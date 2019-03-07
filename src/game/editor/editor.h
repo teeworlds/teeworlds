@@ -1,4 +1,3 @@
-#if 0
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_EDITOR_EDITOR_H
@@ -538,7 +537,7 @@ public:
 
 		m_GridActive = false;
 		m_GridFactor = 1;
-
+		
 		m_MouseEdMode = MOUSE_EDIT;
 
 		m_aFileName[0] = 0;
@@ -592,7 +591,7 @@ public:
 		m_ShowEnvelopePreview = SHOWENV_NONE;
 		m_SelectedQuadEnvelope = -1;
 		m_SelectedEnvelopePoint = -1;
-
+		
 		m_SelectedColor = vec4(0,0,0,0);
 		m_InitialPickerColor = vec3(1,0,0);
 		m_SelectedPickerColor = vec3(1,0,0);
@@ -629,13 +628,13 @@ public:
 
 	bool m_GridActive;
 	int m_GridFactor;
-
+	
 	enum
 	{
 		MOUSE_EDIT=0,
 		MOUSE_PIPETTE,
 	};
-
+	
 	int m_MouseEdMode;
 
 	char m_aFileName[512];
@@ -734,9 +733,9 @@ public:
 	int m_SelectedPoints;
 	int m_SelectedEnvelope;
 	int m_SelectedEnvelopePoint;
-	int m_SelectedQuadEnvelope;
+    int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
-
+	
 	vec4 m_SelectedColor;
 	vec3 m_InitialPickerColor;
 	vec3 m_SelectedPickerColor;
@@ -863,6 +862,3 @@ inline class IGraphics *CLayer::Graphics() { return m_pEditor->Graphics(); }
 inline class ITextRender *CLayer::TextRender() { return m_pEditor->TextRender(); }
 
 #endif
-#endif
-
-#include "editor2.h"

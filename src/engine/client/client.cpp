@@ -1949,8 +1949,8 @@ void CClient::Run()
 	//
 	m_FpsGraph.Init(0.0f, 120.0f);
 
-	// ALWAYS start with the editor
-	g_Config.m_ClEditor = 1;
+	// never start with the editor
+	g_Config.m_ClEditor = 0;
 
 	// process pending commands
 	m_pConsole->StoreCommands(false);
@@ -2043,9 +2043,6 @@ void CClient::Run()
 
 			Update();
 
-			/*if(m_EditorActive)
-				m_pEditor->Update();*/
-
 			const bool SkipFrame = LimitFps();
 
 			if(!SkipFrame && (!g_Config.m_GfxAsyncRender || m_pGraphics->IsIdle()))
@@ -2071,8 +2068,7 @@ void CClient::Run()
 						Render();
 					else
 					{
-						m_pEditor->Update();
-						m_pEditor->Render();
+						m_pEditor->UpdateAndRender();
 						DebugRender();
 					}
 					m_pGraphics->Swap();

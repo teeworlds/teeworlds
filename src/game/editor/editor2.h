@@ -369,7 +369,7 @@ public:
 	inline int capacity() const { return ParentT::list_size; }
 };
 
-struct CEditorMap
+struct CEditorMap2
 {
 	enum
 	{
@@ -527,7 +527,7 @@ struct CEditorMap
 	void AssetsClearAndSetImages(CImageName* aName, CImageInfo* aInfo, u32* aImageEmbeddedCrc, int ImageCount);
 	u32 AssetsAddEmbeddedData(void* pData, u64 DataSize);
 	void AssetsClearEmbeddedFiles();
-	bool AssetsAddAndLoadImage(const char* pFilename);
+	bool AssetsAddAndLoadImage(const char* pFilename); // also loads automap rules if there are any
 	void AssetsDeleteImage(int ImgID);
 
 	CSnapshot* SaveSnapshot();
@@ -604,7 +604,7 @@ struct CHistoryEntry
 {
 	CHistoryEntry* m_pPrev;
 	CHistoryEntry* m_pNext;
-	CEditorMap::CSnapshot* m_pSnap;
+	CEditorMap2::CSnapshot* m_pSnap;
 	char m_aActionStr[64];
 	char m_aDescStr[64];
 
@@ -623,7 +623,7 @@ struct CHistoryEntry
 	}
 };
 
-class CEditor: public IEditor
+class CEditor2: public IEditor
 {
 	enum
 	{
@@ -654,7 +654,7 @@ class CEditor: public IEditor
 	IGraphics::CTextureHandle m_EntitiesTexture;
 	IGraphics::CTextureHandle m_GameTexture;
 
-	CEditorMap m_Map;
+	CEditorMap2 m_Map;
 	CEditorConsoleUI m_InputConsole;
 
 	bool m_ConfigShowGrid = true;
@@ -755,12 +755,12 @@ class CEditor: public IEditor
 			return IsValid() && m_EndTX - m_StartTX >= 0 && m_EndTY - m_StartTY >= 0;
 		}
 
-		void FitLayer(const CEditorMap::CLayer& TileLayer);
+		void FitLayer(const CEditorMap2::CLayer& TileLayer);
 	};
 
 	CTileSelection m_TileSelection;
 
-	void RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer);
+	void RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer);
 
 	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
 		float ParallaxY);
@@ -954,10 +954,11 @@ class CEditor: public IEditor
 
 public:
 
-	CEditor();
-	~CEditor();
+	CEditor2();
+	~CEditor2();
 
 	void Init();
+	void UpdateAndRender();
 	void Update();
 	void Render();
 	bool HasUnsavedData() const;

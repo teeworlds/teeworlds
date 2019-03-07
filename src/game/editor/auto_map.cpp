@@ -1,4 +1,3 @@
-#if 0
 #include <engine/console.h>
 #include <engine/storage.h>
 
@@ -146,7 +145,7 @@ void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 						RespectRules = false;
 					else
 					{
-						if(pCondition->m_Value == CRuleCondition::EMPTY || pCondition->m_Value == CRuleCondition::FULL)
+ 						if(pCondition->m_Value == CRuleCondition::EMPTY || pCondition->m_Value == CRuleCondition::FULL)
 						{
 							if(pLayer->m_pTiles[CheckIndex].m_Index > 0 && pCondition->m_Value == CRuleCondition::EMPTY)
 								RespectRules = false;
@@ -690,4 +689,3 @@ void CDoodadsMapper::Proceed(CLayerTiles *pLayer, int ConfigID, int Amount)
 
 	m_pEditor->m_Map.m_Modified = true;
 }
-#endif

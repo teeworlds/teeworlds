@@ -95,7 +95,7 @@ inline u32 fnv1a32(const void* data, u32 dataSize)
 	return hash;
 }
 
-void CEditorMap::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
+void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
 {
 	m_pGraphics = pGraphics;
 	m_pStorage = pStorage;
@@ -200,12 +200,12 @@ void CEditorMap::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConso
 #endif
 }
 
-bool CEditorMap::Save(const char* pFileName)
+bool CEditorMap2::Save(const char* pFileName)
 {
 	return false;
 }
 
-bool CEditorMap::Load(const char* pFileName)
+bool CEditorMap2::Load(const char* pFileName)
 {
 	CDataFileReader File;
 	if(!File.Open(m_pStorage, pFileName, IStorage::TYPE_ALL))
@@ -237,7 +237,7 @@ bool CEditorMap::Load(const char* pFileName)
 				pGroup->m_OffsetX, pGroup->m_OffsetY);
 		const int GroupLayerCount = pGroup->m_NumLayers;
 		const int GroupLayerStart = pGroup->m_StartLayer;
-		CEditorMap::CGroup Group;
+		CEditorMap2::CGroup Group;
 		IntsToStr(pGroup->m_aName, ARR_COUNT(pGroup->m_aName), Group.m_aName);
 		Group.m_ParallaxX = pGroup->m_ParallaxX;
 		Group.m_ParallaxY = pGroup->m_ParallaxY;
@@ -405,7 +405,7 @@ bool CEditorMap::Load(const char* pFileName)
 	return true;
 }
 
-void CEditorMap::LoadDefault()
+void CEditorMap2::LoadDefault()
 {
 	Clear();
 
@@ -455,7 +455,7 @@ void CEditorMap::LoadDefault()
 	m_GameLayerID = GameGroup.m_apLayerIDs[0];
 }
 
-void CEditorMap::Clear()
+void CEditorMap2::Clear()
 {
 	m_GameLayerID = -1;
 	m_GameGroupID = -1;
@@ -478,7 +478,7 @@ void CEditorMap::Clear()
 	m_aEnvPoints.Clear();
 }
 
-void CEditorMap::AssetsClearAndSetImages(CEditorMap::CImageName* aName, CImageInfo* aInfo,
+void CEditorMap2::AssetsClearAndSetImages(CEditorMap2::CImageName* aName, CImageInfo* aInfo,
 	u32* aImageEmbeddedCrc, int ImageCount)
 {
 	dbg_assert(ImageCount <= MAX_IMAGES, "ImageCount > MAX_IMAGES");
@@ -559,7 +559,7 @@ void CEditorMap::AssetsClearAndSetImages(CEditorMap::CImageName* aName, CImageIn
 	}
 }
 
-u32 CEditorMap::AssetsAddEmbeddedData(void* pData, u64 DataSize)
+u32 CEditorMap2::AssetsAddEmbeddedData(void* pData, u64 DataSize)
 {
 	// 10 Mb limit
 	dbg_assert(DataSize < (u64)(1024*1024*10), "DataSize is invalid");
@@ -576,7 +576,7 @@ u32 CEditorMap::AssetsAddEmbeddedData(void* pData, u64 DataSize)
 	return Crc;
 }
 
-void CEditorMap::AssetsClearEmbeddedFiles()
+void CEditorMap2::AssetsClearEmbeddedFiles()
 {
 	for(int i = 0; i < m_Assets.m_EmbeddedFileCount; i++)
 	{
@@ -589,7 +589,7 @@ void CEditorMap::AssetsClearEmbeddedFiles()
 	m_Assets.m_EmbeddedFileCount = 0;
 }
 
-bool CEditorMap::AssetsAddAndLoadImage(const char* pFilename)
+bool CEditorMap2::AssetsAddAndLoadImage(const char* pFilename)
 {
 	// TODO: return error ID
 	if(m_Assets.m_ImageCount > MAX_IMAGES-1)
@@ -662,7 +662,7 @@ bool CEditorMap::AssetsAddAndLoadImage(const char* pFilename)
 	return true;
 }
 
-void CEditorMap::AssetsDeleteImage(int ImgID)
+void CEditorMap2::AssetsDeleteImage(int ImgID)
 {
 	Graphics()->UnloadTexture(&m_Assets.m_aTextureHandle[ImgID]);
 	const int SwappedID = m_Assets.m_ImageCount-1;
@@ -682,7 +682,7 @@ void CEditorMap::AssetsDeleteImage(int ImgID)
 	}
 }
 
-CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
+CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 {
 	// calculate snapshot size
 	u64 SnapSize = sizeof(CSnapshot)-1;
@@ -842,9 +842,9 @@ CEditorMap::CSnapshot* CEditorMap::SaveSnapshot()
 	return &Snap;
 }
 
-void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
+void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 {
-	const CEditorMap::CSnapshot& Snap = *pSnapshot;
+	const CEditorMap2::CSnapshot& Snap = *pSnapshot;
 
 	Clear();
 
@@ -911,9 +911,9 @@ void CEditorMap::RestoreSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 }
 
 #ifdef CONF_DEBUG
-void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
+void CEditorMap2::CompareSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 {
-	const CEditorMap::CSnapshot& Snap = *pSnapshot;
+	const CEditorMap2::CSnapshot& Snap = *pSnapshot;
 	dbg_assert(Snap.m_GroupCount == m_aGroups.Count(), "");
 	dbg_assert(Snap.m_LayerCount == m_aLayers.Count(), "");
 	dbg_assert(Snap.m_EnvelopeCount == m_aEnvelopes.Count(), "");
@@ -999,7 +999,7 @@ void CEditorMap::CompareSnapshot(const CEditorMap::CSnapshot* pSnapshot)
 }
 #endif
 
-CEditorMap::CLayer& CEditorMap::NewTileLayer(int Width, int Height)
+CEditorMap2::CLayer& CEditorMap2::NewTileLayer(int Width, int Height)
 {
 	CLayer TileLayer;
 	mem_zero(TileLayer.m_aName, sizeof(TileLayer.m_aName));
@@ -1014,7 +1014,7 @@ CEditorMap::CLayer& CEditorMap::NewTileLayer(int Width, int Height)
 	return m_aLayers.Add(TileLayer);
 }
 
-CEditorMap::CLayer&CEditorMap::NewQuadLayer()
+CEditorMap2::CLayer&CEditorMap2::NewQuadLayer()
 {
 	CLayer QuadLayer;
 	mem_zero(QuadLayer.m_aName, sizeof(QuadLayer.m_aName));
@@ -1057,19 +1057,19 @@ int CEditorAssets::LoadQuadImage(const char* aPath)
 	return -1;
 }*/
 
-IEditor *CreateEditor() { return new CEditor; }
+IEditor *CreateEditor2() { return new CEditor2; }
 
-CEditor::CEditor()
+CEditor2::CEditor2()
 {
 
 }
 
-CEditor::~CEditor()
+CEditor2::~CEditor2()
 {
 
 }
 
-void CEditor::Init()
+void CEditor2::Init()
 {
 	m_pInput = Kernel()->RequestInterface<IInput>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
@@ -1147,12 +1147,18 @@ void CEditor::Init()
 	}
 }
 
-bool CEditor::HasUnsavedData() const
+void CEditor2::UpdateAndRender()
+{
+	Update();
+	Render();
+}
+
+bool CEditor2::HasUnsavedData() const
 {
 	return false;
 }
 
-void CEditor::OnInput(IInput::CEvent Event)
+void CEditor2::OnInput(IInput::CEvent Event)
 {
 	if(m_InputConsole.IsOpen())
 	{
@@ -1161,7 +1167,7 @@ void CEditor::OnInput(IInput::CEvent Event)
 	}
 }
 
-void CEditor::Update()
+void CEditor2::Update()
 {
 	m_LocalTime = Client()->LocalTime();
 
@@ -1260,7 +1266,7 @@ void CEditor::Update()
 	}
 }
 
-void CEditor::Render()
+void CEditor2::Render()
 {
 	const CUIRect UiScreenRect = *UI()->Screen();
 	m_UiScreenRect = UiScreenRect;
@@ -1303,7 +1309,7 @@ void CEditor::Render()
 	Input()->Clear();
 }
 
-void CEditor::RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer)
+void CEditor2::RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer)
 {
 	const CTile* pTiles = GameLayer.m_aTiles.Data();
 	const int LayerWidth = GameLayer.m_Width;
@@ -1426,7 +1432,7 @@ void CEditor::RenderLayerGameEntities(const CEditorMap::CLayer& GameLayer)
 	Graphics()->QuadsEnd();
 }
 
-inline vec2 CEditor::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY,
+inline vec2 CEditor2::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY,
 										   float ParallaxX, float ParallaxY)
 {
 	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
@@ -1439,9 +1445,9 @@ inline vec2 CEditor::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, 
 	return vec2(MapOffX, MapOffY);
 }
 
-vec2 CEditor::CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos)
+vec2 CEditor2::CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos)
 {
-	const CEditorMap::CGroup& G = m_Map.m_aGroups[GroupID];
+	const CEditorMap2::CGroup& G = m_Map.m_aGroups[GroupID];
 	const float OffX = G.m_OffsetX;
 	const float OffY = G.m_OffsetY;
 	const float ParaX = G.m_ParallaxX/100.f;
@@ -1456,10 +1462,10 @@ vec2 CEditor::CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float Wo
 	return vec2(MapOffX, MapOffY);
 }
 
-CUIRect CEditor::CalcUiRectFromGroupWorldRect(int GroupID, float WorldWidth, float WorldHeight,
+CUIRect CEditor2::CalcUiRectFromGroupWorldRect(int GroupID, float WorldWidth, float WorldHeight,
 	CUIRect WorldRect)
 {
-	const CEditorMap::CGroup& G = m_Map.m_aGroups[GroupID];
+	const CEditorMap2::CGroup& G = m_Map.m_aGroups[GroupID];
 	const float OffX = G.m_OffsetX;
 	const float OffY = G.m_OffsetY;
 	const float ParaX = G.m_ParallaxX/100.f;
@@ -1476,14 +1482,14 @@ CUIRect CEditor::CalcUiRectFromGroupWorldRect(int GroupID, float WorldWidth, flo
 	return r;
 }
 
-void CEditor::StaticEnvelopeEval(float TimeOffset, int EnvID, float* pChannels, void* pUser)
+void CEditor2::StaticEnvelopeEval(float TimeOffset, int EnvID, float* pChannels, void* pUser)
 {
-	CEditor *pThis = (CEditor *)pUser;
+	CEditor2 *pThis = (CEditor2 *)pUser;
 	if(EnvID >= 0)
 		pThis->EnvelopeEval(TimeOffset, EnvID, pChannels);
 }
 
-void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
+void CEditor2::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
 {
 	pChannels[0] = 0;
 	pChannels[1] = 0;
@@ -1502,7 +1508,7 @@ void CEditor::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
 									  Time+TimeOffset, pChannels);
 }
 
-void CEditor::RenderMap()
+void CEditor2::RenderMap()
 {
 	// get world view points based on neutral paramters
 	float aWorldViewRectPoints[4];
@@ -1527,8 +1533,8 @@ void CEditor::RenderMap()
 	const int SelectedGroupID = m_UiSelectedLayerID != -1 ? m_UiSelectedGroupID : m_Map.m_GameGroupID;
 	dbg_assert(SelectedLayerID >= 0, "No layer selected");
 	dbg_assert(SelectedGroupID >= 0, "Parent group of selected layer not found");
-	const CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[SelectedLayerID];
-	const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[SelectedGroupID];
+	const CEditorMap2::CLayer& SelectedLayer = m_Map.m_aLayers[SelectedLayerID];
+	const CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups[SelectedGroupID];
 	SelectedParallaxX = SelectedGroup.m_ParallaxX / 100.f;
 	SelectedParallaxY = SelectedGroup.m_ParallaxY / 100.f;
 	SelectedPositionX = SelectedGroup.m_OffsetX;
@@ -1566,7 +1572,7 @@ void CEditor::RenderMap()
 		if(m_UiGroupHidden[gi])
 			continue;
 
-		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+		CEditorMap2::CGroup& Group = m_Map.m_aGroups[gi];
 
 		// group clip
 		const vec2 ClipOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
@@ -1592,20 +1598,6 @@ void CEditor::RenderMap()
 				(int)((x1-x0)*GfxScreenW), (int)((y1-y0)*GfxScreenH));
 		}
 
-		// TODO: remove
-		/*
-		if(Clipped)
-		{
-			CUIRect ClipRect = {
-				(float)Group.m_ClipX,
-				(float)Group.m_ClipY,
-				(float)Group.m_ClipWidth,
-				(float)Group.m_ClipHeight
-			};
-			DrawRect(ClipRect, vec4(1, 0, 0, 0.5));
-		}
-		*/
-
 		const float ParallaxX = Group.m_ParallaxX / 100.f;
 		const float ParallaxY = Group.m_ParallaxY / 100.f;
 		const float OffsetX = Group.m_OffsetX;
@@ -1626,7 +1618,7 @@ void CEditor::RenderMap()
 			if(m_UiLayerHidden[LyID])
 				continue;
 
-			const CEditorMap::CLayer& Layer = m_Map.m_aLayers[LyID];
+			const CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LyID];
 
 			if(Layer.m_Type == LAYERTYPE_TILES)
 			{
@@ -1695,7 +1687,7 @@ void CEditor::RenderMap()
 		Graphics()->MapScreen(ScreenRect.x, ScreenRect.y, ScreenRect.x+ScreenRect.w,
 							  ScreenRect.y+ScreenRect.h);
 
-		const CEditorMap::CLayer& LayerTile = m_Map.m_aLayers[LyID];
+		const CEditorMap2::CLayer& LayerTile = m_Map.m_aLayers[LyID];
 		const float LyWidth = LayerTile.m_Width;
 		const float LyHeight = LayerTile.m_Height;
 		vec4 LyColor = LayerTile.m_Color;
@@ -1805,7 +1797,7 @@ void CEditor::RenderMap()
 	RenderMapEditorUI();
 }
 
-void CEditor::RenderMapOverlay()
+void CEditor2::RenderMapOverlay()
 {
 	// NOTE: we're in selected group world space here
 	if(m_UiCurrentPopupID != POPUP_NONE)
@@ -1830,8 +1822,8 @@ void CEditor::RenderMapOverlay()
 		s_MapViewDrag = {};
 
 	const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
-	const CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
-	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[SelectedLayerID];
+	const CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
+	const CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers[SelectedLayerID];
 
 	if(SelectedTileLayer.IsTileLayer())
 	{
@@ -1985,16 +1977,10 @@ void CEditor::RenderMapOverlay()
 	}
 }
 
-void CEditor::RenderMapEditorUI()
+void CEditor2::RenderMapEditorUI()
 {
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
-
-	// TODO: remove
-	/*
-	if(m_WasMouseOnUiElement)
-		DrawRect(UiScreenRect, vec4(0, 0.7, 0, 0.5));
-	*/
 
 	CUIRect RightPanel, DetailPanel, ToolColumnRect;
 	UiScreenRect.VSplitRight(150, &m_UiMainViewRect, &RightPanel);
@@ -2141,7 +2127,7 @@ void CEditor::RenderMapEditorUI()
 	// selection context buttons
 	if(m_UiSelectedLayerID != -1 && IsToolSelect() && m_TileSelection.IsSelected())
 	{
-		const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+		const CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 
 		if(SelectedTileLayer.IsTileLayer())
 		{
@@ -2186,7 +2172,7 @@ void CEditor::RenderMapEditorUI()
 	// Clip and tilelayer resize handles
 	if(IsToolDimension())
 	{
-		CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
+		CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
 		if(SelectedGroup.m_UseClipping)
 		{
 			CUIRect ClipRect = {
@@ -2336,7 +2322,7 @@ void CEditor::RenderMapEditorUI()
 		}
 
 		// tile layer resize
-		CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+		CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 
 		if(SelectedTileLayer.IsTileLayer())
 		{
@@ -2458,7 +2444,7 @@ void CEditor::RenderMapEditorUI()
 	UI()->ClipDisable(); // main view rect clip
 }
 
-void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
+void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 {
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
@@ -2509,7 +2495,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
-		const CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+		const CEditorMap2::CGroup& Group = m_Map.m_aGroups[gi];
 
 		if(gi != 0)
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
@@ -2601,7 +2587,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			for(int li = 0; li < LayerCount; li++)
 			{
 				const int LyID = m_Map.m_aGroups[gi].m_apLayerIDs[li];
-				const CEditorMap::CLayer& Layer = m_Map.m_aLayers[LyID];
+				const CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LyID];
 				NavRect.HSplitTop(Spacing, 0, &NavRect);
 				NavRect.HSplitTop(ButtonHeight, &ButtonRect, &NavRect);
 				UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
@@ -2779,10 +2765,10 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	{
 		if(pDragMoveID && !IsInsideRect(s_DragMove.m_EndDragPos, DragMoveOverlayRect))
 		{
-			int GroupID = (CEditorMap::CGroup*)pDragMoveID - m_Map.m_aGroups.Data();
+			int GroupID = (CEditorMap2::CGroup*)pDragMoveID - m_Map.m_aGroups.Data();
 			if(GroupID < 0 || GroupID > m_Map.m_aGroups.Count()-1)
 				GroupID = -1;
-			int LayerID = (CEditorMap::CLayer*)pDragMoveID - m_Map.m_aLayers.Data();
+			int LayerID = (CEditorMap2::CLayer*)pDragMoveID - m_Map.m_aLayers.Data();
 			if(LayerID < 0 || LayerID > m_Map.m_aLayers.Count()-1)
 				LayerID = -1;
 
@@ -2806,7 +2792,7 @@ void CEditor::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	}
 }
 
-void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
+void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 {
 	DetailRect.Margin(3.0f, &DetailRect);
 
@@ -2818,7 +2804,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 
 	// group
 	dbg_assert(m_UiSelectedGroupID >= 0, "No selected group");
-	CEditorMap::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
+	CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
 	const bool IsGameGroup = m_UiSelectedGroupID == m_Map.m_GameGroupID;
 	char aBuff[128];
 
@@ -2980,7 +2966,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	// layer
 	if(m_UiSelectedLayerID >= 0)
 	{
-		CEditorMap::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+		CEditorMap2::CLayer& SelectedLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 		const bool IsGameLayer = m_UiSelectedLayerID == m_Map.m_GameLayerID;
 
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -3161,7 +3147,7 @@ void CEditor::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	UiEndScrollRegion(&s_DetailSR);
 }
 
-void CEditor::RenderPopupBrushPalette()
+void CEditor2::RenderPopupBrushPalette()
 {
 	dbg_assert(m_UiSelectedLayerID >= 0 && m_UiSelectedLayerID < m_Map.m_aLayers.Count(),
 			   "m_UiSelectedLayerID is out of bounds");
@@ -3178,7 +3164,7 @@ void CEditor::RenderPopupBrushPalette()
 	CUIRect TopRow;
 	MainRect.HSplitTop(40, &TopRow, &MainRect);
 
-	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+	const CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 	dbg_assert(SelectedTileLayer.IsTileLayer(), "Selected layer is not a tile layer");
 
 	IGraphics::CTextureHandle PaletteTexture;
@@ -3409,7 +3395,7 @@ void CEditor::RenderPopupBrushPalette()
 	RenderBrush(m_UiMousePos);
 }
 
-void CEditor::RenderBrush(vec2 Pos)
+void CEditor2::RenderBrush(vec2 Pos)
 {
 	if(m_Brush.IsEmpty())
 		return;
@@ -3419,7 +3405,7 @@ void CEditor::RenderBrush(vec2 Pos)
 	Graphics()->MapScreen(ScreenX0 - Pos.x, ScreenY0 - Pos.y,
 		ScreenX1 - Pos.x, ScreenY1 - Pos.y);
 
-	const CEditorMap::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
+	const CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers[m_UiSelectedLayerID];
 	dbg_assert(SelectedTileLayer.IsTileLayer(), "Selected layer is not a tile layer");
 
 	const float TileSize = 32;
@@ -3450,7 +3436,7 @@ void CEditor::RenderBrush(vec2 Pos)
 struct CImageNameItem
 {
 	int m_Index;
-	CEditorMap::CImageName m_Name;
+	CEditorMap2::CImageName m_Name;
 };
 
 static int CompareImageNameItems(const void* pA, const void* pB)
@@ -3460,9 +3446,9 @@ static int CompareImageNameItems(const void* pA, const void* pB)
 	return str_comp_nocase(a.m_Name.m_Buff, b.m_Name.m_Buff);
 }
 
-void CEditor::RenderAssetManager()
+void CEditor2::RenderAssetManager()
 {
-	CEditorMap::CAssets& Assets = m_Map.m_Assets;
+	CEditorMap2::CAssets& Assets = m_Map.m_Assets;
 
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
@@ -3478,12 +3464,12 @@ void CEditor::RenderAssetManager()
 	NavRect.HSplitBottom(200, &NavRect, &DetailRect);
 	UI()->ClipEnable(&NavRect);
 
-	static CUIButton s_UiImageButState[CEditorMap::MAX_IMAGES] = {};
+	static CUIButton s_UiImageButState[CEditorMap2::MAX_IMAGES] = {};
 	const float FontSize = 8.0f;
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
 
-	static CImageNameItem s_aImageItems[CEditorMap::MAX_IMAGES];
+	static CImageNameItem s_aImageItems[CEditorMap2::MAX_IMAGES];
 	const int ImageCount = Assets.m_ImageCount;
 
 	// sort images by name
@@ -3611,7 +3597,7 @@ void CEditor::RenderAssetManager()
 		m_UiSelectedImageID = -1;
 }
 
-inline void CEditor::DrawRect(const CUIRect& Rect, const vec4& Color)
+inline void CEditor2::DrawRect(const CUIRect& Rect, const vec4& Color)
 {
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
@@ -3621,7 +3607,7 @@ inline void CEditor::DrawRect(const CUIRect& Rect, const vec4& Color)
 	Graphics()->QuadsEnd();
 }
 
-void CEditor::DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
+void CEditor2::DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
@@ -3668,7 +3654,7 @@ void CEditor::DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Borde
 	Graphics()->QuadsEnd();
 }
 
-void CEditor::DrawRectBorderOutside(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
+void CEditor2::DrawRectBorderOutside(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
@@ -3714,7 +3700,7 @@ void CEditor::DrawRectBorderOutside(const CUIRect& Rect, const vec4& Color, floa
 	Graphics()->QuadsEnd();
 }
 
-void CEditor::DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
+void CEditor2::DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
@@ -3763,7 +3749,7 @@ void CEditor::DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, float
 	Graphics()->QuadsEnd();
 }
 
-inline void CEditor::DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color)
+inline void CEditor2::DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color)
 {
 	const float OffY = (Rect.h - FontSize - 3.0f) * 0.5f;
 	CTextCursor Cursor;
@@ -3771,7 +3757,7 @@ inline void CEditor::DrawText(const CUIRect& Rect, const char* pText, float Font
 	TextRender()->TextShadowed(&Cursor, pText, -1, vec2(0,0), vec4(0,0,0,0), Color);
 }
 
-void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState)
+void CEditor2::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState)
 {
 	pButState->m_Clicked = false;
 
@@ -3807,7 +3793,7 @@ void CEditor::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton
 
 }
 
-bool CEditor::UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDrag* pDragState)
+bool CEditor2::UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDrag* pDragState)
 {
 	bool Return = false;
 	CUIButton ButState;
@@ -3834,13 +3820,13 @@ bool CEditor::UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDr
 	return Return;
 }
 
-bool CEditor::UiButton(const CUIRect& Rect, const char* pText, CUIButton* pButState, float FontSize)
+bool CEditor2::UiButton(const CUIRect& Rect, const char* pText, CUIButton* pButState, float FontSize)
 {
 	return UiButtonEx(Rect, pText, pButState, StyleColorButton, StyleColorButtonHover,
 		StyleColorButtonPressed, StyleColorButtonBorder, FontSize);
 }
 
-bool CEditor::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* pButState, vec4 ColNormal,
+bool CEditor2::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* pButState, vec4 ColNormal,
 	vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize)
 {
 	UiDoButtonBehavior(pButState, Rect, pButState);
@@ -3856,7 +3842,7 @@ bool CEditor::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* pBut
 	return pButState->m_Clicked;
 }
 
-bool CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInput* pInputState)
+bool CEditor2::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInput* pInputState)
 {
 	UiDoButtonBehavior(pInputState, Rect, &pInputState->m_Button);
 	if(pInputState->m_Button.m_Clicked)
@@ -3926,7 +3912,7 @@ bool CEditor::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, C
 	return Changed;
 }
 
-bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput* pInputState)
+bool CEditor2::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput* pInputState)
 {
 	const int OldInteger = *pInteger;
 	const u8 OldSelected = pInputState->m_TextInput.m_Selected;
@@ -3961,7 +3947,7 @@ bool CEditor::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput
 	return OldInteger != *pInteger;
 }
 
-bool CEditor::UiSliderInt(const CUIRect& Rect, int* pInt, int Min, int Max, CUIButton* pInputState)
+bool CEditor2::UiSliderInt(const CUIRect& Rect, int* pInt, int Min, int Max, CUIButton* pInputState)
 {
 	dbg_assert(false, "implement, see UiSliderFloat");
 
@@ -3982,7 +3968,7 @@ bool CEditor::UiSliderInt(const CUIRect& Rect, int* pInt, int Min, int Max, CUIB
 	return OldInt != *pInt;
 }
 
-bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButton* pInputState,
+bool CEditor2::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButton* pInputState,
 	const vec4* pColor)
 {
 	const float OldInt = *pVal;
@@ -4031,7 +4017,7 @@ bool CEditor::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float M
 	return OldInt != *pVal;
 }
 
-bool CEditor::UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNo* pCbyn)
+bool CEditor2::UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNo* pCbyn)
 {
 	const bool OldVal = *pVal;
 	CUIRect YesRect, NoRect;
@@ -4071,14 +4057,14 @@ bool CEditor::UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNo*
 	return OldVal != *pVal;
 }
 
-bool CEditor::UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
+bool CEditor2::UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
 	float FontSize)
 {
 	return UiButtonEx(Rect, pText, pButState, StyleColorButton, StyleColorButtonHover, StyleColorButtonPressed,
 					  Selected ? vec4(1, 0, 0, 1):StyleColorButtonBorder, FontSize);
 }
 
-bool CEditor::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive)
+bool CEditor2::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive)
 {
 	UiDoMouseDragging(pGrabHandle, Rect, pGrabHandle);
 	const bool Active = IsInsideRect(m_UiMousePos, Rect) || pGrabHandle->m_IsDragging;
@@ -4088,7 +4074,7 @@ bool CEditor::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, cons
 }
 
 
-void CEditor::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
+void CEditor2::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
 {
 	if(pParams)
 		pSr->m_Params = *pParams;
@@ -4124,7 +4110,7 @@ void CEditor::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* 
 	*pOutOffset = pSr->m_ContentScrollOff;
 }
 
-void CEditor::UiEndScrollRegion(CScrollRegion* pSr)
+void CEditor2::UiEndScrollRegion(CScrollRegion* pSr)
 {
 	UI()->ClipDisable();
 	if(pSr->m_WasClipped)
@@ -4206,7 +4192,7 @@ void CEditor::UiEndScrollRegion(CScrollRegion* pSr)
 	RenderTools()->DrawRoundRect(&Slider, SliderColor, 0);
 }
 
-void CEditor::UiScrollRegionAddRect(CScrollRegion* pSr, CUIRect Rect)
+void CEditor2::UiScrollRegionAddRect(CScrollRegion* pSr, CUIRect Rect)
 {
 	vec2 ContentPos = vec2(pSr->m_ClipRect.x, pSr->m_ClipRect.y);
 	ContentPos.x += pSr->m_ContentScrollOff.x;
@@ -4215,7 +4201,7 @@ void CEditor::UiScrollRegionAddRect(CScrollRegion* pSr, CUIRect Rect)
 	pSr->m_ContentH = max(Rect.y + Rect.h - ContentPos.y, pSr->m_ContentH);
 }
 
-void CEditor::UiScrollRegionScrollHere(CScrollRegion* pSr, int Option)
+void CEditor2::UiScrollRegionScrollHere(CScrollRegion* pSr, int Option)
 {
 	const float MinHeight = min(pSr->m_ClipRect.h, pSr->m_LastAddedRect.h);
 	const float TopScroll = pSr->m_LastAddedRect.y -
@@ -4243,7 +4229,7 @@ void CEditor::UiScrollRegionScrollHere(CScrollRegion* pSr, int Option)
 	}
 }
 
-bool CEditor::UiScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Rect)
+bool CEditor2::UiScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Rect)
 {
 	return (pSr->m_ClipRect.x > (Rect.x + Rect.w)
 		|| (pSr->m_ClipRect.x + pSr->m_ClipRect.w) < Rect.x
@@ -4252,18 +4238,18 @@ bool CEditor::UiScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Rec
 }
 
 
-void CEditor::Reset()
+void CEditor2::Reset()
 {
 
 }
 
-void CEditor::ResetCamera()
+void CEditor2::ResetCamera()
 {
 	m_Zoom = 1;
 	m_MapUiPosOffset = vec2(0,0);
 }
 
-void CEditor::ChangeZoom(float Zoom)
+void CEditor2::ChangeZoom(float Zoom)
 {
 	// zoom centered on mouse
 	const float WorldWidth = m_ZoomWorldViewWidth/m_Zoom;
@@ -4281,14 +4267,14 @@ void CEditor::ChangeZoom(float Zoom)
 	m_Zoom = Zoom;
 }
 
-void CEditor::ChangePage(int Page)
+void CEditor2::ChangePage(int Page)
 {
 	UI()->SetHotItem(0);
 	UI()->SetActiveItem(0);
 	m_Page = Page;
 }
 
-void CEditor::ChangeTool(int Tool)
+void CEditor2::ChangeTool(int Tool)
 {
 	if(m_Tool == Tool) return;
 
@@ -4298,14 +4284,14 @@ void CEditor::ChangeTool(int Tool)
 	m_Tool = Tool;
 }
 
-void CEditor::SelectLayerBelowCurrentOne()
+void CEditor2::SelectLayerBelowCurrentOne()
 {
 	dbg_assert(m_UiSelectedLayerID >= 0 && m_UiSelectedLayerID < m_Map.m_aLayers.Count(),
 		"m_UiSelectedLayerID is invalid");
 	dbg_assert(m_UiSelectedGroupID >= 0 && m_UiSelectedGroupID < m_Map.m_aGroups.Count(),
 		"m_UiSelectedGroupID is invalid");
 
-	const CEditorMap::CGroup& Group = m_Map.m_aGroups[m_UiSelectedGroupID];
+	const CEditorMap2::CGroup& Group = m_Map.m_aGroups[m_UiSelectedGroupID];
 	int LayerPos = -1;
 	for(int i = 0; i < (Group.m_LayerCount-1); i++)
 	{
@@ -4332,7 +4318,7 @@ void CEditor::SelectLayerBelowCurrentOne()
 		"m_UiSelectedGroupID is invalid");
 }
 
-void CEditor::SetNewBrush(CTile* aTiles, int Width, int Height)
+void CEditor2::SetNewBrush(CTile* aTiles, int Width, int Height)
 {
 	dbg_assert(Width > 0 && Height > 0, "Brush: wrong dimensions");
 	m_Brush.m_Width = Width;
@@ -4341,7 +4327,7 @@ void CEditor::SetNewBrush(CTile* aTiles, int Width, int Height)
 	m_Brush.m_aTiles.Add(aTiles, Width*Height);
 }
 
-void CEditor::BrushClear()
+void CEditor2::BrushClear()
 {
 	m_Brush.m_Width = 0;
 	m_Brush.m_Height = 0;
@@ -4349,7 +4335,7 @@ void CEditor::BrushClear()
 	mem_zero(m_UiBrushPaletteState.m_aTileSelected, sizeof(m_UiBrushPaletteState.m_aTileSelected));
 }
 
-void CEditor::BrushFlipX()
+void CEditor2::BrushFlipX()
 {
 	if(m_Brush.m_Width <= 0)
 		return;
@@ -4371,7 +4357,7 @@ void CEditor::BrushFlipX()
 	}
 }
 
-void CEditor::BrushFlipY()
+void CEditor2::BrushFlipY()
 {
 	if(m_Brush.m_Width <= 0)
 		return;
@@ -4393,7 +4379,7 @@ void CEditor::BrushFlipY()
 	}
 }
 
-void CEditor::BrushRotate90Clockwise()
+void CEditor2::BrushRotate90Clockwise()
 {
 	if(m_Brush.m_Width <= 0)
 		return;
@@ -4420,7 +4406,7 @@ void CEditor::BrushRotate90Clockwise()
 	m_Brush.m_Height = BrushWidth;
 }
 
-void CEditor::BrushRotate90CounterClockwise()
+void CEditor2::BrushRotate90CounterClockwise()
 {
 	if(m_Brush.m_Width <= 0)
 		return;
@@ -4447,9 +4433,9 @@ void CEditor::BrushRotate90CounterClockwise()
 	m_Brush.m_Height = BrushWidth;
 }
 
-void CEditor::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
+void CEditor2::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 {
-	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
 
 	const int BrushW = m_Brush.m_Width;
 	const int BrushH = m_Brush.m_Height;
@@ -4475,9 +4461,9 @@ void CEditor::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 	}
 }
 
-void CEditor::BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID)
+void CEditor2::BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID)
 {
-	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
 
 	const int BrushW = m_Brush.m_Width;
 	const int BrushH = m_Brush.m_Height;
@@ -4503,9 +4489,9 @@ void CEditor::BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW
 	}
 }
 
-void CEditor::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY)
+void CEditor2::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY)
 {
-	const CEditorMap::CLayer& TileLayer = m_Map.m_aLayers[LayerID];
+	const CEditorMap2::CLayer& TileLayer = m_Map.m_aLayers[LayerID];
 	dbg_assert(TileLayer.IsTileLayer(), "Layer is not a tile layer");
 
 	const int SelStartX = clamp(min(StartTX, EndTX), 0, TileLayer.m_Width-1);
@@ -4534,7 +4520,7 @@ void CEditor::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int 
 	SetNewBrush(aExtractTiles.Data(), Width, Height);
 }
 
-bool CEditor::LoadMap(const char* pFileName)
+bool CEditor2::LoadMap(const char* pFileName)
 {
 	if(m_Map.Load(pFileName))
 	{
@@ -4546,7 +4532,7 @@ bool CEditor::LoadMap(const char* pFileName)
 	return false;
 }
 
-void CEditor::OnMapLoaded()
+void CEditor2::OnMapLoaded()
 {
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
@@ -4587,7 +4573,7 @@ void CEditor::OnMapLoaded()
 	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
 }
 
-void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
+void CEditor2::EditDeleteLayer(int LyID, int ParentGroupID)
 {
 	dbg_assert(LyID >= 0 && LyID < m_Map.m_aLayers.Count(), "LyID out of bounds");
 	dbg_assert(ParentGroupID >= 0 && ParentGroupID < m_Map.m_aGroups.Count(), "ParentGroupID out of bounds");
@@ -4598,7 +4584,7 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 	str_format(aHistoryDesc, sizeof(aHistoryDesc), "%s", GetLayerName(LyID));
 
 	const int SwappedLyID = m_Map.m_aLayers.Count()-1; // see RemoveByIndex
-	CEditorMap::CGroup& ParentGroup = m_Map.m_aGroups[ParentGroupID];
+	CEditorMap2::CGroup& ParentGroup = m_Map.m_aGroups[ParentGroupID];
 	const int ParentGroupLayerCount = ParentGroup.m_LayerCount;
 	dbg_assert(ParentGroupLayerCount > 0, "Parent group layer count is zero?");
 	const int GroupCount = m_Map.m_aGroups.Count();
@@ -4627,7 +4613,7 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 	// Groups: swap last layer id with deleted id
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
-		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+		CEditorMap2::CGroup& Group = m_Map.m_aGroups[gi];
 		const int LayerCount = Group.m_LayerCount;
 		for(int li = 0; li < LayerCount; li++)
 		{
@@ -4648,7 +4634,7 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
-		CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+		CEditorMap2::CGroup& Group = m_Map.m_aGroups[gi];
 		const int LayerCount = Group.m_LayerCount;
 		for(int li = 0; li < LayerCount; li++)
 		{
@@ -4662,12 +4648,12 @@ void CEditor::EditDeleteLayer(int LyID, int ParentGroupID)
 	HistoryNewEntry("Deleted layer", aHistoryDesc);
 }
 
-void CEditor::EditDeleteGroup(int GroupID)
+void CEditor2::EditDeleteGroup(int GroupID)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 	dbg_assert(GroupID != m_Map.m_GameGroupID, "Can't delete game group");
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 	while(Group.m_LayerCount > 0)
 	{
 		EditDeleteLayer(Group.m_apLayerIDs[0], GroupID);
@@ -4684,7 +4670,7 @@ void CEditor::EditDeleteGroup(int GroupID)
 	HistoryNewEntry("Deleted group", aBuff);
 }
 
-void CEditor::EditDeleteImage(int ImgID)
+void CEditor2::EditDeleteImage(int ImgID)
 {
 	dbg_assert(ImgID >= 0 && ImgID <= m_Map.m_Assets.m_ImageCount, "ImgID out of bounds");
 
@@ -4697,7 +4683,7 @@ void CEditor::EditDeleteImage(int ImgID)
 	HistoryNewEntry("Deleted image", aHistoryEntryDesc);
 }
 
-void CEditor::EditAddImage(const char* pFilename)
+void CEditor2::EditAddImage(const char* pFilename)
 {
 	bool Success = m_Map.AssetsAddAndLoadImage(pFilename);
 
@@ -4710,9 +4696,9 @@ void CEditor::EditAddImage(const char* pFilename)
 	}
 }
 
-void CEditor::EditCreateAndAddGroup()
+void CEditor2::EditCreateAndAddGroup()
 {
-	CEditorMap::CGroup Group;
+	CEditorMap2::CGroup Group;
 	Group.m_OffsetX = 0;
 	Group.m_OffsetY = 0;
 	Group.m_ParallaxX = 100;
@@ -4725,7 +4711,7 @@ void CEditor::EditCreateAndAddGroup()
 	HistoryNewEntry("New group", aHistoryEntryDesc);
 }
 
-int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
+int CEditor2::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
@@ -4734,13 +4720,13 @@ int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 	int LyHeight = m_Map.m_aLayers[m_Map.m_GameLayerID].m_Height;
 	int LyImageID = -1;
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	int UnderGrpLyID = -1;
 	if(UnderLyID != -1)
 	{
 		dbg_assert(UnderLyID >= 0 && UnderLyID < m_Map.m_aLayers.Count(), "LyID out of bounds");
-		const CEditorMap::CLayer& TopLayer = m_Map.m_aLayers[UnderLyID];
+		const CEditorMap2::CLayer& TopLayer = m_Map.m_aLayers[UnderLyID];
 
 		if(TopLayer.IsTileLayer())
 		{
@@ -4762,9 +4748,9 @@ int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 		dbg_assert(UnderGrpLyID != -1, "Layer not found in parent group");
 	}
 
-	dbg_assert(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS, "Group is full of layers");
+	dbg_assert(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS, "Group is full of layers");
 
-	CEditorMap::CLayer& Layer = m_Map.NewTileLayer(LyWidth, LyHeight);
+	CEditorMap2::CLayer& Layer = m_Map.NewTileLayer(LyWidth, LyHeight);
 	Layer.m_ImageID = LyImageID;
 
 	const int GrpLyID = UnderGrpLyID+1;
@@ -4781,13 +4767,13 @@ int CEditor::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 	return LyID;
 }
 
-int CEditor::EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID)
+int CEditor2::EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID)
 {
 	dbg_assert(UnderLyID >= 0 && UnderLyID < m_Map.m_aLayers.Count(), "LyID out of bounds");
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap::CLayer& Layer = m_Map.NewQuadLayer();
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CLayer& Layer = m_Map.NewQuadLayer();
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	int UnderGrpLyID = -1;
 	const int ParentGroupLayerCount = Group.m_LayerCount;
@@ -4801,7 +4787,7 @@ int CEditor::EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID)
 	}
 
 	dbg_assert(UnderGrpLyID != -1, "Layer not found in parent group");
-	dbg_assert(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS, "Group is full of layers");
+	dbg_assert(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS, "Group is full of layers");
 
 	const int GrpLyID = UnderGrpLyID+1;
 	memmove(&Group.m_apLayerIDs[GrpLyID+1], &Group.m_apLayerIDs[GrpLyID],
@@ -4816,7 +4802,7 @@ int CEditor::EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID)
 	return LyID;
 }
 
-void CEditor::EditLayerChangeImage(int LayerID, int NewImageID)
+void CEditor2::EditLayerChangeImage(int LayerID, int NewImageID)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 	dbg_assert(NewImageID >= -1 && NewImageID < m_Map.m_Assets.m_ImageCount, "NewImageID out of bounds");
@@ -4837,11 +4823,11 @@ void CEditor::EditLayerChangeImage(int LayerID, int NewImageID)
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-void CEditor::EditGroupUseClipping(int GroupID, bool NewUseClipping)
+void CEditor2::EditGroupUseClipping(int GroupID, bool NewUseClipping)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 	if(Group.m_UseClipping == NewUseClipping)
 		return;
 
@@ -4858,7 +4844,7 @@ void CEditor::EditGroupUseClipping(int GroupID, bool NewUseClipping)
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-int CEditor::EditGroupOrderMove(int GroupID, int RelativePos)
+int CEditor2::EditGroupOrderMove(int GroupID, int RelativePos)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
@@ -4883,7 +4869,7 @@ int CEditor::EditGroupOrderMove(int GroupID, int RelativePos)
 	return NewGroupID;
 }
 
-int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
+int CEditor2::EditLayerOrderMove(int LayerID, int RelativePos)
 {
 	// Returns new parent group ID (or the same if it does not change)
 
@@ -4894,7 +4880,7 @@ int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 	const int GroupCount = m_Map.m_aGroups.Count();
 	for(int gi = 0; gi < GroupCount && ParentGroupID == -1; gi++)
 	{
-		const CEditorMap::CGroup& Group = m_Map.m_aGroups[gi];
+		const CEditorMap2::CGroup& Group = m_Map.m_aGroups[gi];
 
 		for(int l = 0; l < Group.m_LayerCount; l++)
 		{
@@ -4916,7 +4902,7 @@ int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 		return ParentGroupID;
 
 	const int NewPos = LayerPos + RelativePos;
-	CEditorMap::CGroup& ParentGroup = m_Map.m_aGroups[ParentGroupID];
+	CEditorMap2::CGroup& ParentGroup = m_Map.m_aGroups[ParentGroupID];
 	const bool IsGameLayer = LayerID == m_Map.m_GameLayerID;
 
 	char aHistoryEntryAction[64];
@@ -4927,10 +4913,10 @@ int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 	{
 		if(ParentGroupID > 0 && !IsGameLayer)
 		{
-			CEditorMap::CGroup& Group = m_Map.m_aGroups[ParentGroupID-1];
+			CEditorMap2::CGroup& Group = m_Map.m_aGroups[ParentGroupID-1];
 
 			// TODO: make a function GroupAddLayer?
-			if(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS)
+			if(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS)
 				Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
 
 			// squash layer from previous group
@@ -4952,10 +4938,10 @@ int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 	{
 		if(ParentGroupID < GroupCount-1 && !IsGameLayer)
 		{
-			CEditorMap::CGroup& Group = m_Map.m_aGroups[ParentGroupID+1];
+			CEditorMap2::CGroup& Group = m_Map.m_aGroups[ParentGroupID+1];
 
 			// move other layers down, put this one first
-			if(Group.m_LayerCount < CEditorMap::MAX_GROUP_LAYERS)
+			if(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS)
 			{
 				memmove(&Group.m_apLayerIDs[1], &Group.m_apLayerIDs[0],
 					sizeof(Group.m_apLayerIDs[0]) * Group.m_LayerCount);
@@ -4992,7 +4978,7 @@ int CEditor::EditLayerOrderMove(int LayerID, int RelativePos)
 	return ParentGroupID;
 }
 
-void CEditor::EditTileSelectionFlipX(int LayerID)
+void CEditor2::EditTileSelectionFlipX(int LayerID)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 
@@ -5009,7 +4995,7 @@ void CEditor::EditTileSelectionFlipX(int LayerID)
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-void CEditor::EditTileSelectionFlipY(int LayerID)
+void CEditor2::EditTileSelectionFlipY(int LayerID)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 
@@ -5026,7 +5012,7 @@ void CEditor::EditTileSelectionFlipY(int LayerID)
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-void CEditor::EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
+void CEditor2::EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 	dbg_assert(m_Map.m_aLayers[LayerID].IsTileLayer(), "Layer is not a tile layer");
@@ -5042,7 +5028,7 @@ void CEditor::EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-void CEditor::EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID)
+void CEditor2::EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 	dbg_assert(m_Map.m_aLayers[LayerID].IsTileLayer(), "Layer is not a tile layer");
@@ -5058,13 +5044,13 @@ void CEditor::EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int Pa
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-void CEditor::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
+void CEditor2::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 	dbg_assert(m_Map.m_aLayers[LayerID].IsTileLayer(), "Layer is not a tile layer");
 	dbg_assert(NewWidth > 0 && NewHeight > 0, "NewWidth, NewHeight invalid");
 
-	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
 
 	if(NewWidth == Layer.m_Width && NewHeight == Layer.m_Height)
 		return;
@@ -5108,11 +5094,11 @@ void CEditor::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-void CEditor::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition)
+void CEditor2::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 
-	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
 
 	// names are indentical, stop
 	if(str_comp(Layer.m_aName, pNewName) == 0)
@@ -5133,11 +5119,11 @@ void CEditor::EditHistCondLayerChangeName(int LayerID, const char* pNewName, boo
 	}
 }
 
-void CEditor::EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition)
+void CEditor2::EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition)
 {
 	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
 
-	CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
 
 	// colors are indentical, stop
 	if(mem_comp(&Layer.m_Color, &NewColor, sizeof(NewColor)) == 0)
@@ -5157,11 +5143,11 @@ void CEditor::EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool Hist
 	}
 }
 
-void CEditor::EditHistCondGroupChangeName(int GroupID, const char* pNewName, bool HistoryCondition)
+void CEditor2::EditHistCondGroupChangeName(int GroupID, const char* pNewName, bool HistoryCondition)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	// names are indentical, stop
 	if(str_comp(Group.m_aName, pNewName) == 0)
@@ -5182,11 +5168,11 @@ void CEditor::EditHistCondGroupChangeName(int GroupID, const char* pNewName, boo
 	}
 }
 
-void CEditor::EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY, bool HistoryCondition)
+void CEditor2::EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY, bool HistoryCondition)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 	if(NewParallaxX == Group.m_ParallaxX && NewParallaxY == Group.m_ParallaxY)
 		return;
 
@@ -5208,11 +5194,11 @@ void CEditor::EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, int
 	}
 }
 
-void CEditor::EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY, bool HistoryCondition)
+void CEditor2::EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY, bool HistoryCondition)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 	if(NewOffsetX == Group.m_OffsetX && NewOffsetY == Group.m_OffsetY)
 		return;
 
@@ -5234,11 +5220,11 @@ void CEditor::EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int New
 	}
 }
 
-void CEditor::EditHistCondGroupChangeClipX(int GroupID, int NewClipX, bool HistoryCondition)
+void CEditor2::EditHistCondGroupChangeClipX(int GroupID, int NewClipX, bool HistoryCondition)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	if(NewClipX == Group.m_ClipX)
 		return;
@@ -5262,11 +5248,11 @@ void CEditor::EditHistCondGroupChangeClipX(int GroupID, int NewClipX, bool Histo
 	}
 }
 
-void CEditor::EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool HistoryCondition)
+void CEditor2::EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool HistoryCondition)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	if(NewClipY == Group.m_ClipY)
 		return;
@@ -5291,11 +5277,11 @@ void CEditor::EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool Histo
 	}
 }
 
-void CEditor::EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, bool HistoryCondition)
+void CEditor2::EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, bool HistoryCondition)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	if(NewClipRight - Group.m_ClipX == Group.m_ClipWidth)
 		return;
@@ -5316,11 +5302,11 @@ void CEditor::EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, bo
 	}
 }
 
-void CEditor::EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom, bool HistoryCondition)
+void CEditor2::EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom, bool HistoryCondition)
 {
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap::CGroup& Group = m_Map.m_aGroups[GroupID];
+	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	if(NewClipBottom - Group.m_ClipY == Group.m_ClipHeight)
 		return;
@@ -5341,7 +5327,7 @@ void CEditor::EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom, 
 	}
 }
 
-void CEditor::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
+void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 {
 	CHistoryEntry* pEntry;
 	pEntry = m_HistoryEntryDispenser.AllocOne();
@@ -5366,7 +5352,7 @@ void CEditor::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 	m_pHistoryEntryCurrent = pEntry;
 }
 
-void CEditor::HistoryRestoreToEntry(CHistoryEntry* pEntry)
+void CEditor2::HistoryRestoreToEntry(CHistoryEntry* pEntry)
 {
 	dbg_assert(pEntry && pEntry->m_pSnap, "History entry or snapshot invalid");
 	m_Map.RestoreSnapshot(pEntry->m_pSnap);
@@ -5377,24 +5363,24 @@ void CEditor::HistoryRestoreToEntry(CHistoryEntry* pEntry)
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
 }
 
-void CEditor::HistoryUndo()
+void CEditor2::HistoryUndo()
 {
 	dbg_assert(m_pHistoryEntryCurrent != nullptr, "Current history entry is null");
 	if(m_pHistoryEntryCurrent->m_pPrev)
 		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pPrev);
 }
 
-void CEditor::HistoryRedo()
+void CEditor2::HistoryRedo()
 {
 	dbg_assert(m_pHistoryEntryCurrent != nullptr, "Current history entry is null");
 	if(m_pHistoryEntryCurrent->m_pNext)
 		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pNext);
 }
 
-const char* CEditor::GetLayerName(int LayerID)
+const char* CEditor2::GetLayerName(int LayerID)
 {
 	static char aBuff[64];
-	const CEditorMap::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	const CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
 
 	if(Layer.m_aName[0])
 	{
@@ -5411,9 +5397,9 @@ const char* CEditor::GetLayerName(int LayerID)
 	return aBuff;
 }
 
-void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
+void CEditor2::ConLoad(IConsole::IResult* pResult, void* pUserData)
 {
-	CEditor *pSelf = (CEditor *)pUserData;
+	CEditor2 *pSelf = (CEditor2 *)pUserData;
 
 	const int InputTextLen = str_length(pResult->GetString(0));
 
@@ -5428,44 +5414,44 @@ void CEditor::ConLoad(IConsole::IResult* pResult, void* pUserData)
 	pSelf->LoadMap(aMapPath);
 }
 
-void CEditor::ConShowPalette(IConsole::IResult* pResult, void* pUserData)
+void CEditor2::ConShowPalette(IConsole::IResult* pResult, void* pUserData)
 {
-	CEditor *pSelf = (CEditor *)pUserData;
+	CEditor2 *pSelf = (CEditor2 *)pUserData;
 	dbg_assert(0, "Implement this");
 }
 
-void CEditor::ConGameView(IConsole::IResult* pResult, void* pUserData)
+void CEditor2::ConGameView(IConsole::IResult* pResult, void* pUserData)
 {
-	CEditor *pSelf = (CEditor *)pUserData;
+	CEditor2 *pSelf = (CEditor2 *)pUserData;
 	pSelf->m_ConfigShowGameEntities = (pResult->GetInteger(0) > 0);
 	pSelf->m_ConfigShowExtendedTilemaps = pSelf->m_ConfigShowGameEntities;
 }
 
-void CEditor::ConShowGrid(IConsole::IResult* pResult, void* pUserData)
+void CEditor2::ConShowGrid(IConsole::IResult* pResult, void* pUserData)
 {
-	CEditor *pSelf = (CEditor *)pUserData;
+	CEditor2 *pSelf = (CEditor2 *)pUserData;
 	pSelf->m_ConfigShowGrid = (pResult->GetInteger(0) > 0);
 }
 
-void CEditor::ConUndo(IConsole::IResult* pResult, void* pUserData)
+void CEditor2::ConUndo(IConsole::IResult* pResult, void* pUserData)
 {
-	CEditor *pSelf = (CEditor *)pUserData;
+	CEditor2 *pSelf = (CEditor2 *)pUserData;
 	pSelf->HistoryUndo();
 }
 
-void CEditor::ConRedo(IConsole::IResult* pResult, void* pUserData)
+void CEditor2::ConRedo(IConsole::IResult* pResult, void* pUserData)
 {
-	CEditor *pSelf = (CEditor *)pUserData;
+	CEditor2 *pSelf = (CEditor2 *)pUserData;
 	pSelf->HistoryRedo();
 }
 
-void CEditor::ConDeleteImage(IConsole::IResult* pResult, void* pUserData)
+void CEditor2::ConDeleteImage(IConsole::IResult* pResult, void* pUserData)
 {
-	CEditor *pSelf = (CEditor *)pUserData;
+	CEditor2 *pSelf = (CEditor2 *)pUserData;
 	pSelf->EditDeleteImage(pResult->GetInteger(0));
 }
 
-void CEditor::CTileSelection::FitLayer(const CEditorMap::CLayer& TileLayer)
+void CEditor2::CTileSelection::FitLayer(const CEditorMap2::CLayer& TileLayer)
 {
 	dbg_assert(TileLayer.IsTileLayer(), "Layer is not a tile layer");
 	// if either start or end point could be inside layer
