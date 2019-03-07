@@ -37,6 +37,8 @@ CInput::CInput()
 	mem_zero(m_aInputCount, sizeof(m_aInputCount));
 	mem_zero(m_aInputState, sizeof(m_aInputState));
 
+	m_pJoystick = 0;
+
 	m_InputCounter = 1;
 	m_InputGrabbed = 0;
 	m_pClipboardText = 0;
@@ -73,7 +75,6 @@ void CInput::Init()
 		}
 	}
 
-	m_pJoystick = 0;
 	if(SDL_NumJoysticks() > 0)
 	{
 		m_pJoystick = SDL_JoystickOpen(0);
