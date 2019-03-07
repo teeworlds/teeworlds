@@ -1558,6 +1558,7 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
   set_src(TESTS GLOB src/test
     fs.cpp
     git_revision.cpp
+    storage.cpp
     str.cpp
     test.cpp
     test.h
