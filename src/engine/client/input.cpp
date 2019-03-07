@@ -64,19 +64,21 @@ void CInput::Init()
 
 	MouseModeRelative();
 
-	if (!SDL_WasInit(SDL_INIT_JOYSTICK))
+	if(!SDL_WasInit(SDL_INIT_JOYSTICK))
 	{
-		if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0) {
+		if(SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0)
+		{
 			dbg_msg("joystick", "unable to init SDL joystick: %s", SDL_GetError());
 			return;
 		}
 	}
 
 	m_pJoystick = 0;
-	if (SDL_NumJoysticks() > 0) {
+	if(SDL_NumJoysticks() > 0)
+	{
 		m_pJoystick = SDL_JoystickOpen(0);
 
-		if (!m_pJoystick) {
+		if(!m_pJoystick) {
 			dbg_msg("joystick", "Could not open 0th joystick: %s", SDL_GetError());
 			return;
 		}
@@ -86,9 +88,10 @@ void CInput::Init()
 		dbg_msg("joystick", "Number of Axes: %d", SDL_JoystickNumAxes(m_pJoystick));
 		dbg_msg("joystick", "Number of Buttons: %d", SDL_JoystickNumButtons(m_pJoystick));
 		dbg_msg("joystick", "Number of Balls: %d", SDL_JoystickNumBalls(m_pJoystick));
-	} else {
+	}
+	else
+	{
 		dbg_msg("joystick", "No joysticks found");
-		return;
 	}
 }
 
@@ -105,7 +108,8 @@ void CInput::MouseRelative(float *x, float *y)
 	float jx = 0.0f;
 	float jy = 0.0f;
 
-	if (m_pJoystick) {
+	if(m_pJoystick)
+	{
 		jx = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickX)) / 32768.0f * 50.0f;
 		jy = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickY)) / 32768.0f * 50.0f;
 	}
