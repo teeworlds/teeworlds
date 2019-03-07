@@ -16,4 +16,5 @@ public:
 };
 
 extern IEditor *CreateEditor();
+extern IEditor *CreateEditor2();
 #endif

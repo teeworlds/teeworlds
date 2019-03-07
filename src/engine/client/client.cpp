@@ -1950,7 +1950,7 @@ void CClient::Run()
 	m_FpsGraph.Init(0.0f, 120.0f);
 
 	// never start with the editor
-	g_Config.m_ClEditor = 0;
+	g_Config.m_ClEditor = 1; // TODO: remove
 
 	// process pending commands
 	m_pConsole->StoreCommands(false);
@@ -2579,7 +2579,8 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMasterServer*>(pEngineMasterServer)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMasterServer*>(pEngineMasterServer));
 
-		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateEditor());
+		//RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateEditor());
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateEditor2()); // TODO: remove
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateGameClient());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
 
