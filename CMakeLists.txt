@@ -218,6 +218,9 @@ function(set_glob VAR GLOBBING EXTS DIRECTORY) # ...
       if(GLOB_BUT_NOT_LIST)
         message(AUTHOR_WARNING "Entries only present in ${DIRECTORY}: ${GLOB_BUT_NOT_LIST}")
       endif()
+      if(NOT LIST_BUT_NOT_GLOB AND NOT GLOB_BUT_NOT_LIST)
+        message(AUTHOR_WARNING "${VAR} is not alphabetically sorted")
+      endif()
     endif()
   endif()
 
