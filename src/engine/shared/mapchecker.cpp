@@ -46,7 +46,7 @@ void CMapChecker::AddMaplist(CMapVersion *pMaplist, int Num)
 	}
 }
 
-bool CMapChecker::IsMapValid(const char *pMapName, unsigned MapCrc, unsigned MapSize)
+bool CMapChecker::IsMapValid(const char *pMapName, const SHA256_DIGEST *pMapSha256, unsigned MapCrc, unsigned MapSize)
 {
 	return true;
 	/*bool StandardMap = false;

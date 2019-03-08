@@ -86,6 +86,11 @@ public:
 		return m_DataFile.IsOpen();
 	}
 
+	virtual SHA256_DIGEST Sha256()
+	{
+		return m_DataFile.Sha256();
+	}
+
 	virtual unsigned Crc()
 	{
 		return m_DataFile.Crc();
