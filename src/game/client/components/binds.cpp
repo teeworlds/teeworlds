@@ -3,13 +3,7 @@
 #include <engine/config.h>
 #include <engine/shared/config.h>
 #include "binds.h"
-int M[4][5] =
-{
-  {10,  5, -3, 9, 0},
-  { 0, 32, 20, 1, 0},
-  { 0,  8,  0, 0, 0},
-  { 0,  0,  0, 0, 0}
-};
+
 const int CBinds::s_aaDefaultBindKeys[][2] = {
 	{KEY_F1, 0}, {KEY_F2, 0}, {KEY_TAB, 0}, {'u', 0}, {KEY_F10, 0}, {'s', CBinds::MODIFIER_CTRL},
 	{'a', 0}, {'d', 0},
@@ -371,12 +365,12 @@ void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 
 	for(unsigned j = 0; j < sizeof(s_aaDefaultBindKeys)/sizeof(int)/2; j++)
 	{
-		const int key = s_aaDefaultBindKeys[j][0];
-		const int modifier = s_aaDefaultBindKeys[j][1];
-		if(pSelf->m_aaaKeyBindings[key][modifier][0] == 0)
+		const int Key = s_aaDefaultBindKeys[j][0];
+		const int Modifier = s_aaDefaultBindKeys[j][1];
+		if(pSelf->m_aaaKeyBindings[Key][Modifier][0] == 0)
 		{
 			// explicitly unbind keys that were unbound by the user
-			str_format(aBuffer, sizeof(aBuffer), "unbind %s%s ", GetModifierName(modifier), pSelf->Input()->KeyName(key));
+			str_format(aBuffer, sizeof(aBuffer), "unbind %s%s ", GetModifierName(Modifier), pSelf->Input()->KeyName(Key));
 			pConfig->WriteLine(aBuffer);
 		}
 	}

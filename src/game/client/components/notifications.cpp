@@ -36,19 +36,19 @@ void CNotifications::RenderSoundNotification()
 	const float Width = Height*Graphics()->ScreenAspect();
 	const float ItemHeight = 20.f;
 	const float ItemWidth = 20.f;
-	// const float Spacing = 10.f; // from the edge of the screen
-	const float DisplayTime = 1.5f; // does not include FadeTime
+	const float DisplayTime = 1.5f; // includes FadeTime
 	const float FadeTime = 0.6f;
+
 	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
 
 	CUIRect Area;
 	Area.x = (Width-ItemWidth)/2.f;
-	Area.y = (Height)/5.f - (ItemHeight/2.f);
+	Area.y = (Height/5.f) - (ItemHeight/2.f);
 	Area.w = ItemWidth;
 	Area.h = ItemHeight;
 
 	float Fade = max(0.0f, m_SoundToggleTime + DisplayTime - Client()->LocalTime());
-	Fade = min(Fade, FadeTime) / FadeTime; // 0.0 ≤ Fade ≤ 1.0
+	Fade = min(1.0f, Fade / FadeTime); // 0.0 ≤ Fade ≤ 1.0
 
 	vec4 Color = (g_Config.m_SndEnable == 0) ? vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.55f) : vec4(1.f/0xff*0x2b, 1.f/0xff*0xf9, 1.f/0xff*0x2b, 0.55f);
 	Color = mix(vec4(Color.r, Color.g, Color.b, 0.0f), Color, 0.8*Fade);
