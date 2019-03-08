@@ -41,6 +41,7 @@
 #include "components/maplayers.h"
 #include "components/menus.h"
 #include "components/motd.h"
+#include "components/notifications.h"
 #include "components/particles.h"
 #include "components/players.h"
 #include "components/nameplates.h"
@@ -65,6 +66,7 @@ static CCountryFlags gs_CountryFlags;
 static CFlow gs_Flow;
 static CHud gs_Hud;
 static CDebugHud gs_DebugHud;
+static CNotifications gs_Notifications;
 static CControls gs_Controls;
 static CEffects gs_Effects;
 static CScoreboard gs_Scoreboard;
@@ -217,6 +219,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(m_pChat);
 	m_All.Add(&gs_Broadcast);
 	m_All.Add(&gs_DebugHud);
+	m_All.Add(&gs_Notifications);
 	m_All.Add(&gs_Scoreboard);
 	m_All.Add(m_pMotd);
 	m_All.Add(m_pMenus);

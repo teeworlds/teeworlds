@@ -53,7 +53,7 @@ public:
 
 private:
 	char m_aaaKeyBindings[KEY_LAST][MODIFIER_COUNT][128];
-	static const int s_aDefaultBindKeys[];
+	static const int s_aaDefaultBindKeys[][2];
 	static const char s_aaDefaultBindValues[][32];
 };
 #endif
