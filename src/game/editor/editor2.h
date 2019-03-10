@@ -17,7 +17,7 @@
 #include <game/client/components/mapimages.h>
 
 #include "ed_console.h"
-
+#include "auto_map2.h"
 
 class IStorage;
 class IGraphics;
@@ -455,6 +455,7 @@ struct CEditorMap2
 
 	struct CAssets
 	{
+		// TODO: pack some of these together
 		CImageName m_aImageNames[MAX_IMAGES];
 		u32 m_aImageNameHash[MAX_IMAGES];
 		u32 m_aImageEmbeddedCrc[MAX_IMAGES];
@@ -464,6 +465,9 @@ struct CEditorMap2
 
 		CEmbeddedFile m_aEmbeddedFile[MAX_EMBEDDED_FILES];
 		int m_EmbeddedFileCount;
+
+		array<u32> m_aAutomapTileHashID;
+		array<CTilesetMapper2> m_aAutomapTile;
 	};
 
 	// used for undo/redo
@@ -529,6 +533,8 @@ struct CEditorMap2
 	void AssetsClearEmbeddedFiles();
 	bool AssetsAddAndLoadImage(const char* pFilename); // also loads automap rules if there are any
 	void AssetsDeleteImage(int ImgID);
+	void AssetsLoadAutomapFileForImage(int ImgID);
+	void AssetsLoadMissingAutomapFiles();
 
 	CSnapshot* SaveSnapshot();
 	void RestoreSnapshot(const CSnapshot* pSnapshot);

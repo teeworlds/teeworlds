@@ -401,6 +401,7 @@ bool CEditorMap2::Load(const char* pFileName)
 	}
 
 	AssetsClearAndSetImages(aImageName, aImageInfo, aImageEmbeddedCrc, ImagesCount);
+	AssetsLoadMissingAutomapFiles();
 
 	return true;
 }
@@ -658,7 +659,11 @@ bool CEditorMap2::AssetsAddAndLoadImage(const char* pFilename)
 
 	m_Assets.m_aTextureHandle[ImgID] = TexHnd;
 	m_Assets.m_aTextureInfos[ImgID] = ImgInfo;
+
 	ed_dbg("Image '%s' loaded", aFilePath);
+
+	AssetsLoadAutomapFileForImage(ImgID);
+
 	return true;
 }
 
@@ -679,6 +684,86 @@ void CEditorMap2::AssetsDeleteImage(int ImgID)
 			m_aLayers[li].m_ImageID = -1;
 		if(m_aLayers[li].m_ImageID == SwappedID)
 			m_aLayers[li].m_ImageID = ImgID;
+	}
+}
+
+void CEditorMap2::AssetsLoadAutomapFileForImage(int ImgID)
+{
+	u32 ImgNameHash = m_Assets.m_aImageNameHash[ImgID];
+	dbg_assert(ImgNameHash != 0x0, "Image hash is invalid");
+
+	bool FoundTileMapper = false;
+	const u32* aAutomapTileHashID = m_Assets.m_aAutomapTileHashID.base_ptr();
+	const int aAutomapTileHashIDCount = m_Assets.m_aAutomapTileHashID.size();
+	for(int i = 0; i < aAutomapTileHashIDCount; i++)
+	{
+		if(aAutomapTileHashID[i] == ImgNameHash)
+		{
+			FoundTileMapper = true;
+			break;
+		}
+	}
+
+	if(FoundTileMapper)
+		return;
+
+	char aAutomapFilePath[256];
+	str_format(aAutomapFilePath, sizeof(aAutomapFilePath), "editor/automap/%s.json", m_Assets.m_aImageNames[ImgID].m_Buff);
+	IOHANDLE File = Storage()->OpenFile(aAutomapFilePath, IOFLAG_READ, IStorage::TYPE_ALL);
+	if(File)
+	{
+		int FileSize = (int)io_length(File);
+		char *pFileData = (char *)mem_alloc(FileSize, 1);
+		io_read(File, pFileData, FileSize);
+		io_close(File);
+
+		// parse json data
+		json_settings JsonSettings;
+		mem_zero(&JsonSettings, sizeof(JsonSettings));
+		char aError[256];
+		json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+		mem_free(pFileData);
+
+		if(pJsonData == 0)
+		{
+			ed_log("Error parsing json: '%s' (%s)", aError, aAutomapFilePath);
+			return;
+		}
+
+		// generate configurations
+		const json_value &rTileset = (*pJsonData)[(const char *)AutoMap::GetTypeName(AutoMap::TYPE_TILESET)];
+		if(rTileset.type == json_array)
+		{
+			// tile automapper
+			m_Assets.m_aAutomapTileHashID.add(ImgNameHash);
+			int TileMapperArrayID = m_Assets.m_aAutomapTile.add(CTilesetMapper2());
+			CTilesetMapper2& TileMapper = m_Assets.m_aAutomapTile[TileMapperArrayID];
+			TileMapper.LoadJsonRuleSets(rTileset);
+			ed_dbg("Automap file '%s' loaded (Tileset mapper)", aAutomapFilePath);
+		}
+		else
+		{
+			const json_value &rDoodads = (*pJsonData)[(const char *)AutoMap::GetTypeName(AutoMap::TYPE_DOODADS)];
+			if(rDoodads.type == json_array)
+			{
+				// doodad automapper
+				// TODO: implement this
+				//ed_dbg("Automap file '%s' loaded (Doodads mapper)", aAutomapFilePath);
+			}
+		}
+
+		// clean up
+		json_value_free(pJsonData);
+	}
+}
+
+void CEditorMap2::AssetsLoadMissingAutomapFiles()
+{
+	// TODO: this could be much better
+	const int ImgCount = m_Assets.m_ImageCount;
+	for(int i = 0; i < ImgCount; i++)
+	{
+		AssetsLoadAutomapFileForImage(i);
 	}
 }
 
