@@ -535,6 +535,7 @@ struct CEditorMap2
 	void AssetsDeleteImage(int ImgID);
 	void AssetsLoadAutomapFileForImage(int ImgID);
 	void AssetsLoadMissingAutomapFiles();
+	CTilesetMapper2* AssetsFindTilesetMapper(int ImgID);
 
 	CSnapshot* SaveSnapshot();
 	void RestoreSnapshot(const CSnapshot* pSnapshot);
@@ -922,6 +923,7 @@ class CEditor2: public IEditor
 	void EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID);
 	void EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID);
 	void EditTileLayerResize(int LayerID, int NewWidth, int NewHeight);
+	void EditTileLayerAutoMapWhole(int LayerID, int RulesetID);
 
 	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
 	void EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition);

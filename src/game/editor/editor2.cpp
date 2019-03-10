@@ -767,6 +767,29 @@ void CEditorMap2::AssetsLoadMissingAutomapFiles()
 	}
 }
 
+CTilesetMapper2* CEditorMap2::AssetsFindTilesetMapper(int ImgID)
+{
+	if(ImgID < 0)
+		return 0;
+	dbg_assert(ImgID < m_Assets.m_ImageCount, "ImgID out of bounds");
+
+	CTilesetMapper2* pMapper = 0;
+
+	const u32 ImgNameHash = m_Assets.m_aImageNameHash[ImgID];
+	const u32* aAutomapTileHashID = m_Assets.m_aAutomapTileHashID.base_ptr();
+	const int aAutomapTileHashIDCount = m_Assets.m_aAutomapTileHashID.size();
+	for(int i = 0; i < aAutomapTileHashIDCount; i++)
+	{
+		if(aAutomapTileHashID[i] == ImgNameHash)
+		{
+			pMapper = &m_Assets.m_aAutomapTile[i];
+			break;
+		}
+	}
+
+	return pMapper;
+}
+
 CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 {
 	// calculate snapshot size
@@ -3199,6 +3222,34 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 					EditHistCondLayerChangeColor(m_UiSelectedLayerID, NewColor, true);
 				}
 
+				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+
+				// label
+				DrawRect(ButtonRect, StyleColorButtonPressed);
+				DrawText(ButtonRect, Localize("Auto-map"), FontSize);
+
+				CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(SelectedLayer.m_ImageID);
+
+				if(pMapper)
+				{
+					const int RulesetCount = pMapper->RuleSetNum();
+					static CUIButton s_ButtonAutoMap[16];
+					 // TODO: find a better solution to this
+					dbg_assert(RulesetCount <= 16, "RulesetCount is too big");
+
+					for(int r = 0; r < RulesetCount; r++)
+					{
+						DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+						DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+
+						if(UiButton(ButtonRect, pMapper->GetRuleSetName(r), &s_ButtonAutoMap[r], FontSize))
+						{
+							EditTileLayerAutoMapWhole(m_UiSelectedLayerID, r);
+						}
+					}
+				}
+
 				UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 			}
 		}
@@ -5176,6 +5227,29 @@ void CEditor2::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d) > (%d, %d)",
 		OldWidth, OldHeight,
 		NewWidth, NewHeight);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor2::EditTileLayerAutoMapWhole(int LayerID, int RulesetID)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
+
+	dbg_assert(Layer.m_ImageID >= 0 && Layer.m_ImageID < m_Map.m_Assets.m_ImageCount, "ImageID out of bounds or invalid");
+
+	CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(Layer.m_ImageID);
+
+	dbg_assert(pMapper != 0, "Tileset mapper not found");
+	dbg_assert(Layer.m_aTiles.Count() == Layer.m_Width*Layer.m_Height, "Tile count does not match layer size");
+
+	pMapper->AutomapWholeLayer(Layer.m_aTiles.Data(), Layer.m_Width, Layer.m_Height, RulesetID);
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: tileset automap"),
+		LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Ruleset: %d", 0);
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
