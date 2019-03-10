@@ -3225,14 +3225,15 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-				// label
-				DrawRect(ButtonRect, StyleColorButtonPressed);
-				DrawText(ButtonRect, Localize("Auto-map"), FontSize);
-
+				// Auto map
 				CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(SelectedLayer.m_ImageID);
 
 				if(pMapper)
 				{
+					// label
+					DrawRect(ButtonRect, StyleColorButtonPressed);
+					DrawText(ButtonRect, Localize("Auto-map"), FontSize);
+
 					const int RulesetCount = pMapper->RuleSetNum();
 					static CUIButton s_ButtonAutoMap[16];
 					 // TODO: find a better solution to this
@@ -5249,7 +5250,7 @@ void CEditor2::EditTileLayerAutoMapWhole(int LayerID, int RulesetID)
 	char aHistoryEntryDesc[64];
 	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: tileset automap"),
 		LayerID);
-	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Ruleset: %d", 0);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Ruleset: %s", pMapper->GetRuleSetName(RulesetID));
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
