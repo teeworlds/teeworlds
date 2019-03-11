@@ -53,7 +53,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		return;
 
 	char aBuf[128];
-	CSwitchTeamInfo Info = { 0 };
+	CSwitchTeamInfo Info = {{0}};
 	GetSwitchTeamInfo(&Info);
 	CUIRect Button, ButtonRow, Label;
 

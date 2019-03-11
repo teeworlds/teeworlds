@@ -1,0 +1,18 @@
+os: osx
+script:
+- brew install sdl2
+- mkdir build; cd build
+- cmake -Werror=dev -DDOWNLOAD_GTEST=ON ..
+- make everything
+- make run_tests
+- make package_default
+- cd ..
+- mkdir build_debug; cd build_debug
+- cmake -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON ..
+- make run_tests
+- cd ..
+- build/teeworlds_srv shutdown
+env:
+  global:
+  - CFLAGS="-Wdeclaration-after-statement -Werror"
+  - CXXFLAGS="-Werror"

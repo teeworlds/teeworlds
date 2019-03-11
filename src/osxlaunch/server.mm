@@ -5,11 +5,11 @@
 	NSTask *task;
 	NSFileHandle *file;
 }
-- (void)listenTo: (NSTask*)t;
+- (void)listenTo: (NSTask *)t;
 @end
 
 @implementation ServerView
-- (void)listenTo: (NSTask*)t;
+- (void)listenTo: (NSTask *)t
 {
 	NSPipe *pipe;
 	task = t;
@@ -49,24 +49,20 @@ void runServer()
 {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
 	NSApp = [NSApplication sharedApplication];
-	NSBundle* mainBundle = [NSBundle mainBundle];
+	NSBundle *mainBundle = [NSBundle mainBundle];
 	NSTask *task;
 	task = [[NSTask alloc] init];
 	[task setCurrentDirectoryPath: [mainBundle resourcePath]];
 
 	// get a server config
-	NSOpenPanel* openDlg = [NSOpenPanel openPanel];
+	NSOpenPanel *openDlg = [NSOpenPanel openPanel];
 	[openDlg setCanChooseFiles:YES];
 
-	if([openDlg runModalForDirectory:nil file:nil] != NSOKButton)
+	if([openDlg runModal] != NSOKButton)
 		return;
 
-	NSArray* filenames = [openDlg filenames];
-	if([filenames count] != 1)
-		return;
-
-	NSString* filename = [filenames objectAtIndex: 0];
-	NSArray* arguments = [NSArray arrayWithObjects: @"-f", filename, nil];
+	NSString *filename = [[openDlg URL] path];
+	NSArray *arguments = [NSArray arrayWithObjects: @"-f", filename, nil];
 
 	// run server
 	NSWindow *window;
@@ -104,7 +100,7 @@ void runServer()
 	[pool release];
 }
 
-int main (int argc, char **argv)
+int main(int argc, char **argv)
 {
 	runServer();
 
