@@ -24,8 +24,8 @@ the game, including new versions, custom maps and much more.
 Originally written by Magnus Auvinen.
 
 
-Building on Linux
-=================
+Building on Linux or macOS
+==========================
 
 Installing dependencies
 -----------------------
@@ -38,6 +38,9 @@ Installing dependencies
 
     # Arch Linux (doesn't have pnglite in its repositories)
     sudo pacman -S --needed base-devel cmake freetype2 git glu python sdl2 wavpack
+
+    # macOS
+    sudo brew install cmake freetype sdl2
 
 
 Downloading repository
@@ -106,6 +109,30 @@ arrow. Wait for the compilation to finish.
 
 For subsequent builds you only have to click the button with the green arrow
 again.
+
+
+Building on Windows with MinGW
+==============================
+
+Download and install MinGW with at least the following components:
+
+- mingw-developer-toolkit-bin
+- mingw32-base-bin
+- mingw32-gcc-g++-bin
+- msys-base-bin
+
+Also install [Git](https://git-scm.com/downloads) (for downloading the source
+code), [Python](https://www.python.org/downloads/) and
+[CMake](https://cmake.org/download/).
+
+Open CMake ("CMake (cmake-gui)" in the start menu). Click "Browse Source"
+(first line) and select the directory with the Teeworlds source code. Next,
+click "Browse Build" and create a subdirectory for the build (e.g. called
+"build"). Then click "Configure". Select "MinGW Makefiles" as the generator and
+click "Finish". Wait a bit (until the progress bar is full). Then click
+"Generate".
+
+You can now build Teeworlds by executing `mingw32-make` in the build directory.
 
 
 Building with bam, guides for all operating systems
