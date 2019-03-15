@@ -48,8 +48,7 @@ void CMapChecker::AddMaplist(CMapVersion *pMaplist, int Num)
 
 bool CMapChecker::IsMapValid(const char *pMapName, const SHA256_DIGEST *pMapSha256, unsigned MapCrc, unsigned MapSize)
 {
-	return true;
-	/*bool StandardMap = false;
+	bool StandardMap = false;
 	for(CWhitelistEntry *pCurrent = m_pFirst; pCurrent; pCurrent = pCurrent->m_pNext)
 	{
 		if(str_comp(pCurrent->m_aMapName, pMapName) == 0)
@@ -60,13 +59,12 @@ bool CMapChecker::IsMapValid(const char *pMapName, const SHA256_DIGEST *pMapSha2
 		}
 	}
 
-	return !StandardMap;*/
+	return !StandardMap;
 }
 
 bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, int StorageType)
 {
-	return true;
-	/*// extract map name
+	// extract map name
 	char aMapName[MAX_MAP_LENGTH];
 	char aMapNameExt[MAX_MAP_LENGTH+4];
 	bool StandardMap = false;
@@ -101,5 +99,5 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 			break;
 	}
 
-	return !StandardMap;*/
+	return !StandardMap;
 }
