@@ -163,8 +163,8 @@ public:
 
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);
 
-	virtual void OnClientConnected(int ClientID) { OnClientConnected(ClientID, false); }
-	void OnClientConnected(int ClientID, bool Dummy);
+	virtual void OnClientConnected(int ClientID, bool AsSpec) { OnClientConnected(ClientID, false, AsSpec); }
+	void OnClientConnected(int ClientID, bool Dummy, bool AsSpec);
 	void OnClientTeamChange(int ClientID);
 	virtual void OnClientEnter(int ClientID);
 	virtual void OnClientDrop(int ClientID, const char *pReason);
@@ -173,6 +173,7 @@ public:
 
 	virtual bool IsClientReady(int ClientID) const;
 	virtual bool IsClientPlayer(int ClientID) const;
+	virtual bool IsClientSpectator(int ClientID) const;
 
 	virtual const char *GameType() const;
 	virtual const char *Version() const;
