@@ -1732,6 +1732,43 @@ int time_isxmasday()
 	return 0;
 }
 
+int time_iseasterday()
+{
+	time_t time_data_now, time_data;
+	struct tm *time_info;
+
+	time(&time_data_now);
+	time_info = localtime(&time_data_now);
+
+	// compute Easter day (Sunday) using https://en.wikipedia.org/w/index.php?title=Computus&oldid=890710285#Anonymous_Gregorian_algorithm
+	int Y = time_info->tm_year + 1900;
+	int a = Y % 19;
+	int b = Y / 100;
+	int c = Y % 100;
+	int d = b / 4;
+	int e = b % 4;
+	int f = (b + 8) / 25;
+	int g = (b - f + 1) / 3;
+	int h = (19 * a + b - d - g + 15) % 30;
+	int i = c / 4;
+	int k = c % 4;
+	int L = (32 + 2 * e + 2 * i - h - k) % 7;
+	int m = (a + 11 * h + 22 * L) / 451;
+	int month = (h + L - 7 * m + 114) / 31;
+	int day = ((h + L - 7 * m + 114) % 31) + 1;
+
+	// (now-1d ≤ easter ≤ now+2d) <=> (easter-2d ≤ now ≤ easter+1d) <=> (Good Friday ≤ now ≤ Easter Monday)
+	for(int day_offset = -1; day_offset <= 2; day_offset++)
+	{
+		time_data = time_data_now + day_offset*(60*60*24);
+		time_info = localtime(&time_data);
+
+		if(time_info->tm_mon == month-1 && time_info->tm_mday == day)
+			return 1;
+	}
+	return 0;
+}
+
 void str_append(char *dst, const char *src, int dst_size)
 {
 	int s = strlen(dst);

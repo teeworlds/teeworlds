@@ -200,6 +200,7 @@ public:
 	float m_TeamChangeTime;
 	bool m_IsXmasDay;
 	float m_LastSkinChangeTime;
+	bool m_IsEasterDay;
 
 	struct CGameInfo
 	{
@@ -255,6 +256,7 @@ public:
 	virtual int ClientVersion() const;
 	static void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
 	bool IsXmas() const;
+	bool IsEaster() const;
 
 	//
 	void DoEnterMessage(const char *pName, int ClientID, int Team);
