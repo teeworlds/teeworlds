@@ -845,20 +845,20 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 
 	for(int i = 0; i < ImageCount; i++)
 	{
-		Snap.m_aImageNames[i] = m_Assets.m_aImageNames[i];
+		mem_copy(&Snap.m_aImageNames[i], &m_Assets.m_aImageNames[i], sizeof(m_Assets.m_aImageNames[i]));
 	}
 
-	memmove(Snap.m_aImageEmbeddedCrc, m_Assets.m_aImageEmbeddedCrc,
+	mem_copy(Snap.m_aImageEmbeddedCrc, m_Assets.m_aImageEmbeddedCrc,
 		sizeof(Snap.m_aImageEmbeddedCrc[0]) * ImageCount);
 
 	for(int i = 0; i < ImageCount; i++)
 	{
-		Snap.m_aImageInfos[i] = m_Assets.m_aTextureInfos[i];
+		mem_copy(&Snap.m_aImageInfos[i], &m_Assets.m_aTextureInfos[i], sizeof(m_Assets.m_aTextureInfos[i]));
 	}
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
-		Snap.m_aGroups[gi] = m_aGroups[gi];
+		mem_copy(&Snap.m_aGroups[gi], &m_aGroups[gi], sizeof(m_aGroups[gi]));
 	}
 
 	CMapItemLayer* pCurrentLayerData = (CMapItemLayer*)(Snap.m_apLayers + Snap.m_LayerCount);
@@ -911,7 +911,7 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 	Snap.m_aEnvelopes = (CMapItemEnvelope*)pCurrentLayerData;
 	for(int ei = 0; ei < EnvelopeCount; ei++)
 	{
-		Snap.m_aEnvelopes[ei] = m_aEnvelopes[ei];
+		mem_copy(&Snap.m_aEnvelopes[ei], &m_aEnvelopes[ei], sizeof(m_aEnvelopes[ei]));
 	}
 
 	Snap.m_aTiles = (CTile*)(Snap.m_aEnvelopes + EnvelopeCount);
