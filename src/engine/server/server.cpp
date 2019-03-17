@@ -266,6 +266,7 @@ void CServer::CClient::Reset()
 	m_SnapRate = CClient::SNAPRATE_INIT;
 	m_Score = 0;
 	m_MapChunk = 0;
+	m_HasPersistentData = false;
 }
 
 CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
@@ -858,7 +859,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_REQUEST_MAP_DATA)
 		{
-			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) == 0 || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING_AS_SPEC)
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) == 0 || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING)
 			{
 				int ChunkSize = MAP_CHUNK_SIZE;
 
@@ -892,7 +893,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		}
 		else if(Msg == NETMSG_READY)
 		{
-			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && (m_aClients[ClientID].m_State == CClient::STATE_CONNECTING || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING_AS_SPEC))
+			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && (m_aClients[ClientID].m_State == CClient::STATE_CONNECTING))
 			{
 				char aAddrStr[NETADDR_MAXSTRSIZE];
 				net_addr_str(m_NetServer.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
@@ -901,9 +902,14 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				str_format(aBuf, sizeof(aBuf), "player is ready. ClientID=%x addr=%s", ClientID, aAddrStr);
 				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "server", aBuf);
 
-				bool ConnectAsSpec = m_aClients[ClientID].m_State == CClient::STATE_CONNECTING_AS_SPEC;
+				void *pPersistentData = 0;
+				if(m_aClients[ClientID].m_HasPersistentData)
+				{
+					pPersistentData = m_aClients[ClientID].m_pPersistentData;
+					m_aClients[ClientID].m_HasPersistentData = false;
+				}
 				m_aClients[ClientID].m_State = CClient::STATE_READY;
-				GameServer()->OnClientConnected(ClientID, ConnectAsSpec);
+				GameServer()->OnClientConnected(ClientID, pPersistentData);
 				SendConnectionReady(ClientID);
 			}
 		}
@@ -1281,6 +1287,14 @@ int CServer::Run()
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, SendRconLineAuthed, this);
 
+	{
+		int Size = GameServer()->PersistentClientDataSize();
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			m_aClients[i].m_pPersistentData = mem_alloc(Size, 1);
+		}
+	}
+
 	// list maps
 	m_pMapListHeap = new CHeap();
 	CSubdirCallbackUserdata Userdata;
@@ -1361,9 +1375,15 @@ int CServer::Run()
 				if(LoadMap(g_Config.m_SvMap))
 				{
 					// new map loaded
-					bool aSpecs[MAX_CLIENTS];
-					for(int c = 0; c < MAX_CLIENTS; c++)
-						aSpecs[c] = GameServer()->IsClientSpectator(c);
+
+					// ask the game to for the data it wants to persist past a map change
+					for(int i = 0; i < MAX_CLIENTS; i++)
+					{
+						if(m_aClients[i].m_State == CClient::STATE_INGAME)
+						{
+							m_aClients[i].m_HasPersistentData = GameServer()->OnClientDataPersist(i, m_aClients[i].m_pPersistentData);
+						}
+					}
 
 					GameServer()->OnShutdown();
 
@@ -1373,8 +1393,10 @@ int CServer::Run()
 							continue;
 
 						SendMap(c);
+						bool HasPersistentData = m_aClients[c].m_HasPersistentData;
 						m_aClients[c].Reset();
-						m_aClients[c].m_State = aSpecs[c] ? CClient::STATE_CONNECTING_AS_SPEC : CClient::STATE_CONNECTING;
+						m_aClients[c].m_HasPersistentData = HasPersistentData;
+						m_aClients[c].m_State = CClient::STATE_CONNECTING;
 					}
 
 					m_GameStartTime = time_get();
