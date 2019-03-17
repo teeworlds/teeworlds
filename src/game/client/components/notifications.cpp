@@ -12,7 +12,7 @@
 
 CNotifications::CNotifications()
 {
-	m_SoundToggleTime = 0.0f;
+	m_SoundToggleTime = -99.0f;
 }
 
 void CNotifications::OnConsoleInit()
