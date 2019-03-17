@@ -110,6 +110,11 @@ const char* CTilesetMapper2::GetRuleSetName(int Index) const
 
 void CTilesetMapper2::AutomapWholeLayer(CTile* aLayerTiles, int LayerWidth, int LayerHeight, int RuleSetID)
 {
+	AutomapLayerSection(aLayerTiles, 0, 0, LayerWidth, LayerHeight, LayerWidth, LayerHeight, RuleSetID);
+}
+
+void CTilesetMapper2::AutomapLayerSection(CTile* aLayerTiles, int StartTx, int StartTy, int SectionWidth, int SectionHeight, int LayerWidth, int LayerHeight, int RuleSetID)
+{
 	dbg_assert(RuleSetID >= 0 && RuleSetID < m_aRuleSets.size(), "RuleSetID out of bounds");
 
 	CRuleSet *pConf = &m_aRuleSets[RuleSetID];
@@ -121,9 +126,11 @@ void CTilesetMapper2::AutomapWholeLayer(CTile* aLayerTiles, int LayerWidth, int 
 	const int MaxIndex = LayerWidth*LayerHeight;
 
 	// auto map !
-	for(int y = 0; y < LayerHeight; y++)
+	const int EndTx = StartTx + SectionWidth;
+	const int EndTy = StartTx + SectionHeight;
+	for(int y = StartTy; y < EndTy; y++)
 	{
-		for(int x = 0; x < LayerWidth; x++)
+		for(int x = StartTx; x < EndTx; x++)
 		{
 			CTile *pTile = &(aLayerTiles[y*LayerWidth+x]);
 			if(pTile->m_Index == 0)
@@ -143,7 +150,7 @@ void CTilesetMapper2::AutomapWholeLayer(CTile* aLayerTiles, int LayerWidth, int 
 						RespectRules = false;
 					else
 					{
- 						if(pCondition->m_Value == CRuleCondition::EMPTY || pCondition->m_Value == CRuleCondition::FULL)
+						if(pCondition->m_Value == CRuleCondition::EMPTY || pCondition->m_Value == CRuleCondition::FULL)
 						{
 							if(aLayerTiles[CheckIndex].m_Index > 0 && pCondition->m_Value == CRuleCondition::EMPTY)
 								RespectRules = false;

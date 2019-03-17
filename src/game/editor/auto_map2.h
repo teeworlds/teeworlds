@@ -112,6 +112,7 @@ struct CTilesetMapper2
 
 	void LoadJsonRuleSets(const json_value &rElement);
 	void AutomapWholeLayer(CTile* aLayerTiles, int LayerWidth, int LayerHeight, int RuleSetID);
+	void AutomapLayerSection(CTile* aLayerTiles, int StartTx, int StartTy, int SectionWidth, int SectionHeight, int LayerWidth, int LayerHeight, int RuleSetID);
 
 	inline int RuleSetNum() const { return m_aRuleSets.size(); }
 	const char* GetRuleSetName(int Index) const;
