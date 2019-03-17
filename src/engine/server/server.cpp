@@ -1778,11 +1778,10 @@ int main(int argc, const char **argv) // ignore_convention
 		}
 	}
 
-	bool SkipPWGen = false;
 	if(secure_random_init() != 0)
 	{
 		dbg_msg("secure", "could not initialize secure RNG");
-		SkipPWGen = true;	// skip automatic password generation
+		return -1;
 	}
 
 	CServer *pServer = CreateServer();
@@ -1841,8 +1840,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 	pEngine->InitLogfile();
 
-	if(!SkipPWGen)
-		pServer->InitRconPasswordIfUnset();
+	pServer->InitRconPasswordIfUnset();
 
 	// run the server
 	dbg_msg("server", "starting...");
