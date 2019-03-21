@@ -1154,7 +1154,7 @@ int net_udp_recv(NETSOCKET sock, NETADDR *addr, void *data, int maxsize)
 	socklen_t fromlen;// = sizeof(sockaddrbuf);
 	int bytes = 0;
 
-	if(bytes == 0 && sock.ipv4sock >= 0)
+	if(sock.ipv4sock >= 0)
 	{
 		fromlen = sizeof(struct sockaddr_in);
 		bytes = recvfrom(sock.ipv4sock, (char*)data, maxsize, 0, (struct sockaddr *)&sockaddrbuf, &fromlen);

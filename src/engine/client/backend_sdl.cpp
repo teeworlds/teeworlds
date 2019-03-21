@@ -682,7 +682,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	*pDesktopHeight = DisplayMode.h;
 
 	// use desktop resolution as default resolution
-	if (*pWidth == 0 || *pWidth == 0)
+	if (*pWidth == 0 || *pHeight == 0)
 	{
 		*pWidth = *pDesktopWidth;
 		*pHeight = *pDesktopHeight;

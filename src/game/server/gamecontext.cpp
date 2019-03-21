@@ -1213,7 +1213,7 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		return;
 	}
-	while(*pDescription && *pDescription == ' ')
+	while(*pDescription == ' ')
 		pDescription++;
 	if(str_length(pDescription) >= VOTE_DESC_LENGTH || *pDescription == 0)
 	{
