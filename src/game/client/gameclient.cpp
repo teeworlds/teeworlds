@@ -1496,7 +1496,7 @@ void CGameClient::SendReadyChange()
 void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
-	if(pClient->m_LocalClientID == -1)
+	if(pClient->Client()->State() != IClient::STATE_ONLINE || pClient->m_LocalClientID == -1)
 		return;
 	CMenus::CSwitchTeamInfo Info;
 	pClient->m_pMenus->GetSwitchTeamInfo(&Info);
@@ -1507,17 +1507,22 @@ void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
 			pClient->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", Info.m_aNotification);
 		return;
 	}
-	((CGameClient*)pUserData)->SendSwitchTeam(Team);
+	pClient->SendSwitchTeam(Team);
 }
 
 void CGameClient::ConKill(IConsole::IResult *pResult, void *pUserData)
 {
-	((CGameClient*)pUserData)->SendKill();
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	if(pClient->Client()->State() == IClient::STATE_ONLINE)
+		pClient->SendKill();
 }
 
 void CGameClient::ConReadyChange(IConsole::IResult *pResult, void *pUserData)
 {
-	((CGameClient*)pUserData)->SendReadyChange();
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	if(pClient->Client()->State() == IClient::STATE_ONLINE)
+		pClient->SendReadyChange();
+}
 }
 
 void CGameClient::ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
@@ -1535,6 +1540,9 @@ void CGameClient::ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserD
 {
 	pfnCallback(pResult, pCallbackUserData);
 	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	if(pClient->Client()->State() != IClient::STATE_ONLINE)
+		return;
+
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(pClient->m_aClients[i].m_Active)
