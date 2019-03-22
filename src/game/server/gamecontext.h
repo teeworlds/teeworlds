@@ -119,6 +119,8 @@ public:
 
 		VOTE_TIME=25,
 		VOTE_CANCEL_TIME = 10,
+
+		MIN_SKINCHANGE_CLIENTVERSION = 0x0703,
 	};
 	class CHeap *m_pVoteOptionHeap;
 	CVoteOptionServer *m_pVoteOptionFirst;
@@ -139,6 +141,7 @@ public:
 	void SendWeaponPickup(int ClientID, int Weapon);
 	void SendMotd(int ClientID);
 	void SendSettings(int ClientID);
+	void SendSkinChange(int ClientID);
 
 	void SendGameMsg(int GameMsgID, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);

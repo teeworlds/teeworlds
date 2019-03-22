@@ -59,6 +59,7 @@ class CGameClient : public IGameClient
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
+	static void ConchainSkinChange(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
@@ -197,6 +198,7 @@ public:
 	bool m_MuteServerBroadcast;
 	float m_TeamChangeTime;
 	bool m_IsXmasDay;
+	float m_LastSkinChangeTime;
 
 	struct CGameInfo
 	{
@@ -265,6 +267,7 @@ public:
 	void SendStartInfo();
 	void SendKill();
 	void SendReadyChange();
+	void SendSkinChange();
 
 	// pointers to all systems
 	class CGameConsole *m_pGameConsole;

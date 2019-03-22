@@ -246,6 +246,25 @@ void CGameClient::OnConsoleInit()
 	Console()->Chain("add_friend", ConchainFriendUpdate, this);
 	Console()->Chain("remove_friend", ConchainFriendUpdate, this);
 	Console()->Chain("cl_show_xmas_hats", ConchainXmasHatUpdate, this);
+	Console()->Chain("player_color_body", ConchainSkinChange, this);
+	Console()->Chain("player_color_marking", ConchainSkinChange, this);
+	Console()->Chain("player_color_decoration", ConchainSkinChange, this);
+	Console()->Chain("player_color_hands", ConchainSkinChange, this);
+	Console()->Chain("player_color_feet", ConchainSkinChange, this);
+	Console()->Chain("player_color_eyes", ConchainSkinChange, this);
+	Console()->Chain("player_use_custom_color_body", ConchainSkinChange, this);
+	Console()->Chain("player_use_custom_color_marking", ConchainSkinChange, this);
+	Console()->Chain("player_use_custom_color_decoration", ConchainSkinChange, this);
+	Console()->Chain("player_use_custom_color_hands", ConchainSkinChange, this);
+	Console()->Chain("player_use_custom_color_feet", ConchainSkinChange, this);
+	Console()->Chain("player_use_custom_color_eyes", ConchainSkinChange, this);
+	Console()->Chain("player_skin", ConchainSkinChange, this);
+	Console()->Chain("player_skin_body", ConchainSkinChange, this);
+	Console()->Chain("player_skin_marking", ConchainSkinChange, this);
+	Console()->Chain("player_skin_decoration", ConchainSkinChange, this);
+	Console()->Chain("player_skin_hands", ConchainSkinChange, this);
+	Console()->Chain("player_skin_feet", ConchainSkinChange, this);
+	Console()->Chain("player_skin_eyes", ConchainSkinChange, this);
 
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->m_pClient = this;
@@ -384,6 +403,7 @@ void CGameClient::OnReset()
 	m_LocalClientID = -1;
 	m_TeamCooldownTick = 0;
 	m_TeamChangeTime = 0.0f;
+	m_LastSkinChangeTime = Client()->LocalTime();
 	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 	m_DemoSpecMode = SPEC_FREEVIEW;
 	m_DemoSpecID = -1;
@@ -715,6 +735,26 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]--;
 
 		m_aClients[pMsg->m_ClientID].Reset(this, pMsg->m_ClientID);
+	}
+	else if(MsgId == NETMSGTYPE_SV_SKINCHANGE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		Client()->RecordGameMessage(false);
+		CNetMsg_Sv_SkinChange *pMsg = (CNetMsg_Sv_SkinChange *)pRawMsg;
+
+		if(!m_aClients[pMsg->m_ClientID].m_Active)
+		{
+			if(g_Config.m_Debug)
+				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", "invalid skin info");
+			return;
+		}
+
+		for(int i = 0; i < 6; i++)
+		{
+			str_copy(m_aClients[pMsg->m_ClientID].m_aaSkinPartNames[i], pMsg->m_apSkinPartNames[i], 24);
+			m_aClients[pMsg->m_ClientID].m_aUseCustomColors[i] = pMsg->m_aUseCustomColors[i];
+			m_aClients[pMsg->m_ClientID].m_aSkinPartColors[i] = pMsg->m_aSkinPartColors[i];
+		}
+		m_aClients[pMsg->m_ClientID].UpdateRenderInfo(this, pMsg->m_ClientID, true);
 	}
 	else if(MsgId == NETMSGTYPE_SV_GAMEINFO && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
@@ -1493,6 +1533,19 @@ void CGameClient::SendReadyChange()
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
+void CGameClient::SendSkinChange()
+{
+	CNetMsg_Cl_SkinChange Msg;
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[p];
+		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[p];
+		Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[p];
+	}
+	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD|MSGFLAG_FLUSH);
+	m_LastSkinChangeTime = Client()->LocalTime();
+}
+
 void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
@@ -1523,6 +1576,13 @@ void CGameClient::ConReadyChange(IConsole::IResult *pResult, void *pUserData)
 	if(pClient->Client()->State() == IClient::STATE_ONLINE)
 		pClient->SendReadyChange();
 }
+
+void CGameClient::ConchainSkinChange(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	if(pClient->Client()->State() == IClient::STATE_ONLINE && pResult->NumArguments())
+		pClient->SendSkinChange();
 }
 
 void CGameClient::ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

@@ -52,7 +52,6 @@ CMenus::CMenus()
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
 	m_NeedRestartPlayer = false;
-	m_NeedRestartTee = false;
 	m_TeePartSelected = SKINPART_BODY;
 	m_aSaveSkinName[0] = 0;
 	m_RefreshSkinSelector = true;
@@ -61,6 +60,7 @@ CMenus::CMenus()
 	m_SeekBarActivatedTime = 0;
 	m_SeekBarActive = true;
 	m_UseMouseButtons = true;
+	m_SkinModified = false;
 
 	SetMenuPage(PAGE_START);
 	m_MenuPageOld = PAGE_START;
@@ -2429,11 +2429,20 @@ void CMenus::SetActive(bool Active)
 		if(Client()->State() == IClient::STATE_ONLINE)
 		{
 			m_pClient->OnRelease();
+			if(Client()->State() == IClient::STATE_ONLINE && m_SkinModified)
+			{
+				m_SkinModified = false;
+				m_pClient->SendSkinChange();
+			}
 		}
 	}
-	else if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	else
 	{
-		m_pClient->OnRelease();
+		m_SkinModified = false;
+		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		{
+			m_pClient->OnRelease();
+		}
 	}
 }
 

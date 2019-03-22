@@ -170,7 +170,10 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 	MainView.HSplitTop(ButtonHeight, &Button, &MainView);
 	static int s_CustomColors = 0;
 	if(DoButton_CheckBox(&s_CustomColors, Localize("Custom colors"), *CSkins::ms_apUCCVariables[m_TeePartSelected], &Button))
+	{
 		*CSkins::ms_apUCCVariables[m_TeePartSelected] ^= 1;
+		m_SkinModified = true;
+	}
 
 	if(!(*CSkins::ms_apUCCVariables[m_TeePartSelected]))
 		return;
@@ -404,6 +407,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 		}
 		if(UseAlpha)
 			g_Config.m_PlayerColorMarking = (Alp << 24) + NewVal;
+		m_SkinModified = true;
 	}
 }
 
@@ -477,6 +481,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 				*CSkins::ms_apUCCVariables[p] = m_pSelectedSkin->m_aUseCustomColors[p];
 				*CSkins::ms_apColorVariables[p] = m_pSelectedSkin->m_aPartColors[p];
 			}
+			m_SkinModified = true;
 		}
 	}
 	OldSelected = NewSelected;
@@ -560,6 +565,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
 			mem_copy(CSkins::ms_apSkinVariables[m_TeePartSelected], s->m_aName, 24);
 			g_Config.m_PlayerSkin[0] = 0;
+			m_SkinModified = true;
 		}
 	}
 	OldSelected = NewSelected;
@@ -1409,7 +1415,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		else
 			s_CustomSkinMenu = true;
 	}
-	m_NeedRestartTee = str_comp(g_Config.m_PlayerSkin, s_aPlayerSkin);
 }
 
 //typedef void (*pfnAssignFuncCallback)(CConfiguration *pConfig, int Value);
@@ -1990,7 +1995,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 	MainView.HSplitBottom(32.0f, 0, &MainView);
 
 	// reset warning
-	bool NeedReconnect = (m_NeedRestartPlayer || m_NeedRestartTee) && this->Client()->State() == IClient::STATE_ONLINE;
+	bool NeedReconnect = (m_NeedRestartPlayer || (m_SkinModified && m_pClient->m_LastSkinChangeTime + 6.0f > Client()->LocalTime())) && this->Client()->State() == IClient::STATE_ONLINE;
 	if(m_NeedRestartGraphics || m_NeedRestartSound || NeedReconnect)
 	{
 		// background
@@ -2004,8 +2009,17 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RestartWarning.y += 2.0f;
 		if(m_NeedRestartGraphics || m_NeedRestartSound)
 			UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
-		else if(NeedReconnect)
-			UI()->DoLabel(&RestartWarning, Localize("You must reconnect to change identity."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
+		else if(Client()->State() == IClient::STATE_ONLINE)
+		{
+			if(m_NeedRestartPlayer)
+				UI()->DoLabel(&RestartWarning, Localize("You must reconnect to change identity."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
+			else if(m_SkinModified)
+			{
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf), Localize("You have to wait %1.f seconds to change identity."), m_pClient->m_LastSkinChangeTime+6.5f - Client()->LocalTime());
+				UI()->DoLabel(&RestartWarning, aBuf, RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
+			}
+		}
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 

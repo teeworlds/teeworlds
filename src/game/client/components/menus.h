@@ -297,6 +297,7 @@ private:
 	vec2 m_PrevMousePos;
 	bool m_PopupActive;
 	int m_ActiveListBox;
+	bool m_SkinModified;
 
 	// images
 	struct CMenuImage
@@ -371,7 +372,6 @@ private:
 
 	// for settings
 	bool m_NeedRestartPlayer;
-	bool m_NeedRestartTee;
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
 	int m_TeePartSelected;

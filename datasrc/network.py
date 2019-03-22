@@ -334,6 +334,13 @@ Messages = [
 		NetBool("m_Silent"),
 	]),
 
+	NetMessage("Sv_SkinChange", [
+		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
+		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aUseCustomColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+	]),
+
 	NetMessage("Sv_GameInfo", [
 		NetFlag("m_GameFlags", GameFlags),
 		
@@ -385,6 +392,12 @@ Messages = [
 		NetStringStrict("m_pName"),
 		NetStringStrict("m_pClan"),
 		NetIntAny("m_Country"),
+		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aUseCustomColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+	]),
+
+	NetMessage("Cl_SkinChange", [
 		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
