@@ -1,4 +1,3 @@
-import copy
 from datatypes import *
 
 class Sound(Struct):

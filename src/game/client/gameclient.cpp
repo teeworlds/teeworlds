@@ -93,19 +93,27 @@ int CGameClient::ClientVersion() const { return CLIENT_VERSION; }
 const char *CGameClient::GetItemName(int Type) const { return m_NetObjHandler.GetObjName(Type); }
 bool CGameClient::IsXmas() const { return g_Config.m_ClShowXmasHats == 2 || (g_Config.m_ClShowXmasHats == 1 && m_IsXmasDay); }
 
-const char *CGameClient::GetTeamName(int Team, bool Teamplay) const
+enum
+{
+	STR_TEAM_GAME,
+	STR_TEAM_RED,
+	STR_TEAM_BLUE,
+	STR_TEAM_SPECTATORS,
+};
+
+static int GetStrTeam(int Team, bool Teamplay)
 {
 	if(Teamplay)
 	{
 		if(Team == TEAM_RED)
-			return Localize("red team", "'X joined the <red team>' (server message)");
+			return STR_TEAM_RED;
 		else if(Team == TEAM_BLUE)
-			return Localize("blue team", "'X joined the <blue team>' (server message)");
+			return STR_TEAM_BLUE;
 	}
 	else if(Team == 0)
-		return Localize("game", "'X joined the <game>' (server message)");
+		return STR_TEAM_GAME;
 
-	return Localize("spectators", "'X joined the <spectators>' (server message)");
+	return STR_TEAM_SPECTATORS;
 }
 
 void CGameClient::GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName)
@@ -562,6 +570,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 		// handle special messages
 		char aBuf[256];
+		bool TeamPlay = m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS;
 		if(gs_GameMsgList[GameMsgID].m_Action == DO_SPECIAL)
 		{
 			switch(GameMsgID)
@@ -577,12 +586,30 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_RETURN);
 				break;
 			case GAMEMSG_TEAM_ALL:
-				str_format(aBuf, sizeof(aBuf), Localize("All players were moved to the %s"), GetTeamName(aParaI[0], m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
-				m_pBroadcast->DoBroadcast(aBuf);
+				{
+					const char *pMsg;
+					switch(GetStrTeam(aParaI[0], TeamPlay))
+					{
+					case STR_TEAM_GAME: pMsg = Localize("All players were moved to the game"); break;
+					case STR_TEAM_RED: pMsg = Localize("All players were moved to the red team"); break;
+					case STR_TEAM_BLUE: pMsg = Localize("All players were moved to the blue team"); break;
+					case STR_TEAM_SPECTATORS: pMsg = Localize("All players were moved to the spectators"); break;
+					}
+					m_pBroadcast->DoBroadcast(pMsg);
+				}
 				break;
 			case GAMEMSG_TEAM_BALANCE_VICTIM:
-				str_format(aBuf, sizeof(aBuf), Localize("You were moved to %s due to team balancing"), GetTeamName(aParaI[0], m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
-				m_pBroadcast->DoBroadcast(aBuf);
+				{
+					const char *pMsg;
+					switch(GetStrTeam(aParaI[0], TeamPlay))
+					{
+					case STR_TEAM_GAME: pMsg = Localize("You were moved to the game due to team balancing"); break;
+					case STR_TEAM_RED: pMsg = Localize("You were moved to the red team due to team balancing"); break;
+					case STR_TEAM_BLUE: pMsg = Localize("You were moved to the blue team due to team balancing"); break;
+					case STR_TEAM_SPECTATORS: pMsg = Localize("You were moved to the spectators due to team balancing"); break;
+					}
+					m_pBroadcast->DoBroadcast(pMsg);
+				}
 				break;
 			case GAMEMSG_CTF_GRAB:
 				if(m_SuppressEvents)
@@ -601,12 +628,29 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				char aLabel[64];
 				GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, m_aClients[ClientID].m_aName);
 
-				if(aParaI[2] <= 60*Client()->GameTickSpeed())
-					str_format(aBuf, sizeof(aBuf), Localize("The %s was captured by '%s' (%.2f seconds)"), aParaI[0] ? Localize("blue flag") : Localize("red flag"),
-						aLabel, aParaI[2]/(float)Client()->GameTickSpeed());
+				float Time = aParaI[2] / (float)Client()->GameTickSpeed();
+				if(Time <= 60)
+				{
+					if(aParaI[0])
+					{
+						str_format(aBuf, sizeof(aBuf), Localize("The blue flag was captured by '%s' (%.2f seconds)"), aLabel, Time);
+					}
+					else
+					{
+						str_format(aBuf, sizeof(aBuf), Localize("The red flag was captured by '%s' (%.2f seconds)"), aLabel, Time);
+					}
+				}
 				else
-					str_format(aBuf, sizeof(aBuf), Localize("The %s was captured by '%s'"), aParaI[0] ? Localize("blue flag") : Localize("red flag"),
-						aLabel);
+				{
+					if(aParaI[0])
+					{
+						str_format(aBuf, sizeof(aBuf), Localize("The blue flag was captured by '%s'"), aLabel);
+					}
+					else
+					{
+						str_format(aBuf, sizeof(aBuf), Localize("The red flag was captured by '%s'"), aLabel);
+					}
+				}
 				m_pChat->AddLine(-1, 0, aBuf);
 			}
 			return;
@@ -1477,7 +1521,13 @@ void CGameClient::DoEnterMessage(const char *pName, int ClientID, int Team)
 {
 	char aBuf[128], aLabel[64];
 	GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, pName);
-	str_format(aBuf, sizeof(aBuf), Localize("'%s' entered and joined the %s"), aLabel, GetTeamName(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
+	switch(GetStrTeam(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS))
+	{
+	case STR_TEAM_GAME: str_format(aBuf, sizeof(aBuf), Localize("'%s' entered and joined the game"), aLabel); break;
+	case STR_TEAM_RED: str_format(aBuf, sizeof(aBuf), Localize("'%s' entered and joined the red team"), aLabel); break;
+	case STR_TEAM_BLUE: str_format(aBuf, sizeof(aBuf), Localize("'%s' entered and joined the blue team"), aLabel); break;
+	case STR_TEAM_SPECTATORS: str_format(aBuf, sizeof(aBuf), Localize("'%s' entered and joined the spectators"), aLabel); break;
+	}
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 
@@ -1495,7 +1545,15 @@ void CGameClient::DoLeaveMessage(const char *pName, int ClientID, const char *pR
 void CGameClient::DoTeamChangeMessage(const char *pName, int ClientID, int Team)
 {
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), Localize("'%2d: %s' joined the %s"), ClientID, g_Config.m_ClShowsocial ? pName : "", GetTeamName(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS));
+	char aLabel[64];
+	GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, pName);
+	switch(GetStrTeam(Team, m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS))
+	{
+	case STR_TEAM_GAME: str_format(aBuf, sizeof(aBuf), Localize("'%s' joined the game"), aLabel); break;
+	case STR_TEAM_RED: str_format(aBuf, sizeof(aBuf), Localize("'%s' joined the red team"), aLabel); break;
+	case STR_TEAM_BLUE: str_format(aBuf, sizeof(aBuf), Localize("'%s' joined the blue team"), aLabel); break;
+	case STR_TEAM_SPECTATORS: str_format(aBuf, sizeof(aBuf), Localize("'%s' joined the spectators"), aLabel); break;
+	}
 	m_pChat->AddLine(-1, 0, aBuf);
 }
 

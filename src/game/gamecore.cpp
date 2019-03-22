@@ -172,7 +172,6 @@ void CCharacterCore::Tick(bool UseInput)
 	{
 		m_HookState = HOOK_RETRACTED;
 		//m_TriggeredEvents |= COREEVENTFLAG_HOOK_RETRACT;
-		m_HookState = HOOK_RETRACTED;
 	}
 	else if(m_HookState == HOOK_FLYING)
 	{
@@ -350,12 +349,13 @@ void CCharacterCore::Move()
 	if(!m_pWorld)
 		return;
 
+	float PhysSize = 28.0f;
 	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
 
 	m_Vel.x = m_Vel.x*RampValue;
 
 	vec2 NewPos = m_Pos;
-	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(28.0f, 28.0f), 0);
+	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(PhysSize, PhysSize), 0);
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 
@@ -375,7 +375,7 @@ void CCharacterCore::Move()
 				if(!pCharCore || pCharCore == this)
 					continue;
 				float D = distance(Pos, pCharCore->m_Pos);
-				if(D < 28.0f && D > 0.0f)
+				if(D < PhysSize && D > 0.0f)
 				{
 					if(a > 0.0f)
 						m_Pos = LastPos;

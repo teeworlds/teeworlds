@@ -252,7 +252,6 @@ public:
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;
 	virtual int ClientVersion() const;
-	const char *GetTeamName(int Team, bool Teamplay) const;
 	static void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
 	bool IsXmas() const;
 

@@ -21,9 +21,8 @@ void CHeap::NewChunk()
 	pChunk->m_pMemory = (char*)(pChunk+1);
 	pChunk->m_pCurrent = pChunk->m_pMemory;
 	pChunk->m_pEnd = pChunk->m_pMemory + CHUNK_SIZE;
-	pChunk->m_pNext = (CChunk *)0x0;
-
 	pChunk->m_pNext = m_pCurrent;
+
 	m_pCurrent = pChunk;
 }
 
