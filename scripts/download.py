@@ -20,7 +20,8 @@ def unzip(filename, where):
 	return z.namelist()[0]
 
 def downloadAll(targets):
-	url = "https://github.com/teeworlds/teeworlds-libs/archive/master.zip"
+	version = "4bf6dbc8c9f9b2fa89b2b5be1928f5e85bca01e6"
+	url = "https://github.com/teeworlds/teeworlds-libs/archive/{}.zip".format(version)
 
 	# download and unzip
 	src_package_libs = twlib.fetch_file(url)
@@ -31,7 +32,7 @@ def downloadAll(targets):
 	if not libs_dir:
 		print("couldn't unzip libs")
 		sys.exit(-1)
-	libs_dir = "teeworlds-libs-master"
+	libs_dir = "teeworlds-libs-{}".format(version)
 
 	if "sdl" in targets:
 		copy_tree(libs_dir + "/sdl/", "other/sdl/")

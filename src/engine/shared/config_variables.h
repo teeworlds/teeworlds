@@ -64,6 +64,9 @@ MACRO_CONFIG_INT(GfxUseX11XRandRWM, gfx_use_x11xrandr_wm, 1, 0, 1, CFGFLAG_SAVE|
 MACRO_CONFIG_INT(InpGrab, inp_grab, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Disable OS mouse settings such as mouse acceleration, use raw mouse input mode")
 MACRO_CONFIG_INT(InpMousesens, inp_mousesens, 100, 5, 100000, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Ingame mouse sensitivity")
 
+MACRO_CONFIG_INT(JoystickX, joystick_x, 0, 0, 6, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Joystick Axis that controls X axis of mouse")
+MACRO_CONFIG_INT(JoystickY, joystick_y, 1, 0, 6, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Joystick Axis that controls Y axis of mouse")
+
 MACRO_CONFIG_STR(SvName, sv_name, 128, "unnamed server", CFGFLAG_SAVE|CFGFLAG_SERVER, "Server name")
 MACRO_CONFIG_STR(SvHostname, sv_hostname, 128, "", CFGFLAG_SAVE|CFGFLAG_SERVER, "Server hostname")
 MACRO_CONFIG_STR(Bindaddr, bindaddr, 128, "", CFGFLAG_SAVE|CFGFLAG_CLIENT|CFGFLAG_SERVER|CFGFLAG_MASTER, "Address to bind the client/server to")

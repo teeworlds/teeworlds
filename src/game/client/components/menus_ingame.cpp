@@ -53,7 +53,7 @@ void CMenus::RenderGame(CUIRect MainView)
 		return;
 
 	char aBuf[128];
-	CSwitchTeamInfo Info = { 0 };
+	CSwitchTeamInfo Info = {{0}};
 	GetSwitchTeamInfo(&Info);
 	CUIRect Button, ButtonRow, Label;
 
@@ -733,7 +733,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			// call vote
 			static CButtonContainer s_CallVoteButton;
 			if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &Button) || doCallVote)
+			{
 				HandleCallvote(s_ControlPage, false);
+				m_aCallvoteReason[0] = 0;
+			}
 		}
 		else if (!Authed)
 		{
@@ -754,7 +757,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			Bottom.VSplitLeft(120.0f, &Button, &Bottom);
 			static CButtonContainer s_ForceVoteButton;
 			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
+			{
 				HandleCallvote(s_ControlPage, true);
+				m_aCallvoteReason[0] = 0;
+			}
 
 			if(s_ControlPage == 0)
 			{

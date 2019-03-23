@@ -657,7 +657,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	m_NumScreens = SDL_GetNumVideoDisplays();
 	if(m_NumScreens > 0)
 	{
-		clamp(*Screen, 0, m_NumScreens-1);
+		*Screen = clamp(*Screen, 0, m_NumScreens-1);
 		if(SDL_GetDisplayBounds(*Screen, &ScreenPos) != 0)
 		{
 			dbg_msg("gfx", "unable to retrieve screen information: %s", SDL_GetError());
@@ -682,7 +682,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	*pDesktopHeight = DisplayMode.h;
 
 	// use desktop resolution as default resolution
-	if (*pWidth == 0 || *pWidth == 0)
+	if (*pWidth == 0 || *pHeight == 0)
 	{
 		*pWidth = *pDesktopWidth;
 		*pHeight = *pDesktopHeight;

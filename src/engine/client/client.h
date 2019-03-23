@@ -3,6 +3,8 @@
 #ifndef ENGINE_CLIENT_CLIENT_H
 #define ENGINE_CLIENT_CLIENT_H
 
+#include <base/hash.h>
+
 class CGraph
 {
 public:
@@ -114,6 +116,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	//
 	char m_aCurrentMap[256];
+	SHA256_DIGEST m_CurrentMapSha256;
 	unsigned m_CurrentMapCrc;
 
 	//
@@ -126,6 +129,8 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	int m_MapdownloadChunk;
 	int m_MapdownloadChunkNum;
 	int m_MapDownloadChunkSize;
+	SHA256_DIGEST m_MapdownloadSha256;
+	bool m_MapdownloadSha256Present;
 	int m_MapdownloadCrc;
 	int m_MapdownloadAmount;
 	int m_MapdownloadTotalsize;
@@ -252,8 +257,8 @@ public:
 
 	virtual const char *ErrorString() const;
 
-	const char *LoadMap(const char *pName, const char *pFilename, unsigned WantedCrc);
-	const char *LoadMapSearch(const char *pMapName, int WantedCrc);
+	const char *LoadMap(const char *pName, const char *pFilename, const SHA256_DIGEST *pWantedSha256, unsigned WantedCrc);
+	const char *LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pWantedSha256, int WantedCrc);
 
 	int UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken);
 	void ProcessConnlessPacket(CNetChunk *pPacket);

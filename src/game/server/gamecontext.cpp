@@ -279,6 +279,18 @@ void CGameContext::SendSettings(int ClientID)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
+void CGameContext::SendSkinChange(int ClientID)
+{
+	CNetMsg_Sv_SkinChange Msg;
+	Msg.m_ClientID = ClientID;
+	for(int p = 0; p < 6; p++)
+	{
+		Msg.m_apSkinPartNames[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aaSkinPartNames[p];
+		Msg.m_aUseCustomColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aUseCustomColors[p];
+		Msg.m_aSkinPartColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartColors[p];
+	}
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
+}
 
 void CGameContext::SendGameMsg(int GameMsgID, int ClientID)
 {
@@ -656,9 +668,9 @@ void CGameContext::OnClientEnter(int ClientID)
 	}
 }
 
-void CGameContext::OnClientConnected(int ClientID, bool Dummy)
+void CGameContext::OnClientConnected(int ClientID, bool Dummy, bool AsSpec)
 {
-	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, Dummy);
+	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, Dummy, AsSpec);
 
 	if(Dummy)
 		return;
@@ -980,6 +992,30 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			pPlayer->m_LastReadyChange = Server()->Tick();
 			m_pController->OnPlayerReadyChange(pPlayer);
 		}
+		else if(MsgID == NETMSGTYPE_CL_SKINCHANGE)
+		{
+			if(pPlayer->m_LastChangeInfo && pPlayer->m_LastChangeInfo+Server()->TickSpeed()*5 > Server()->Tick())
+				return;
+
+			pPlayer->m_LastChangeInfo = Server()->Tick();
+			CNetMsg_Cl_SkinChange *pMsg = (CNetMsg_Cl_SkinChange *)pRawMsg;
+
+			for(int p = 0; p < 6; p++)
+			{
+				str_copy(pPlayer->m_TeeInfos.m_aaSkinPartNames[p], pMsg->m_apSkinPartNames[p], 24);
+				pPlayer->m_TeeInfos.m_aUseCustomColors[p] = pMsg->m_aUseCustomColors[p];
+				pPlayer->m_TeeInfos.m_aSkinPartColors[p] = pMsg->m_aSkinPartColors[p];
+			}
+
+			// update all clients
+			for(int i = 0; i < MAX_CLIENTS; ++i)
+			{
+				if(!m_apPlayers[i] || (!Server()->ClientIngame(i) && !m_apPlayers[i]->IsDummy()) || Server()->GetClientVersion(i) < MIN_SKINCHANGE_CLIENTVERSION)
+					continue;
+
+				SendSkinChange(i);
+			}
+		}
 	}
 	else
 	{
@@ -1213,7 +1249,7 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		return;
 	}
-	while(*pDescription && *pDescription == ' ')
+	while(*pDescription == ' ')
 		pDescription++;
 	if(str_length(pDescription) >= VOTE_DESC_LENGTH || *pDescription == 0)
 	{
@@ -1531,7 +1567,12 @@ bool CGameContext::IsClientReady(int ClientID) const
 
 bool CGameContext::IsClientPlayer(int ClientID) const
 {
-	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS ? false : true;
+	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->GetTeam() != TEAM_SPECTATORS;
+}
+
+bool CGameContext::IsClientSpectator(int ClientID) const
+{
+	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS;
 }
 
 const char *CGameContext::GameType() const { return m_pController && m_pController->GetGameType() ? m_pController->GetGameType() : ""; }

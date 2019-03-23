@@ -77,11 +77,7 @@ void CNetTokenManager::GenerateSeed()
 	static const NETADDR NullAddr = { 0 };
 	m_PrevSeed = m_Seed;
 
-	for(int i = 0; i < 2; i++)
-	{
-		m_Seed <<= 32;
-		m_Seed ^= random_int();
-	}
+	secure_random_fill(&m_Seed, sizeof(m_Seed));
 
 	m_PrevGlobalToken = m_GlobalToken;
 	m_GlobalToken = GenerateToken(&NullAddr);

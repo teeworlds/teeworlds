@@ -92,6 +92,7 @@ public:
 			STATE_EMPTY = 0,
 			STATE_AUTH,
 			STATE_CONNECTING,
+			STATE_CONNECTING_AS_SPEC,
 			STATE_READY,
 			STATE_INGAME,
 
@@ -163,6 +164,7 @@ public:
 		MAP_CHUNK_SIZE=NET_MAX_PAYLOAD-NET_MAX_CHUNKHEADERSIZE-4, // msg type
 	};
 	char m_aCurrentMap[64];
+	SHA256_DIGEST m_CurrentMapSha256;
 	unsigned m_CurrentMapCrc;
 	unsigned char *m_pCurrentMapData;
 	int m_CurrentMapSize;
@@ -217,6 +219,7 @@ public:
 	bool IsBanned(int ClientID);
 	int GetClientInfo(int ClientID, CClientInfo *pInfo) const;
 	void GetClientAddr(int ClientID, char *pAddrStr, int Size) const;
+	int GetClientVersion(int ClientID) const;
 	const char *ClientName(int ClientID) const;
 	const char *ClientClan(int ClientID) const;
 	int ClientCountry(int ClientID) const;

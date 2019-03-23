@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/hash_ctxt.h>
 #include <base/math.h>
 #include <base/system.h>
 #include <engine/storage.h>
@@ -58,6 +59,7 @@ struct CDatafileInfo
 struct CDatafile
 {
 	IOHANDLE m_File;
+	SHA256_DIGEST m_Sha256;
 	unsigned m_Crc;
 	CDatafileInfo m_Info;
 	CDatafileHeader m_Header;
@@ -78,7 +80,9 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	}
 
 
-	// take the CRC of the file and store it
+	// take the hashes of the file and store them
+	SHA256_CTX Sha256Ctx;
+	sha256_init(&Sha256Ctx);
 	unsigned Crc = crc32(0L, 0x0, 0);
 	{
 		enum
@@ -91,14 +95,14 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 		while(1)
 		{
 			unsigned Bytes = io_read(File, aBuffer, BUFFER_SIZE);
-			if(Bytes <= 0)
+			if(Bytes == 0)
 				break;
+			sha256_update(&Sha256Ctx, aBuffer, Bytes);
 			Crc = crc32(Crc, aBuffer, Bytes); // ignore_convention
 		}
 
 		io_seek(File, 0, IOSEEK_START);
 	}
-
 
 	// TODO: change this header
 	CDatafileHeader Header;
@@ -141,6 +145,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	pTmpDataFile->m_ppDataPtrs = (char**)(pTmpDataFile+1);
 	pTmpDataFile->m_pData = (char *)(pTmpDataFile+1)+Header.m_NumRawData*sizeof(char *);
 	pTmpDataFile->m_File = File;
+	pTmpDataFile->m_Sha256 = sha256_finish(&Sha256Ctx);
 	pTmpDataFile->m_Crc = Crc;
 
 	// clear the data pointers
@@ -399,6 +404,12 @@ bool CDataFileReader::Close()
 	mem_free(m_pDataFile);
 	m_pDataFile = 0;
 	return true;
+}
+
+SHA256_DIGEST CDataFileReader::Sha256() const
+{
+	if(!m_pDataFile) return SHA256_ZEROED;
+	return m_pDataFile->m_Sha256;
 }
 
 unsigned CDataFileReader::Crc() const

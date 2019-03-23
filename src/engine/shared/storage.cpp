@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/hash_ctxt.h>
 #include <base/system.h>
 #include <engine/storage.h>
 #include "linereader.h"
@@ -342,8 +343,10 @@ public:
 		const char *m_pPath;
 		char *m_pBuffer;
 		int m_BufferSize;
+		const SHA256_DIGEST *m_pWantedSha256;
 		unsigned m_WantedCrc;
 		unsigned m_WantedSize;
+		bool m_CheckHashAndSize;
 	};
 
 	static int FindFileCallback(const char *pName, int IsDir, int Type, void *pUser)
@@ -367,14 +370,18 @@ public:
 		{
 			// found the file
 			str_format(Data.m_pBuffer, Data.m_BufferSize, "%s/%s", Data.m_pPath, Data.m_pFilename);
-			
-			// check crc and size
-			unsigned Crc = 0;
-			unsigned Size = 0;
-			if(!Data.m_pStorage->GetCrcSize(Data.m_pBuffer, Type, &Crc, &Size) || Crc != Data.m_WantedCrc || Size != Data.m_WantedSize)
+
+			if(Data.m_CheckHashAndSize)
 			{
-				Data.m_pBuffer[0] = 0;
-				return 0;
+				// check crc and size
+				SHA256_DIGEST Sha256;
+				unsigned Crc = 0;
+				unsigned Size = 0;
+				if(!Data.m_pStorage->GetHashAndSize(Data.m_pBuffer, Type, &Sha256, &Crc, &Size) || (Data.m_pWantedSha256 && Sha256 != *Data.m_pWantedSha256) || Crc != Data.m_WantedCrc || Size != Data.m_WantedSize)
+				{
+					Data.m_pBuffer[0] = 0;
+					return 0;
+				}
 			}
 			
 			return 1;
@@ -383,39 +390,62 @@ public:
 		return 0;
 	}
 
-	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, unsigned WantedCrc = 0, unsigned WantedSize = 0)
+	bool FindFileImpl(int Type, CFindCBData *pCBData)
 	{
-		if(BufferSize < 1)
+		if(pCBData->m_BufferSize < 1)
 			return false;
 
-		pBuffer[0] = 0;
+		pCBData->m_pBuffer[0] = 0;
+
 		char aBuf[MAX_PATH_LENGTH];
-		CFindCBData Data;
-		Data.m_pStorage = this;
-		Data.m_pFilename = pFilename;
-		Data.m_pPath = pPath;
-		Data.m_pBuffer = pBuffer;
-		Data.m_BufferSize = BufferSize;
-		Data.m_WantedCrc = WantedCrc;
-		Data.m_WantedSize = WantedSize;
 		
 		if(Type == TYPE_ALL)
 		{
 			// search within all available directories
 			for(int i = 0; i < m_NumPaths; ++i)
 			{
-				fs_listdir(GetPath(i, pPath, aBuf, sizeof(aBuf)), FindFileCallback, i, &Data);
-				if(pBuffer[0])
+				fs_listdir(GetPath(i, pCBData->m_pPath, aBuf, sizeof(aBuf)), FindFileCallback, i, pCBData);
+				if(pCBData->m_pBuffer[0])
 					return true;
 			}
 		}
 		else if(Type >= 0 && Type < m_NumPaths)
 		{
 			// search within wanted directory
-			fs_listdir(GetPath(Type, pPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, &Data);
+			fs_listdir(GetPath(Type, pCBData->m_pPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, pCBData);
 		}
 
-		return pBuffer[0] != 0;
+		return pCBData->m_pBuffer[0] != 0;
+	}
+
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize)
+	{
+		CFindCBData Data;
+		Data.m_pStorage = this;
+		Data.m_pFilename = pFilename;
+		Data.m_pPath = pPath;
+		Data.m_pBuffer = pBuffer;
+		Data.m_BufferSize = BufferSize;
+		Data.m_pWantedSha256 = 0;
+		Data.m_WantedCrc = 0;
+		Data.m_WantedSize = 0;
+		Data.m_CheckHashAndSize = false;
+		return FindFileImpl(Type, &Data);
+	}
+
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, const SHA256_DIGEST *pWantedSha256, unsigned WantedCrc, unsigned WantedSize)
+	{
+		CFindCBData Data;
+		Data.m_pStorage = this;
+		Data.m_pFilename = pFilename;
+		Data.m_pPath = pPath;
+		Data.m_pBuffer = pBuffer;
+		Data.m_BufferSize = BufferSize;
+		Data.m_pWantedSha256 = pWantedSha256;
+		Data.m_WantedCrc = WantedCrc;
+		Data.m_WantedSize = WantedSize;
+		Data.m_CheckHashAndSize = true;
+		return FindFileImpl(Type, &Data);
 	}
 
 	virtual bool RemoveFile(const char *pFilename, int Type)
@@ -457,13 +487,15 @@ public:
 		GetPath(Type, pDir, pBuffer, BufferSize);
 	}
 	
-	virtual bool GetCrcSize(const char *pFilename, int StorageType, unsigned *pCrc, unsigned *pSize)
+	virtual bool GetHashAndSize(const char *pFilename, int StorageType, SHA256_DIGEST *pSha256, unsigned *pCrc, unsigned *pSize)
 	{
 		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ, StorageType);
 		if(!File)
 			return false;
 
-		// get crc and size
+		// get hash and size
+		SHA256_CTX Sha256Ctx;
+		sha256_init(&Sha256Ctx);
 		unsigned Crc = 0;
 		unsigned Size = 0;
 		unsigned char aBuffer[64*1024];
@@ -472,12 +504,14 @@ public:
 			unsigned Bytes = io_read(File, aBuffer, sizeof(aBuffer));
 			if(Bytes <= 0)
 				break;
+			sha256_update(&Sha256Ctx, aBuffer, Bytes);
 			Crc = crc32(Crc, aBuffer, Bytes); // ignore_convention
 			Size += Bytes;
 		}
 
 		io_close(File);
 
+		*pSha256 = sha256_finish(&Sha256Ctx);
 		*pCrc = Crc;
 		*pSize = Size;
 		return true;
@@ -494,6 +528,18 @@ public:
 		}
 		return p;
 	}
+
+	static IStorage *CreateTest()
+	{
+		CStorage *p = new CStorage();
+		if(!p)
+		{
+			return 0;
+		}
+		p->AddPath(".");
+		return p;
+	}
 };
 
 IStorage *CreateStorage(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments) { return CStorage::Create(pApplicationName, StorageType, NumArgs, ppArguments); }
+IStorage *CreateTestStorage() { return CStorage::CreateTest(); }

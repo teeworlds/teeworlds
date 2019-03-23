@@ -28,6 +28,7 @@ mastersrv*
 packetgen*
 teeworlds*
 teeworlds_srv*
+testrunner
 versionsrv*
 
 # CMake
@@ -47,6 +48,9 @@ Release
 _CPack_Packages/
 build.ninja
 cmake_install.cmake
+googletest-build
+googletest-download
+googletest-src
 install_manifest.txt
 pack_*/
 rules.ninja

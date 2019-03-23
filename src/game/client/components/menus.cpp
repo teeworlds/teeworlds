@@ -52,7 +52,6 @@ CMenus::CMenus()
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
 	m_NeedRestartPlayer = false;
-	m_NeedRestartTee = false;
 	m_TeePartSelected = SKINPART_BODY;
 	m_aSaveSkinName[0] = 0;
 	m_RefreshSkinSelector = true;
@@ -61,6 +60,7 @@ CMenus::CMenus()
 	m_SeekBarActivatedTime = 0;
 	m_SeekBarActive = true;
 	m_UseMouseButtons = true;
+	m_SkinModified = false;
 
 	SetMenuPage(PAGE_START);
 	m_MenuPageOld = PAGE_START;
@@ -2167,6 +2167,7 @@ int CMenus::Render()
 		{
 			CUIRect Yes, No;
 			Box.HSplitTop(27.0f, 0, &Box);
+			Box.VMargin(10.0f, &Box);
 			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
 			// buttons
@@ -2202,6 +2203,7 @@ int CMenus::Render()
 			CUIRect Yes, No, EditBox;
 
 			Box.HSplitTop(27.0f, 0, &Box);
+			Box.VMargin(10.0f, &Box);
 			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
@@ -2343,6 +2345,7 @@ int CMenus::Render()
 		{
 			CUIRect Yes, No;
 			Box.HSplitTop(27.0f, 0, &Box);
+			Box.VMargin(10.0f, &Box);
 			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
 			// buttons
@@ -2426,11 +2429,20 @@ void CMenus::SetActive(bool Active)
 		if(Client()->State() == IClient::STATE_ONLINE)
 		{
 			m_pClient->OnRelease();
+			if(Client()->State() == IClient::STATE_ONLINE && m_SkinModified)
+			{
+				m_SkinModified = false;
+				m_pClient->SendSkinChange();
+			}
 		}
 	}
-	else if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	else
 	{
-		m_pClient->OnRelease();
+		m_SkinModified = false;
+		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		{
+			m_pClient->OnRelease();
+		}
 	}
 }
 

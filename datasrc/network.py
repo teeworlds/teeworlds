@@ -408,4 +408,18 @@ Messages = [
 		NetStringStrict("m_Reason"),
 		NetBool("m_Force"),
 	]),
+
+	# todo 0.8: move up
+	NetMessage("Sv_SkinChange", [
+		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
+		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aUseCustomColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+	]),
+
+	NetMessage("Cl_SkinChange", [
+		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aUseCustomColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+	]),
 ]

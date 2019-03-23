@@ -32,6 +32,7 @@ public:
 	virtual bool ClientIngame(int ClientID) const = 0;
 	virtual int GetClientInfo(int ClientID, CClientInfo *pInfo) const = 0;
 	virtual void GetClientAddr(int ClientID, char *pAddrStr, int Size) const = 0;
+	virtual int GetClientVersion(int ClientID) const = 0;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID) = 0;
 
@@ -85,7 +86,7 @@ public:
 
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID) = 0;
 
-	virtual void OnClientConnected(int ClientID) = 0;
+	virtual void OnClientConnected(int ClientID, bool AsSpec) = 0;
 	virtual void OnClientEnter(int ClientID) = 0;
 	virtual void OnClientDrop(int ClientID, const char *pReason) = 0;
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
@@ -93,6 +94,7 @@ public:
 
 	virtual bool IsClientReady(int ClientID) const = 0;
 	virtual bool IsClientPlayer(int ClientID) const = 0;
+	virtual bool IsClientSpectator(int ClientID) const = 0;
 
 	virtual const char *GameType() const = 0;
 	virtual const char *Version() const = 0;

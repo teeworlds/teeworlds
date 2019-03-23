@@ -4,18 +4,18 @@
 #include <engine/shared/config.h>
 #include "binds.h"
 
-const int CBinds::s_aDefaultBindKeys[] = { // only simple binds
-	KEY_F1, KEY_F2, KEY_TAB, 'u', KEY_F10,
-	'a', 'd',
-	KEY_SPACE, KEY_MOUSE_1, KEY_MOUSE_2, KEY_LSHIFT, KEY_RSHIFT, KEY_RIGHT, KEY_LEFT,
-	'1', '2', '3', '4', '5',
-	KEY_MOUSE_WHEEL_UP, KEY_MOUSE_WHEEL_DOWN,
-	't', 'y', 'x',
-	KEY_F3, KEY_F4,
-	'r',
+const int CBinds::s_aaDefaultBindKeys[][2] = {
+	{KEY_F1, 0}, {KEY_F2, 0}, {KEY_TAB, 0}, {'u', 0}, {KEY_F10, 0}, {'s', CBinds::MODIFIER_CTRL},
+	{'a', 0}, {'d', 0},
+	{KEY_SPACE, 0}, {KEY_MOUSE_1, 0}, {KEY_MOUSE_2, 0}, {KEY_LSHIFT, 0}, {KEY_RSHIFT, 0}, {KEY_RIGHT, 0}, {KEY_LEFT, 0},
+	{'1', 0}, {'2', 0}, {'3', 0}, {'4', 0}, {'5', 0},
+	{KEY_MOUSE_WHEEL_UP, 0}, {KEY_MOUSE_WHEEL_DOWN, 0},
+	{'t', 0}, {'y', 0}, {'x', 0},
+	{KEY_F3, 0}, {KEY_F4, 0},
+	{'r', 0},
 };
 const char CBinds::s_aaDefaultBindValues[][32] = {
-	"toggle_local_console", "toggle_remote_console", "+scoreboard", "+show_chat", "screenshot",
+	"toggle_local_console", "toggle_remote_console", "+scoreboard", "+show_chat", "screenshot", "snd_toggle",
 	"+left", "+right",
 	"+jump", "+fire", "+hook", "+emote", "+spectate", "spectate_next", "spectate_previous",
 	"+weapon1", "+weapon2", "+weapon3", "+weapon4", "+weapon5",
@@ -188,10 +188,10 @@ void CBinds::SetDefaults()
 {
 	// set default key bindings
 	UnbindAll();
-	const int count = sizeof(s_aDefaultBindKeys)/sizeof(int);
+	const int count = sizeof(s_aaDefaultBindKeys)/sizeof(int)/2;
 	dbg_assert(count == sizeof(s_aaDefaultBindValues)/32, "the count of bind keys differs from that of bind values!");
 	for(int i = 0; i < count; i++)
-		Bind(s_aDefaultBindKeys[i], MODIFIER_NONE, s_aaDefaultBindValues[i]);
+		Bind(s_aaDefaultBindKeys[i][0], s_aaDefaultBindKeys[i][1], s_aaDefaultBindValues[i]);
 }
 
 void CBinds::OnConsoleInit()
@@ -363,14 +363,14 @@ void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 		}
 	}
 
-	// default binds can only be non-composed right now, so only check for that
-	for(unsigned j = 0; j < sizeof(s_aDefaultBindKeys)/sizeof(int); j++)
+	for(unsigned j = 0; j < sizeof(s_aaDefaultBindKeys)/sizeof(int)/2; j++)
 	{
-		const int i = s_aDefaultBindKeys[j];
-		if(pSelf->m_aaaKeyBindings[i][0][0] == 0)
+		const int Key = s_aaDefaultBindKeys[j][0];
+		const int Modifier = s_aaDefaultBindKeys[j][1];
+		if(pSelf->m_aaaKeyBindings[Key][Modifier][0] == 0)
 		{
 			// explicitly unbind keys that were unbound by the user
-			str_format(aBuffer, sizeof(aBuffer), "unbind %s ", pSelf->Input()->KeyName(i));
+			str_format(aBuffer, sizeof(aBuffer), "unbind %s%s ", GetModifierName(Modifier), pSelf->Input()->KeyName(Key));
 			pConfig->WriteLine(aBuffer);
 		}
 	}

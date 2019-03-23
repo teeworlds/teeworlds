@@ -45,6 +45,7 @@ static CKeyInfo gs_aKeys[] =
 	{ "Respawn", "kill", 0, 0},
 	{ "Ready", "ready_change", 0, 0},
 	{ "Add demo marker", "add_demomarker", 0, 0},
+	{ "Toggle sounds", "snd_toggle", 0, 0},
 };
 
 /*	This is for scripts/update_localization.py to work, don't remove!
@@ -299,7 +300,7 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View, void *pUser)
 		}
 	}
 
-	int NumOptions = 11;
+	int NumOptions = 12;
 	int StartOption = 18;
 	float ButtonHeight = 20.0f;
 	float Spaceing = 2.0f;

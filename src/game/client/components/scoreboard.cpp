@@ -737,9 +737,9 @@ void CScoreboard::OnMessage(int MsgType, void *pRawMsg)
 		if(pMsg->m_Victim != pMsg->m_Killer)
 			m_aPlayerStats[pMsg->m_Killer].m_Kills++;
 	}
-	else if(MsgType == NETMSGTYPE_SV_CLIENTINFO && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	else if(MsgType == NETMSGTYPE_SV_CLIENTDROP && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		CNetMsg_Sv_ClientInfo *pMsg = (CNetMsg_Sv_ClientInfo *)pRawMsg;
+		CNetMsg_Sv_ClientDrop *pMsg = (CNetMsg_Sv_ClientDrop *)pRawMsg;
 
 		if(!m_pClient->m_aClients[pMsg->m_ClientID].m_Active)
 			return;
