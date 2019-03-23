@@ -334,13 +334,6 @@ Messages = [
 		NetBool("m_Silent"),
 	]),
 
-	NetMessage("Sv_SkinChange", [
-		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
-		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
-		NetArray(NetBool("m_aUseCustomColors"), 6),
-		NetArray(NetIntAny("m_aSkinPartColors"), 6),
-	]),
-
 	NetMessage("Sv_GameInfo", [
 		NetFlag("m_GameFlags", GameFlags),
 		
@@ -397,12 +390,6 @@ Messages = [
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),
 
-	NetMessage("Cl_SkinChange", [
-		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
-		NetArray(NetBool("m_aUseCustomColors"), 6),
-		NetArray(NetIntAny("m_aSkinPartColors"), 6),
-	]),
-
 	NetMessage("Cl_Kill", []),
 
 	NetMessage("Cl_ReadyChange", []),
@@ -420,5 +407,19 @@ Messages = [
 		NetStringStrict("m_Value"),
 		NetStringStrict("m_Reason"),
 		NetBool("m_Force"),
+	]),
+
+	# todo 0.8: move up
+	NetMessage("Sv_SkinChange", [
+		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
+		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aUseCustomColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartColors"), 6),
+	]),
+
+	NetMessage("Cl_SkinChange", [
+		NetArray(NetStringStrict("m_apSkinPartNames"), 6),
+		NetArray(NetBool("m_aUseCustomColors"), 6),
+		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),
 ]
