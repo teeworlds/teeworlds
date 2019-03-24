@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_CHAT_H
 #define GAME_CLIENT_COMPONENTS_CHAT_H
+#include <base/system.h>
 #include <engine/shared/ringbuffer.h>
 #include <game/client/component.h>
 #include <game/client/lineinput.h>
@@ -28,10 +29,17 @@ class CChat : public CComponent
 		bool m_Highlighted;
 	};
 
+	// client IDs for special messages
+	enum 
+	{
+		CLIENT_MSG = -2,
+		SERVER_MSG = -1,
+	};
+
 	CLine m_aLines[MAX_LINES];
 	int m_CurrentLine;
 
-	// chat
+	// chat sounds
 	enum
 	{
 		CHAT_SERVER=0,
@@ -42,6 +50,7 @@ class CChat : public CComponent
 
 	int m_Mode;
 	int m_WhisperTarget;
+	int m_LastWhisperFrom;
 	bool m_Show;
 	bool m_InputUpdate;
 	int m_ChatStringOffset;
@@ -64,6 +73,51 @@ class CChat : public CComponent
 	int64 m_LastChatSend;
 	int64 m_aLastSoundPlayed[CHAT_NUM];
 
+	// chat commands
+	struct CChatCommand
+	{
+		const char* m_pCommandText;
+		const char* m_pHelpText;
+		void (*m_pfnFunc)(CChat *pChatData, const char* pCommand);
+		bool m_aFiltered; // 0 = shown, 1 = hidden
+	};
+		
+	class CChatCommands
+	{
+		CChatCommand *m_apCommands;
+		int m_Count;
+		CChatCommand *m_pSelectedCommand;
+
+	private:
+		int GetActiveIndex(int index) const;
+	public:
+		CChatCommands(CChatCommand apCommands[], int Count);
+		~CChatCommands();
+		void Reset();
+		void Filter(const char* pLine);
+		int CountActiveCommands() const;
+		const CChatCommand* GetCommand(int index) const;
+		const CChatCommand* GetSelectedCommand() const;
+		void SelectPreviousCommand();
+		void SelectNextCommand();
+	};
+
+	CChatCommands *m_pCommands;
+	bool m_IgnoreCommand;
+	bool IsTypingCommand() const;
+	void HandleCommands(float x, float y, float w);
+	bool ExecuteCommand();
+	int IdentifyNameParameter(const char* pCommand) const;
+
+	static void Com_All(CChat *pChatData, const char* pCommand);
+	static void Com_Team(CChat *pChatData, const char* pCommand);
+	static void Com_Reply(CChat *pChatData, const char* pCommand);
+	static void Com_Whisper(CChat *pChatData, const char* pCommand);
+	static void Com_Mute(CChat *pChatData, const char* pCommand);
+	static void Com_Befriend(CChat *pChatData, const char* pCommand);
+
+	void ClearInput();
+
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConWhisper(IConsole::IResult *pResult, void *pUserData);
@@ -72,12 +126,13 @@ class CChat : public CComponent
 
 public:
 	CChat();
+	~CChat();
 
 	bool IsActive() const { return m_Mode != CHAT_NONE; }
 
 	void AddLine(int ClientID, int Team, const char *pLine, int TargetID = -1);
 
-	void EnableMode(int Team);
+	void EnableMode(int Team, const char* pText = NULL);
 
 	void Say(int Team, const char *pLine);
 
