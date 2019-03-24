@@ -9,7 +9,6 @@
 #include <engine/map.h>
 #include <engine/textrender.h>
 #include <generated/client_data.h>
-#include <generated/protocol.h>
 #include <game/layers.h>
 #include "animstate.h"
 #include "render.h"

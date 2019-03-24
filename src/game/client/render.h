@@ -5,6 +5,7 @@
 
 #include <engine/graphics.h>
 #include <base/vmath.h>
+#include <generated/protocol.h>
 #include <game/mapitems.h>
 #include "ui.h"
 
@@ -12,14 +13,6 @@
 // sprite renderings
 enum
 {
-	SKINPART_BODY = 0,
-	SKINPART_MARKING,
-	SKINPART_DECORATION,
-	SKINPART_HANDS,
-	SKINPART_FEET,
-	SKINPART_EYES,
-	NUM_SKINPARTS,
-
 	SPRITE_FLAG_FLIP_Y = 1,
 	SPRITE_FLAG_FLIP_X = 2,
 
