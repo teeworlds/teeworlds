@@ -158,6 +158,8 @@ static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_CTF_GRAB*/ DO_SPECIAL, PARA_I, ""},	// special - play ctf grab sound based on team
 
 	{/*GAMEMSG_CTF_CAPTURE*/ DO_SPECIAL, PARA_III, ""},	// special - play ctf capture sound + capture chat message
+
+	{/*GAMEMSG_GAME_PAUSED*/ DO_SPECIAL, PARA_I, ""},	// special - add player name
 };
 
 void CGameClient::OnConsoleInit()
@@ -621,6 +623,15 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 					m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_GRAB_PL);
 				else
 					m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_GRAB_EN);
+				break;
+			case GAMEMSG_GAME_PAUSED:
+				{
+					int ClientID = clamp(aParaI[0], 0, MAX_CLIENTS - 1);
+					char aLabel[64];
+					GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, m_aClients[ClientID].m_aName);
+					str_format(aBuf, sizeof(aBuf), Localize("'%s' initiated a pause"), aLabel);
+					m_pChat->AddLine(-1, 0, aBuf);
+				}
 				break;
 			case GAMEMSG_CTF_CAPTURE:
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_CAPTURE);

@@ -372,7 +372,10 @@ void IGameController::OnPlayerReadyChange(CPlayer *pPlayer)
 		pPlayer->m_IsReadyToPlay ^= 1;
 
 		if(m_GameState == IGS_GAME_RUNNING && !pPlayer->m_IsReadyToPlay)
+		{
 			SetGameState(IGS_GAME_PAUSED, TIMER_INFINITE); // one player isn't ready -> pause the game
+			GameServer()->SendGameMsg(GAMEMSG_GAME_PAUSED, pPlayer->GetCID(), -1);
+		}
 
 		CheckReadyStates();
 	}
