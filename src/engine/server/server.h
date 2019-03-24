@@ -92,7 +92,6 @@ public:
 			STATE_EMPTY = 0,
 			STATE_AUTH,
 			STATE_CONNECTING,
-			STATE_CONNECTING_AS_SPEC,
 			STATE_READY,
 			STATE_INGAME,
 
@@ -134,6 +133,9 @@ public:
 		bool m_Quitting;
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
 		const CMapListEntry *m_pMapListEntryToSend;
+
+		bool m_HasPersistentData;
+		void *m_pPersistentData;
 
 		void Reset();
 	};

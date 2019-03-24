@@ -86,7 +86,22 @@ public:
 
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID) = 0;
 
-	virtual void OnClientConnected(int ClientID, bool AsSpec) = 0;
+	// Called before map reload, for any data that the game wants to
+	// persist to the next map.
+	//
+	// Has the size of the return value of `PersistentClientDataSize()`.
+	//
+	// Returns whether the game should be supplied with the data when the
+	// client connects for the next map.
+	virtual bool OnClientDataPersist(int ClientID, void *pData) = 0;
+
+	// Called when a client connects.
+	//
+	// If it is reconnecting to the game after a map change, the
+	// `pPersistentData` point is nonnull and contains the data the game
+	// previously stored.
+	virtual void OnClientConnected(int ClientID, void *pPersistentData) = 0;
+
 	virtual void OnClientEnter(int ClientID) = 0;
 	virtual void OnClientDrop(int ClientID, const char *pReason) = 0;
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
@@ -94,7 +109,8 @@ public:
 
 	virtual bool IsClientReady(int ClientID) const = 0;
 	virtual bool IsClientPlayer(int ClientID) const = 0;
-	virtual bool IsClientSpectator(int ClientID) const = 0;
+
+	virtual int PersistentClientDataSize() const = 0;
 
 	virtual const char *GameType() const = 0;
 	virtual const char *Version() const = 0;

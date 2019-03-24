@@ -68,6 +68,12 @@ class CGameContext : public IGameServer
 	void Construct(int Resetting);
 
 	bool m_Resetting;
+
+	struct CPersistentClientData
+	{
+		bool m_IsSpectator;
+	};
+
 public:
 	IServer *Server() const { return m_pServer; }
 	class IConsole *Console() { return m_pConsole; }
@@ -166,8 +172,9 @@ public:
 
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);
 
-	virtual void OnClientConnected(int ClientID, bool AsSpec) { OnClientConnected(ClientID, false, AsSpec); }
-	void OnClientConnected(int ClientID, bool Dummy, bool AsSpec);
+	virtual bool OnClientDataPersist(int ClientID, void *pData);
+	virtual void OnClientConnected(int ClientID, void *pPersistentData) { OnClientConnected(ClientID, false, (CPersistentClientData *)pPersistentData); }
+	void OnClientConnected(int ClientID, bool Dummy, CPersistentClientData *pPersistent);
 	void OnClientTeamChange(int ClientID);
 	virtual void OnClientEnter(int ClientID);
 	virtual void OnClientDrop(int ClientID, const char *pReason);
@@ -176,7 +183,7 @@ public:
 
 	virtual bool IsClientReady(int ClientID) const;
 	virtual bool IsClientPlayer(int ClientID) const;
-	virtual bool IsClientSpectator(int ClientID) const;
+	virtual int PersistentClientDataSize() const { return sizeof(CPersistentClientData); }
 
 	virtual const char *GameType() const;
 	virtual const char *Version() const;

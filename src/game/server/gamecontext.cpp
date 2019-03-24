@@ -668,9 +668,25 @@ void CGameContext::OnClientEnter(int ClientID)
 	}
 }
 
-void CGameContext::OnClientConnected(int ClientID, bool Dummy, bool AsSpec)
+bool CGameContext::OnClientDataPersist(int ClientID, void *pData)
 {
-	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, Dummy, AsSpec);
+	CPersistentClientData *pPersistent = (CPersistentClientData *)pData;
+	if(!m_apPlayers[ClientID])
+	{
+		return false;
+	}
+	pPersistent->m_IsSpectator = m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS;
+	return true;
+}
+
+void CGameContext::OnClientConnected(int ClientID, bool Dummy, CPersistentClientData *pPersistent)
+{
+	bool Spec = false;
+	if(pPersistent)
+	{
+		Spec = pPersistent->m_IsSpectator;
+	}
+	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, Dummy, Spec);
 
 	if(Dummy)
 		return;
@@ -1518,7 +1534,7 @@ void CGameContext::OnInit()
 	if(g_Config.m_DbgDummies)
 	{
 		for(int i = 0; i < g_Config.m_DbgDummies ; i++)
-			OnClientConnected(Server()->MaxClients() -i-1, true);
+			OnClientConnected(Server()->MaxClients() -i-1, true, 0);
 	}
 #endif
 }
@@ -1568,11 +1584,6 @@ bool CGameContext::IsClientReady(int ClientID) const
 bool CGameContext::IsClientPlayer(int ClientID) const
 {
 	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->GetTeam() != TEAM_SPECTATORS;
-}
-
-bool CGameContext::IsClientSpectator(int ClientID) const
-{
-	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->GetTeam() == TEAM_SPECTATORS;
 }
 
 const char *CGameContext::GameType() const { return m_pController && m_pController->GetGameType() ? m_pController->GetGameType() : ""; }
