@@ -6,6 +6,7 @@
 
 #include <engine/engine.h>
 #include <engine/graphics.h>
+#include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/external/json-parser/json.h>
