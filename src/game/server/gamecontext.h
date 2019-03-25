@@ -141,7 +141,7 @@ public:
 	void SendWeaponPickup(int ClientID, int Weapon);
 	void SendMotd(int ClientID);
 	void SendSettings(int ClientID);
-	void SendSkinChange(int ClientID);
+	void SendSkinChange(int ClientID, int TargetID);
 
 	void SendGameMsg(int GameMsgID, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);

@@ -279,7 +279,7 @@ void CGameContext::SendSettings(int ClientID)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
-void CGameContext::SendSkinChange(int ClientID)
+void CGameContext::SendSkinChange(int ClientID, int TargetID)
 {
 	CNetMsg_Sv_SkinChange Msg;
 	Msg.m_ClientID = ClientID;
@@ -289,7 +289,7 @@ void CGameContext::SendSkinChange(int ClientID)
 		Msg.m_aUseCustomColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aUseCustomColors[p];
 		Msg.m_aSkinPartColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartColors[p];
 	}
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, TargetID);
 }
 
 void CGameContext::SendGameMsg(int GameMsgID, int ClientID)
@@ -1013,7 +1013,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 				if(!m_apPlayers[i] || (!Server()->ClientIngame(i) && !m_apPlayers[i]->IsDummy()) || Server()->GetClientVersion(i) < MIN_SKINCHANGE_CLIENTVERSION)
 					continue;
 
-				SendSkinChange(i);
+				SendSkinChange(pPlayer->GetCID(), i);
 			}
 		}
 	}
