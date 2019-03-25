@@ -1996,7 +1996,13 @@ void CMenus::RenderSettings(CUIRect MainView)
 
 	// reset warning
 	bool NeedReconnect = (m_NeedRestartPlayer || (m_SkinModified && m_pClient->m_LastSkinChangeTime + 6.0f > Client()->LocalTime())) && this->Client()->State() == IClient::STATE_ONLINE;
-	if(m_NeedRestartGraphics || m_NeedRestartSound || NeedReconnect)
+	// backwards compatibility
+	CServerInfo CurrentServerInfo;
+	Client()->GetServerInfo(&CurrentServerInfo);
+	const char *pVersion = str_startswith(CurrentServerInfo.m_aVersion, "0.7.");
+	bool NeedRestartTee = pVersion && (pVersion[0] == '1' || pVersion[0] == '2') && pVersion[1] == 0;
+
+	if(m_NeedRestartGraphics || m_NeedRestartSound || NeedReconnect || NeedRestartTee)
 	{
 		// background
 		CUIRect RestartWarning;
@@ -2011,7 +2017,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 			UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
 		else if(Client()->State() == IClient::STATE_ONLINE)
 		{
-			if(m_NeedRestartPlayer)
+			if(m_NeedRestartPlayer || NeedRestartTee)
 				UI()->DoLabel(&RestartWarning, Localize("You must reconnect to change identity."), RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
 			else if(m_SkinModified)
 			{
