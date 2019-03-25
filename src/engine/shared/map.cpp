@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <limits.h>
 #include <base/system.h>
 #include <engine/map.h>
 #include <engine/storage.h>
@@ -55,6 +56,7 @@ public:
 					
 					if(pTilemap->m_Version > 3)
 					{
+						dbg_assert((pTilemap->m_Width <= INT_MAX / 2 - 1) && (pTilemap->m_Height <= INT_MAX / 2 - 1), "map layer too big (%d * %d causes an integer overflow)");
 						CTile *pTiles = static_cast<CTile *>(mem_alloc(pTilemap->m_Width * pTilemap->m_Height * sizeof(CTile), 1));
 
 						// extract original tile data
