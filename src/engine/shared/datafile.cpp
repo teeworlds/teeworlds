@@ -249,6 +249,9 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 {
 	if(!m_pDataFile) { return 0; }
 
+	if(Index < 0 || ((unsigned) Index) >= m_pDataFile->m_Header.m_NumRawData)
+		return 0;
+
 	// load it if needed
 	if(!m_pDataFile->m_ppDataPtrs[Index])
 	{
@@ -312,6 +315,9 @@ void *CDataFileReader::GetDataSwapped(int Index)
 
 void CDataFileReader::ReplaceData(int Index, char *pData)
 {
+	if(Index < 0 || ((unsigned) Index) >= m_pDataFile->m_Header.m_NumRawData)
+		return;
+
 	// make sure the data has been loaded
 	GetDataImpl(Index, 0);
 
@@ -321,10 +327,9 @@ void CDataFileReader::ReplaceData(int Index, char *pData)
 
 void CDataFileReader::UnloadData(int Index)
 {
-	if(Index < 0)
+	if(Index < 0 || ((unsigned) Index) >= m_pDataFile->m_Header.m_NumRawData)
 		return;
 
-	//
 	mem_free(m_pDataFile->m_ppDataPtrs[Index]);
 	m_pDataFile->m_ppDataPtrs[Index] = 0x0;
 }
