@@ -64,7 +64,7 @@ void CMenus::RenderGame(CUIRect MainView)
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	float NoteHeight = !Info.m_aNotification[0] ? 0.0f : 45.0f;
 	MainView.HSplitTop(20.0f+20.0f+2*Spacing+ NoteHeight, &MainView, 0);
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_ALL, 5.0f);
 
 	// game options
 	MainView.HSplitTop(20.0f, &Label, &MainView);
@@ -214,7 +214,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	CUIRect Label, Row;
 	MainView.HSplitBottom(80.0f, &MainView, 0);
 	MainView.HSplitTop(20.0f, 0, &MainView);
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_ALL, 5.0f);
 
 	// player options
 	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
@@ -355,7 +355,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	// render background
 	MainView.HSplitBottom(80.0f, &MainView, 0);
 	MainView.HSplitTop(20.0f, 0, &MainView);
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect ServerInfo, GameInfo, Motd, Label;
 
@@ -405,7 +405,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	{
 		if(IsFavorite)
 			ServerBrowser()->RemoveFavorite(&CurrentServerInfo);
-			else
+		else
 			ServerBrowser()->AddFavorite(&CurrentServerInfo);
 	}
 
@@ -621,7 +621,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		// only print notice
 		CUIRect Bar;
 		MainView.HSplitTop(45.0f, &Bar, &MainView);
-		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f+ms_BackgroundAlpha), CUI::CORNER_ALL, 5.0f);
+		RenderTools()->DrawUIRect(&Bar, vec4(0.0f, 0.0f, 0.0f, 0.25f+g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_ALL, 5.0f);
 		Bar.HMargin(15.0f, &Bar);
 		UI()->DoLabel(&Bar, pNotification, 14.0f, CUI::ALIGN_CENTER);
 		return;
@@ -666,7 +666,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	{
 		MainView.HSplitTop(20.0f+45.0f, &MainView, 0);
 	}
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, ms_BackgroundAlpha), CUI::CORNER_B, 5.0f);
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	if(pNotification && !Authed)
 	{
