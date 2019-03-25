@@ -56,8 +56,14 @@ public:
 					
 					if(pTilemap->m_Version > 3)
 					{
-						dbg_assert((pTilemap->m_Width <= INT_MAX / 2 - 1) && (pTilemap->m_Height <= INT_MAX / 2 - 1), "map layer too big (%d * %d causes an integer overflow)");
+						if(!((pTilemap->m_Width <= INT_MAX / 2 - 1) && (pTilemap->m_Height <= INT_MAX / 2 - 1)))
+						{
+							dbg_msg("engine", "map layer too big (%d * %d causes an integer overflow)", pTilemap->m_Width, pTilemap->m_Height);
+							return false;
+						}
 						CTile *pTiles = static_cast<CTile *>(mem_alloc(pTilemap->m_Width * pTilemap->m_Height * sizeof(CTile), 1));
+						if(!pTiles)
+							return false;
 
 						// extract original tile data
 						int i = 0;
