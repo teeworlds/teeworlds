@@ -1566,8 +1566,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render screen menu background
-	int NumOptions = 3;// + (!g_Config.m_GfxFullscreen);
-	if(Graphics()->GetNumScreens() > 1)
+	int NumOptions = 3;
+	if(Graphics()->GetNumScreens() > 1 && !g_Config.m_GfxFullscreen)
 		++NumOptions;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
@@ -1613,6 +1613,29 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		static int s_ButtonGfxBorderless = 0;
 		if(DoButton_CheckBox(&s_ButtonGfxBorderless, Localize("Borderless window"), g_Config.m_GfxBorderless, &Button))
 			Client()->ToggleWindowBordered();
+	}
+
+	if(Graphics()->GetNumScreens() > 1)
+	{
+		char aBuf[64];
+		ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
+		ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
+		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		CUIRect Text;
+		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
+		Button.VSplitLeft(100.0f-25.0f, &Text, &Button); // make button appear centered with FSAA
+		str_format(aBuf, sizeof(aBuf), Localize("Screen:"));
+		Text.y += 2.0f;
+		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+
+		Button.VSplitLeft(120.0f, &Button, 0);
+		str_format(aBuf, sizeof(aBuf), "#%d  (%dx%d)", g_Config.m_GfxScreen+1, Graphics()->GetDesktopScreenWidth(), Graphics()->GetDesktopScreenHeight());
+		static CButtonContainer s_ButtonScreenId;
+		if(DoButton_Menu(&s_ButtonScreenId, aBuf, 0, &Button))
+		{
+			g_Config.m_GfxScreen = (g_Config.m_GfxScreen + 1) % Graphics()->GetNumScreens();
+			Client()->SwitchWindowScreen(g_Config.m_GfxScreen);
+		}
 	}
 
 	// FSAA button
@@ -1669,16 +1692,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			DoScrollbarOption(&g_Config.m_GfxMaxFps, &g_Config.m_GfxMaxFps,
 							  &Button, Localize("Max fps"), 30, 300);
 		}
-	}
-
-	if(Graphics()->GetNumScreens() > 1)
-	{
-		ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
-		ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
-		int Index = g_Config.m_GfxScreen;
-		DoScrollbarOption(&g_Config.m_GfxScreen, &Index, &Button, Localize("Screen"), 0, Graphics()->GetNumScreens()-1);
-		if(Index != g_Config.m_GfxScreen)
-			Client()->SwitchWindowScreen(Index);
 	}
 
 	// render texture menu
