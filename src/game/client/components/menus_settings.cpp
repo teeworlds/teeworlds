@@ -2040,7 +2040,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 			else if(m_SkinModified)
 			{
 				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), Localize("You have to wait %1.f seconds to change identity."), m_pClient->m_LastSkinChangeTime+6.5f - Client()->LocalTime());
+				str_format(aBuf, sizeof(aBuf), Localize("You have to wait %1.0f seconds to change identity."), m_pClient->m_LastSkinChangeTime+6.5f - Client()->LocalTime());
 				UI()->DoLabel(&RestartWarning, aBuf, RestartWarning.h*ms_FontmodHeight*0.75f, CUI::ALIGN_CENTER);
 			}
 		}
