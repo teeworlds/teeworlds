@@ -850,16 +850,15 @@ set_glob(DATA GLOB_RECURSE "json;map;png;rules;ttf;txt;wv" datasrc
   countryflags/default.png
   countryflags/index.json
   deadtee.png
+  editor/automap/desert_main.json
   editor/automap/grass_doodads.json
   editor/automap/grass_main.json
+  editor/automap/jungle_main.json
+  editor/automap/winter_main.json
   editor/background.png
   editor/checker.png
   editor/cursor.png
-  editor/desert_main.rules
   editor/entities.png
-  editor/grass_main.rules
-  editor/jungle_main.rules
-  editor/winter_main.rules
   emoticons.png
   fonts/DejaVuSans.ttf
   game.png
