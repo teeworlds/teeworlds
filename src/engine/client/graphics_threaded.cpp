@@ -894,7 +894,13 @@ void CGraphics_Threaded::SetWindowBordered(bool State)
 
 bool CGraphics_Threaded::SetWindowScreen(int Index)
 {
-	return m_pBackend->SetWindowScreen(Index);
+	if(m_pBackend->SetWindowScreen(Index))
+	{
+		// update resolution info
+		m_pBackend->GetDesktopResolution(Index, &m_DesktopScreenWidth, &m_DesktopScreenHeight);
+		return true;
+	}
+	return false;
 }
 
 int CGraphics_Threaded::GetWindowScreen()

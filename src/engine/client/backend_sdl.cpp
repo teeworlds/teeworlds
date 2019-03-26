@@ -672,14 +672,11 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	}
 
 	// store desktop resolution for settings reset button
-	SDL_DisplayMode DisplayMode;
-	if(SDL_GetDesktopDisplayMode(*Screen, &DisplayMode))
+	if(!GetDesktopResolution(*Screen, pDesktopWidth, pDesktopHeight))
 	{
 		dbg_msg("gfx", "unable to get desktop resolution: %s", SDL_GetError());
 		return -1;
 	}
-	*pDesktopWidth = DisplayMode.w;
-	*pDesktopHeight = DisplayMode.h;
 
 	// use desktop resolution as default resolution
 	if (*pWidth == 0 || *pHeight == 0)
@@ -847,6 +844,17 @@ bool CGraphicsBackend_SDL_OpenGL::SetWindowScreen(int Index)
 int CGraphicsBackend_SDL_OpenGL::GetWindowScreen()
 {
 	return SDL_GetWindowDisplayIndex(m_pWindow);
+}
+
+bool CGraphicsBackend_SDL_OpenGL::GetDesktopResolution(int Index, int *pDesktopWidth, int* pDesktopHeight)
+{
+	SDL_DisplayMode DisplayMode;
+	if(SDL_GetDesktopDisplayMode(Index, &DisplayMode))
+		return false;
+
+	*pDesktopWidth = DisplayMode.w;
+	*pDesktopHeight = DisplayMode.h;
+	return true;
 }
 
 int CGraphicsBackend_SDL_OpenGL::WindowActive()

@@ -212,6 +212,7 @@ public:
 	virtual void SetWindowBordered(bool State);	// on=true/off=false
 	virtual bool SetWindowScreen(int Index);
 	virtual int GetWindowScreen();
+	virtual bool GetDesktopResolution(int Index, int *pDesktopWidth, int* pDesktopHeight);
 	virtual int WindowActive();
 	virtual int WindowOpen();
 };
