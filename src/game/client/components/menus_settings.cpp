@@ -1629,7 +1629,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
 		Button.VSplitLeft(120.0f, &Button, 0);
-		str_format(aBuf, sizeof(aBuf), "#%d  (%dx%d)", g_Config.m_GfxScreen+1, Graphics()->GetDesktopScreenWidth(), Graphics()->GetDesktopScreenHeight());
+		str_format(aBuf, sizeof(aBuf), "#%d  (%dx%d)", g_Config.m_GfxScreen+1, Graphics()->DesktopWidth(), Graphics()->DesktopHeight());
 		static CButtonContainer s_ButtonScreenId;
 		if(DoButton_Menu(&s_ButtonScreenId, aBuf, 0, &Button))
 		{
@@ -1793,8 +1793,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		g_Config.m_GfxScreenWidth = Graphics()->GetDesktopScreenWidth();
-		g_Config.m_GfxScreenHeight = Graphics()->GetDesktopScreenHeight();
+		g_Config.m_GfxScreenWidth = Graphics()->DesktopWidth();
+		g_Config.m_GfxScreenHeight = Graphics()->DesktopHeight();
 		g_Config.m_GfxBorderless = 0;
 		g_Config.m_GfxFullscreen = 1;
 		g_Config.m_GfxVsync = 1;

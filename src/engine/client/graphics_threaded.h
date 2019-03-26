@@ -466,9 +466,6 @@ public:
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen);
 
-	virtual int GetDesktopScreenWidth() const { return m_DesktopScreenWidth; }
-	virtual int GetDesktopScreenHeight() const { return m_DesktopScreenHeight; }
-
 	// syncronization
 	virtual void InsertSignal(semaphore *pSemaphore);
 	virtual bool IsIdle() const;
