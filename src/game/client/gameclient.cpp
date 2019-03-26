@@ -602,13 +602,11 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				break;
 			case GAMEMSG_TEAM_BALANCE_VICTIM:
 				{
-					const char *pMsg;
+					const char *pMsg = "";
 					switch(GetStrTeam(aParaI[0], TeamPlay))
 					{
-					case STR_TEAM_GAME: pMsg = Localize("You were moved to the game due to team balancing"); break;
 					case STR_TEAM_RED: pMsg = Localize("You were moved to the red team due to team balancing"); break;
 					case STR_TEAM_BLUE: pMsg = Localize("You were moved to the blue team due to team balancing"); break;
-					case STR_TEAM_SPECTATORS: pMsg = Localize("You were moved to the spectators due to team balancing"); break;
 					}
 					m_pBroadcast->DoBroadcast(pMsg);
 				}
