@@ -43,6 +43,7 @@ void CMapChecker::AddMaplist(CMapVersion *pMaplist, int Num)
 		str_copy(pEntry->m_aMapName, pMaplist[i].m_aName, sizeof(pEntry->m_aMapName));
 		pEntry->m_MapCrc = (pMaplist[i].m_aCrc[0]<<24) | (pMaplist[i].m_aCrc[1]<<16) | (pMaplist[i].m_aCrc[2]<<8) | pMaplist[i].m_aCrc[3];
 		pEntry->m_MapSize = (pMaplist[i].m_aSize[0]<<24) | (pMaplist[i].m_aSize[1]<<16) | (pMaplist[i].m_aSize[2]<<8) | pMaplist[i].m_aSize[3];
+		mem_copy(&pEntry->m_MapSha256, &pMaplist[i].m_aSha256, sizeof(pEntry->m_MapSha256));
 	}
 }
 
@@ -92,7 +93,7 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 		{
 			StandardMap = true;
 			char aBuffer[512]; // TODO: MAX_PATH_LENGTH (512) should be defined in a more central header and not in storage.cpp and editor.h
-			if(pStorage->FindFile(aMapNameExt, "maps", StorageType, aBuffer, sizeof(aBuffer), pCurrent->m_MapCrc, pCurrent->m_MapSize))
+			if(pStorage->FindFile(aMapNameExt, "maps", StorageType, aBuffer, sizeof(aBuffer), &pCurrent->m_MapSha256, pCurrent->m_MapCrc, pCurrent->m_MapSize))
 				return true;
 		}
 		else if(StandardMap)
