@@ -924,6 +924,7 @@ class CEditor2: public IEditor
 	void EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID);
 	void EditTileLayerResize(int LayerID, int NewWidth, int NewHeight);
 	void EditTileLayerAutoMapWhole(int LayerID, int RulesetID);
+	void EditTileLayerAutoMapSection(int LayerID, int RulesetID, int StartTx, int StartTy, int SectionWidth, int SectionHeight);
 
 	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
 	void EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition);

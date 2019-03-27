@@ -108,7 +108,7 @@ const char* CTilesetMapper2::GetRuleSetName(int Index) const
 	return m_aRuleSets[Index].m_aName;
 }
 
-void CTilesetMapper2::AutomapWholeLayer(CTile* aLayerTiles, int LayerWidth, int LayerHeight, int RuleSetID)
+void CTilesetMapper2::AutomapLayerWhole(CTile* aLayerTiles, int LayerWidth, int LayerHeight, int RuleSetID)
 {
 	AutomapLayerSection(aLayerTiles, 0, 0, LayerWidth, LayerHeight, LayerWidth, LayerHeight, RuleSetID);
 }
@@ -127,7 +127,7 @@ void CTilesetMapper2::AutomapLayerSection(CTile* aLayerTiles, int StartTx, int S
 
 	// auto map !
 	const int EndTx = StartTx + SectionWidth;
-	const int EndTy = StartTx + SectionHeight;
+	const int EndTy = StartTy + SectionHeight;
 	for(int y = StartTy; y < EndTy; y++)
 	{
 		for(int x = StartTx; x < EndTx; x++)

@@ -2274,6 +2274,28 @@ void CEditor2::RenderMapEditorUI()
 			{
 				EditTileSelectionFlipY(m_UiSelectedLayerID);
 			}
+
+			// Auto map
+			CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(SelectedTileLayer.m_ImageID);
+
+			if(pMapper)
+			{
+				const int RulesetCount = pMapper->RuleSetNum();
+				static CUIButton s_ButtonAutoMap[16];
+				 // TODO: find a better solution to this
+				dbg_assert(RulesetCount <= 16, "RulesetCount is too big");
+
+				for(int r = 0; r < RulesetCount; r++)
+				{
+					LineRect.VSplitLeft(50, &ButtonRect, &LineRect);
+					LineRect.VSplitLeft(Margin, 0, &LineRect);
+
+					if(UiButton(ButtonRect, pMapper->GetRuleSetName(r), &s_ButtonAutoMap[r]))
+					{
+						EditTileLayerAutoMapSection(m_UiSelectedLayerID, r, m_TileSelection.m_StartTX, m_TileSelection.m_StartTY, m_TileSelection.m_EndTX+1-m_TileSelection.m_StartTX, m_TileSelection.m_EndTY+1-m_TileSelection.m_StartTY);
+					}
+				}
+			}
 		}
 	}
 
@@ -5244,11 +5266,34 @@ void CEditor2::EditTileLayerAutoMapWhole(int LayerID, int RulesetID)
 	dbg_assert(pMapper != 0, "Tileset mapper not found");
 	dbg_assert(Layer.m_aTiles.Count() == Layer.m_Width*Layer.m_Height, "Tile count does not match layer size");
 
-	pMapper->AutomapWholeLayer(Layer.m_aTiles.Data(), Layer.m_Width, Layer.m_Height, RulesetID);
+	pMapper->AutomapLayerWhole(Layer.m_aTiles.Data(), Layer.m_Width, Layer.m_Height, RulesetID);
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
 	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: tileset automap"),
+		LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Ruleset: %s", pMapper->GetRuleSetName(RulesetID));
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor2::EditTileLayerAutoMapSection(int LayerID, int RulesetID, int StartTx, int StartTy, int SectionWidth, int SectionHeight)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
+
+	dbg_assert(Layer.m_ImageID >= 0 && Layer.m_ImageID < m_Map.m_Assets.m_ImageCount, "ImageID out of bounds or invalid");
+
+	CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(Layer.m_ImageID);
+
+	dbg_assert(pMapper != 0, "Tileset mapper not found");
+	dbg_assert(Layer.m_aTiles.Count() == Layer.m_Width*Layer.m_Height, "Tile count does not match layer size");
+
+	pMapper->AutomapLayerSection(Layer.m_aTiles.Data(), StartTx, StartTy, SectionWidth, SectionHeight, Layer.m_Width, Layer.m_Height, RulesetID);
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: tileset automap section"),
 		LayerID);
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Ruleset: %s", pMapper->GetRuleSetName(RulesetID));
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
