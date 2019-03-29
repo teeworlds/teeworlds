@@ -2035,6 +2035,7 @@ void CClient::Run()
 				if(!m_EditorActive)
 				{
 					GameClient()->OnActivateEditor();
+					Input()->MouseModeRelative();
 					m_EditorActive = true;
 				}
 			}
