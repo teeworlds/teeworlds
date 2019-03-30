@@ -1,0 +1,57 @@
+name: teeworlds
+version: "0.7.2"
+summary: A retro multiplayer shooter
+description: |
+  Teeworlds is a free online multiplayer game, available for
+  all major operating systems. Battle with up to 16 players
+  in a variety of game modes, including Team Deathmatch and
+  Capture The Flag. You can even design your own maps!
+base: core18
+grade: stable
+architectures:
+  - build-on: amd64
+    run-on: [amd64, i386]
+confinement: strict
+
+apps:
+  teeworlds:
+    command: bin/teeworlds
+    environment:
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib/$SNAPCRAFT_ARCH_TRIPLET/pulseaudio
+    plugs:
+      - home
+      - desktop
+      - joystick
+      - network
+      - opengl
+      - pulseaudio
+      - wayland
+      - x11
+parts:
+  teeworlds:
+    plugin: cmake
+    source-type: git
+    source: https://github.com/teeworlds/teeworlds
+    organize:
+      share/teeworlds/data: bin/data
+    stage-packages:
+      - libfreetype6
+      - libsdl2-2.0-0
+      - libgl1
+      - libglu1-mesa
+      - libglx0
+      - libpulse0
+    build-packages:
+      - g++
+      - gcc
+      - make
+      - cmake
+      - libsdl2-dev
+      - python
+      - libasound2-dev
+      - libgl-dev
+      - libglu-dev
+      - libx11-dev
+      - libfreetype6-dev
+      - libssl-dev
+      - libpulse0
