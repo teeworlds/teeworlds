@@ -17,6 +17,7 @@
 
 #include <game/client/components/maplayers.h>
 #include <game/client/components/sounds.h>
+#include <game/client/components/stats.h>
 #include <game/client/ui.h>
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
@@ -1469,6 +1470,12 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
 	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	static int s_ScoreboardDropdown = 0;
+	static bool s_ScoreboardActive = true;
+	Split = DoIndependentDropdownMenu(&s_ScoreboardDropdown, &MainView, Localize("Scoreboard"), HeaderHeight, RenderSettingsControlsScoreboard, &s_ScoreboardActive);
+
+	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
+	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
 	static int s_MiscDropdown = 0;
 	static bool s_MiscActive = true;
 	Split = DoIndependentDropdownMenu(&s_MiscDropdown, &MainView, Localize("Misc"), HeaderHeight, RenderSettingsControlsMisc, &s_MiscActive);
@@ -1490,6 +1497,59 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 		m_pClient->m_pBinds->SetDefaults();
+}
+
+float CMenus::RenderSettingsControlsStats(CUIRect View, void *pUser)
+{
+	CMenus *pSelf = (CMenus*)pUser;
+
+	CUIRect Button;
+
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos, Localize("Frags"), g_Config.m_ClStatboardInfos & TC_STATS_FRAGS, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_FRAGS;
+
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+1, Localize("Deaths"), g_Config.m_ClStatboardInfos & TC_STATS_DEATHS, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_DEATHS;
+
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+2, Localize("Suicides"), g_Config.m_ClStatboardInfos & TC_STATS_SUICIDES, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_SUICIDES;
+
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+3, Localize("Ratio"), g_Config.m_ClStatboardInfos & TC_STATS_RATIO, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_RATIO;
+
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+4, Localize("Net score"), g_Config.m_ClStatboardInfos & TC_STATS_NET, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_NET;
+
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+5, Localize("Frags per minute"), g_Config.m_ClStatboardInfos & TC_STATS_FPM, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_FPM;
+		
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+6, Localize("Current spree"), g_Config.m_ClStatboardInfos & TC_STATS_SPREE, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_SPREE;
+		
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+7, Localize("Best spree"), g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_BESTSPREE;
+
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+9, Localize("Weapons stats"), g_Config.m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_WEAPS;
+
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+8, Localize("Flag grabs"), g_Config.m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_FLAGGRABS;
+
+	View.HSplitTop(20.0f, &Button, &View);
+	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+10, Localize("Flag captures"), g_Config.m_ClStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
+		g_Config.m_ClStatboardInfos ^= TC_STATS_FLAGCAPTURES;
+
+	return 11*20.0f;
 }
 
 bool CMenus::DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
