@@ -2495,11 +2495,6 @@ int main(int argc, const char **argv) // ignore_convention
 {
 #endif
 #if defined(CONF_FAMILY_WINDOWS)
-	#ifdef CONF_RELEASE
-	bool HideConsole = true;
-	#else
-	bool HideConsole = false;
-	#endif
 	bool QuickEditMode = false;
 	for(int i = 1; i < argc; i++) // ignore_convention
 	{
@@ -2507,22 +2502,7 @@ int main(int argc, const char **argv) // ignore_convention
 		{
 			QuickEditMode = true;
 		}
-		if(str_comp("-c", argv[i]) == 0 || str_comp("--console", argv[i]) == 0) // ignore_convention
-		{
-			HideConsole = false;
-			break;
-		}
-		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
-		{
-			HideConsole = true;
-			break;
-		}
 	}
-
-	if(HideConsole)
-		FreeConsole();
-	else if(!QuickEditMode)
-		dbg_console_init();
 #endif
 
 	bool UseDefaultConfig = false;
@@ -2627,6 +2607,20 @@ int main(int argc, const char **argv) // ignore_convention
 			}
 		}
 	}
+#if defined(CONF_FAMILY_WINDOWS)
+	bool HideConsole = false;
+	#ifdef CONF_RELEASE
+	if(!(g_Config.m_ShowConsoleWindow&2))
+	#else
+	if(!(g_Config.m_ShowConsoleWindow&1))
+	#endif
+	{
+		HideConsole = true;
+		FreeConsole();
+	}
+	else if(!QuickEditMode)
+		dbg_console_init();
+#endif
 
 	// restore empty config strings to their defaults
 	pConfig->RestoreStrings();
