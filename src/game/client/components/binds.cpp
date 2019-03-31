@@ -36,9 +36,6 @@ void CBinds::Bind(int KeyID, int Modifier, const char *pStr)
 	if(KeyID < 0 || KeyID >= KEY_LAST)
 		return;
 
-	// skip modifiers for +xxx binds
-	if(pStr[0] == '+')
-		Modifier = 0;
 	str_copy(m_aaaKeyBindings[KeyID][Modifier], pStr, sizeof(m_aaaKeyBindings[KeyID][Modifier]));
 	char aBuf[256];
 	if(!m_aaaKeyBindings[KeyID][Modifier][0])
@@ -137,7 +134,41 @@ bool CBinds::OnInput(IInput::CEvent Event)
 	bool rtn = false;
 	for(int m = 0; m < MODIFIER_COUNT; m++)
 	{
-		if(((Mask&(1 << m)) || (m == 0 && m_aaaKeyBindings[Event.m_Key][0][0] == '+')) && m_aaaKeyBindings[Event.m_Key][m][0] != 0)	// always trigger +xxx binds despite any modifier
+		if(m == 0 && m_aaaKeyBindings[Event.m_Key][0][0] == '+')
+		{
+			if(!KeyModifierMask)	// pressed key isn't a modifier
+			{
+				// check if a composed bind exists
+				bool GotComposedBind = false;
+				for(int ModCheck = 1; ModCheck < MODIFIER_COUNT; ++ModCheck)
+				{
+					if((Mask&(1<<ModCheck)) && m_aaaKeyBindings[Event.m_Key][ModCheck][0])
+						GotComposedBind = true;
+				}
+
+				// check if a non-composed bind for pressed modifiers exist
+				bool GotModifierBind = false;
+				if((Mask&(1<<MODIFIER_SHIFT)) && (m_aaaKeyBindings[KEY_LSHIFT][0][0] || m_aaaKeyBindings[KEY_RSHIFT][0][0]))
+					GotModifierBind = true;
+				if((Mask&(1<<MODIFIER_CTRL)) && (m_aaaKeyBindings[KEY_LCTRL][0][0] || m_aaaKeyBindings[KEY_RCTRL][0][0]))
+					GotModifierBind = true;
+				if((Mask&(1<<MODIFIER_ALT)) && (m_aaaKeyBindings[KEY_LALT][0][0] || m_aaaKeyBindings[KEY_RALT][0][0]))
+					GotModifierBind = true;
+
+				// use the composed bind:
+				// - when the modifier is already pressed
+				// - the pressed modifier doesn't trigger a non-composed bind
+				// - a composed bind is available
+				if(!GotModifierBind && GotComposedBind)
+					continue;
+			}
+			if(Event.m_Flags&IInput::FLAG_PRESS)
+				Console()->ExecuteLineStroked(1, m_aaaKeyBindings[Event.m_Key][m]);
+			if(Event.m_Flags&IInput::FLAG_RELEASE)
+				Console()->ExecuteLineStroked(0, m_aaaKeyBindings[Event.m_Key][m]);
+			return true; // always stop after triggering a +xxx bind
+		}
+		if((Mask&(1<<m)) && m_aaaKeyBindings[Event.m_Key][m][0])
 		{
 			if(Event.m_Flags&IInput::FLAG_PRESS)
 				Console()->ExecuteLineStroked(1, m_aaaKeyBindings[Event.m_Key][m]);
