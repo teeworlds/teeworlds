@@ -58,9 +58,9 @@ public:
 						const int TilemapCount = pTilemap->m_Width * pTilemap->m_Height;
 						const int TilemapSize = TilemapCount * sizeof(CTile);
 
-						if((TilemapCount / pTilemap->m_Width != pTilemap->m_Height) || (TilemapSize / sizeof(CTile) != TilemapCount))
+						if((TilemapCount / pTilemap->m_Width != pTilemap->m_Height) || (TilemapSize / (int)sizeof(CTile) != TilemapCount))
 						{
-							dbg_msg("engine", "map layer too big (%d * %d * &lu causes an integer overflow)", pTilemap->m_Width, pTilemap->m_Height, sizeof(CTile));
+							dbg_msg("engine", "map layer too big (%d * %d * %lu causes an integer overflow)", pTilemap->m_Width, pTilemap->m_Height, sizeof(CTile));
 							return false;
 						}
 						CTile *pTiles = static_cast<CTile *>(mem_alloc(TilemapSize, 1));
