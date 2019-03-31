@@ -4711,14 +4711,16 @@ void CEditor2::OnMapLoaded()
 		CHistoryEntry* pCurrent = m_pHistoryEntryCurrent->m_pNext;
 		while(pCurrent)
 		{
-			free(pCurrent->m_pSnap);
+			mem_free(pCurrent->m_pSnap);
+			mem_free(pCurrent->m_pUiSnap); // TODO: make a HistoryDeleteEntry function
 			pCurrent = pCurrent->m_pNext;
 		}
 
 		pCurrent = m_pHistoryEntryCurrent;
 		while(pCurrent)
 		{
-			free(pCurrent->m_pSnap);
+			mem_free(pCurrent->m_pSnap);
+			mem_free(pCurrent->m_pUiSnap); // TODO: make a HistoryDeleteEntry function
 			pCurrent = pCurrent->m_pPrev;
 		}
 		m_HistoryEntryDispenser.Clear();
@@ -4728,6 +4730,7 @@ void CEditor2::OnMapLoaded()
 	// initialize history
 	m_pHistoryEntryCurrent = m_HistoryEntryDispenser.AllocOne();
 	m_pHistoryEntryCurrent->m_pSnap = m_Map.SaveSnapshot();
+	m_pHistoryEntryCurrent->m_pUiSnap = SaveUiSnapshot();
 	m_pHistoryEntryCurrent->SetAction("Map loaded");
 	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
 }
@@ -5537,6 +5540,7 @@ void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 	CHistoryEntry* pEntry;
 	pEntry = m_HistoryEntryDispenser.AllocOne();
 	pEntry->m_pSnap = m_Map.SaveSnapshot();
+	pEntry->m_pUiSnap = SaveUiSnapshot();
 	pEntry->SetAction(pActionStr);
 	pEntry->SetDescription(pDescStr);
 
@@ -5548,7 +5552,8 @@ void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 		pCur = pCur->m_pNext;
 
 		dbg_assert(pToDelete->m_pSnap != nullptr, "Snapshot is null");
-		free(pToDelete->m_pSnap);
+		mem_free(pToDelete->m_pSnap);
+		mem_free(pToDelete->m_pUiSnap); // TODO: dealloc smarter, see above
 		m_HistoryEntryDispenser.DeallocOne(pToDelete);
 	}
 
@@ -5561,11 +5566,8 @@ void CEditor2::HistoryRestoreToEntry(CHistoryEntry* pEntry)
 {
 	dbg_assert(pEntry && pEntry->m_pSnap, "History entry or snapshot invalid");
 	m_Map.RestoreSnapshot(pEntry->m_pSnap);
+	RestoreUiSnapshot(pEntry->m_pUiSnap);
 	m_pHistoryEntryCurrent = pEntry;
-
-	// TODO: on map restore
-	m_UiSelectedLayerID = m_Map.m_GameLayerID;
-	m_UiSelectedGroupID = m_Map.m_GameGroupID;
 }
 
 void CEditor2::HistoryUndo()
@@ -5580,6 +5582,22 @@ void CEditor2::HistoryRedo()
 	dbg_assert(m_pHistoryEntryCurrent != nullptr, "Current history entry is null");
 	if(m_pHistoryEntryCurrent->m_pNext)
 		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pNext);
+}
+
+CEditor2::CUISnapshot* CEditor2::SaveUiSnapshot()
+{
+	CUISnapshot* pUiSnap = (CUISnapshot*)mem_alloc(sizeof(CUISnapshot), 1); // TODO: alloc this smarter (make a growable array to act like a pool)
+	pUiSnap->m_SelectedLayerID = m_UiSelectedLayerID;
+	pUiSnap->m_SelectedGroupID = m_UiSelectedGroupID;
+	pUiSnap->m_ToolID = m_Tool;
+	return pUiSnap;
+}
+
+void CEditor2::RestoreUiSnapshot(CUISnapshot* pUiSnap)
+{
+	m_UiSelectedLayerID = pUiSnap->m_SelectedLayerID;
+	m_UiSelectedGroupID = pUiSnap->m_SelectedGroupID;
+	m_Tool = pUiSnap->m_ToolID;
 }
 
 const char* CEditor2::GetLayerName(int LayerID)

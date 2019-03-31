@@ -607,29 +607,6 @@ struct CUIGrabHandle: CUIMouseDrag
 	bool m_IsGrabbed;
 };
 
-struct CHistoryEntry
-{
-	CHistoryEntry* m_pPrev;
-	CHistoryEntry* m_pNext;
-	CEditorMap2::CSnapshot* m_pSnap;
-	char m_aActionStr[64];
-	char m_aDescStr[64];
-
-	inline void SetAction(const char* pStr)
-	{
-		const int Len = min((int)(sizeof(m_aActionStr)-1), str_length(pStr));
-		memmove(m_aActionStr, pStr, Len);
-		m_aActionStr[Len] = 0;
-	}
-
-	inline void SetDescription(const char* pStr)
-	{
-		const int Len = min((int)(sizeof(m_aDescStr)-1), str_length(pStr));
-		memmove(m_aDescStr, pStr, Len);
-		m_aDescStr[Len] = 0;
-	}
-};
-
 class CEditor2: public IEditor
 {
 	enum
@@ -714,7 +691,39 @@ class CEditor2: public IEditor
 
 		inline bool IsEmpty() const { return m_Width <= 0;}
 	};
+
 	CBrush m_Brush;
+
+	struct CUISnapshot
+	{
+		int m_SelectedLayerID;
+		int m_SelectedGroupID;
+		int m_ToolID;
+	};
+
+	struct CHistoryEntry
+	{
+		CHistoryEntry* m_pPrev;
+		CHistoryEntry* m_pNext;
+		CEditorMap2::CSnapshot* m_pSnap;
+		CUISnapshot* m_pUiSnap;
+		char m_aActionStr[64];
+		char m_aDescStr[64];
+
+		inline void SetAction(const char* pStr)
+		{
+			const int Len = min((int)(sizeof(m_aActionStr)-1), str_length(pStr));
+			memmove(m_aActionStr, pStr, Len);
+			m_aActionStr[Len] = 0;
+		}
+
+		inline void SetDescription(const char* pStr)
+		{
+			const int Len = min((int)(sizeof(m_aDescStr)-1), str_length(pStr));
+			memmove(m_aDescStr, pStr, Len);
+			m_aDescStr[Len] = 0;
+		}
+	};
 
 	CChainAllocator<CHistoryEntry> m_HistoryEntryDispenser;
 	CHistoryEntry* m_pHistoryEntryCurrent = nullptr;
@@ -940,6 +949,9 @@ class CEditor2: public IEditor
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
 	void HistoryUndo();
 	void HistoryRedo();
+
+	CUISnapshot* SaveUiSnapshot();
+	void RestoreUiSnapshot(CUISnapshot* pUiSnap);
 
 	const char* GetLayerName(int LayerID);
 	const char* GetGroupName(int GroupID);
