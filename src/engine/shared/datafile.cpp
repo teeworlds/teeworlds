@@ -164,7 +164,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 		io_close(pTmpDataFile->m_File);
 		mem_free(pTmpDataFile);
 		pTmpDataFile = 0;
-		dbg_msg("datafile", "couldn't load the whole thing, wanted=%d got=%d", Size, ReadSize);
+		dbg_msg("datafile", "couldn't load the whole thing, wanted=%d got=%d", unsigned(Size), ReadSize);
 		return false;
 	}
 
@@ -177,7 +177,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 
 	//if(DEBUG)
 	{
-		dbg_msg("datafile", "allocsize=%d", AllocSize);
+		dbg_msg("datafile", "allocsize=%d", unsigned(AllocSize));
 		dbg_msg("datafile", "readsize=%d", ReadSize);
 		dbg_msg("datafile", "swaplen=%d", Header.m_Swaplen);
 		dbg_msg("datafile", "item_size=%d", m_pDataFile->m_Header.m_ItemSize);
