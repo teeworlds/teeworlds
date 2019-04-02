@@ -316,6 +316,8 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_SnapshotStorage[1].Init();
 	m_RecivedSnapshots[0] = 0;
 	m_RecivedSnapshots[1] = 0;
+	m_SnapshotParts[0] = 0;
+	m_SnapshotParts[1] = 0;
 
 	m_VersionInfo.m_State = CVersionInfo::STATE_INIT;
 
@@ -509,7 +511,7 @@ void CClient::OnEnterGame()
 	m_aSnapshots[g_Config.m_ClDummy][SNAP_PREV] = 0;
 	m_SnapshotStorage[g_Config.m_ClDummy].PurgeAll();
 	m_RecivedSnapshots[g_Config.m_ClDummy] = 0;
-	m_SnapshotParts = 0;
+	m_SnapshotParts[g_Config.m_ClDummy] = 0;
 	m_PredTick[g_Config.m_ClDummy] = 0;
 	m_CurrentRecvTick[g_Config.m_ClDummy] = 0;
 	m_CurGameTick[g_Config.m_ClDummy] = 0;
@@ -1496,15 +1498,15 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			{
 				if(GameTick != m_CurrentRecvTick[g_Config.m_ClDummy])
 				{
-					m_SnapshotParts = 0;
+					m_SnapshotParts[g_Config.m_ClDummy] = 0;
 					m_CurrentRecvTick[g_Config.m_ClDummy] = GameTick;
 				}
 
 				// TODO: clean this up abit
 				mem_copy((char*)m_aSnapshotIncommingData + Part*MAX_SNAPSHOT_PACKSIZE, pData, PartSize);
-				m_SnapshotParts |= 1<<Part;
+				m_SnapshotParts[g_Config.m_ClDummy] |= 1<<Part;
 
-				if(m_SnapshotParts == (unsigned)((1<<NumParts)-1))
+				if(m_SnapshotParts[g_Config.m_ClDummy] == (unsigned)((1<<NumParts)-1))
 				{
 					static CSnapshot Emptysnap;
 					CSnapshot *pDeltaShot = &Emptysnap;
@@ -1519,7 +1521,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					CompleteSize = (NumParts-1) * MAX_SNAPSHOT_PACKSIZE + PartSize;
 
 					// reset snapshoting
-					m_SnapshotParts = 0;
+					m_SnapshotParts[g_Config.m_ClDummy] = 0;
 
 					// find snapshot that we should use as delta
 					Emptysnap.Clear();
@@ -1726,15 +1728,15 @@ void CClient::ProcessServerPacketDummy(CNetChunk *pPacket)
 			{
 				if(GameTick != m_CurrentRecvTick[!g_Config.m_ClDummy])
 				{
-					m_SnapshotParts = 0;
+					m_SnapshotParts[!g_Config.m_ClDummy] = 0;
 					m_CurrentRecvTick[!g_Config.m_ClDummy] = GameTick;
 				}
 
 				// TODO: clean this up abit
 				mem_copy((char*)m_aSnapshotIncommingData + Part*MAX_SNAPSHOT_PACKSIZE, pData, PartSize);
-				m_SnapshotParts |= 1<<Part;
+				m_SnapshotParts[g_Config.m_ClDummy] |= 1<<Part;
 
-				if(m_SnapshotParts == (unsigned)((1<<NumParts)-1))
+				if(m_SnapshotParts[!g_Config.m_ClDummy] == (unsigned)((1<<NumParts)-1))
 				{
 					static CSnapshot Emptysnap;
 					CSnapshot *pDeltaShot = &Emptysnap;
@@ -1749,7 +1751,7 @@ void CClient::ProcessServerPacketDummy(CNetChunk *pPacket)
 					CompleteSize = (NumParts-1) * MAX_SNAPSHOT_PACKSIZE + PartSize;
 
 					// reset snapshoting
-					m_SnapshotParts = 0;
+					m_SnapshotParts[!g_Config.m_ClDummy] = 0;
 
 					// find snapshot that we should use as delta
 					Emptysnap.Clear();
@@ -2333,7 +2335,6 @@ bool CClient::LimitFps()
 void CClient::Run()
 {
 	m_LocalStartTime = time_get();
-	m_SnapshotParts = 0;
 
 	// init SDL
 	{
