@@ -1960,7 +1960,7 @@ void CEditor2::RenderMapOverlay()
 				HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
 				DrawRectBorderMiddle(HoverRect, HoverColor, 2, StyleColorTileHoverBorder);
 			}
-			else
+			else if(m_Brush.IsEmpty())
 			{
 				const CUIRect HoverRect = {GridMousePos.x, GridMousePos.y, TileSize, TileSize};
 				vec4 HoverColor = StyleColorTileHover;
@@ -5598,6 +5598,8 @@ void CEditor2::RestoreUiSnapshot(CUISnapshot* pUiSnap)
 	m_UiSelectedLayerID = pUiSnap->m_SelectedLayerID;
 	m_UiSelectedGroupID = pUiSnap->m_SelectedGroupID;
 	m_Tool = pUiSnap->m_ToolID;
+	BrushClear(); // TODO: save brush?
+	m_TileSelection.Deselect(); // TODO: save selection?
 }
 
 const char* CEditor2::GetLayerName(int LayerID)
