@@ -2055,11 +2055,26 @@ void CEditor2::RenderMapOverlay()
 					const int RectEndX = max(MouseTx, StartTX);
 					const int RectEndY = max(MouseTy, StartTY);
 
-					// click without dragging, paint whole brush in place
-					if(StartTX == MouseTx && StartTY == MouseTy)
-						EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
-					else // drag, fill the rectangle by repeating the brush
-						EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
+					// automap
+					if(m_BrushAutomapRuleID >= 0)
+					{
+						// click without dragging, paint whole brush in place
+						if(StartTX == MouseTx && StartTY == MouseTy)
+							EditBrushPaintLayerAutomap(MouseTx, MouseTy, SelectedLayerID, m_BrushAutomapRuleID);
+						else // drag, fill the rectangle by repeating the brush
+						{
+							EditBrushPaintLayerFillRectAutomap(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID, m_BrushAutomapRuleID);
+						}
+					}
+					// no automap
+					else
+					{
+						// click without dragging, paint whole brush in place
+						if(StartTX == MouseTx && StartTY == MouseTy)
+							EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
+						else // drag, fill the rectangle by repeating the brush
+							EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
+					}
 				}
 			}
 		}
@@ -3314,11 +3329,13 @@ void CEditor2::RenderPopupBrushPalette()
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
+	DrawRect(UiScreenRect, vec4(0, 0, 0, 0.5)); // darken the background a bit
+
 	CUIRect MainRect = {0, 0, m_UiMainViewRect.h, m_UiMainViewRect.h};
 	MainRect.x += (m_UiMainViewRect.w - MainRect.w) * 0.5;
 	MainRect.Margin(50.0f, &MainRect);
 	m_UiPopupBrushPaletteRect = MainRect;
-	DrawRect(MainRect, StyleColorBg);
+	//DrawRect(MainRect, StyleColorBg);
 
 	CUIRect TopRow;
 	MainRect.HSplitTop(40, &TopRow, &MainRect);
@@ -3473,8 +3490,7 @@ void CEditor2::RenderPopupBrushPalette()
 	}
 
 	// drag rectangle
-	if(s_DragState.m_IsDragging/* &&
-	   (UI()->MouseInside(&ImageRect) || IsInsideRect(s_DragState.m_StartDragPos, ImageRect))*/)
+	if(s_DragState.m_IsDragging)
 	{
 		const vec2 RelMouseStartPos = s_DragState.m_StartDragPos - vec2(ImageRect.x, ImageRect.y);
 		const vec2 RelMouseEndPos = m_UiMousePos - vec2(ImageRect.x, ImageRect.y);
@@ -3549,6 +3565,40 @@ void CEditor2::RenderPopupBrushPalette()
 	if(UiButton(ButtonRect, "90° ⟲", &s_ButRotCounterClockwise))
 	{
 		BrushRotate90CounterClockwise();
+	}
+
+	// Auto map
+	CUIRect RightCol = ImageRect;
+	RightCol.x = ImageRect.x + ImageRect.w + 2;
+	RightCol.w = 80;
+
+	// reset selected rule when changing image
+	if(SelectedTileLayer.m_ImageID != m_UiBrushPaletteState.m_ImageID)
+		m_BrushAutomapRuleID = -1;
+	m_UiBrushPaletteState.m_ImageID = SelectedTileLayer.m_ImageID;
+
+	CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(SelectedTileLayer.m_ImageID);
+	const float ButtonHeight = 20;
+	const float Spacing = 2;
+
+	if(pMapper)
+	{
+		const int RulesetCount = pMapper->RuleSetNum();
+		static CUIButton s_ButtonAutoMap[16];
+		 // TODO: find a better solution to this
+		dbg_assert(RulesetCount <= 16, "RulesetCount is too big");
+
+		for(int r = 0; r < RulesetCount; r++)
+		{
+			RightCol.HSplitTop(ButtonHeight, &ButtonRect, &RightCol);
+			RightCol.HSplitTop(Spacing, 0, &RightCol);
+
+			bool Selected = m_BrushAutomapRuleID == r;
+			if(UiButtonSelect(ButtonRect, pMapper->GetRuleSetName(r), &s_ButtonAutoMap[r], Selected, 10))
+			{
+				m_BrushAutomapRuleID = r;
+			}
+		}
 	}
 
 	RenderBrush(m_UiMousePos);
@@ -5200,6 +5250,58 @@ void CEditor2::EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int P
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
 	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: brush paint"),
+		LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "at (%d, %d)(%d, %d)",
+		PaintTX, PaintTY, PaintW, PaintH);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor2::EditBrushPaintLayerAutomap(int PaintTX, int PaintTY, int LayerID, int RulesetID)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+	dbg_assert(m_Map.m_aLayers[LayerID].IsTileLayer(), "Layer is not a tile layer");
+
+	BrushPaintLayer(PaintTX, PaintTY, LayerID);
+
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	dbg_assert(Layer.m_ImageID >= 0 && Layer.m_ImageID < m_Map.m_Assets.m_ImageCount, "ImageID out of bounds or invalid");
+
+	CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(Layer.m_ImageID);
+
+	dbg_assert(pMapper != 0, "Tileset mapper not found");
+	dbg_assert(Layer.m_aTiles.Count() == Layer.m_Width*Layer.m_Height, "Tile count does not match layer size");
+
+	pMapper->AutomapLayerSection(Layer.m_aTiles.Data(), PaintTX, PaintTY, m_Brush.m_Width, m_Brush.m_Height, Layer.m_Width, Layer.m_Height, RulesetID);
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: brush paint auto"),
+		LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "at (%d, %d)",
+		PaintTX, PaintTY);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor2::EditBrushPaintLayerFillRectAutomap(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID, int RulesetID)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.Count(), "LayerID out of bounds");
+	dbg_assert(m_Map.m_aLayers[LayerID].IsTileLayer(), "Layer is not a tile layer");
+
+	BrushPaintLayerFillRectRepeat(PaintTX, PaintTY, PaintW, PaintH, LayerID);
+
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	dbg_assert(Layer.m_ImageID >= 0 && Layer.m_ImageID < m_Map.m_Assets.m_ImageCount, "ImageID out of bounds or invalid");
+
+	CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(Layer.m_ImageID);
+
+	dbg_assert(pMapper != 0, "Tileset mapper not found");
+	dbg_assert(Layer.m_aTiles.Count() == Layer.m_Width*Layer.m_Height, "Tile count does not match layer size");
+
+	pMapper->AutomapLayerSection(Layer.m_aTiles.Data(), PaintTX, PaintTY, PaintW, PaintH, Layer.m_Width, Layer.m_Height, RulesetID);
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: brush paint auto"),
 		LayerID);
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "at (%d, %d)(%d, %d)",
 		PaintTX, PaintTY, PaintW, PaintH);

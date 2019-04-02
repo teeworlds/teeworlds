@@ -674,6 +674,7 @@ class CEditor2: public IEditor
 	struct CUIBrushPaletteState
 	{
 		u8 m_aTileSelected[256] = {0};
+		int m_ImageID = -1;
 	};
 	CUIBrushPaletteState m_UiBrushPaletteState;
 	CUIRect m_UiPopupBrushPaletteRect = {};
@@ -693,6 +694,7 @@ class CEditor2: public IEditor
 	};
 
 	CBrush m_Brush;
+	int m_BrushAutomapRuleID = -1;
 
 	struct CUISnapshot
 	{
@@ -931,6 +933,8 @@ class CEditor2: public IEditor
 	void EditTileSelectionFlipY(int LayerID);
 	void EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID);
 	void EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID);
+	void EditBrushPaintLayerAutomap(int PaintTX, int PaintTY, int LayerID, int RulesetID);
+	void EditBrushPaintLayerFillRectAutomap(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID, int RulesetID);
 	void EditTileLayerResize(int LayerID, int NewWidth, int NewHeight);
 	void EditTileLayerAutoMapWhole(int LayerID, int RulesetID);
 	void EditTileLayerAutoMapSection(int LayerID, int RulesetID, int StartTx, int StartTy, int SectionWidth, int SectionHeight);
