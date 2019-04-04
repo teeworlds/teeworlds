@@ -3631,11 +3631,9 @@ void CEditor2::RenderBrush(vec2 Pos)
 
 	Graphics()->TextureSet(LayerTexture);
 	Graphics()->BlendNone();
-	RenderTools()->RenderTilemap(m_Brush.m_aTiles.Data(), m_Brush.m_Width, m_Brush.m_Height, 32, White,
-								 LAYERRENDERFLAG_OPAQUE, 0, 0, -1, 0);
+	RenderTools()->RenderTilemap(m_Brush.m_aTiles.Data(), m_Brush.m_Width, m_Brush.m_Height, TileSize, White, LAYERRENDERFLAG_OPAQUE, 0, 0, -1, 0);
 	Graphics()->BlendNormal();
-	RenderTools()->RenderTilemap(m_Brush.m_aTiles.Data(), m_Brush.m_Width, m_Brush.m_Height, 32, White,
-								 LAYERRENDERFLAG_TRANSPARENT, 0, 0, -1, 0);
+	RenderTools()->RenderTilemap(m_Brush.m_aTiles.Data(), m_Brush.m_Width, m_Brush.m_Height, TileSize, White, LAYERRENDERFLAG_TRANSPARENT, 0, 0, -1, 0);
 
 	DrawRectBorder(BrushRect, vec4(0, 0, 0, 0), 1, vec4(1, 1, 1, 1));
 

@@ -143,8 +143,7 @@
 				"condition": [
 					{"x": -1, "y": 0, "value": "empty"},
 					{"x": -1, "y": 1, "value": "full"},
-					{"x": 0, "y": 1, "value": 48},
-					{"x": 0, "y": -1, "value": 4}
+					{"x": 0, "y": 1, "value": "full"},
 				]
 			},
 			{
