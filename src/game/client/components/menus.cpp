@@ -74,6 +74,9 @@ CMenus::CMenus()
 	m_DownArrowPressed = false;
 
 	m_LastInput = time_get();
+	
+	m_CursorActive = false;
+	m_PrevCursorActive = false;
 
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
 	m_aCallvoteReason[0] = 0;
@@ -590,6 +593,9 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	// render the cursor
 	if(UI()->LastActiveItem() == pID && !JustGotActive)
 	{
+		// set cursor active
+		m_CursorActive = true;
+		
 		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
 		Textbox = *pRect;
 		Textbox.VSplitLeft(2.0f, 0, &Textbox);
@@ -1222,29 +1228,29 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 		Left.VSplitLeft(ButtonWidth, &Button, &Left);
 		static CButtonContainer s_GameButton;
-		if(DoButton_MenuTabTop(&s_GameButton, Localize("Game"), m_ActivePage == PAGE_GAME, &Button, Alpha, Alpha))
+		if(DoButton_MenuTabTop(&s_GameButton, Localize("Game"), m_ActivePage == PAGE_GAME, &Button, Alpha, Alpha) || CheckHotKey(KEY_G))
 			NewPage = PAGE_GAME;
 
 		Left.VSplitLeft(Spacing, 0, &Left); // little space
 		Left.VSplitLeft(ButtonWidth, &Button, &Left);
 		static CButtonContainer s_PlayersButton;
-		if(DoButton_MenuTabTop(&s_PlayersButton, Localize("Players"), m_ActivePage == PAGE_PLAYERS, &Button, Alpha, Alpha))
+		if(DoButton_MenuTabTop(&s_PlayersButton, Localize("Players"), m_ActivePage == PAGE_PLAYERS, &Button, Alpha, Alpha) || CheckHotKey(KEY_P))
 			NewPage = PAGE_PLAYERS;
 
 		Left.VSplitLeft(Spacing, 0, &Left); // little space
 		Left.VSplitLeft(ButtonWidth, &Button, &Left);
 		static CButtonContainer s_ServerInfoButton;
-		if(DoButton_MenuTabTop(&s_ServerInfoButton, Localize("Server info"), m_ActivePage == PAGE_SERVER_INFO, &Button, Alpha, Alpha))
+		if(DoButton_MenuTabTop(&s_ServerInfoButton, Localize("Server info"), m_ActivePage == PAGE_SERVER_INFO, &Button, Alpha, Alpha) || CheckHotKey(KEY_I))
 			NewPage = PAGE_SERVER_INFO;
 
 		Left.VSplitLeft(Spacing, 0, &Left); // little space
 		Left.VSplitLeft(ButtonWidth, &Button, &Left);
 		static CButtonContainer s_CallVoteButton;
-		if(DoButton_MenuTabTop(&s_CallVoteButton, Localize("Call vote"), m_ActivePage == PAGE_CALLVOTE, &Button, Alpha, Alpha))
+		if(DoButton_MenuTabTop(&s_CallVoteButton, Localize("Call vote"), m_ActivePage == PAGE_CALLVOTE, &Button, Alpha, Alpha) || CheckHotKey(KEY_V))
 			NewPage = PAGE_CALLVOTE;
 
 		static CButtonContainer s_SettingsButton;
-		if(DoButton_MenuTabTop(&s_SettingsButton, Localize("Settings"), m_GamePage == PAGE_SETTINGS, &Right))
+		if(DoButton_MenuTabTop(&s_SettingsButton, Localize("Settings"), m_GamePage == PAGE_SETTINGS, &Right) || CheckHotKey(KEY_S))
 			NewPage = PAGE_SETTINGS;
 		
 		Rect.HSplitTop(Spacing, 0, &Rect);
@@ -1346,7 +1352,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static CButtonContainer s_InternetButton;
-			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Global"), m_ActivePage==PAGE_INTERNET, &Button))
+			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Global"), m_ActivePage==PAGE_INTERNET, &Button) || CheckHotKey(KEY_G))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 				ServerBrowser()->SetType(IServerBrowser::TYPE_INTERNET);
@@ -1357,7 +1363,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			Left.VSplitLeft(Spacing, 0, &Left); // little space
 			Left.VSplitLeft(ButtonWidth, &Button, &Left);
 			static CButtonContainer s_LanButton;
-			if(DoButton_MenuTabTop(&s_LanButton, Localize("Local"), m_ActivePage==PAGE_LAN, &Button))
+			if(DoButton_MenuTabTop(&s_LanButton, Localize("Local"), m_ActivePage==PAGE_LAN, &Button) || CheckHotKey(KEY_L))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 				ServerBrowser()->SetType(IServerBrowser::TYPE_LAN);
@@ -2605,6 +2611,13 @@ void CMenus::OnRender()
 {
 	UI()->StartCheck();
 
+	// reset cursor
+	if(m_CursorActive)
+		m_PrevCursorActive = true;
+	else
+		m_PrevCursorActive = false;
+	m_CursorActive = false;
+
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		SetActive(true);
 
@@ -2682,6 +2695,11 @@ void CMenus::OnRender()
 	m_DeletePressed = false;
 	m_UpArrowPressed = false;
 	m_DownArrowPressed = false;
+}
+
+bool CMenus::CheckHotKey(int Key)
+{
+	return !m_PrevCursorActive && !m_PopupActive && Input()->KeyIsPressed(Key) && !m_pClient->m_pGameConsole->IsConsoleActive();
 }
 
 void CMenus::RenderBackground()
