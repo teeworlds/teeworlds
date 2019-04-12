@@ -36,6 +36,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_SaveTilesSize = 0;
 
 	m_SelectedRuleSet = 0;
+	m_LiveAutoMap = false;
 	m_SelectedAmount = 50;
 }
 
@@ -284,18 +285,26 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 				m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
 		}
 	}
+
+	if(m_LiveAutoMap)
+		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, {sx - 1, sy - 1, w + 2, h + 2});
+
 	m_pEditor->m_Map.m_Modified = true;
 }
 
+static int s_lastBrushX = -1, s_lastBrushY = -1;
 void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 {
 	if(m_Readonly)
 		return;
 
-	//
 	CLayerTiles *l = (CLayerTiles *)pBrush;
 	int sx = ConvertX(wx);
 	int sy = ConvertY(wy);
+
+	//dont draw if the mouse is held without moving
+	if(sx == s_lastBrushX && sy == s_lastBrushY)
+		return;
 
 	for(int y = 0; y < l->m_Height; y++)
 		for(int x = 0; x < l->m_Width; x++)
@@ -307,7 +316,14 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
+
+	if(m_LiveAutoMap)
+		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, {sx - 1, sy - 1, l->m_Width + 2, l->m_Height + 2});
+
 	m_pEditor->m_Map.m_Modified = true;
+
+	s_lastBrushX = sx;
+	s_lastBrushY = sy;
 }
 
 void CLayerTiles::BrushFlipX()
@@ -483,7 +499,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			{
 				if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_TILESET)
 				{
-					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet);
+					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, {0, 0, m_Width, m_Height});
 					return 1; // only close the popup when it's a tileset
 				}
 				else if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_DOODADS)
@@ -572,7 +588,11 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			m_Image = -1;
 		}
 		else
+		{
 			m_Image = NewVal%m_pEditor->m_Map.m_lImages.size();
+			m_SelectedRuleSet = 0;
+			m_LiveAutoMap = false;
+		}
 	}
 	else if(Prop == PROP_COLOR)
 	{

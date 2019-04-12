@@ -2709,6 +2709,23 @@ void CEditor::ReplaceImage(const char *pFileName, int StorageType, void *pUser)
 	{
 		delete pImg->m_pAutoMapper;
 		pImg->m_pAutoMapper = 0;
+		for (int g = 0; g < pEditor->m_Map.m_lGroups.size(); g++)
+		{
+			CLayerGroup *pGroup = pEditor->m_Map.m_lGroups[g];
+			for (int l = 0; l < pGroup->m_lLayers.size(); l++)
+			{
+				if (pGroup->m_lLayers[l]->m_Type == LAYERTYPE_TILES)
+				{
+					CLayerTiles *pLayer = static_cast<CLayerTiles *>(pGroup->m_lLayers[l]);
+					//resets live auto map of affected layers
+					if (pLayer->m_Image == pEditor->m_SelectedImage)
+					{
+						pLayer->m_SelectedRuleSet = 0;
+						pLayer->m_LiveAutoMap = false;
+					}
+				}
+			}
+		}
 	}
 	*pImg = ImgInfo;
 	pImg->m_External = External;
@@ -3897,7 +3914,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 									pEnvelope->m_lPoints[i].m_aOutTangentdx[c] = clamp(pEnvelope->m_lPoints[i].m_aOutTangentdx[c], 0,
 																						(int)(EndTime*1000.f - pEnvelope->m_lPoints[i].m_Time));
 
-									//
 									m_SelectedQuadEnvelope = m_SelectedEnvelope;
 									m_ShowEnvelopePreview = SHOWENV_SELECTED;
 									m_SelectedEnvelopePoint = i;
@@ -3981,7 +3997,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 									// clamp time value
 									pEnvelope->m_lPoints[i].m_aInTangentdx[c] = clamp(pEnvelope->m_lPoints[i].m_aInTangentdx[c], -pEnvelope->m_lPoints[i].m_Time, 0);
 
-									//
 									m_SelectedQuadEnvelope = m_SelectedEnvelope;
 									m_ShowEnvelopePreview = SHOWENV_SELECTED;
 									m_SelectedEnvelopePoint = i;
