@@ -287,7 +287,10 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 	}
 
 	if(m_LiveAutoMap)
-		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, {sx - 1, sy - 1, w + 2, h + 2});
+	{
+		RECTi r = {sx - 1, sy - 1, w + 2, h + 2};	
+		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, r);
+	}
 
 	m_pEditor->m_Map.m_Modified = true;
 }
@@ -318,7 +321,10 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 		}
 
 	if(m_LiveAutoMap)
-		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, {sx - 1, sy - 1, l->m_Width + 2, l->m_Height + 2});
+	{
+		RECTi r = {sx - 1, sy - 1, l->m_Width + 2, l->m_Height + 2};
+		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, r);
+	}
 
 	m_pEditor->m_Map.m_Modified = true;
 
@@ -499,7 +505,8 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			{
 				if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_TILESET)
 				{
-					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, {0, 0, m_Width, m_Height});
+					RECTi r = {0, 0, m_Width, m_Height};
+					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, r);
 					return 1; // only close the popup when it's a tileset
 				}
 				else if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_DOODADS)
