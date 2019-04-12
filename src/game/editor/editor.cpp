@@ -4038,6 +4038,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 	static int s_SaveButton = 0;
 	static int s_SaveAsButton = 0;
 	static int s_OpenButton = 0;
+	static int s_OpenCurrentButton = 0;
 	static int s_AppendButton = 0;
 	static int s_ExitButton = 0;
 
@@ -4071,6 +4072,23 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 		else
 			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		return 1;
+	}
+
+	if(pEditor->Client()->State() == IClient::STATE_ONLINE)
+	{
+		View.HSplitTop(2.0f, &Slot, &View);
+		View.HSplitTop(12.0f, &Slot, &View);
+		if(pEditor->DoButton_MenuItem(&s_OpenCurrentButton, "Load Current Map", 0, &Slot, 0, "Opens the current in game map for editing"))
+		{
+			if(pEditor->HasUnsavedData())
+			{
+				pEditor->m_PopupEventType = POPEVENT_LOAD_CURRENT;
+				pEditor->m_PopupEventActivated = true;
+			}
+			else
+				pEditor->LoadCurrentMap();
+			return 1;
+		}
 	}
 
 	View.HSplitTop(10.0f, &Slot, &View);

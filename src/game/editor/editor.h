@@ -611,6 +611,7 @@ public:
 	void Reset(bool CreateDefault=true);
 	int Save(const char *pFilename);
 	int Load(const char *pFilename, int StorageType);
+	void LoadCurrentMap();
 	int Append(const char *pFilename, int StorageType);
 	void Render();
 
@@ -645,6 +646,7 @@ public:
 	{
 		POPEVENT_EXIT=0,
 		POPEVENT_LOAD,
+		POPEVENT_LOAD_CURRENT,
 		POPEVENT_NEW,
 		POPEVENT_SAVE,
 	};
