@@ -116,6 +116,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	//
 	char m_aCurrentMap[256];
+	char m_aCurrentMapPath[256];
 	SHA256_DIGEST m_CurrentMapSha256;
 	unsigned m_CurrentMapCrc;
 
@@ -264,6 +265,7 @@ public:
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
 
+	const char *GetCurrentMapPath() const { return m_aCurrentMapPath; }
 	virtual const char *MapDownloadName() const { return m_aMapdownloadName; }
 	virtual int MapDownloadAmount() const { return m_MapdownloadAmount; }
 	virtual int MapDownloadTotalsize() const { return m_MapdownloadTotalsize; }

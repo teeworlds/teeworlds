@@ -803,6 +803,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, const SHA
 	m_RecivedSnapshots = 0;
 
 	str_copy(m_aCurrentMap, pName, sizeof(m_aCurrentMap));
+	str_copy(m_aCurrentMapPath, pFilename, sizeof(m_aCurrentMapPath));
 	m_CurrentMapSha256 = m_pMap->Sha256();
 	m_CurrentMapCrc = m_pMap->Crc();
 
