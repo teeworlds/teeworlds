@@ -230,6 +230,7 @@ void CLayerTiles::BrushSelecting(CUIRect Rect)
 	TextRender()->Text(0, Rect.x+3.0f, Rect.y+3.0f, m_pEditor->m_ShowTilePicker?15.0f:15.0f*m_pEditor->m_WorldZoom, aBuf, -1);
 }
 
+static int s_lastBrushX = -1, s_lastBrushY = -1;
 int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 {
 	RECTi r;
@@ -252,6 +253,8 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		for(int x = 0; x < r.w; x++)
 			pGrabbed->m_pTiles[y*pGrabbed->m_Width+x] = m_pTiles[(r.y+y)*m_Width+(r.x+x)];
 
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 	return 1;
 }
 
@@ -295,7 +298,6 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 	m_pEditor->m_Map.m_Modified = true;
 }
 
-static int s_lastBrushX = -1, s_lastBrushY = -1;
 void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 {
 	if(m_Readonly)
