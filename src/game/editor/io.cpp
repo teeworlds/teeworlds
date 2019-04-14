@@ -251,6 +251,11 @@ int CEditor::Load(const char *pFileName, int StorageType)
 	return m_Map.Load(Kernel()->RequestInterface<IStorage>(), pFileName, StorageType);
 }
 
+void CEditor::LoadCurrentMap()
+{
+	CallbackOpenMap(m_pClient->GetCurrentMapPath(), IStorage::TYPE_ALL, this);
+}
+
 int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int StorageType)
 {
 	CDataFileReader DataFile;

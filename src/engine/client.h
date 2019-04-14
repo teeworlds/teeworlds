@@ -98,6 +98,7 @@ public:
 	virtual void EnterGame() = 0;
 
 	//
+	virtual const char *GetCurrentMapPath() const = 0;
 	virtual const char *MapDownloadName() const = 0;
 	virtual int MapDownloadAmount() const = 0;
 	virtual int MapDownloadTotalsize() const = 0;

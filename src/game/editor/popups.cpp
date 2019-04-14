@@ -763,6 +763,8 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 		pEditor->UI()->DoLabel(&Label, "Exit the editor", 20.0f, CUI::ALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
 		pEditor->UI()->DoLabel(&Label, "Load map", 20.0f, CUI::ALIGN_CENTER);
+	else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
+		pEditor->UI()->DoLabel(&Label, "Load current map", 20.0f, CUI::ALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
 		pEditor->UI()->DoLabel(&Label, "New map", 20.0f, CUI::ALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
@@ -779,6 +781,8 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you exit the editor.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
 		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load a new map.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
+	else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
+		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load the current map.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
 		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you create a new map.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
@@ -794,6 +798,8 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 			g_Config.m_ClEditor = 0;
 		else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
 			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
+		else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
+			pEditor->LoadCurrentMap();
 		else if(pEditor->m_PopupEventType == POPEVENT_NEW)
 		{
 			pEditor->Reset();
