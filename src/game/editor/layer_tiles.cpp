@@ -348,6 +348,9 @@ void CLayerTiles::BrushFlipX()
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP : TILEFLAG_VFLIP;
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::BrushFlipY()
@@ -364,6 +367,9 @@ void CLayerTiles::BrushFlipY()
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP : TILEFLAG_HFLIP;
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::BrushRotate(float Amount)
@@ -401,6 +407,9 @@ void CLayerTiles::BrushRotate(float Amount)
 		BrushFlipX();
 		BrushFlipY();
 	}
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::Resize(int NewW, int NewH)
@@ -451,6 +460,9 @@ void CLayerTiles::Shift(int Direction)
 				mem_copy(&m_pTiles[y*m_Width], &m_pTiles[(y-1)*m_Width], m_Width*sizeof(CTile));
 		}
 	}
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::ShowInfo()
