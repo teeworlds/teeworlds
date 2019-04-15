@@ -17,7 +17,7 @@ config:Finalize("config.lua")
 
 generated_src_dir = "build/src"
 generated_icon_dir = "build/icons"
-builddir = "build/%(arch)s/%(conf)s"
+builddir = "bin"
 content_src_dir = "datasrc/"
 
 -- data compiler
@@ -218,6 +218,8 @@ function GenerateSolarisSettings(settings, conf, arch, compiler)
 end
 
 function GenerateWindowsSettings(settings, conf, target_arch, compiler)
+	settings.cc.flags_cxx:Add("-g")
+	
 	if compiler == "cl" then
 		if (target_arch == "x86" and arch ~= "ia32") or
 		   (target_arch == "x86_64" and arch ~= "ia64" and arch ~= "amd64") then
@@ -350,7 +352,9 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], server, game_server)
+	local infcroya = Compile(settings, Collect("src/infcroya/*.cpp", "src/infcroya/classes/*.cpp"))
+	
+	return Link(settings, "server", libs["zlib"], libs["md5"], server, game_server, infcroya)
 end
 
 function BuildTools(settings)
@@ -502,7 +506,7 @@ if ScriptArgs['builddir'] then
 	builddir = ScriptArgs['builddir']
 end
 
-targets = {client="teeworlds", server="teeworlds_srv",
+targets = {client="teeworlds", server="server",
            versionserver="versionsrv", masterserver="mastersrv",
            tools="pseudo_tools", content="content"}
 
