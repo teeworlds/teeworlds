@@ -269,21 +269,42 @@ void CSkins::OnInit()
 	if(!m_aSkins.size())
 		m_aSkins.add(m_DummySkin);
 
-	// add xmas hat
-	const char *pFileName = "skins/xmas_hat.png";
-	CImageInfo Info;
-	if(!Graphics()->LoadPNG(&Info, pFileName, IStorage::TYPE_ALL) || Info.m_Width != 128 || Info.m_Height != 512)
 	{
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "failed to load xmas hat '%s'", pFileName);
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		// add xmas hat
+		const char *pFileName = "skins/xmas_hat.png";
+		CImageInfo Info;
+		if(!Graphics()->LoadPNG(&Info, pFileName, IStorage::TYPE_ALL) || Info.m_Width != 128 || Info.m_Height != 512)
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "failed to load xmas hat '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		}
+		else
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "loaded xmas hat '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+			m_XmasHatTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+		}
 	}
-	else
+
 	{
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "loaded xmas hat '%s'", pFileName);
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
-		m_XmasHatTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+		// add bot decoration
+		const char *pFileName = "skins/bot.png";
+		CImageInfo Info;
+		if(!Graphics()->LoadPNG(&Info, pFileName, IStorage::TYPE_ALL) || Info.m_Width != 384 || Info.m_Height != 160)
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "failed to load bot '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		}
+		else
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "loaded bot '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+			m_BotTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+		}
 	}
 }
 
