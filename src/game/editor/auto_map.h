@@ -6,6 +6,11 @@
 
 #include <engine/external/json-parser/json.h>
 
+typedef struct
+{
+	int x, y;
+	int w, h;
+} RECTi;
 
 class IAutoMapper
 {
@@ -22,17 +27,15 @@ public:
 		MAX_RULES=256
 	};
 
-	//
 	IAutoMapper(class CEditor *pEditor, int Type) : m_pEditor(pEditor), m_Type(Type) {}
 	virtual ~IAutoMapper() {};
 	virtual void Load(const json_value &rElement) = 0;
-	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID) {}
+	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, RECTi Area) {}
 	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, int Ammount) {} // for convenience purposes
 
 	virtual int RuleSetNum() = 0;
 	virtual const char* GetRuleSetName(int Index) const = 0;
 
-	//
 	int GetType() const { return m_Type; }
 
 	static bool Random(int Value)
@@ -91,7 +94,7 @@ public:
 	CTilesetMapper(class CEditor *pEditor) : IAutoMapper(pEditor, TYPE_TILESET) { m_aRuleSets.clear(); }
 
 	virtual void Load(const json_value &rElement);
-	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID);
+	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, RECTi Area);
 
 	virtual int RuleSetNum() { return m_aRuleSets.size(); }
 	virtual const char* GetRuleSetName(int Index) const;

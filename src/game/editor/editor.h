@@ -409,12 +409,6 @@ enum
 	PROPTYPE_SHIFT,
 };
 
-typedef struct
-{
-	int x, y;
-	int w, h;
-} RECTi;
-
 class CLayerTiles : public CLayer
 {
 public:
@@ -464,6 +458,7 @@ public:
 	int m_SaveTilesSize;
 	CTile *m_pTiles;
 	int m_SelectedRuleSet;
+	bool m_LiveAutoMap;
 	int m_SelectedAmount;
 };
 

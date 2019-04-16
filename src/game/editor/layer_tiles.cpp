@@ -36,6 +36,7 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_SaveTilesSize = 0;
 
 	m_SelectedRuleSet = 0;
+	m_LiveAutoMap = false;
 	m_SelectedAmount = 50;
 }
 
@@ -229,6 +230,7 @@ void CLayerTiles::BrushSelecting(CUIRect Rect)
 	TextRender()->Text(0, Rect.x+3.0f, Rect.y+3.0f, m_pEditor->m_ShowTilePicker?15.0f:15.0f*m_pEditor->m_WorldZoom, aBuf, -1);
 }
 
+static int s_lastBrushX = -1, s_lastBrushY = -1;
 int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 {
 	RECTi r;
@@ -251,6 +253,8 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		for(int x = 0; x < r.w; x++)
 			pGrabbed->m_pTiles[y*pGrabbed->m_Width+x] = m_pTiles[(r.y+y)*m_Width+(r.x+x)];
 
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 	return 1;
 }
 
@@ -284,6 +288,13 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 				m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
 		}
 	}
+
+	if(m_LiveAutoMap)
+	{
+		RECTi r = {sx - 1, sy - 1, w + 2, h + 2};	
+		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, r);
+	}
+
 	m_pEditor->m_Map.m_Modified = true;
 }
 
@@ -292,10 +303,13 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 	if(m_Readonly)
 		return;
 
-	//
 	CLayerTiles *l = (CLayerTiles *)pBrush;
 	int sx = ConvertX(wx);
 	int sy = ConvertY(wy);
+
+	//dont draw if the mouse is held without moving
+	if(sx == s_lastBrushX && sy == s_lastBrushY)
+		return;
 
 	for(int y = 0; y < l->m_Height; y++)
 		for(int x = 0; x < l->m_Width; x++)
@@ -307,7 +321,17 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
+
+	if(m_LiveAutoMap)
+	{
+		RECTi r = {sx - 1, sy - 1, l->m_Width + 2, l->m_Height + 2};
+		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, r);
+	}
+
 	m_pEditor->m_Map.m_Modified = true;
+
+	s_lastBrushX = sx;
+	s_lastBrushY = sy;
 }
 
 void CLayerTiles::BrushFlipX()
@@ -324,6 +348,9 @@ void CLayerTiles::BrushFlipX()
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP : TILEFLAG_VFLIP;
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::BrushFlipY()
@@ -340,6 +367,9 @@ void CLayerTiles::BrushFlipY()
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP : TILEFLAG_HFLIP;
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::BrushRotate(float Amount)
@@ -377,6 +407,9 @@ void CLayerTiles::BrushRotate(float Amount)
 		BrushFlipX();
 		BrushFlipY();
 	}
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::Resize(int NewW, int NewH)
@@ -427,6 +460,9 @@ void CLayerTiles::Shift(int Direction)
 				mem_copy(&m_pTiles[y*m_Width], &m_pTiles[(y-1)*m_Width], m_Width*sizeof(CTile));
 		}
 	}
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::ShowInfo()
@@ -483,7 +519,8 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			{
 				if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_TILESET)
 				{
-					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet);
+					RECTi r = {0, 0, m_Width, m_Height};
+					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, r);
 					return 1; // only close the popup when it's a tileset
 				}
 				else if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_DOODADS)
@@ -572,7 +609,11 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			m_Image = -1;
 		}
 		else
+		{
 			m_Image = NewVal%m_pEditor->m_Map.m_lImages.size();
+			m_SelectedRuleSet = 0;
+			m_LiveAutoMap = false;
+		}
 	}
 	else if(Prop == PROP_COLOR)
 	{
