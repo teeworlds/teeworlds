@@ -4,17 +4,15 @@
 
 class CDefault : public IClass {
 private:
-	int m_BodyColor;
-	int m_MarkingColor;
-	int m_FeetColor;
-	char m_MarkingName[24];
+	CSkin m_Skin;
+	bool m_InfectedClass;
 public:
 	CDefault();
 	~CDefault() override;
-	int GetBodyColor() const override;
-	int GetMarkingColor() const override;
-	int GetFeetColor() const override;
-	const char* GetMarkingName() const override;
+	CSkin& GetSkin();
 
 	void OnCharacterSpawn(CCharacter* pChr) override;
+	int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon) override;
+
+	bool IsInfectedClass() const override;
 };

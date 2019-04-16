@@ -159,8 +159,8 @@ public:
 	*/
 	virtual bool OnEntity(int Index, vec2 Pos);
 
-	virtual void OnPlayerConnect(class CPlayer *pPlayer);
-	virtual void OnPlayerDisconnect(class CPlayer *pPlayer);
+	virtual void OnPlayerConnect(class CPlayer *pPlayer); // INFCROYA RELATED
+	virtual void OnPlayerDisconnect(class CPlayer *pPlayer); // INFCROYA RELATED
 	void OnPlayerInfoChange(class CPlayer *pPlayer);
 	void OnPlayerReadyChange(class CPlayer *pPlayer);
 
@@ -189,7 +189,7 @@ public:
 
 	// info
 	void CheckGameInfo();
-	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
+	virtual bool IsFriendlyFire(int ClientID1, int ClientID2) const; // INFCROYA RELATED
 	bool IsGamePaused() const { return m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_START_COUNTDOWN; }
 	bool IsGameRunning() const { return m_GameState == IGS_GAME_RUNNING; }
 	bool IsPlayerReadyMode() const;

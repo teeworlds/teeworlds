@@ -25,5 +25,7 @@ public:
 
 	void OnPlayerConnect(class CPlayer* pPlayer) override;
 	void OnPlayerDisconnect(class CPlayer* pPlayer) override;
+
+	bool IsFriendlyFire(int ClientID1, int ClientID2) const override;
 };
 #endif

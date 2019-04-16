@@ -8,6 +8,8 @@ CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer)
 {
 	m_ClientID = ClientID;
 	m_pPlayer = pPlayer;
+	m_pCharacter = nullptr;
+	m_Infected = false;
 }
 
 CroyaPlayer::~CroyaPlayer()
@@ -20,12 +22,15 @@ void CroyaPlayer::SetClass(IClass* pClass)
 		each = 1;
 	}
 	m_pClass = pClass;
-	m_pPlayer->m_TeeInfos.m_aSkinPartColors[0] = m_pClass->GetBodyColor();
-	m_pPlayer->m_TeeInfos.m_aSkinPartColors[1] = m_pClass->GetMarkingColor();
-	m_pPlayer->m_TeeInfos.m_aSkinPartColors[4] = m_pClass->GetFeetColor();
+	auto& skin = m_pClass->GetSkin();
+	m_pPlayer->m_TeeInfos.m_aSkinPartColors[0] = skin.GetBodyColor();
+	m_pPlayer->m_TeeInfos.m_aSkinPartColors[1] = skin.GetMarkingColor();
+	m_pPlayer->m_TeeInfos.m_aSkinPartColors[4] = skin.GetFeetColor();
 	str_format(m_pPlayer->m_TeeInfos.m_aaSkinPartNames[1], sizeof(m_pPlayer->m_TeeInfos.m_aaSkinPartNames[1]), 
-		"%s", m_pClass->GetMarkingName()
+		"%s", skin.GetMarkingName()
 		);
+	if (m_pClass->IsInfectedClass())
+		m_Infected = true;
 }
 
 void CroyaPlayer::SetCharacter(CCharacter* pCharacter)
@@ -36,4 +41,14 @@ void CroyaPlayer::SetCharacter(CCharacter* pCharacter)
 void CroyaPlayer::OnCharacterSpawn()
 {
 	m_pClass->OnCharacterSpawn(m_pCharacter);
+}
+
+bool CroyaPlayer::IsHuman() const
+{
+	return !m_Infected;
+}
+
+bool CroyaPlayer::IsZombie() const
+{
+	return m_Infected;
 }

@@ -4,33 +4,17 @@
 
 CDefault::CDefault()
 {
-	m_BodyColor = HSLtoInt(27, 111, 116);
-	m_MarkingColor = HSLtoInt(0, 0, 0);
-	m_FeetColor = HSLtoInt(28, 135, 62);
+	m_Skin = CSkin();
+	m_InfectedClass = false;
 }
 
 CDefault::~CDefault()
 {
 }
 
-int CDefault::GetBodyColor() const
+CSkin& CDefault::GetSkin()
 {
-	return m_BodyColor;
-}
-
-int CDefault::GetMarkingColor() const
-{
-	return m_MarkingColor;
-}
-
-int CDefault::GetFeetColor() const
-{
-	return m_FeetColor;
-}
-
-const char* CDefault::GetMarkingName() const
-{
-	return m_MarkingName;
+	return m_Skin;
 }
 
 void CDefault::OnCharacterSpawn(CCharacter* pChr)
@@ -38,4 +22,14 @@ void CDefault::OnCharacterSpawn(CCharacter* pChr)
 	pChr->IncreaseHealth(10);
 	pChr->GiveWeapon(WEAPON_GUN, 10);
 	pChr->SetWeapon(WEAPON_GUN);
+}
+
+int CDefault::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon)
+{
+	return 0;
+}
+
+bool CDefault::IsInfectedClass() const
+{
+	return m_InfectedClass;
 }

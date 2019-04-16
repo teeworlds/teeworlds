@@ -56,6 +56,7 @@ void CCharacter::Reset()
 
 bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {
+	SetNormalEmote(EMOTE_NORMAL); // INFCROYA RELATED
 	m_EmoteStop = -1;
 	m_LastAction = -1;
 	m_LastNoAmmoSound = -1;
@@ -478,6 +479,11 @@ void CCharacter::SetEmote(int Emote, int Tick)
 	m_EmoteStop = Tick;
 }
 
+void CCharacter::SetNormalEmote(int Emote) // INFCROYA RELATED
+{
+	m_NormalEmote = Emote;
+}
+
 void CCharacter::OnPredictedInput(CNetObj_PlayerInput *pNewInput)
 {
 	// check for changes
@@ -787,7 +793,7 @@ void CCharacter::Snap(int SnappingClient)
 	// set emote
 	if (m_EmoteStop < Server()->Tick())
 	{
-		m_EmoteType = EMOTE_NORMAL;
+		m_EmoteType = m_NormalEmote; // INFCROYA RELATED
 		m_EmoteStop = -1;
 	}
 

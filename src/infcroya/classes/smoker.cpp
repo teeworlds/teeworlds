@@ -1,39 +1,27 @@
 #include "smoker.h"
 #include "base/system.h"
 #include <game/server/entities/character.h>
+#include <game/server/gamecontext.h>
+#include <limits>
 
 CSmoker::CSmoker()
 {
-	m_BodyColor = HSLtoInt(58, 200, 79);
-	m_MarkingColor = HSLtoInt(0, 0, 0);
-	m_FeetColor = HSLtoInt(0, 79, 70);
-	char SkinName[24];
-	str_format(SkinName, sizeof(SkinName), "cammostripes");
-	str_copy(m_MarkingName, SkinName, 24);
+	CSkin skin;
+	skin.SetBodyColor(58, 200, 79);
+	skin.SetMarkingColor(0, 0, 0);
+	skin.SetFeetColor(0, 79, 70);
+	skin.SetMarkingName("cammostripes");
+	m_Skin = skin;
+	m_InfectedClass = true;
 }
 
 CSmoker::~CSmoker()
 {
 }
 
-int CSmoker::GetBodyColor() const
+CSkin& CSmoker::GetSkin()
 {
-	return m_BodyColor;
-}
-
-int CSmoker::GetMarkingColor() const
-{
-	return m_MarkingColor;
-}
-
-int CSmoker::GetFeetColor() const
-{
-	return m_FeetColor;
-}
-
-const char* CSmoker::GetMarkingName() const
-{
-	return m_MarkingName;
+	return m_Skin;
 }
 
 void CSmoker::OnCharacterSpawn(CCharacter* pChr)
@@ -41,4 +29,15 @@ void CSmoker::OnCharacterSpawn(CCharacter* pChr)
 	pChr->IncreaseHealth(10);
 	pChr->GiveWeapon(WEAPON_HAMMER, -1);
 	pChr->SetWeapon(WEAPON_HAMMER);
+	pChr->SetNormalEmote(EMOTE_ANGRY);
+}
+
+int CSmoker::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon)
+{
+	return 0;
+}
+
+bool CSmoker::IsInfectedClass() const
+{
+	return m_InfectedClass;
 }

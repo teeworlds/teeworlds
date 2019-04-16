@@ -85,3 +85,10 @@ void CGameControllerMOD::OnPlayerDisconnect(CPlayer* pPlayer)
 	delete players[ClientID];
 	players[ClientID] = nullptr;
 }
+
+bool CGameControllerMOD::IsFriendlyFire(int ClientID1, int ClientID2) const
+{
+	if (players[ClientID1]->IsHuman() && players[ClientID2]->IsHuman() && ClientID1 != ClientID2)
+		return true;
+	return false;
+}
