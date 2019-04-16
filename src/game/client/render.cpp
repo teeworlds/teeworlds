@@ -362,6 +362,22 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 					Graphics()->QuadsEnd();
 				}
 
+				// draw bot visuals (foreground)
+				if(IsBot && !OutLine)
+				{
+					Graphics()->TextureSet(pInfo->m_BotTexture);
+					Graphics()->QuadsBegin();
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					SelectSprite(SPRITE_TEE_BOT_FOREGROUND, 0, 0, 0);
+					Item = BotItem;
+					Graphics()->QuadsDraw(&Item, 1);
+					Graphics()->SetColor(pInfo->m_BotColor.r, pInfo->m_BotColor.g, pInfo->m_BotColor.b, pInfo->m_BotColor.a);
+					SelectSprite(SPRITE_TEE_BOT_GLOW, 0, 0, 0);
+					Item = BotItem;
+					Graphics()->QuadsDraw(&Item, 1);
+					Graphics()->QuadsEnd();
+				}
+
 				// draw decoration
 				if(pInfo->m_aTextures[SKINPART_DECORATION].IsValid())
 				{
@@ -463,22 +479,6 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 				}
 				Graphics()->QuadsEnd();
 				
-				// draw bot visuals (foreground)
-				if(IsBot && !OutLine)
-				{
-					Graphics()->TextureSet(pInfo->m_BotTexture);
-					Graphics()->QuadsBegin();
-					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-					SelectSprite(SPRITE_TEE_BOT_FOREGROUND, 0, 0, 0);
-					Item = BotItem;
-					Graphics()->QuadsDraw(&Item, 1);
-					Graphics()->SetColor(pInfo->m_BotColor.r, pInfo->m_BotColor.g, pInfo->m_BotColor.b, pInfo->m_BotColor.a);
-					SelectSprite(SPRITE_TEE_BOT_GLOW, 0, 0, 0);
-					Item = BotItem;
-					Graphics()->QuadsDraw(&Item, 1);
-					Graphics()->QuadsEnd();
-				}
-
 				// draw xmas hat
 				if(!OutLine && pInfo->m_HatTexture.IsValid())
 				{
