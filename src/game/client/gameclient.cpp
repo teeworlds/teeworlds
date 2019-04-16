@@ -1121,6 +1121,7 @@ void CGameClient::OnNewSnapshot()
 							m_Snap.m_SpecInfo.m_SpectatorID = -1;
 						}
 					}
+					m_aClients[ClientID].UpdateBotRenderInfo(this, ClientID);
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_CHARACTER)
@@ -1434,6 +1435,39 @@ void CGameClient::OnPredict()
 void CGameClient::OnActivateEditor()
 {
 	OnRelease();
+}
+
+void CGameClient::CClientData::UpdateBotRenderInfo(CGameClient *pGameClient, int ClientID)
+{
+	static const unsigned char s_aBotColors[][3] = {
+		{0xff,0x00,0x00},
+		{0xff,0x66,0x00},
+		{0x4d,0x9f,0x45},
+		{0xd5,0x9e,0x29},
+		{0x9f,0xd3,0xa9},
+		{0xbd,0xd8,0x5e},
+		{0xc0,0x7f,0x94},
+		{0xc3,0xa2,0x67},
+		{0xf8,0xa8,0x3b},
+		{0xcc,0xe2,0xbf},
+		{0xe6,0xb4,0x98},
+		{0x74,0xc7,0xa3},
+	};
+
+	if(pGameClient->m_Snap.m_paPlayerInfos[ClientID] && pGameClient->m_Snap.m_paPlayerInfos[ClientID]->m_PlayerFlags&PLAYERFLAG_BOT)
+	{
+		m_RenderInfo.m_BotTexture = pGameClient->m_pSkins->m_BotTexture;
+		if(!m_RenderInfo.m_BotColor.a) // bot color has not been set; pick a random color once
+		{
+			const unsigned char* pBotColor = s_aBotColors[rand()%(sizeof(s_aBotColors)/sizeof(s_aBotColors[0]))];
+			m_RenderInfo.m_BotColor = vec4(pBotColor[0]/255.f, pBotColor[1]/255.f, pBotColor[2]/255.f, 1.0f);
+		}
+	}
+	else
+	{
+		m_RenderInfo.m_BotTexture.Invalidate();
+		m_RenderInfo.m_BotColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	}
 }
 
 void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, int ClientID, bool UpdateSkinInfo)

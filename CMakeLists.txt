@@ -960,6 +960,7 @@ set_glob(DATA GLOB_RECURSE "json;map;png;rules;ttf;txt;wv" datasrc
   skins/body/kitty.png
   skins/body/standard.png
   skins/body/x_ninja.png
+  skins/bot.png
   skins/brownbear.json
   skins/cammo.json
   skins/cammostripes.json
