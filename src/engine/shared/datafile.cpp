@@ -350,7 +350,15 @@ int CDataFileReader::GetItemSize(int Index) const
 
 void *CDataFileReader::GetItem(int Index, int *pType, int *pID)
 {
-	if(!m_pDataFile) { if(pType) *pType = 0; if(pID) *pID = 0; return 0; }
+	if(!m_pDataFile || Index < 0 || Index >= m_pDataFile->m_Header.m_NumItems)
+	{
+		if(pType)
+			*pType = 0;
+		if(pID)
+			*pID = 0;
+
+		return 0;
+	}
 
 	CDatafileItem *i = (CDatafileItem *)(m_pDataFile->m_Info.m_pItemStart+m_pDataFile->m_Info.m_pItemOffsets[Index]);
 	if(pType)
