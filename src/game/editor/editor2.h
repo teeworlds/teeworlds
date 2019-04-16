@@ -514,14 +514,16 @@ struct CEditorMap2
 	CAssets m_Assets;
 
 	IGraphics* m_pGraphics;
+	IClient *m_pClient;
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 
 	inline IGraphics* Graphics() { return m_pGraphics; };
+	inline IClient *Client() { return m_pClient; };
 	inline IConsole *Console() { return m_pConsole; };
 	inline IStorage *Storage() { return m_pStorage; };
 
-	void Init(IStorage *pStorage, IGraphics* pGraphics, IConsole* pConsole);
+	void Init(IStorage *pStorage, IGraphics* pGraphics, IClient* pClient, IConsole* pConsole);
 	bool Save(const char *pFileName);
 	bool Load(const char *pFileName);
 	void LoadDefault();
@@ -728,7 +730,7 @@ class CEditor2: public IEditor
 	};
 
 	CChainAllocator<CHistoryEntry> m_HistoryEntryDispenser;
-	CHistoryEntry* m_pHistoryEntryCurrent = nullptr;
+	CHistoryEntry* m_pHistoryEntryCurrent = 0x0;
 
 	enum
 	{
@@ -916,6 +918,7 @@ class CEditor2: public IEditor
 
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);
+	bool SaveMap(const char *pFileName);
 	void OnMapLoaded();
 
 	void EditDeleteLayer(int LyID, int ParentGroupID);
@@ -961,6 +964,7 @@ class CEditor2: public IEditor
 	const char* GetGroupName(int GroupID);
 
 	static void ConLoad(IConsole::IResult *pResult, void *pUserData);
+	static void ConSave(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowPalette(IConsole::IResult *pResult, void *pUserData);
 	static void ConGameView(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowGrid(IConsole::IResult *pResult, void *pUserData);
