@@ -569,9 +569,24 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		// only possible when game, pause or start countdown is running
 		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_START_COUNTDOWN)
 		{
-			m_GameState = GameState;
-			m_GameStateTimer = 3*Server()->TickSpeed();
-			GameServer()->m_World.m_Paused = true;
+			if(g_Config.m_SvCountdown == 0 && m_GameFlags&GAMEFLAG_SURVIVAL)
+			{
+				m_GameState = GameState;
+				m_GameStateTimer = 3*Server()->TickSpeed();
+				GameServer()->m_World.m_Paused = true;
+
+			}
+			else if(g_Config.m_SvCountdown > 0)
+			{
+				m_GameState = GameState;
+				m_GameStateTimer = g_Config.m_SvCountdown*Server()->TickSpeed();
+				GameServer()->m_World.m_Paused = true;
+			}
+			else
+			{
+				// no countdown, start new match right away
+				SetGameState(IGS_GAME_RUNNING);
+			}
 		}
 		break;
 	case IGS_GAME_RUNNING:
