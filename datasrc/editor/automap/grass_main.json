@@ -75,7 +75,7 @@
 			{
 				"index": 20,
 				"condition": [
-					{"x": -1, "y": 0, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"}
 				]
 			},
 			{
@@ -143,8 +143,7 @@
 				"condition": [
 					{"x": -1, "y": 0, "value": "empty"},
 					{"x": -1, "y": 1, "value": "full"},
-					{"x": 0, "y": 1, "value": 48},
-					{"x": 0, "y": -1, "value": 4}
+					{"x": 0, "y": 1, "value": "full"}
 				]
 			},
 			{
@@ -153,88 +152,6 @@
 					{"x": 1, "y": 0, "value": "empty"},
 					{"x": 1, "y": 1, "value": "full"},
 					{"x": 0, "y": 1, "value": "full"}
-				]
-			},
-			{
-				"index": 101,
-				"condition": [
-					{"x": 0, "y": -1, "value": "empty"},
-					{"x": 0, "y": 1, "value": "empty"}
-				]
-			},
-			{
-				"index": 100,
-				"condition": [
-					{"x": 0, "y": -1, "value": "empty"},
-                    {"x": -1, "y": 0, "value": "empty"},
-                    {"x": 1, "y": 0, "value": "full"},
-                    {"x": 0, "y": 1, "value": "empty"},
-				]
-			},
-			{
-				"index": 102,
-				"condition": [
-					{"x": 0, "y": -1, "value": "empty"},
-                    {"x": 1, "y": 0, "value": "empty"},
-                    {"x": -1, "y": 0, "value": "full"},
-                    {"x": 0, "y": 1, "value": "empty"},
-				]
-			},
-			{
-				"index": 117,
-				"condition": [
-					{"x": 1, "y": 0, "value": "empty"},
-                    {"x": -1, "y": 0, "value": "empty"},
-				]
-			},
-			{
-				"index": 116,
-				"condition": [
-					{"x": 1, "y": 0, "value": "empty"},
-                    {"x": -1, "y": 0, "value": "empty"},
-                    {"x": 0, "y": 1, "value": "full"},
-                    {"x": 0, "y": -1, "value": "empty"},
-				]
-			},
-			{
-				"index": 118,
-				"condition": [
-					{"x": 1, "y": 0, "value": "empty"},
-                    {"x": -1, "y": 0, "value": "empty"},
-                    {"x": 0, "y": -1, "value": "full"},
-                    {"x": 0, "y": 1, "value": "empty"},
-				]
-			},
-			{
-				"index": 128,
-				"condition": [
-					{"x": 1, "y": 0, "value": "full"},
-                    {"x": -1, "y": 0, "value": "empty"},
-                    {"x": 0, "y": -1, "value": "empty"},
-                    {"x": 0, "y": 1, "value": "full"},
-                    {"x": 1, "y": 1, "value": "empty"},
-				]
-			},
-			{
-				"index": 166,
-				"condition": [
-					{"x": 1, "y": 0, "value": "full"},
-                    {"x": -1, "y": 0, "value": "full"},
-                    {"x": 0, "y": -1, "value": "full"},
-                    {"x": 0, "y": 1, "value": "full"},
-                    {"x": -1, "y": 1, "value": "empty"},
-                    {"x": -1, "y": -1, "value": "empty"},
-				]
-			},
-			{
-				"index": 150,
-				"condition": [
-					{"x": 1, "y": 0, "value": "full"},
-                    {"x": -1, "y": 0, "value": "full"},
-                    {"x": 0, "y": -1, "value": "full"},
-                    {"x": 0, "y": 1, "value": "full"},
-                    {"x": 1, "y": 1, "value": "empty"},
-                    {"x": -1, "y": -1, "value": "empty"},
 				]
 			},
 			{
@@ -251,6 +168,344 @@
 					{"x": 0, "y": -1, "value": "empty"},
 					{"x": -1, "y": 0, "value": "empty"},
 					{"x": -1, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"index": 101,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 96,
+				"condition": [
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"index": 97,
+				"condition": [
+					{"x": -1, "y": 1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"index": 98,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 99,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": -1, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 129,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},					
+					{"x": -1, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 100,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 102,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 112,
+				"condition": [
+					{"x": 1, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"}
+				]
+			},
+			{
+				"index": 144,
+				"condition": [
+					{"x": 1, "y": -1, "value": "empty"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"}
+				]
+			},
+			{
+				"index": 113,
+				"condition": [
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"}
+				]
+			},
+			{
+				"index": 146,
+				"condition": [
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": -1, "y": 1, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"}
+				]
+			},
+			{
+				"index": 114,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 115,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": -1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 117,
+				"condition": [
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"}
+				]
+			},
+			{
+				"index": 116,
+				"condition": [
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 118,
+				"condition": [
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 128,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 130,
+				"condition": [
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 160,
+				"condition": [
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 162,
+				"condition": [
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 133,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": -1, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 149,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 165,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 166,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": -1, "y": 1, "value": "empty"},
+					{"x": -1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 150,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": -1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 150,
+				"hflip" : 1,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": -1, "y": 1, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 147,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 148,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": -1, "y": 1, "value": "empty"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 163,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": -1, "y": 1, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 164,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": -1, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"index": 145,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": -1, "y": 1, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"index": 161,
+				"condition": [
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": 1, "y": -1, "value": "empty"}
 				]
 			}]
 		}
