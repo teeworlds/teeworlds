@@ -10,32 +10,27 @@
 
 CStats::CStats()
 {
-	m_Mode = 0;
+	m_Active = false;
 }
 
 void CStats::OnReset()
 {
 	for(int i=0; i<MAX_CLIENTS; i++)
 		m_pClient->m_aStats[i].Reset();
-	m_Mode = 0;
+	m_Active = false;
 }
 
 void CStats::ConKeyStats(IConsole::IResult *pResult, void *pUserData)
 {
 	if(pResult->GetInteger(0) != 0)
-		((CStats *)pUserData)->m_Mode = 1;
+		((CStats *)pUserData)->m_Active = true;
 	else
-		((CStats *)pUserData)->m_Mode = 0;
+		((CStats *)pUserData)->m_Active = false;
 }
 
 void CStats::OnConsoleInit()
 {
 	Console()->Register("+stats", "i", CFGFLAG_CLIENT, ConKeyStats, this, "Show stats");
-}
-
-bool CStats::IsActive()
-{
-	return (m_Mode > 0);
 }
 
 void CStats::OnMessage(int MsgType, void *pRawMsg)
@@ -72,7 +67,7 @@ void CStats::OnMessage(int MsgType, void *pRawMsg)
 
 void CStats::OnRender()
 {
-	if(m_Mode != 1)
+	if(!m_Active)
 		return;
 
 	float Width = 400*3.0f*Graphics()->ScreenAspect();

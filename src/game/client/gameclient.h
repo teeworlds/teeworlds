@@ -232,8 +232,6 @@ public:
 		CClientStats();
 		
 		int m_JoinDate;
-		bool m_Active;
-		bool m_WasActive;
 
 		int m_aFragsWith[NUM_WEAPONS];
 		int m_aDeathsFrom[NUM_WEAPONS];

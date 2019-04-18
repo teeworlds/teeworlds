@@ -884,11 +884,14 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	{
 		CNetMsg_De_ClientEnter *pMsg = (CNetMsg_De_ClientEnter *)pRawMsg;
 		DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team);
+		m_aStats[pMsg->m_ClientID].Reset();
+		m_aStats[pMsg->m_ClientID].m_JoinDate = Client()->GameTick();
 	}
 	else if(MsgId == NETMSGTYPE_DE_CLIENTLEAVE && Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		CNetMsg_De_ClientLeave *pMsg = (CNetMsg_De_ClientLeave *)pRawMsg;
 		DoLeaveMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_pReason);
+		m_aStats[pMsg->m_ClientID].Reset();
 	}
 }
 
@@ -1047,10 +1050,6 @@ void CGameClient::OnNewSnapshot()
 
 	// go trough all the items in the snapshot and gather the info we want
 	{
-		// stats
-		for(int i = 0; i < MAX_CLIENTS; i++)
-			m_aStats[i].m_Active = false;
-
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 		for(int i = 0; i < Num; i++)
 		{
@@ -1202,18 +1201,6 @@ void CGameClient::OnNewSnapshot()
 			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
-		}
-
-		// stats
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(m_aStats[i].m_Active && !m_aStats[i].m_WasActive)
-			{
-				m_aStats[i].Reset(); // Client connected, reset stats
-				m_aStats[i].m_Active = true;
-				m_aStats[i].m_JoinDate = Client()->GameTick();
-			}
-			m_aStats[i].m_WasActive = m_aStats[i].m_Active;
 		}
 	}
 
@@ -1527,8 +1514,6 @@ void CGameClient::OnFlagGrab(int ID)
 CGameClient::CClientStats::CClientStats()
 {
 	m_JoinDate  = 0;
-	m_Active    = false;
-	m_WasActive = false;
 	m_Frags     = 0;
 	m_Deaths    = 0;
 	m_Suicides  = 0;
@@ -1547,8 +1532,6 @@ CGameClient::CClientStats::CClientStats()
 void CGameClient::CClientStats::Reset()
 {
 	m_JoinDate  = 0;
-	m_Active    = false;
-	m_WasActive = false;
 	m_Frags     = 0;
 	m_Deaths    = 0;
 	m_Suicides  = 0;

@@ -17,7 +17,7 @@ enum {
 class CStats: public CComponent
 {
 private:
-	int m_Mode;
+	int m_Active;
 	static void ConKeyStats(IConsole::IResult *pResult, void *pUserData);
 
 public:
@@ -26,5 +26,4 @@ public:
 	virtual void OnConsoleInit();
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
-	bool IsActive();
 };
