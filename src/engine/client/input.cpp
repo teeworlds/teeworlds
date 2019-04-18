@@ -115,11 +115,11 @@ void CInput::MouseRelative(float *x, float *y)
 		j.y = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickY)) / 32768.0f * Max;
 		const float Len = length(j);
 
-		if (Len <= g_Config.m_AxisTolerance) {
+		if (Len <= g_Config.m_JoystickTolerance) {
 			j = vec2(0.0f, 0.0f);
 		} else {
 			const vec2 nj = Len > 0.0f ? j / Len : vec2(0.0f, 0.0f);
-			j = nj * fminf(Len, Max) - nj * g_Config.m_AxisTolerance;
+			j = nj * fminf(Len, Max) - nj * g_Config.m_JoystickTolerance;
 		}
 	}
 
