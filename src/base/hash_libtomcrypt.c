@@ -151,6 +151,8 @@ static void sha_process(sha256_state* md, const void* src, u32 inlen)
 
 static void sha_done(sha256_state* md, void* out)
 {
+	int i;
+
     // Increase the length of the message
     md->length += md->curlen * 8;
 
@@ -176,7 +178,7 @@ static void sha_done(sha256_state* md, void* out)
     sha_compress(md, md->buf);
 
     // Copy output
-    for(int i = 0; i < 8; i++)
+    for(i = 0; i < 8; i++)
         store32(md->state[i], (unsigned char *)out+(4*i));
 }
 
