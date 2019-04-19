@@ -19,6 +19,10 @@ class CMapLayers : public CComponent
 	array<CEnvPoint> m_lEnvPoints;
 	array<CEnvPoint> m_lEnvPointsMenu;
 
+	CTile* m_pEggTiles;
+	int m_EggLayerWidth;
+	int m_EggLayerHeight;
+
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
 
 	void LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoints);
@@ -34,6 +38,7 @@ public:
 	CMapLayers(int Type);
 	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnInit();
+	virtual void OnShutdown();
 	virtual void OnRender();
 	virtual void OnMapLoad();
 

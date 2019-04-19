@@ -94,6 +94,7 @@ const char *CGameClient::NetVersion() const { return GAME_NETVERSION; }
 int CGameClient::ClientVersion() const { return CLIENT_VERSION; }
 const char *CGameClient::GetItemName(int Type) const { return m_NetObjHandler.GetObjName(Type); }
 bool CGameClient::IsXmas() const { return g_Config.m_ClShowXmasHats == 2 || (g_Config.m_ClShowXmasHats == 1 && m_IsXmasDay); }
+bool CGameClient::IsEaster() const { return g_Config.m_ClShowEasterEggs == 2 || (g_Config.m_ClShowEasterEggs == 1 && m_IsEasterDay); }
 
 enum
 {
@@ -347,6 +348,7 @@ void CGameClient::OnInit()
 	m_ServerMode = SERVERMODE_PURE;
 
 	m_IsXmasDay = time_isxmasday();
+	m_IsEasterDay = time_iseasterday();
 }
 
 void CGameClient::OnUpdate()
