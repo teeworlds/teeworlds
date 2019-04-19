@@ -868,7 +868,6 @@ set_glob(DATA GLOB_RECURSE "json;map;png;rules;ttf;txt;wv" datasrc
   languages/breton.json
   languages/bulgarian.json
   languages/catalan.json
-  languages/chinese.json
   languages/chuvash.json
   languages/czech.json
   languages/danish.json
@@ -902,6 +901,7 @@ set_glob(DATA GLOB_RECURSE "json;map;png;rules;ttf;txt;wv" datasrc
   languages/slovenian.json
   languages/spanish.json
   languages/swedish.json
+  languages/traditional_chinese.json
   languages/turkish.json
   languages/ukrainian.json
   mapres/bg_cloud1.png
