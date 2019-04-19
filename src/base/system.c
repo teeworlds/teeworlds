@@ -1736,7 +1736,7 @@ int time_iseasterday()
 {
 	time_t time_data_now, time_data;
 	struct tm *time_info;
-	int Y, a, b, c, d, e, f, g, h, i, k, L, m, month, day;
+	int Y, a, b, c, d, e, f, g, h, i, k, L, m, month, day, day_offset;
 
 	time(&time_data_now);
 	time_info = localtime(&time_data_now);
@@ -1759,7 +1759,7 @@ int time_iseasterday()
 	day = ((h + L - 7 * m + 114) % 31) + 1;
 
 	// (now-1d ≤ easter ≤ now+2d) <=> (easter-2d ≤ now ≤ easter+1d) <=> (Good Friday ≤ now ≤ Easter Monday)
-	for(int day_offset = -1; day_offset <= 2; day_offset++)
+	for(day_offset = -1; day_offset <= 2; day_offset++)
 	{
 		time_data = time_data_now + day_offset*(60*60*24);
 		time_info = localtime(&time_data);
