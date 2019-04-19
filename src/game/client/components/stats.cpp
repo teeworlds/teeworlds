@@ -22,15 +22,12 @@ void CStats::OnReset()
 
 void CStats::ConKeyStats(IConsole::IResult *pResult, void *pUserData)
 {
-	if(pResult->GetInteger(0) != 0)
-		((CStats *)pUserData)->m_Active = true;
-	else
-		((CStats *)pUserData)->m_Active = false;
+	((CStats *)pUserData)->m_Active = pResult->GetInteger(0) != 0;
 }
 
 void CStats::OnConsoleInit()
 {
-	Console()->Register("+stats", "i", CFGFLAG_CLIENT, ConKeyStats, this, "Show stats");
+	Console()->Register("+stats", "", CFGFLAG_CLIENT, ConKeyStats, this, "Show stats");
 }
 
 void CStats::OnMessage(int MsgType, void *pRawMsg)

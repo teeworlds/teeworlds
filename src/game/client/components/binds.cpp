@@ -15,7 +15,7 @@ const int CBinds::s_aaDefaultBindKeys[][2] = {
 	{'r', 0},
 };
 const char CBinds::s_aaDefaultBindValues[][32] = {
-	"toggle_local_console", "toggle_remote_console", "+scoreboard", "+stats 1", "+show_chat", "screenshot", "snd_toggle",
+	"toggle_local_console", "toggle_remote_console", "+scoreboard", "+stats", "+show_chat", "screenshot", "snd_toggle",
 	"+left", "+right",
 	"+jump", "+fire", "+hook", "+emote", "+spectate", "spectate_next", "spectate_previous",
 	"+weapon1", "+weapon2", "+weapon3", "+weapon4", "+weapon5",

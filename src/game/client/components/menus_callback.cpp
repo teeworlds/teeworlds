@@ -35,7 +35,7 @@ static CKeyInfo gs_aKeys[] =
 	{ "Whisper", "chat whisper", 0, 0},
 	{ "Show chat", "+show_chat", 0, 0},
 	{ "Scoreboard", "+scoreboard", 0, 0},
-	{ "Statboard", "+stats 1", 0, 0},
+	{ "Statboard", "+stats", 0, 0},
 	{ "Emoticon", "+emote", 0, 0},
 	{ "Spectator mode", "+spectate", 0, 0},
 	{ "Spectate next", "spectate_next", 0, 0},
