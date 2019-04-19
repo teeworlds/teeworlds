@@ -1736,26 +1736,27 @@ int time_iseasterday()
 {
 	time_t time_data_now, time_data;
 	struct tm *time_info;
+	int Y, a, b, c, d, e, f, g, h, i, k, L, m, month, day;
 
 	time(&time_data_now);
 	time_info = localtime(&time_data_now);
 
 	// compute Easter day (Sunday) using https://en.wikipedia.org/w/index.php?title=Computus&oldid=890710285#Anonymous_Gregorian_algorithm
-	int Y = time_info->tm_year + 1900;
-	int a = Y % 19;
-	int b = Y / 100;
-	int c = Y % 100;
-	int d = b / 4;
-	int e = b % 4;
-	int f = (b + 8) / 25;
-	int g = (b - f + 1) / 3;
-	int h = (19 * a + b - d - g + 15) % 30;
-	int i = c / 4;
-	int k = c % 4;
-	int L = (32 + 2 * e + 2 * i - h - k) % 7;
-	int m = (a + 11 * h + 22 * L) / 451;
-	int month = (h + L - 7 * m + 114) / 31;
-	int day = ((h + L - 7 * m + 114) % 31) + 1;
+	Y = time_info->tm_year + 1900;
+	a = Y % 19;
+	b = Y / 100;
+	c = Y % 100;
+	d = b / 4;
+	e = b % 4;
+	f = (b + 8) / 25;
+	g = (b - f + 1) / 3;
+	h = (19 * a + b - d - g + 15) % 30;
+	i = c / 4;
+	k = c % 4;
+	L = (32 + 2 * e + 2 * i - h - k) % 7;
+	m = (a + 11 * h + 22 * L) / 451;
+	month = (h + L - 7 * m + 114) / 31;
+	day = ((h + L - 7 * m + 114) % 31) + 1;
 
 	// (now-1d ≤ easter ≤ now+2d) <=> (easter-2d ≤ now ≤ easter+1d) <=> (Good Friday ≤ now ≤ Easter Monday)
 	for(int day_offset = -1; day_offset <= 2; day_offset++)
