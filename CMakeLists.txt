@@ -912,6 +912,7 @@ set_glob(DATA GLOB_RECURSE "json;map;png;rules;ttf;txt;wv" datasrc
   mapres/desert_mountains.png
   mapres/desert_mountains2.png
   mapres/desert_sun.png
+  mapres/easter.png
   mapres/generic_deathtiles.png
   mapres/generic_lamps.png
   mapres/generic_shadows.png
