@@ -5,6 +5,7 @@
 
 #include <engine/sound.h>
 #include <game/client/component.h>
+#include <engine/shared/jobs.h>
 
 class CSounds : public CComponent
 {
