@@ -1549,7 +1549,7 @@ int fs_makedir_recursive(const char *path)
 	for(i = 1; i < len; i++)
 	{
 		char b = buffer[i];
-		if(b == '/' || b == '\\')
+		if(b == '/' || (b == '\\' && buffer[i-1] != ':'))
 		{
 			buffer[i] = 0;
 			if(fs_makedir(buffer) < 0)
