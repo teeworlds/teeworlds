@@ -43,7 +43,15 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!MapFile)
 	{
-		// try the downloaded maps
+		// try the downloaded maps (sha256)
+		char aSha256[SHA256_MAXSTRSIZE];
+		sha256_str(Sha256, aSha256, sizeof(aSha256));
+		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%s.map", pMap, aSha256);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	}
+	if(!MapFile)
+	{
+		// try the downloaded maps (crc)
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
 		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	}
