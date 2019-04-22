@@ -87,9 +87,9 @@ void CMapLayers::OnInit()
 
 static void PlaceEggDoodads(int LayerWidth, int LayerHeight, CTile* aOutTiles, CTile* aGameLayerTiles, int ItemWidth, int ItemHeight, const int* aImageTileID, int ImageTileIDCount, int Freq)
 {
-	for(int y = 0; y < LayerHeight; y++)
+	for(int y = 0; y < LayerHeight-ItemHeight; y++)
 	{
-		for(int x = 0; x < LayerWidth; x++)
+		for(int x = 0; x < LayerWidth-ItemWidth; x++)
 		{
 			bool Overlap = false;
 			bool ObstructedByWall = false;
@@ -99,9 +99,6 @@ static void PlaceEggDoodads(int LayerWidth, int LayerHeight, CTile* aOutTiles, C
 			{
 				for(int ix = 0; ix < ItemWidth; ix++)
 				{
-					if(y+iy >= LayerHeight || x+ix >= LayerWidth)
-						continue;
-
 					int Tid = (y+iy) * LayerWidth + (x+ix);
 					int DownTid = (y+iy+1) * LayerWidth + (x+ix);
 
