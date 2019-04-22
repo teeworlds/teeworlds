@@ -5,7 +5,7 @@ file(STRINGS src/game/version.h VERSION_LINE
   REGEX GAME_RELEASE_VERSION
 )
 
-if(VERSION_LINE MATCHES "\"([0-9]+)\\.([0-9]+)\\.([0-9]+)\"")
+if(VERSION_LINE MATCHES "\"([0-9]+)\\.([0-9]+)\\.([0-9]+|[0-9]+\\.[0-9]+)\"")
   set(VERSION_MAJOR ${CMAKE_MATCH_1})
   set(VERSION_MINOR ${CMAKE_MATCH_2})
   set(VERSION_PATCH ${CMAKE_MATCH_3})
