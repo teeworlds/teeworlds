@@ -670,6 +670,12 @@ void CGameContext::OnClientEnter(int ClientID)
 
 void CGameContext::OnClientConnected(int ClientID, bool Dummy, bool AsSpec)
 {
+	if(m_apPlayers[ClientID])
+	{
+		dbg_assert(m_apPlayers[ClientID]->IsDummy(), "invalid clientID");
+		OnClientDrop(ClientID, "removing dummy");
+	}
+
 	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, Dummy, AsSpec);
 
 	if(Dummy)
