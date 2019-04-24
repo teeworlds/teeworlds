@@ -868,7 +868,11 @@ void CChat::OnRender()
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
 		CLine& Line = m_aLines[r];
 
-		if(m_aLines[r].m_aText[0] == 0) break;
+		if(Line.m_aText[0] == 0)
+			break;
+
+		if(Line.m_ClientID && m_pClient->m_aClients[i].m_ChatIgnore)
+			break;
 
 		if(Now > Line.m_Time+16*TimeFreq && !m_Show)
 			break;
@@ -1163,7 +1167,7 @@ int CChat::IdentifyNameParameter(const char* pCommand) const
 			if(TargetID != -1)
 			{
 				// duplicate; be conservative
-				dbg_msg("chat", "name duplicate found, aborting whisper command");
+				dbg_msg("chat", "name duplicate found, aborting command");
 				return -1;
 			}
 			TargetID = i;
