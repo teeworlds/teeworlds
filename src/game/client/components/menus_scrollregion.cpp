@@ -91,7 +91,7 @@ void CMenus::CScrollRegion::End()
 		}
 	}
 
-	const float SliderHeight = max(m_Params.m_SliderMinHeight,
+	const float SliderHeight = maximum(m_Params.m_SliderMinHeight,
 		m_ClipRect.h/m_ContentH * m_RailRect.h);
 
 	CUIRect Slider = m_RailRect;
@@ -186,12 +186,12 @@ void CMenus::CScrollRegion::AddRect(CUIRect Rect)
 	ContentPos.x += m_ContentScrollOff.x;
 	ContentPos.y += m_ContentScrollOff.y;
 	m_LastAddedRect = Rect;
-	m_ContentH = max(Rect.y + Rect.h - ContentPos.y, m_ContentH);
+	m_ContentH = maximum(Rect.y + Rect.h - ContentPos.y, m_ContentH);
 }
 
 void CMenus::CScrollRegion::ScrollHere(int Option)
 {
-	const float MinHeight = min(m_ClipRect.h, m_LastAddedRect.h);
+	const float MinHeight = minimum(m_ClipRect.h, m_LastAddedRect.h);
 	const float TopScroll = m_LastAddedRect.y - (m_ClipRect.y + m_ContentScrollOff.y);
 
 	switch(Option)

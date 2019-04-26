@@ -16,7 +16,7 @@ IContactList::IContactList()
 
 const CContactInfo *IContactList::GetContact(int Index) const
 {
-	return &m_aContacts[max(0, Index%m_NumContacts)];
+	return &m_aContacts[maximum(0, Index%m_NumContacts)];
 }
 
 int IContactList::GetContactState(const char *pName, const char *pClan) const

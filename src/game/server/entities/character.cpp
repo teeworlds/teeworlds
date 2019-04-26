@@ -434,7 +434,7 @@ void CCharacter::HandleWeapons()
 			if((Server()->Tick() - m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
 			{
 				// Add some ammo
-				m_aWeapons[m_ActiveWeapon].m_Ammo = min(m_aWeapons[m_ActiveWeapon].m_Ammo + 1,
+				m_aWeapons[m_ActiveWeapon].m_Ammo = minimum(m_aWeapons[m_ActiveWeapon].m_Ammo + 1,
 					g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Maxammo);
 				m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
 			}
@@ -453,7 +453,7 @@ bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 	if(m_aWeapons[Weapon].m_Ammo < g_pData->m_Weapons.m_aId[Weapon].m_Maxammo || !m_aWeapons[Weapon].m_Got)
 	{
 		m_aWeapons[Weapon].m_Got = true;
-		m_aWeapons[Weapon].m_Ammo = min(g_pData->m_Weapons.m_aId[Weapon].m_Maxammo, Ammo);
+		m_aWeapons[Weapon].m_Ammo = minimum(g_pData->m_Weapons.m_aId[Weapon].m_Maxammo, Ammo);
 		return true;
 	}
 	return false;
@@ -731,7 +731,7 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 
 	// m_pPlayer only inflicts half damage on self
 	if(From == m_pPlayer->GetCID())
-		Dmg = max(1, Dmg/2);
+		Dmg = maximum(1, Dmg/2);
 
 	int OldHealth = m_Health, OldArmor = m_Armor;
 	if(Dmg)

@@ -104,7 +104,7 @@ float CMenus::CButtonContainer::GetFade(bool Checked, float Seconds)
 		return 1.0f;
 	}
 
-	return max(0.0f, m_FadeStartTime -  m_pClient->LocalTime() + Seconds)/Seconds;
+	return maximum(0.0f, m_FadeStartTime -  m_pClient->LocalTime() + Seconds)/Seconds;
 }
 
 void CMenus::DoIcon(int ImageId, int SpriteId, const CUIRect *pRect, const vec4 *pColor)
@@ -376,20 +376,20 @@ bool CMenus::DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned
 			// do scrolling
 			if(UI()->MouseX() < pRect->x && s_ScrollStart-UI()->MouseX() > 10.0f)
 			{
-				s_AtIndex = max(0, s_AtIndex-1);
+				s_AtIndex = maximum(0, s_AtIndex-1);
 				s_ScrollStart = UI()->MouseX();
 				UpdateOffset = true;
 			}
 			else if(UI()->MouseX() > pRect->x+pRect->w && UI()->MouseX()-s_ScrollStart > 10.0f)
 			{
-				s_AtIndex = min(Len, s_AtIndex+1);
+				s_AtIndex = minimum(Len, s_AtIndex+1);
 				s_ScrollStart = UI()->MouseX();
 				UpdateOffset = true;
 			}
 		}
 		else if(!Inside && UI()->MouseButton(0))
 		{
-			s_AtIndex = min(s_AtIndex, str_length(pStr));
+			s_AtIndex = minimum(s_AtIndex, str_length(pStr));
 			s_DoScroll = false;
 			UI()->SetActiveItem(0);
 			UI()->ClearLastActiveItem();
@@ -412,7 +412,7 @@ bool CMenus::DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned
 	{
 		if(!UI()->MouseButton(0))
 		{
-			s_AtIndex = min(s_AtIndex, str_length(pStr));
+			s_AtIndex = minimum(s_AtIndex, str_length(pStr));
 			s_DoScroll = false;
 			UI()->SetActiveItem(0);
 		}
@@ -465,7 +465,7 @@ bool CMenus::DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned
 			float wt = TextRender()->TextWidth(FontSize, pDisplayStr, -1);
 			do
 			{
-				*pOffset += min(wt-*pOffset-Textbox.w, Textbox.w/3);
+				*pOffset += minimum(wt-*pOffset-Textbox.w, Textbox.w/3);
 			}
 			while(w-*pOffset > Textbox.w);
 		}
@@ -474,7 +474,7 @@ bool CMenus::DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned
 			// move to the right
 			do
 			{
-				*pOffset = max(0.0f, *pOffset-Textbox.w/3);
+				*pOffset = maximum(0.0f, *pOffset-Textbox.w/3);
 			}
 			while(w-*pOffset < 0.0f);
 		}
@@ -1287,7 +1287,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 				BarHeight += 3.0f + 25.0f;
 			float VMargin = Screen.w/2-365.0f;
 			if(Config()->m_UiWideview)
-				VMargin = min(VMargin, 60.0f);
+				VMargin = minimum(VMargin, 60.0f);
 
 			CUIRect TabBar, MainView;
 			Screen.VMargin(VMargin, &MainView);
@@ -1572,7 +1572,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 				UI()->DoLabel(&Part, aBuf, FontSize, CUI::ALIGN_CENTER);
 
 				// time left
-				int SecondsLeft = max(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed) : 1);
+				int SecondsLeft = maximum(1, m_DownloadSpeed > 0.0f ? static_cast<int>((Client()->MapDownloadTotalsize()-Client()->MapDownloadAmount())/m_DownloadSpeed) : 1);
 				if(SecondsLeft >= 60)
 				{
 					int MinutesLeft = SecondsLeft / 60;
@@ -1591,7 +1591,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 				Box.HSplitTop(ButtonHeight, &Part, &Box);
 				Part.VMargin(40.0f, &Part);
 				Part.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f));
-				Part.w = max(10.0f, (Part.w*Client()->MapDownloadAmount())/Client()->MapDownloadTotalsize());
+				Part.w = maximum(10.0f, (Part.w*Client()->MapDownloadAmount())/Client()->MapDownloadTotalsize());
 				Part.Draw(vec4(1.0f, 1.0f, 1.0f, 0.5f));
 			}
 			else

@@ -78,7 +78,7 @@ void CCamera::OnRender()
 				}
 				else
 				{
-					s_SpeedBias = max(5.0f, CameraSpeed); // make sure toggle back is fast
+					s_SpeedBias = maximum(5.0f, CameraSpeed); // make sure toggle back is fast
 				}
 			}
 
@@ -89,13 +89,13 @@ void CCamera::OnRender()
 			{
 				float DeadZone = Config()->m_ClMouseDeadzone;
 				float FollowFactor = Config()->m_ClMouseFollowfactor/100.0f;
-				float OffsetAmount = max(l-DeadZone, 0.0f) * FollowFactor;
+				float OffsetAmount = maximum(l-DeadZone, 0.0f) * FollowFactor;
 
 				TargetCameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;
 			}
 			
 			if(Config()->m_ClCameraSmoothness > 0)
-				s_CurrentCameraOffset += (TargetCameraOffset - s_CurrentCameraOffset) * min(DeltaTime * s_SpeedBias, 1.0f);
+				s_CurrentCameraOffset += (TargetCameraOffset - s_CurrentCameraOffset) * minimum(DeltaTime * s_SpeedBias, 1.0f);
 			else
 				s_CurrentCameraOffset = TargetCameraOffset;
 			

@@ -147,9 +147,9 @@ void CServerBrowser::Set(const NETADDR &Addr, int SetType, int Token, const CSer
 			{
 				SetInfo(Type, pEntry, *pInfo);
 				if(Type == IServerBrowser::TYPE_LAN)
-					pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-m_BroadcastTime)*1000/time_freq()), 999);
+					pEntry->m_Info.m_Latency = minimum(static_cast<int>((time_get()-m_BroadcastTime)*1000/time_freq()), 999);
 				else
-					pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-pEntry->m_RequestTime)*1000/time_freq()), 999);
+					pEntry->m_Info.m_Latency = minimum(static_cast<int>((time_get()-pEntry->m_RequestTime)*1000/time_freq()), 999);
 				m_InfoUpdated = true;
 				RemoveRequest(pEntry);
 			}

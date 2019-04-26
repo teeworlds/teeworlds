@@ -205,7 +205,7 @@ bool CInput::JoystickRelative(float *pX, float *pY)
 		const float DeadZone = m_pConfig->m_JoystickTolerance/50.0f;
 		if(Len > DeadZone)
 		{
-			const float Factor = 0.1f * max((Len - DeadZone) / (1 - DeadZone), 0.001f) / Len;
+			const float Factor = 0.1f * maximum((Len - DeadZone) / (1 - DeadZone), 0.001f) / Len;
 			*pX = RawJoystickPos.x * Factor;
 			*pY = RawJoystickPos.y * Factor;
 			return true;

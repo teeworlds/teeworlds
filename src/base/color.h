@@ -115,8 +115,8 @@ inline vec3 HsvToRgb(vec3 hsv)
 */
 inline vec3 RgbToHsv(vec3 rgb)
 {
-	float h_min = min(min(rgb.r, rgb.g), rgb.b);
-	float h_max = max(max(rgb.r, rgb.g), rgb.b);
+	float h_min = minimum(minimum(rgb.r, rgb.g), rgb.b);
+	float h_max = maximum(maximum(rgb.r, rgb.g), rgb.b);
 
 	// hue
 	float hue = 0.0f;

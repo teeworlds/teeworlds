@@ -176,7 +176,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 	}
 
 	// background
-	float RectHeight = 3*h+((min(Lines, MaxLines)-1) * (FontSize + 3.0f));
+	float RectHeight = 3*h+((minimum(Lines, MaxLines)-1) * (FontSize + 3.0f));
 	Graphics()->BlendNormal();
 	CUIRect Rect = {x, y, w, RectHeight};
 	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
@@ -235,7 +235,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	int NumPlayers = m_pClient->m_GameInfo.m_aTeamSize[Team];
 	int PlayerLines = NumPlayers;
 	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
-		PlayerLines = max(m_pClient->m_GameInfo.m_aTeamSize[Team^1], PlayerLines);
+		PlayerLines = maximum(m_pClient->m_GameInfo.m_aTeamSize[Team^1], PlayerLines);
 
 	// clamp to 16
 	if(PlayerLines > 16)

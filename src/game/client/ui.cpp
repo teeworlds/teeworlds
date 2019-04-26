@@ -144,10 +144,10 @@ void CUI::ClipEnable(const CUIRect *pRect)
 		dbg_assert(m_NumClips < MAX_CLIP_NESTING_DEPTH, "max clip nesting depth exceeded");
 		const CUIRect *pOldRect = ClipArea();
 		CUIRect Intersection;
-		Intersection.x = max(pRect->x, pOldRect->x);
-		Intersection.y = max(pRect->y, pOldRect->y);
-		Intersection.w = min(pRect->x+pRect->w, pOldRect->x+pOldRect->w) - pRect->x;
-		Intersection.h = min(pRect->y+pRect->h, pOldRect->y+pOldRect->h) - pRect->y;
+		Intersection.x = maximum(pRect->x, pOldRect->x);
+		Intersection.y = maximum(pRect->y, pOldRect->y);
+		Intersection.w = minimum(pRect->x+pRect->w, pOldRect->x+pOldRect->w) - pRect->x;
+		Intersection.h = minimum(pRect->y+pRect->h, pOldRect->y+pOldRect->h) - pRect->y;
 		m_aClips[m_NumClips] = Intersection;
 	}
 	else
@@ -303,7 +303,7 @@ float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 {
 	// layout
 	CUIRect Handle;
-	pRect->HSplitTop(min(pRect->h/8.0f, 33.0f), &Handle, 0);
+	pRect->HSplitTop(minimum(pRect->h/8.0f, 33.0f), &Handle, 0);
 	Handle.y += (pRect->h-Handle.h)*Current;
 	Handle.VMargin(5.0f, &Handle);
 
@@ -372,7 +372,7 @@ float CUI::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
 	// layout
 	CUIRect Handle;
-	pRect->VSplitLeft(max(min(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
+	pRect->VSplitLeft(maximum(minimum(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
 	Handle.x += (pRect->w-Handle.w)*clamp(Current, 0.0f, 1.0f);
 	Handle.HMargin(5.0f, &Handle);
 
@@ -457,7 +457,7 @@ void CUI::DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect,
 		str_format(aBuf, sizeof(aBuf), "%s: \xe2\x88\x9e", pStr);
 
 	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
-	float VSplitVal = max(TextRender()->TextWidth(FontSize, aBuf, -1), TextRender()->TextWidth(FontSize, aBufMax, -1));
+	float VSplitVal = maximum(TextRender()->TextWidth(FontSize, aBuf, -1), TextRender()->TextWidth(FontSize, aBufMax, -1));
 
 	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 

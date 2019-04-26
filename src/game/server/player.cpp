@@ -54,8 +54,8 @@ void CPlayer::Tick()
 		if(Server()->GetClientInfo(m_ClientID, &Info))
 		{
 			m_Latency.m_Accum += Info.m_Latency;
-			m_Latency.m_AccumMax = max(m_Latency.m_AccumMax, Info.m_Latency);
-			m_Latency.m_AccumMin = min(m_Latency.m_AccumMin, Info.m_Latency);
+			m_Latency.m_AccumMax = maximum(m_Latency.m_AccumMax, Info.m_Latency);
+			m_Latency.m_AccumMin = minimum(m_Latency.m_AccumMin, Info.m_Latency);
 		}
 		// each second
 		if(Server()->Tick()%Server()->TickSpeed() == 0)

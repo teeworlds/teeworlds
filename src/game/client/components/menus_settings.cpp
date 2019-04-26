@@ -86,7 +86,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 
 	MainView.VSplitMid(&Picker, &Sliders, 5.0f);
-	float PickerSize = min(Picker.w, Picker.h) - 20.0f;
+	float PickerSize = minimum(Picker.w, Picker.h) - 20.0f;
 	Picker.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	float Dark = CSkins::DARKEST_COLOR_LGT/255.0f;
@@ -192,7 +192,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 			Section.VSplitLeft(SliderHeight, &Button, &Bar);
 			if(DoButton_Menu(&s_aButtons[i*3], "<", 0, &Button, 0, CUIRect::CORNER_TL|CUIRect::CORNER_BL))
 			{
-				*apVars[i] = max(0, *apVars[i]-1);
+				*apVars[i] = maximum(0, *apVars[i]-1);
 				Modified = true;
 			}
 
@@ -271,7 +271,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 			// bar marker
 			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
-			IGraphics::CQuadItem QuadItem(Bar.x + min(Bar.w, *apVars[i]/255.0f*Bar.w), Bar.y, UI()->PixelSize(), Bar.h);
+			IGraphics::CQuadItem QuadItem(Bar.x + minimum(Bar.w, *apVars[i]/255.0f*Bar.w), Bar.y, UI()->PixelSize(), Bar.h);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 
@@ -279,7 +279,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 			Button.VSplitLeft(SliderHeight, &Button, &Label);
 			if(DoButton_Menu(&s_aButtons[i*3+1], ">", 0, &Button, 0, CUIRect::CORNER_TR|CUIRect::CORNER_BR))
 			{
-				*apVars[i] = min(255, *apVars[i]+1);
+				*apVars[i] = minimum(255, *apVars[i]+1);
 				Modified = true;
 			}
 
@@ -875,7 +875,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render game menu backgrounds
-	int NumOptions = max(Config()->m_ClNameplates ? 6 : 3, Config()->m_ClShowsocial ? 6 : 5);
+	int NumOptions = maximum(Config()->m_ClNameplates ? 6 : 3, Config()->m_ClShowsocial ? 6 : 5);
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -1281,7 +1281,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			vec2 TeePosition = vec2(Top.x+Top.w/2.0f, Top.y+Top.h/2.0f+6.0f);
 			vec2 DeltaPosition = MousePosition - TeePosition;
 			float Distance = length(DeltaPosition);
-			vec2 TeeDirection = Distance < 20.0f ? normalize(vec2(DeltaPosition.x, max(DeltaPosition.y, 0.5f))) : normalize(DeltaPosition);
+			vec2 TeeDirection = Distance < 20.0f ? normalize(vec2(DeltaPosition.x, maximum(DeltaPosition.y, 0.5f))) : normalize(DeltaPosition);
 			int TeeEmote = Distance < 20.0f ? EMOTE_HAPPY : EMOTE_NORMAL;
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, TeeEmote, TeeDirection, TeePosition);
 			if(Distance < 20.0f && UI()->MouseButtonClicked(0))

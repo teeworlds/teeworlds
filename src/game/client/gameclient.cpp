@@ -65,7 +65,7 @@ inline void AppendDecimals(char *pBuf, int Size, int Time, int Precision)
 			0
 		};
 		char *pDecimals = Time < 0 ? aInvalid : aMSec;
-		pDecimals[min(Precision, 3)+1] = 0;
+		pDecimals[minimum(Precision, 3)+1] = 0;
 		str_append(pBuf, pDecimals, Size);
 	}
 }
@@ -1292,8 +1292,8 @@ void CGameClient::OnNewSnapshot()
 						pCharInfo->m_Prev = *((const CNetObj_Character *)pOld);
 
 						// limit evolving to 3 seconds
-						int EvolvePrevTick = min(pCharInfo->m_Prev.m_Tick + Client()->GameTickSpeed()*3, Client()->PrevGameTick());
-						int EvolveCurTick = min(pCharInfo->m_Cur.m_Tick + Client()->GameTickSpeed()*3, Client()->GameTick());
+						int EvolvePrevTick = minimum(pCharInfo->m_Prev.m_Tick + Client()->GameTickSpeed()*3, Client()->PrevGameTick());
+						int EvolveCurTick = minimum(pCharInfo->m_Cur.m_Tick + Client()->GameTickSpeed()*3, Client()->GameTick());
 
 						// reuse the evolved char
 						if(m_aClients[Item.m_ID].m_Evolved.m_Tick == EvolvePrevTick)
