@@ -871,7 +871,7 @@ void CChat::OnRender()
 		if(Line.m_aText[0] == 0)
 			break;
 
-		if(Line.m_ClientID && m_pClient->m_aClients[i].m_ChatIgnore)
+		if(Line.m_ClientID >= 0 && m_pClient->m_aClients[Line.m_ClientID].m_ChatIgnore)
 			break;
 
 		if(Now > Line.m_Time+16*TimeFreq && !m_Show)
