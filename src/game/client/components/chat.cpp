@@ -35,8 +35,6 @@ CChat::CChat()
 	};
 	const int CommandsCount = sizeof(s_aapCommands) / sizeof(CChatCommand);
 	m_pCommands = new CChatCommands(s_aapCommands, CommandsCount);
-
-	OnReset();
 }
 
 CChat::~CChat()
@@ -46,33 +44,36 @@ CChat::~CChat()
 
 void CChat::OnReset()
 {
-	for(int i = 0; i < MAX_LINES; i++)
+	if(Client()->State() == IClient::STATE_OFFLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
-		m_aLines[i].m_Time = 0;
-		m_aLines[i].m_aText[0] = 0;
-		m_aLines[i].m_aName[0] = 0;
+		for(int i = 0; i < MAX_LINES; i++)
+		{
+			m_aLines[i].m_Time = 0;
+			m_aLines[i].m_aText[0] = 0;
+			m_aLines[i].m_aName[0] = 0;
+		}
+
+		m_Mode = CHAT_NONE;
+		// m_WhisperTarget = -1;
+		m_LastWhisperFrom = -1;
+		m_ReverseCompletion = false;
+		m_Show = false;
+		m_InputUpdate = false;
+		m_ChatStringOffset = 0;
+		m_CompletionChosen = -1;
+		m_CompletionFav = -1;
+		m_aCompletionBuffer[0] = 0;
+		m_PlaceholderOffset = 0;
+		m_PlaceholderLength = 0;
+		m_pHistoryEntry = 0x0;
+		m_PendingChatCounter = 0;
+		m_LastChatSend = 0;
+		m_IgnoreCommand = false;
+		m_pCommands->Reset();
+
+		for(int i = 0; i < CHAT_NUM; ++i)
+			m_aLastSoundPlayed[i] = 0;
 	}
-
-	m_Mode = CHAT_NONE;
-	// m_WhisperTarget = -1;
-	m_LastWhisperFrom = -1;
-	m_ReverseCompletion = false;
-	m_Show = false;
-	m_InputUpdate = false;
-	m_ChatStringOffset = 0;
-	m_CompletionChosen = -1;
-	m_CompletionFav = -1;
-	m_aCompletionBuffer[0] = 0;
-	m_PlaceholderOffset = 0;
-	m_PlaceholderLength = 0;
-	m_pHistoryEntry = 0x0;
-	m_PendingChatCounter = 0;
-	m_LastChatSend = 0;
-	m_IgnoreCommand = false;
-	m_pCommands->Reset();
-
-	for(int i = 0; i < CHAT_NUM; ++i)
-		m_aLastSoundPlayed[i] = 0;
 }
 
 void CChat::OnRelease()
@@ -178,7 +179,7 @@ void CChat::OnConsoleInit()
 
 bool CChat::OnInput(IInput::CEvent Event)
 {
-	if(m_Mode == CHAT_NONE)
+	if(m_Mode == CHAT_NONE || Client()->State() != Client()->STATE_ONLINE)
 		return false;
 
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_ESCAPE)
