@@ -2,13 +2,13 @@
 
 #include "class.h"
 
-class CSmoker : public IClass {
+class CBiologist : public IClass {
 private:
 	CSkin m_Skin;
 	bool m_InfectedClass;
 public:
-	CSmoker();
-	~CSmoker() override;
+	CBiologist();
+	~CBiologist() override;
 	const CSkin& GetSkin() const override;
 
 	void OnCharacterSpawn(CCharacter* pChr) override;

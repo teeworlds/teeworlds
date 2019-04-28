@@ -1,16 +1,14 @@
 #include "smoker.h"
 #include "base/system.h"
 #include <game/server/entities/character.h>
-#include <game/server/gamecontext.h>
-#include <limits>
 
 CSmoker::CSmoker()
 {
 	CSkin skin;
 	skin.SetBodyColor(58, 200, 79);
+	skin.SetMarkingName("cammostripes");
 	skin.SetMarkingColor(0, 0, 0);
 	skin.SetFeetColor(0, 79, 70);
-	skin.SetMarkingName("cammostripes");
 	m_Skin = skin;
 	m_InfectedClass = true;
 }
@@ -19,13 +17,14 @@ CSmoker::~CSmoker()
 {
 }
 
-CSkin& CSmoker::GetSkin()
+const CSkin& CSmoker::GetSkin() const
 {
 	return m_Skin;
 }
 
 void CSmoker::OnCharacterSpawn(CCharacter* pChr)
 {
+	pChr->SetInfected(m_InfectedClass);
 	pChr->IncreaseHealth(10);
 	pChr->GiveWeapon(WEAPON_HAMMER, -1);
 	pChr->SetWeapon(WEAPON_HAMMER);
@@ -35,6 +34,10 @@ void CSmoker::OnCharacterSpawn(CCharacter* pChr)
 int CSmoker::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon)
 {
 	return 0;
+}
+
+void CSmoker::OnWeaponFire(vec2 Direction, int Weapon)
+{
 }
 
 bool CSmoker::IsInfectedClass() const

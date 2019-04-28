@@ -9,10 +9,12 @@ private:
 public:
 	CDefault();
 	~CDefault() override;
-	CSkin& GetSkin();
+	const CSkin& GetSkin() const override;
 
 	void OnCharacterSpawn(CCharacter* pChr) override;
 	int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon) override;
+
+	void OnWeaponFire(vec2 Direction, int Weapon) override;
 
 	bool IsInfectedClass() const override;
 };

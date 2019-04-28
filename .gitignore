@@ -54,3 +54,9 @@ googletest-src
 install_manifest.txt
 pack_*/
 rules.ninja
+*.o
+src/.vs/*
+*.exe
+src/.bam/*
+*.json
+*.obj

@@ -11,6 +11,10 @@
 #include "laser.h"
 #include "projectile.h"
 
+// INFCROYA BEGIN ------------------------------------------------------------
+#include <infcroya/croyaplayer.h>
+// INFCROYA END ------------------------------------------------------------//
+
 //input count
 struct CInputCount
 {
@@ -47,6 +51,7 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_Health = 0;
 	m_Armor = 0;
 	m_TriggeredEvents = 0;
+	m_Infected = false; // INFCROYA RELATED
 }
 
 void CCharacter::Reset()
@@ -259,7 +264,7 @@ void CCharacter::FireWeapon()
 	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
 
 	bool FullAuto = false;
-	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_LASER)
+	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_LASER || m_ActiveWeapon == WEAPON_GUN) // INFCROYA RELATED
 		FullAuto = true;
 
 
@@ -380,8 +385,15 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_LASER:
 		{
-			new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID());
-			GameServer()->CreateSound(m_Pos, SOUND_LASER_FIRE);
+			// INFCROYA BEGIN ------------------------------------------------------------
+			if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+				m_pCroyaPlayer->OnWeaponLaser(Direction);
+			}
+			else {
+				new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID());
+				GameServer()->CreateSound(m_Pos, SOUND_LASER_FIRE);
+			}
+			// INFCROYA END ------------------------------------------------------------//
 		} break;
 
 		case WEAPON_NINJA:

@@ -8,7 +8,14 @@
 #include <algorithm>
 #include <infcroya/croyaplayer.h>
 #include <infcroya/classes/default.h>
+#include <infcroya/classes/biologist.h>
 #include <infcroya/classes/smoker.h>
+#ifdef CONF_GEOLOCATION
+	#include <infcroya/geolocation/geolocation.h>
+#endif
+#include <iostream>
+
+using namespace std;
 
 CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 : IGameController(pGameServer)
@@ -19,12 +26,19 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 
 	//m_GameFlags = GAMEFLAG_TEAMS; // GAMEFLAG_TEAMS makes it a two-team gamemode
 
-	classes["Default"] = new CDefault();
-	classes["Smoker"] = new CSmoker();
+#ifdef CONF_GEOLOCATION
+	geolocation = new Geolocation("GeoLite2-Country.mmdb");
+#endif
+	classes[Class::DEFAULT] = new CDefault();
+	classes[Class::BIOLOGIST] = new CBiologist();
+	classes[Class::SMOKER] = new CSmoker();
 }
 
 CGameControllerMOD::~CGameControllerMOD()
 {
+#ifdef CONF_GEOLOCATION
+	delete geolocation;
+#endif
 	for (const auto& c : classes) {
 		delete c.second;
 	}
@@ -42,22 +56,15 @@ void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 	int ClientID = pChr->GetPlayer()->GetCID();
 
 	players[ClientID]->SetCharacter(pChr);
-	players[ClientID]->OnCharacterSpawn();
+	players[ClientID]->OnCharacterSpawn(pChr);
 }
 
 int CGameControllerMOD::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon)
 {
 	int ClientID = pVictim->GetPlayer()->GetCID();
 
-	players[ClientID]->SetCharacter(nullptr);
-	players[ClientID]->SetClass(classes["Smoker"]);
-	for (const auto each : GameServer()->m_apPlayers) {
-		if (each) {
-			GameServer()->SendSkinChange(each->GetCID(), each->GetCID());
-			each->m_Score = 0;
-		}
-	}
-
+	players[ClientID]->SetClass(classes[Class::SMOKER]);
+	players[ClientID]->OnCharacterDeath(pVictim, pKiller, Weapon);
 	return 0;
 }
 
@@ -65,17 +72,14 @@ void CGameControllerMOD::OnPlayerConnect(CPlayer* pPlayer)
 {
 	int ClientID = pPlayer->GetCID();
 
-	Server()->SetClientCountry(ClientID, 36);
-	players[ClientID] = new CroyaPlayer(ClientID, pPlayer);
-
-	players[ClientID]->SetClass(classes["Default"]);
-
-	for (const auto each : GameServer()->m_apPlayers) {
-		if (each) {
-			GameServer()->SendSkinChange(each->GetCID(), each->GetCID());
-			each->m_Score = 0;
-		}
-	}
+#ifdef CONF_GEOLOCATION
+	char aAddrStr[NETADDR_MAXSTRSIZE];
+	Server()->GetClientAddr(ClientID, aAddrStr, sizeof(aAddrStr));
+	std::string ip(aAddrStr);
+	Server()->SetClientCountry(ClientID, geolocation->get_country_iso_numeric_code(ip));
+#endif
+	players[ClientID] = new CroyaPlayer(ClientID, pPlayer, GameServer());
+	players[ClientID]->SetClass(classes[Class::BIOLOGIST]);
 }
 
 void CGameControllerMOD::OnPlayerDisconnect(CPlayer* pPlayer)

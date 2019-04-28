@@ -59,16 +59,33 @@ public:
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
+	// INFCROYA BEGIN ------------------------------------------------------------
+	bool IsHuman() const { return !m_Infected; }
+	bool IsZombie() const { return m_Infected; }
+
+	void SetInfected(bool Infected) { m_Infected = Infected; }
+
+	void SetCroyaPlayer(class CroyaPlayer* CroyaPlayer) { m_pCroyaPlayer = CroyaPlayer; }
+	class CroyaPlayer* GetCroyaPlayer() { return m_pCroyaPlayer; }
+	// INFCROYA END ------------------------------------------------------------//
+
 private:
 	// player controlling this character
 	class CPlayer *m_pPlayer;
 
 	bool m_Alive;
 
+	// INFCROYA BEGIN ------------------------------------------------------------
+	bool m_Infected;
+	class CroyaPlayer* m_pCroyaPlayer;
+	// INFCROYA END ------------------------------------------------------------//
+
 	// weapon info
 	CEntity *m_apHitObjects[10];
 	int m_NumObjectsHit;
 
+	// INFCROYA BEGIN ------------------------------------------------------------
+public:
 	struct WeaponStat
 	{
 		int m_AmmoRegenStart;
@@ -76,6 +93,8 @@ private:
 		bool m_Got;
 
 	} m_aWeapons[NUM_WEAPONS];
+private:
+	// INFCROYA END ------------------------------------------------------------//
 
 	int m_ActiveWeapon;
 	int m_LastWeapon;

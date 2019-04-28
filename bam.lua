@@ -13,6 +13,7 @@ config:Add(OptTestCompileC("buildwithoutsseflag", "#include <immintrin.h>\nint m
 config:Add(OptLibrary("zlib", "zlib.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Add(FreeType.OptFind("freetype", true))
+config:Add(OptToggle("geolocation", true)) -- INFCROYA RELATED
 config:Finalize("config.lua")
 
 generated_src_dir = "build/src"
@@ -78,8 +79,13 @@ end
 
 
 function GenerateCommonSettings(settings, conf, arch, compiler)
+	if config.geolocation.value then
+		settings.cc.defines:Add("CONF_GEOLOCATION") -- INFCROYA RELATED
+		settings.link.libs:Add("libmaxminddb") -- INFCROYA RELATED
+	end
 	if compiler == "gcc" or compiler == "clang" then
-		settings.cc.flags:Add("-Wall", "-fno-exceptions")
+		-- settings.cc.flags:Add("-Wall", "-fno-exceptions")
+		settings.cc.flags:Add("-Wall") -- INFCROYA RELATED
 	end
 
 	-- Compile zlib if needed
@@ -218,8 +224,6 @@ function GenerateSolarisSettings(settings, conf, arch, compiler)
 end
 
 function GenerateWindowsSettings(settings, conf, target_arch, compiler)
-	settings.cc.flags_cxx:Add("-g")
-	
 	if compiler == "cl" then
 		if (target_arch == "x86" and arch ~= "ia32") or
 		   (target_arch == "x86_64" and arch ~= "ia64" and arch ~= "amd64") then
@@ -228,6 +232,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 		end
 		settings.cc.flags:Add("/wd4244", "/wd4577")
 	elseif compiler == "gcc" or config.compiler.driver == "clang" then
+		settings.cc.flags_cxx:Add("-g") -- INFCROYA RELATED
 		if target_arch ~= "x86" and target_arch ~= "x86_64" then
 			print("Unknown Architecture '" .. arch .. "'. Supported: x86, x86_64")
 			os.exit(1)
@@ -352,9 +357,13 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	local infcroya = Compile(settings, Collect("src/infcroya/*.cpp", "src/infcroya/classes/*.cpp"))
+	local infcroya = Compile(settings, Collect("src/infcroya/*.cpp", "src/infcroya/classes/*.cpp")) -- INFCROYA RELATED
+	local infcroya_entities = Compile(settings, Collect("src/infcroya/entities/*.cpp")) -- INFCROYA RELATED
+	if config.geolocation.value then
+		geolocation = Compile(settings, Collect("src/infcroya/geolocation/*.cpp", "src/infcroya/geolocation/GeoLite2PP/*.cpp")) -- INFCROYA RELATED
+	end
 	
-	return Link(settings, "server", libs["zlib"], libs["md5"], server, game_server, infcroya)
+	return Link(settings, "server", libs["zlib"], libs["md5"], server, game_server, infcroya, infcroya_entities, geolocation) -- INFCROYA RELATED
 end
 
 function BuildTools(settings)

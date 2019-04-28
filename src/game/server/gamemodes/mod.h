@@ -13,7 +13,8 @@ class CGameControllerMOD : public IGameController
 {
 private:
 	std::array<CroyaPlayer*, 64> players{};
-	std::unordered_map<const char*, class IClass*> classes;
+	std::unordered_map<int, class IClass*> classes;
+	class Geolocation* geolocation;
 public:
 	CGameControllerMOD(class CGameContext *pGameServer);
 	~CGameControllerMOD() override;
