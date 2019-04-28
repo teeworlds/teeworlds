@@ -295,6 +295,8 @@ private:
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
+	bool m_CursorActive;
+	bool m_PrevCursorActive;
 	bool m_PopupActive;
 	int m_ActiveListBox;
 	bool m_SkinModified;
@@ -697,6 +699,8 @@ private:
 	void ToggleMusic();
 
 	void SetMenuPage(int NewPage);
+
+	bool CheckHotKey(int Key);
 public:
 	struct CSwitchTeamInfo
 	{
