@@ -292,6 +292,7 @@ CGameConsole::CInstance *CGameConsole::CurrentConsole()
 
 void CGameConsole::OnReset()
 {
+	m_RemoteConsole.Reset();
 }
 
 // only defined for 0<=t<=1
