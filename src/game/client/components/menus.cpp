@@ -499,8 +499,15 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 				UpdateOffset = true;
 			}
 		}
+		else if(!Inside && UI()->MouseButton(0))
+		{
+			s_AtIndex = min(s_AtIndex, str_length(pStr));
+			s_DoScroll = false;
+			UI()->SetActiveItem(0);
+			UI()->ClearLastActiveItem();
+		}
 
-		if(!m_pClient->m_pGameConsole->IsConsoleActive())
+		if(UI()->LastActiveItem() == pID && !m_pClient->m_pGameConsole->IsConsoleActive())
 		{
 			for(int i = 0; i < Input()->NumEvents(); i++)
 			{
