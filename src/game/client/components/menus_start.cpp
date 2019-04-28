@@ -66,13 +66,21 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 		DemolistOnUpdate(false);
 	}
 
+	static bool EditorHotkeyWasPressed = true;
+	static float EditorHotKeyChecktime = 0;
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
 	static CButtonContainer s_MapEditorButton;
-	if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "editor" : 0, CUI::CORNER_ALL, 10.0f, 0.5f))
+	if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, g_Config.m_ClShowStartMenuImages ? "editor" : 0, CUI::CORNER_ALL, 10.0f, 0.5f) || (!EditorHotkeyWasPressed && Client()->LocalTime() - EditorHotKeyChecktime < 0.1f && CheckHotKey(KEY_E)))
 	{
 		g_Config.m_ClEditor = 1;
 		Input()->MouseModeRelative();
+		EditorHotkeyWasPressed = true;
+	}
+	if(!Input()->KeyIsPressed(KEY_E))
+	{
+		EditorHotkeyWasPressed = false;
+		EditorHotKeyChecktime = Client()->LocalTime();
 	}
 
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
