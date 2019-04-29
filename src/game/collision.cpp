@@ -209,10 +209,10 @@ bool CCollision::HitTileDeath(vec2& Pos, vec2& Newpos, vec2& Deathpos, float rad
 
     //calculathe orthogonal vector to move directions
     Dir = Pos-Newpos;
-    Orth = normalize(vec2(dir.y, -dir.x)) * radius;
+    Orth = normalize(vec2(Dir.y, -Dir.x)) * radius;
 
     //check if hit with deathtile appears with right and left side of tee
-    if(CheckDeath(Pos+Orth, Newpos+Orth, deathpos1) || CheckDeath(Pos-Orth, Newpos-Orth, deathpos2))
+    if(CheckDeath(Pos+Orth, Newpos+Orth, Deathpos1) || CheckDeath(Pos-Orth, Newpos-Orth, Deathpos2))
     {
         //choose closer death position
         if(distance(Pos, Deathpos1) > distance(Pos, Deathpos2))
@@ -237,15 +237,15 @@ bool CCollision::CheckDeath(vec2 Pos1, vec2 Pos2, vec2& Deathpos)
     else
         Step = fabs(dy);
 
-    dx = dx / step;
-    dy = dy / step;
+    dx = dx / Step;
+    dy = dy / Step;
 
     float x = Pos1.x;
     float y = Pos1.y;
 
     int i = 1;
 
-    while(i <= step)
+    while(i <= Step)
     {
         if(GetCollisionAt(x, y)&COLFLAG_DEATH) {
             Deathpos = vec2(x, y);
