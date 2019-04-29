@@ -72,6 +72,7 @@ void CCharacterCore::Reset()
 	m_HookedPlayer = -1;
 	m_Jumped = 0;
 	m_TriggeredEvents = 0;
+	m_DiesFromDeathtiles = false;
 }
 
 void CCharacterCore::Tick(bool UseInput)
@@ -388,7 +389,15 @@ void CCharacterCore::Move()
 		}
 	}
 
-	m_Pos = NewPos;
+	// check player death by deathtiles
+	vec2 LastDeathPos;
+	if(m_pCollision->HitTileDeath(m_Pos, NewPos, LastDeathPos, 28.0f))//Gets tee radius
+	{
+        m_Pos = LastDeathPos;
+        m_DiesFromDeathtiles = true;
+    }
+    else
+        m_Pos = NewPos;
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)
