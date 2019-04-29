@@ -202,3 +202,59 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 	*pInoutPos = Pos;
 	*pInoutVel = Vel;
 }
+
+bool CCollision::HitTileDeath(vec2& Pos, vec2& Newpos, vec2& Deathpos, float radius)
+{
+    vec2 dir, orth, deathpos1, deathpos2;
+
+    //calculathe orthogonal vector to move directions
+    dir = Pos-Newpos;
+    orth = normalize(vec2(dir.y, -dir.x)) * radius;
+
+    //check if hit with deathtile appears with right and left side of tee
+    if(CheckDeath(Pos+orth, Newpos+orth, deathpos1) || CheckDeath(Pos-orth, Newpos-orth, deathpos2))
+    {
+        //choose closer death position
+        if(distance(Pos, deathpos1) > distance(Pos, deathpos2))
+            Deathpos = deathpos2+orth;
+        else
+            Deathpos = deathpos1-orth;
+        return true;
+    }
+    Deathpos = Newpos;
+    return false;
+}
+
+// finds any deathtile between pos1 and pos2 using digital differential analyser
+bool CCollision::CheckDeath(vec2 Pos1, vec2 Pos2, vec2& Deathpos)
+{
+    float dx = (Pos2.x - Pos1.x);
+    float dy = (Pos2.y - Pos1.y);
+
+    float step;
+    if(abs(dx) >= abs(dy))
+        step = abs(dx);
+    else
+        step = abs(dy);
+
+    dx = dx / step;
+    dy = dy / step;
+
+    float x = Pos1.x;
+    float y = Pos1.y;
+
+    int i = 1;
+
+    while(i <= step) {
+        if(GetCollisionAt(x, y)&COLFLAG_DEATH) {
+            Deathpos = vec2(x, y);
+            return true;
+        }
+        x = x + dx;
+        y = y + dy;
+
+        ++i;
+    }
+    Deathpos = vec2(x, y);
+    return false;
+}
