@@ -389,15 +389,15 @@ void CCharacterCore::Move()
 		}
 	}
 
-    // check player death by deathtiles
-    vec2 LastDeathPos;
-    if(m_pCollision->HitTileDeath(m_Pos, NewPos, LastDeathPos, 28.0f/2))//Gets tee radius
+	// check player death by deathtiles
+	vec2 LastDeathPos;
+	if(m_pCollision->HitTileDeath(m_Pos, NewPos, LastDeathPos, 28.0f/2))//Gets tee radius
 	{
-        m_Pos = LastDeathPos;
-        m_DiesFromDeathtiles = true;
-    }
-    else
-        m_Pos = NewPos;
+		m_Pos = LastDeathPos;
+		m_DiesFromDeathtiles = true;
+	}
+	else
+		m_Pos = NewPos;
 }
 
 void CCharacterCore::Write(CNetObj_CharacterCore *pObjCore)

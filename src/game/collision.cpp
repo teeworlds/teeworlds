@@ -228,34 +228,34 @@ bool CCollision::HitTileDeath(vec2& Pos, vec2& Newpos, vec2& Deathpos, float rad
 // finds any deathtile between pos1 and pos2 using digital differential analyser
 bool CCollision::CheckDeath(vec2 Pos1, vec2 Pos2, vec2& Deathpos)
 {
-    float dx = (Pos2.x - Pos1.x);
-    float dy = (Pos2.y - Pos1.y);
+	float dx = (Pos2.x - Pos1.x);
+	float dy = (Pos2.y - Pos1.y);
 
-    float Step;
-    if(fabs(dx) >= fabs(dy))
-        Step = fabs(dx);
-    else
-        Step = fabs(dy);
+	float Step;
+	if(fabs(dx) >= fabs(dy))
+		Step = fabs(dx);
+	else
+		Step = fabs(dy);
 
-    dx = dx / Step;
-    dy = dy / Step;
+	dx = dx / Step;
+	dy = dy / Step;
 
-    float x = Pos1.x;
-    float y = Pos1.y;
+	float x = Pos1.x;
+	float y = Pos1.y;
 
-    int i = 1;
+	int i = 1;
 
-    while(i <= Step)
-    {
-        if(GetCollisionAt(x, y)&COLFLAG_DEATH) {
-            Deathpos = vec2(x, y);
-            return true;
-        }
-        x = x + dx;
-        y = y + dy;
+	while(i <= Step)
+	{
+		if(GetCollisionAt(x, y)&COLFLAG_DEATH) {
+			Deathpos = vec2(x, y);
+			return true;
+		}
+		x = x + dx;
+		y = y + dy;
 
-        ++i;
-    }
-    Deathpos = vec2(x, y);
-    return false;
+		++i;
+	}
+	Deathpos = vec2(x, y);
+	return false;
 }
