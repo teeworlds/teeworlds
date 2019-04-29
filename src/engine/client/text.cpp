@@ -496,7 +496,7 @@ public:
 		pCursor->m_X = x;
 		pCursor->m_Y = y;
 		pCursor->m_LineCount = 1;
-		pCursor->m_LineWidth = -1;
+		pCursor->m_LineWidth = -1.0f;
 		pCursor->m_Flags = Flags;
 		pCursor->m_GlyphCount = 0;
 		pCursor->m_CharCount = 0;
@@ -513,11 +513,12 @@ public:
 		TextEx(&Cursor, pText, -1);
 	}
 
-	virtual float TextWidth(void *pFontSetV, float Size, const char *pText, int Length)
+	virtual float TextWidth(void *pFontSetV, float Size, const char *pText, int StrLength, float LineWidth)
 	{
 		CTextCursor Cursor;
 		SetCursor(&Cursor, 0, 0, Size, 0);
-		TextEx(&Cursor, pText, Length);
+		Cursor.m_LineWidth = LineWidth;
+		TextEx(&Cursor, pText, StrLength);
 		return Cursor.m_X;
 	}
 

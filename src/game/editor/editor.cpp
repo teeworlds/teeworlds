@@ -306,7 +306,7 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 
 			for(int i = 1; i <= Len; i++)
 			{
-				if(TextRender()->TextWidth(0, FontSize, pStr, i) - *Offset > MxRel)
+				if(TextRender()->TextWidth(0, FontSize, pStr, i, -1.0f) - *Offset > MxRel)
 				{
 					s_AtIndex = i - 1;
 					break;
@@ -388,11 +388,11 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 	// check if the text has to be moved
 	if(UI()->LastActiveItem() == pID && !JustGotActive && (UpdateOffset || Input()->NumEvents()))
 	{
-		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
+		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex, -1.0f);
 		if(w-*Offset > Textbox.w)
 		{
 			// move to the left
-			float wt = TextRender()->TextWidth(0, FontSize, pDisplayStr, -1);
+			float wt = TextRender()->TextWidth(0, FontSize, pDisplayStr, -1, -1.0f);
 			do
 			{
 				*Offset += min(wt-*Offset-Textbox.w, Textbox.w/3);
@@ -417,10 +417,10 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 	// render the cursor
 	if(UI()->LastActiveItem() == pID && !JustGotActive)
 	{
-		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex);
+		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex, -1.0f);
 		Textbox = *pRect;
 		Textbox.VSplitLeft(2.0f, 0, &Textbox);
-		Textbox.x += (w-*Offset-TextRender()->TextWidth(0, FontSize, "|", -1)/2);
+		Textbox.x += (w-*Offset-TextRender()->TextWidth(0, FontSize, "|", -1, -1.0f)/2);
 
 		if((2*time_get()/time_freq()) % 2)	// make it blink
 			UI()->DoLabel(&Textbox, "|", FontSize, CUI::ALIGN_LEFT);
@@ -535,7 +535,7 @@ int CEditor::DoButton_Editor(const void *pID, const char *pText, int Checked, co
 	RenderTools()->DrawUIRect(pRect, GetButtonColor(pID, Checked), CUI::CORNER_ALL, 3.0f);
 	CUIRect NewRect = *pRect;
 	NewRect.y += NewRect.h/2.0f-7.0f;
-	float tw = min(TextRender()->TextWidth(0, 10.0f, pText, -1), NewRect.w);
+	float tw = min(TextRender()->TextWidth(0, 10.0f, pText, -1, -1.0f), NewRect.w);
 	CTextCursor Cursor;
 	TextRender()->SetCursor(&Cursor, NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f, 10.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 	Cursor.m_LineWidth = NewRect.w;
@@ -553,7 +553,7 @@ int CEditor::DoButton_Image(const void *pID, const char *pText, int Checked, con
 	RenderTools()->DrawUIRect(pRect, ButtonColor, CUI::CORNER_ALL, 3.0f);
 	CUIRect NewRect = *pRect;
 	NewRect.y += NewRect.h/2.0f-7.0f;
-	float tw = min(TextRender()->TextWidth(0, 10.0f, pText, -1), NewRect.w);
+	float tw = min(TextRender()->TextWidth(0, 10.0f, pText, -1, -1.0f), NewRect.w);
 	CTextCursor Cursor;
 	TextRender()->SetCursor(&Cursor, NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f, 10.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 	Cursor.m_LineWidth = NewRect.w;
@@ -2603,7 +2603,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 				str_format(aBuf, sizeof(aBuf),"#%d %s", g, m_Map.m_lGroups[g]->m_aName);
 				float FontSize = 10.0f;
-				while(TextRender()->TextWidth(0, FontSize, aBuf, -1) > Slot.w)
+				while(TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f) > Slot.w)
 					FontSize--;
 				if(int Result = DoButton_Ex(&m_Map.m_lGroups[g], aBuf, g==m_SelectedGroup, &Slot,
 					BUTTON_CONTEXT, m_Map.m_lGroups[g]->m_Collapse ? "Select group. Double click to expand." : "Select group. Double click to collapse.", 0, FontSize))
@@ -2656,7 +2656,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 					str_copy(aBuf, "Quads", sizeof(aBuf));
 
 				float FontSize = 10.0f;
-				while(TextRender()->TextWidth(0, FontSize, aBuf, -1) > Button.w)
+				while(TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f) > Button.w)
 					FontSize--;
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
 					BUTTON_CONTEXT, "Select layer.", 0, FontSize))
