@@ -22,7 +22,7 @@ CroyaPlayer::~CroyaPlayer()
 int CroyaPlayer::GetClassNum()
 {
 	int ClassNum;
-	for (auto& c : m_Classes) {
+	for (const auto& c : m_Classes) {
 		if (m_pClass == c.second)
 			ClassNum = c.first;
 	}
@@ -129,4 +129,11 @@ void CroyaPlayer::SetPrevHumanClass()
 	if (PrevClass == Class::HUMAN_CLASS_START || NotInRange)
 		PrevClass = LastClass;
 	SetClassNum(PrevClass);
+}
+
+void CroyaPlayer::SetRandomZombieClass()
+{
+	int RandomZombieClass = random_int() % (Class::ZOMBIE_CLASS_END - Class::ZOMBIE_CLASS_START - 1) + Class::ZOMBIE_CLASS_START + 1;
+	printf("%d", RandomZombieClass);
+	SetClassNum(RandomZombieClass);
 }

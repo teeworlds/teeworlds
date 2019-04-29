@@ -33,4 +33,6 @@ public:
 
 	void SetNextHumanClass();
 	void SetPrevHumanClass();
+
+	void SetRandomZombieClass();
 };

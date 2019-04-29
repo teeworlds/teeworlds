@@ -5,6 +5,10 @@
 #include <game/server/gamecontext.h>
 #include <infcroya/entities/biologist-mine.h>
 #include <generated/server_data.h>
+#include <game/server/entities/projectile.h>
+#include <base/math.h>
+#include <infcroya\entities\bouncing-bullet.h>
+#include <engine/message.h>
 
 CBiologist::CBiologist()
 {
@@ -26,6 +30,7 @@ void CBiologist::InitialWeaponsHealth(CCharacter* pChr)
 	pChr->IncreaseHealth(10);
 	pChr->GiveWeapon(WEAPON_HAMMER, -1);
 	pChr->GiveWeapon(WEAPON_GUN, 10);
+	pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
 	pChr->GiveWeapon(WEAPON_LASER, 10);
 	pChr->SetWeapon(WEAPON_GUN);
 }
@@ -62,7 +67,7 @@ void CBiologist::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCh
 			else
 				Dir = vec2(0.f, -1.f);
 
-			pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
+			pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, 20,
 				pChr->GetPlayer()->GetCID(), pChr->GetActiveWeapon());
 			Hits++;
 		}
@@ -72,7 +77,43 @@ void CBiologist::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCh
 			pChr->SetReloadTimer(pChr->Server()->TickSpeed() / 3);
 	} break;
 
-	case WEAPON_LASER:
+	case WEAPON_GUN: {
+		new CProjectile(pChr->GameWorld(), WEAPON_GUN,
+			pChr->GetPlayer()->GetCID(),
+			ProjStartPos,
+			Direction,
+			(int)(pChr->Server()->TickSpeed() * pChr->GameServer()->Tuning()->m_GunLifetime),
+			g_pData->m_Weapons.m_Gun.m_pBase->m_Damage, false, 0, -1, WEAPON_GUN);
+
+		pChr->GameServer()->CreateSound(pChr->GetPos(), SOUND_GUN_FIRE);
+	} break;
+
+	case WEAPON_SHOTGUN: {
+		int ShotSpread = 2;
+		CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
+		Msg.AddInt(ShotSpread * 2 + 1);
+
+		for (int i = -ShotSpread; i <= ShotSpread; ++i)
+		{
+			float Spreading[] = { -0.185f, -0.070f, 0, 0.070f, 0.185f };
+			float a = angle(Direction);
+			a += Spreading[i + 2];
+			float v = 1 - (absolute(i) / (float)ShotSpread);
+			float Speed = mix((float)pChr->GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
+			
+			CBouncingBullet* pProj = new CBouncingBullet(pChr->GameWorld(), pChr->GetPlayer()->GetCID(), ProjStartPos, vec2(cosf(a), sinf(a)) * Speed);
+
+			// pack the Projectile and send it to the client Directly
+			CNetObj_Projectile p;
+			pProj->FillInfo(&p);
+			for (unsigned i = 0; i < sizeof(CNetObj_Projectile) / sizeof(int); i++)
+				Msg.AddInt(((int*)& p)[i]);
+		}
+
+		pChr->GameServer()->CreateSound(pChr->GetPos(), SOUND_SHOTGUN_FIRE);
+	} break;
+
+	case WEAPON_LASER: {
 		CGameWorld* pGameWorld = pChr->GameWorld();
 		for (CBiologistMine* pMine = (CBiologistMine*)pGameWorld->FindFirst(CGameWorld::ENTTYPE_BIOLOGIST_MINE); pMine; pMine = (CBiologistMine*)pMine->TypeNext())
 		{
@@ -87,6 +128,6 @@ void CBiologist::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCh
 			pChr->GameServer()->CreateSound(pChr->GetPos(), SOUND_LASER_FIRE);
 			pChr->m_aWeapons[WEAPON_LASER].m_Ammo = 0;
 		}
-		break;
+	} break;
 	}
 }

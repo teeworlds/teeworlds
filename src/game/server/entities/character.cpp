@@ -561,8 +561,8 @@ void CCharacter::ResetWeaponsHealth()
 {
 	m_Health = 0;
 	m_Armor = 0;
-	for (int i = 0; i < NUM_WEAPONS; i++) {
-		m_aWeapons[i].m_Got = false;
+	for (auto& each : m_aWeapons) {
+		each.m_Got = false;
 	}
 }
 
@@ -579,6 +579,29 @@ void CCharacter::SetReloadTimer(int ReloadTimer)
 void CCharacter::SetNumObjectsHit(int NumObjectsHit)
 {
 	m_NumObjectsHit = NumObjectsHit;
+}
+
+void CCharacter::Infect()
+{
+	GetCroyaPlayer()->SetRandomZombieClass();
+}
+
+bool CCharacter::IncreaseOverallHp(int Amount)
+{
+	bool success = false;
+	if (m_Health < 10)
+	{
+		int healthDiff = 10 - m_Health;
+		IncreaseHealth(Amount);
+		success = true;
+		Amount = Amount - healthDiff;
+	}
+	if (Amount > 0)
+	{
+		if (IncreaseArmor(Amount))
+			success = true;
+	}
+	return success;
 }
 // INFCROYA END ------------------------------------------------------------//
 
