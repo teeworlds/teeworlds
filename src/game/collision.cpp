@@ -205,20 +205,20 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 
 bool CCollision::HitTileDeath(vec2& Pos, vec2& Newpos, vec2& Deathpos, float radius)
 {
-    vec2 dir, orth, deathpos1, deathpos2;
+    vec2 Dir, Orth, Deathpos1, Deathpos2;
 
     //calculathe orthogonal vector to move directions
-    dir = Pos-Newpos;
-    orth = normalize(vec2(dir.y, -dir.x)) * radius;
+    Dir = Pos-Newpos;
+    Orth = normalize(vec2(dir.y, -dir.x)) * radius;
 
     //check if hit with deathtile appears with right and left side of tee
-    if(CheckDeath(Pos+orth, Newpos+orth, deathpos1) || CheckDeath(Pos-orth, Newpos-orth, deathpos2))
+    if(CheckDeath(Pos+Orth, Newpos+Orth, deathpos1) || CheckDeath(Pos-Orth, Newpos-Orth, deathpos2))
     {
         //choose closer death position
-        if(distance(Pos, deathpos1) > distance(Pos, deathpos2))
-            Deathpos = deathpos2+orth;
+        if(distance(Pos, Deathpos1) > distance(Pos, Deathpos2))
+            Deathpos = Deathpos2+Orth;
         else
-            Deathpos = deathpos1-orth;
+            Deathpos = Deathpos1-Orth;
         return true;
     }
     Deathpos = Newpos;
@@ -231,11 +231,11 @@ bool CCollision::CheckDeath(vec2 Pos1, vec2 Pos2, vec2& Deathpos)
     float dx = (Pos2.x - Pos1.x);
     float dy = (Pos2.y - Pos1.y);
 
-    float step;
+    float Step;
     if(fabs(dx) >= fabs(dy))
-        step = fabs(dx);
+        Step = fabs(dx);
     else
-        step = fabs(dy);
+        Step = fabs(dy);
 
     dx = dx / step;
     dy = dy / step;
@@ -245,7 +245,8 @@ bool CCollision::CheckDeath(vec2 Pos1, vec2 Pos2, vec2& Deathpos)
 
     int i = 1;
 
-    while(i <= step) {
+    while(i <= step)
+    {
         if(GetCollisionAt(x, y)&COLFLAG_DEATH) {
             Deathpos = vec2(x, y);
             return true;
