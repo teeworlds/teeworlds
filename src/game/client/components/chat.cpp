@@ -621,6 +621,9 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 
 void CChat::OnRender()
 {
+	if(Client()->State() == Client()->STATE_LOADING)
+		return;
+		
 	// send pending chat messages
 	if(m_PendingChatCounter > 0 && m_LastChatSend+time_freq() < time_get())
 	{
