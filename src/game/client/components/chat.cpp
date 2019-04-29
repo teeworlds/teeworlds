@@ -49,6 +49,8 @@ void CChat::OnReset()
 		for(int i = 0; i < MAX_LINES; i++)
 		{
 			m_aLines[i].m_Time = 0;
+			m_aLines[i].m_Size[0].y = -1.0f;
+			m_aLines[i].m_Size[1].y = -1.0f;
 			m_aLines[i].m_aText[0] = 0;
 			m_aLines[i].m_aName[0] = 0;
 		}
@@ -73,6 +75,14 @@ void CChat::OnReset()
 
 		for(int i = 0; i < CHAT_NUM; ++i)
 			m_aLastSoundPlayed[i] = 0;
+	}
+	else
+	{
+		for(int i = 0; i < MAX_LINES; i++)
+		{
+			m_aLines[i].m_Size[0].y = -1.0f;
+			m_aLines[i].m_Size[1].y = -1.0f;
+		}
 	}
 }
 
