@@ -28,12 +28,17 @@ CScoreboard::CScoreboard()
 
 void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData)
 {
-	((CScoreboard *)pUserData)->m_Active = pResult->GetInteger(0) != 0;
+	int Result = pResult->GetInteger(0);
+	if(!Result)
+		((CScoreboard *)pUserData)->m_Active = false;
+	else
+		((CScoreboard *)pUserData)->m_Activate = true;
 }
 
 void CScoreboard::OnReset()
 {
 	m_Active = false;
+	m_Activate = false;
 	m_PlayerLines = 0;
 	m_SkipPlayerStatsReset = false;
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -639,6 +644,13 @@ void CScoreboard::OnRender()
 	}
 	else if(m_SkipPlayerStatsReset && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStartTick != Client()->GameTick())
 		m_SkipPlayerStatsReset = false;
+
+	// postpone the active state till the render area gets updated during the rendering
+	if(m_Activate)
+	{
+		m_Active = true;
+		m_Activate = false;
+	}
 
 	// close the motd if we actively wanna look on the scoreboard
 	if(m_Active)
