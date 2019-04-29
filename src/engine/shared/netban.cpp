@@ -621,3 +621,5 @@ void CNetBan::ConBansSave(IConsole::IResult *pResult, void *pUser)
 // explicitly instantiate template for src/engine/server/server.cpp
 template void CNetBan::MakeBanInfo<CNetRange>(CBan<CNetRange> *pBan, char *pBuf, unsigned BufferSize, int Type, int *pLastInfoQuery);
 template void CNetBan::MakeBanInfo<NETADDR>(CBan<NETADDR> *pBan, char *pBuf, unsigned BufferSize, int Type, int *pLastInfoQuery);
+template int CNetBan::Ban<CNetBan::CBanPool<NETADDR, 1> >(CNetBan::CBanPool<NETADDR, 1> *pBanPool, const NETADDR *pData, int Seconds, const char *pReason);
+template int CNetBan::Ban<CNetBan::CBanPool<CNetRange, 16> >(CNetBan::CBanPool<CNetRange, 16> *pBanPool, const CNetRange *pData, int Seconds, const char *pReason);
