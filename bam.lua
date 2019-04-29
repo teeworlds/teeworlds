@@ -81,7 +81,7 @@ end
 function GenerateCommonSettings(settings, conf, arch, compiler)
 	if config.geolocation.value then
 		settings.cc.defines:Add("CONF_GEOLOCATION") -- INFCROYA RELATED
-		settings.link.libs:Add("libmaxminddb") -- INFCROYA RELATED
+		settings.link.libs:Add("maxminddb") -- INFCROYA RELATED
 	end
 	if compiler == "gcc" or compiler == "clang" then
 		-- settings.cc.flags:Add("-Wall", "-fno-exceptions")
