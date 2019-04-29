@@ -35,8 +35,8 @@ public:
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity) const;
 	bool TestBox(vec2 Pos, vec2 Size) const;
 
-	bool CheckDeath(vec2 Pos, vec2 Newpos, vec2& Deathpos);
-	bool HitTileDeath(vec2& Pos, vec2& Newpos, vec2& Deathpos, float radius);
+	bool CheckDeath(const vec2& Pos, const vec2& Newpos, vec2* pDeathpos);
+	bool HitTileDeath(const vec2& Pos, const vec2& Newpos, vec2* pDeathpos, float radius);
 };
 
 #endif

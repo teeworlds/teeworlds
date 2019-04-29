@@ -203,7 +203,7 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 	*pInoutVel = Vel;
 }
 
-bool CCollision::HitTileDeath(vec2& Pos, vec2& Newpos, vec2& Deathpos, float radius)
+bool CCollision::HitTileDeath(const vec2& Pos, const vec2& Newpos, vec2* pDeathpos, float radius)
 {
     vec2 Dir, Orth, Deathpos1, Deathpos2;
 
@@ -212,21 +212,20 @@ bool CCollision::HitTileDeath(vec2& Pos, vec2& Newpos, vec2& Deathpos, float rad
     Orth = normalize(vec2(Dir.y, -Dir.x)) * radius;
 
     //check if hit with deathtile appears with right and left side of tee
-    if(CheckDeath(Pos+Orth, Newpos+Orth, Deathpos1) || CheckDeath(Pos-Orth, Newpos-Orth, Deathpos2))
+    if(CheckDeath(Pos+Orth, Newpos+Orth, &Deathpos1) || CheckDeath(Pos-Orth, Newpos-Orth, &Deathpos2))
     {
         //choose closer death position
         if(distance(Pos, Deathpos1) > distance(Pos, Deathpos2))
-            Deathpos = Deathpos2+Orth;
+            *pDeathpos = Deathpos2+Orth;
         else
-            Deathpos = Deathpos1-Orth;
+            *pDeathpos = Deathpos1-Orth;
         return true;
     }
-    Deathpos = Newpos;
     return false;
 }
 
 // finds any deathtile between pos1 and pos2 using digital differential analyser
-bool CCollision::CheckDeath(vec2 Pos1, vec2 Pos2, vec2& Deathpos)
+bool CCollision::CheckDeath(const vec2& Pos1, const vec2& Pos2, vec2* pDeathpos)
 {
 	float dx = (Pos2.x - Pos1.x);
 	float dy = (Pos2.y - Pos1.y);
@@ -248,7 +247,7 @@ bool CCollision::CheckDeath(vec2 Pos1, vec2 Pos2, vec2& Deathpos)
 	while(i <= Step)
 	{
 		if(GetCollisionAt(x, y)&COLFLAG_DEATH) {
-			Deathpos = vec2(x, y);
+			*pDeathpos = vec2(x, y);
 			return true;
 		}
 		x = x + dx;
@@ -256,6 +255,6 @@ bool CCollision::CheckDeath(vec2 Pos1, vec2 Pos2, vec2& Deathpos)
 
 		++i;
 	}
-	Deathpos = vec2(x, y);
+	*pDeathpos = vec2(x, y);
 	return false;
 }

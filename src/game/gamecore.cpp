@@ -391,7 +391,7 @@ void CCharacterCore::Move()
 
 	// check player death by deathtiles
 	vec2 LastDeathPos;
-	if(m_pCollision->HitTileDeath(m_Pos, NewPos, LastDeathPos, 28.0f/2))//Gets tee radius
+	if(m_pCollision->HitTileDeath(m_Pos, NewPos, &LastDeathPos, 28.0f/2))//Gets tee radius
 	{
 		m_Pos = LastDeathPos;
 		m_DiesFromDeathtiles = true;
