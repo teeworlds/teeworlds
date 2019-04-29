@@ -4,38 +4,21 @@
 
 CDefault::CDefault()
 {
-	m_Skin = CSkin();
-	m_InfectedClass = false;
+	SetSkin(CSkin());
+	SetInfectedClass(false);
 }
 
 CDefault::~CDefault()
 {
 }
 
-const CSkin& CDefault::GetSkin() const
+void CDefault::InitialWeaponsHealth(CCharacter* pChr)
 {
-	return m_Skin;
-}
-
-void CDefault::OnCharacterSpawn(CCharacter* pChr)
-{
-	pChr->SetInfected(m_InfectedClass);
 	pChr->IncreaseHealth(10);
 	pChr->GiveWeapon(WEAPON_GUN, 10);
-	pChr->GiveWeapon(WEAPON_LASER, 10);
 	pChr->SetWeapon(WEAPON_GUN);
 }
 
-int CDefault::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon)
+void CDefault::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCharacter* pChr)
 {
-	return 0;
-}
-
-void CDefault::OnWeaponFire(vec2 Direction, int Weapon)
-{
-}
-
-bool CDefault::IsInfectedClass() const
-{
-	return m_InfectedClass;
 }

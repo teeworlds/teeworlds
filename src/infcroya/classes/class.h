@@ -2,22 +2,37 @@
 
 #include <infcroya/skin.h>
 #include <base/vmath.h>
+#include <unordered_map>
 
 class IClass {
+private:
+	CSkin m_Skin;
+	bool m_Infected;
 public:
-	virtual ~IClass() {};
-	virtual const CSkin& GetSkin() const = 0;
+	static std::unordered_map<int, class IClass*> classes;
+	virtual ~IClass();
 
-	virtual void OnCharacterSpawn(class CCharacter* pChr) = 0;
-	virtual int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon) = 0;
+	virtual void InitialWeaponsHealth(class CCharacter* pChr) = 0;
 
-	virtual void OnWeaponFire(vec2 Direction, int Weapon) = 0;
+	virtual void OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, class CCharacter* pChr) = 0;
 
-	virtual bool IsInfectedClass() const = 0;
+	virtual void OnCharacterSpawn(class CCharacter* pChr);
+	virtual int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon);
+
+	virtual const CSkin& GetSkin() const;
+	virtual void SetSkin(CSkin skin);
+
+	virtual bool IsInfectedClass() const;
+	virtual void SetInfectedClass(bool Infected);
 };
 
 enum Class {
-	DEFAULT = 0,
+	HUMAN_CLASS_START = 0,
+	DEFAULT,
 	BIOLOGIST,
+	HUMAN_CLASS_END,
+
+	ZOMBIE_CLASS_START,
 	SMOKER,
+	ZOMBIE_CLASS_END,
 };

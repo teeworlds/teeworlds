@@ -60,13 +60,19 @@ public:
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
 	// INFCROYA BEGIN ------------------------------------------------------------
-	bool IsHuman() const { return !m_Infected; }
-	bool IsZombie() const { return m_Infected; }
+	bool IsHuman() const;
+	bool IsZombie() const;
 
-	void SetInfected(bool Infected) { m_Infected = Infected; }
+	void SetInfected(bool Infected);
 
-	void SetCroyaPlayer(class CroyaPlayer* CroyaPlayer) { m_pCroyaPlayer = CroyaPlayer; }
-	class CroyaPlayer* GetCroyaPlayer() { return m_pCroyaPlayer; }
+	void SetCroyaPlayer(class CroyaPlayer* CroyaPlayer);
+	class CroyaPlayer* GetCroyaPlayer();
+
+	void ResetWeaponsHealth();
+
+	int GetActiveWeapon() const;
+	void SetReloadTimer(int ReloadTimer);
+	void SetNumObjectsHit(int NumObjectsHit);
 	// INFCROYA END ------------------------------------------------------------//
 
 private:

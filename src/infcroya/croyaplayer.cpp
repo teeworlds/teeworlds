@@ -5,17 +5,33 @@
 #include <infcroya/classes/class.h>
 #include <infcroya/entities/biologist-mine.h>
 
-CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer)
+CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, std::unordered_map<int, IClass*> Classes)
 {
 	m_ClientID = ClientID;
 	m_pPlayer = pPlayer;
 	m_pGameServer = pGameServer;
 	m_pCharacter = nullptr;
 	m_Infected = false;
+	m_Classes = Classes;
 }
 
 CroyaPlayer::~CroyaPlayer()
 {
+}
+
+int CroyaPlayer::GetClassNum()
+{
+	int ClassNum;
+	for (auto& c : m_Classes) {
+		if (m_pClass == c.second)
+			ClassNum = c.first;
+	}
+	return ClassNum;
+}
+
+void CroyaPlayer::SetClassNum(int Class)
+{
+	SetClass(m_Classes[Class]);
 }
 
 IClass* CroyaPlayer::GetClass()
@@ -49,6 +65,11 @@ void CroyaPlayer::SetClass(IClass* pClass)
 			m_pGameServer->SendSkinChange(m_pPlayer->GetCID(), each->GetCID());
 		}
 	}
+	if (m_pCharacter) {
+		m_pCharacter->SetInfected(m_pClass->IsInfectedClass());
+		m_pCharacter->ResetWeaponsHealth();
+		m_pClass->InitialWeaponsHealth(m_pCharacter);
+	}
 }
 
 void CroyaPlayer::SetCharacter(CCharacter* pCharacter)
@@ -68,22 +89,9 @@ void CroyaPlayer::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int We
 	m_pCharacter = nullptr;
 }
 
-void CroyaPlayer::OnWeaponLaser(vec2 Direction)
+void CroyaPlayer::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon)
 {
-	CGameWorld* pGameWorld = m_pCharacter->GameWorld();
-	for (CBiologistMine* pMine = (CBiologistMine*)pGameWorld->FindFirst(CGameWorld::ENTTYPE_BIOLOGIST_MINE); pMine; pMine = (CBiologistMine*)pMine->TypeNext())
-	{
-		if (pMine->m_Owner != m_pPlayer->GetCID()) continue;
-		m_pGameServer->m_World.DestroyEntity(pMine);
-	}
-
-	vec2 To = m_pCharacter->GetPos() + Direction * 400.0f;
-	if (m_pGameServer->Collision()->IntersectLine(m_pCharacter->GetPos(), To, 0x0, &To))
-	{
-		new CBiologistMine(pGameWorld, m_pCharacter->GetPos(), To, m_pPlayer->GetCID());
-		m_pGameServer->CreateSound(m_pCharacter->GetPos(), SOUND_LASER_FIRE);
-		m_pCharacter->m_aWeapons[WEAPON_LASER].m_Ammo = 0;
-	}
+	m_pClass->OnWeaponFire(Direction, ProjStartPos, Weapon, m_pCharacter);
 }
 
 bool CroyaPlayer::IsHuman() const
@@ -94,4 +102,31 @@ bool CroyaPlayer::IsHuman() const
 bool CroyaPlayer::IsZombie() const
 {
 	return m_Infected;
+}
+
+std::unordered_map<int, class IClass*>& CroyaPlayer::GetClasses()
+{
+	return m_Classes;
+}
+
+void CroyaPlayer::SetNextHumanClass()
+{
+	int NextClass = GetClassNum() + 1;
+	int FirstClass = Class::HUMAN_CLASS_START + 1;
+	bool NotInRange = !(NextClass > HUMAN_CLASS_START && NextClass < HUMAN_CLASS_END);
+
+	if (NextClass == Class::HUMAN_CLASS_END || NotInRange)
+		NextClass = FirstClass;
+	SetClassNum(NextClass);
+}
+
+void CroyaPlayer::SetPrevHumanClass()
+{
+	int PrevClass = GetClassNum() - 1;
+	int LastClass = Class::HUMAN_CLASS_END - 1;
+	bool NotInRange = !(PrevClass > HUMAN_CLASS_START && PrevClass < HUMAN_CLASS_END);
+
+	if (PrevClass == Class::HUMAN_CLASS_START || NotInRange)
+		PrevClass = LastClass;
+	SetClassNum(PrevClass);
 }

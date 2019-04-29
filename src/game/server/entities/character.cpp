@@ -13,6 +13,7 @@
 
 // INFCROYA BEGIN ------------------------------------------------------------
 #include <infcroya/croyaplayer.h>
+#include <infcroya/classes/class.h>
 // INFCROYA END ------------------------------------------------------------//
 
 //input count
@@ -229,8 +230,10 @@ void CCharacter::HandleWeaponSwitch()
 		while(Next) // Next Weapon selection
 		{
 			WantedWeapon = (WantedWeapon+1)%NUM_WEAPONS;
-			if(m_aWeapons[WantedWeapon].m_Got)
+			if (m_aWeapons[WantedWeapon].m_Got) {
 				Next--;
+				GetCroyaPlayer()->SetNextHumanClass(); // INFCROYA RELATED
+			}
 		}
 	}
 
@@ -239,8 +242,10 @@ void CCharacter::HandleWeaponSwitch()
 		while(Prev) // Prev Weapon selection
 		{
 			WantedWeapon = (WantedWeapon-1)<0?NUM_WEAPONS-1:WantedWeapon-1;
-			if(m_aWeapons[WantedWeapon].m_Got)
+			if (m_aWeapons[WantedWeapon].m_Got) {
 				Prev--;
+				GetCroyaPlayer()->SetPrevHumanClass(); // INFCROYA RELATED
+			}
 		}
 	}
 
@@ -298,96 +303,124 @@ void CCharacter::FireWeapon()
 	{
 		case WEAPON_HAMMER:
 		{
-			// reset objects Hit
-			m_NumObjectsHit = 0;
-			GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
-
-			CCharacter *apEnts[MAX_CLIENTS];
-			int Hits = 0;
-			int Num = GameServer()->m_World.FindEntities(ProjStartPos, GetProximityRadius()*0.5f, (CEntity**)apEnts,
-														MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
-
-			for (int i = 0; i < Num; ++i)
-			{
-				CCharacter *pTarget = apEnts[i];
-
-				if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
-					continue;
-
-				// set his velocity to fast upward (for now)
-				if(length(pTarget->m_Pos-ProjStartPos) > 0.0f)
-					GameServer()->CreateHammerHit(pTarget->m_Pos-normalize(pTarget->m_Pos-ProjStartPos)*GetProximityRadius()*0.5f);
-				else
-					GameServer()->CreateHammerHit(ProjStartPos);
-
-				vec2 Dir;
-				if (length(pTarget->m_Pos - m_Pos) > 0.0f)
-					Dir = normalize(pTarget->m_Pos - m_Pos);
-				else
-					Dir = vec2(0.f, -1.f);
-
-				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir*-1, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
-					m_pPlayer->GetCID(), m_ActiveWeapon);
-				Hits++;
+			// INFCROYA BEGIN ------------------------------------------------------------
+			if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+				m_pCroyaPlayer->OnWeaponFire(Direction, ProjStartPos, WEAPON_HAMMER);
 			}
+			else {
+				// reset objects Hit
+				m_NumObjectsHit = 0;
+				GameServer()->CreateSound(m_Pos, SOUND_HAMMER_FIRE);
 
-			// if we Hit anything, we have to wait for the reload
-			if(Hits)
-				m_ReloadTimer = Server()->TickSpeed()/3;
+				CCharacter* apEnts[MAX_CLIENTS];
+				int Hits = 0;
+				int Num = GameServer()->m_World.FindEntities(ProjStartPos, GetProximityRadius() * 0.5f, (CEntity * *)apEnts,
+					MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+
+				for (int i = 0; i < Num; ++i)
+				{
+					CCharacter* pTarget = apEnts[i];
+
+					if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
+						continue;
+
+					// set his velocity to fast upward (for now)
+					if (length(pTarget->m_Pos - ProjStartPos) > 0.0f)
+						GameServer()->CreateHammerHit(pTarget->m_Pos - normalize(pTarget->m_Pos - ProjStartPos) * GetProximityRadius() * 0.5f);
+					else
+						GameServer()->CreateHammerHit(ProjStartPos);
+
+					vec2 Dir;
+					if (length(pTarget->m_Pos - m_Pos) > 0.0f)
+						Dir = normalize(pTarget->m_Pos - m_Pos);
+					else
+						Dir = vec2(0.f, -1.f);
+
+					pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, g_pData->m_Weapons.m_Hammer.m_pBase->m_Damage,
+						m_pPlayer->GetCID(), m_ActiveWeapon);
+					Hits++;
+				}
+
+				// if we Hit anything, we have to wait for the reload
+				if (Hits)
+					m_ReloadTimer = Server()->TickSpeed() / 3;
+			}
+			// INFCROYA END ------------------------------------------------------------//
 
 		} break;
 
 		case WEAPON_GUN:
 		{
-			new CProjectile(GameWorld(), WEAPON_GUN,
-				m_pPlayer->GetCID(),
-				ProjStartPos,
-				Direction,
-				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GunLifetime),
-				g_pData->m_Weapons.m_Gun.m_pBase->m_Damage, false, 0, -1, WEAPON_GUN);
+			// INFCROYA BEGIN ------------------------------------------------------------
+			if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+				m_pCroyaPlayer->OnWeaponFire(Direction, ProjStartPos, WEAPON_GUN);
+			}
+			else {
+				new CProjectile(GameWorld(), WEAPON_GUN,
+					m_pPlayer->GetCID(),
+					ProjStartPos,
+					Direction,
+					(int)(Server()->TickSpeed() * GameServer()->Tuning()->m_GunLifetime),
+					g_pData->m_Weapons.m_Gun.m_pBase->m_Damage, false, 0, -1, WEAPON_GUN);
 
-			GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE);
+				GameServer()->CreateSound(m_Pos, SOUND_GUN_FIRE);
+			}
+			// INFCROYA END ------------------------------------------------------------//
 		} break;
 
 		case WEAPON_SHOTGUN:
 		{
-			int ShotSpread = 2;
-
-			for(int i = -ShotSpread; i <= ShotSpread; ++i)
-			{
-				float Spreading[] = {-0.185f, -0.070f, 0, 0.070f, 0.185f};
-				float a = angle(Direction);
-				a += Spreading[i+2];
-				float v = 1-(absolute(i)/(float)ShotSpread);
-				float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
-				new CProjectile(GameWorld(), WEAPON_SHOTGUN,
-					m_pPlayer->GetCID(),
-					ProjStartPos,
-					vec2(cosf(a), sinf(a))*Speed,
-					(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_ShotgunLifetime),
-					g_pData->m_Weapons.m_Shotgun.m_pBase->m_Damage, false, 0, -1, WEAPON_SHOTGUN);
+			// INFCROYA BEGIN ------------------------------------------------------------
+			if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+				m_pCroyaPlayer->OnWeaponFire(Direction, ProjStartPos, WEAPON_SHOTGUN);
 			}
+			else {
+				int ShotSpread = 2;
 
-			GameServer()->CreateSound(m_Pos, SOUND_SHOTGUN_FIRE);
+				for (int i = -ShotSpread; i <= ShotSpread; ++i)
+				{
+					float Spreading[] = { -0.185f, -0.070f, 0, 0.070f, 0.185f };
+					float a = angle(Direction);
+					a += Spreading[i + 2];
+					float v = 1 - (absolute(i) / (float)ShotSpread);
+					float Speed = mix((float)GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
+					new CProjectile(GameWorld(), WEAPON_SHOTGUN,
+						m_pPlayer->GetCID(),
+						ProjStartPos,
+						vec2(cosf(a), sinf(a)) * Speed,
+						(int)(Server()->TickSpeed() * GameServer()->Tuning()->m_ShotgunLifetime),
+						g_pData->m_Weapons.m_Shotgun.m_pBase->m_Damage, false, 0, -1, WEAPON_SHOTGUN);
+				}
+
+				GameServer()->CreateSound(m_Pos, SOUND_SHOTGUN_FIRE);
+			}
+			// INFCROYA END ------------------------------------------------------------//
 		} break;
 
 		case WEAPON_GRENADE:
 		{
-			new CProjectile(GameWorld(), WEAPON_GRENADE,
-				m_pPlayer->GetCID(),
-				ProjStartPos,
-				Direction,
-				(int)(Server()->TickSpeed()*GameServer()->Tuning()->m_GrenadeLifetime),
-				g_pData->m_Weapons.m_Grenade.m_pBase->m_Damage, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
+			// INFCROYA BEGIN ------------------------------------------------------------
+			if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+				m_pCroyaPlayer->OnWeaponFire(Direction, ProjStartPos, WEAPON_GRENADE);
+			}
+			else {
+				new CProjectile(GameWorld(), WEAPON_GRENADE,
+					m_pPlayer->GetCID(),
+					ProjStartPos,
+					Direction,
+					(int)(Server()->TickSpeed() * GameServer()->Tuning()->m_GrenadeLifetime),
+					g_pData->m_Weapons.m_Grenade.m_pBase->m_Damage, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
 
-			GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
+				GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
+			}
+			// INFCROYA END ------------------------------------------------------------//
 		} break;
 
 		case WEAPON_LASER:
 		{
 			// INFCROYA BEGIN ------------------------------------------------------------
 			if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
-				m_pCroyaPlayer->OnWeaponLaser(Direction);
+				m_pCroyaPlayer->OnWeaponFire(Direction, ProjStartPos, WEAPON_LASER);
 			}
 			else {
 				new CLaser(GameWorld(), m_Pos, Direction, GameServer()->Tuning()->m_LaserReach, m_pPlayer->GetCID());
@@ -398,14 +431,21 @@ void CCharacter::FireWeapon()
 
 		case WEAPON_NINJA:
 		{
-			// reset Hit objects
-			m_NumObjectsHit = 0;
+			// INFCROYA BEGIN ------------------------------------------------------------
+			if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+				m_pCroyaPlayer->OnWeaponFire(Direction, ProjStartPos, WEAPON_GRENADE);
+			}
+			else {
+				// reset Hit objects
+				m_NumObjectsHit = 0;
 
-			m_Ninja.m_ActivationDir = Direction;
-			m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
-			m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
+				m_Ninja.m_ActivationDir = Direction;
+				m_Ninja.m_CurrentMoveTime = g_pData->m_Weapons.m_Ninja.m_Movetime * Server()->TickSpeed() / 1000;
+				m_Ninja.m_OldVelAmount = length(m_Core.m_Vel);
 
-			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
+				GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
+			}
+			// INFCROYA END ------------------------------------------------------------//
 		} break;
 
 	}
@@ -491,10 +531,56 @@ void CCharacter::SetEmote(int Emote, int Tick)
 	m_EmoteStop = Tick;
 }
 
-void CCharacter::SetNormalEmote(int Emote) // INFCROYA RELATED
+// INFCROYA BEGIN ------------------------------------------------------------
+void CCharacter::SetNormalEmote(int Emote)
 {
 	m_NormalEmote = Emote;
 }
+
+bool CCharacter::IsHuman() const {
+	return !m_Infected;
+}
+
+bool CCharacter::IsZombie() const {
+	return m_Infected;
+}
+
+void CCharacter::SetInfected(bool Infected) {
+	m_Infected = Infected;
+}
+
+void CCharacter::SetCroyaPlayer(CroyaPlayer* CroyaPlayer) {
+	m_pCroyaPlayer = CroyaPlayer;
+}
+
+CroyaPlayer* CCharacter::GetCroyaPlayer() {
+	return m_pCroyaPlayer;
+}
+
+void CCharacter::ResetWeaponsHealth()
+{
+	m_Health = 0;
+	m_Armor = 0;
+	for (int i = 0; i < NUM_WEAPONS; i++) {
+		m_aWeapons[i].m_Got = false;
+	}
+}
+
+int CCharacter::GetActiveWeapon() const
+{
+	return m_ActiveWeapon;
+}
+
+void CCharacter::SetReloadTimer(int ReloadTimer)
+{
+	m_ReloadTimer = ReloadTimer;
+}
+
+void CCharacter::SetNumObjectsHit(int NumObjectsHit)
+{
+	m_NumObjectsHit = NumObjectsHit;
+}
+// INFCROYA END ------------------------------------------------------------//
 
 void CCharacter::OnPredictedInput(CNetObj_PlayerInput *pNewInput)
 {

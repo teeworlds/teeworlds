@@ -13,9 +13,6 @@
 #ifdef CONF_GEOLOCATION
 	#include <infcroya/geolocation/geolocation.h>
 #endif
-#include <iostream>
-
-using namespace std;
 
 CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 : IGameController(pGameServer)
@@ -78,8 +75,8 @@ void CGameControllerMOD::OnPlayerConnect(CPlayer* pPlayer)
 	std::string ip(aAddrStr);
 	Server()->SetClientCountry(ClientID, geolocation->get_country_iso_numeric_code(ip));
 #endif
-	players[ClientID] = new CroyaPlayer(ClientID, pPlayer, GameServer());
-	players[ClientID]->SetClass(classes[Class::BIOLOGIST]);
+	players[ClientID] = new CroyaPlayer(ClientID, pPlayer, GameServer(), classes);
+	players[ClientID]->SetClass(classes[Class::DEFAULT]);
 }
 
 void CGameControllerMOD::OnPlayerDisconnect(CPlayer* pPlayer)
@@ -92,7 +89,7 @@ void CGameControllerMOD::OnPlayerDisconnect(CPlayer* pPlayer)
 
 bool CGameControllerMOD::IsFriendlyFire(int ClientID1, int ClientID2) const
 {
-	if (players[ClientID1]->IsHuman() && players[ClientID2]->IsHuman() && ClientID1 != ClientID2)
+	if (players[ClientID1]->IsHuman() == players[ClientID2]->IsHuman() && ClientID1 != ClientID2)
 		return true;
 	return false;
 }
