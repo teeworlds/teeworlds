@@ -172,7 +172,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	m_pDataFile = pTmpDataFile;
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	swap_endian(m_pDataFile->m_pData, sizeof(int), min(static_cast<unsigned>(Header.m_Swaplen), Size) / sizeof(int));
+	swap_endian(m_pDataFile->m_pData, sizeof(int), min(static_cast<unsigned>(Header.m_Swaplen), static_cast<unsigned>(Size)) / sizeof(int));
 #endif
 
 	//if(DEBUG)
