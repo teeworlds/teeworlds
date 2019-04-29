@@ -232,10 +232,10 @@ bool CCollision::CheckDeath(vec2 Pos1, vec2 Pos2, vec2& Deathpos)
     float dy = (Pos2.y - Pos1.y);
 
     float step;
-    if(abs(dx) >= abs(dy))
-        step = abs(dx);
+    if(fabs(dx) >= fabs(dy))
+        step = fabs(dx);
     else
-        step = abs(dy);
+        step = fabs(dy);
 
     dx = dx / step;
     dy = dy / step;
