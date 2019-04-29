@@ -851,7 +851,7 @@ void CChat::OnRender()
 		CUIRect Rect;
 		Rect.x = 0;
 		Rect.y = HeightLimit - 2.0f;
-		Rect.w = LineWidth + x;
+		Rect.w = LineWidth + x + 3.0f;
 		Rect.h = Height - HeightLimit - 22.f;
 
 		const float LeftAlpha = 0.85f;
