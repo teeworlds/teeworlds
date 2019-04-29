@@ -7,7 +7,7 @@
 #include <generated/server_data.h>
 #include <game/server/entities/projectile.h>
 #include <base/math.h>
-#include <infcroya\entities\bouncing-bullet.h>
+#include <infcroya/entities/bouncing-bullet.h>
 #include <engine/message.h>
 
 CBiologist::CBiologist()
