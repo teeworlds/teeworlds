@@ -471,7 +471,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	RenderTools()->DrawUIRect(&Motd, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 	Motd.Margin(5.0f, &Motd);
 
-	TextRender()->Text(0, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, m_pClient->m_pMotd->GetMotd(), (int)Motd.w);
+	TextRender()->Text(0, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, m_pClient->m_pMotd->GetMotd(), Motd.w);
 }
 
 bool CMenus::RenderServerControlServer(CUIRect MainView)

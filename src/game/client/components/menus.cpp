@@ -2428,7 +2428,7 @@ int CMenus::Render()
 		{
 			Box.HSplitTop(27.0f, 0, &Box);
 			Box.VMargin(5.0f, &Part);
-			UI()->DoLabel(&Part, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign, ExtraAlign == CUI::ALIGN_CENTER ? -1 : Part.w);
+			UI()->DoLabel(&Part, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign, ExtraAlign == CUI::ALIGN_CENTER ? -1.0f : Part.w);
 
 			// button
 			static CButtonContainer s_Button;
