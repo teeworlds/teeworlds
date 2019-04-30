@@ -1390,7 +1390,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			Box.HMargin(2.0f, &Box);
 			TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 			TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
-			UI()->DoLabel(&Box, Localize("Demo"), Box.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
+			UI()->DoLabel(&Box, Localize("Demos"), Box.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 			TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 		}
