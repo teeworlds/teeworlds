@@ -35,8 +35,11 @@ public:
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity) const;
 	bool TestBox(vec2 Pos, vec2 Size) const;
 
-	bool CheckDeath(const vec2& Pos, const vec2& Newpos, vec2* pDeathpos);
+	bool CheckDeath(const vec2& Pos, const vec2& Newpos, vec2* pDeathpos, float radius);
 	bool HitTileDeath(const vec2& Pos, const vec2& Newpos, vec2* pDeathpos, float radius);
+	bool LineLineIntersection(const vec2& LineStart1, const vec2& LineEnd1, const vec2& LineStart2, const vec2& LineEnd2, vec2* Intersection);
+	bool CalcDeathPos(const vec2& Playerpos, const vec2& Nextplayerpos, const vec2& PosDeathtile, vec2* pDeathpos, float radius);
+
 };
 
 #endif

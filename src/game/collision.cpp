@@ -205,27 +205,35 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 
 bool CCollision::HitTileDeath(const vec2& Pos, const vec2& Newpos, vec2* pDeathpos, float radius)
 {
-    vec2 Dir, Orth, Deathpos1, Deathpos2;
 
-    //calculathe orthogonal vector to move directions
+    vec2 Dir, Orth, Deathtilepos1, Deathtilepos2;
+
+    //calculathe vector, that is orthogonal to the movement direction
     Dir = Pos-Newpos;
     Orth = normalize(vec2(Dir.y, -Dir.x)) * radius;
+    Dir = normalize(Dir) * radius;
 
-    //check if hit with deathtile appears with right and left side of tee
-    if(CheckDeath(Pos+Orth, Newpos+Orth, &Deathpos1) || CheckDeath(Pos-Orth, Newpos-Orth, &Deathpos2))
+    //check if a hit with a deathtile appears within a line right and left parallel to the movement direction
+    if(CheckDeath(Pos+Orth, Newpos+Orth+Dir, &Deathtilepos1, radius) || CheckDeath(Pos-Orth, Newpos-Orth-Dir, &Deathtilepos2, radius))
     {
-        //choose closer death position
+    	//Calulate exact deathposition for up to 2 deathtiles
+    	vec2 Deathpos1;
+    	vec2 Deathpos2;
+		CalcDeathPos(Pos, Newpos, Deathtilepos1, &Deathpos1, radius);
+		CalcDeathPos(Pos, Newpos, Deathtilepos2, &Deathpos2, radius);
+
+        //The Closer hit kills the Tee
         if(distance(Pos, Deathpos1) > distance(Pos, Deathpos2))
-            *pDeathpos = Deathpos2+Orth;
+            *pDeathpos = Deathpos2;
         else
-            *pDeathpos = Deathpos1-Orth;
+            *pDeathpos = Deathpos1;
         return true;
     }
     return false;
 }
 
 // finds any deathtile between pos1 and pos2 using digital differential analyser
-bool CCollision::CheckDeath(const vec2& Pos1, const vec2& Pos2, vec2* pDeathpos)
+bool CCollision::CheckDeath(const vec2& Pos1, const vec2& Pos2, vec2* pDeathtilepos, float radius)
 {
 	float dx = (Pos2.x - Pos1.x);
 	float dy = (Pos2.y - Pos1.y);
@@ -235,6 +243,8 @@ bool CCollision::CheckDeath(const vec2& Pos1, const vec2& Pos2, vec2* pDeathpos)
 		Step = fabs(dx);
 	else
 		Step = fabs(dy);
+	if(Step == 0.0)
+		return false;
 
 	dx = dx / Step;
 	dy = dy / Step;
@@ -242,12 +252,13 @@ bool CCollision::CheckDeath(const vec2& Pos1, const vec2& Pos2, vec2* pDeathpos)
 	float x = Pos1.x;
 	float y = Pos1.y;
 
-	int i = 1;
+	int i = 0;
 
 	while(i <= Step)
 	{
+		//Check if Collision with Deathtile accured
 		if(GetCollisionAt(x, y)&COLFLAG_DEATH) {
-			*pDeathpos = vec2(x, y);
+			*pDeathtilepos = vec2(x, y);
 			return true;
 		}
 		x = x + dx;
@@ -255,6 +266,84 @@ bool CCollision::CheckDeath(const vec2& Pos1, const vec2& Pos2, vec2* pDeathpos)
 
 		++i;
 	}
-	*pDeathpos = vec2(x, y);
+	*pDeathtilepos = Pos2;
 	return false;
+}
+
+bool CCollision::CalcDeathPos(const vec2& Playerpos, const vec2& Nextplayerpos, const vec2& PosDeathtile, vec2* pDeathpos, float radius)
+{
+	/* Do a box around the death tile with line segments with distance 'radius'
+	*  DT = Deathtile, P = Top left corner of Deathtile
+	*   C0...........C1
+	*   |            |
+	*   |	P^^^^*   |
+	*   |	- DT -   |
+	*   |	*vvvv*   |
+	*   |            |
+	*   C3...........C2
+	*/
+
+	//Calculate top right corner of deathtile
+	int TileX = round_to_int(PosDeathtile.x)/32;
+	int TileY = round_to_int(PosDeathtile.y)/32;
+	vec2 P = vec2(TileX*32.0f, TileY*32.0f);
+
+	//Calculate corners
+	vec2 Corner[4];
+	Corner[0] = vec2(P.x-radius, P.y-radius);
+	Corner[1] = vec2(P.x+radius+32.0f, P.y-radius);
+	Corner[2] = vec2(P.x+radius+32.0f, P.y+radius+32.0f);
+	Corner[3] = vec2(P.x-radius, P.y+radius+32.0f);
+
+	//Calculate intersections
+	bool IntersectionFound = false;
+	vec2 ClosestIntersection;
+	vec2 CurrentIntersection;
+
+	//Iterate over all edges
+	for(int i = 0; i < 4; ++i)
+	{
+		//There may be multiple intersections between the Tee and the Deathtile. The closest is the first the Tee hits
+		if(LineLineIntersection(Corner[i], Corner[(i+1)%4], Playerpos, Nextplayerpos, &CurrentIntersection)
+			&& (!IntersectionFound || distance(Playerpos, CurrentIntersection) < distance(Playerpos, ClosestIntersection)))
+		{
+			ClosestIntersection = CurrentIntersection;
+			IntersectionFound = true;
+		}
+	}
+	if(!IntersectionFound)
+		return false;
+	*pDeathpos = ClosestIntersection;
+	return true;
+}
+
+bool CCollision::LineLineIntersection(const vec2& LineStart1, const vec2& LineEnd1, const vec2& LineStart2, const vec2& LineEnd2, vec2* Intersection)
+{
+	//Store in own values for readability
+	float x1 = LineStart1.x;
+	float x2 = LineEnd1.x;
+	float x3 = LineStart2.x;
+	float x4 = LineEnd2.x;
+
+	float y1 = LineStart1.y;
+	float y2 = LineEnd1.y;
+	float y3 = LineStart2.y;
+	float y4 = LineEnd2.y;
+
+	float d = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4);
+
+	// If d is zero, there is no intersection (parallel lines)
+	if (d == 0.0f)
+		return false;
+
+	// Get the x and y
+	float pre = (x1*y2 - y1*x2), post = (x3*y4 - y3*x4);
+	float x = ( pre * (x3 - x4) - (x1 - x2) * post ) / d;
+	float y = ( pre * (y3 - y4) - (y1 - y2) * post ) / d;
+
+	// Return the point of intersection
+	Intersection->x = x;
+	Intersection->y = y;
+
+	return true;
 }
