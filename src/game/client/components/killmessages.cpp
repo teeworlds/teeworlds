@@ -59,8 +59,8 @@ void CKillMessages::OnRender()
 			continue;
 
 		float FontSize = 36.0f;
-		float KillerNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aKillerName, -1) + RenderTools()->GetClientIdRectSize(FontSize);
-		float VictimNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aVictimName, -1) + RenderTools()->GetClientIdRectSize(FontSize);
+		float KillerNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aKillerName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(FontSize);
+		float VictimNameW = TextRender()->TextWidth(0, FontSize, m_aKillmsgs[r].m_aVictimName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(FontSize);
 
 		float x = StartX;
 

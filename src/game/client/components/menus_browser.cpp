@@ -441,7 +441,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		else if(ID == COL_BROWSER_NAME)
 		{
 			CTextCursor Cursor;
-			float tw = TextRender()->TextWidth(0, 12.0f, pEntry->m_aName, -1);
+			float tw = TextRender()->TextWidth(0, 12.0f, pEntry->m_aName, -1, -1.0f);
 			if(tw < Button.w)
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER);
 			else
@@ -473,7 +473,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		else if(ID == COL_BROWSER_MAP)
 		{
 			CTextCursor Cursor;
-			float tw = TextRender()->TextWidth(0, 12.0f, pEntry->m_aMap, -1);
+			float tw = TextRender()->TextWidth(0, 12.0f, pEntry->m_aMap, -1, -1.0f);
 			if(tw < Button.w)
 				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER);
 			else
@@ -531,7 +531,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			if(RenderOffset == 0.0f)
 			{
 				char aChar[2] = "0";
-				RenderOffset = TextRender()->TextWidth(0, 12.0f, aChar, -1);
+				RenderOffset = TextRender()->TextWidth(0, 12.0f, aChar, -1, -1.0f);
 			}
 
 			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
@@ -546,7 +546,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			if(!Num)
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
 			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_LEFT);
-			Button.x += TextRender()->TextWidth(0, 12.0f, aTemp, -1);
+			Button.x += TextRender()->TextWidth(0, 12.0f, aTemp, -1, -1.0f);
 		}
 		else if(ID == COL_BROWSER_PING)
 		{
@@ -1288,7 +1288,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		if(RenderOffset == 0.0f)
 		{
 			char aChar[2] = "0";
-			RenderOffset = TextRender()->TextWidth(0, 12.0f, aChar, -1);
+			RenderOffset = TextRender()->TextWidth(0, 12.0f, aChar, -1, -1.0f);
 		}
 
 		float OffsetServer = 0.0f, OffsetPlayer = 0.0f;
@@ -1711,7 +1711,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	{
 		if(FilterInfo.m_aGametype[i][0])
 		{
-			Length += TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1) + 14.0f;
+			Length += TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1, -1.0f) + 14.0f;
 		}
 	}
 	static float s_ScrollValue = 0.0f;
@@ -1721,7 +1721,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	{
 		if(FilterInfo.m_aGametype[i][0])
 		{
-			float CurLength = TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1) + 12.0f;
+			float CurLength = TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1, -1.0f) + 12.0f;
 			Button.VSplitLeft(CurLength, &Icon, &Button);
 			RenderTools()->DrawUIRect(&Icon, vec4(0.75, 0.75, 0.75, 0.25f), CUI::CORNER_ALL, 3.0f);
 			UI()->DoLabel(&Icon, FilterInfo.m_aGametype[i], FontSize, CUI::ALIGN_LEFT);
