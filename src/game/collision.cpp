@@ -297,7 +297,7 @@ bool CCollision::CalcDeathPos(const vec2& Playerpos, const vec2& Nextplayerpos, 
 
 	//Calculate intersections
 	bool IntersectionFound = false;
-	vec2 ClosestIntersection;
+	vec2 ClosestIntersection(0, 0);
 	vec2 CurrentIntersection;
 
 	//Iterate over all edges
