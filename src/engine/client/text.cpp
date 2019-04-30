@@ -378,7 +378,7 @@ class CTextRender : public IEngineTextRender
 			pFontchr->m_ID = Chr;
 			pFontchr->m_Height = Height * Scale;
 			pFontchr->m_Width = Width * Scale;
-			pFontchr->m_OffsetX = (pFont->m_FtFace->glyph->bitmap_left-1) * Scale; // ignore_convention
+			pFontchr->m_OffsetX = (pFont->m_FtFace->glyph->bitmap_left-2) * Scale; // ignore_convention
 			pFontchr->m_OffsetY = (pSizeData->m_FontSize - pFont->m_FtFace->glyph->bitmap_top) * Scale; // ignore_convention
 			pFontchr->m_AdvanceX = (pFont->m_FtFace->glyph->advance.x>>6) * Scale; // ignore_convention
 
