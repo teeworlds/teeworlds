@@ -426,7 +426,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	{
 		//Save Chat Buffer
 		m_ChatBufferMode = m_Mode;
-		str_copy(m_ChatBuffer, m_Input.GetString(), m_Input.GetLength()+1);
+		str_copy(m_ChatBuffer, m_Input.GetString(), sizeof(m_ChatBuffer));
 	}
 	return true;
 }
