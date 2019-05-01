@@ -587,8 +587,6 @@ void CCharacter::Infect(int From)
 	GetCroyaPlayer()->SetRandomZombieClass();
 	GetCroyaPlayer()->OnKill(From);
 	vec2 PrevPos = m_Pos;
-	Die(From, WEAPON_HAMMER);
-	Spawn(m_pPlayer, PrevPos);
 	// purple animation begin, got from old infclass CGameContext::CreatePlayerSpawn(vec2 Pos)
 	CNetEvent_Spawn* ev = (CNetEvent_Spawn*)GameServer()->m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(CNetEvent_Spawn));
 	if (ev)
