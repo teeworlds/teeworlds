@@ -621,6 +621,7 @@ private:
 	// found in menus_demo.cpp
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoList(CUIRect MainView);
+	static float RenderDemoDetails(CUIRect View, void *pUser);
 
 	// found in menus_start.cpp
 	void RenderStartMenu(CUIRect MainView);
