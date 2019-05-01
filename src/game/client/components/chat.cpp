@@ -99,6 +99,7 @@ void CChat::OnStateChange(int NewState, int OldState)
 		for(int i = 0; i < MAX_LINES; i++)
 			m_aLines[i].m_Time = 0;
 		m_CurrentLine = 0;
+		ClearChatBuffer();
 	}
 }
 
@@ -185,6 +186,12 @@ void CChat::OnConsoleInit()
 	Console()->Register("whisper", "ir", CFGFLAG_CLIENT, ConWhisper, this, "Whisper to a client in chat");
 	Console()->Register("chat", "s?i", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team/whisper mode");
 	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat");
+}
+
+void CChat::ClearChatBuffer()
+{
+	mem_zero(m_ChatBuffer, sizeof(m_ChatBuffer));
+	m_ChatBufferMode = CHAT_NONE;
 }
 
 bool CChat::OnInput(IInput::CEvent Event)
@@ -413,9 +420,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	//Handle Chat Buffer
 	if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
-		//Reset Chat Buffer
-		mem_zero(m_ChatBuffer, sizeof(m_ChatBuffer));
-		m_ChatBufferMode = CHAT_NONE;
+		ClearChatBuffer();
 	}
 	else if(Event.m_Key != KEY_MOUSE_1 && Event.m_Key != KEY_MOUSE_2)
 	{
