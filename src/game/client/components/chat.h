@@ -30,7 +30,7 @@ class CChat : public CComponent
 	};
 
 	// client IDs for special messages
-	enum 
+	enum
 	{
 		CLIENT_MSG = -2,
 		SERVER_MSG = -1,
@@ -62,6 +62,9 @@ class CChat : public CComponent
 	int m_PlaceholderLength;
 	bool m_ReverseCompletion;
 
+	int m_ChatBufferMode;
+	char m_ChatBuffer[512];
+
 	struct CHistoryEntry
 	{
 		int m_Mode;
@@ -81,7 +84,7 @@ class CChat : public CComponent
 		void (*m_pfnFunc)(CChat *pChatData, const char* pCommand);
 		bool m_aFiltered; // 0 = shown, 1 = hidden
 	};
-		
+
 	class CChatCommands
 	{
 		CChatCommand *m_apCommands;
@@ -135,6 +138,8 @@ public:
 	void EnableMode(int Team, const char* pText = NULL);
 
 	void Say(int Team, const char *pLine);
+
+	void ClearChatBuffer();
 
 	virtual void OnInit();
 	virtual void OnReset();
