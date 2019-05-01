@@ -73,7 +73,7 @@ public:
 	int GetActiveWeapon() const;
 	void SetReloadTimer(int ReloadTimer);
 	void SetNumObjectsHit(int NumObjectsHit);
-	void Infect();
+	void Infect(int From);
 	bool IncreaseOverallHp(int Amount);
 	// INFCROYA END ------------------------------------------------------------//
 

@@ -14,6 +14,7 @@
 // INFCROYA BEGIN ------------------------------------------------------------
 #include <infcroya/croyaplayer.h>
 #include <infcroya/classes/class.h>
+#include <game/server/eventhandler.h>
 // INFCROYA END ------------------------------------------------------------//
 
 //input count
@@ -581,9 +582,21 @@ void CCharacter::SetNumObjectsHit(int NumObjectsHit)
 	m_NumObjectsHit = NumObjectsHit;
 }
 
-void CCharacter::Infect()
+void CCharacter::Infect(int From)
 {
 	GetCroyaPlayer()->SetRandomZombieClass();
+	GetCroyaPlayer()->OnKill(From);
+	vec2 PrevPos = m_Pos;
+	Die(From, WEAPON_HAMMER);
+	Spawn(m_pPlayer, PrevPos);
+	// purple animation begin, got from old infclass CGameContext::CreatePlayerSpawn(vec2 Pos)
+	CNetEvent_Spawn* ev = (CNetEvent_Spawn*)GameServer()->m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(CNetEvent_Spawn));
+	if (ev)
+	{
+		ev->m_X = (int)PrevPos.x;
+		ev->m_Y = (int)PrevPos.y;
+	}
+	// purple animation end
 }
 
 bool CCharacter::IncreaseOverallHp(int Amount)
@@ -871,6 +884,7 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 			{
 				pChr->m_EmoteType = EMOTE_HAPPY;
 				pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
+				pChr->GetCroyaPlayer()->OnKill(From); // INFCROYA RELATED
 			}
 		}
 

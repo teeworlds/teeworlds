@@ -23,6 +23,7 @@ public:
 
 	void OnCharacterSpawn(CCharacter* pChr);
 	void OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon);
+	void OnKill(int Killer);
 
 	void OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon);
 

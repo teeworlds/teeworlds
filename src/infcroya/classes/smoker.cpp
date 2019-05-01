@@ -63,7 +63,7 @@ void CSmoker::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CChara
 			//pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, 20,
 			//	pChr->GetPlayer()->GetCID(), pChr->GetActiveWeapon());
 			if (pTarget->IsHuman())
-				pTarget->Infect();
+				pTarget->Infect(pChr->GetPlayer()->GetCID());
 			Hits++;
 		}
 

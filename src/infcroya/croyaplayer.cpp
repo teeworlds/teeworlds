@@ -89,6 +89,16 @@ void CroyaPlayer::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int We
 	m_pCharacter = nullptr;
 }
 
+void CroyaPlayer::OnKill(int Killer)
+{
+	int64 Mask = CmaskOne(m_pPlayer->GetCID());
+	m_pGameServer->CreateSound(m_pPlayer->m_ViewPos, SOUND_CTF_GRAB_PL, Mask);
+	if (IsZombie())
+		m_pPlayer->m_Score += 3;
+	else
+		m_pPlayer->m_Score++;
+}
+
 void CroyaPlayer::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon)
 {
 	m_pClass->OnWeaponFire(Direction, ProjStartPos, Weapon, m_pCharacter);
