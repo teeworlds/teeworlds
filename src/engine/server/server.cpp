@@ -1334,6 +1334,10 @@ int CServer::Run()
 	GameServer()->OnInit();
 	str_format(aBuf, sizeof(aBuf), "version %s", GameServer()->NetVersion());
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
+	if(str_comp(GameServer()->NetVersionHashUsed(), GameServer()->NetVersionHashReal()))
+	{
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "WARNING: netversion hash differs");
+	}
 
 	// process pending commands
 	m_pConsole->StoreCommands(false);

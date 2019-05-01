@@ -1946,6 +1946,10 @@ void CClient::Run()
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
+	if(str_comp(GameClient()->NetVersionHashUsed(), GameClient()->NetVersionHashReal()))
+	{
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", "WARNING: netversion hash differs");
+	}
 
 	//
 	m_FpsGraph.Init(0.0f, 120.0f);

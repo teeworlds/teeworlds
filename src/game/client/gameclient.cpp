@@ -91,6 +91,8 @@ void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_N
 
 const char *CGameClient::Version() const { return GAME_VERSION; }
 const char *CGameClient::NetVersion() const { return GAME_NETVERSION; }
+const char *CGameClient::NetVersionHashUsed() const { return GAME_NETVERSION_HASH_FORCED; }
+const char *CGameClient::NetVersionHashReal() const{ return GAME_NETVERSION_HASH; }
 int CGameClient::ClientVersion() const { return CLIENT_VERSION; }
 const char *CGameClient::GetItemName(int Type) const { return m_NetObjHandler.GetObjName(Type); }
 bool CGameClient::IsXmas() const { return g_Config.m_ClShowXmasHats == 2 || (g_Config.m_ClShowXmasHats == 1 && m_IsXmasDay); }

@@ -1587,5 +1587,7 @@ bool CGameContext::IsClientSpectator(int ClientID) const
 const char *CGameContext::GameType() const { return m_pController && m_pController->GetGameType() ? m_pController->GetGameType() : ""; }
 const char *CGameContext::Version() const { return GAME_VERSION; }
 const char *CGameContext::NetVersion() const { return GAME_NETVERSION; }
+const char *CGameContext::NetVersionHashUsed() const { return GAME_NETVERSION_HASH_FORCED; }
+const char *CGameContext::NetVersionHashReal() const { return GAME_NETVERSION_HASH; }
 
 IGameServer *CreateGameServer() { return new CGameContext; }
