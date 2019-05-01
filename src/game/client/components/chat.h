@@ -139,6 +139,8 @@ public:
 
 	void Say(int Team, const char *pLine);
 
+	void ClearChatBuffer();
+
 	virtual void OnInit();
 	virtual void OnReset();
 	virtual void OnConsoleInit();
