@@ -29,27 +29,6 @@ function Python(name)
 	return "python " .. name
 end
 
-function CHash(output, ...)
-	local inputs = TableFlatten({...})
-
-	output = PathJoin(generated_src_dir, Path(output))
-
-	-- compile all the files
-	local cmd = Python("scripts/cmd5.py") .. " "
-	for index, inname in ipairs(inputs) do
-		cmd = cmd .. Path(inname) .. " "
-	end
-
-	cmd = cmd .. " > " .. output
-
-	AddJob(output, "cmd5 " .. output, cmd)
-	for index, inname in ipairs(inputs) do
-		AddDependency(output, inname)
-	end
-	AddDependency(output, "scripts/cmd5.py")
-	return output
-end
-
 function ResCompile(scriptfile, compiler)
 	scriptfile = Path(scriptfile)
 	local output = nil
@@ -281,8 +260,7 @@ function SharedCommonFiles()
 		local network_header = ContentCompile("network_header", "generated/protocol.h")
 		AddDependency(network_source, network_header, "src/engine/shared/protocol.h")
 
-		local nethash = CHash("generated/nethash.cpp", "src/engine/shared/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
-		shared_common_files = {network_source, nethash}
+		shared_common_files = {network_source}
 	end
 
 	return shared_common_files
