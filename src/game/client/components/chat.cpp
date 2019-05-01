@@ -192,7 +192,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	if(m_Mode == CHAT_NONE || Client()->State() != Client()->STATE_ONLINE)
 		return false;
 
-	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_ESCAPE)
+	if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_ESCAPE || Event.m_Key == KEY_MOUSE_1 || Event.m_Key == KEY_MOUSE_2))
 	{
 		if(IsTypingCommand())
 		{
@@ -417,7 +417,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		mem_zero(m_ChatBuffer, sizeof(m_ChatBuffer));
 		m_ChatBufferMode = CHAT_NONE;
 	}
-	else if(Event.m_Key != KEY_ESCAPE)
+	else if(Event.m_Key != KEY_MOUSE_1 && Event.m_Key != KEY_MOUSE_2)
 	{
 		//Save Chat Buffer
 		m_ChatBufferMode = m_Mode;
