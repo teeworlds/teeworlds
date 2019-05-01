@@ -10,6 +10,7 @@
 #include <infcroya/classes/default.h>
 #include <infcroya/classes/biologist.h>
 #include <infcroya/classes/smoker.h>
+#include <engine/shared/config.h>
 #ifdef CONF_GEOLOCATION
 	#include <infcroya/geolocation/geolocation.h>
 #endif
@@ -60,7 +61,6 @@ int CGameControllerMOD::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, 
 {
 	int ClientID = pVictim->GetPlayer()->GetCID();
 
-	players[ClientID]->SetClass(classes[Class::SMOKER]);
 	players[ClientID]->OnCharacterDeath(pVictim, pKiller, Weapon);
 	return 0;
 }
@@ -77,6 +77,7 @@ void CGameControllerMOD::OnPlayerConnect(CPlayer* pPlayer)
 #endif
 	players[ClientID] = new CroyaPlayer(ClientID, pPlayer, GameServer(), classes);
 	players[ClientID]->SetClass(classes[Class::DEFAULT]);
+	GameServer()->SendChat(-1, CHAT_ALL, ClientID, g_Config.m_SvWelcome);
 }
 
 void CGameControllerMOD::OnPlayerDisconnect(CPlayer* pPlayer)

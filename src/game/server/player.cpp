@@ -10,6 +10,18 @@
 
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
+// INFCROYA BEGIN ------------------------------------------------------------
+CroyaPlayer* CPlayer::GetCroyaPlayer()
+{
+	return m_pCroyaPlayer;
+}
+
+void CPlayer::SetCroyaPlayer(CroyaPlayer* pCroyaPlayer)
+{
+	m_pCroyaPlayer = pCroyaPlayer;
+}
+// INFCROYA END ------------------------------------------------------------//
+
 IServer *CPlayer::Server() const { return m_pGameServer->Server(); }
 
 CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy, bool AsSpec)

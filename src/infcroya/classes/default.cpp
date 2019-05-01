@@ -10,6 +10,7 @@ CDefault::CDefault()
 {
 	SetSkin(CSkin());
 	SetInfectedClass(false);
+	SetName("Random");
 }
 
 CDefault::~CDefault()
@@ -21,6 +22,7 @@ void CDefault::InitialWeaponsHealth(CCharacter* pChr)
 	pChr->IncreaseHealth(10);
 	pChr->GiveWeapon(WEAPON_GUN, 10);
 	pChr->SetWeapon(WEAPON_GUN);
+	pChr->SetNormalEmote(EMOTE_NORMAL);
 }
 
 void CDefault::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCharacter* pChr)

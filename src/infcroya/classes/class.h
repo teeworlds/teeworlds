@@ -6,6 +6,7 @@
 
 class IClass {
 private:
+	std::string m_Name;
 	CSkin m_Skin;
 	bool m_Infected;
 public:
@@ -24,6 +25,9 @@ public:
 
 	virtual bool IsInfectedClass() const;
 	virtual void SetInfectedClass(bool Infected);
+
+	virtual std::string GetName() const;
+	virtual void SetName(std::string Name);
 };
 
 enum Class {

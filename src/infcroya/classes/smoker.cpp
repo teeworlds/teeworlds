@@ -13,6 +13,7 @@ CSmoker::CSmoker() : IClass()
 	skin.SetFeetColor(0, 79, 70);
 	SetSkin(skin);
 	SetInfectedClass(true);
+	SetName("Smoker");
 }
 
 CSmoker::~CSmoker()

@@ -112,6 +112,11 @@ public:
 		int m_Max;
 	} m_Latency;
 
+	// INFCROYA BEGIN ------------------------------------------------------------
+	class CroyaPlayer* GetCroyaPlayer();
+	void SetCroyaPlayer(CroyaPlayer* pCroyaPlayer);
+	// INFCROYA END ------------------------------------------------------------//
+
 private:
 	CCharacter *m_pCharacter;
 	CGameContext *m_pGameServer;
@@ -130,6 +135,8 @@ private:
 	int m_SpectatorID;
 	class CFlag *m_pSpecFlag;
 	bool m_ActiveSpecSwitch;
+
+	class CroyaPlayer* m_pCroyaPlayer; // INFCROYA RELATED
 };
 
 #endif

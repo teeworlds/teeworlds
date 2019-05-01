@@ -102,4 +102,8 @@ MACRO_CONFIG_INT(DbgHitch, dbg_hitch, 0, 0, 0, CFGFLAG_SERVER, "Hitch warnings")
 MACRO_CONFIG_STR(DbgStressServer, dbg_stress_server, 32, "localhost", CFGFLAG_CLIENT, "Server to stress")
 MACRO_CONFIG_INT(DbgResizable, dbg_resizable, 0, 0, 0, CFGFLAG_CLIENT, "Enables window resizing")
 
+// INFCROYA BEGIN ------------------------------------------------------------
+MACRO_CONFIG_STR(SvWelcome, sv_welcome, 128, "Join our discord: https://discord.gg/Sxk5ssv", CFGFLAG_SAVE | CFGFLAG_SERVER, "Welcome chat message on player connect")
+// INFCROYA END ------------------------------------------------------------//
+
 #endif

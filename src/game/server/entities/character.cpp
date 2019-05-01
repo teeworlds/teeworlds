@@ -584,17 +584,8 @@ void CCharacter::SetNumObjectsHit(int NumObjectsHit)
 
 void CCharacter::Infect(int From)
 {
-	GetCroyaPlayer()->SetRandomZombieClass();
+	GetCroyaPlayer()->TurnIntoRandomZombie();
 	GetCroyaPlayer()->OnKill(From);
-	vec2 PrevPos = m_Pos;
-	// purple animation begin, got from old infclass CGameContext::CreatePlayerSpawn(vec2 Pos)
-	CNetEvent_Spawn* ev = (CNetEvent_Spawn*)GameServer()->m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(CNetEvent_Spawn));
-	if (ev)
-	{
-		ev->m_X = (int)PrevPos.x;
-		ev->m_Y = (int)PrevPos.y;
-	}
-	// purple animation end
 }
 
 bool CCharacter::IncreaseOverallHp(int Amount)

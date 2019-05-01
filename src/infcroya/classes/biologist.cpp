@@ -19,6 +19,7 @@ CBiologist::CBiologist()
 	skin.SetFeetColor(147, 4, 72);
 	SetSkin(skin);
 	SetInfectedClass(false);
+	SetName("Biologist");
 }
 
 CBiologist::~CBiologist()
@@ -33,6 +34,7 @@ void CBiologist::InitialWeaponsHealth(CCharacter* pChr)
 	pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
 	pChr->GiveWeapon(WEAPON_LASER, 10);
 	pChr->SetWeapon(WEAPON_GUN);
+	pChr->SetNormalEmote(EMOTE_NORMAL);
 }
 
 void CBiologist::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCharacter* pChr)

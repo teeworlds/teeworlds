@@ -36,3 +36,13 @@ void IClass::SetInfectedClass(bool Infected)
 {
 	m_Infected = Infected;
 }
+
+std::string IClass::GetName() const
+{
+	return m_Name;
+}
+
+void IClass::SetName(std::string Name)
+{
+	m_Name = Name;
+}

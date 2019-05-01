@@ -11,14 +11,15 @@ private:
 	class CGameContext* m_pGameServer;
 	int m_ClientID;
 	bool m_Infected;
+	bool m_HookProtected;
 	std::unordered_map<int, class IClass*> m_Classes;
 public:
 	CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, std::unordered_map<int, class IClass*> Classes);
 	~CroyaPlayer();
 	int GetClassNum();
-	void SetClassNum(int Class);
+	void SetClassNum(int Class, bool DrawPurpleThing = false);
 	IClass* GetClass();
-	void SetClass(IClass* pClass);
+	void SetClass(IClass* pClass, bool DrawPurpleThing = false);
 	void SetCharacter(CCharacter* pCharacter);
 
 	void OnCharacterSpawn(CCharacter* pChr);
@@ -26,6 +27,7 @@ public:
 	void OnKill(int Killer);
 
 	void OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon);
+	void OnButtonF3();
 
 	bool IsHuman() const;
 	bool IsZombie() const;
@@ -35,5 +37,8 @@ public:
 	void SetNextHumanClass();
 	void SetPrevHumanClass();
 
-	void SetRandomZombieClass();
+	void TurnIntoRandomZombie();
+
+	bool IsHookProtected() const;
+	void SetHookProtected(bool HookProtected);
 };
