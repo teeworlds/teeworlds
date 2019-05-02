@@ -53,7 +53,11 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_Health = 0;
 	m_Armor = 0;
 	m_TriggeredEvents = 0;
-	m_Infected = false; // INFCROYA RELATED
+
+	// INFCROYA BEGIN ------------------------------------------------------------
+	m_Infected = false;
+	m_HeartID = Server()->SnapNewID();
+	// INFCROYA END ------------------------------------------------------------//
 }
 
 void CCharacter::Reset()
@@ -95,6 +99,12 @@ void CCharacter::Destroy()
 {
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	m_Alive = false;
+	// INFCROYA BEGIN ------------------------------------------------------------
+	if (m_HeartID >= 0) {
+		Server()->SnapFreeID(m_HeartID);
+		m_HeartID = -1;
+	}
+	// INFCROYA END ------------------------------------------------------------//
 }
 
 void CCharacter::SetWeapon(int W)
@@ -546,6 +556,11 @@ bool CCharacter::IsZombie() const {
 	return m_Infected;
 }
 
+bool CCharacter::IsInfected() const
+{
+	return m_Infected;
+}
+
 void CCharacter::SetInfected(bool Infected) {
 	m_Infected = Infected;
 }
@@ -949,6 +964,20 @@ void CCharacter::Snap(int SnappingClient)
 		if(250 - ((Server()->Tick() - m_LastAction)%(250)) < 5)
 			pCharacter->m_Emote = EMOTE_BLINK;
 	}
+
+	// INFCROYA BEGIN ------------------------------------------------------------
+	// Heart displayed on top of injured tees
+	CPlayer* pClient = GameServer()->m_apPlayers[SnappingClient];
+	if (m_Infected && m_Health < 10 && SnappingClient != m_pPlayer->GetCID() && pClient->GetCroyaPlayer()->IsZombie()) {
+		CNetObj_Pickup* pP = static_cast<CNetObj_Pickup*>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, m_HeartID, sizeof(CNetObj_Pickup)));
+		if (!pP)
+			return;
+
+		pP->m_X = (int)m_Pos.x;
+		pP->m_Y = (int)m_Pos.y - 60.0;
+		pP->m_Type = PICKUP_HEALTH;
+	}
+	// INFCROYA END ------------------------------------------------------------//
 }
 
 void CCharacter::PostSnap()

@@ -9,12 +9,13 @@ private:
 	class CPlayer* m_pPlayer;
 	class CCharacter* m_pCharacter;
 	class CGameContext* m_pGameServer;
+	class CGameControllerMOD* m_pGameController;
 	int m_ClientID;
 	bool m_Infected;
 	bool m_HookProtected;
 	std::unordered_map<int, class IClass*> m_Classes;
 public:
-	CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, std::unordered_map<int, class IClass*> Classes);
+	CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, CGameControllerMOD* pGameController, std::unordered_map<int, class IClass*> Classes);
 	~CroyaPlayer();
 	int GetClassNum();
 	void SetClassNum(int Class, bool DrawPurpleThing = false);

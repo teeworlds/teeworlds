@@ -4,13 +4,15 @@
 #include <game/server/entities/character.h>
 #include <infcroya/classes/class.h>
 #include <infcroya/entities/biologist-mine.h>
+#include <game/server/gamemodes/mod.h>
 
-CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, std::unordered_map<int, IClass*> Classes)
+CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, CGameControllerMOD* pGameController, std::unordered_map<int, IClass*> Classes)
 {
 	m_ClientID = ClientID;
 	m_pPlayer = pPlayer;
 	m_pPlayer->SetCroyaPlayer(this);
 	m_pGameServer = pGameServer;
+	m_pGameController = pGameController;
 	m_pCharacter = nullptr;
 	m_Infected = false;
 	m_HookProtected = true;
@@ -93,6 +95,9 @@ void CroyaPlayer::SetClass(IClass* pClass, bool DrawPurpleThing)
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "%s", m_pClass->GetName().c_str());
 	m_pGameServer->SendBroadcast(aBuf, m_pPlayer->GetCID());
+
+	if (m_pGameController->IsEveryoneInfected()) {
+	}
 }
 
 void CroyaPlayer::SetCharacter(CCharacter* pCharacter)

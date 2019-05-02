@@ -67,6 +67,7 @@ int CGameControllerMOD::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, 
 
 void CGameControllerMOD::OnPlayerConnect(CPlayer* pPlayer)
 {
+	IGameController::OnPlayerConnect(pPlayer);
 	int ClientID = pPlayer->GetCID();
 
 #ifdef CONF_GEOLOCATION
@@ -75,13 +76,14 @@ void CGameControllerMOD::OnPlayerConnect(CPlayer* pPlayer)
 	std::string ip(aAddrStr);
 	Server()->SetClientCountry(ClientID, geolocation->get_country_iso_numeric_code(ip));
 #endif
-	players[ClientID] = new CroyaPlayer(ClientID, pPlayer, GameServer(), classes);
+	players[ClientID] = new CroyaPlayer(ClientID, pPlayer, GameServer(), this, classes);
 	players[ClientID]->SetClass(classes[Class::DEFAULT]);
 	GameServer()->SendChat(-1, CHAT_ALL, ClientID, g_Config.m_SvWelcome);
 }
 
 void CGameControllerMOD::OnPlayerDisconnect(CPlayer* pPlayer)
 {
+	IGameController::OnPlayerDisconnect(pPlayer);
 	int ClientID = pPlayer->GetCID();
 
 	delete players[ClientID];
@@ -93,4 +95,19 @@ bool CGameControllerMOD::IsFriendlyFire(int ClientID1, int ClientID2) const
 	if (players[ClientID1]->IsHuman() == players[ClientID2]->IsHuman() && ClientID1 != ClientID2)
 		return true;
 	return false;
+}
+
+bool CGameControllerMOD::IsEveryoneInfected() const
+{
+	bool EveryoneInfected = true;
+	for (CPlayer* each : GameServer()->m_apPlayers) {
+		if (each) {
+			CCharacter* pChr = each->GetCharacter();
+			if (pChr && !pChr->IsInfected()) {
+				EveryoneInfected = false;
+				break;
+			}
+		}
+	}
+	return EveryoneInfected;
 }

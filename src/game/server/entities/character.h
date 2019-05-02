@@ -63,6 +63,7 @@ public:
 	bool IsHuman() const;
 	bool IsZombie() const;
 
+	bool IsInfected() const;
 	void SetInfected(bool Infected);
 
 	void SetCroyaPlayer(class CroyaPlayer* CroyaPlayer);
@@ -86,6 +87,7 @@ private:
 	// INFCROYA BEGIN ------------------------------------------------------------
 	bool m_Infected;
 	class CroyaPlayer* m_pCroyaPlayer;
+	int m_HeartID;
 	// INFCROYA END ------------------------------------------------------------//
 
 	// weapon info

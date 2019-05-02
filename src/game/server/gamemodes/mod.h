@@ -28,5 +28,7 @@ public:
 	void OnPlayerDisconnect(class CPlayer* pPlayer) override;
 
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const override;
+
+	bool IsEveryoneInfected() const;
 };
 #endif
