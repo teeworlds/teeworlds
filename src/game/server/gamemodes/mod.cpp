@@ -27,7 +27,7 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 	//m_GameFlags = GAMEFLAG_TEAMS; // GAMEFLAG_TEAMS makes it a two-team gamemode
 
 #ifdef CONF_GEOLOCATION
-	geolocation = new Geolocation("GeoLite2-Country.mmdb");
+	geolocation = new Geolocation("mmdb/GeoLite2-Country.mmdb");
 #endif
 	classes[Class::DEFAULT] = new CDefault();
 	classes[Class::BIOLOGIST] = new CBiologist();
