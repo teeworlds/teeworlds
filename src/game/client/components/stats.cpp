@@ -126,7 +126,7 @@ void CStats::OnRender()
 	int px = 325;
 
 	TextRender()->Text(0, x+10, y-5, 24.0f, Localize("Name"), -1.0f);
-	const char *apHeaders[] = { Localize("Frags"), Localize("Deaths"), Localize("Suicides"), Localize("Ratio"), Localize("Net"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs") };
+	const char *apHeaders[] = { Localize("Frags"), Localize("Deaths"), Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
 	for(i=0; i<9; i++)
 		if(g_Config.m_ClStatboardInfos & (1<<i))
 		{
@@ -195,11 +195,18 @@ void CStats::OnRender()
 			break;
 		}
 
-		const CGameClient::CClientStats Stats = m_pClient->m_aStats[apPlayers[j]];		
 
-		if(apPlayers[j] == m_pClient->m_LocalClientID)
+		// skip specs
+		if(m_pClient->m_aClients[apPlayers[j]].m_Active && m_pClient->m_aClients[apPlayers[j]].m_Team == TEAM_SPECTATORS)
+			break;
+
+		const CGameClient::CClientStats Stats = m_pClient->m_aStats[apPlayers[j]];		
+		const bool HighlightedLine = (!m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_LocalClientID)
+			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
+
+		// background so it's easy to find the local player or the followed one in spectator mode
+		if(HighlightedLine)
 		{
-			// background so it's easy to find the local player
 			CUIRect Rect = {x, y, w-20, LineHeight*0.95f};
 			RenderTools()->DrawRoundRect(&Rect, vec4(1,1,1,0.25f), 17.0f);
 		}
