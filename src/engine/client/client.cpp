@@ -2039,19 +2039,21 @@ void CClient::Run()
 		}
 
 		// panic quit button
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_Q, true))
+		bool IsCtrlPressed = Input()->KeyIsPressed(KEY_LCTRL);
+		bool IsLShiftPressed = Input()->KeyIsPressed(KEY_LSHIFT);
+		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_Q, true))
 		{
 			Quit();
 			break;
 		}
 
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_D, true))
+		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_D, true))
 			g_Config.m_Debug ^= 1;
 
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_G, true))
+		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_G, true))
 			g_Config.m_DbgGraphs ^= 1;
 
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_E, true))
+		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_E, true))
 		{
 			g_Config.m_ClEditor = g_Config.m_ClEditor^1;
 			Input()->MouseModeRelative();
