@@ -362,11 +362,12 @@ function BuildServer(settings, family, platform)
 	
 	local infcroya = Compile(settings, Collect("src/infcroya/*.cpp", "src/infcroya/classes/*.cpp")) -- INFCROYA RELATED
 	local infcroya_entities = Compile(settings, Collect("src/infcroya/entities/*.cpp")) -- INFCROYA RELATED
+	local localization = Compile(settings, Collect("src/infcroya/localization/*.cpp", "src/infcroya/localization/json-parses/*.c")) -- INFCROYA RELATED
 	if config.geolocation.value then
 		geolocation = Compile(settings, Collect("src/infcroya/geolocation/*.cpp", "src/infcroya/geolocation/GeoLite2PP/*.cpp")) -- INFCROYA RELATED
 	end
 	
-	return Link(settings, "server", libs["zlib"], libs["md5"], server, game_server, infcroya, infcroya_entities, geolocation) -- INFCROYA RELATED
+	return Link(settings, "server", libs["zlib"], libs["md5"], server, game_server, infcroya, infcroya_entities, localization, geolocation) -- INFCROYA RELATED
 end
 
 function BuildTools(settings)

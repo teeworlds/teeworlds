@@ -18,17 +18,19 @@ private:
 public:
 	CGameControllerMOD(class CGameContext *pGameServer);
 	~CGameControllerMOD() override;
+	void Snap(int SnappingClient) override;
 	virtual void Tick();
-	// add more virtual functions here if you wish
 	
 	void OnCharacterSpawn(class CCharacter* pChr) override;
 	int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon) override;
 
-	void OnPlayerConnect(class CPlayer* pPlayer) override;
-	void OnPlayerDisconnect(class CPlayer* pPlayer) override;
-
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const override;
 
 	bool IsEveryoneInfected() const;
+
+	void OnPlayerDisconnect(class CPlayer* pPlayer) override;
+	void OnPlayerConnect(class CPlayer* pPlayer) override;
+
+	void SetLanguageByCountry(int Country, int ClientID);
 };
 #endif

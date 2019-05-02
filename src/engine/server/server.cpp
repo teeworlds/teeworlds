@@ -30,6 +30,8 @@
 #include "register.h"
 #include "server.h"
 
+#include <infcroya/localization/localization.h> // INFCROYA RELATED
+
 #if defined(CONF_FAMILY_WINDOWS)
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
@@ -1802,6 +1804,8 @@ int main(int argc, const char **argv) // ignore_convention
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_SERVER, argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
+
+	g_Localization.Load("translations.json", pStorage, pConsole); // INFCROYA RELATED
 
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer, pConsole);
 

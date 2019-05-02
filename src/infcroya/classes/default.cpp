@@ -10,7 +10,7 @@ CDefault::CDefault()
 {
 	SetSkin(CSkin());
 	SetInfectedClass(false);
-	SetName("Random");
+	SetName("Random choice");
 }
 
 CDefault::~CDefault()

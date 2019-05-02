@@ -4,6 +4,7 @@
 #include <game/server/entities/character.h>
 #include <infcroya/classes/class.h>
 #include <infcroya/entities/biologist-mine.h>
+#include <infcroya/localization/localization.h>
 #include <game/server/gamemodes/mod.h>
 
 CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, CGameControllerMOD* pGameController, std::unordered_map<int, IClass*> Classes)
@@ -17,6 +18,7 @@ CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServ
 	m_Infected = false;
 	m_HookProtected = true;
 	m_Classes = Classes;
+	m_Language = "english";
 }
 
 CroyaPlayer::~CroyaPlayer()
@@ -94,8 +96,10 @@ void CroyaPlayer::SetClass(IClass* pClass, bool DrawPurpleThing)
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "%s", m_pClass->GetName().c_str());
-	m_pGameServer->SendBroadcast(aBuf, m_pPlayer->GetCID());
-
+	if (str_comp(GetLanguage(), "english") == 0)
+		m_pGameServer->SendBroadcast(aBuf, m_pPlayer->GetCID());
+	else
+		m_pGameServer->SendBroadcast(Localize(aBuf, GetLanguage()), m_pPlayer->GetCID());
 	if (m_pGameController->IsEveryoneInfected()) {
 	}
 }
@@ -197,4 +201,14 @@ bool CroyaPlayer::IsHookProtected() const
 void CroyaPlayer::SetHookProtected(bool HookProtected)
 {
 	m_HookProtected = HookProtected;
+}
+
+const char* CroyaPlayer::GetLanguage() const
+{
+	return m_Language.c_str();
+}
+
+void CroyaPlayer::SetLanguage(const char* Language)
+{
+	m_Language = Language;
 }
