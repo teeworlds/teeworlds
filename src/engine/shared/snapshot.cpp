@@ -20,12 +20,27 @@ int CSnapshot::GetItemSize(int Index)
 int CSnapshot::GetItemIndex(int Key)
 {
 	// TODO: OPT: this should not be a linear search. very bad
-	for(int i = 0; i < m_NumItems; i++)
+	const int* pKeys = Keys();
+	const int NumItems = m_NumItems;
+
+	for(int i = 0; i < NumItems; i++)
 	{
-		if(GetItem(i)->Key() == Key)
+		if(pKeys[i] == Key)
 			return i;
 	}
 	return -1;
+}
+
+const int* CSnapshot::GetItemKeys() const
+{
+	return Keys();
+}
+
+void CSnapshot::InvalidateItem(int Index)
+{
+	CSnapshotItem* pItem = GetItem(Index);
+	pItem->m_TypeAndID = -1;
+	Keys()[Index] = -1;
 }
 
 int CSnapshot::Crc()
@@ -532,11 +547,18 @@ int CSnapshotBuilder::Finish(void *pSpnapData)
 	// flattern and make the snapshot
 	CSnapshot *pSnap = (CSnapshot *)pSpnapData;
 	int OffsetSize = sizeof(int)*m_NumItems;
+	int KeySize = sizeof(int)*m_NumItems;
 	pSnap->m_DataSize = m_DataSize;
 	pSnap->m_NumItems = m_NumItems;
 	mem_copy(pSnap->Offsets(), m_aOffsets, OffsetSize);
 	mem_copy(pSnap->DataStart(), m_aData, m_DataSize);
-	return sizeof(CSnapshot) + OffsetSize + m_DataSize;
+
+	for(int i = 0; i < m_NumItems; i++)
+	{
+		pSnap->Keys()[i] = GetItem(i)->Key();
+	}
+
+	return sizeof(CSnapshot) + KeySize + OffsetSize + m_DataSize;
 }
 
 void *CSnapshotBuilder::NewItem(int Type, int ID, int Size)

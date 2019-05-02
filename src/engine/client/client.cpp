@@ -605,24 +605,48 @@ void CClient::SnapInvalidateItem(int SnapID, int Index)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "snap invalidate problem");
 		if((char *)i >= (char *)m_aSnapshots[SnapID]->m_pSnap && (char *)i < (char *)m_aSnapshots[SnapID]->m_pSnap + m_aSnapshots[SnapID]->m_SnapSize)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "snap invalidate problem");
-		i->m_TypeAndID = -1;
+		m_aSnapshots[SnapID]->m_pAltSnap->InvalidateItem(Index);
 	}
 }
 
 const void *CClient::SnapFindItem(int SnapID, int Type, int ID) const
 {
 	// TODO: linear search. should be fixed.
-	int i;
-
 	if(!m_aSnapshots[SnapID])
 		return 0x0;
 
-	for(i = 0; i < m_aSnapshots[SnapID]->m_pSnap->NumItems(); i++)
+	const int NumItems = m_aSnapshots[SnapID]->m_pSnap->NumItems();
+	CSnapshot* pAltSnap = m_aSnapshots[SnapID]->m_pAltSnap;
+
+	const int* pItemKeys = pAltSnap->GetItemKeys();
+	const int NumItem4 = (int)(NumItems/4) * 4;
+
+	int i = 0;
+
+	for(; i < NumItem4; i += 4)
 	{
-		CSnapshotItem *pItem = m_aSnapshots[SnapID]->m_pAltSnap->GetItem(i);
-		if(pItem->Type() == Type && pItem->ID() == ID)
-			return (void *)pItem->Data();
+		const int Key1 = pItemKeys[i];
+		const int Key2 = pItemKeys[i+1];
+		const int Key3 = pItemKeys[i+2];
+		const int Key4 = pItemKeys[i+3];
+
+		if((Key1>>16) == Type && (Key1&0xffff) == ID)
+			return (void *)pAltSnap->GetItem(i)->Data();
+		if((Key2>>16) == Type && (Key2&0xffff) == ID)
+			return (void *)pAltSnap->GetItem(i+1)->Data();
+		if((Key3>>16) == Type && (Key3&0xffff) == ID)
+			return (void *)pAltSnap->GetItem(i+2)->Data();
+		if((Key4>>16) == Type && (Key4&0xffff) == ID)
+			return (void *)pAltSnap->GetItem(i+3)->Data();
 	}
+
+	for(; i < NumItems; i++)
+	{
+		const int Key = pItemKeys[i];
+		if((Key>>16) == Type && (Key&0xffff) == ID)
+			return (void *)pAltSnap->GetItem(i)->Data();
+	}
+
 	return 0x0;
 }
 
