@@ -87,7 +87,7 @@ const char* CSkin::GetBodyName() const
 void CSkin::SetBodyName(const char* name)
 {
 	char SkinName[STRING_LENGTH];
-	str_format(SkinName, sizeof(SkinName), name);
+	str_format(SkinName, sizeof(SkinName), "%s", name);
 	str_copy(m_BodyName, SkinName, STRING_LENGTH);
 }
 
@@ -99,7 +99,7 @@ const char* CSkin::GetMarkingName() const
 void CSkin::SetMarkingName(const char* name)
 {
 	char SkinName[STRING_LENGTH];
-	str_format(SkinName, sizeof(SkinName), name);
+	str_format(SkinName, sizeof(SkinName), "%s", name);
 	str_copy(m_MarkingName, SkinName, STRING_LENGTH);
 }
 
@@ -111,7 +111,7 @@ const char* CSkin::GetDecorationName() const
 void CSkin::SetDecorationName(const char* name)
 {
 	char SkinName[STRING_LENGTH];
-	str_format(SkinName, sizeof(SkinName), name);
+	str_format(SkinName, sizeof(SkinName), "%s", name);
 	str_copy(m_DecorationName, SkinName, STRING_LENGTH);
 }
 
@@ -123,7 +123,7 @@ const char* CSkin::GetHandsName() const
 void CSkin::SetHandsName(const char* name)
 {
 	char SkinName[STRING_LENGTH];
-	str_format(SkinName, sizeof(SkinName), name);
+	str_format(SkinName, sizeof(SkinName), "%s", name);
 	str_copy(m_HandsName, SkinName, STRING_LENGTH);
 }
 
@@ -135,7 +135,7 @@ const char* CSkin::GetFeetName() const
 void CSkin::SetFeetName(const char* name)
 {
 	char SkinName[STRING_LENGTH];
-	str_format(SkinName, sizeof(SkinName), name);
+	str_format(SkinName, sizeof(SkinName), "%s", name);
 	str_copy(m_FeetName, SkinName, STRING_LENGTH);
 }
 
@@ -147,7 +147,7 @@ const char* CSkin::GetEyesName() const
 void CSkin::SetEyesName(const char* name)
 {
 	char SkinName[STRING_LENGTH];
-	str_format(SkinName, sizeof(SkinName), name);
+	str_format(SkinName, sizeof(SkinName), "%s", name);
 	str_copy(m_EyesName, SkinName, STRING_LENGTH);
 }
 
