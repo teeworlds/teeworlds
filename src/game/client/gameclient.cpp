@@ -49,6 +49,7 @@
 #include "components/skins.h"
 #include "components/sounds.h"
 #include "components/spectator.h"
+#include "components/stats.h"
 #include "components/voting.h"
 
 // instanciate all systems
@@ -75,6 +76,7 @@ static CEmoticon gs_Emoticon;
 static CDamageInd gsDamageInd;
 static CVoting gs_Voting;
 static CSpectator gs_Spectator;
+static CStats gs_Stats;
 
 static CPlayers gs_Players;
 static CNamePlates gs_NamePlates;
@@ -89,9 +91,12 @@ void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_N
 
 const char *CGameClient::Version() const { return GAME_VERSION; }
 const char *CGameClient::NetVersion() const { return GAME_NETVERSION; }
+const char *CGameClient::NetVersionHashUsed() const { return GAME_NETVERSION_HASH_FORCED; }
+const char *CGameClient::NetVersionHashReal() const{ return GAME_NETVERSION_HASH; }
 int CGameClient::ClientVersion() const { return CLIENT_VERSION; }
 const char *CGameClient::GetItemName(int Type) const { return m_NetObjHandler.GetObjName(Type); }
 bool CGameClient::IsXmas() const { return g_Config.m_ClShowXmasHats == 2 || (g_Config.m_ClShowXmasHats == 1 && m_IsXmasDay); }
+bool CGameClient::IsEaster() const { return g_Config.m_ClShowEasterEggs == 2 || (g_Config.m_ClShowEasterEggs == 1 && m_IsEasterDay); }
 
 enum
 {
@@ -199,6 +204,7 @@ void CGameClient::OnConsoleInit()
 	m_pItems = &::gs_Items;
 	m_pMapLayersBackGround = &::gs_MapLayersBackGround;
 	m_pMapLayersForeGround = &::gs_MapLayersForeGround;
+	m_pStats = &::gs_Stats;
 
 	// make a list of all the systems, make sure to add them in the corrent render order
 	m_All.Add(m_pSkins);
@@ -231,6 +237,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(&gs_DebugHud);
 	m_All.Add(&gs_Notifications);
 	m_All.Add(&gs_Scoreboard);
+	m_All.Add(m_pStats);
 	m_All.Add(m_pMotd);
 	m_All.Add(m_pMenus);
 	m_All.Add(&m_pMenus->m_Binder);
@@ -343,6 +350,7 @@ void CGameClient::OnInit()
 	m_ServerMode = SERVERMODE_PURE;
 
 	m_IsXmasDay = time_isxmasday();
+	m_IsEasterDay = time_iseasterday();
 }
 
 void CGameClient::OnUpdate()
@@ -634,6 +642,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			case GAMEMSG_CTF_CAPTURE:
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_CAPTURE);
 				int ClientID = clamp(aParaI[1], 0, MAX_CLIENTS - 1);
+				m_aStats[ClientID].m_FlagCaptures++;
 				char aLabel[64];
 				GetPlayerLabel(aLabel, sizeof(aLabel), ClientID, m_aClients[ClientID].m_aName);
 
@@ -879,11 +888,14 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 	{
 		CNetMsg_De_ClientEnter *pMsg = (CNetMsg_De_ClientEnter *)pRawMsg;
 		DoEnterMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_Team);
+		m_aStats[pMsg->m_ClientID].Reset();
+		m_aStats[pMsg->m_ClientID].m_JoinDate = Client()->GameTick();
 	}
 	else if(MsgId == NETMSGTYPE_DE_CLIENTLEAVE && Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		CNetMsg_De_ClientLeave *pMsg = (CNetMsg_De_ClientLeave *)pRawMsg;
 		DoLeaveMessage(pMsg->m_pName, pMsg->m_ClientID, pMsg->m_pReason);
+		m_aStats[pMsg->m_ClientID].Reset();
 	}
 }
 
@@ -1121,6 +1133,7 @@ void CGameClient::OnNewSnapshot()
 							m_Snap.m_SpecInfo.m_SpectatorID = -1;
 						}
 					}
+					m_aClients[ClientID].UpdateBotRenderInfo(this, ClientID);
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_CHARACTER)
@@ -1176,6 +1189,19 @@ void CGameClient::OnNewSnapshot()
 			{
 				m_Snap.m_pGameDataFlag = (const CNetObj_GameDataFlag *)pData;
 				m_Snap.m_GameDataFlagSnapID = Item.m_ID;
+
+				// stats
+				{
+					static int s_FlagCarrierRed = FLAG_ATSTAND;
+					static int s_FlagCarrierBlue = FLAG_ATSTAND;
+					if(s_FlagCarrierRed == FLAG_ATSTAND && m_Snap.m_pGameDataFlag->m_FlagCarrierRed >= 0)
+						OnFlagGrab(TEAM_RED);
+					else if(s_FlagCarrierBlue == FLAG_ATSTAND && m_Snap.m_pGameDataFlag->m_FlagCarrierBlue >= 0)
+						OnFlagGrab(TEAM_BLUE);
+
+					s_FlagCarrierRed = m_Snap.m_pGameDataFlag->m_FlagCarrierRed;
+					s_FlagCarrierBlue = m_Snap.m_pGameDataFlag->m_FlagCarrierBlue;
+				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
@@ -1431,9 +1457,100 @@ void CGameClient::OnPredict()
 	m_PredictedTick = Client()->PredGameTick();
 }
 
+// stats
+void CGameClient::OnGameRestart()
+{	
+	m_pStats->OnReset();
+}
+
 void CGameClient::OnActivateEditor()
 {
 	OnRelease();
+}
+
+void CGameClient::CClientData::UpdateBotRenderInfo(CGameClient *pGameClient, int ClientID)
+{
+	static const unsigned char s_aBotColors[][3] = {
+		{0xff,0x00,0x00},
+		{0xff,0x66,0x00},
+		{0x4d,0x9f,0x45},
+		{0xd5,0x9e,0x29},
+		{0x9f,0xd3,0xa9},
+		{0xbd,0xd8,0x5e},
+		{0xc0,0x7f,0x94},
+		{0xc3,0xa2,0x67},
+		{0xf8,0xa8,0x3b},
+		{0xcc,0xe2,0xbf},
+		{0xe6,0xb4,0x98},
+		{0x74,0xc7,0xa3},
+	};
+
+	if(pGameClient->m_Snap.m_paPlayerInfos[ClientID] && pGameClient->m_Snap.m_paPlayerInfos[ClientID]->m_PlayerFlags&PLAYERFLAG_BOT)
+	{
+		m_RenderInfo.m_BotTexture = pGameClient->m_pSkins->m_BotTexture;
+		if(!m_RenderInfo.m_BotColor.a) // bot color has not been set; pick a random color once
+		{
+			const unsigned char* pBotColor = s_aBotColors[rand()%(sizeof(s_aBotColors)/sizeof(s_aBotColors[0]))];
+			m_RenderInfo.m_BotColor = vec4(pBotColor[0]/255.f, pBotColor[1]/255.f, pBotColor[2]/255.f, 1.0f);
+		}
+	}
+	else
+	{
+		m_RenderInfo.m_BotTexture.Invalidate();
+		m_RenderInfo.m_BotColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	}
+}
+
+void CGameClient::OnRoundStart()
+{
+	for(int i=0; i<MAX_CLIENTS; i++)
+		m_aStats[i].Reset();
+}
+
+void CGameClient::OnFlagGrab(int ID)
+{
+	if(ID == TEAM_RED)
+		m_aStats[m_Snap.m_pGameDataFlag->m_FlagCarrierRed].m_FlagGrabs++;
+	else
+		m_aStats[m_Snap.m_pGameDataFlag->m_FlagCarrierBlue].m_FlagGrabs++;
+}
+
+CGameClient::CClientStats::CClientStats()
+{
+	m_JoinDate  = 0;
+	m_Frags     = 0;
+	m_Deaths    = 0;
+	m_Suicides  = 0;
+	for(int j = 0; j < NUM_WEAPONS; j++)
+	{
+		m_aFragsWith[j]  = 0;
+		m_aDeathsFrom[j] = 0;
+	}
+	m_FlagGrabs      = 0;
+	m_FlagCaptures   = 0;
+	m_CarriersKilled = 0;
+	m_KillsCarrying  = 0;
+	m_DeathsCarrying = 0;
+}
+
+void CGameClient::CClientStats::Reset()
+{
+	m_JoinDate  = 0;
+	m_Frags     = 0;
+	m_Deaths    = 0;
+	m_Suicides  = 0;
+	m_BestSpree = 0;
+	m_CurrentSpree = 0;
+	for(int j = 0; j < NUM_WEAPONS; j++)
+	{
+		m_aFragsWith[j]  = 0;
+		m_aDeathsFrom[j] = 0;
+	}
+	m_FlagGrabs      = 0;
+	m_FlagCaptures   = 0;
+	m_CarriersKilled = 0;
+	m_KillsCarrying  = 0;
+	m_DeathsCarrying = 0;
 }
 
 void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, int ClientID, bool UpdateSkinInfo)

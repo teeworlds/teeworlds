@@ -505,6 +505,16 @@ int time_houroftheday();
 */
 int time_isxmasday();
 
+/*
+	Function: time_iseasterday
+		Checks if today is in between Good Friday and Easter Monday (Gregorian calendar)
+
+	Returns:
+		1 - if it's egg time
+		0 - if not
+*/
+int time_iseasterday();
+
 /* Group: Network General */
 typedef struct
 {

@@ -128,16 +128,22 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	}
 
 	// read in the rest except the data
-	unsigned Size = 0;
+	int64 Size = 0;
 	Size += Header.m_NumItemTypes*sizeof(CDatafileItemType);
 	Size += (Header.m_NumItems+Header.m_NumRawData)*sizeof(int);
 	if(Header.m_Version == 4)
 		Size += Header.m_NumRawData*sizeof(int); // v4 has uncompressed data sizes aswell
 	Size += Header.m_ItemSize;
 
-	unsigned AllocSize = Size;
+	int64 AllocSize = Size;
 	AllocSize += sizeof(CDatafile); // add space for info structure
 	AllocSize += Header.m_NumRawData*sizeof(void*); // add space for data pointers
+	if(Size > (int64(1)<<31) || Header.m_NumItemTypes < 0 || Header.m_NumItems < 0 || Header.m_NumRawData < 0 || Header.m_ItemSize < 0)
+	{
+		io_close(File);
+		dbg_msg("datafile", "unable to load file, invalid file information");
+		return false;
+	}
 
 	CDatafile *pTmpDataFile = (CDatafile*)mem_alloc(AllocSize, 1);
 	pTmpDataFile->m_Header = Header;
@@ -158,7 +164,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 		io_close(pTmpDataFile->m_File);
 		mem_free(pTmpDataFile);
 		pTmpDataFile = 0;
-		dbg_msg("datafile", "couldn't load the whole thing, wanted=%d got=%d", Size, ReadSize);
+		dbg_msg("datafile", "couldn't load the whole thing, wanted=%d got=%d", unsigned(Size), ReadSize);
 		return false;
 	}
 
@@ -166,12 +172,12 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	m_pDataFile = pTmpDataFile;
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	swap_endian(m_pDataFile->m_pData, sizeof(int), min(static_cast<unsigned>(Header.m_Swaplen), Size) / sizeof(int));
+	swap_endian(m_pDataFile->m_pData, sizeof(int), min(static_cast<unsigned>(Header.m_Swaplen), static_cast<unsigned>(Size)) / sizeof(int));
 #endif
 
 	//if(DEBUG)
 	{
-		dbg_msg("datafile", "allocsize=%d", AllocSize);
+		dbg_msg("datafile", "allocsize=%d", unsigned(AllocSize));
 		dbg_msg("datafile", "readsize=%d", ReadSize);
 		dbg_msg("datafile", "swaplen=%d", Header.m_Swaplen);
 		dbg_msg("datafile", "item_size=%d", m_pDataFile->m_Header.m_ItemSize);
@@ -249,6 +255,9 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap, unsigned long* pDataSize
 {
 	if(!m_pDataFile) { return 0; }
 
+	if(Index < 0 || Index >= m_pDataFile->m_Header.m_NumRawData)
+		return 0;
+
 	// load it if needed
 	if(!m_pDataFile->m_ppDataPtrs[Index])
 	{
@@ -316,6 +325,9 @@ void *CDataFileReader::GetDataSwapped(int Index)
 
 void CDataFileReader::ReplaceData(int Index, char *pData)
 {
+	if(Index < 0 || Index >= m_pDataFile->m_Header.m_NumRawData)
+		return;
+
 	// make sure the data has been loaded
 	GetDataImpl(Index, 0);
 
@@ -325,10 +337,9 @@ void CDataFileReader::ReplaceData(int Index, char *pData)
 
 void CDataFileReader::UnloadData(int Index)
 {
-	if(Index < 0)
+	if(Index < 0 || Index >= m_pDataFile->m_Header.m_NumRawData)
 		return;
 
-	//
 	mem_free(m_pDataFile->m_ppDataPtrs[Index]);
 	m_pDataFile->m_ppDataPtrs[Index] = 0x0;
 }
@@ -343,7 +354,15 @@ int CDataFileReader::GetItemSize(int Index) const
 
 void *CDataFileReader::GetItem(int Index, int *pType, int *pID)
 {
-	if(!m_pDataFile) { if(pType) *pType = 0; if(pID) *pID = 0; return 0; }
+	if(!m_pDataFile || Index < 0 || Index >= m_pDataFile->m_Header.m_NumItems)
+	{
+		if(pType)
+			*pType = 0;
+		if(pID)
+			*pID = 0;
+
+		return 0;
+	}
 
 	CDatafileItem *i = (CDatafileItem *)(m_pDataFile->m_Info.m_pItemStart+m_pDataFile->m_Info.m_pItemOffsets[Index]);
 	if(pType)

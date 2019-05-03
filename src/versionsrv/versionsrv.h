@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef VERSIONSRV_VERSIONSRV_H
 #define VERSIONSRV_VERSIONSRV_H
+#include <base/hash.h>
 static const int VERSIONSRV_PORT = 8285;
 
 struct CMapVersion
@@ -9,6 +10,7 @@ struct CMapVersion
 	char m_aName[8];
 	unsigned char m_aCrc[4];
 	unsigned char m_aSize[4];
+	unsigned char m_aSha256[SHA256_DIGEST_LENGTH];
 };
 
 static const unsigned char VERSIONSRV_GETVERSION[] = {255, 255, 255, 255, 'v', 'e', 'r', 'g'};

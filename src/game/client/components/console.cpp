@@ -292,6 +292,7 @@ CGameConsole::CInstance *CGameConsole::CurrentConsole()
 
 void CGameConsole::OnReset()
 {
+	m_RemoteConsole.Reset();
 }
 
 // only defined for 0<=t<=1
@@ -318,7 +319,7 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
-		float tw = pInfo->m_pSelf->TextRender()->TextWidth(pInfo->m_Cursor.m_pFont, pInfo->m_Cursor.m_FontSize, pStr, -1);
+		float tw = pInfo->m_pSelf->TextRender()->TextWidth(pInfo->m_Cursor.m_pFont, pInfo->m_Cursor.m_FontSize, pStr, -1, -1.0f);
 		CUIRect Rect = {pInfo->m_Cursor.m_X-3, pInfo->m_Cursor.m_Y, tw+5, pInfo->m_Cursor.m_FontSize+4};
 		pInfo->m_pSelf->RenderTools()->DrawRoundRect(&Rect, vec4(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f), pInfo->m_Cursor.m_FontSize/3);
 
@@ -500,7 +501,7 @@ void CGameConsole::OnRender()
 		Cursor.m_LineWidth = Screen.w - 10.0f - x;
 		
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
-		static float MarkerOffset = TextRender()->TextWidth(0, FontSize, "|", -1)/3;
+		static float MarkerOffset = TextRender()->TextWidth(0, FontSize, "|", -1, -1.0f)/3;
 		CTextCursor Marker = Cursor;
 		Marker.m_X -= MarkerOffset;
 		Marker.m_LineWidth = -1;
@@ -587,12 +588,12 @@ void CGameConsole::OnRender()
 		// render page
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), Localize("-Page %d-"), pConsole->m_BacklogActPage+1);
-		TextRender()->Text(0, 10.0f, 0.0f, FontSize, aBuf, -1);
+		TextRender()->Text(0, 10.0f, 0.0f, FontSize, aBuf, -1.0f);
 
 		// render version
-		str_format(aBuf, sizeof(aBuf), "v%s", GAME_VERSION);
-		float Width = TextRender()->TextWidth(0, FontSize, aBuf, -1);
-		TextRender()->Text(0, Screen.w-Width-10.0f, 0.0f, FontSize, aBuf, -1);
+		str_format(aBuf, sizeof(aBuf), "v%s", GAME_RELEASE_VERSION);
+		float Width = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
+		TextRender()->Text(0, Screen.w-Width-10.0f, 0.0f, FontSize, aBuf, -1.0f);
 	}
 }
 

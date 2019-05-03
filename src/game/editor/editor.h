@@ -409,12 +409,6 @@ enum
 	PROPTYPE_SHIFT,
 };
 
-typedef struct
-{
-	int x, y;
-	int w, h;
-} RECTi;
-
 class CLayerTiles : public CLayer
 {
 public:
@@ -464,6 +458,7 @@ public:
 	int m_SaveTilesSize;
 	CTile *m_pTiles;
 	int m_SelectedRuleSet;
+	bool m_LiveAutoMap;
 	int m_SelectedAmount;
 };
 
@@ -611,6 +606,7 @@ public:
 	void Reset(bool CreateDefault=true);
 	int Save(const char *pFilename);
 	int Load(const char *pFilename, int StorageType);
+	void LoadCurrentMap();
 	int Append(const char *pFilename, int StorageType);
 	void Render();
 
@@ -645,6 +641,7 @@ public:
 	{
 		POPEVENT_EXIT=0,
 		POPEVENT_LOAD,
+		POPEVENT_LOAD_CURRENT,
 		POPEVENT_NEW,
 		POPEVENT_SAVE,
 	};

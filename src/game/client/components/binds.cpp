@@ -5,7 +5,7 @@
 #include "binds.h"
 
 const int CBinds::s_aaDefaultBindKeys[][2] = {
-	{KEY_F1, 0}, {KEY_F2, 0}, {KEY_TAB, 0}, {'u', 0}, {KEY_F10, 0}, {'s', CBinds::MODIFIER_CTRL},
+	{KEY_F1, 0}, {KEY_F2, 0}, {KEY_TAB, 0}, {'e', 0}, {'u', 0}, {KEY_F10, 0}, {'s', CBinds::MODIFIER_CTRL},
 	{'a', 0}, {'d', 0},
 	{KEY_SPACE, 0}, {KEY_MOUSE_1, 0}, {KEY_MOUSE_2, 0}, {KEY_LSHIFT, 0}, {KEY_RSHIFT, 0}, {KEY_RIGHT, 0}, {KEY_LEFT, 0},
 	{'1', 0}, {'2', 0}, {'3', 0}, {'4', 0}, {'5', 0},
@@ -15,7 +15,7 @@ const int CBinds::s_aaDefaultBindKeys[][2] = {
 	{'r', 0},
 };
 const char CBinds::s_aaDefaultBindValues[][32] = {
-	"toggle_local_console", "toggle_remote_console", "+scoreboard", "+show_chat", "screenshot", "snd_toggle",
+	"toggle_local_console", "toggle_remote_console", "+scoreboard", "+stats", "+show_chat", "screenshot", "snd_toggle",
 	"+left", "+right",
 	"+jump", "+fire", "+hook", "+emote", "+spectate", "spectate_next", "spectate_previous",
 	"+weapon1", "+weapon2", "+weapon3", "+weapon4", "+weapon5",
@@ -36,9 +36,6 @@ void CBinds::Bind(int KeyID, int Modifier, const char *pStr)
 	if(KeyID < 0 || KeyID >= KEY_LAST)
 		return;
 
-	// skip modifiers for +xxx binds
-	if(pStr[0] == '+')
-		Modifier = 0;
 	str_copy(m_aaaKeyBindings[KeyID][Modifier], pStr, sizeof(m_aaaKeyBindings[KeyID][Modifier]));
 	char aBuf[256];
 	if(!m_aaaKeyBindings[KeyID][Modifier][0])
@@ -135,15 +132,60 @@ bool CBinds::OnInput(IInput::CEvent Event)
 	}
 
 	bool rtn = false;
-	for(int m = 0; m < MODIFIER_COUNT; m++)
+	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
-		if(((Mask&(1 << m)) || (m == 0 && m_aaaKeyBindings[Event.m_Key][0][0] == '+')) && m_aaaKeyBindings[Event.m_Key][m][0] != 0)	// always trigger +xxx binds despite any modifier
+		for(int m = 0; m < MODIFIER_COUNT; m++)
 		{
-			if(Event.m_Flags&IInput::FLAG_PRESS)
+			if(m == 0 && m_aaaKeyBindings[Event.m_Key][0][0] == '+')
+			{
+				if(!KeyModifierMask)	// pressed key isn't a modifier
+				{
+					// check if a composed bind exists
+					bool GotComposedBind = false;
+					for(int ModCheck = 1; ModCheck < MODIFIER_COUNT; ++ModCheck)
+					{
+						if((Mask&(1 << ModCheck)) && m_aaaKeyBindings[Event.m_Key][ModCheck][0])
+							GotComposedBind = true;
+					}
+
+					// check if a non-composed bind for pressed modifiers exist
+					bool GotModifierBind = false;
+					if((Mask&(1 << MODIFIER_SHIFT)) && (m_aaaKeyBindings[KEY_LSHIFT][0][0] || m_aaaKeyBindings[KEY_RSHIFT][0][0]))
+						GotModifierBind = true;
+					if((Mask&(1 << MODIFIER_CTRL)) && (m_aaaKeyBindings[KEY_LCTRL][0][0] || m_aaaKeyBindings[KEY_RCTRL][0][0]))
+						GotModifierBind = true;
+					if((Mask&(1 << MODIFIER_ALT)) && (m_aaaKeyBindings[KEY_LALT][0][0] || m_aaaKeyBindings[KEY_RALT][0][0]))
+						GotModifierBind = true;
+
+					// use the composed bind:
+					// - when the modifier is already pressed
+					// - the pressed modifier doesn't trigger a non-composed bind
+					// - a composed bind is available
+					if(!GotModifierBind && GotComposedBind)
+						continue;
+				}
+
 				Console()->ExecuteLineStroked(1, m_aaaKeyBindings[Event.m_Key][m]);
-			if(Event.m_Flags&IInput::FLAG_RELEASE)
+				rtn = true;
+				break;		// always stop after triggering a +xxx bind
+			}
+			if((Mask&(1 << m)) && m_aaaKeyBindings[Event.m_Key][m][0])
+			{
+				Console()->ExecuteLineStroked(1, m_aaaKeyBindings[Event.m_Key][m]);
+				rtn = true;
+			}
+		}
+	}
+	if(Event.m_Flags&IInput::FLAG_RELEASE)
+	{
+		// release them all
+		for(int m = 0; m < MODIFIER_COUNT; ++m)
+		{
+			if(m_aaaKeyBindings[Event.m_Key][m][0])
+			{
 				Console()->ExecuteLineStroked(0, m_aaaKeyBindings[Event.m_Key][m]);
-			rtn = true;
+				rtn = true;
+			}
 		}
 	}
 	return rtn;

@@ -110,7 +110,7 @@ const char* CTilesetMapper::GetRuleSetName(int Index) const
 	return m_aRuleSets[Index].m_aName;
 }
 
-void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
+void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID, RECTi Area)
 {
 	if(pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
 		return;
@@ -120,12 +120,14 @@ void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 	if(!pConf->m_aRules.size())
 		return;
 
+	pLayer->Clamp(&Area);
+	
 	int BaseTile = pConf->m_BaseTile;
 
 	// auto map !
 	int MaxIndex = pLayer->m_Width*pLayer->m_Height;
-	for(int y = 0; y < pLayer->m_Height; y++)
-		for(int x = 0; x < pLayer->m_Width; x++)
+	for(int y = Area.y; y < Area.y + Area.h; y++)
+		for(int x = Area.x; x < Area.x + Area.w; x++)
 		{
 			CTile *pTile = &(pLayer->m_pTiles[y*pLayer->m_Width+x]);
 			if(pTile->m_Index == 0)

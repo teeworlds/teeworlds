@@ -42,13 +42,15 @@ static u32 load32(const unsigned char* y)
 
 static void store64(u64 x, unsigned char* y)
 {
-    for(int i = 0; i != 8; ++i)
+	int i;
+    for(i = 0; i != 8; ++i)
         y[i] = (x >> ((7-i) * 8)) & 255;
 }
 
 static void store32(u32 x, unsigned char* y)
 {
-    for(int i = 0; i != 4; ++i)
+	int i;
+    for(i = 0; i != 4; ++i)
         y[i] = (x >> ((3-i) * 8)) & 255;
 }
 
@@ -64,17 +66,18 @@ static u32 Gamma1(u32 x)            { return Rot(x, 17) ^ Rot(x, 19) ^ Sh(x, 10)
 static void sha_compress(sha256_state* md, const unsigned char* buf)
 {
     u32 S[8], W[64], t0, t1, t;
+	int i;
 
     // Copy state into S
-    for(int i = 0; i < 8; i++)
+    for(i = 0; i < 8; i++)
         S[i] = md->state[i];
 
     // Copy the state into 512-bits into W[0..15]
-    for(int i = 0; i < 16; i++)
+    for(i = 0; i < 16; i++)
         W[i] = load32(buf + (4*i));
 
     // Fill W[16..63]
-    for(int i = 16; i < 64; i++)
+    for(i = 16; i < 64; i++)
         W[i] = Gamma1(W[i - 2]) + W[i - 7] + Gamma0(W[i - 15]) + W[i - 16];
 
     // Compress
@@ -86,7 +89,7 @@ static void sha_compress(sha256_state* md, const unsigned char* buf)
         h  = t0 + t1; \
     }
 
-    for(int i = 0; i < 64; ++i)
+    for(i = 0; i < 64; ++i)
     {
         RND(S[0],S[1],S[2],S[3],S[4],S[5],S[6],S[7],i);
         t = S[7]; S[7] = S[6]; S[6] = S[5]; S[5] = S[4];
@@ -94,7 +97,7 @@ static void sha_compress(sha256_state* md, const unsigned char* buf)
     }
 
     // Feedback
-    for(int i = 0; i < 8; i++)
+    for(i = 0; i < 8; i++)
         md->state[i] = md->state[i] + S[i];
 }
 
@@ -148,6 +151,8 @@ static void sha_process(sha256_state* md, const void* src, u32 inlen)
 
 static void sha_done(sha256_state* md, void* out)
 {
+	int i;
+
     // Increase the length of the message
     md->length += md->curlen * 8;
 
@@ -173,7 +178,7 @@ static void sha_done(sha256_state* md, void* out)
     sha_compress(md, md->buf);
 
     // Copy output
-    for(int i = 0; i < 8; i++)
+    for(i = 0; i < 8; i++)
         store32(md->state[i], (unsigned char *)out+(4*i));
 }
 

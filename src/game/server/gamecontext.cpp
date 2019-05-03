@@ -670,6 +670,12 @@ void CGameContext::OnClientEnter(int ClientID)
 
 void CGameContext::OnClientConnected(int ClientID, bool Dummy, bool AsSpec)
 {
+	if(m_apPlayers[ClientID])
+	{
+		dbg_assert(m_apPlayers[ClientID]->IsDummy(), "invalid clientID");
+		OnClientDrop(ClientID, "removing dummy");
+	}
+
 	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, Dummy, AsSpec);
 
 	if(Dummy)
@@ -1515,6 +1521,9 @@ void CGameContext::OnInit()
 		g_Config.m_SvPlayerSlots = Server()->MaxClients();
 
 #ifdef CONF_DEBUG
+	// clamp dbg_dummies to 0..MaxClients-1
+	if(Server()->MaxClients() <= g_Config.m_DbgDummies)
+		g_Config.m_DbgDummies = Server()->MaxClients();
 	if(g_Config.m_DbgDummies)
 	{
 		for(int i = 0; i < g_Config.m_DbgDummies ; i++)
@@ -1578,5 +1587,7 @@ bool CGameContext::IsClientSpectator(int ClientID) const
 const char *CGameContext::GameType() const { return m_pController && m_pController->GetGameType() ? m_pController->GetGameType() : ""; }
 const char *CGameContext::Version() const { return GAME_VERSION; }
 const char *CGameContext::NetVersion() const { return GAME_NETVERSION; }
+const char *CGameContext::NetVersionHashUsed() const { return GAME_NETVERSION_HASH_FORCED; }
+const char *CGameContext::NetVersionHashReal() const { return GAME_NETVERSION_HASH; }
 
 IGameServer *CreateGameServer() { return new CGameContext; }

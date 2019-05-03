@@ -375,7 +375,7 @@ int CUI::DoButton(const void *id, const char *text, int checked, const CUIRect *
 	return ret;
 }*/
 
-void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Align, int MaxWidth, bool MultiLine)
+void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Align, float LineWidth, bool MultiLine)
 {
 	// TODO: FIX ME!!!!
 	//Graphics()->BlendNormal();
@@ -383,19 +383,19 @@ void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Al
 	{
 	case ALIGN_CENTER:
 	{
-		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
-		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, MaxWidth, MultiLine);
+		float tw = TextRender()->TextWidth(0, Size, pText, -1, LineWidth);
+		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, LineWidth, MultiLine);
 		break;
 	}
 	case ALIGN_LEFT:
 	{
-		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, MaxWidth, MultiLine);
+		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, LineWidth, MultiLine);
 		break;
 	}
 	case ALIGN_RIGHT:
 	{
-		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
-		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, MaxWidth, MultiLine);
+		float tw = TextRender()->TextWidth(0, Size, pText, -1, LineWidth);
+		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, LineWidth, MultiLine);
 		break;
 	}
 	}

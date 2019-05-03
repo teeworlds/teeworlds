@@ -72,6 +72,7 @@ void CCharacterCore::Reset()
 	m_HookedPlayer = -1;
 	m_Jumped = 0;
 	m_TriggeredEvents = 0;
+	m_Death = false;
 }
 
 void CCharacterCore::Tick(bool UseInput)
@@ -355,7 +356,7 @@ void CCharacterCore::Move()
 	m_Vel.x = m_Vel.x*RampValue;
 
 	vec2 NewPos = m_Pos;
-	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(PhysSize, PhysSize), 0);
+	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(PhysSize, PhysSize), 0, &m_Death);
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 

@@ -106,17 +106,25 @@ void CInput::MouseRelative(float *x, float *y)
 
 	SDL_GetRelativeMouseState(&nx,&ny);
 
-	float jx = 0.0f;
-	float jy = 0.0f;
+	vec2 j = vec2(0.0f, 0.0f);
 
 	if(m_pJoystick)
 	{
-		jx = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickX)) / 32768.0f * 50.0f;
-		jy = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickY)) / 32768.0f * 50.0f;
+		const float Max = 50.0f;
+		j.x = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickX)) / 32768.0f * Max;
+		j.y = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickY)) / 32768.0f * Max;
+		const float Len = length(j);
+
+		if (Len <= g_Config.m_JoystickTolerance) {
+			j = vec2(0.0f, 0.0f);
+		} else {
+			const vec2 nj = Len > 0.0f ? j / Len : vec2(0.0f, 0.0f);
+			j = nj * fminf(Len, Max) - nj * g_Config.m_JoystickTolerance;
+		}
 	}
 
-	*x = (nx + jx)*Sens;
-	*y = (ny + jy)*Sens;
+	*x = (nx + j.x)*Sens;
+	*y = (ny + j.y)*Sens;
 }
 
 void CInput::MouseModeAbsolute()

@@ -98,6 +98,7 @@ public:
 	virtual void EnterGame() = 0;
 
 	//
+	virtual const char *GetCurrentMapPath() const = 0;
 	virtual const char *MapDownloadName() const = 0;
 	virtual int MapDownloadAmount() const = 0;
 	virtual int MapDownloadTotalsize() const = 0;
@@ -179,6 +180,8 @@ public:
 	virtual const char *GetItemName(int Type) const = 0;
 	virtual const char *Version() const = 0;
 	virtual const char *NetVersion() const = 0;
+	virtual const char *NetVersionHashUsed() const = 0;
+	virtual const char *NetVersionHashReal() const = 0;
 	virtual int ClientVersion() const = 0;
 
 };

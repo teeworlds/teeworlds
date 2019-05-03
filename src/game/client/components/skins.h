@@ -53,6 +53,7 @@ public:
 	static int * const ms_apUCCVariables[NUM_SKINPARTS]; // use custom color
 	static int * const ms_apColorVariables[NUM_SKINPARTS];
 	IGraphics::CTextureHandle m_XmasHatTexture;
+	IGraphics::CTextureHandle m_BotTexture;
 
 	//
 	void OnInit();

@@ -471,7 +471,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	RenderTools()->DrawUIRect(&Motd, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 	Motd.Margin(5.0f, &Motd);
 
-	TextRender()->Text(0, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, m_pClient->m_pMotd->GetMotd(), (int)Motd.w);
+	TextRender()->Text(0, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, m_pClient->m_pMotd->GetMotd(), Motd.w);
 }
 
 bool CMenus::RenderServerControlServer(CUIRect MainView)
@@ -708,7 +708,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			Bottom.VSplitRight(160.0f, &Bottom, &Reason);
 			Reason.VSplitRight(Reason.h, &Reason, &ClearButton);
 			const char *pLabel = Localize("Reason:");
-			float w = TextRender()->TextWidth(0, Reason.h*ms_FontmodHeight*0.8f, pLabel, -1);
+			float w = TextRender()->TextWidth(0, Reason.h*ms_FontmodHeight*0.8f, pLabel, -1, -1.0f);
 			Reason.VSplitLeft(w + 10.0f, &Label, &Reason);
 			Label.y += 2.0f;
 			UI()->DoLabel(&Label, pLabel, Reason.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);

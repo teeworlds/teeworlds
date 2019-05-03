@@ -47,6 +47,7 @@ class CGameConsole : public CComponent
 
 		void ClearBacklog();
 		void ClearHistory();
+		void Reset() { m_CompletionRenderOffset = 0; }
 
 		void ExecuteLine(const char *pLine);
 

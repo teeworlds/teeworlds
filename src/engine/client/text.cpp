@@ -378,7 +378,7 @@ class CTextRender : public IEngineTextRender
 			pFontchr->m_ID = Chr;
 			pFontchr->m_Height = Height * Scale;
 			pFontchr->m_Width = Width * Scale;
-			pFontchr->m_OffsetX = (pFont->m_FtFace->glyph->bitmap_left-1) * Scale; // ignore_convention
+			pFontchr->m_OffsetX = (pFont->m_FtFace->glyph->bitmap_left-2) * Scale; // ignore_convention
 			pFontchr->m_OffsetY = (pSizeData->m_FontSize - pFont->m_FtFace->glyph->bitmap_top) * Scale; // ignore_convention
 			pFontchr->m_AdvanceX = (pFont->m_FtFace->glyph->advance.x>>6) * Scale; // ignore_convention
 
@@ -496,28 +496,29 @@ public:
 		pCursor->m_X = x;
 		pCursor->m_Y = y;
 		pCursor->m_LineCount = 1;
-		pCursor->m_LineWidth = -1;
+		pCursor->m_LineWidth = -1.0f;
 		pCursor->m_Flags = Flags;
 		pCursor->m_GlyphCount = 0;
 		pCursor->m_CharCount = 0;
 	}
 
 
-	virtual void Text(void *pFontSetV, float x, float y, float Size, const char *pText, int MaxWidth, bool MultiLine)
+	virtual void Text(void *pFontSetV, float x, float y, float Size, const char *pText, float LineWidth, bool MultiLine)
 	{
 		CTextCursor Cursor;
 		SetCursor(&Cursor, x, y, Size, TEXTFLAG_RENDER);
 		if(!MultiLine)
 			Cursor.m_Flags |= TEXTFLAG_STOP_AT_END;
-		Cursor.m_LineWidth = MaxWidth;
+		Cursor.m_LineWidth = LineWidth;
 		TextEx(&Cursor, pText, -1);
 	}
 
-	virtual float TextWidth(void *pFontSetV, float Size, const char *pText, int Length)
+	virtual float TextWidth(void *pFontSetV, float Size, const char *pText, int StrLength, float LineWidth)
 	{
 		CTextCursor Cursor;
 		SetCursor(&Cursor, 0, 0, Size, 0);
-		TextEx(&Cursor, pText, Length);
+		Cursor.m_LineWidth = LineWidth;
+		TextEx(&Cursor, pText, StrLength);
 		return Cursor.m_X;
 	}
 

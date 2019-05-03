@@ -58,8 +58,8 @@ private:
 	void DoButton_MenuTabTop_Dummy(const char *pText, int Checked, const CUIRect *pRect, float Alpha);
 	int DoButton_Customize(CButtonContainer *pBC, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio);
 
-	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false);
-	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false, bool Locked=false);
+	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect, bool Locked=false);
 	int DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
 
 	int DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect);
@@ -295,6 +295,8 @@ private:
 	bool m_UseMouseButtons;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
+	bool m_CursorActive;
+	bool m_PrevCursorActive;
 	bool m_PopupActive;
 	int m_ActiveListBox;
 	bool m_SkinModified;
@@ -619,6 +621,7 @@ private:
 	// found in menus_demo.cpp
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoList(CUIRect MainView);
+	static float RenderDemoDetails(CUIRect View, void *pUser);
 
 	// found in menus_start.cpp
 	void RenderStartMenu(CUIRect MainView);
@@ -672,6 +675,7 @@ private:
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
+	void RenderSettingsStats(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 
 	bool DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
@@ -682,6 +686,8 @@ private:
 	static float RenderSettingsControlsWeapon(CUIRect View, void *pUser);
 	static float RenderSettingsControlsVoting(CUIRect View, void *pUser);
 	static float RenderSettingsControlsChat(CUIRect View, void *pUser);
+	static float RenderSettingsControlsScoreboard(CUIRect View, void *pUser);
+	static float RenderSettingsControlsStats(CUIRect View, void *pUser);
 	static float RenderSettingsControlsMisc(CUIRect View, void *pUser);
 
 	void SetActive(bool Active);
@@ -694,6 +700,8 @@ private:
 	void ToggleMusic();
 
 	void SetMenuPage(int NewPage);
+
+	bool CheckHotKey(int Key);
 public:
 	struct CSwitchTeamInfo
 	{
