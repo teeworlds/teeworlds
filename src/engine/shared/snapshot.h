@@ -25,7 +25,8 @@ class CSnapshot
 	int m_DataSize;
 	int m_NumItems;
 
-	int *Offsets() const { return (int *)(this+1); }
+	int *Keys() const { return (int *)(this+1); }
+	int *Offsets() const { return (int *)(Keys()+m_NumItems); }
 	char *DataStart() const { return (char*)(Offsets()+m_NumItems); }
 
 public:
@@ -40,6 +41,8 @@ public:
 	CSnapshotItem *GetItem(int Index);
 	int GetItemSize(int Index);
 	int GetItemIndex(int Key);
+	const int* GetItemKeys() const;
+	void InvalidateItem(int Index);
 
 	int Crc();
 	void DebugDump();

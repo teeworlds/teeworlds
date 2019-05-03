@@ -605,24 +605,38 @@ void CClient::SnapInvalidateItem(int SnapID, int Index)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "snap invalidate problem");
 		if((char *)i >= (char *)m_aSnapshots[SnapID]->m_pSnap && (char *)i < (char *)m_aSnapshots[SnapID]->m_pSnap + m_aSnapshots[SnapID]->m_SnapSize)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "snap invalidate problem");
-		i->m_TypeAndID = -1;
+		m_aSnapshots[SnapID]->m_pAltSnap->InvalidateItem(Index);
 	}
+}
+
+static const int* SnapSearchKey(const int* pKeysStart, const int* pKeysEnd, int Key)
+{
+	int MiddleIndex = (pKeysEnd - pKeysStart) / 2;
+	int Middle = pKeysStart[MiddleIndex];
+	if(MiddleIndex == 0)
+		return Middle == Key ? pKeysStart : 0x0;
+	if(Middle > Key)
+		return SnapSearchKey(pKeysStart, pKeysStart+MiddleIndex, Key);
+	if(Middle < Key)
+		return SnapSearchKey(pKeysStart+MiddleIndex, pKeysEnd, Key);
+	// ==
+	return pKeysStart + MiddleIndex;
 }
 
 const void *CClient::SnapFindItem(int SnapID, int Type, int ID) const
 {
-	// TODO: linear search. should be fixed.
-	int i;
-
 	if(!m_aSnapshots[SnapID])
 		return 0x0;
 
-	for(i = 0; i < m_aSnapshots[SnapID]->m_pSnap->NumItems(); i++)
-	{
-		CSnapshotItem *pItem = m_aSnapshots[SnapID]->m_pAltSnap->GetItem(i);
-		if(pItem->Type() == Type && pItem->ID() == ID)
-			return (void *)pItem->Data();
-	}
+	const int NumItems = m_aSnapshots[SnapID]->m_pSnap->NumItems();
+	CSnapshot* pAltSnap = m_aSnapshots[SnapID]->m_pAltSnap;
+	const int* pItemKeys = pAltSnap->GetItemKeys();
+
+	int Key = (Type<<16)|(ID&0xffff);
+	int Index = SnapSearchKey(pItemKeys, pItemKeys+NumItems, Key) - pItemKeys;
+	if(Index >= 0 && Index < NumItems)
+		return (void *)pAltSnap->GetItem(Index)->Data();
+
 	return 0x0;
 }
 
@@ -2015,19 +2029,21 @@ void CClient::Run()
 		}
 
 		// panic quit button
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_Q, true))
+		bool IsCtrlPressed = Input()->KeyIsPressed(KEY_LCTRL);
+		bool IsLShiftPressed = Input()->KeyIsPressed(KEY_LSHIFT);
+		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_Q, true))
 		{
 			Quit();
 			break;
 		}
 
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_D, true))
+		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_D, true))
 			g_Config.m_Debug ^= 1;
 
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_G, true))
+		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_G, true))
 			g_Config.m_DbgGraphs ^= 1;
 
-		if(Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_E, true))
+		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_E, true))
 		{
 			g_Config.m_ClEditor = g_Config.m_ClEditor^1;
 			Input()->MouseModeRelative();
