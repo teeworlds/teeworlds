@@ -15,6 +15,16 @@
 		"or": "Smoker",
 		"tr": "Курильщик"
 	},
+	{
+		"context": "russian",
+		"or": "Medic",
+		"tr": "Медик"
+	},
+	{
+		"context": "russian",
+		"or": "Engineer",
+		"tr": "Инженер"
+	},
 	
 	
 	
@@ -32,6 +42,16 @@
 		"context": "german",
 		"or": "Smoker",
 		"tr": "Raucher"
+	},
+	{
+		"context": "german",
+		"or": "Smoker",
+		"tr": "Sanitäter"
+	},
+	{
+		"context": "german",
+		"or": "Engineer",
+		"tr": "Ingenieur"
 	},
 ]
 }
