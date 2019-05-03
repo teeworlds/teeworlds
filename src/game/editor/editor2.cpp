@@ -7,6 +7,7 @@
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/keys.h>
+#include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -95,10 +96,11 @@ inline u32 fnv1a32(const void* data, u32 dataSize)
 	return hash;
 }
 
-void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
+void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IClient* pClient, IConsole* pConsole)
 {
 	m_pGraphics = pGraphics;
 	m_pStorage = pStorage;
+	m_pClient = pClient;
 	m_pConsole = pConsole;
 
 	m_TileDispenser.Init(2000000, 100);
@@ -202,7 +204,254 @@ void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pCons
 
 bool CEditorMap2::Save(const char* pFileName)
 {
-	return false;
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "saving to '%s'...", pFileName);
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
+	CDataFileWriter File;
+	if(!File.Open(m_pStorage, pFileName))
+	{
+		str_format(aBuf, sizeof(aBuf), "failed to open file '%s'...", pFileName);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", aBuf);
+		return 0;
+	}
+
+	// save version
+	{
+		CMapItemVersion Item;
+		Item.m_Version = CMapItemVersion::CURRENT_VERSION;
+		File.AddItem(MAPITEMTYPE_VERSION, 0, sizeof(Item), &Item);
+	}
+
+	// save map info
+	{
+		CMapItemInfo Item;
+		Item.m_Version = CMapItemInfo::CURRENT_VERSION;
+
+		// if(m_MapInfo.m_aAuthor[0])
+			// Item.m_Author = df.AddData(str_length(m_MapInfo.m_aAuthor)+1, m_MapInfo.m_aAuthor);
+		// else
+			Item.m_Author = -1;
+		// if(m_MapInfo.m_aVersion[0])
+			// Item.m_MapVersion = df.AddData(str_length(m_MapInfo.m_aVersion)+1, m_MapInfo.m_aVersion);
+		// else
+			Item.m_MapVersion = -1;
+		// if(m_MapInfo.m_aCredits[0])
+			// Item.m_Credits = df.AddData(str_length(m_MapInfo.m_aCredits)+1, m_MapInfo.m_aCredits);
+		// else
+			Item.m_Credits = -1;
+		// if(m_MapInfo.m_aLicense[0])
+			// Item.m_License = df.AddData(str_length(m_MapInfo.m_aLicense)+1, m_MapInfo.m_aLicense);
+		// else
+			Item.m_License = -1;
+
+		File.AddItem(MAPITEMTYPE_INFO, 0, sizeof(Item), &Item);
+	}
+
+	// save images
+	for(int i = 0; i < m_Assets.m_ImageCount; i++)
+	{
+		// old code: analyse the image for when saving (should be done when we load the image)
+		// pImg->AnalyseTileFlags();
+
+		CImageName ImgName = m_Assets.m_aImageNames[i];
+		CImageInfo ImgInfo = m_Assets.m_aTextureInfos[i];
+		const bool IsExternal = m_Assets.m_aImageEmbeddedCrc[i] == 0; // external
+
+		CMapItemImage Item;
+		Item.m_Version = CMapItemImage::CURRENT_VERSION;
+
+		Item.m_Width = ImgInfo.m_Width;
+		Item.m_Height = ImgInfo.m_Height;
+		Item.m_External = IsExternal;
+		Item.m_ImageName = File.AddData(str_length(ImgName.m_Buff)+1, ImgName.m_Buff);
+		if(IsExternal)
+			Item.m_ImageData = -1;
+		else
+		{
+			int PixelSize = ImgInfo.m_Format == CImageInfo::FORMAT_RGB ? 3 : 4;
+			Item.m_ImageData = File.AddData(Item.m_Width*Item.m_Height*PixelSize, ImgInfo.m_pData);
+		}
+		Item.m_Format = ImgInfo.m_Format;
+		File.AddItem(MAPITEMTYPE_IMAGE, i, sizeof(Item), &Item);
+	}
+
+	// save layers
+	for(int li = 0, gi = 0; gi < m_aGroups.Count(); gi++)
+	{
+		CGroup Group = m_aGroups[gi];
+		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", gi, Group.m_LayerCount, Group.m_OffsetX, Group.m_OffsetY);
+		// old feature
+		// if(!Group->m_SaveToMap)
+		// 	continue;
+
+		CMapItemGroup GItem;
+		GItem.m_Version = CMapItemGroup::CURRENT_VERSION;
+
+		GItem.m_ParallaxX = Group.m_ParallaxX;
+		GItem.m_ParallaxY = Group.m_ParallaxY;
+		GItem.m_OffsetX = Group.m_OffsetX;
+		GItem.m_OffsetY = Group.m_OffsetY;
+		GItem.m_UseClipping = Group.m_UseClipping;
+		GItem.m_ClipX = Group.m_ClipX;
+		GItem.m_ClipY = Group.m_ClipY;
+		// GItem.m_ClipW = Group.m_ClipW;
+		// GItem.m_ClipH = Group.m_ClipH;
+		GItem.m_ClipW = 0;
+		GItem.m_ClipH = 0;
+		GItem.m_StartLayer = li;
+		GItem.m_NumLayers = 0;
+
+		// save group name
+		StrToInts(GItem.m_aName, sizeof(GItem.m_aName)/sizeof(int), Group.m_aName);
+
+
+		for(; li < GItem.m_StartLayer + Group.m_LayerCount; li++)
+		{
+
+			// old feature
+			// if(!Group->m_lLayers[l]->m_SaveToMap)
+			// 	continue;
+
+			if(m_aLayers[li].IsTileLayer())
+			{
+				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving tiles layer");
+				CLayer Layer = m_aLayers[li];
+				// Layer.PrepareForSave();
+
+				ed_dbg("  Group#%d Layer=%d (w=%d, h=%d)", gi, li, Layer.m_Width, Layer.m_Height);
+
+				CMapItemLayerTilemap Item;
+				Item.m_Version = CMapItemLayerTilemap::CURRENT_VERSION;
+
+				// Item.m_Layer.m_Flags = Layer.m_Flags;
+				Item.m_Layer.m_Flags = 0; // LAYERFLAG_DETAIL or 0
+				Item.m_Layer.m_Type = Layer.m_Type;
+
+				Item.m_Color.r = Layer.m_Color.r*255;
+				Item.m_Color.g = Layer.m_Color.g*255;
+				Item.m_Color.b = Layer.m_Color.b*255;
+				Item.m_Color.a = Layer.m_Color.a*255;
+				Item.m_ColorEnv = Layer.m_ColorEnvelopeID;
+				Item.m_ColorEnvOffset = Layer.m_ColorEnvOffset;
+
+				Item.m_Width = Layer.m_Width;
+				Item.m_Height = Layer.m_Height;
+
+				if(m_GameGroupID == gi && m_GameLayerID == li)
+				{
+					Item.m_Flags = TILESLAYERFLAG_GAME;
+					ed_dbg("Game layer reached");
+				}
+				else
+					Item.m_Flags = 0;
+				Item.m_Image = Layer.m_ImageID;
+				// Item.m_Data = File.AddData(Layer.m_SaveTilesSize, Layer.m_pSaveTiles);
+				Item.m_Data = File.AddData(Layer.m_aTiles.Count()*sizeof(CTile), Layer.m_aTiles.Data());
+
+				// save layer name
+				StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), Layer.m_aName);
+
+				File.AddItem(MAPITEMTYPE_LAYER, li, sizeof(Item), &Item);
+
+				GItem.m_NumLayers++;
+			}
+			else if(m_aLayers[li].IsQuadLayer())
+			{
+				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving quads layer");
+				CLayer LayerQuad = m_aLayers[li];
+
+				ed_dbg("  Group#%d Quad=%d (w=%d, h=%d)", gi, li, LayerQuad.m_Width, LayerQuad.m_Height);
+
+				if(LayerQuad.m_aQuads.Count())
+				{
+					CMapItemLayerQuads Item;
+					Item.m_Version = CMapItemLayerQuads::CURRENT_VERSION;
+					Item.m_Layer.m_Flags = 0; // LAYERFLAG_DETAIL or 0
+					Item.m_Layer.m_Type = LayerQuad.m_Type;
+					Item.m_Image = LayerQuad.m_ImageID;
+
+					// add the data
+					Item.m_NumQuads = LayerQuad.m_aQuads.Count();
+					Item.m_Data = File.AddDataSwapped(LayerQuad.m_aQuads.Count()*sizeof(CQuad), LayerQuad.m_aQuads.Data());
+
+					// save layer name
+					StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), LayerQuad.m_aName);
+
+					File.AddItem(MAPITEMTYPE_LAYER, li, sizeof(Item), &Item);
+
+					GItem.m_NumLayers++;
+				}
+			}
+		}
+
+		File.AddItem(MAPITEMTYPE_GROUP, gi, sizeof(GItem), &GItem);
+	}
+
+	// check for bezier curve envelopes, otherwise use older, smaller envelope points
+	int Version = CMapItemEnvelope_v2::CURRENT_VERSION;
+	int Size = sizeof(CEnvPoint_v1);	
+	// for(int e = 0; e < m_aEnvelopes.Count(); e++)
+	{
+		for(int p = 0; p < m_aEnvPoints.Count(); p++)
+		{
+			if(m_aEnvPoints[p].m_Curvetype == CURVETYPE_BEZIER)
+			{
+				Version = CMapItemEnvelope::CURRENT_VERSION;
+				Size = sizeof(CEnvPoint);
+				break;
+			}
+		}
+	}
+
+	// save envelopes
+	int PointCount = 0;
+	for(int e = 0; e < m_aEnvelopes.Count(); e++)
+	{
+		CMapItemEnvelope Item;
+		Item.m_Version = Version;
+		Item.m_Channels = m_aEnvelopes[e].m_Channels;
+		Item.m_StartPoint = PointCount;
+		Item.m_NumPoints = m_aEnvelopes[e].m_NumPoints;
+		Item.m_Synchronized = m_aEnvelopes[e].m_Synchronized;
+		mem_copy(Item.m_aName, m_aEnvelopes[e].m_aName, sizeof(m_aEnvelopes[e].m_aName)*sizeof(int));
+
+		File.AddItem(MAPITEMTYPE_ENVELOPE, e, sizeof(Item), &Item);
+		PointCount += Item.m_NumPoints;
+	}
+
+	// save points
+	int TotalSize = Size * PointCount;
+	unsigned char *pPoints = (unsigned char *)mem_alloc(TotalSize, 1);
+	int Offset = 0;
+	// for(int e = 0; e < m_aEnvelopes.Count(); e++)
+	{
+		for(int p = 0; p < m_aEnvPoints.Count(); p++)
+		{
+			mem_copy(pPoints + Offset, &(m_aEnvPoints[p]), Size);
+			Offset += Size;
+		}
+	}
+
+	File.AddItem(MAPITEMTYPE_ENVPOINTS, 0, TotalSize, pPoints);
+	mem_free(pPoints);
+
+	// finish the data file
+	File.Finish();
+	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving done");
+
+	// send rcon.. if we can
+	
+	if(Client()->RconAuthed())
+	{/*
+		CServerInfo CurrentServerInfo;
+		Client()->GetServerInfo(&CurrentServerInfo);
+		char aMapName[128];
+		m_pEditor->ExtractName(pFileName, aMapName, sizeof(aMapName));
+		if(!str_comp(aMapName, CurrentServerInfo.m_aMap))
+			m_pEditor->Client()->Rcon("reload");
+	*/}
+
+	return true;
 }
 
 bool CEditorMap2::Load(const char* pFileName)
@@ -380,7 +629,7 @@ bool CEditorMap2::Load(const char* pFileName)
 		CMapItemImage *pImg = (CMapItemImage *)File.GetItem(ImagesStart+i, 0, 0);
 		const char *pImgName = (char *)File.GetData(pImg->m_ImageName);
 		mem_copy(&aImageName[i], pImgName, min((u64)str_length(pImgName), sizeof(aImageName[i].m_Buff)-1));
-		aImageInfo[i].m_pData = nullptr;
+		aImageInfo[i].m_pData = 0x0;
 		aImageInfo[i].m_Width = pImg->m_Width;
 		aImageInfo[i].m_Height = pImg->m_Height;
 
@@ -447,7 +696,7 @@ void CEditorMap2::LoadDefault()
 	GameGroup.m_ParallaxX = 100;
 	GameGroup.m_ParallaxY = 100;
 
-	CLayer& Gamelayer = NewTileLayer(50, 50);
+	/*CLayer& Gamelayer =*/ NewTileLayer(50, 50);
 
 	GameGroup.m_apLayerIDs[GameGroup.m_LayerCount++] = m_aLayers.Count()-1;
 	m_aGroups.Add(GameGroup);
@@ -536,7 +785,7 @@ void CEditorMap2::AssetsClearAndSetImages(CEditorMap2::CImageName* aName, CImage
 		{
 			const u32 Crc = aImageEmbeddedCrc[i];
 			const int EmbeddedFileCount = m_Assets.m_EmbeddedFileCount;
-			CEmbeddedFile* pFile = nullptr;
+			CEmbeddedFile* pFile = 0x0;
 			for(int f = 0; f < EmbeddedFileCount; f++)
 			{
 				if(m_Assets.m_aEmbeddedFile[f].m_Crc == Crc)
@@ -547,7 +796,7 @@ void CEditorMap2::AssetsClearAndSetImages(CEditorMap2::CImageName* aName, CImage
 			}
 
 			// embedded file should be found
-			dbg_assert(pFile != nullptr, "Embedded file not found");
+			dbg_assert(pFile != 0x0, "Embedded file not found");
 
 			m_Assets.m_aTextureHandle[i] = m_pGraphics->LoadTextureRaw(aInfo[i].m_Width, aInfo[i].m_Height,
 				aInfo[i].m_Format, pFile->m_pData, CImageInfo::FORMAT_RGBA, TextureFlags);
@@ -584,7 +833,7 @@ void CEditorMap2::AssetsClearEmbeddedFiles()
 		if(m_Assets.m_aEmbeddedFile[i].m_pData)
 		{
 			free(m_Assets.m_aEmbeddedFile[i].m_pData);
-			m_Assets.m_aEmbeddedFile[i].m_pData = nullptr;
+			m_Assets.m_aEmbeddedFile[i].m_pData = 0x0;
 		}
 	}
 	m_Assets.m_EmbeddedFileCount = 0;
@@ -828,7 +1077,7 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 	SnapSize += sizeof(CSnapshot::m_aImageInfos[0]) * ImageCount; // m_aImageInfos
 	SnapSize += sizeof(CSnapshot::m_aImageEmbeddedCrc[0]) * ImageCount; // m_aImageEmbeddedCrc
 
-	ed_dbg("Map snapshot size = %lluKo", SnapSize/1024);
+	ed_dbg("Map snapshot size = %luKo", SnapSize/1024);
 
 	CSnapshot& Snap = *(CSnapshot*)mem_alloc(SnapSize, 0);
 	Snap.m_GroupCount = GroupCount;
@@ -1204,6 +1453,7 @@ void CEditor2::Init()
 		IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 
 	m_pConsole->Register("load", "r", CFGFLAG_EDITOR, ConLoad, this, "Load map");
+	m_pConsole->Register("save", "r", CFGFLAG_EDITOR, ConSave, this, "Save map");
 	m_pConsole->Register("+show_palette", "", CFGFLAG_EDITOR, ConShowPalette, this, "Show palette");
 	m_pConsole->Register("game_view", "i", CFGFLAG_EDITOR, ConGameView, this, "Toggle game view");
 	m_pConsole->Register("show_grid", "i", CFGFLAG_EDITOR, ConShowGrid, this, "Toggle grid");
@@ -1240,11 +1490,11 @@ void CEditor2::Init()
 									   VisualSize * (SpriteH/ScaleFactor));
 	}
 
-	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
+	m_Map.Init(m_pStorage, m_pGraphics, m_pClient, m_pConsole);
 	m_Brush.m_aTiles = m_Map.NewTileArray();
 
 	m_HistoryEntryDispenser.Init(MAX_HISTORY, 1);
-	m_pHistoryEntryCurrent = nullptr;
+	m_pHistoryEntryCurrent = 0x0;
 
 	/*
 	m_Map.LoadDefault();
@@ -1981,15 +2231,15 @@ void CEditor2::RenderMapOverlay()
 				const vec2 EndMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
 					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, s_MapViewDrag.m_EndDragPos);
 
-				const int StartTX = floor(StartMouseWorldPos.x/TileSize);
-				const int StartTY = floor(StartMouseWorldPos.y/TileSize);
-				const int EndTX = floor(EndMouseWorldPos.x/TileSize);
-				const int EndTY = floor(EndMouseWorldPos.y/TileSize);
+				// const int StartTX = floor(StartMouseWorldPos.x/TileSize);
+				// const int StartTY = floor(StartMouseWorldPos.y/TileSize);
+				// const int EndTX = floor(EndMouseWorldPos.x/TileSize);
+				// const int EndTY = floor(EndMouseWorldPos.y/TileSize);
 
-				const int SelStartX = clamp(min(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1);
-				const int SelStartY = clamp(min(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1);
-				const int SelEndX = clamp(max(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1) + 1;
-				const int SelEndY = clamp(max(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1) + 1;
+				// const int SelStartX = clamp(min(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1);
+				// const int SelStartY = clamp(min(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1);
+				// const int SelEndX = clamp(max(StartTX, EndTX), 0, SelectedTileLayer.m_Width-1) + 1;
+				// const int SelEndY = clamp(max(StartTY, EndTY), 0, SelectedTileLayer.m_Height-1) + 1;
 
 				m_TileSelection.Select(
 					floor(StartMouseWorldPos.x/TileSize),
@@ -2573,9 +2823,9 @@ void CEditor2::RenderMapEditorUI()
 			}
 
 			// IF we let go of any handle, resize tile layer
-			if(WasGrabbingBot && !s_GrabHandleBot.m_IsGrabbed ||
-			   WasGrabbingRight && !s_GrabHandleRight.m_IsGrabbed ||
-			   WasGrabbingBotRight && !s_GrabHandleBotRight.m_IsGrabbed)
+			if((WasGrabbingBot && !s_GrabHandleBot.m_IsGrabbed) ||
+			   (WasGrabbingRight && !s_GrabHandleRight.m_IsGrabbed) ||
+			   (WasGrabbingBotRight && !s_GrabHandleBotRight.m_IsGrabbed))
 			{
 				EditTileLayerResize(m_UiSelectedLayerID, (int)(PreviewRect.w / TileSize), (int)(PreviewRect.h / TileSize));
 			}
@@ -3777,7 +4027,7 @@ void CEditor2::RenderAssetManager()
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-		static CUIButton s_ButDelete = {};
+		static CUIButton s_ButDelete;
 		if(UiButton(ButtonRect, Localize("Delete"), &s_ButDelete))
 		{
 			EditDeleteImage(m_UiSelectedImageID);
@@ -3786,14 +4036,14 @@ void CEditor2::RenderAssetManager()
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-		static CUITextInput s_TextInputAdd = {};
+		static CUITextInput s_TextInputAdd;
 		static char aAddPath[256] = "grass_main.png";
 		UiTextInput(ButtonRect, aAddPath, sizeof(aAddPath), &s_TextInputAdd);
 
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-		static CUIButton s_ButAdd = {};
+		static CUIButton s_ButAdd;
 		if(UiButton(ButtonRect, Localize("Add image"), &s_ButAdd))
 		{
 			EditAddImage(aAddPath);
@@ -4739,6 +4989,18 @@ bool CEditor2::LoadMap(const char* pFileName)
 	return false;
 }
 
+bool CEditor2::SaveMap(const char* pFileName)
+{
+	if(m_Map.Save(pFileName))
+	{
+		OnMapLoaded();
+		ed_log("map '%s' sucessfully saved.", pFileName);
+		return true;
+	}
+	ed_log("failed to save map '%s'", pFileName);
+	return false;
+}
+
 void CEditor2::OnMapLoaded()
 {
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
@@ -4772,7 +5034,7 @@ void CEditor2::OnMapLoaded()
 			pCurrent = pCurrent->m_pPrev;
 		}
 		m_HistoryEntryDispenser.Clear();
-		m_pHistoryEntryCurrent = nullptr;
+		m_pHistoryEntryCurrent = 0x0;
 	}
 
 	// initialize history
@@ -4885,7 +5147,7 @@ void CEditor2::EditDeleteImage(int ImgID)
 	dbg_assert(ImgID >= 0 && ImgID <= m_Map.m_Assets.m_ImageCount, "ImgID out of bounds");
 
 	char aHistoryEntryDesc[64];
-	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s", m_Map.m_Assets.m_aImageNames[ImgID]);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s", m_Map.m_Assets.m_aImageNames[ImgID].m_Buff);
 
 	m_Map.AssetsDeleteImage(ImgID);
 
@@ -4982,7 +5244,7 @@ int CEditor2::EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID)
 	dbg_assert(UnderLyID >= 0 && UnderLyID < m_Map.m_aLayers.Count(), "LyID out of bounds");
 	dbg_assert(GroupID >= 0 && GroupID < m_Map.m_aGroups.Count(), "GroupID out of bounds");
 
-	CEditorMap2::CLayer& Layer = m_Map.NewQuadLayer();
+	/*CEditorMap2::CLayer& Layer =*/ m_Map.NewQuadLayer();
 	CEditorMap2::CGroup& Group = m_Map.m_aGroups[GroupID];
 
 	int UnderGrpLyID = -1;
@@ -5651,7 +5913,7 @@ void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 		CHistoryEntry* pToDelete = pCur;
 		pCur = pCur->m_pNext;
 
-		dbg_assert(pToDelete->m_pSnap != nullptr, "Snapshot is null");
+		dbg_assert(pToDelete->m_pSnap != 0x0, "Snapshot is null");
 		mem_free(pToDelete->m_pSnap);
 		mem_free(pToDelete->m_pUiSnap); // TODO: dealloc smarter, see above
 		m_HistoryEntryDispenser.DeallocOne(pToDelete);
@@ -5672,14 +5934,14 @@ void CEditor2::HistoryRestoreToEntry(CHistoryEntry* pEntry)
 
 void CEditor2::HistoryUndo()
 {
-	dbg_assert(m_pHistoryEntryCurrent != nullptr, "Current history entry is null");
+	dbg_assert(m_pHistoryEntryCurrent != 0x0, "Current history entry is null");
 	if(m_pHistoryEntryCurrent->m_pPrev)
 		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pPrev);
 }
 
 void CEditor2::HistoryRedo()
 {
-	dbg_assert(m_pHistoryEntryCurrent != nullptr, "Current history entry is null");
+	dbg_assert(m_pHistoryEntryCurrent != 0x0, "Current history entry is null");
 	if(m_pHistoryEntryCurrent->m_pNext)
 		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pNext);
 }
@@ -5739,9 +6001,26 @@ void CEditor2::ConLoad(IConsole::IResult* pResult, void* pUserData)
 	pSelf->LoadMap(aMapPath);
 }
 
-void CEditor2::ConShowPalette(IConsole::IResult* pResult, void* pUserData)
+void CEditor2::ConSave(IConsole::IResult* pResult, void* pUserData)
 {
 	CEditor2 *pSelf = (CEditor2 *)pUserData;
+
+	const int InputTextLen = str_length(pResult->GetString(0));
+
+	char aMapPath[256];
+	bool AddMapPath = str_comp_nocase_num(pResult->GetString(0), "maps/", 5) != 0;
+	bool AddMapExtension = InputTextLen <= 4 ||
+		str_comp_nocase_num(pResult->GetString(0)+InputTextLen-4, ".map", 4) != 0;
+	str_format(aMapPath, sizeof(aMapPath), "%s%s%s", AddMapPath ? "maps/":"", pResult->GetString(0),
+			   AddMapExtension ? ".map":"");
+
+	dbg_msg("editor", "ConSave(%s)", aMapPath);
+	pSelf->SaveMap(aMapPath);
+}
+
+void CEditor2::ConShowPalette(IConsole::IResult* pResult, void* pUserData)
+{
+	// CEditor2 *pSelf = (CEditor2 *)pUserData;
 	dbg_assert(0, "Implement this");
 }
 
