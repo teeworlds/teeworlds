@@ -18,16 +18,13 @@
 // - Easily know if we're clicking on UI or elsewhere
 // ---- what event gets handled where should be VERY clear
 
-// - Allow brush to go in automapper mode
 // - Binds
 // - Smooth zoom
 // - Fix selecting while moving the camera
 
-// - Replace a lot of the static count arrays with dynamic ones (with a stack base)
 // - Localize everything
 
 // - Stability is very important (crashes should be easy to catch)
-// --- fix layer id / image id handling
 // - Input should be handled well (careful of input-locks https://github.com/teeworlds/teeworlds/issues/828)
 // ! Do not use DoButton_SpriteClean (dunno why)
 
@@ -96,11 +93,10 @@ inline u32 fnv1a32(const void* data, u32 dataSize)
 	return hash;
 }
 
-void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IClient* pClient, IConsole* pConsole)
+void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
 {
 	m_pGraphics = pGraphics;
 	m_pStorage = pStorage;
-	m_pClient = pClient;
 	m_pConsole = pConsole;
 
 	m_TileDispenser.Init(2000000, 100);
@@ -438,18 +434,6 @@ bool CEditorMap2::Save(const char* pFileName)
 	// finish the data file
 	File.Finish();
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving done");
-
-	// send rcon.. if we can
-	
-	if(Client()->RconAuthed())
-	{/*
-		CServerInfo CurrentServerInfo;
-		Client()->GetServerInfo(&CurrentServerInfo);
-		char aMapName[128];
-		m_pEditor->ExtractName(pFileName, aMapName, sizeof(aMapName));
-		if(!str_comp(aMapName, CurrentServerInfo.m_aMap))
-			m_pEditor->Client()->Rcon("reload");
-	*/}
 
 	return true;
 }
@@ -1490,7 +1474,7 @@ void CEditor2::Init()
 									   VisualSize * (SpriteH/ScaleFactor));
 	}
 
-	m_Map.Init(m_pStorage, m_pGraphics, m_pClient, m_pConsole);
+	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
 	m_Brush.m_aTiles = m_Map.NewTileArray();
 
 	m_HistoryEntryDispenser.Init(MAX_HISTORY, 1);
@@ -4993,7 +4977,18 @@ bool CEditor2::SaveMap(const char* pFileName)
 {
 	if(m_Map.Save(pFileName))
 	{
-		OnMapLoaded();
+		// send rcon.. if we can
+		// TODO: implement / uncomment
+		if(Client()->RconAuthed())
+		{/*
+			CServerInfo CurrentServerInfo;
+			Client()->GetServerInfo(&CurrentServerInfo);
+			char aMapName[128];
+			m_pEditor->ExtractName(pFileName, aMapName, sizeof(aMapName));
+			if(!str_comp(aMapName, CurrentServerInfo.m_aMap))
+				m_pEditor->Client()->Rcon("reload");
+		*/}
+
 		ed_log("map '%s' sucessfully saved.", pFileName);
 		return true;
 	}

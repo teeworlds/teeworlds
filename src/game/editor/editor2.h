@@ -514,16 +514,14 @@ struct CEditorMap2
 	CAssets m_Assets;
 
 	IGraphics* m_pGraphics;
-	IClient *m_pClient;
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 
 	inline IGraphics* Graphics() { return m_pGraphics; };
-	inline IClient *Client() { return m_pClient; };
 	inline IConsole *Console() { return m_pConsole; };
 	inline IStorage *Storage() { return m_pStorage; };
 
-	void Init(IStorage *pStorage, IGraphics* pGraphics, IClient* pClient, IConsole* pConsole);
+	void Init(IStorage *pStorage, IGraphics* pGraphics, IConsole* pConsole);
 	bool Save(const char *pFileName);
 	bool Load(const char *pFileName);
 	void LoadDefault();
