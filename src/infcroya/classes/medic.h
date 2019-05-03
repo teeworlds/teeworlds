@@ -2,10 +2,10 @@
 
 #include "class.h"
 
-class CEngineer : public IClass {
+class CMedic : public IClass {
 public:
-	CEngineer();
-	~CEngineer() override;
+	CMedic();
+	~CMedic() override;
 
 	void InitialWeaponsHealth(class CCharacter* pChr) override;
 

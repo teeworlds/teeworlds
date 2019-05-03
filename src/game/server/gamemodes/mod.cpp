@@ -10,6 +10,8 @@
 #include <infcroya/classes/default.h>
 #include <infcroya/classes/biologist.h>
 #include <infcroya/classes/smoker.h>
+#include <infcroya/classes/engineer.h>
+#include <infcroya/classes/medic.h>
 #include <engine/shared/config.h>
 #include <infcroya/localization/localization.h>
 #include <engine/storage.h>
@@ -31,6 +33,8 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 #endif
 	classes[Class::DEFAULT] = new CDefault();
 	classes[Class::BIOLOGIST] = new CBiologist();
+	classes[Class::ENGINEER] = new CEngineer();
+	classes[Class::MEDIC] = new CMedic();
 	classes[Class::SMOKER] = new CSmoker();
 }
 

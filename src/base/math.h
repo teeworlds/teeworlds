@@ -51,6 +51,7 @@ inline int random_int() { return (((rand() & 0xffff) << 16) | (rand() & 0xffff))
 inline float frandom() { return rand()/(float)(RAND_MAX); }
 // INFCROYA BEGIN ------------------------------------------------------------
 inline bool random_prob(float f) { return (frandom() < f); }
+inline int random_int_range(int min, int max) { return random_int() % (max + 1 - min) + min; }
 // INFCROYA END ------------------------------------------------------------//
 
 // float to fixed

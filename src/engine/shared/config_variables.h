@@ -104,6 +104,8 @@ MACRO_CONFIG_INT(DbgResizable, dbg_resizable, 0, 0, 0, CFGFLAG_CLIENT, "Enables 
 
 // INFCROYA BEGIN ------------------------------------------------------------
 MACRO_CONFIG_STR(SvWelcome, sv_welcome, 128, "Join our discord: https://discord.gg/Sxk5ssv", CFGFLAG_SAVE | CFGFLAG_SERVER, "Welcome chat message on player connect")
+MACRO_CONFIG_INT(InfBarrierLifeSpan, inf_barrier_lifespan, 30, 0, 100, CFGFLAG_SERVER, "Barrier lifespan")
+MACRO_CONFIG_INT(InfBarrierTimeReduce, inf_barrier_timereduce, 150, 0, 10000, CFGFLAG_SERVER, "Time to remove from a barrier lifespan when an infected dies (centisec)")
 // INFCROYA END ------------------------------------------------------------//
 
 #endif

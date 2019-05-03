@@ -1,44 +1,41 @@
-#include "biologist.h"
-#include "base/system.h"
+#include "medic.h"
 #include <game/server/entities/character.h>
 #include <game/server/player.h>
-#include <game/server/gamecontext.h>
-#include <infcroya/entities/biologist-mine.h>
-#include <generated/server_data.h>
 #include <game/server/entities/projectile.h>
-#include <base/math.h>
-#include <infcroya/entities/bouncing-bullet.h>
-#include <engine/message.h>
+#include <game/server/gamecontext.h>
+#include <generated/server_data.h>
 #include <infcroya/croyaplayer.h>
 
-CBiologist::CBiologist()
+CMedic::CMedic()
 {
 	CSkin skin;
-	skin.SetBodyColor(52, 156, 124);
-	skin.SetMarkingName("twintri");
-	skin.SetMarkingColor(40, 222, 227);
-	skin.SetFeetColor(147, 4, 72);
+	skin.SetBodyColor(233, 158, 183);
+	skin.SetMarkingName("duodonny");
+	skin.SetMarkingColor(231, 146, 218);
+	skin.SetDecorationName("twinbopp");
+	skin.SetDecorationColor(233, 158, 183);
+	skin.SetHandsColor(233, 158, 183);
+	skin.SetFeetColor(0, 146, 224);
 	SetSkin(skin);
 	SetInfectedClass(false);
-	SetName("Biologist");
+	SetName("Medic");
 }
 
-CBiologist::~CBiologist()
+CMedic::~CMedic()
 {
 }
 
-void CBiologist::InitialWeaponsHealth(CCharacter* pChr)
+void CMedic::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);
 	pChr->GiveWeapon(WEAPON_HAMMER, -1);
 	pChr->GiveWeapon(WEAPON_GUN, 10);
-	pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
-	pChr->GiveWeapon(WEAPON_LASER, 10);
 	pChr->SetWeapon(WEAPON_GUN);
+	pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
 	pChr->SetNormalEmote(EMOTE_NORMAL);
 }
 
-void CBiologist::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCharacter* pChr)
+void CMedic::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCharacter* pChr)
 {
 	int ClientID = pChr->GetPlayer()->GetCID();
 	CGameWorld* pGameWorld = pChr->GameWorld();
@@ -58,7 +55,10 @@ void CBiologist::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCh
 		for (int i = 0; i < Num; ++i)
 		{
 			CCharacter* pTarget = apEnts[i];
-
+			if (pTarget->IsHuman() && pTarget != pChr) {
+				pTarget->IncreaseOverallHp(4);
+				pTarget->SetEmote(EMOTE_HAPPY, pChr->Server()->Tick() + pChr->Server()->TickSpeed());
+			}
 			if ((pTarget == pChr) || pGameServer->Collision()->IntersectLine(ProjStartPos, pTarget->GetPos(), NULL, NULL))
 				continue;
 
@@ -90,52 +90,33 @@ void CBiologist::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCh
 			ClientID,
 			ProjStartPos,
 			Direction,
-			(int)(pChr->Server()->TickSpeed() * pChr->GameServer()->Tuning()->m_GunLifetime),
+			(int)(pChr->Server()->TickSpeed() * pGameServer->Tuning()->m_GunLifetime),
 			g_pData->m_Weapons.m_Gun.m_pBase->m_Damage, false, 0, -1, WEAPON_GUN);
 
 		pGameServer->CreateSound(pChr->GetPos(), SOUND_GUN_FIRE);
 	} break;
 
 	case WEAPON_SHOTGUN: {
-		int ShotSpread = 2;
-		CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
-		Msg.AddInt(ShotSpread * 2 + 1);
+		int ShotSpread = 3;
+		float Force = 10.0f;
 
 		for (int i = -ShotSpread; i <= ShotSpread; ++i)
 		{
 			float Spreading[] = { -0.185f, -0.070f, 0, 0.070f, 0.185f };
 			float a = angle(Direction);
-			a += Spreading[i + 2];
+			a += Spreading[i + 3] * 2.0f * (0.25f + 0.75f * static_cast<float>(10 - pChr->m_aWeapons[WEAPON_SHOTGUN].m_Ammo) / 10.0f);
 			float v = 1 - (absolute(i) / (float)ShotSpread);
-			float Speed = mix((float)pChr->GameServer()->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
-			
-			CBouncingBullet* pProj = new CBouncingBullet(pChr->GameWorld(), pChr->GetPlayer()->GetCID(), ProjStartPos, vec2(cosf(a), sinf(a)) * Speed);
-
-			// pack the Projectile and send it to the client Directly
-			CNetObj_Projectile p;
-			pProj->FillInfo(&p);
-			for (unsigned i = 0; i < sizeof(CNetObj_Projectile) / sizeof(int); i++)
-				Msg.AddInt(((int*)& p)[i]);
+			float Speed = mix((float)pGameServer->Tuning()->m_ShotgunSpeeddiff, 1.0f, v);
+			float LifeTime = pGameServer->Tuning()->m_ShotgunLifetime + 0.1f * static_cast<float>(pChr->m_aWeapons[WEAPON_SHOTGUN].m_Ammo) / 10.0f;
+			new CProjectile(pGameWorld, WEAPON_SHOTGUN,
+				ClientID,
+				ProjStartPos,
+				vec2(cosf(a), sinf(a)) * Speed,
+				(int)(pChr->Server()->TickSpeed() * LifeTime),
+				g_pData->m_Weapons.m_Shotgun.m_pBase->m_Damage, false, Force, -1, WEAPON_SHOTGUN);
 		}
 
-		pChr->GameServer()->CreateSound(pChr->GetPos(), SOUND_SHOTGUN_FIRE);
-	} break;
-
-	case WEAPON_LASER: {
-		CGameWorld* pGameWorld = pChr->GameWorld();
-		for (CBiologistMine* pMine = (CBiologistMine*)pGameWorld->FindFirst(CGameWorld::ENTTYPE_BIOLOGIST_MINE); pMine; pMine = (CBiologistMine*)pMine->TypeNext())
-		{
-			if (pMine->m_Owner != pChr->GetPlayer()->GetCID()) continue;
-			pChr->GameServer()->m_World.DestroyEntity(pMine);
-		}
-
-		vec2 To = pChr->GetPos() + Direction * 400.0f;
-		if (pChr->GameServer()->Collision()->IntersectLine(pChr->GetPos(), To, 0x0, &To))
-		{
-			new CBiologistMine(pGameWorld, pChr->GetPos(), To, pChr->GetPlayer()->GetCID());
-			pChr->GameServer()->CreateSound(pChr->GetPos(), SOUND_LASER_FIRE);
-			pChr->m_aWeapons[WEAPON_LASER].m_Ammo = 0;
-		}
+		pGameServer->CreateSound(pChr->GetPos(), SOUND_SHOTGUN_FIRE);
 	} break;
 	}
 }

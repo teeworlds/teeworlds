@@ -7,6 +7,7 @@
 
 #include <game/gamecore.h>
 #include <game/server/entity.h>
+#include <base/tl/array.h> // INFCROYA RELATED
 
 
 class CCharacter : public CEntity
@@ -76,6 +77,12 @@ public:
 	void SetNumObjectsHit(int NumObjectsHit);
 	void Infect(int From);
 	bool IncreaseOverallHp(int Amount);
+
+	CCharacterCore& GetCharacterCore();
+	bool m_FirstShot;
+	vec2 m_FirstShotCoord;
+	int m_BarrierHintID;
+	array<int> m_BarrierHintIDs;
 	// INFCROYA END ------------------------------------------------------------//
 
 private:

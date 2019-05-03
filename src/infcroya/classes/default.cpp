@@ -27,16 +27,20 @@ void CDefault::InitialWeaponsHealth(CCharacter* pChr)
 
 void CDefault::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCharacter* pChr)
 {
+	int ClientID = pChr->GetPlayer()->GetCID();
+	CGameWorld* pGameWorld = pChr->GameWorld();
+	CGameContext* pGameServer = pChr->GameServer();
+
 	switch (Weapon) {
 	case WEAPON_GUN: {
-		new CProjectile(pChr->GameWorld(), WEAPON_GUN,
-			pChr->GetPlayer()->GetCID(),
+		new CProjectile(pGameWorld, WEAPON_GUN,
+			ClientID,
 			ProjStartPos,
 			Direction,
-			(int)(pChr->Server()->TickSpeed() * pChr->GameServer()->Tuning()->m_GunLifetime),
+			(int)(pChr->Server()->TickSpeed() * pGameServer->Tuning()->m_GunLifetime),
 			g_pData->m_Weapons.m_Gun.m_pBase->m_Damage, false, 0, -1, WEAPON_GUN);
 
-		pChr->GameServer()->CreateSound(pChr->GetPos(), SOUND_GUN_FIRE);
+		pGameServer->CreateSound(pChr->GetPos(), SOUND_GUN_FIRE);
 	} break;
 	}
 }

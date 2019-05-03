@@ -57,6 +57,13 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	// INFCROYA BEGIN ------------------------------------------------------------
 	m_Infected = false;
 	m_HeartID = Server()->SnapNewID();
+	m_FirstShot = true;
+	m_BarrierHintID = Server()->SnapNewID();
+	m_BarrierHintIDs.set_size(2);
+	for (int i = 0; i < 2; i++)
+	{
+		m_BarrierHintIDs[i] = Server()->SnapNewID();
+	}
 	// INFCROYA END ------------------------------------------------------------//
 }
 
@@ -103,6 +110,15 @@ void CCharacter::Destroy()
 	if (m_HeartID >= 0) {
 		Server()->SnapFreeID(m_HeartID);
 		m_HeartID = -1;
+	}
+	if (m_BarrierHintID >= 0) {
+		Server()->SnapFreeID(m_BarrierHintID);
+		for (int i = 0; i < 2; i++)
+		{
+			if (m_BarrierHintIDs[i] >= 0) {
+				Server()->SnapFreeID(m_BarrierHintIDs[i]);
+			}
+		}
 	}
 	// INFCROYA END ------------------------------------------------------------//
 }
@@ -620,6 +636,11 @@ bool CCharacter::IncreaseOverallHp(int Amount)
 	}
 	return success;
 }
+
+CCharacterCore& CCharacter::GetCharacterCore()
+{
+	return m_Core;
+}
 // INFCROYA END ------------------------------------------------------------//
 
 void CCharacter::OnPredictedInput(CNetObj_PlayerInput *pNewInput)
@@ -976,6 +997,18 @@ void CCharacter::Snap(int SnappingClient)
 		pP->m_X = (int)m_Pos.x;
 		pP->m_Y = (int)m_Pos.y - 60.0;
 		pP->m_Type = PICKUP_HEALTH;
+	}
+	if (!m_FirstShot)
+	{
+		CNetObj_Laser* pObj = static_cast<CNetObj_Laser*>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_BarrierHintID, sizeof(CNetObj_Laser)));
+		if (!pObj)
+			return;
+
+		pObj->m_X = (int)m_FirstShotCoord.x;
+		pObj->m_Y = (int)m_FirstShotCoord.y;
+		pObj->m_FromX = (int)m_FirstShotCoord.x;
+		pObj->m_FromY = (int)m_FirstShotCoord.y;
+		pObj->m_StartTick = Server()->Tick();
 	}
 	// INFCROYA END ------------------------------------------------------------//
 }
