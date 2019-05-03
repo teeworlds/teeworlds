@@ -18,7 +18,7 @@
 
 #include "menus.h"
 #include "chat.h"
-
+#include "binds.h"
 
 CChat::CChat()
 {
@@ -418,7 +418,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 
 	//Handle Chat Buffer
-	if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
+	if((Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER)) || !m_Input.GetLength())
 	{
 		ClearChatBuffer();
 	}
@@ -643,6 +643,18 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 	}
 }
 
+const char* CChat::GetCommandName(int Mode)
+{
+	switch(Mode)
+	{
+		case CHAT_ALL: return "chat all";
+		case CHAT_WHISPER: return "chat whisper";
+		case CHAT_TEAM: return "chat team";
+		default: break;
+	}
+	return "";
+}
+
 void CChat::OnRender()
 {
 	if(Client()->State() == Client()->STATE_LOADING)
@@ -672,20 +684,26 @@ void CChat::OnRender()
 	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
 	float x = 12.0f;
 	float y = Height-20.0f;
-	const int LocalCID = m_pClient->m_LocalClientID;
-	const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[LocalCID];
-	const int LocalTteam = LocalClient.m_Team;
+
 	// bool showCommands;
 	float CategoryWidth = 0;
 
 	if(m_Mode == CHAT_WHISPER && !m_pClient->m_aClients[m_WhisperTarget].m_Active)
 		m_Mode = CHAT_NONE;
-	else if(m_Mode != CHAT_NONE)
+	else if(m_Mode != CHAT_NONE || m_ChatBufferMode != CHAT_NONE)
 	{
+		//Set ChatMode and alpha blend for buffered chat
+		int ChatMode = m_Mode;
+		float Blend = 1.0f;
+		if(m_Mode == CHAT_NONE) {
+			ChatMode = m_ChatBufferMode;
+			Blend = 0.5f;
+		}
+
 		// calculate category text size
 		// TODO: rework TextRender. Writing the same code twice to calculate a simple thing as width is ridiculus
 		float CategoryHeight;
-		const float IconOffsetX = m_Mode == CHAT_WHISPER ? 6.0f : 0.0f;
+		const float IconOffsetX = ChatMode == CHAT_WHISPER ? 6.0f : 0.0f;
 		const float CategoryFontSize = 8.0f;
 		const float InputFontSize = 8.0f;
 		char aCatText[48];
@@ -694,16 +712,20 @@ void CChat::OnRender()
 			CTextCursor Cursor;
 			TextRender()->SetCursor(&Cursor, x, y, CategoryFontSize, 0);
 
-			if(m_Mode == CHAT_ALL)
+			if(ChatMode == CHAT_ALL)
 				str_copy(aCatText, Localize("All"), sizeof(aCatText));
-			else if(m_Mode == CHAT_TEAM)
+			else if(ChatMode == CHAT_TEAM)
 			{
+				const int LocalCID = m_pClient->m_LocalClientID;
+				const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[LocalCID];
+				const int LocalTteam = LocalClient.m_Team;
+
 				if(LocalTteam == TEAM_SPECTATORS)
 					str_copy(aCatText, Localize("Spectators"), sizeof(aCatText));
 				else
 					str_copy(aCatText, Localize("Team"), sizeof(aCatText));
 			}
-			else if(m_Mode == CHAT_WHISPER)
+			else if(ChatMode == CHAT_WHISPER)
 			{
 				CategoryWidth += RenderTools()->GetClientIdRectSize(CategoryFontSize);
 				str_format(aCatText, sizeof(aCatText), "%s",m_pClient->m_aClients[m_WhisperTarget].m_aName);
@@ -718,14 +740,14 @@ void CChat::OnRender()
 		}
 
 		// draw a background box
-		const vec4 CRCWhite(1.0f, 1.0f, 1.0f, 0.25f);
-		const vec4 CRCTeam(0.4f, 1.0f, 0.4f, 0.4f);
-		const vec4 CRCWhisper(0.0f, 0.5f, 1.0f, 0.5f);
+		const vec4 CRCWhite(1.0f, 1.0f, 1.0f, 0.25f*Blend);
+		const vec4 CRCTeam(0.4f, 1.0f, 0.4f, 0.4f*Blend);
+		const vec4 CRCWhisper(0.0f, 0.5f, 1.0f, 0.5f*Blend);
 
 		vec4 CatRectColor = CRCWhite;
-		if(m_Mode == CHAT_TEAM)
+		if(ChatMode == CHAT_TEAM)
 			CatRectColor = CRCTeam;
-		else if(m_Mode == CHAT_WHISPER)
+		else if(ChatMode == CHAT_WHISPER)
 			CatRectColor = CRCWhisper;
 
 		CUIRect CatRect;
@@ -739,7 +761,7 @@ void CChat::OnRender()
 		Graphics()->WrapClamp();
 		IGraphics::CQuadItem QuadIcon;
 
-		if(m_Mode == CHAT_WHISPER)
+		if(ChatMode == CHAT_WHISPER)
 		{
 			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
 			Graphics()->QuadsBegin();
@@ -754,7 +776,7 @@ void CChat::OnRender()
 			QuadIcon = IGraphics::CQuadItem(1.0f, y, 10.f, 10.0f);
 		}
 
-		Graphics()->SetColor(1, 1, 1, 1);
+		Graphics()->SetColor(1, 1, 1, 1.0f*Blend);
 		Graphics()->QuadsDrawTL(&QuadIcon, 1);
 		Graphics()->QuadsEnd();
 		Graphics()->WrapNormal();
@@ -765,7 +787,11 @@ void CChat::OnRender()
 		Cursor.m_LineWidth = Width-190.0f;
 		Cursor.m_MaxLines = 2;
 
-		if(m_Mode == CHAT_WHISPER)
+		//make buffered chat name transparent
+		if(m_Mode == CHAT_NONE)
+			TextRender()->TextColor(1, 1, 1, 0.5f);
+
+		if(ChatMode == CHAT_WHISPER)
 			RenderTools()->DrawClientID(TextRender(), &Cursor, m_WhisperTarget);
 		TextRender()->TextEx(&Cursor, aCatText, -1);
 
@@ -786,6 +812,7 @@ void CChat::OnRender()
 			{
 				CTextCursor Temp = Cursor;
 				Temp.m_Flags = 0;
+
 				TextRender()->TextEx(&Temp, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
 				TextRender()->TextEx(&Temp, "|", -1);
 				while(Temp.m_LineCount > 2)
@@ -800,12 +827,50 @@ void CChat::OnRender()
 			m_InputUpdate = false;
 		}
 
-		TextRender()->TextEx(&Cursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
-		static float MarkerOffset = TextRender()->TextWidth(0, 8.0f, "|", -1, -1.0f)/3;
-		CTextCursor Marker = Cursor;
-		Marker.m_X -= MarkerOffset;
-		TextRender()->TextEx(&Marker, "|", -1);
-		TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
+		//render buffered text
+		if(m_Mode == CHAT_NONE) {
+			//truncate text to 29 chars
+			char aText[30];
+			str_copy(aText, m_Input.GetString(), sizeof(aText));
+
+			//add dots when string excesses length
+			if(m_Input.GetLength() >= (int)(sizeof(aText))-2)
+			{
+				for(int i = 0; i < 3; ++i)
+				{
+					aText[sizeof(aText)-2-i] = '.';
+				}
+			}
+			aText[29] = 0;
+
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+			TextRender()->TextEx(&Cursor, aText, -1);
+
+			//render helper annotation
+			CTextCursor InfoCursor;
+			TextRender()->SetCursor(&InfoCursor, 2.0f, y+12.0f, CategoryFontSize*0.75, TEXTFLAG_RENDER);
+
+			//find keyname and format text
+			char aKeyName[64];
+			m_pClient->m_pBinds->GetKey(GetCommandName(m_ChatBufferMode), aKeyName, sizeof(aKeyName));
+
+			char aInfoText[128];
+			str_format(aInfoText, sizeof(aInfoText), "Press %s to resume chatting", aKeyName);
+
+			TextRender()->TextColor(1, 1, 1, Blend);
+			TextRender()->TextEx(&InfoCursor, aInfoText, -1);
+		}
+		else
+		{
+			//Render normal text
+			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
+			static float MarkerOffset = TextRender()->TextWidth(0, 8.0f, "|", -1, -1.0f)/3;
+			CTextCursor Marker = Cursor;
+			Marker.m_X -= MarkerOffset;
+
+			TextRender()->TextEx(&Marker, "|", -1);
+			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
+		}
 	}
 
 	y -= 8.0f;
