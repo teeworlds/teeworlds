@@ -1368,6 +1368,20 @@ int str_isspace(char c);
 char str_uppercase(char c);
 unsigned str_quickhash(const char *str);
 
+/*
+	Function: str_utf8_skip_whitespaces
+		Skips leading utf8 whitespace characters.
+
+	Parameters:
+		str - Pointer to the string.
+
+	Returns:
+		Pointer to the first non-whitespace character found
+		within the string.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
 char *str_utf8_skip_whitespaces(char *str);
 
 /*
