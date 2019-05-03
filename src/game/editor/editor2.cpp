@@ -4341,7 +4341,7 @@ bool CEditor2::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, 
 	if(pInputState->m_Selected && fmod(m_LocalTime - s_StartBlinkTime, 1.0f) < 0.5f)
 	{
 		const float OffY = (Rect.h - FontSize - 3.0f) * 0.5f; // see DrawText
-		float w = TextRender()->TextWidth(0, FontSize, pText, pInputState->m_CursorPos);
+		float w = TextRender()->TextWidth(0, FontSize, pText, pInputState->m_CursorPos, -1);
 		CUIRect CursorRect = Rect;
 		CursorRect.x += w + OffY;
 		CursorRect.y += 2;

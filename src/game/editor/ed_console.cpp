@@ -93,8 +93,7 @@ void CEditorConsoleUI::Render()
 							   vec4(1, 1, 1, 1));
 
 	// cursor line |
-	float w = TextRender()->TextWidth(0, FontSize, m_LineInput.GetString(), m_LineInput.GetCursorOffset()) +
-		TextRender()->TextWidth(0, FontSize, "> ", 2);
+	float w = TextRender()->TextWidth(0, FontSize, m_LineInput.GetString(), m_LineInput.GetCursorOffset(), -1) + TextRender()->TextWidth(0, FontSize, "> ", 2, -1);
 	CUIRect CursorRect = InputRect;
 	CursorRect.x += w + InputMargin;
 	CursorRect.y += 2;
