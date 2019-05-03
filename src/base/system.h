@@ -1369,6 +1369,18 @@ char str_uppercase(char c);
 unsigned str_quickhash(const char *str);
 
 /*
+	Function: str_utf8_is_whitespace
+		Check if the unicode is an utf8 whitespace.
+
+	Parameters:
+		code - unicode.
+
+	Returns:
+		Returns 1 on success, 0 on failure.
+*/
+int str_utf8_is_whitespace(int code);
+
+/*
 	Function: str_utf8_skip_whitespaces
 		Skips leading utf8 whitespace characters.
 
