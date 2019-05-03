@@ -614,7 +614,7 @@ static const int* SnapSearchKey(const int* pKeysStart, const int* pKeysEnd, int 
 	int MiddleIndex = (pKeysEnd - pKeysStart) / 2;
 	int Middle = pKeysStart[MiddleIndex];
 	if(MiddleIndex == 0)
-		return Middle == Key ? pKeysStart + MiddleIndex : 0x0;
+		return Middle == Key ? pKeysStart : 0x0;
 	if(Middle > Key)
 		return SnapSearchKey(pKeysStart, pKeysStart+MiddleIndex, Key);
 	if(Middle < Key)
