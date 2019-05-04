@@ -695,7 +695,8 @@ void CChat::OnRender()
 		//Set ChatMode and alpha blend for buffered chat
 		int ChatMode = m_Mode;
 		float Blend = 1.0f;
-		if(m_Mode == CHAT_NONE) {
+		if(m_Mode == CHAT_NONE)
+		{
 			ChatMode = m_ChatBufferMode;
 			Blend = 0.5f;
 		}
@@ -828,22 +829,24 @@ void CChat::OnRender()
 		}
 
 		//render buffered text
-		if(m_Mode == CHAT_NONE) {
-			//truncate text to 29 chars
-			char aText[30];
+		if(m_Mode == CHAT_NONE)
+		{
+			//truncate text to 28 chars
+			const int WidthLimit = 28;
+			char aText[29];//WidthLimit+1
 			str_copy(aText, m_Input.GetString(), sizeof(aText));
 
 			//add dots when string excesses length
-			if(m_Input.GetLength() >= (int)(sizeof(aText))-2)
+			if(m_Input.GetLength() > WidthLimit)
 			{
 				for(int i = 0; i < 3; ++i)
 				{
-					aText[sizeof(aText)-2-i] = '.';
+					aText[WidthLimit-i-1] = '.';
 				}
 			}
-			aText[29] = 0;
+			aText[WidthLimit] = 0;
 
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
 			TextRender()->TextEx(&Cursor, aText, -1);
 
 			//render helper annotation
@@ -855,9 +858,7 @@ void CChat::OnRender()
 			m_pClient->m_pBinds->GetKey(GetCommandName(m_ChatBufferMode), aKeyName, sizeof(aKeyName));
 
 			char aInfoText[128];
-			str_format(aInfoText, sizeof(aInfoText), "Press %s to resume chatting", aKeyName);
-
-			TextRender()->TextColor(1, 1, 1, Blend);
+			str_format(aInfoText, sizeof(aInfoText), Localize("Press %s to resume chatting"), aKeyName);
 			TextRender()->TextEx(&InfoCursor, aInfoText, -1);
 		}
 		else
