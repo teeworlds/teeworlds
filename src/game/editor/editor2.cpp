@@ -93,6 +93,17 @@ inline u32 fnv1a32(const void* data, u32 dataSize)
 	return hash;
 }
 
+// increase size and zero out / construct new items
+template<typename T>
+inline void ArraySetSizeZero(array<T>* pArray, int NewSize)
+{
+	const int OldElementCount = pArray->size();
+	pArray->set_size(NewSize);
+	const int Diff = pArray->size() - OldElementCount;
+	for(int i = 0; i < Diff; i++)
+		(*pArray)[i+OldElementCount] = T();
+}
+
 void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pConsole)
 {
 	m_pGraphics = pGraphics;
@@ -2836,21 +2847,22 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	const int GroupCount = m_Map.m_aGroups.Count();
 	const int TotalLayerCount = m_Map.m_aLayers.Count();
 
-	static CDynArraySB<CUIButton, 64> s_UiGroupButState;
-	static CDynArraySB<CUIButton, 64> s_UiGroupShowButState;
-	static CDynArraySB<CUIButton, 128> s_UiLayerButState;
-	static CDynArraySB<CUIButton, 128> s_UiLayerShowButState;
+	static array<CUIButton> s_UiGroupButState;
+	static array<CUIButton> s_UiGroupShowButState;
+	static array<CUIButton> s_UiLayerButState;
+	static array<CUIButton> s_UiLayerShowButState;
 
-	s_UiGroupButState.set_size_zero(GroupCount);
-	s_UiGroupShowButState.set_size_zero(GroupCount);
-	s_UiLayerButState.set_size_zero(TotalLayerCount);
-	s_UiLayerShowButState.set_size_zero(TotalLayerCount);
+	ArraySetSizeZero(&s_UiGroupButState, GroupCount);
+	ArraySetSizeZero(&s_UiGroupButState, GroupCount);
+	ArraySetSizeZero(&s_UiGroupShowButState, GroupCount);
+	ArraySetSizeZero(&s_UiLayerButState, TotalLayerCount);
+	ArraySetSizeZero(&s_UiLayerShowButState, TotalLayerCount);
 
-	m_UiGroupOpen.set_size_zero(GroupCount);
-	m_UiGroupHidden.set_size_zero(GroupCount);
-	m_UiGroupHovered.set_size_zero(GroupCount);
-	m_UiLayerHovered.set_size_zero(TotalLayerCount);
-	m_UiLayerHidden.set_size_zero(TotalLayerCount);
+	ArraySetSizeZero(&m_UiGroupOpen, GroupCount);
+	ArraySetSizeZero(&m_UiGroupHidden, GroupCount);
+	ArraySetSizeZero(&m_UiGroupHovered, GroupCount);
+	ArraySetSizeZero(&m_UiLayerHovered, TotalLayerCount);
+	ArraySetSizeZero(&m_UiLayerHidden, TotalLayerCount);
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOff(0, 0);
@@ -5000,12 +5012,12 @@ void CEditor2::OnMapLoaded()
 {
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
-	mem_zero(m_UiGroupHidden.base_ptr(), sizeof(m_UiGroupHidden[0]) * m_UiGroupHidden.capacity());
+	mem_zero(m_UiGroupHidden.base_ptr(), sizeof(m_UiGroupHidden[0]) * m_UiGroupHidden.size());
 	m_UiGroupOpen.set_size(m_Map.m_aGroups.Count());
-	mem_zero(m_UiGroupOpen.base_ptr(), sizeof(m_UiGroupOpen[0]) * m_UiGroupOpen.capacity());
+	mem_zero(m_UiGroupOpen.base_ptr(), sizeof(m_UiGroupOpen[0]) * m_UiGroupOpen.size());
 	m_UiGroupOpen[m_Map.m_GameGroupID] = true;
-	mem_zero(m_UiLayerHidden.base_ptr(), sizeof(m_UiLayerHidden[0]) * m_UiLayerHidden.capacity());
-	mem_zero(m_UiLayerHovered.base_ptr(), sizeof(m_UiLayerHovered[0]) * m_UiLayerHovered.capacity());
+	mem_zero(m_UiLayerHidden.base_ptr(), sizeof(m_UiLayerHidden[0]) * m_UiLayerHidden.size());
+	mem_zero(m_UiLayerHovered.base_ptr(), sizeof(m_UiLayerHovered[0]) * m_UiLayerHovered.size());
 	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
 	ResetCamera();
 	BrushClear();

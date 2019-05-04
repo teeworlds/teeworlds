@@ -305,70 +305,6 @@ struct CDynArray
 	}
 };
 
-// Dynamic Array Stack-based
-template<typename T, int BASE_COUNT, class ALLOCATOR = allocator_default<T> >
-class CDynArraySB: public array<T, ALLOCATOR>
-{
-	typedef array<T, ALLOCATOR> ParentT;
-	T m_BaseData[BASE_COUNT];
-
-public:
-
-	CDynArraySB(): ParentT()
-	{
-		ParentT::list = m_BaseData;
-		ParentT::list_size = BASE_COUNT;
-	}
-
-	~CDynArraySB()
-	{
-		if(ParentT::list == m_BaseData)
-			ParentT::list = 0x0;
-	}
-
-	// never used anywhere
-	void delete_all()
-	{
-		if(ParentT::list == m_BaseData)
-		{
-			for(int i = 0; i < ParentT::size(); i++)
-				delete ParentT::list[i];
-			clear();
-		}
-		else
-			ParentT::delete_all();
-	}
-
-	void clear()
-	{
-		if(ParentT::list == m_BaseData)
-		{
-			ParentT::list_size = BASE_COUNT;
-			ParentT::num_elements = 0;
-		}
-		else
-			ParentT::clear();
-	}
-
-	void alloc(int new_len)
-	{
-		if(ParentT::list == m_BaseData)
-			ParentT::list = 0x0;
-		ParentT::alloc(new_len);
-	}
-
-	void set_size_zero(int new_size)
-	{
-		const int OldElementCount = ParentT::num_elements;
-		ParentT::set_size(new_size);
-		const int Diff = ParentT::num_elements - OldElementCount;
-		for(int i = 0; i < Diff; i++)
-			ParentT::list[i+OldElementCount] = T();
-	}
-
-	inline int capacity() const { return ParentT::list_size; }
-};
-
 struct CEditorMap2
 {
 	enum
@@ -654,11 +590,11 @@ class CEditor2: public IEditor
 
 	CUIRect m_UiScreenRect;
 	CUIRect m_UiMainViewRect;
-	CDynArraySB<u8, 64> m_UiGroupOpen;
-	CDynArraySB<u8, 64> m_UiGroupHidden;
-	CDynArraySB<u8, 64> m_UiGroupHovered;
-	CDynArraySB<u8, 128> m_UiLayerHovered;
-	CDynArraySB<u8, 128> m_UiLayerHidden;
+	array<u8> m_UiGroupOpen;
+	array<u8> m_UiGroupHidden;
+	array<u8> m_UiGroupHovered;
+	array<u8> m_UiLayerHovered;
+	array<u8> m_UiLayerHidden;
 	int m_UiSelectedLayerID = -1;
 	int m_UiSelectedGroupID = -1;
 	int m_UiSelectedImageID = -1;
