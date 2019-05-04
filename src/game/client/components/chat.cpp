@@ -684,6 +684,7 @@ void CChat::OnRender()
 	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
 	float x = 12.0f;
 	float y = Height-20.0f;
+	float LineWidth = 200.0f;
 
 	// bool showCommands;
 	float CategoryWidth = 0;
@@ -789,8 +790,7 @@ void CChat::OnRender()
 		Cursor.m_MaxLines = 2;
 
 		//make buffered chat name transparent
-		if(m_Mode == CHAT_NONE)
-			TextRender()->TextColor(1, 1, 1, 0.5f);
+		TextRender()->TextColor(1, 1, 1, Blend);
 
 		if(ChatMode == CHAT_WHISPER)
 			RenderTools()->DrawClientID(TextRender(), &Cursor, m_WhisperTarget);
@@ -831,23 +831,29 @@ void CChat::OnRender()
 		//render buffered text
 		if(m_Mode == CHAT_NONE)
 		{
-			//truncate text to 28 chars
-			const int WidthLimit = 28;
-			char aText[29];//WidthLimit+1
-			str_copy(aText, m_Input.GetString(), sizeof(aText));
+			//calculate WidthLimit
+			float WidthLimit = LineWidth + x + 3.0f - Cursor.m_X;
+			float TextWidth = TextRender()->TextWidth(0, Cursor.m_FontSize, m_Input.GetString(), -1, -1);
 
 			//add dots when string excesses length
-			if(m_Input.GetLength() > WidthLimit)
-			{
-				for(int i = 0; i < 3; ++i)
-				{
-					aText[WidthLimit-i-1] = '.';
-				}
-			}
-			aText[WidthLimit] = 0;
-
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
-			TextRender()->TextEx(&Cursor, aText, -1);
+			if(TextWidth > WidthLimit)
+			{
+				float DotWidth = TextRender()->TextWidth(0, Cursor.m_FontSize, "...", -1, -1);
+
+				Cursor.m_Flags|=TEXTFLAG_STOP_AT_END;
+
+				//Limit the line width to append three dots
+				Cursor.m_LineWidth = WidthLimit-DotWidth;
+
+				TextRender()->TextEx(&Cursor, m_Input.GetString(), -1);
+
+				//Change line width back to default
+				Cursor.m_LineWidth = LineWidth;
+				TextRender()->TextEx(&Cursor, "...", -1);
+			}
+			else
+				TextRender()->TextEx(&Cursor, m_Input.GetString(), -1);
 
 			//render helper annotation
 			CTextCursor InfoCursor;
@@ -892,7 +898,6 @@ void CChat::OnRender()
 	ScoreboardRectFixed.w = ScoreboardRect.w/ScoreboardScreen.w * Width;
 	ScoreboardRectFixed.h = ScoreboardRect.h/ScoreboardScreen.h * Height;
 
-	float LineWidth = 200.0f;
 	float HeightLimit = m_Show ? 90.0f : 200.0f;
 
 	if(IsScoreboardActive)
