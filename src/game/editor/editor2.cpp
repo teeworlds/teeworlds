@@ -123,10 +123,10 @@ void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pCons
 	ed_log("m_GroupDispenser.AllocatedSize=%lldMb", m_GroupDispenser.AllocatedSize()/(1024*1024));
 	ed_log("m_EnvelopeDispenser.AllocatedSize=%lldMb", m_EnvelopeDispenser.AllocatedSize()/(1024*1024));
 
-	m_aEnvPoints.Init(&m_EnvPointDispenser);
-	m_aLayers.Init(&m_LayerDispenser);
-	m_aGroups.Init(&m_GroupDispenser);
-	m_aEnvelopes.Init(&m_EnvelopeDispenser);
+	m_aEnvPoints.hint_size(1024);
+	m_aLayers.hint_size(32);
+	m_aGroups.hint_size(16);
+	m_aEnvelopes.hint_size(32);
 
 	// speedtest
 #if 0
@@ -285,7 +285,7 @@ bool CEditorMap2::Save(const char* pFileName)
 	// save layers
 	for(int li = 0, gi = 0; gi < m_aGroups.Count(); gi++)
 	{
-		CGroup Group = m_aGroups[gi];
+		const CGroup& Group = m_aGroups[gi];
 		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", gi, Group.m_LayerCount, Group.m_OffsetX, Group.m_OffsetY);
 		// old feature
 		// if(!Group->m_SaveToMap)
@@ -322,7 +322,7 @@ bool CEditorMap2::Save(const char* pFileName)
 			if(m_aLayers[li].IsTileLayer())
 			{
 				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving tiles layer");
-				CLayer Layer = m_aLayers[li];
+				CLayer& Layer = m_aLayers[li];
 				// Layer.PrepareForSave();
 
 				ed_dbg("  Group#%d Layer=%d (w=%d, h=%d)", gi, li, Layer.m_Width, Layer.m_Height);
@@ -365,7 +365,7 @@ bool CEditorMap2::Save(const char* pFileName)
 			else if(m_aLayers[li].IsQuadLayer())
 			{
 				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving quads layer");
-				CLayer LayerQuad = m_aLayers[li];
+				CLayer& LayerQuad = m_aLayers[li];
 
 				ed_dbg("  Group#%d Quad=%d (w=%d, h=%d)", gi, li, LayerQuad.m_Width, LayerQuad.m_Height);
 
@@ -517,7 +517,7 @@ bool CEditorMap2::Load(const char* pFileName)
 				LayerTile.m_ColorEnvOffset = Tilemap.m_ColorEnvOffset;
 				LayerTile.m_Color = vec4(Tilemap.m_Color.r/255.f, Tilemap.m_Color.g/255.f,
 										 Tilemap.m_Color.b/255.f, Tilemap.m_Color.a/255.f);
-				LayerTile.m_aTiles = NewTileArray();
+				LayerTile.m_aTiles.Clear();
 
 				CTile *pTiles = (CTile *)File.GetData(Tilemap.m_Data);
 				int TileCount = Tilemap.m_Width*Tilemap.m_Height;
@@ -556,7 +556,7 @@ bool CEditorMap2::Load(const char* pFileName)
 				LayerQuad.m_ImageID = ItemQuadLayer.m_Image;
 
 				CQuad *pQuads = (CQuad *)File.GetData(ItemQuadLayer.m_Data);
-				LayerQuad.m_aQuads = NewQuadArray();
+				LayerQuad.m_aQuads.Clear();
 				LayerQuad.m_aQuads.Add(pQuads, ItemQuadLayer.m_NumQuads);
 
 				const int LayerID = m_aLayers.Count();
@@ -1230,7 +1230,7 @@ void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 			Layer.m_ColorEnvelopeID = SnapTilemap.m_ColorEnv;
 			Layer.m_Width = SnapTilemap.m_Width;
 			Layer.m_Height = SnapTilemap.m_Height;
-			Layer.m_aTiles = NewTileArray();
+			Layer.m_aTiles.Clear();
 			Layer.m_aTiles.Add(pSnapTiles, Layer.m_Width*Layer.m_Height);
 			pSnapTiles += Layer.m_Width*Layer.m_Height;
 		}
@@ -1240,7 +1240,7 @@ void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 			IntsToStr(SnapQuadLayer.m_aName, ARR_COUNT(SnapQuadLayer.m_aName), Layer.m_aName);
 			Layer.m_Type = LAYERTYPE_QUADS;
 			Layer.m_ImageID = SnapQuadLayer.m_Image;
-			Layer.m_aQuads = NewQuadArray();
+			Layer.m_aQuads.Clear();
 			Layer.m_aQuads.Add(pSnapQuads, SnapQuadLayer.m_NumQuads);
 			pSnapQuads += SnapQuadLayer.m_NumQuads;
 		}
@@ -1361,7 +1361,7 @@ CEditorMap2::CLayer& CEditorMap2::NewTileLayer(int Width, int Height)
 	TileLayer.m_Width = Width;
 	TileLayer.m_Height = Height;
 	TileLayer.m_ColorEnvelopeID = -1;
-	TileLayer.m_aTiles = NewTileArray();
+	TileLayer.m_aTiles.Clear();
 	TileLayer.m_aTiles.AddEmpty(TileLayer.m_Width * TileLayer.m_Height);
 	return m_aLayers.Add(TileLayer);
 }
@@ -1373,7 +1373,7 @@ CEditorMap2::CLayer&CEditorMap2::NewQuadLayer()
 	QuadLayer.m_Type = LAYERTYPE_QUADS;
 	QuadLayer.m_ImageID = -1;
 	QuadLayer.m_Color = vec4(1, 1, 1, 1);
-	QuadLayer.m_aQuads = NewQuadArray();
+	QuadLayer.m_aQuads.Clear();
 	return m_aLayers.Add(QuadLayer);
 }
 
@@ -1486,7 +1486,7 @@ void CEditor2::Init()
 	}
 
 	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
-	m_Brush.m_aTiles = m_Map.NewTileArray();
+	m_Brush.m_aTiles.Clear();
 
 	m_HistoryEntryDispenser.Init(MAX_HISTORY, 1);
 	m_pHistoryEntryCurrent = 0x0;
@@ -3685,7 +3685,7 @@ void CEditor2::RenderPopupBrushPalette()
 		EndX++;
 		EndY++;
 
-		CDynArray<CTile> aBrushTiles = m_Map.NewTileArray();
+		CDynArray<CTile> aBrushTiles;
 		const int Width = EndX - StartX;
 		const int Height = EndY - StartY;
 		aBrushTiles.AddEmpty(Width * Height);
@@ -4796,7 +4796,7 @@ void CEditor2::BrushFlipX()
 	const int BrushWidth = m_Brush.m_Width;
 	const int BrushHeight = m_Brush.m_Height;
 	CDynArray<CTile>& aTiles = m_Brush.m_aTiles;
-	CDynArray<CTile> aTilesCopy = m_Map.NewTileArray();
+	CDynArray<CTile> aTilesCopy;
 	aTilesCopy.Add(aTiles.Data(), aTiles.Count());
 
 	for(int ty = 0; ty < BrushHeight; ty++)
@@ -4818,7 +4818,7 @@ void CEditor2::BrushFlipY()
 	const int BrushWidth = m_Brush.m_Width;
 	const int BrushHeight = m_Brush.m_Height;
 	CDynArray<CTile>& aTiles = m_Brush.m_aTiles;
-	CDynArray<CTile> aTilesCopy = m_Map.NewTileArray();
+	CDynArray<CTile> aTilesCopy;
 	aTilesCopy.Add(aTiles.Data(), aTiles.Count());
 
 	for(int ty = 0; ty < BrushHeight; ty++)
@@ -4840,7 +4840,7 @@ void CEditor2::BrushRotate90Clockwise()
 	const int BrushWidth = m_Brush.m_Width;
 	const int BrushHeight = m_Brush.m_Height;
 	CDynArray<CTile>& aTiles = m_Brush.m_aTiles;
-	CDynArray<CTile> aTilesCopy = m_Map.NewTileArray();
+	CDynArray<CTile> aTilesCopy;
 	aTilesCopy.Add(aTiles.Data(), aTiles.Count());
 
 	for(int ty = 0; ty < BrushHeight; ty++)
@@ -4867,7 +4867,7 @@ void CEditor2::BrushRotate90CounterClockwise()
 	const int BrushWidth = m_Brush.m_Width;
 	const int BrushHeight = m_Brush.m_Height;
 	CDynArray<CTile>& aTiles = m_Brush.m_aTiles;
-	CDynArray<CTile> aTilesCopy = m_Map.NewTileArray();
+	CDynArray<CTile> aTilesCopy;
 	aTilesCopy.Add(aTiles.Data(), aTiles.Count());
 
 	for(int ty = 0; ty < BrushHeight; ty++)
@@ -4954,7 +4954,7 @@ void CEditor2::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int
 	const int Width = SelEndX - SelStartX;
 	const int Height = SelEndY - SelStartY;
 
-	CDynArray<CTile> aExtractTiles = m_Map.NewTileArray();
+	CDynArray<CTile> aExtractTiles;
 	aExtractTiles.AddEmpty(Width * Height);
 
 	const int LayerWidth = TileLayer.m_Width;

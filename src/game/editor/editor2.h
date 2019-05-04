@@ -203,105 +203,62 @@ public:
 };
 
 template<typename T>
-struct CDynArray
+struct CDynArray: public array<T>
 {
-	CChainAllocator<T>* m_pAllocator;
-	CMemBlock<T> m_MemBlock;
-	int m_EltCount;
+	typedef array<T> ParentT;
 
-	CDynArray()
+	inline T& Add(const T& Elt)
 	{
-		m_pAllocator = 0;
+		return Data()[ParentT::add(Elt)];
 	}
 
-	~CDynArray()
+	T& Add(const T* aElements, int EltCount)
 	{
-		Clear();
+		for(int i = 0; i < EltCount; i++)
+			ParentT::add(aElements[i]);
+		return *(Data()+Count()-EltCount);
 	}
 
-	void Init(CChainAllocator<T>* pAllocator)
+	T& AddEmpty(int EltCount)
 	{
-		dbg_assert(!m_pAllocator, "Init already called");
-		m_pAllocator = pAllocator;
-		m_MemBlock.m_pStart = 0;
-		m_MemBlock.m_Count = 0;
-		m_EltCount = 0;
-	}
-
-	void Reserve(int NewCapacity)
-	{
-		dbg_assert(m_pAllocator != 0, "Forgot to call Init");
-		if(NewCapacity <= Capacity())
-			return;
-		CMemBlock<T> NewBlock = m_pAllocator->Alloc(NewCapacity);
-		mem_copy(NewBlock.m_pStart, Data(), Capacity()*sizeof(T));
-		m_pAllocator->Dealloc(&m_MemBlock);
-		m_MemBlock = NewBlock;
-	}
-
-	inline T& Add(const T& Elt) { return Add(&Elt, 1); }
-
-	T& Add(const T* aElements, int Count)
-	{
-		if(m_EltCount+Count >= Capacity())
-			Reserve(max(Capacity() * 2, m_EltCount+Count));
-		mem_copy(Data()+m_EltCount, aElements, Count*sizeof(T));
-		m_EltCount += Count;
-		return *(Data()+m_EltCount-Count);
-	}
-
-	T& AddEmpty(int Count)
-	{
-		dbg_assert(Count > 0, "Add 0 or more");
-		if(m_EltCount+Count >= Capacity())
-			Reserve(max(Capacity() * 2, m_EltCount+Count));
-		mem_zero(Data()+m_EltCount, Count*sizeof(T));
-		m_EltCount += Count;
-		return *(Data()+m_EltCount-Count);
+		dbg_assert(EltCount > 0, "Add 0 or more");
+		for(int i = 0; i < EltCount; i++)
+			ParentT::add(T());
+		return *(Data()+Count()-EltCount);
 	}
 
 	inline void Clear()
 	{
-		for(int i = 0; i < m_EltCount; i++)
-			Data()[i].~T();
-		m_pAllocator->Dealloc(&m_MemBlock);
-		m_MemBlock.m_pStart = 0;
-		m_MemBlock.m_Count = 0;
-		m_EltCount = 0;
+		clear();
 	}
 
 	inline void RemoveByIndex(int Index)
 	{
-		dbg_assert(Index >= 0 && Index < m_EltCount, "Index out of bounds");
-		Data()[Index].~T();
-		Data()[Index] = Data()[m_EltCount-1];
-		m_EltCount--;
+		dbg_assert(Index >= 0 && Index < Count(), "Index out of bounds");
+		ParentT::remove_index_fast(Index);
 	}
 
 	// keeps order, way slower
 	inline void RemoveByIndexSlide(int Index)
 	{
-		dbg_assert(Index >= 0 && Index < m_EltCount, "Index out of bounds");
-		Data()[Index].~T();
-		memmove(Data()+Index, Data()+Index+1, (m_EltCount-(Index+1))*sizeof(T));
-		m_EltCount--;
+		dbg_assert(Index >= 0 && Index < Count(), "Index out of bounds");
+		ParentT::remove_index(Index);
 	}
 
-	inline int Count() const { return m_EltCount; }
-	inline int Capacity() const { return m_MemBlock.m_Count; }
-	inline T* Data() { return m_MemBlock.m_pStart; }
-	inline const T* Data() const { return m_MemBlock.m_pStart; }
+	inline int Count() const { return ParentT::size(); }
+	inline T* Data() { return ParentT::base_ptr(); }
+	inline const T* Data() const { return ParentT::base_ptr(); }
 
 	inline T& operator[] (int Index)
 	{
-		dbg_assert(Index >= 0 && Index < m_EltCount, "Index out of bounds");
-		return m_MemBlock.m_pStart[Index];
+		dbg_assert(Index >= 0 && Index < ParentT::size(), "Index out of bounds");
+		return Data()[Index];
 	}
 
 	inline const T& operator[] (int Index) const
 	{
-		dbg_assert(Index >= 0 && Index < m_EltCount, "Index out of bounds");
-		return m_MemBlock.m_pStart[Index];
+		dbg_assert(Index >= 0 && Index < ParentT::size(), "Index out of bounds");
+		return Data()[Index];
 	}
 };
 
@@ -323,11 +280,9 @@ struct CEditorMap2
 		vec4 m_Color;
 
 		// NOTE: we have to split the union because gcc doesn't like non-POD anonymous structs...
-		union
-		{
-			CDynArray<CTile> m_aTiles;
-			CDynArray<CQuad> m_aQuads;
-		};
+
+		CDynArray<CTile> m_aTiles;
+		CDynArray<CQuad> m_aQuads;
 
 		union
 		{
@@ -345,8 +300,6 @@ struct CEditorMap2
 			};
 		};
 
-		CLayer(){}
-		~CLayer(){}
 		inline bool IsTileLayer() const { return m_Type == LAYERTYPE_TILES; }
 		inline bool IsQuadLayer() const { return m_Type == LAYERTYPE_QUADS; }
 	};
@@ -478,20 +431,6 @@ struct CEditorMap2
 #ifdef CONF_DEBUG
 	void CompareSnapshot(const CSnapshot* pSnapshot);
 #endif
-
-	inline CDynArray<CTile> NewTileArray()
-	{
-		CDynArray<CTile> Array;
-		Array.Init(&m_TileDispenser);
-		return Array;
-	}
-
-	inline CDynArray<CQuad> NewQuadArray()
-	{
-		CDynArray<CQuad> Array;
-		Array.Init(&m_QuadDispenser);
-		return Array;
-	}
 
 	CLayer& NewTileLayer(int Width, int Height);
 	CLayer& NewQuadLayer();

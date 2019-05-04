@@ -321,7 +321,7 @@ protected:
 		}
 	}
 
-	virtual void alloc(int new_len)
+	void alloc(int new_len)
 	{
 		list_size = new_len;
 		T *new_list = ALLOCATOR::alloc_array(list_size);
