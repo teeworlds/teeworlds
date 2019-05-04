@@ -839,7 +839,7 @@ void CChat::OnRender()
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
 			if(TextWidth > WidthLimit)
 			{
-				float DotWidth = TextRender()->TextWidth(0, Cursor.m_FontSize, "...", -1, -1);
+				const static float DotWidth = TextRender()->TextWidth(0, Cursor.m_FontSize, "...", -1, -1);
 
 				Cursor.m_Flags|=TEXTFLAG_STOP_AT_END;
 
