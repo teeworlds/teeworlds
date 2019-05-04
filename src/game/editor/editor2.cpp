@@ -95,7 +95,7 @@ inline u32 fnv1a32(const void* data, u32 dataSize)
 
 // increase size and zero out / construct new items
 template<typename T>
-inline void ArraySetSizeZero(array<T>* pArray, int NewSize)
+inline void ArraySetSizeAndZero(array<T>* pArray, int NewSize)
 {
 	const int OldElementCount = pArray->size();
 	pArray->set_size(NewSize);
@@ -2852,17 +2852,17 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	static array<CUIButton> s_UiLayerButState;
 	static array<CUIButton> s_UiLayerShowButState;
 
-	ArraySetSizeZero(&s_UiGroupButState, GroupCount);
-	ArraySetSizeZero(&s_UiGroupButState, GroupCount);
-	ArraySetSizeZero(&s_UiGroupShowButState, GroupCount);
-	ArraySetSizeZero(&s_UiLayerButState, TotalLayerCount);
-	ArraySetSizeZero(&s_UiLayerShowButState, TotalLayerCount);
+	ArraySetSizeAndZero(&s_UiGroupButState, GroupCount);
+	ArraySetSizeAndZero(&s_UiGroupButState, GroupCount);
+	ArraySetSizeAndZero(&s_UiGroupShowButState, GroupCount);
+	ArraySetSizeAndZero(&s_UiLayerButState, TotalLayerCount);
+	ArraySetSizeAndZero(&s_UiLayerShowButState, TotalLayerCount);
 
-	ArraySetSizeZero(&m_UiGroupOpen, GroupCount);
-	ArraySetSizeZero(&m_UiGroupHidden, GroupCount);
-	ArraySetSizeZero(&m_UiGroupHovered, GroupCount);
-	ArraySetSizeZero(&m_UiLayerHovered, TotalLayerCount);
-	ArraySetSizeZero(&m_UiLayerHidden, TotalLayerCount);
+	ArraySetSizeAndZero(&m_UiGroupOpen, GroupCount);
+	ArraySetSizeAndZero(&m_UiGroupHidden, GroupCount);
+	ArraySetSizeAndZero(&m_UiGroupHovered, GroupCount);
+	ArraySetSizeAndZero(&m_UiLayerHovered, TotalLayerCount);
+	ArraySetSizeAndZero(&m_UiLayerHidden, TotalLayerCount);
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOff(0, 0);
