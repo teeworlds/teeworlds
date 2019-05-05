@@ -25,7 +25,7 @@ public:
 
 	void OnCharacterSpawn(CCharacter* pChr);
 	void OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon);
-	void OnKill(int Killer);
+	void OnKill(int Victim);
 
 	void OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon); // called in CCharacter::FireWeapon
 	void OnButtonF3(); // called in CGameContext::OnMessage { ... else if(MsgID == NETMSGTYPE_CL_VOTE) }

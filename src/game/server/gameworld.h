@@ -42,6 +42,7 @@ public:
 		ENTTYPE_LASER_TELEPORT,
 		ENTTYPE_TURRET,
 		ENTTYPE_PLASMA,
+		ENTTYPE_GROWINGEXPLOSION,
 		// INFCROYA END ------------------------------------------------------------//
 
 		NUM_ENTTYPES

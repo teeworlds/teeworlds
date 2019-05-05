@@ -15,6 +15,10 @@
 #include <infcroya/croyaplayer.h>
 #include <infcroya/classes/class.h>
 #include <game/server/eventhandler.h>
+#include <infcroya/entities/engineer-wall.h>
+#include <infcroya/entities/biologist-mine.h>
+#include <infcroya/entities/soldier-bomb.h>
+#include <infcroya/entities/scientist-mine.h>
 // INFCROYA END ------------------------------------------------------------//
 
 //input count
@@ -66,6 +70,10 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 			m_BarrierHintIDs[i] = Server()->SnapNewID();
 		}
 	}
+	
+	m_IsFrozen = false;
+	m_FrozenTime = -1;
+	m_PoisonTick = 0;
 	// INFCROYA END ------------------------------------------------------------//
 }
 
@@ -76,7 +84,13 @@ void CCharacter::Reset()
 
 bool CCharacter::Spawn(CPlayer *pPlayer, vec2 Pos)
 {
-	SetNormalEmote(EMOTE_NORMAL); // INFCROYA RELATED
+	// INFCROYA BEGIN ------------------------------------------------------------
+	SetNormalEmote(EMOTE_NORMAL);
+	m_IsFrozen = false;
+	m_FrozenTime = -1;
+	m_Poison = 0;
+	SetHookProtected(true); // both humans and zombies hook protected by default
+	// INFCROYA END ------------------------------------------------------------//
 	m_EmoteStop = -1;
 	m_LastAction = -1;
 	m_LastNoAmmoSound = -1;
@@ -124,6 +138,7 @@ void CCharacter::Destroy()
 			}
 		}
 	}
+	DestroyChildEntities();
 	// INFCROYA END ------------------------------------------------------------//
 }
 
@@ -478,7 +493,7 @@ void CCharacter::FireWeapon()
 		{
 			// INFCROYA BEGIN ------------------------------------------------------------
 			if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
-				m_pCroyaPlayer->OnWeaponFire(Direction, ProjStartPos, WEAPON_GRENADE);
+				m_pCroyaPlayer->OnWeaponFire(Direction, ProjStartPos, WEAPON_NINJA);
 			}
 			else {
 				// reset Hit objects
@@ -597,6 +612,7 @@ bool CCharacter::IsInfected() const
 
 void CCharacter::SetInfected(bool Infected) {
 	m_Infected = Infected;
+	m_Core.m_Infected = Infected;
 }
 
 void CCharacter::SetCroyaPlayer(CroyaPlayer* CroyaPlayer) {
@@ -633,8 +649,8 @@ void CCharacter::SetNumObjectsHit(int NumObjectsHit)
 
 void CCharacter::Infect(int From)
 {
+	GameServer()->m_apPlayers[From]->GetCroyaPlayer()->OnKill(GetPlayer()->GetCID()); // do that before you actually turn someone into a zombie
 	GetCroyaPlayer()->TurnIntoRandomZombie();
-	GetCroyaPlayer()->OnKill(From);
 }
 
 bool CCharacter::IncreaseOverallHp(int Amount)
@@ -658,6 +674,62 @@ bool CCharacter::IncreaseOverallHp(int Amount)
 CCharacterCore& CCharacter::GetCharacterCore()
 {
 	return m_Core;
+}
+
+void CCharacter::Freeze(float Time, int Player, int Reason)
+{
+	//if (m_IsFrozen && m_FreezeReason == FREEZEREASON_UNDEAD)
+	//	return;
+
+	m_IsFrozen = true;
+	m_FrozenTime = Server()->TickSpeed() * Time;
+	m_FreezeReason = Reason;
+
+	m_LastFreezer = Player;
+}
+void CCharacter::Poison(int Count, int From)
+{
+	if (m_Poison <= 0)
+	{
+		m_PoisonTick = 0;
+		m_Poison = Count;
+		m_PoisonFrom = From;
+	}
+}
+
+void CCharacter::DestroyChildEntities()
+{
+	for (CEngineerWall* pWall = (CEngineerWall*)GameWorld()->FindFirst(CGameWorld::ENTTYPE_ENGINEER_WALL); pWall; pWall = (CEngineerWall*)pWall->TypeNext())
+	{
+		if (pWall->m_Owner != m_pPlayer->GetCID()) continue;
+		GameServer()->m_World.DestroyEntity(pWall);
+	}
+	for (CSoldierBomb* pBomb = (CSoldierBomb*)GameWorld()->FindFirst(CGameWorld::ENTTYPE_SOLDIER_BOMB); pBomb; pBomb = (CSoldierBomb*)pBomb->TypeNext())
+	{
+		if (pBomb->m_Owner != m_pPlayer->GetCID()) continue;
+		GameServer()->m_World.DestroyEntity(pBomb);
+	}
+	for (CScientistMine* pMine = (CScientistMine*)GameWorld()->FindFirst(CGameWorld::ENTTYPE_SCIENTIST_MINE); pMine; pMine = (CScientistMine*)pMine->TypeNext())
+	{
+		if (pMine->m_Owner != m_pPlayer->GetCID()) continue;
+		GameServer()->m_World.DestroyEntity(pMine);
+	}
+	for (CBiologistMine* pMine = (CBiologistMine*)GameWorld()->FindFirst(CGameWorld::ENTTYPE_BIOLOGIST_MINE); pMine; pMine = (CBiologistMine*)pMine->TypeNext())
+	{
+		if (pMine->m_Owner != m_pPlayer->GetCID()) continue;
+		GameServer()->m_World.DestroyEntity(pMine);
+	}
+}
+
+bool CCharacter::IsHookProtected() const
+{
+	return m_HookProtected;
+}
+
+void CCharacter::SetHookProtected(bool HookProtected)
+{
+	m_HookProtected = HookProtected;
+	m_Core.m_HookProtected = HookProtected;
 }
 // INFCROYA END ------------------------------------------------------------//
 
@@ -859,6 +931,10 @@ void CCharacter::Die(int Killer, int Weapon)
 	GameServer()->m_World.RemoveEntity(this);
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
+
+	// INFCROYA BEGIN ------------------------------------------------------------
+	DestroyChildEntities();
+	// INFCROYA END ------------------------------------------------------------//
 }
 
 bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weapon)
@@ -871,6 +947,16 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 	// m_pPlayer only inflicts half damage on self
 	if(From == m_pPlayer->GetCID())
 		Dmg = max(1, Dmg/2);
+
+	// INFCROYA BEGIN ------------------------------------------------------------
+	// search tags xd: no self harm no selfharm selfhurt self hurt
+	if (From == m_pPlayer->GetCID()) {
+		int ClassNum = GetCroyaPlayer()->GetClassNum();
+		if ((ClassNum == Class::SOLDIER && m_ActiveWeapon == WEAPON_GRENADE) || (ClassNum == Class::SCIENTIST && m_ActiveWeapon == WEAPON_LASER)) {
+			return false;
+		}
+	}
+	// INFCROYA END ------------------------------------------------------------//
 
 	int OldHealth = m_Health, OldArmor = m_Armor;
 	if(Dmg)
@@ -929,7 +1015,7 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 				pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
 				// INFCROYA BEGIN ------------------------------------------------------------
 				if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
-					pChr->GetCroyaPlayer()->OnKill(From);
+					pChr->GetCroyaPlayer()->OnKill(GetPlayer()->GetCID());
 				}
 				// INFCROYA END ------------------------------------------------------------//
 			}

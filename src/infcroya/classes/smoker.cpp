@@ -48,10 +48,10 @@ void CSmoker::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CChara
 		{
 			CCharacter* pTarget = apEnts[i];
 			if (pTarget->IsZombie() && pTarget != pChr) {
-				pTarget->IncreaseArmor(4);
+				pTarget->IncreaseOverallHp(4);
 				pTarget->SetEmote(EMOTE_HAPPY, pChr->Server()->Tick() + pChr->Server()->TickSpeed());
 			}
-			if ((pTarget == pChr) || pChr->GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->GetPos(), NULL, NULL))
+			if ((pTarget == pChr) || pGameServer->Collision()->IntersectLine(ProjStartPos, pTarget->GetPos(), NULL, NULL))
 				continue;
 
 			// set his velocity to fast upward (for now)
@@ -66,8 +66,11 @@ void CSmoker::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CChara
 			else
 				Dir = vec2(0.f, -1.f);
 
-			//pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, 20,
-			//	pChr->GetPlayer()->GetCID(), pChr->GetActiveWeapon());
+			if (pTarget->IsZombie() && !pTarget->IsHookProtected()) {
+				const int DAMAGE = 0; // 0 = no damage, TakeDamage() is called below just for hammerfly etc
+				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, DAMAGE,
+					pChr->GetPlayer()->GetCID(), pChr->GetActiveWeapon());
+			}
 			if (pTarget->IsHuman())
 				pTarget->Infect(ClientID);
 			Hits++;

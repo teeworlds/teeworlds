@@ -59,15 +59,15 @@ void CroyaPlayer::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int We
 	m_pCharacter = nullptr;
 }
 
-void CroyaPlayer::OnKill(int Killer)
+void CroyaPlayer::OnKill(int Victim)
 {
-	int64 Mask = CmaskOne(Killer);
+	int64 Mask = CmaskOne(m_ClientID);
 	m_pGameServer->CreateSound(m_pPlayer->m_ViewPos, SOUND_CTF_GRAB_PL, Mask);
 	if (IsZombie()) {
-		m_pGameServer->m_apPlayers[Killer]->m_Score += 3;
+		m_pPlayer->m_Score += 3;
 	}
 	else {
-		m_pGameServer->m_apPlayers[Killer]->m_Score++;
+		m_pPlayer->m_Score++;
 	}
 }
 
@@ -79,10 +79,6 @@ void CroyaPlayer::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon)
 void CroyaPlayer::OnButtonF3()
 {
 	SetHookProtected(!IsHookProtected());
-	if (IsHookProtected())
-		m_pGameServer->SendChat(-1, CHAT_ALL, m_ClientID, "Hook protection enabled");
-	else
-		m_pGameServer->SendChat(-1, CHAT_ALL, m_ClientID, "Hook protection disabled");
 }
 
 void CroyaPlayer::OnMouseWheelDown()
@@ -137,7 +133,6 @@ void CroyaPlayer::TurnIntoPrevHumanClass()
 void CroyaPlayer::TurnIntoRandomZombie()
 {
 	int RandomZombieClass = random_int() % (Class::ZOMBIE_CLASS_END - Class::ZOMBIE_CLASS_START - 1) + Class::ZOMBIE_CLASS_START + 1;
-	printf("%d", RandomZombieClass);
 	SetClassNum(RandomZombieClass, true);
 }
 
@@ -149,6 +144,13 @@ bool CroyaPlayer::IsHookProtected() const
 void CroyaPlayer::SetHookProtected(bool HookProtected)
 {
 	m_HookProtected = HookProtected;
+	if (m_pCharacter) {
+		m_pCharacter->SetHookProtected(HookProtected);
+		if (IsHookProtected())
+			m_pGameServer->SendChatTarget(m_ClientID, "Hook protection enabled");
+		else
+			m_pGameServer->SendChatTarget(m_ClientID, "Hook protection disabled");
+	}
 }
 
 const char* CroyaPlayer::GetLanguage() const
@@ -210,6 +212,7 @@ void CroyaPlayer::SetClass(IClass* pClass, bool DrawPurpleThing)
 		}
 	}
 	if (m_pCharacter) {
+		m_pCharacter->DestroyChildEntities();
 		m_pCharacter->SetInfected(m_pClass->IsInfectedClass());
 		m_pCharacter->ResetWeaponsHealth();
 		m_pClass->InitialWeaponsHealth(m_pCharacter);

@@ -11,6 +11,7 @@
 
 #include "eventhandler.h"
 #include "gameworld.h"
+#include <base/tl/array.h> // INFCROYA RELATED
 
 /*
 	Tick
@@ -68,6 +69,17 @@ class CGameContext : public IGameServer
 	void Construct(int Resetting);
 
 	bool m_Resetting;
+
+	// INFCROYA BEGIN ------------------------------------------------------------
+	struct LaserDotState
+	{
+		vec2 m_Pos0;
+		vec2 m_Pos1;
+		int m_LifeSpan;
+		int m_SnapID;
+	};
+	array<LaserDotState> m_LaserDots;
+	// INFCROYA END ------------------------------------------------------------//
 public:
 	IServer *Server() const { return m_pServer; }
 	class IConsole *Console() { return m_pConsole; }
@@ -181,6 +193,11 @@ public:
 	virtual const char *GameType() const;
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;
+	
+	// INFCROYA BEGIN ------------------------------------------------------------
+	void CreateLaserDotEvent(vec2 Pos0, vec2 Pos1, int LifeSpan);
+	void SendChatTarget(int To, const char* pText);
+	// INFCROYA END ------------------------------------------------------------//
 };
 
 inline int64 CmaskAll() { return -1; }

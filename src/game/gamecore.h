@@ -172,6 +172,11 @@ public:
 	void Read(const CNetObj_CharacterCore *pObjCore);
 	void Write(CNetObj_CharacterCore *pObjCore);
 	void Quantize();
+
+	// INFCROYA BEGIN ------------------------------------------------------------
+	bool m_HookProtected; // initial value is set on CCharacter::Spawn by SetHookProtected() setter function
+	bool m_Infected;
+	// INFCROYA END ------------------------------------------------------------//
 };
 
 #endif

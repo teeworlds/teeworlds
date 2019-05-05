@@ -1586,3 +1586,26 @@ const char *CGameContext::Version() const { return GAME_VERSION; }
 const char *CGameContext::NetVersion() const { return GAME_NETVERSION; }
 
 IGameServer *CreateGameServer() { return new CGameContext; }
+
+// INFCROYA BEGIN ------------------------------------------------------------
+void CGameContext::CreateLaserDotEvent(vec2 Pos0, vec2 Pos1, int LifeSpan)
+{
+	CGameContext::LaserDotState State;
+	State.m_Pos0 = Pos0;
+	State.m_Pos1 = Pos1;
+	State.m_LifeSpan = LifeSpan;
+	State.m_SnapID = Server()->SnapNewID();
+
+	m_LaserDots.add(State);
+}
+
+void CGameContext::SendChatTarget(int To, const char* pText)
+{
+	CNetMsg_Sv_Chat Msg;
+	Msg.m_Mode = MSGFLAG_VITAL;
+	Msg.m_ClientID = -1;
+	Msg.m_TargetID = To;
+	Msg.m_pMessage = pText;
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, To);
+}
+// INFCROYA END ------------------------------------------------------------//

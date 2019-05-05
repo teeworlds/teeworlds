@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "gamecore.h"
+#include <stdio.h>
 
 const char *CTuningParams::m_apNames[] =
 {
@@ -195,7 +196,7 @@ void CCharacterCore::Tick(bool UseInput)
 		}
 
 		// Check against other players first
-		if(m_pWorld && m_pWorld->m_Tuning.m_PlayerHooking)
+		if(m_pWorld) // INFCROYA RELATED
 		{
 			float Distance = 0.0f;
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -203,6 +204,12 @@ void CCharacterCore::Tick(bool UseInput)
 				CCharacterCore *pCharCore = m_pWorld->m_apCharacters[i];
 				if(!pCharCore || pCharCore == this)
 					continue;
+				// INFCROYA BEGIN ------------------------------------------------------------
+				if (!m_Infected && !pCharCore->m_Infected)
+					continue;
+				if (m_Infected && pCharCore->m_Infected && pCharCore->m_HookProtected)
+					continue;
+				// INFCROYA END ------------------------------------------------------------//
 
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, pCharCore->m_Pos);
 				if(distance(pCharCore->m_Pos, ClosestPoint) < PhysSize+2.0f)
@@ -302,10 +309,35 @@ void CCharacterCore::Tick(bool UseInput)
 			if(pCharCore == this) // || !(p->flags&FLAG_ALIVE)
 				continue; // make sure that we don't nudge our self
 
-			// handle player <-> player collision
+			// INFCROYA BEGIN ------------------------------------------------------------
 			float Distance = distance(m_Pos, pCharCore->m_Pos);
 			vec2 Dir = normalize(m_Pos - pCharCore->m_Pos);
-			if(m_pWorld->m_Tuning.m_PlayerCollision && Distance < PhysSize*1.25f && Distance > 0.0f)
+
+			// handle hook influence
+			if (m_HookedPlayer == i)
+			{
+				if (Distance > PhysSize * 1.50f) // TODO: fix tweakable variable
+				{
+					float Accel = m_pWorld->m_Tuning.m_HookDragAccel * (Distance / m_pWorld->m_Tuning.m_HookLength);
+					float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
+
+					// add force to the hooked player
+					pCharCore->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel * Dir.x * 1.5f);
+					pCharCore->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel * Dir.y * 1.5f);
+
+					// add a little bit force to the guy who has the grip
+					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel * Dir.x * 0.25f);
+					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel * Dir.y * 0.25f);
+				}
+			}
+
+			// handle player <-> player collision
+			if (!m_Infected && !pCharCore->m_Infected)
+				continue;
+			if ((m_Infected && pCharCore->m_Infected) && (m_HookProtected || pCharCore->m_HookProtected))
+				continue;
+
+			if(Distance < PhysSize*1.25f && Distance > 0.0f)
 			{
 				float a = (PhysSize*1.45f - Distance);
 				float Velocity = 0.5f;
@@ -318,24 +350,7 @@ void CCharacterCore::Tick(bool UseInput)
 				m_Vel += Dir*a*(Velocity*0.75f);
 				m_Vel *= 0.85f;
 			}
-
-			// handle hook influence
-			if(m_HookedPlayer == i && m_pWorld->m_Tuning.m_PlayerHooking)
-			{
-				if(Distance > PhysSize*1.50f) // TODO: fix tweakable variable
-				{
-					float Accel = m_pWorld->m_Tuning.m_HookDragAccel * (Distance/m_pWorld->m_Tuning.m_HookLength);
-					float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
-
-					// add force to the hooked player
-					pCharCore->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel*Dir.x*1.5f);
-					pCharCore->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel*Dir.y*1.5f);
-
-					// add a little bit force to the guy who has the grip
-					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
-					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
-				}
-			}
+			// INFCROYA END ------------------------------------------------------------//
 		}
 	}
 
@@ -374,6 +389,12 @@ void CCharacterCore::Move()
 				CCharacterCore *pCharCore = m_pWorld->m_apCharacters[p];
 				if(!pCharCore || pCharCore == this)
 					continue;
+				// INFCROYA BEGIN ------------------------------------------------------------
+				if (pCharCore->m_HookProtected && (m_Infected == pCharCore->m_Infected))
+					continue; // no hook for hook protected zombies
+				if (pCharCore->m_HookProtected && !(m_Infected == pCharCore->m_Infected))
+					continue; // no hook for hook protected humans
+				// INFCROYA END ------------------------------------------------------------//
 				float D = distance(Pos, pCharCore->m_Pos);
 				if(D < PhysSize && D > 0.0f)
 				{

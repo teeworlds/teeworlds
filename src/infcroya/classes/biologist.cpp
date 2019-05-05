@@ -75,8 +75,10 @@ void CBiologist::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCh
 				Dir = vec2(0.f, -1.f);
 
 			const int DAMAGE = 20; // should kill
-			pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, DAMAGE,
-				ClientID, pChr->GetActiveWeapon());
+			if (pTarget->IsZombie()) {
+				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, DAMAGE,
+					ClientID, pChr->GetActiveWeapon());
+			}
 			Hits++;
 		}
 

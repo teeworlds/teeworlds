@@ -7,6 +7,7 @@
 #include "engineer-wall.h"
 #include <game/server/entities/character.h>
 #include <game/server/player.h>
+#include <infcroya/croyaplayer.h>
 
 const float g_BarrierMaxLength = 300.0;
 const float g_BarrierRadius = 0.0;
@@ -100,6 +101,9 @@ void CEngineerWall::Tick()
 				}
 				
 				p->Die(m_Owner, WEAPON_HAMMER);
+				CPlayer* pKiller = GameServer()->m_apPlayers[m_Owner];
+				if (p->GetPlayer()->GetCID() != pKiller->GetCID())
+					pKiller->GetCroyaPlayer()->OnKill(p->GetPlayer()->GetCID());
 			}
 		}
 	}

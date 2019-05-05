@@ -1806,9 +1806,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IConfig *pConfig = CreateConfig();
 
 	// INFCROYA BEGIN ------------------------------------------------------------
-	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
-		g_Localization.Load("translations.json", pStorage, pConsole);
-	}
+	g_Localization.Load("translations.json", pStorage, pConsole);
 	// INFCROYA END ------------------------------------------------------------//
 
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer, pConsole);

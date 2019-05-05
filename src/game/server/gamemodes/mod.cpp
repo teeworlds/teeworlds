@@ -11,6 +11,8 @@
 #include <infcroya/classes/biologist.h>
 #include <infcroya/classes/smoker.h>
 #include <infcroya/classes/engineer.h>
+#include <infcroya/classes/soldier.h>
+#include <infcroya/classes/scientist.h>
 #include <infcroya/classes/medic.h>
 #include <engine/shared/config.h>
 #include <infcroya/localization/localization.h>
@@ -35,6 +37,8 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 	classes[Class::BIOLOGIST] = new CBiologist();
 	classes[Class::ENGINEER] = new CEngineer();
 	classes[Class::MEDIC] = new CMedic();
+	classes[Class::SOLDIER] = new CSoldier();
+	classes[Class::SCIENTIST] = new CScientist();
 	classes[Class::SMOKER] = new CSmoker();
 }
 
@@ -121,7 +125,7 @@ void CGameControllerMOD::OnPlayerConnect(CPlayer* pPlayer)
 	players[ClientID] = new CroyaPlayer(ClientID, pPlayer, GameServer(), this, classes);
 	SetLanguageByCountry(Server()->ClientCountry(ClientID), ClientID);
 	players[ClientID]->SetClass(classes[Class::DEFAULT]);
-	GameServer()->SendChat(-1, CHAT_ALL, ClientID, g_Config.m_SvWelcome);
+	GameServer()->SendChatTarget(ClientID, g_Config.m_SvWelcome);
 }
 
 void CGameControllerMOD::SetLanguageByCountry(int Country, int ClientID)

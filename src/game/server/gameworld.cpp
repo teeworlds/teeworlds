@@ -214,6 +214,11 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 		if(p == pNotThis)
 			continue;
 
+		// INFCROYA BEGIN ------------------------------------------------------------
+		if (p->IsHuman())
+			continue; // shoot through humans, may break future zombie entities that use IntersectCharacter()
+		// INFCROYA END ------------------------------------------------------------//
+
 		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
 		float Len = distance(p->m_Pos, IntersectPos);
 		if(Len < p->m_ProximityRadius+Radius)

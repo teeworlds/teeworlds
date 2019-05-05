@@ -49,14 +49,14 @@ void CMedic::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCharac
 
 		CCharacter* apEnts[MAX_CLIENTS];
 		int Hits = 0;
-		int Num = pChr->GameServer()->m_World.FindEntities(ProjStartPos, pChr->GetProximityRadius() * 0.5f, (CEntity * *)apEnts,
+		int Num = pGameServer->m_World.FindEntities(ProjStartPos, pChr->GetProximityRadius() * 0.5f, (CEntity * *)apEnts,
 			MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 
 		for (int i = 0; i < Num; ++i)
 		{
 			CCharacter* pTarget = apEnts[i];
 			if (pTarget->IsHuman() && pTarget != pChr) {
-				pTarget->IncreaseOverallHp(4);
+				pTarget->IncreaseArmor(4);
 				pTarget->SetEmote(EMOTE_HAPPY, pChr->Server()->Tick() + pChr->Server()->TickSpeed());
 			}
 			if ((pTarget == pChr) || pGameServer->Collision()->IntersectLine(ProjStartPos, pTarget->GetPos(), NULL, NULL))
@@ -75,8 +75,10 @@ void CMedic::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCharac
 				Dir = vec2(0.f, -1.f);
 
 			const int DAMAGE = 20; // should kill
-			pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, DAMAGE,
-				ClientID, pChr->GetActiveWeapon());
+			if (pTarget->IsZombie()) {
+				pTarget->TakeDamage(vec2(0.f, -1.f) + normalize(Dir + vec2(0.f, -1.1f)) * 10.0f, Dir * -1, DAMAGE,
+					ClientID, pChr->GetActiveWeapon());
+			}
 			Hits++;
 		}
 
