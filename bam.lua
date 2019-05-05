@@ -237,6 +237,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	end
 
 	local icons = SharedIcons(compiler)
+	local manifests = SharedManifests(compiler)
 
 	-- Required libs
 	settings.link.libs:Add("gdi32")
@@ -264,6 +265,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 
 	-- Client
 	settings.link.extrafiles:Add(icons.client)
+	settings.link.extrafiles:Add(manifests.client)
 	settings.link.libs:Add("opengl32")
 	settings.link.libs:Add("glu32")
 	settings.link.libs:Add("winmm")
@@ -322,6 +324,14 @@ function SharedIcons(compiler)
 		shared_icons[compiler] = {server=server_icon, client=client_icon}
 	end
 	return shared_icons[compiler]
+end
+
+function SharedManifests(compiler)
+	if not shared_manifests then
+		local client_manifest = ResCompile("other/manifest/teeworlds.rc", compiler)
+		shared_manifests = {client=client_manifest}
+	end
+	return shared_manifests
 end
 
 function BuildEngineCommon(settings)
