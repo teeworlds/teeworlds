@@ -203,62 +203,53 @@ public:
 };
 
 template<typename T>
-struct CDynArray: public array<T>
+struct array2: public array<T>
 {
 	typedef array<T> ParentT;
 
-	inline T& Add(const T& Elt)
+	inline T& add(const T& Elt)
 	{
-		return Data()[ParentT::add(Elt)];
+		return base_ptr()[ParentT::add(Elt)];
 	}
 
-	T& Add(const T* aElements, int EltCount)
+	T& add(const T* aElements, int EltCount)
 	{
 		for(int i = 0; i < EltCount; i++)
 			ParentT::add(aElements[i]);
-		return *(Data()+Count()-EltCount);
+		return *(base_ptr()+size()-EltCount);
 	}
 
-	T& AddEmpty(int EltCount)
+	T& add_empty(int EltCount)
 	{
 		dbg_assert(EltCount > 0, "Add 0 or more");
 		for(int i = 0; i < EltCount; i++)
 			ParentT::add(T());
-		return *(Data()+Count()-EltCount);
+		return *(base_ptr()+size()-EltCount);
 	}
 
-	inline void Clear()
+	inline void remove_index_fast(int Index)
 	{
-		clear();
-	}
-
-	inline void RemoveByIndex(int Index)
-	{
-		dbg_assert(Index >= 0 && Index < Count(), "Index out of bounds");
+		dbg_assert(Index >= 0 && Index < size(), "Index out of bounds");
 		ParentT::remove_index_fast(Index);
 	}
 
 	// keeps order, way slower
-	inline void RemoveByIndexSlide(int Index)
+	inline void remove_index(int Index)
 	{
-		dbg_assert(Index >= 0 && Index < Count(), "Index out of bounds");
+		dbg_assert(Index >= 0 && Index < size(), "Index out of bounds");
 		ParentT::remove_index(Index);
 	}
-
-	inline int Count() const { return ParentT::size(); }
-	inline T* Data() { return ParentT::base_ptr(); }
-	inline const T* Data() const { return ParentT::base_ptr(); }
 
 	inline T& operator[] (int Index)
 	{
 		dbg_assert(Index >= 0 && Index < ParentT::size(), "Index out of bounds");
-		return Data()[Index];
+		return ParentT::operator[](Index);
 	}
 
 	inline const T& operator[] (int Index) const
 	{
 		dbg_assert(Index >= 0 && Index < ParentT::size(), "Index out of bounds");
-		return Data()[Index];
+		return ParentT::operator[](Index);
 	}
 };
 
@@ -281,8 +272,8 @@ struct CEditorMap2
 
 		// NOTE: we have to split the union because gcc doesn't like non-POD anonymous structs...
 
-		CDynArray<CTile> m_aTiles;
-		CDynArray<CQuad> m_aQuads;
+		array2<CTile> m_aTiles;
+		array2<CQuad> m_aQuads;
 
 		union
 		{
@@ -388,10 +379,10 @@ struct CEditorMap2
 
 	char m_aPath[256];
 
-	CDynArray<CEnvPoint> m_aEnvPoints;
-	CDynArray<CLayer> m_aLayers;
-	CDynArray<CGroup> m_aGroups;
-	CDynArray<CMapItemEnvelope> m_aEnvelopes;
+	array2<CEnvPoint> m_aEnvPoints;
+	array2<CLayer> m_aLayers;
+	array2<CGroup> m_aGroups;
+	array2<CMapItemEnvelope> m_aEnvelopes;
 
 	CChainAllocator<CTile> m_TileDispenser;
 	CChainAllocator<CQuad> m_QuadDispenser;
@@ -561,7 +552,7 @@ class CEditor2: public IEditor
 
 	struct CBrush
 	{
-		CDynArray<CTile> m_aTiles;
+		array2<CTile> m_aTiles;
 		int m_Width = 0;
 		int m_Height = 0;
 
