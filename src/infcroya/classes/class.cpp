@@ -5,6 +5,14 @@ IClass::~IClass()
 {
 }
 
+void IClass::OnMouseWheelDown()
+{
+}
+
+void IClass::OnMouseWheelUp()
+{
+}
+
 void IClass::OnCharacterSpawn(CCharacter* pChr)
 {
 	pChr->SetInfected(IsInfectedClass());

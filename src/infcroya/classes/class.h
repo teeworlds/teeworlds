@@ -16,6 +16,8 @@ public:
 	virtual void InitialWeaponsHealth(class CCharacter* pChr) = 0;
 
 	virtual void OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, class CCharacter* pChr) = 0;
+	virtual void OnMouseWheelDown();
+	virtual void OnMouseWheelUp();
 
 	virtual void OnCharacterSpawn(class CCharacter* pChr);
 	virtual int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon);

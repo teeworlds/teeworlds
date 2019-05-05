@@ -18,27 +18,27 @@ private:
 public:
 	CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, CGameControllerMOD* pGameController, std::unordered_map<int, class IClass*> Classes);
 	~CroyaPlayer();
+
 	int GetClassNum();
 	void SetClassNum(int Class, bool DrawPurpleThing = false);
-	IClass* GetClass();
-	void SetClass(IClass* pClass, bool DrawPurpleThing = false);
 	void SetCharacter(CCharacter* pCharacter);
 
 	void OnCharacterSpawn(CCharacter* pChr);
 	void OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon);
 	void OnKill(int Killer);
 
-	void OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon);
-	void OnButtonF3();
+	void OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon); // called in CCharacter::FireWeapon
+	void OnButtonF3(); // called in CGameContext::OnMessage { ... else if(MsgID == NETMSGTYPE_CL_VOTE) }
+	void OnMouseWheelDown(); // called in CCharacter::HandleWeaponSwitch
+	void OnMouseWheelUp(); // called in CCharacter::HandleWeaponSwitch
 
 	bool IsHuman() const;
 	bool IsZombie() const;
 
 	std::unordered_map<int, class IClass*>& GetClasses();
 
-	void SetNextHumanClass();
-	void SetPrevHumanClass();
-
+	void TurnIntoNextHumanClass();
+	void TurnIntoPrevHumanClass();
 	void TurnIntoRandomZombie();
 
 	bool IsHookProtected() const;
@@ -46,4 +46,7 @@ public:
 
 	const char* GetLanguage() const;
 	void SetLanguage(const char* Language);
+
+	IClass* GetClass();
+	void SetClass(IClass* pClass, bool DrawPurpleThing = false);
 };

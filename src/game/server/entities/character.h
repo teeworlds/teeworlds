@@ -55,12 +55,13 @@ public:
 	void GiveNinja();
 
 	void SetEmote(int Emote, int Tick);
-	void SetNormalEmote(int Emote); // INFCROYA RELATED
 
 	bool IsAlive() const { return m_Alive; }
 	class CPlayer *GetPlayer() { return m_pPlayer; }
 
 	// INFCROYA BEGIN ------------------------------------------------------------
+	void SetNormalEmote(int Emote);
+
 	bool IsHuman() const;
 	bool IsZombie() const;
 
@@ -95,6 +96,7 @@ private:
 	bool m_Infected;
 	class CroyaPlayer* m_pCroyaPlayer;
 	int m_HeartID;
+	int m_NormalEmote;
 	// INFCROYA END ------------------------------------------------------------//
 
 	// weapon info
@@ -122,7 +124,6 @@ private:
 
 	int m_EmoteType;
 	int m_EmoteStop;
-	int m_NormalEmote; // INFCROYA RELATED
 
 	// last tick that the player took any action ie some input
 	int m_LastAction;

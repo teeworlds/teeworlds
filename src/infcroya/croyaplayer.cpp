@@ -40,6 +40,127 @@ void CroyaPlayer::SetClassNum(int Class, bool DrawPurpleThing)
 	SetClass(m_Classes[Class], DrawPurpleThing);
 }
 
+void CroyaPlayer::SetCharacter(CCharacter* pCharacter)
+{
+	m_pCharacter = pCharacter;
+}
+
+void CroyaPlayer::OnCharacterSpawn(CCharacter* pChr)
+{
+	m_pClass->OnCharacterSpawn(pChr);
+	m_pCharacter->SetCroyaPlayer(this);
+}
+
+void CroyaPlayer::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon)
+{
+	m_pClass->OnCharacterDeath(pVictim, pKiller, Weapon);
+	if (IsHuman())
+		TurnIntoRandomZombie();
+	m_pCharacter = nullptr;
+}
+
+void CroyaPlayer::OnKill(int Killer)
+{
+	int64 Mask = CmaskOne(Killer);
+	m_pGameServer->CreateSound(m_pPlayer->m_ViewPos, SOUND_CTF_GRAB_PL, Mask);
+	if (IsZombie()) {
+		m_pGameServer->m_apPlayers[Killer]->m_Score += 3;
+	}
+	else {
+		m_pGameServer->m_apPlayers[Killer]->m_Score++;
+	}
+}
+
+void CroyaPlayer::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon)
+{
+	m_pClass->OnWeaponFire(Direction, ProjStartPos, Weapon, m_pCharacter);
+}
+
+void CroyaPlayer::OnButtonF3()
+{
+	SetHookProtected(!IsHookProtected());
+	if (IsHookProtected())
+		m_pGameServer->SendChat(-1, CHAT_ALL, m_ClientID, "Hook protection enabled");
+	else
+		m_pGameServer->SendChat(-1, CHAT_ALL, m_ClientID, "Hook protection disabled");
+}
+
+void CroyaPlayer::OnMouseWheelDown()
+{
+	TurnIntoNextHumanClass();
+	m_pClass->OnMouseWheelDown();
+}
+
+void CroyaPlayer::OnMouseWheelUp()
+{
+	TurnIntoPrevHumanClass();
+	m_pClass->OnMouseWheelUp();
+}
+
+bool CroyaPlayer::IsHuman() const
+{
+	return !m_Infected;
+}
+
+bool CroyaPlayer::IsZombie() const
+{
+	return m_Infected;
+}
+
+std::unordered_map<int, class IClass*>& CroyaPlayer::GetClasses()
+{
+	return m_Classes;
+}
+
+void CroyaPlayer::TurnIntoNextHumanClass()
+{
+	int NextClass = GetClassNum() + 1;
+	int FirstClass = Class::HUMAN_CLASS_START + 1;
+	bool NotInRange = !(NextClass > HUMAN_CLASS_START && NextClass < HUMAN_CLASS_END);
+
+	if (NextClass == Class::HUMAN_CLASS_END || NotInRange)
+		NextClass = FirstClass;
+	SetClassNum(NextClass);
+}
+
+void CroyaPlayer::TurnIntoPrevHumanClass()
+{
+	int PrevClass = GetClassNum() - 1;
+	int LastClass = Class::HUMAN_CLASS_END - 1;
+	bool NotInRange = !(PrevClass > HUMAN_CLASS_START && PrevClass < HUMAN_CLASS_END);
+
+	if (PrevClass == Class::HUMAN_CLASS_START || NotInRange)
+		PrevClass = LastClass;
+	SetClassNum(PrevClass);
+}
+
+void CroyaPlayer::TurnIntoRandomZombie()
+{
+	int RandomZombieClass = random_int() % (Class::ZOMBIE_CLASS_END - Class::ZOMBIE_CLASS_START - 1) + Class::ZOMBIE_CLASS_START + 1;
+	printf("%d", RandomZombieClass);
+	SetClassNum(RandomZombieClass, true);
+}
+
+bool CroyaPlayer::IsHookProtected() const
+{
+	return m_HookProtected;
+}
+
+void CroyaPlayer::SetHookProtected(bool HookProtected)
+{
+	m_HookProtected = HookProtected;
+}
+
+const char* CroyaPlayer::GetLanguage() const
+{
+	return m_Language.c_str();
+}
+
+void CroyaPlayer::SetLanguage(const char* Language)
+{
+	m_Language = Language;
+}
+
 IClass* CroyaPlayer::GetClass()
 {
 	return m_pClass;
@@ -102,113 +223,4 @@ void CroyaPlayer::SetClass(IClass* pClass, bool DrawPurpleThing)
 		m_pGameServer->SendBroadcast(Localize(aBuf, GetLanguage()), m_pPlayer->GetCID());
 	if (m_pGameController->IsEveryoneInfected()) {
 	}
-}
-
-void CroyaPlayer::SetCharacter(CCharacter* pCharacter)
-{
-	m_pCharacter = pCharacter;
-}
-
-void CroyaPlayer::OnCharacterSpawn(CCharacter* pChr)
-{
-	m_pClass->OnCharacterSpawn(pChr);
-	m_pCharacter->SetCroyaPlayer(this);
-}
-
-void CroyaPlayer::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon)
-{
-	m_pClass->OnCharacterDeath(pVictim, pKiller, Weapon);
-	if (IsHuman())
-		TurnIntoRandomZombie();
-	m_pCharacter = nullptr;
-}
-
-void CroyaPlayer::OnKill(int Killer)
-{
-	int64 Mask = CmaskOne(Killer);
-	m_pGameServer->CreateSound(m_pPlayer->m_ViewPos, SOUND_CTF_GRAB_PL, Mask);
-	if (IsZombie()) {
-		m_pGameServer->m_apPlayers[Killer]->m_Score += 3;
-	}
-	else {
-		m_pGameServer->m_apPlayers[Killer]->m_Score++;
-	}
-}
-
-void CroyaPlayer::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon)
-{
-	m_pClass->OnWeaponFire(Direction, ProjStartPos, Weapon, m_pCharacter);
-}
-
-void CroyaPlayer::OnButtonF3()
-{
-	SetHookProtected(!IsHookProtected());
-	if (IsHookProtected())
-		m_pGameServer->SendChat(-1, CHAT_ALL, m_ClientID, "Hook protection enabled");
-	else
-		m_pGameServer->SendChat(-1, CHAT_ALL, m_ClientID, "Hook protection disabled");
-}
-
-bool CroyaPlayer::IsHuman() const
-{
-	return !m_Infected;
-}
-
-bool CroyaPlayer::IsZombie() const
-{
-	return m_Infected;
-}
-
-std::unordered_map<int, class IClass*>& CroyaPlayer::GetClasses()
-{
-	return m_Classes;
-}
-
-void CroyaPlayer::SetNextHumanClass()
-{
-	int NextClass = GetClassNum() + 1;
-	int FirstClass = Class::HUMAN_CLASS_START + 1;
-	bool NotInRange = !(NextClass > HUMAN_CLASS_START && NextClass < HUMAN_CLASS_END);
-
-	if (NextClass == Class::HUMAN_CLASS_END || NotInRange)
-		NextClass = FirstClass;
-	SetClassNum(NextClass);
-}
-
-void CroyaPlayer::SetPrevHumanClass()
-{
-	int PrevClass = GetClassNum() - 1;
-	int LastClass = Class::HUMAN_CLASS_END - 1;
-	bool NotInRange = !(PrevClass > HUMAN_CLASS_START && PrevClass < HUMAN_CLASS_END);
-
-	if (PrevClass == Class::HUMAN_CLASS_START || NotInRange)
-		PrevClass = LastClass;
-	SetClassNum(PrevClass);
-}
-
-void CroyaPlayer::TurnIntoRandomZombie()
-{
-	int RandomZombieClass = random_int() % (Class::ZOMBIE_CLASS_END - Class::ZOMBIE_CLASS_START - 1) + Class::ZOMBIE_CLASS_START + 1;
-	printf("%d", RandomZombieClass);
-	SetClassNum(RandomZombieClass, true);
-}
-
-bool CroyaPlayer::IsHookProtected() const
-{
-	return m_HookProtected;
-}
-
-void CroyaPlayer::SetHookProtected(bool HookProtected)
-{
-	m_HookProtected = HookProtected;
-}
-
-const char* CroyaPlayer::GetLanguage() const
-{
-	return m_Language.c_str();
-}
-
-void CroyaPlayer::SetLanguage(const char* Language)
-{
-	m_Language = Language;
 }

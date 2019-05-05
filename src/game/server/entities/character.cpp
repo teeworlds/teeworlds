@@ -55,14 +55,16 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_TriggeredEvents = 0;
 
 	// INFCROYA BEGIN ------------------------------------------------------------
-	m_Infected = false;
-	m_HeartID = Server()->SnapNewID();
-	m_FirstShot = true;
-	m_BarrierHintID = Server()->SnapNewID();
-	m_BarrierHintIDs.set_size(2);
-	for (int i = 0; i < 2; i++)
-	{
-		m_BarrierHintIDs[i] = Server()->SnapNewID();
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		m_Infected = false;
+		m_HeartID = Server()->SnapNewID();
+		m_FirstShot = true;
+		m_BarrierHintID = Server()->SnapNewID();
+		m_BarrierHintIDs.set_size(2);
+		for (int i = 0; i < 2; i++)
+		{
+			m_BarrierHintIDs[i] = Server()->SnapNewID();
+		}
 	}
 	// INFCROYA END ------------------------------------------------------------//
 }
@@ -107,16 +109,18 @@ void CCharacter::Destroy()
 	GameServer()->m_World.m_Core.m_apCharacters[m_pPlayer->GetCID()] = 0;
 	m_Alive = false;
 	// INFCROYA BEGIN ------------------------------------------------------------
-	if (m_HeartID >= 0) {
-		Server()->SnapFreeID(m_HeartID);
-		m_HeartID = -1;
-	}
-	if (m_BarrierHintID >= 0) {
-		Server()->SnapFreeID(m_BarrierHintID);
-		for (int i = 0; i < 2; i++)
-		{
-			if (m_BarrierHintIDs[i] >= 0) {
-				Server()->SnapFreeID(m_BarrierHintIDs[i]);
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		if (m_HeartID >= 0) {
+			Server()->SnapFreeID(m_HeartID);
+			m_HeartID = -1;
+		}
+		if (m_BarrierHintID >= 0) {
+			Server()->SnapFreeID(m_BarrierHintID);
+			for (int i = 0; i < 2; i++)
+			{
+				if (m_BarrierHintIDs[i] >= 0) {
+					Server()->SnapFreeID(m_BarrierHintIDs[i]);
+				}
 			}
 		}
 	}
@@ -259,7 +263,11 @@ void CCharacter::HandleWeaponSwitch()
 			WantedWeapon = (WantedWeapon+1)%NUM_WEAPONS;
 			if (m_aWeapons[WantedWeapon].m_Got) {
 				Next--;
-				GetCroyaPlayer()->SetNextHumanClass(); // INFCROYA RELATED
+				// INFCROYA BEGIN ------------------------------------------------------------
+				if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+					GetCroyaPlayer()->OnMouseWheelDown();
+				}
+				// INFCROYA END ------------------------------------------------------------//
 			}
 		}
 	}
@@ -271,7 +279,11 @@ void CCharacter::HandleWeaponSwitch()
 			WantedWeapon = (WantedWeapon-1)<0?NUM_WEAPONS-1:WantedWeapon-1;
 			if (m_aWeapons[WantedWeapon].m_Got) {
 				Prev--;
-				GetCroyaPlayer()->SetPrevHumanClass(); // INFCROYA RELATED
+				// INFCROYA BEGIN ------------------------------------------------------------
+				if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+					GetCroyaPlayer()->OnMouseWheelUp();
+				}
+				// INFCROYA END ------------------------------------------------------------//
 			}
 		}
 	}
@@ -296,8 +308,14 @@ void CCharacter::FireWeapon()
 	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
 
 	bool FullAuto = false;
-	if(m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_LASER || m_ActiveWeapon == WEAPON_GUN) // INFCROYA RELATED
+	if (m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_LASER)
 		FullAuto = true;
+	// INFCROYA BEGIN ------------------------------------------------------------
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		if (m_ActiveWeapon == WEAPON_GRENADE || m_ActiveWeapon == WEAPON_SHOTGUN || m_ActiveWeapon == WEAPON_LASER || m_ActiveWeapon == WEAPON_GUN) // INFCROYA RELATED
+			FullAuto = true;
+	}
+	// INFCROYA END ------------------------------------------------------------//
 
 
 	// check if we gonna fire
@@ -909,7 +927,11 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 			{
 				pChr->m_EmoteType = EMOTE_HAPPY;
 				pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
-				pChr->GetCroyaPlayer()->OnKill(From); // INFCROYA RELATED
+				// INFCROYA BEGIN ------------------------------------------------------------
+				if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+					pChr->GetCroyaPlayer()->OnKill(From);
+				}
+				// INFCROYA END ------------------------------------------------------------//
 			}
 		}
 
@@ -988,27 +1010,29 @@ void CCharacter::Snap(int SnappingClient)
 
 	// INFCROYA BEGIN ------------------------------------------------------------
 	// Heart displayed on top of injured tees
-	CPlayer* pClient = GameServer()->m_apPlayers[SnappingClient];
-	if (m_Infected && m_Health < 10 && SnappingClient != m_pPlayer->GetCID() && pClient->GetCroyaPlayer()->IsZombie()) {
-		CNetObj_Pickup* pP = static_cast<CNetObj_Pickup*>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, m_HeartID, sizeof(CNetObj_Pickup)));
-		if (!pP)
-			return;
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		CPlayer* pClient = GameServer()->m_apPlayers[SnappingClient];
+		if (m_Infected && m_Health < 10 && SnappingClient != m_pPlayer->GetCID() && pClient->GetCroyaPlayer()->IsZombie()) {
+			CNetObj_Pickup* pP = static_cast<CNetObj_Pickup*>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, m_HeartID, sizeof(CNetObj_Pickup)));
+			if (!pP)
+				return;
 
-		pP->m_X = (int)m_Pos.x;
-		pP->m_Y = (int)m_Pos.y - 60.0;
-		pP->m_Type = PICKUP_HEALTH;
-	}
-	if (!m_FirstShot)
-	{
-		CNetObj_Laser* pObj = static_cast<CNetObj_Laser*>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_BarrierHintID, sizeof(CNetObj_Laser)));
-		if (!pObj)
-			return;
+			pP->m_X = (int)m_Pos.x;
+			pP->m_Y = (int)m_Pos.y - 60.0;
+			pP->m_Type = PICKUP_HEALTH;
+		}
+		if (!m_FirstShot)
+		{
+			CNetObj_Laser* pObj = static_cast<CNetObj_Laser*>(Server()->SnapNewItem(NETOBJTYPE_LASER, m_BarrierHintID, sizeof(CNetObj_Laser)));
+			if (!pObj)
+				return;
 
-		pObj->m_X = (int)m_FirstShotCoord.x;
-		pObj->m_Y = (int)m_FirstShotCoord.y;
-		pObj->m_FromX = (int)m_FirstShotCoord.x;
-		pObj->m_FromY = (int)m_FirstShotCoord.y;
-		pObj->m_StartTick = Server()->Tick();
+			pObj->m_X = (int)m_FirstShotCoord.x;
+			pObj->m_Y = (int)m_FirstShotCoord.y;
+			pObj->m_FromX = (int)m_FirstShotCoord.x;
+			pObj->m_FromY = (int)m_FirstShotCoord.y;
+			pObj->m_StartTick = Server()->Tick();
+		}
 	}
 	// INFCROYA END ------------------------------------------------------------//
 }

@@ -1805,7 +1805,11 @@ int main(int argc, const char **argv) // ignore_convention
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_SERVER, argc, argv); // ignore_convention
 	IConfig *pConfig = CreateConfig();
 
-	g_Localization.Load("translations.json", pStorage, pConsole); // INFCROYA RELATED
+	// INFCROYA BEGIN ------------------------------------------------------------
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		g_Localization.Load("translations.json", pStorage, pConsole);
+	}
+	// INFCROYA END ------------------------------------------------------------//
 
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer, pConsole);
 
