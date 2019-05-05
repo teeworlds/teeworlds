@@ -141,6 +141,8 @@ public:
 
 	void ClearChatBuffer();
 
+	const char* GetCommandName(int Mode);
+
 	virtual void OnInit();
 	virtual void OnReset();
 	virtual void OnConsoleInit();
