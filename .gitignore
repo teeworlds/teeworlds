@@ -27,6 +27,8 @@ map_version*
 mastersrv*
 packetgen*
 teeworlds*
+!teeworlds.manifest
+!teeworlds.rc
 teeworlds_srv*
 testrunner
 versionsrv*
