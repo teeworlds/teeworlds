@@ -112,19 +112,6 @@ void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pCons
 	m_pStorage = pStorage;
 	m_pConsole = pConsole;
 
-	m_TileDispenser.Init(2000000, 100);
-	m_QuadDispenser.Init(10000, 5);
-	m_EnvPointDispenser.Init(100000, 10);
-	m_LayerDispenser.Init(1000);
-	m_GroupDispenser.Init(200);
-	m_EnvelopeDispenser.Init(1000);
-	ed_log("m_TileDispenser.AllocatedSize=%lldMb", m_TileDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_QuadDispenser.AllocatedSize=%lldMb", m_QuadDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_EnvPointDispenser.AllocatedSize=%lldMb", m_EnvPointDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_LayerDispenser.AllocatedSize=%lldMb", m_LayerDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_GroupDispenser.AllocatedSize=%lldMb", m_GroupDispenser.AllocatedSize()/(1024*1024));
-	ed_log("m_EnvelopeDispenser.AllocatedSize=%lldMb", m_EnvelopeDispenser.AllocatedSize()/(1024*1024));
-
 	m_aEnvPoints.hint_size(1024);
 	m_aLayers.hint_size(32);
 	m_aGroups.hint_size(16);
@@ -1490,7 +1477,7 @@ void CEditor2::Init()
 	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
 	m_Brush.m_aTiles.clear();
 
-	m_HistoryEntryDispenser.Init(MAX_HISTORY, 1);
+	HistoryClear();
 	m_pHistoryEntryCurrent = 0x0;
 
 	/*
@@ -5042,12 +5029,12 @@ void CEditor2::OnMapLoaded()
 			mem_free(pCurrent->m_pUiSnap); // TODO: make a HistoryDeleteEntry function
 			pCurrent = pCurrent->m_pPrev;
 		}
-		m_HistoryEntryDispenser.Clear();
+		HistoryClear();
 		m_pHistoryEntryCurrent = 0x0;
 	}
 
 	// initialize history
-	m_pHistoryEntryCurrent = m_HistoryEntryDispenser.AllocOne();
+	m_pHistoryEntryCurrent = HistoryAllocEntry();
 	m_pHistoryEntryCurrent->m_pSnap = m_Map.SaveSnapshot();
 	m_pHistoryEntryCurrent->m_pUiSnap = SaveUiSnapshot();
 	m_pHistoryEntryCurrent->SetAction("Map loaded");
@@ -5592,8 +5579,7 @@ void CEditor2::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
 	const int OldHeight = Layer.m_Height;
 	array2<CTile>& aTiles = Layer.m_aTiles;
 
-	CMemBlock<CTile> CopyBlock = m_Map.m_TileDispenser.Alloc(OldWidth * OldHeight);
-	CTile* pCopyBuff = CopyBlock.Get();
+	CTile* pCopyBuff = (CTile*)mem_alloc(OldWidth * OldHeight * sizeof(CTile), 1); // TODO: use ring buffer?
 
 	dbg_assert(aTiles.size() == OldWidth * OldHeight, "Tile count does not match Width*Height");
 	memmove(pCopyBuff, aTiles.base_ptr(), sizeof(CTile) * OldWidth * OldHeight);
@@ -5612,7 +5598,7 @@ void CEditor2::EditTileLayerResize(int LayerID, int NewWidth, int NewHeight)
 		}
 	}
 
-	m_Map.m_TileDispenser.Dealloc(&CopyBlock);
+	mem_free(pCopyBuff);
 
 	Layer.m_Width = NewWidth;
 	Layer.m_Height = NewHeight;
@@ -5906,10 +5892,49 @@ void CEditor2::EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom,
 	}
 }
 
+void CEditor2::HistoryClear()
+{
+	mem_zero(m_aHistoryEntryUsed, sizeof(m_aHistoryEntryUsed));
+}
+
+CEditor2::CHistoryEntry *CEditor2::HistoryAllocEntry()
+{
+	for(int i = 0; i < MAX_HISTORY; i++)
+	{
+		if(!m_aHistoryEntryUsed[i])
+		{
+			m_aHistoryEntryUsed[i] = 1;
+			m_aHistoryEntries[i] = CHistoryEntry();
+			return &m_aHistoryEntries[i];
+		}
+	}
+
+	// if not found, get the last one
+	CHistoryEntry* pCur = m_pHistoryEntryCurrent;
+	while(pCur && pCur->m_pPrev)
+	{
+		pCur = pCur->m_pPrev;
+	}
+
+	pCur->m_pNext->m_pPrev = 0x0;
+	*pCur = CHistoryEntry();
+	return pCur;
+}
+
+void CEditor2::HistoryDeallocEntry(CEditor2::CHistoryEntry *pEntry)
+{
+	int Index = pEntry - m_aHistoryEntries;
+	dbg_assert(Index >= 0 && Index < MAX_HISTORY, "History entry out of bounds");
+	dbg_assert(pEntry->m_pSnap != 0x0, "Snapshot is null");
+	mem_free(pEntry->m_pSnap);
+	mem_free(pEntry->m_pUiSnap); // TODO: dealloc smarter, see above
+	m_aHistoryEntryUsed[Index] = 0;
+}
+
 void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 {
 	CHistoryEntry* pEntry;
-	pEntry = m_HistoryEntryDispenser.AllocOne();
+	pEntry = HistoryAllocEntry();
 	pEntry->m_pSnap = m_Map.SaveSnapshot();
 	pEntry->m_pUiSnap = SaveUiSnapshot();
 	pEntry->SetAction(pActionStr);
@@ -5921,11 +5946,7 @@ void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 	{
 		CHistoryEntry* pToDelete = pCur;
 		pCur = pCur->m_pNext;
-
-		dbg_assert(pToDelete->m_pSnap != 0x0, "Snapshot is null");
-		mem_free(pToDelete->m_pSnap);
-		mem_free(pToDelete->m_pUiSnap); // TODO: dealloc smarter, see above
-		m_HistoryEntryDispenser.DeallocOne(pToDelete);
+		HistoryDeallocEntry(pToDelete);
 	}
 
 	m_pHistoryEntryCurrent->m_pNext = pEntry;

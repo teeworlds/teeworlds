@@ -32,176 +32,6 @@ typedef uint16_t u16;
 typedef uint32_t u32;
 typedef uint64_t u64;
 
-/* Chain Allocator
- *
- * - Allocate/Deallocate a continous list of T elements
- * - Pointers are never invalidated
- *
- * Technicality:
- * - Slightly faster than malloc with RING_ELT_COUNT==1, faster otherwise depending on RING_ELT_COUNT
- * - A Ring can be X element long
- * - Allocation will be rounded out to match RING_ELT_COUNT
- * - A Chain is made of rings, hence the name
- * - Returned memory is zeroed out
- * - Falls back on malloc when out of space
- *
- * - Usage:
- *	CChainAllocator<T, MaxElementCount, RingElementCount> ChainAllocator;
- *	ChainAllocator.Init();
- *	CMemBlock<T> Block = ChainAllocator.Alloc(ElementCount);
- *	T* pData = Block.Get();
- *	ChainAllocator.Dealloc(&Block);
-*/
-
-template<typename T>
-struct CMemBlock
-{
-	T* m_pStart;
-	int m_Count;
-
-	inline T* Get() { return m_pStart; }
-};
-
-template<typename T>
-class CChainAllocator
-{
-	int64 m_AllocatedSize;
-	u8* m_aRingUsed;
-	T* m_pElementBuffer;
-	int ELT_COUNT_MAX;
-	int RING_ELT_COUNT;
-
-public:
-	typedef CMemBlock<T> BlockT;
-
-	CChainAllocator()
-	{
-		m_AllocatedSize = 0;
-		m_aRingUsed = 0;
-		m_pElementBuffer = 0;
-		ELT_COUNT_MAX = 0;
-		RING_ELT_COUNT = 1;
-	}
-
-	~CChainAllocator()
-	{
-		Deinit();
-	}
-
-	void Init(u32 ElementCountMax, u32 RingElementCount = 1)
-	{
-		ELT_COUNT_MAX = ElementCountMax;
-		RING_ELT_COUNT = RingElementCount;
-		const int TOTAL_RING_COUNT = (ELT_COUNT_MAX/RING_ELT_COUNT);
-		dbg_assert(m_pElementBuffer == 0, "Don't init this twice");
-		m_AllocatedSize = sizeof(u8)*TOTAL_RING_COUNT+sizeof(T)*ELT_COUNT_MAX;
-		m_aRingUsed = (u8*)mem_alloc(m_AllocatedSize, 0); // TODO: align
-		m_pElementBuffer = (T*)(m_aRingUsed+ELT_COUNT_MAX);
-		mem_zero(m_aRingUsed, sizeof(u8)*TOTAL_RING_COUNT);
-	}
-
-	void Clear()
-	{
-		const int TOTAL_RING_COUNT = (ELT_COUNT_MAX/RING_ELT_COUNT);
-		mem_zero(m_aRingUsed, sizeof(u8)*TOTAL_RING_COUNT);
-	}
-
-	void Deinit()
-	{
-		mem_free(m_aRingUsed);
-	}
-
-	inline T* AllocOne()
-	{
-		return Alloc(1).Get();
-	}
-
-	BlockT Alloc(const int Count)
-	{
-		dbg_assert(m_pElementBuffer != 0, "Forgot to call Init()");
-		int ChainRingStart = 0;
-		int ChainRingCount = 0;
-		const int TOTAL_RING_COUNT = (ELT_COUNT_MAX/RING_ELT_COUNT);
-		for(int i = 0; i < TOTAL_RING_COUNT; i++)
-		{
-			u64 Ring8 = *(u64*)(m_aRingUsed+i);
-			if(Ring8 == 0)
-			{
-				ChainRingCount += min(Count, 8);
-				i += min(Count, 8) - 1;
-			}
-			else if(Ring8 == (u64)0xFFFFFFFFFFFFFFFF)
-			{
-				ChainRingStart = i+8;
-				ChainRingCount = 0;
-				i += 7;
-				continue;
-			}
-			else
-			{
-				if(m_aRingUsed[i])
-				{
-					ChainRingStart = i+1;
-					ChainRingCount = 0;
-					continue;
-				}
-				else
-					ChainRingCount++;
-			}
-
-			if(ChainRingCount*RING_ELT_COUNT >= Count)
-			{
-				memset(m_aRingUsed+ChainRingStart, 0xFF, sizeof(u8)*ChainRingCount);
-
-				BlockT Block;
-				Block.m_pStart = m_pElementBuffer + ChainRingStart*RING_ELT_COUNT;
-				Block.m_Count = ChainRingCount*RING_ELT_COUNT;
-				mem_zero(Block.m_pStart, sizeof(T)*Block.m_Count);
-				dbg_assert(ChainRingStart*RING_ELT_COUNT + Block.m_Count <= ELT_COUNT_MAX,
-						   "Something went wrong");
-				return Block;
-			}
-		}
-
-#ifdef CONF_DEBUG
-		dbg_break();
-#endif
-		// fallback to malloc in release mode
-		T* pFallBack = (T*)mem_alloc(sizeof(T)*Count, 0);
-		BlockT Block;
-		Block.m_pStart = pFallBack;
-		Block.m_Count = Count;
-		mem_zero(Block.m_pStart, sizeof(T)*Block.m_Count);
-		return Block;
-	}
-
-	void Dealloc(BlockT* pBlock)
-	{
-		if(pBlock->m_Count <= 0)
-			return;
-
-		const int Start = pBlock->m_pStart-m_pElementBuffer;
-		const int Count = pBlock->m_Count;
-
-		if(Start >= 0 && Start+Count <= ELT_COUNT_MAX)
-			mem_zero(m_aRingUsed+(Start/RING_ELT_COUNT), sizeof(u8)*(Count/RING_ELT_COUNT));
-		else
-			mem_free(pBlock->m_pStart);
-
-		pBlock->m_Count = 0;
-	}
-
-	inline void DeallocOne(T* pPtr)
-	{
-		BlockT Block;
-		Block.m_pStart = pPtr;
-		Block.m_Count = 1;
-		Dealloc(&Block);
-	}
-
-	inline int64 AllocatedSize() const { return m_AllocatedSize; }
-};
-
 template<typename T>
 struct array2: public array<T>
 {
@@ -384,13 +214,6 @@ struct CEditorMap2
 	array2<CGroup> m_aGroups;
 	array2<CMapItemEnvelope> m_aEnvelopes;
 
-	CChainAllocator<CTile> m_TileDispenser;
-	CChainAllocator<CQuad> m_QuadDispenser;
-	CChainAllocator<CEnvPoint> m_EnvPointDispenser;
-	CChainAllocator<CLayer> m_LayerDispenser;
-	CChainAllocator<CGroup> m_GroupDispenser;
-	CChainAllocator<CMapItemEnvelope> m_EnvelopeDispenser;
-
 	CAssets m_Assets;
 
 	IGraphics* m_pGraphics;
@@ -477,7 +300,7 @@ class CEditor2: public IEditor
 {
 	enum
 	{
-		MAX_HISTORY=128,
+		MAX_HISTORY=1024,
 	};
 
 	IGraphics* m_pGraphics;
@@ -593,7 +416,8 @@ class CEditor2: public IEditor
 		}
 	};
 
-	CChainAllocator<CHistoryEntry> m_HistoryEntryDispenser;
+	CHistoryEntry m_aHistoryEntries[MAX_HISTORY];
+	u8 m_aHistoryEntryUsed[MAX_HISTORY];
 	CHistoryEntry* m_pHistoryEntryCurrent = 0x0;
 
 	enum
@@ -816,6 +640,9 @@ class CEditor2: public IEditor
 	void EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, bool HistoryCondition);
 	void EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom, bool HistoryCondition);
 
+	void HistoryClear();
+	CHistoryEntry* HistoryAllocEntry();
+	void HistoryDeallocEntry(CHistoryEntry* pEntry);
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
 	void HistoryUndo();
