@@ -1,3 +1,6 @@
+#ifndef GAME_CLIENT_COMPONENTS_STATS_H
+#define GAME_CLIENT_COMPONENTS_STATS_H
+
 #include <game/client/component.h>
 
 enum {
@@ -27,3 +30,5 @@ public:
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 };
+
+#endif
