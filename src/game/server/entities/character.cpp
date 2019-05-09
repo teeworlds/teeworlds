@@ -20,6 +20,7 @@
 #include <infcroya/entities/soldier-bomb.h>
 #include <infcroya/entities/scientist-mine.h>
 #include <infcroya/entities/medic-grenade.h>
+#include <infcroya/entities/merc-bomb.h>
 // INFCROYA END ------------------------------------------------------------//
 
 //input count
@@ -645,7 +646,10 @@ void CCharacter::SetNumObjectsHit(int NumObjectsHit)
 
 void CCharacter::Infect(int From)
 {
-	GameServer()->m_apPlayers[From]->GetCroyaPlayer()->OnKill(GetPlayer()->GetCID()); // do that before you actually turn someone into a zombie
+	// BEGIN // do that before you actually turn someone into a zombie
+	GetCroyaPlayer()->SetOldClassNum(GetCroyaPlayer()->GetClassNum());
+	GameServer()->m_apPlayers[From]->GetCroyaPlayer()->OnKill(GetPlayer()->GetCID());
+	// END //   do that before you actually turn someone into a zombie
 	GetCroyaPlayer()->TurnIntoRandomZombie();
 }
 
@@ -743,6 +747,11 @@ void CCharacter::DestroyChildEntities()
 		if (pGrenade->m_Owner != m_pPlayer->GetCID()) continue;
 		GameServer()->m_World.DestroyEntity(pGrenade);
 	}
+	for (CMercenaryBomb* pBomb = (CMercenaryBomb*)GameWorld()->FindFirst(CGameWorld::ENTTYPE_MERCENARY_BOMB); pBomb; pBomb = (CMercenaryBomb*)pBomb->TypeNext())
+	{
+		if (pBomb->m_Owner != m_pPlayer->GetCID()) continue;
+		GameServer()->m_World.DestroyEntity(pBomb);
+	}
 }
 
 bool CCharacter::IsHookProtected() const
@@ -784,6 +793,40 @@ bool CCharacter::FindPortalPosition(vec2 Pos, vec2& Res)
 	}
 
 	return false;
+}
+
+void CCharacter::SaturateVelocity(vec2 Force, float MaxSpeed)
+{
+	if (length(Force) < 0.00001)
+		return;
+
+	float Speed = length(m_Core.m_Vel);
+	vec2 VelDir = normalize(m_Core.m_Vel);
+	if (Speed < 0.00001)
+	{
+		VelDir = normalize(Force);
+	}
+	vec2 OrthoVelDir = vec2(-VelDir.y, VelDir.x);
+	float VelDirFactor = dot(Force, VelDir);
+	float OrthoVelDirFactor = dot(Force, OrthoVelDir);
+
+	vec2 NewVel = m_Core.m_Vel;
+	if (Speed < MaxSpeed || VelDirFactor < 0.0f)
+	{
+		NewVel += VelDir * VelDirFactor;
+		float NewSpeed = length(NewVel);
+		if (NewSpeed > MaxSpeed)
+		{
+			if (VelDirFactor > 0.f)
+				NewVel = VelDir * MaxSpeed;
+			else
+				NewVel = -VelDir * MaxSpeed;
+		}
+	}
+
+	NewVel += OrthoVelDir * OrthoVelDirFactor;
+
+	m_Core.m_Vel = NewVel;
 }
 // INFCROYA END ------------------------------------------------------------//
 

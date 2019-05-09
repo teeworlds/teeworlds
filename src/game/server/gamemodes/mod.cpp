@@ -14,6 +14,7 @@
 #include <infcroya/classes/soldier.h>
 #include <infcroya/classes/scientist.h>
 #include <infcroya/classes/medic.h>
+#include <infcroya/classes/mercenary.h>
 #include <engine/shared/config.h>
 #include <infcroya/localization/localization.h>
 #include <engine/storage.h>
@@ -39,6 +40,7 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 	classes[Class::MEDIC] = new CMedic();
 	classes[Class::SOLDIER] = new CSoldier();
 	classes[Class::SCIENTIST] = new CScientist();
+	classes[Class::MERCENARY] = new CMercenary();
 	classes[Class::SMOKER] = new CSmoker();
 }
 
@@ -48,7 +50,7 @@ CGameControllerMOD::~CGameControllerMOD()
 	delete geolocation;
 #endif
 	for (const auto& c : classes) {
-		delete c.second;
+		delete c.second; // delete classes[i];
 	}
 }
 

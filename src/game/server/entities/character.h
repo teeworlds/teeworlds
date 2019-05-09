@@ -105,6 +105,8 @@ public:
 	CNetObj_PlayerInput& GetInput();
 
 	bool FindPortalPosition(vec2 Pos, vec2& Res);
+
+	void SaturateVelocity(vec2 Force, float MaxSpeed);
 	// INFCROYA END ------------------------------------------------------------//
 
 private:
