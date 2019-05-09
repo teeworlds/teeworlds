@@ -197,6 +197,8 @@ public:
 	// INFCROYA BEGIN ------------------------------------------------------------
 	void CreateLaserDotEvent(vec2 Pos0, vec2 Pos1, int LifeSpan);
 	void SendChatTarget(int To, const char* pText);
+	int GetHumanCount() const;
+	int GetZombieCount() const;
 	// INFCROYA END ------------------------------------------------------------//
 };
 

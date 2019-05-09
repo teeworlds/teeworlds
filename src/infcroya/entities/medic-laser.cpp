@@ -4,7 +4,10 @@
 #include <game/server/gamecontext.h>
 
 #include "game/server/entities/character.h"
+#include "game/server/player.h"
 #include "medic-laser.h"
+#include <infcroya/croyaplayer.h>
+#include <infcroya/classes/class.h>
 
 CMedicLaser::CMedicLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER, Pos)
@@ -30,7 +33,46 @@ bool CMedicLaser::HitCharacter(vec2 From, vec2 To)
 	m_From = From;
 	m_Pos = At;
 	m_Energy = -1;
-	pHit->TakeDamage(vec2(0.f, 0.f), normalize(To-From), g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Damage, m_Owner, WEAPON_LASER);
+	if (pOwnerChar && pOwnerChar->GetCroyaPlayer()->GetClassNum() == Class::MEDIC) { // Revive zombie
+		const int MIN_ZOMBIES = 4;
+		const int DAMAGE_ON_REVIVE = 17;
+		int OldClass = pHit->GetCroyaPlayer()->GetOldClassNum();
+		auto medic = pOwnerChar;
+		auto zombie = pHit;
+		CGameContext* pGameServer = medic->GameServer();
+
+		if (medic && medic->GetHealthArmorSum() <= DAMAGE_ON_REVIVE) {
+			int HealthArmor = DAMAGE_ON_REVIVE + 1;
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "You need at least %d hp", HealthArmor);
+			pGameServer->SendBroadcast(aBuf, medic->GetPlayer()->GetCID());
+		}
+		else if (GameServer()->GetZombieCount() <= MIN_ZOMBIES) {
+			int MinZombies = MIN_ZOMBIES + 1;
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), "Too few zombies (less than %d)", MinZombies);
+			GameServer()->SendBroadcast(aBuf, m_Owner);
+		}
+		else {
+			zombie->GetCroyaPlayer()->SetClassNum(OldClass, true);
+			if (zombie->GetPlayer()->GetCharacter()) {
+				zombie->GetPlayer()->GetCharacter()->SetHealthArmor(1, 0);
+				zombie->Unfreeze();
+				medic->TakeDamage(vec2(0.f, 0.f), medic->GetPos(), DAMAGE_ON_REVIVE * 2, m_Owner, WEAPON_LASER);
+
+				const char* MedicName = Server()->ClientName(medic->GetPlayer()->GetCID());
+				const char* ZombieName = Server()->ClientName(zombie->GetPlayer()->GetCID());
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "Medic %s revived %s", MedicName, ZombieName);
+				GameServer()->SendChatTarget(-1, aBuf);
+				//Server()->RoundStatistics()->OnScoreEvent(ClientID, SCOREEVENT_MEDIC_REVIVE, medic->GetClass(), Server()->ClientName(ClientID), GameServer()->Console());
+				medic->GetCroyaPlayer()->OnKill(zombie->GetPlayer()->GetCID());
+			}
+		}
+	}
+	else {
+		pHit->TakeDamage(vec2(0.f, 0.f), normalize(To - From), g_pData->m_Weapons.m_aId[WEAPON_LASER].m_Damage, m_Owner, WEAPON_LASER);
+	}
 	return true;
 }
 

@@ -1608,4 +1608,30 @@ void CGameContext::SendChatTarget(int To, const char* pText)
 	Msg.m_pMessage = pText;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, To);
 }
+
+int CGameContext::GetHumanCount() const
+{
+	int HumanCount = 0;
+	for (CPlayer* each : m_apPlayers) {
+		if (each) {
+			CCharacter* pChr = each->GetCharacter();
+			if (pChr && pChr->IsHuman())
+				HumanCount++;
+		}
+	}
+	return HumanCount;
+}
+
+int CGameContext::GetZombieCount() const
+{
+	int ZombiesCount = 0;
+	for (CPlayer* each : m_apPlayers) {
+		if (each) {
+			CCharacter* pChr = each->GetCharacter();
+			if (pChr && pChr->IsZombie())
+				ZombiesCount++;
+		}
+	}
+	return ZombiesCount;
+}
 // INFCROYA END ------------------------------------------------------------//

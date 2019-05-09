@@ -72,7 +72,6 @@ public:
 	bool IsHuman() const;
 	bool IsZombie() const;
 
-	bool IsInfected() const;
 	void SetInfected(bool Infected);
 
 	void SetCroyaPlayer(class CroyaPlayer* CroyaPlayer);
@@ -85,6 +84,8 @@ public:
 	void SetNumObjectsHit(int NumObjectsHit);
 	void Infect(int From);
 	bool IncreaseOverallHp(int Amount);
+	int GetHealthArmorSum() const;
+	void SetHealthArmor(int Health, int Armor);
 
 	CCharacterCore& GetCharacterCore();
 	bool m_FirstShot;
@@ -93,12 +94,17 @@ public:
 	array<int> m_BarrierHintIDs;
 
 	void Freeze(float Time, int Player, int Reason);
+	void Unfreeze();
 	void Poison(int Count, int From);
 
 	void DestroyChildEntities();
 
 	bool IsHookProtected() const;
 	void SetHookProtected(bool HookProtected);
+
+	CNetObj_PlayerInput& GetInput();
+
+	bool FindPortalPosition(vec2 Pos, vec2& Res);
 	// INFCROYA END ------------------------------------------------------------//
 
 private:

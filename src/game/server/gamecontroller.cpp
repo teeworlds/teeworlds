@@ -1199,3 +1199,33 @@ int IGameController::GetStartTeam()
 	}
 	return TEAM_SPECTATORS;
 }
+
+// INFCROYA BEGIN ------------------------------------------------------------
+bool IGameController::IsSpawnable(vec2 Pos)
+{
+	//First check if there is a tee too close
+	CCharacter* aEnts[MAX_CLIENTS];
+	int Num = GameServer()->m_World.FindEntities(Pos, 64, (CEntity * *)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
+
+	for (int c = 0; c < Num; ++c)
+	{
+		if (distance(aEnts[c]->GetPos(), Pos) <= 60)
+			return false;
+	}
+
+	//Check the center
+	if (GameServer()->Collision()->CheckPoint(Pos))
+		return false;
+
+	//Check the border of the tee. Kind of extrem, but more precise
+	for (int i = 0; i < 16; i++)
+	{
+		float Angle = i * (2.0f * pi / 16.0f);
+		vec2 CheckPos = Pos + vec2(cos(Angle), sin(Angle)) * 30.0f;
+		if (GameServer()->Collision()->CheckPoint(CheckPos))
+			return false;
+	}
+
+	return true;
+}
+// INFCROYA END ------------------------------------------------------------//

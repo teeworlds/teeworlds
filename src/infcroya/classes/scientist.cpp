@@ -6,6 +6,7 @@
 #include <generated/server_data.h>
 #include <infcroya/entities/scientist-mine.h>
 #include <infcroya/entities/scientist-laser.h>
+#include <infcroya/entities/laser-teleport.h>
 #include <engine/shared/config.h>
 
 CScientist::CScientist()
@@ -101,6 +102,31 @@ void CScientist::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCh
 			g_pData->m_Weapons.m_Gun.m_pBase->m_Damage, false, 0, -1, WEAPON_GUN);
 
 		pGameServer->CreateSound(pChr->GetPos(), SOUND_GUN_FIRE);
+	} break;
+
+	case WEAPON_GRENADE: {
+		vec2 PortalShift = vec2(pChr->GetInput().m_TargetX, pChr->GetInput().m_TargetY);
+		vec2 PortalDir = normalize(PortalShift);
+		if (length(PortalShift) > 500.0f)
+			PortalShift = PortalDir * 500.0f;
+		vec2 PortalPos;
+
+		if (pChr->FindPortalPosition(pChr->GetPos() + PortalShift, PortalPos))
+		{
+			CCharacterCore& Core = pChr->GetCharacterCore();
+			vec2 OldPos = Core.m_Pos;
+			Core.m_Pos = PortalPos;
+			Core.m_HookedPlayer = -1;
+			Core.m_HookState = HOOK_RETRACTED;
+			Core.m_HookPos = Core.m_Pos;
+			if (g_Config.m_InfScientistTpSelfharm > 0) {
+				pChr->TakeDamage(vec2(0.0f, 0.0f), pChr->GetPos(), g_Config.m_InfScientistTpSelfharm * 2, ClientID, WEAPON_HAMMER);
+			}
+			pGameServer->CreateDeath(OldPos, ClientID);
+			pGameServer->CreateDeath(PortalPos, ClientID);
+			pGameServer->CreateSound(PortalPos, SOUND_CTF_RETURN);
+			new CLaserTeleport(pGameWorld, PortalPos, OldPos);
+		}
 	} break;
 
 	case WEAPON_LASER: {

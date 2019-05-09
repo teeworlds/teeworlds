@@ -19,6 +19,7 @@
 #include <infcroya/entities/biologist-mine.h>
 #include <infcroya/entities/soldier-bomb.h>
 #include <infcroya/entities/scientist-mine.h>
+#include <infcroya/entities/medic-grenade.h>
 // INFCROYA END ------------------------------------------------------------//
 
 //input count
@@ -605,11 +606,6 @@ bool CCharacter::IsZombie() const {
 	return m_Infected;
 }
 
-bool CCharacter::IsInfected() const
-{
-	return m_Infected;
-}
-
 void CCharacter::SetInfected(bool Infected) {
 	m_Infected = Infected;
 	m_Core.m_Infected = Infected;
@@ -671,6 +667,17 @@ bool CCharacter::IncreaseOverallHp(int Amount)
 	return success;
 }
 
+int CCharacter::GetHealthArmorSum() const
+{
+	return m_Health + m_Armor;
+}
+
+void CCharacter::SetHealthArmor(int Health, int Armor)
+{
+	m_Health = Health;
+	m_Armor = Armor;
+}
+
 CCharacterCore& CCharacter::GetCharacterCore()
 {
 	return m_Core;
@@ -686,6 +693,18 @@ void CCharacter::Freeze(float Time, int Player, int Reason)
 	m_FreezeReason = Reason;
 
 	m_LastFreezer = Player;
+}
+void CCharacter::Unfreeze()
+{
+	m_IsFrozen = false;
+	m_FrozenTime = -1;
+
+	if (m_FreezeReason == FREEZEREASON_UNDEAD)
+	{
+		m_Health = 10.0;
+	}
+
+	GameServer()->CreatePlayerSpawn(m_Pos);
 }
 void CCharacter::Poison(int Count, int From)
 {
@@ -719,6 +738,11 @@ void CCharacter::DestroyChildEntities()
 		if (pMine->m_Owner != m_pPlayer->GetCID()) continue;
 		GameServer()->m_World.DestroyEntity(pMine);
 	}
+	for (CMedicGrenade* pGrenade = (CMedicGrenade*)GameWorld()->FindFirst(CGameWorld::ENTTYPE_MEDIC_GRENADE); pGrenade; pGrenade = (CMedicGrenade*)pGrenade->TypeNext())
+	{
+		if (pGrenade->m_Owner != m_pPlayer->GetCID()) continue;
+		GameServer()->m_World.DestroyEntity(pGrenade);
+	}
 }
 
 bool CCharacter::IsHookProtected() const
@@ -730,6 +754,36 @@ void CCharacter::SetHookProtected(bool HookProtected)
 {
 	m_HookProtected = HookProtected;
 	m_Core.m_HookProtected = HookProtected;
+}
+
+CNetObj_PlayerInput& CCharacter::GetInput()
+{
+	return m_Input;
+}
+
+bool CCharacter::FindPortalPosition(vec2 Pos, vec2& Res)
+{
+	vec2 PortalShift = Pos - m_Pos;
+	vec2 PortalDir = normalize(PortalShift);
+	if (length(PortalShift) > 500.0f)
+		PortalShift = PortalDir * 500.0f;
+
+	float Iterator = length(PortalShift);
+	while (Iterator > 0.0f)
+	{
+		PortalShift = PortalDir * Iterator;
+		vec2 PortalPos = m_Pos + PortalShift;
+
+		if (GameServer()->m_pController->IsSpawnable(PortalPos))
+		{
+			Res = PortalPos;
+			return true;
+		}
+
+		Iterator -= 4.0f;
+	}
+
+	return false;
 }
 // INFCROYA END ------------------------------------------------------------//
 

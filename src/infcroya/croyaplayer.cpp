@@ -153,6 +153,16 @@ void CroyaPlayer::SetHookProtected(bool HookProtected)
 	}
 }
 
+int CroyaPlayer::GetOldClassNum() const
+{
+	return m_OldClassNum;
+}
+
+void CroyaPlayer::SetOldClassNum(int Class)
+{
+	m_OldClassNum = Class;
+}
+
 const char* CroyaPlayer::GetLanguage() const
 {
 	return m_Language.c_str();

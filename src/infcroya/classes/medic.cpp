@@ -5,6 +5,8 @@
 #include <game/server/gamecontext.h>
 #include <generated/server_data.h>
 #include <infcroya/croyaplayer.h>
+#include <infcroya/entities/medic-laser.h>
+#include <infcroya/entities/medic-grenade.h>
 
 CMedic::CMedic()
 {
@@ -32,6 +34,8 @@ void CMedic::InitialWeaponsHealth(CCharacter* pChr)
 	pChr->GiveWeapon(WEAPON_GUN, 10);
 	pChr->SetWeapon(WEAPON_GUN);
 	pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
+	pChr->GiveWeapon(WEAPON_GRENADE, 10);
+	pChr->GiveWeapon(WEAPON_LASER, 10);
 	pChr->SetNormalEmote(EMOTE_NORMAL);
 }
 
@@ -120,5 +124,49 @@ void CMedic::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCharac
 
 		pGameServer->CreateSound(pChr->GetPos(), SOUND_SHOTGUN_FIRE);
 	} break;
+
+	case WEAPON_GRENADE: {
+		//Find bomb
+		bool BombFound = false;
+		for (CMedicGrenade* pGrenade = (CMedicGrenade*)pGameWorld->FindFirst(CGameWorld::ENTTYPE_MEDIC_GRENADE); pGrenade; pGrenade = (CMedicGrenade*)pGrenade->TypeNext())
+		{
+			if (pGrenade->m_Owner != ClientID) continue;
+			pGrenade->Explode();
+			BombFound = true;
+		}
+
+		if (!BombFound && pChr->m_aWeapons[WEAPON_GRENADE].m_Ammo)
+		{
+			int ShotSpread = 0;
+
+			CMsgPacker Msg(NETMSGTYPE_SV_EXTRAPROJECTILE);
+			Msg.AddInt(ShotSpread * 2 + 1);
+
+			for (int i = -ShotSpread; i <= ShotSpread; ++i)
+			{
+				float a = angle(Direction) + frandom() / 5.0f;
+
+				CMedicGrenade* pProj = new CMedicGrenade(pGameWorld, ClientID, pChr->GetPos(), vec2(cosf(a), sinf(a)));
+
+				// pack the Projectile and send it to the client Directly
+				CNetObj_Projectile p;
+				pProj->FillInfo(&p);
+
+				for (unsigned i = 0; i < sizeof(CNetObj_Projectile) / sizeof(int); i++)
+					Msg.AddInt(((int*)& p)[i]);
+				pChr->Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
+			}
+
+			pGameServer->CreateSound(pChr->GetPos(), SOUND_GRENADE_FIRE);
+
+			pChr->SetReloadTimer(pChr->Server()->TickSpeed() / 4);
+			pChr->m_aWeapons[WEAPON_GRENADE].m_Ammo++;
+		}
+	} break;
+
+	case WEAPON_LASER: {
+		new CMedicLaser(pGameWorld, pChr->GetPos(), Direction, pGameServer->Tuning()->m_LaserReach, pChr->GetPlayer()->GetCID());
+		pGameServer->CreateSound(pChr->GetPos(), SOUND_LASER_FIRE);
+	}
 	}
 }

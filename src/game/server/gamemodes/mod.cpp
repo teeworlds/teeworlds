@@ -59,10 +59,17 @@ void CGameControllerMOD::Snap(int SnappingClient)
 
 void CGameControllerMOD::Tick()
 {
-	// this is the main part of the gamemode, this function is run every tick
-
 	IGameController::Tick();
+
+	if (IsGameRunning() && IsEveryoneInfected()) {
+		EndRound();
+	}
 }
+
+/*
+void CGameControllerMOD::StartRound()
+{
+}*/
 
 void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 {
@@ -89,16 +96,17 @@ bool CGameControllerMOD::IsFriendlyFire(int ClientID1, int ClientID2) const
 
 bool CGameControllerMOD::IsEveryoneInfected() const
 {
-	bool EveryoneInfected = true;
+	bool EveryoneInfected = false;
+	int ZombiesCount = 0;
 	for (CPlayer* each : GameServer()->m_apPlayers) {
 		if (each) {
 			CCharacter* pChr = each->GetCharacter();
-			if (pChr && !pChr->IsInfected()) {
-				EveryoneInfected = false;
-				break;
-			}
+			if (pChr && pChr->IsZombie())
+				ZombiesCount++;
 		}
 	}
+	if (GetRealPlayerNum() >= 2 && GetRealPlayerNum() == ZombiesCount)
+		EveryoneInfected = true;
 	return EveryoneInfected;
 }
 
@@ -124,7 +132,13 @@ void CGameControllerMOD::OnPlayerConnect(CPlayer* pPlayer)
 #endif
 	players[ClientID] = new CroyaPlayer(ClientID, pPlayer, GameServer(), this, classes);
 	SetLanguageByCountry(Server()->ClientCountry(ClientID), ClientID);
-	players[ClientID]->SetClass(classes[Class::DEFAULT]);
+	if (!IsGameRunning()) {
+		players[ClientID]->SetClass(classes[Class::DEFAULT]);
+	}
+	else {
+		players[ClientID]->TurnIntoRandomZombie();
+		players[ClientID]->SetOldClassNum(Class::MEDIC); // turn into medic on medic revive
+	}
 	GameServer()->SendChatTarget(ClientID, g_Config.m_SvWelcome);
 }
 
