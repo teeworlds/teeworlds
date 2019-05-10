@@ -21,6 +21,7 @@
 #include <infcroya/entities/scientist-mine.h>
 #include <infcroya/entities/medic-grenade.h>
 #include <infcroya/entities/merc-bomb.h>
+#include <infcroya/entities/scatter-grenade.h>
 // INFCROYA END ------------------------------------------------------------//
 
 //input count
@@ -751,6 +752,11 @@ void CCharacter::DestroyChildEntities()
 	{
 		if (pBomb->m_Owner != m_pPlayer->GetCID()) continue;
 		GameServer()->m_World.DestroyEntity(pBomb);
+	}
+	for (CScatterGrenade* pGrenade = (CScatterGrenade*)GameWorld()->FindFirst(CGameWorld::ENTTYPE_SCATTER_GRENADE); pGrenade; pGrenade = (CScatterGrenade*)pGrenade->TypeNext())
+	{
+		if (pGrenade->m_Owner != m_pPlayer->GetCID()) continue;
+		GameServer()->m_World.DestroyEntity(pGrenade);
 	}
 }
 

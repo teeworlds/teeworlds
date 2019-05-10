@@ -15,6 +15,8 @@ private:
 	std::array<CroyaPlayer*, 64> players{};
 	std::unordered_map<int, class IClass*> classes;
 	class Geolocation* geolocation;
+	class CGameWorld* m_pGameWorld;
+	bool m_NoCircleYet;
 public:
 	CGameControllerMOD(class CGameContext *pGameServer);
 	~CGameControllerMOD() override;

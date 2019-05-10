@@ -18,6 +18,7 @@
 #include <engine/shared/config.h>
 #include <infcroya/localization/localization.h>
 #include <engine/storage.h>
+#include <infcroya/entities/circle.h>
 #ifdef CONF_GEOLOCATION
 	#include <infcroya/geolocation/geolocation.h>
 #endif
@@ -34,6 +35,8 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 #ifdef CONF_GEOLOCATION
 	geolocation = new Geolocation("mmdb/GeoLite2-Country.mmdb");
 #endif
+	m_pGameWorld = nullptr;
+	m_NoCircleYet = true;
 	classes[Class::DEFAULT] = new CDefault();
 	classes[Class::BIOLOGIST] = new CBiologist();
 	classes[Class::ENGINEER] = new CEngineer();
@@ -57,6 +60,11 @@ CGameControllerMOD::~CGameControllerMOD()
 void CGameControllerMOD::Snap(int SnappingClient)
 {
 	IGameController::Snap(SnappingClient);
+	if (m_pGameWorld && m_NoCircleYet) {
+		const int TILE_SIZE = 32;
+		new CCircle(m_pGameWorld, vec2(23 * TILE_SIZE, 56 * TILE_SIZE), -1);
+		m_NoCircleYet = false;
+	}
 }
 
 void CGameControllerMOD::Tick()
@@ -74,6 +82,9 @@ void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 
 	players[ClientID]->SetCharacter(pChr);
 	players[ClientID]->OnCharacterSpawn(pChr);
+	if (m_pGameWorld == nullptr) {
+		m_pGameWorld = pChr->GameWorld();
+	}
 }
 
 int CGameControllerMOD::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon)

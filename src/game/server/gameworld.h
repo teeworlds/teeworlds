@@ -43,6 +43,7 @@ public:
 		ENTTYPE_TURRET,
 		ENTTYPE_PLASMA,
 		ENTTYPE_GROWINGEXPLOSION,
+		ENTTYPE_CIRCLE,
 		// INFCROYA END ------------------------------------------------------------//
 
 		NUM_ENTTYPES
