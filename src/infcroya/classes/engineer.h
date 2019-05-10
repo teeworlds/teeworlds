@@ -5,7 +5,6 @@
 class CEngineer : public IClass {
 public:
 	CEngineer();
-	~CEngineer() override;
 
 	void InitialWeaponsHealth(class CCharacter* pChr) override;
 

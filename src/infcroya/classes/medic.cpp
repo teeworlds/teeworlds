@@ -23,10 +23,6 @@ CMedic::CMedic()
 	SetName("Medic");
 }
 
-CMedic::~CMedic()
-{
-}
-
 void CMedic::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);

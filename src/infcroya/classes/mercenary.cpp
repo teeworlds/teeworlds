@@ -23,10 +23,6 @@ CMercenary::CMercenary()
 	SetName("Mercenary");
 }
 
-CMercenary::~CMercenary()
-{
-}
-
 void CMercenary::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);

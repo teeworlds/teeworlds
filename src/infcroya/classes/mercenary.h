@@ -5,7 +5,6 @@
 class CMercenary : public IClass {
 public:
 	CMercenary();
-	~CMercenary() override;
 
 	void InitialWeaponsHealth(class CCharacter* pChr) override;
 

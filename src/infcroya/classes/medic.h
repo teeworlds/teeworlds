@@ -5,7 +5,6 @@
 class CMedic : public IClass {
 public:
 	CMedic();
-	~CMedic() override;
 
 	void InitialWeaponsHealth(class CCharacter* pChr) override;
 

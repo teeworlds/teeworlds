@@ -21,10 +21,6 @@ CEngineer::CEngineer()
 	SetName("Engineer");
 }
 
-CEngineer::~CEngineer()
-{
-}
-
 void CEngineer::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);

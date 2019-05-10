@@ -20,8 +20,6 @@ public:
 	~CGameControllerMOD() override;
 	void Snap(int SnappingClient) override;
 	virtual void Tick();
-
-	//void StartRound() override;
 	
 	void OnCharacterSpawn(class CCharacter* pChr) override;
 	int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon) override;

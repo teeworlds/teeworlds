@@ -16,10 +16,6 @@ CSmoker::CSmoker() : IClass()
 	SetName("Smoker");
 }
 
-CSmoker::~CSmoker()
-{
-}
-
 void CSmoker::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);

@@ -68,11 +68,6 @@ void CGameControllerMOD::Tick()
 	}
 }
 
-/*
-void CGameControllerMOD::StartRound()
-{
-}*/
-
 void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 {
 	int ClientID = pChr->GetPlayer()->GetCID();

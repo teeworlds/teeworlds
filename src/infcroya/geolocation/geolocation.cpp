@@ -4,6 +4,8 @@ Geolocation::Geolocation(const char* path_to_mmdb) {
 	db = new GeoLite2PP::DB(path_to_mmdb);
 }
 
+Geolocation::Geolocation() {}
+
 Geolocation::~Geolocation() {
 	delete db;
 	db = nullptr;

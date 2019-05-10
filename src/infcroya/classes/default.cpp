@@ -13,10 +13,6 @@ CDefault::CDefault()
 	SetName("Random choice");
 }
 
-CDefault::~CDefault()
-{
-}
-
 void CDefault::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);

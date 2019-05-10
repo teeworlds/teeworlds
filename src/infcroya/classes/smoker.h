@@ -5,7 +5,6 @@
 class CSmoker : public IClass {
 public:
 	CSmoker();
-	~CSmoker() override;
 
 	void InitialWeaponsHealth(class CCharacter* pChr) override;
 

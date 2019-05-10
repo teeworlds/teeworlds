@@ -21,10 +21,6 @@ CSoldier::CSoldier()
 	SetName("Soldier");
 }
 
-CSoldier::~CSoldier()
-{
-}
-
 void CSoldier::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);

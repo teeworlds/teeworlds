@@ -5,7 +5,6 @@
 class CScientist : public IClass {
 public:
 	CScientist();
-	~CScientist() override;
 
 	void InitialWeaponsHealth(class CCharacter* pChr) override;
 

@@ -22,10 +22,6 @@ CScientist::CScientist()
 	SetName("Scientist");
 }
 
-CScientist::~CScientist()
-{
-}
-
 void CScientist::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);

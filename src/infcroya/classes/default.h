@@ -5,7 +5,6 @@
 class CDefault : public IClass {
 public:
 	CDefault();
-	~CDefault() override;
 
 	void InitialWeaponsHealth(class CCharacter* pChr) override;
 

@@ -23,10 +23,6 @@ CBiologist::CBiologist()
 	SetName("Biologist");
 }
 
-CBiologist::~CBiologist()
-{
-}
-
 void CBiologist::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);
