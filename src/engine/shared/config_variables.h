@@ -112,6 +112,7 @@ MACRO_CONFIG_INT(InfMineLimit, inf_mine_limit, 2, 0, 1024, CFGFLAG_SERVER, "Maxi
 MACRO_CONFIG_INT(InfPoisonDamage, inf_poison_damage, 8, 0, 1024, CFGFLAG_SERVER, "Damage deals by the poison grenades")
 MACRO_CONFIG_INT(InfScientistTpSelfharm, inf_scientist_tp_selfharm, 0, 0, 10000, CFGFLAG_SERVER, "Self damage on each teleportation")
 MACRO_CONFIG_INT(InfMercBombs, inf_merc_bombs, 15, 1, 100, CFGFLAG_SERVER, "Number of poison grenades for the mercenary")
+MACRO_CONFIG_INT(InfShowScoreTime, inf_show_score_time, 3, 0, 12, CFGFLAG_SERVER, "Number of seconds the score will be shown at the end of a round")
 // INFCROYA END ------------------------------------------------------------//
 
 #endif

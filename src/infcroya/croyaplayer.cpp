@@ -40,6 +40,10 @@ void CroyaPlayer::SetClassNum(int Class, bool DrawPurpleThing)
 	SetClass(m_Classes[Class], DrawPurpleThing);
 }
 
+CCharacter* CroyaPlayer::GetCharacter() {
+	return m_pCharacter;
+}
+
 void CroyaPlayer::SetCharacter(CCharacter* pCharacter)
 {
 	m_pCharacter = pCharacter;
@@ -84,14 +88,18 @@ void CroyaPlayer::OnButtonF3()
 
 void CroyaPlayer::OnMouseWheelDown()
 {
-	TurnIntoNextHumanClass();
-	m_pClass->OnMouseWheelDown();
+	if (m_pGameController->IsCroyaWarmup()) {
+		TurnIntoNextHumanClass();
+		m_pClass->OnMouseWheelDown();
+	}
 }
 
 void CroyaPlayer::OnMouseWheelUp()
 {
-	TurnIntoPrevHumanClass();
-	m_pClass->OnMouseWheelUp();
+	if (m_pGameController->IsCroyaWarmup()) {
+		TurnIntoPrevHumanClass();
+		m_pClass->OnMouseWheelUp();
+	}
 }
 
 bool CroyaPlayer::IsHuman() const
@@ -235,6 +243,4 @@ void CroyaPlayer::SetClass(IClass* pClass, bool DrawPurpleThing)
 		m_pGameServer->SendBroadcast(aBuf, m_pPlayer->GetCID());
 	else
 		m_pGameServer->SendBroadcast(Localize(aBuf, GetLanguage()), m_pPlayer->GetCID());
-	if (m_pGameController->IsEveryoneInfected()) {
-	}
 }

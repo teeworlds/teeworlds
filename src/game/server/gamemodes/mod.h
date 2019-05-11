@@ -4,6 +4,7 @@
 #define GAME_SERVER_GAMEMODES_MOD_H
 #include <game/server/gamecontroller.h>
 #include <array>
+#include <vector>
 #include <unordered_map>
 #include <infcroya/croyaplayer.h>
 
@@ -17,11 +18,15 @@ private:
 	class Geolocation* geolocation;
 	class CGameWorld* m_pGameWorld;
 	bool m_NoCircleYet;
+	bool m_RoundStarted;
+	std::vector<int> humans;
 public:
 	CGameControllerMOD(class CGameContext *pGameServer);
 	~CGameControllerMOD() override;
 	void Snap(int SnappingClient) override;
 	virtual void Tick();
+
+	bool IsCroyaWarmup();
 	
 	void OnCharacterSpawn(class CCharacter* pChr) override;
 	int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon) override;
@@ -34,5 +39,7 @@ public:
 	void OnPlayerConnect(class CPlayer* pPlayer) override;
 
 	void SetLanguageByCountry(int Country, int ClientID);
+
+	std::array<CroyaPlayer*, 64> GetCroyaPlayers();
 };
 #endif

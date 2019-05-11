@@ -6,6 +6,10 @@
 #include <base/vmath.h>
 
 #include <generated/protocol.h>
+// INFCROYA BEGIN ------------------------------------------------------------
+#include <array>
+#include <engine/shared/config.h>
+// INFCROYA END ------------------------------------------------------------//
 
 /*
 	Class: Game Controller
@@ -102,8 +106,8 @@ protected:
 	int m_SuddenDeath;
 	int m_aTeamscore[NUM_TEAMS];
 
-	void EndMatch() { SetGameState(IGS_END_MATCH, TIMER_END); }
-	void EndRound() { SetGameState(IGS_END_ROUND, TIMER_END/2); }
+	void EndMatch() { SetGameState(IGS_END_MATCH, g_Config.m_InfShowScoreTime); } // INFCROYA RELATED
+	void EndRound() { SetGameState(IGS_END_ROUND, g_Config.m_InfShowScoreTime); } // INFCROYA RELATED
 
 	// info
 	int m_GameFlags;
@@ -217,6 +221,10 @@ public:
 
 	// INFCROYA BEGIN ------------------------------------------------------------
 	bool IsSpawnable(vec2 Pos);
+	bool IsWarmup() const;
+	bool IsGameEnd() const;
+	std::array<class CroyaPlayer*, 64> m_pCroyaPlayers{};
+	class CGameControllerMOD* m_MOD;
 	// INFCROYA END ------------------------------------------------------------//
 };
 

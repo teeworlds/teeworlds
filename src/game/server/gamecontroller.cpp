@@ -9,6 +9,11 @@
 #include "gamecontext.h"
 #include "gamecontroller.h"
 #include "player.h"
+// INFCROYA BEGIN ------------------------------------------------------------
+#include <infcroya/croyaplayer.h>
+#include <infcroya/classes/class.h>
+#include <game/server/gamemodes/mod.h>
+// INFCROYA END ------------------------------------------------------------//
 
 
 IGameController::IGameController(CGameContext *pGameServer)
@@ -570,7 +575,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_START_COUNTDOWN)
 		{
 			m_GameState = GameState;
-			m_GameStateTimer = 3*Server()->TickSpeed();
+			m_GameStateTimer = 0*Server()->TickSpeed(); // INFCROYA RELATED
 			GameServer()->m_World.m_Paused = true;
 		}
 		break;
@@ -645,6 +650,13 @@ void IGameController::StartMatch()
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "start match type='%s' teamplay='%d'", m_pGameType, m_GameFlags&GAMEFLAG_TEAMS);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+	// INFCROYA BEGIN ------------------------------------------------------------
+	for (CroyaPlayer* cp : m_MOD->GetCroyaPlayers()) {
+		if (cp) {
+			cp->SetClassNum(Class::DEFAULT);
+		}
+	}
+	// INFCROYA END ------------------------------------------------------------//
 }
 
 void IGameController::StartRound()
@@ -658,6 +670,13 @@ void IGameController::StartRound()
 		SetGameState(IGS_START_COUNTDOWN);
 	else
 		SetGameState(IGS_WARMUP_GAME, TIMER_INFINITE);
+	// INFCROYA BEGIN ------------------------------------------------------------
+	for (CroyaPlayer* cp : m_MOD->GetCroyaPlayers()) {
+		if (cp) {
+			cp->SetClassNum(Class::DEFAULT);
+		}
+	}
+	// INFCROYA END ------------------------------------------------------------//
 }
 
 void IGameController::SwapTeamscore()
@@ -1227,5 +1246,15 @@ bool IGameController::IsSpawnable(vec2 Pos)
 	}
 
 	return true;
+}
+
+bool IGameController::IsGameEnd() const
+{
+	return (m_GameState == IGS_END_MATCH) || (m_GameState == IGS_END_ROUND);
+}
+
+bool IGameController::IsWarmup() const
+{
+	return (m_GameState == IGS_WARMUP_USER) || (m_GameState == IGS_WARMUP_GAME);
 }
 // INFCROYA END ------------------------------------------------------------//

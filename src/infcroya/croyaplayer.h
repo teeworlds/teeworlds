@@ -22,6 +22,8 @@ public:
 
 	int GetClassNum();
 	void SetClassNum(int Class, bool DrawPurpleThing = false);
+
+	CCharacter* GetCharacter();
 	void SetCharacter(CCharacter* pCharacter);
 
 	void OnCharacterSpawn(CCharacter* pChr);

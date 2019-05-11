@@ -37,6 +37,8 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 #endif
 	m_pGameWorld = nullptr;
 	m_NoCircleYet = true;
+	m_RoundStarted = false;
+	IGameController::m_MOD = this; // temporarily, todo: avoid this
 	classes[Class::DEFAULT] = new CDefault();
 	classes[Class::BIOLOGIST] = new CBiologist();
 	classes[Class::ENGINEER] = new CEngineer();
@@ -71,9 +73,32 @@ void CGameControllerMOD::Tick()
 {
 	IGameController::Tick();
 
-	if (IsGameRunning() && IsEveryoneInfected()) {
+	/*if (IsCroyaWarmup() && !m_RoundStarted) {
+		for (CPlayer* pPlayer : GameServer()->m_apPlayers) {
+			if (!pPlayer)
+				continue;
+			if (!pPlayer->GetCharacter())
+				continue;
+			humans.push_back(pPlayer->GetCID());
+		}
+		//players[ClientID]->TurnIntoRandomZombie();
+		//players[ClientID]->SetOldClassNum(Class::MEDIC); // turn into medic on medic revive
+	}*/
+
+	if (!IsWarmup() && IsEveryoneInfected() && !IsGameEnd()) {
 		EndRound();
+		m_RoundStarted = false;
 	}
+}
+
+bool CGameControllerMOD::IsCroyaWarmup()
+{
+	if (IsWarmup())
+		return true;
+	if (m_GameInfo.m_TimeLimit > 0 && (Server()->Tick() - m_GameStartTick) <= Server()->TickSpeed() * 10)
+		return true;
+	else
+		return false;
 }
 
 void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
@@ -140,7 +165,7 @@ void CGameControllerMOD::OnPlayerConnect(CPlayer* pPlayer)
 #endif
 	players[ClientID] = new CroyaPlayer(ClientID, pPlayer, GameServer(), this, classes);
 	SetLanguageByCountry(Server()->ClientCountry(ClientID), ClientID);
-	if (!IsGameRunning()) {
+	if (IsCroyaWarmup()) {
 		players[ClientID]->SetClass(classes[Class::DEFAULT]);
 	}
 	else {
@@ -324,4 +349,9 @@ void CGameControllerMOD::SetLanguageByCountry(int Country, int ClientID)
 		// set to chinese
 		break;
 	}
+}
+
+std::array<CroyaPlayer*, 64> CGameControllerMOD::GetCroyaPlayers()
+{
+	return players;
 }
