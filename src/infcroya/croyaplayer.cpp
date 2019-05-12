@@ -49,6 +49,16 @@ void CroyaPlayer::SetCharacter(CCharacter* pCharacter)
 	m_pCharacter = pCharacter;
 }
 
+CPlayer* CroyaPlayer::GetPlayer()
+{
+	return m_pPlayer;
+}
+
+int CroyaPlayer::GetClientID() const
+{
+	return m_ClientID;
+}
+
 void CroyaPlayer::OnCharacterSpawn(CCharacter* pChr)
 {
 	m_pClass->OnCharacterSpawn(pChr);

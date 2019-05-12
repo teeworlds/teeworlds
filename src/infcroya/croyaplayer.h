@@ -26,6 +26,9 @@ public:
 	CCharacter* GetCharacter();
 	void SetCharacter(CCharacter* pCharacter);
 
+	CPlayer* GetPlayer();
+	int GetClientID() const;
+
 	void OnCharacterSpawn(CCharacter* pChr);
 	void OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon);
 	void OnKill(int Victim);

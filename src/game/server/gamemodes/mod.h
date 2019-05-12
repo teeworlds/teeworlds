@@ -27,12 +27,17 @@ public:
 	virtual void Tick();
 
 	bool IsCroyaWarmup();
+	bool RoundJustStarted();
+
+	void StartInitialInfection();
 	
 	void OnCharacterSpawn(class CCharacter* pChr) override;
 	int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon) override;
 
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const override;
 
+	int GetZombieCount() const;
+	int GetHumanCount() const;
 	bool IsEveryoneInfected() const;
 
 	void OnPlayerDisconnect(class CPlayer* pPlayer) override;

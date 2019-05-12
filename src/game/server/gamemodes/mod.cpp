@@ -73,21 +73,17 @@ void CGameControllerMOD::Tick()
 {
 	IGameController::Tick();
 
-	/*if (IsCroyaWarmup() && !m_RoundStarted) {
-		for (CPlayer* pPlayer : GameServer()->m_apPlayers) {
-			if (!pPlayer)
-				continue;
-			if (!pPlayer->GetCharacter())
-				continue;
-			humans.push_back(pPlayer->GetCID());
-		}
-		//players[ClientID]->TurnIntoRandomZombie();
-		//players[ClientID]->SetOldClassNum(Class::MEDIC); // turn into medic on medic revive
-	}*/
+	if (IsCroyaWarmup() && RoundJustStarted()) {
+		StartInitialInfection();
+	}
 
-	if (!IsWarmup() && IsEveryoneInfected() && !IsGameEnd()) {
+	if (!IsCroyaWarmup() && IsEveryoneInfected() && !IsGameEnd()) {
 		EndRound();
 		m_RoundStarted = false;
+	}
+
+	if (!IsCroyaWarmup() && !IsGameEnd() && GetZombieCount() < 1) {
+		StartInitialInfection();
 	}
 }
 
@@ -99,6 +95,47 @@ bool CGameControllerMOD::IsCroyaWarmup()
 		return true;
 	else
 		return false;
+}
+
+bool CGameControllerMOD::RoundJustStarted()
+{
+	if (m_GameInfo.m_TimeLimit > 0 && (Server()->Tick() - m_GameStartTick) == Server()->TickSpeed() * 10)
+		return true;
+	else
+		return false;
+}
+
+void CGameControllerMOD::StartInitialInfection()
+{
+	for (CroyaPlayer* each : players) {
+		if (!each)
+			continue;
+		if (each->IsHuman() && each->GetPlayer()->GetTeam() != TEAM_SPECTATORS)
+			humans.push_back(each->GetClientID());
+	}
+	if (GetRealPlayerNum() < 2) {
+		humans.clear();
+		return;
+	}
+
+	auto infect_random_human = [this](int n) {
+		for (int i = 0; i < n; i++) {
+			int HumanVecID = random_int_range(0, humans.size() - 1);
+			int RandomHumanID = humans[HumanVecID];
+			players[RandomHumanID]->SetOldClassNum(players[RandomHumanID]->GetClassNum());
+			players[RandomHumanID]->TurnIntoRandomZombie();
+			humans.erase(humans.begin() + HumanVecID);
+		}
+	};
+
+	if (GetRealPlayerNum() <= 3 && GetZombieCount() < 1) {
+		infect_random_human(1);
+	}
+	else if (GetRealPlayerNum() > 3 && GetZombieCount() < 2) {
+		infect_random_human(2);
+	}
+	
+	humans.clear();
 }
 
 void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
@@ -127,18 +164,37 @@ bool CGameControllerMOD::IsFriendlyFire(int ClientID1, int ClientID2) const
 	return false;
 }
 
+int CGameControllerMOD::GetZombieCount() const
+{
+	int ZombieCount = 0;
+	for (CroyaPlayer* each : players) {
+		if (!each)
+			continue;
+		if (each->IsZombie() && each->GetPlayer()->GetTeam() != TEAM_SPECTATORS) {
+			ZombieCount++;
+		}
+	}
+	return ZombieCount;
+}
+
+int CGameControllerMOD::GetHumanCount() const
+{
+	int HumanCount = 0;
+	for (CroyaPlayer* each : players) {
+		if (!each)
+			continue;
+		if (each->IsHuman() && each->GetPlayer()->GetTeam() != TEAM_SPECTATORS) {
+			HumanCount++;
+		}
+	}
+	return HumanCount;
+}
+
 bool CGameControllerMOD::IsEveryoneInfected() const
 {
 	bool EveryoneInfected = false;
-	int ZombiesCount = 0;
-	for (CPlayer* each : GameServer()->m_apPlayers) {
-		if (each) {
-			CCharacter* pChr = each->GetCharacter();
-			if (pChr && pChr->IsZombie())
-				ZombiesCount++;
-		}
-	}
-	if (GetRealPlayerNum() >= 2 && GetRealPlayerNum() == ZombiesCount)
+	int ZombieCount = GetZombieCount();
+	if (GetRealPlayerNum() >= 2 && GetRealPlayerNum() == ZombieCount)
 		EveryoneInfected = true;
 	return EveryoneInfected;
 }
