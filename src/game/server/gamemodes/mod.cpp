@@ -37,8 +37,29 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 #endif
 	m_pGameWorld = nullptr;
 	m_NoCircleYet = true;
-	m_RoundStarted = false;
 	IGameController::m_MOD = this; // temporarily, todo: avoid this
+
+	m_ExplosionStarted = false;
+	m_MapWidth = GameServer()->Collision()->GetWidth();
+	m_MapHeight = GameServer()->Collision()->GetHeight();
+	m_GrowingMap = new int[m_MapWidth * m_MapHeight];
+
+	for (int j = 0; j < m_MapHeight; j++)
+	{
+		for (int i = 0; i < m_MapWidth; i++)
+		{
+			vec2 TilePos = vec2(16.0f, 16.0f) + vec2(i * 32.0f, j * 32.0f);
+			if (GameServer()->Collision()->CheckPoint(TilePos))
+			{
+				m_GrowingMap[j * m_MapWidth + i] = 4;
+			}
+			else
+			{
+				m_GrowingMap[j * m_MapWidth + i] = 1;
+			}
+		}
+	}
+	m_GrowingMap[56 * m_MapWidth + 23] = 6;
 	classes[Class::DEFAULT] = new CDefault();
 	classes[Class::BIOLOGIST] = new CBiologist();
 	classes[Class::ENGINEER] = new CEngineer();
@@ -57,6 +78,7 @@ CGameControllerMOD::~CGameControllerMOD()
 	for (const auto& c : classes) {
 		delete c.second; // delete classes[i];
 	}
+	if (m_GrowingMap) delete[] m_GrowingMap;
 }
 
 void CGameControllerMOD::Snap(int SnappingClient)
@@ -79,11 +101,121 @@ void CGameControllerMOD::Tick()
 
 	if (!IsCroyaWarmup() && IsEveryoneInfected() && !IsGameEnd()) {
 		EndRound();
-		m_RoundStarted = false;
 	}
 
 	if (!IsCroyaWarmup() && !IsGameEnd() && GetZombieCount() < 1) {
 		StartInitialInfection();
+	}
+
+	if (!IsGameEnd()) { // infclass 0.6 copypaste
+		//Start the final explosion if the time is over
+		if (!IsCroyaWarmup() && !m_ExplosionStarted && g_Config.m_SvTimelimit > 0 && (Server()->Tick() - m_GameStartTick) >= g_Config.m_SvTimelimit * Server()->TickSpeed() * 60)
+		{
+			for (CCharacter* p = (CCharacter*)GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER); p; p = (CCharacter*)p->TypeNext())
+			{
+				if (p->IsZombie())
+				{
+					GameServer()->SendEmoticon(p->GetPlayer()->GetCID(), EMOTICON_GHOST);
+				}
+				else
+				{
+					GameServer()->SendEmoticon(p->GetPlayer()->GetCID(), EMOTICON_EYES);
+				}
+			}
+			m_ExplosionStarted = true;
+		}
+
+		//Do the final explosion
+		if (m_ExplosionStarted)
+		{
+			bool NewExplosion = false;
+
+			for (int j = 0; j < m_MapHeight; j++)
+			{
+				for (int i = 0; i < m_MapWidth; i++)
+				{
+					if ((m_GrowingMap[j * m_MapWidth + i] & 1) && (
+						(i > 0 && m_GrowingMap[j * m_MapWidth + i - 1] & 2) ||
+						(i < m_MapWidth - 1 && m_GrowingMap[j * m_MapWidth + i + 1] & 2) ||
+						(j > 0 && m_GrowingMap[(j - 1) * m_MapWidth + i] & 2) ||
+						(j < m_MapHeight - 1 && m_GrowingMap[(j + 1) * m_MapWidth + i] & 2)
+						))
+					{
+						NewExplosion = true;
+						m_GrowingMap[j * m_MapWidth + i] |= 8;
+						m_GrowingMap[j * m_MapWidth + i] &= ~1;
+						if (random_prob(0.1f))
+						{
+							vec2 TilePos = vec2(16.0f, 16.0f) + vec2(i * 32.0f, j * 32.0f);
+							GameServer()->CreateExplosion(TilePos, -1, WEAPON_GAME, true);
+							GameServer()->CreateSound(TilePos, SOUND_GRENADE_EXPLODE);
+						}
+					}
+				}
+			}
+
+			for (int j = 0; j < m_MapHeight; j++)
+			{
+				for (int i = 0; i < m_MapWidth; i++)
+				{
+					if (m_GrowingMap[j * m_MapWidth + i] & 8)
+					{
+						m_GrowingMap[j * m_MapWidth + i] &= ~8;
+						m_GrowingMap[j * m_MapWidth + i] |= 2;
+					}
+				}
+			}
+
+			for (CCharacter* p = (CCharacter*)GameServer()->m_World.FindFirst(CGameWorld::ENTTYPE_CHARACTER); p; p = (CCharacter*)p->TypeNext())
+			{
+				if (p->IsHuman())
+					continue;
+
+				int tileX = static_cast<int>(round(p->GetPos().x)) / 32;
+				int tileY = static_cast<int>(round(p->GetPos().y)) / 32;
+
+				if (tileX < 0) tileX = 0;
+				if (tileX >= m_MapWidth) tileX = m_MapWidth - 1;
+				if (tileY < 0) tileY = 0;
+				if (tileY >= m_MapHeight) tileY = m_MapHeight - 1;
+
+				if (m_GrowingMap[tileY * m_MapWidth + tileX] & 2 && p->GetPlayer())
+				{
+					p->Die(p->GetPlayer()->GetCID(), WEAPON_GAME);
+				}
+			}
+
+			//If no more explosions, game over, decide who win
+			if (!NewExplosion)
+			{
+				if (GameServer()->GetHumanCount())
+				{
+					int NumHumans = GameServer()->GetHumanCount();
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "%d humans won the round", NumHumans);
+					GameServer()->SendChatTarget(-1, aBuf);
+
+					for (CPlayer* each : GameServer()->m_apPlayers) {
+						if (!each)
+							continue;
+						if (each->GetCroyaPlayer()->IsHuman())
+						{
+							GameServer()->SendChatTarget(-1, "You have survived, +5 points");
+						}
+					}
+				}
+				else
+				{
+					int Seconds = g_Config.m_SvTimelimit * 60;
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "Infected won the round in %d seconds", Seconds);
+					GameServer()->SendChatTarget(-1, aBuf);
+				}
+
+				ResetFinalExplosion();
+				EndRound();
+			}
+		}
 	}
 }
 
@@ -146,6 +278,12 @@ void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 	players[ClientID]->OnCharacterSpawn(pChr);
 	if (m_pGameWorld == nullptr) {
 		m_pGameWorld = pChr->GameWorld();
+	}
+
+	if (pChr->IsZombie()) {
+		vec2 NewPos(0, 0);
+		pChr->GetCharacterCore().m_Pos = NewPos;
+		pChr->GameServer()->CreatePlayerSpawn(NewPos);
 	}
 }
 
@@ -410,4 +548,20 @@ void CGameControllerMOD::SetLanguageByCountry(int Country, int ClientID)
 std::array<CroyaPlayer*, 64> CGameControllerMOD::GetCroyaPlayers()
 {
 	return players;
+}
+
+void CGameControllerMOD::ResetFinalExplosion()
+{
+	m_ExplosionStarted = false;
+
+	for (int j = 0; j < m_MapHeight; j++)
+	{
+		for (int i = 0; i < m_MapWidth; i++)
+		{
+			if (!(m_GrowingMap[j * m_MapWidth + i] & 4))
+			{
+				m_GrowingMap[j * m_MapWidth + i] = 1;
+			}
+		}
+	}
 }

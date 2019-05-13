@@ -6,6 +6,7 @@
 #include "gamecontext.h"
 #include "gamecontroller.h"
 #include "player.h"
+#include <infcroya/croyaplayer.h> // INFCROYA RELATED
 
 
 MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
@@ -480,5 +481,13 @@ void CPlayer::TryRespawn()
 	m_Spawning = false;
 	m_pCharacter = new(m_ClientID) CCharacter(&GameServer()->m_World);
 	m_pCharacter->Spawn(this, SpawnPos);
-	GameServer()->CreatePlayerSpawn(SpawnPos);
+	// INFCROYA BEGIN ------------------------------------------------------------
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		if (GetCroyaPlayer()->IsHuman())
+			GameServer()->CreatePlayerSpawn(SpawnPos);
+	}
+	else {
+		GameServer()->CreatePlayerSpawn(SpawnPos);
+	}
+	// INFCROYA END ------------------------------------------------------------//
 }

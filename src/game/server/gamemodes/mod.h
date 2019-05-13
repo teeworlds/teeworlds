@@ -18,14 +18,20 @@ private:
 	class Geolocation* geolocation;
 	class CGameWorld* m_pGameWorld;
 	bool m_NoCircleYet;
-	bool m_RoundStarted;
 	std::vector<int> humans;
+
+	bool m_ExplosionStarted;
+	int m_MapWidth;
+	int m_MapHeight;
+	int* m_GrowingMap;
 public:
 	CGameControllerMOD(class CGameContext *pGameServer);
 	~CGameControllerMOD() override;
 	void Snap(int SnappingClient) override;
 	virtual void Tick();
 
+	/** First 10 secs after game start
+	*/
 	bool IsCroyaWarmup();
 	bool RoundJustStarted();
 
@@ -46,5 +52,6 @@ public:
 	void SetLanguageByCountry(int Country, int ClientID);
 
 	std::array<CroyaPlayer*, 64> GetCroyaPlayers();
+	void ResetFinalExplosion();
 };
 #endif

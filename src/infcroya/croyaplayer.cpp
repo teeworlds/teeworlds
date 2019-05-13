@@ -199,15 +199,10 @@ IClass* CroyaPlayer::GetClass()
 
 void CroyaPlayer::SetClass(IClass* pClass, bool DrawPurpleThing)
 {
-	// purple animation begin, got from old infclass CGameContext::CreatePlayerSpawn(vec2 Pos)
+	// purple animation begin
 	if (m_pCharacter && DrawPurpleThing) {
 		vec2 PrevPos = m_pCharacter->GetPos();
-		CNetEvent_Spawn* ev = (CNetEvent_Spawn*)m_pGameServer->m_Events.Create(NETEVENTTYPE_SPAWN, sizeof(CNetEvent_Spawn));
-		if (ev)
-		{
-			ev->m_X = (int)PrevPos.x;
-			ev->m_Y = (int)PrevPos.y;
-		}
+		m_pGameServer->CreatePlayerSpawn(PrevPos);
 	}
 	// purple animation end
 	for (int& each : m_pPlayer->m_TeeInfos.m_aUseCustomColors) {
