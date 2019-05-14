@@ -2334,13 +2334,56 @@ void CEditor2::RenderMapOverlay()
 	}
 }
 
+void CEditor2::RenderTopPanel(CUIRect TopPanel)
+{
+	CUIRect ButtonRect;
+	TopPanel.VSplitLeft(50.0f, &ButtonRect, &TopPanel);
+
+	CUIRect FileMenuRect = {ButtonRect.x, ButtonRect.y+ButtonRect.h, 120, 20*7};
+	static CUIButton s_File;
+	if(UiButton(ButtonRect, "File", &s_File))
+	{
+		m_UiCurrentPopupID = POPUP_MENU_FILE;
+		m_UiCurrentPopupRect = FileMenuRect;
+	}
+
+	TopPanel.VSplitLeft(50.0f, &ButtonRect, &TopPanel);
+	static CUIButton s_Help;
+	if(UiButton(ButtonRect, "Help", &s_Help))
+	{
+
+	}
+
+	// tools
+	TopPanel.VSplitLeft(50.0f, 0, &TopPanel);
+	static CUIButton s_ButTools[TOOL_COUNT_];
+	const char* aButName[] = {
+		"Se",
+		"Di",
+		"TB"
+	};
+
+	for(int t = 0; t < TOOL_COUNT_; t++)
+	{
+		TopPanel.VSplitLeft(25.0f, &ButtonRect, &TopPanel);
+
+		// if(UiButtonSelect(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t))
+		if(UiButtonEx(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t ? StyleColorInputSelected : StyleColorButton, m_Tool == t ? StyleColorInputSelected : StyleColorButtonHover, StyleColorButtonPressed, StyleColorButtonBorder, 10.0f))
+			ChangeTool(t);
+	}
+}
+
 void CEditor2::RenderMapEditorUI()
 {
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
-	CUIRect RightPanel, DetailPanel, ToolColumnRect;
-	UiScreenRect.VSplitRight(150, &m_UiMainViewRect, &RightPanel);
+	CUIRect TopPanel, RightPanel, DetailPanel, ToolColumnRect;
+	UiScreenRect.VSplitRight(150.0f, &m_UiMainViewRect, &RightPanel);
+	m_UiMainViewRect.HSplitTop(20.0f, &TopPanel, &m_UiMainViewRect);
+
+	DrawRect(TopPanel, StyleColorBg);
+	RenderTopPanel(TopPanel);
 
 	DrawRect(RightPanel, StyleColorBg);
 
@@ -2463,6 +2506,7 @@ void CEditor2::RenderMapEditorUI()
 	const float ButtonSize = 20.0f;
 	const float Margin = 5.0f;
 	m_UiMainViewRect.VSplitLeft(ButtonSize + Margin * 2, &ToolColumnRect, 0);
+	ToolColumnRect.HSplitTop(150.0f, 0, &ToolColumnRect);
 	ToolColumnRect.VMargin(Margin, &ToolColumnRect);
 
 	static CUIButton s_ButTools[TOOL_COUNT_];
@@ -2819,6 +2863,9 @@ void CEditor2::RenderMapEditorUI()
 	// popups
 	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
 		RenderPopupBrushPalette();
+
+	if(m_UiCurrentPopupID == POPUP_MENU_FILE)
+		RenderPopupMenuFile();
 
 	UI()->ClipDisable(); // main view rect clip
 }
@@ -3554,6 +3601,107 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	}
 
 	UiEndScrollRegion(&s_DetailSR);
+}
+
+void CEditor2::RenderPopupMenuFile()
+{
+	CUIRect Rect = m_UiCurrentPopupRect;
+	if(m_UiCurrentPopupID == POPUP_MENU_FILE)
+	{
+		bool Inside = UI()->MouseInside(&Rect);
+		bool Close = false;
+		static int s_FileMenuID = 0;
+		UI()->SetHotItem(&s_FileMenuID);
+
+		if(UI()->CheckActiveItem(&s_FileMenuID))
+		{
+			if(!UI()->MouseButton(0))
+			{
+				if(!Inside)
+					Close = true;
+				UI()->SetActiveItem(0);
+			}
+		}
+		else if(UI()->HotItem() == &s_FileMenuID)
+		{
+			if(UI()->MouseButton(0))
+				UI()->SetActiveItem(&s_FileMenuID);
+		}
+
+		if(Input()->KeyPress(KEY_ESCAPE))
+			Close = true;
+
+		// render the actual menu
+		static CUIButton s_NewMapButton;
+		static CUIButton s_SaveButton;
+		static CUIButton s_SaveAsButton;
+		static CUIButton s_OpenButton;
+		static CUIButton s_OpenCurrentButton;
+		static CUIButton s_AppendButton;
+		static CUIButton s_ExitButton;
+
+		CUIRect Slot;
+		// Rect.HSplitTop(2.0f, &Slot, &Rect);
+		Rect.HSplitTop(20.0f, &Slot, &Rect);
+		if(UiButton(Slot, "New", &s_NewMapButton))
+		{
+			if(HasUnsavedData())
+			{
+
+			}
+			else
+			{
+				Reset();
+				// pEditor->m_aFileName[0] = 0;
+			}
+			Close = true;
+		}
+
+		Rect.HSplitTop(20.0f, &Slot, &Rect);
+		if(UiButton(Slot, "Load", &s_OpenButton))
+		{
+			if(HasUnsavedData())
+			{
+
+			}
+			else
+			{
+				// pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
+			}
+			Close = true;
+		}
+
+		Rect.HSplitTop(20.0f, &Slot, &Rect);
+		if(UiButton(Slot, "Append", &s_AppendButton))
+		{
+			Close = true;
+		}
+
+		Rect.HSplitTop(20.0f, &Slot, &Rect);
+		if(UiButton(Slot, "Save", &s_SaveButton))
+		{
+			Close = true;
+		}
+
+		Rect.HSplitTop(20.0f, &Slot, &Rect);
+		if(UiButton(Slot, "Save As", &s_SaveAsButton))
+		{
+			Close = true;
+		}
+
+		Rect.HSplitTop(20.0f, &Slot, &Rect);
+		if(UiButton(Slot, "Exit", &s_ExitButton))
+		{
+			Close = true;
+			g_Config.m_ClEditor = 0;
+		}
+
+		if(Close)
+		{
+			m_UiCurrentPopupID = POPUP_NONE;
+			UI()->SetActiveItem(0);
+		}
+	}
 }
 
 void CEditor2::RenderPopupBrushPalette()

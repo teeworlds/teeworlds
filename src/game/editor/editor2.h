@@ -355,10 +355,12 @@ class CEditor2: public IEditor
 	enum
 	{
 		POPUP_NONE = -1,
-		POPUP_BRUSH_PALETTE = 0
+		POPUP_BRUSH_PALETTE = 0,
+		POPUP_MENU_FILE,
 	};
 
 	int m_UiCurrentPopupID = POPUP_NONE;
+	CUIRect m_UiCurrentPopupRect;
 
 	struct CUIBrushPaletteState
 	{
@@ -481,8 +483,10 @@ class CEditor2: public IEditor
 	void RenderMap();
 	void RenderMapOverlay();
 	void RenderMapEditorUI();
+	void RenderTopPanel(CUIRect TopPanel);
 	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
+	void RenderPopupMenuFile();
 	void RenderPopupBrushPalette();
 	void RenderBrush(vec2 Pos);
 
@@ -582,6 +586,7 @@ class CEditor2: public IEditor
 	bool UiScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Rect);
 
 	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
+	inline bool IsPopupMenuFile() const { return m_UiCurrentPopupID == POPUP_MENU_FILE; }
 
 	void Reset();
 	void ResetCamera();
