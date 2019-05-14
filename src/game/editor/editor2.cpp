@@ -320,7 +320,7 @@ bool CEditorMap2::Save(const char* pFileName)
 				Item.m_Version = CMapItemLayerTilemap::CURRENT_VERSION;
 
 				// Item.m_Layer.m_Flags = Layer.m_Flags;
-				Item.m_Layer.m_Flags = 0; // LAYERFLAG_DETAIL or 0
+				Item.m_Layer.m_Flags = (int)Layer.m_HighDetail*LAYERFLAG_DETAIL; // LAYERFLAG_DETAIL or 0
 				Item.m_Layer.m_Type = Layer.m_Type;
 
 				Item.m_Color.r = Layer.m_Color.r*255;
@@ -362,7 +362,7 @@ bool CEditorMap2::Save(const char* pFileName)
 				{
 					CMapItemLayerQuads Item;
 					Item.m_Version = CMapItemLayerQuads::CURRENT_VERSION;
-					Item.m_Layer.m_Flags = 0; // LAYERFLAG_DETAIL or 0
+					Item.m_Layer.m_Flags = (int)LayerQuad.m_HighDetail*LAYERFLAG_DETAIL; // LAYERFLAG_DETAIL or 0
 					Item.m_Layer.m_Type = LayerQuad.m_Type;
 					Item.m_Image = LayerQuad.m_ImageID;
 
@@ -500,6 +500,7 @@ bool CEditorMap2::Load(const char* pFileName)
 				IntsToStr(Tilemap.m_aName, ARR_COUNT(Tilemap.m_aName), LayerTile.m_aName);
 				LayerTile.m_Type = LAYERTYPE_TILES;
 				LayerTile.m_ImageID = Tilemap.m_Image;
+				LayerTile.m_HighDetail = Tilemap.m_Layer.m_Flags & LAYERFLAG_DETAIL;
 				LayerTile.m_Width = Tilemap.m_Width;
 				LayerTile.m_Height = Tilemap.m_Height;
 				LayerTile.m_ColorEnvelopeID = Tilemap.m_ColorEnv;
@@ -543,6 +544,7 @@ bool CEditorMap2::Load(const char* pFileName)
 				IntsToStr(ItemQuadLayer.m_aName, ARR_COUNT(ItemQuadLayer.m_aName), LayerQuad.m_aName);
 				LayerQuad.m_Type = LAYERTYPE_QUADS;
 				LayerQuad.m_ImageID = ItemQuadLayer.m_Image;
+				LayerQuad.m_HighDetail = ItemQuadLayer.m_Layer.m_Flags & LAYERFLAG_DETAIL;
 
 				CQuad *pQuads = (CQuad *)File.GetData(ItemQuadLayer.m_Data);
 				LayerQuad.m_aQuads.clear();
@@ -3494,14 +3496,15 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 					EditHistCondLayerChangeColor(m_UiSelectedLayerID, NewColor, true);
 				}
 
-				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-
 				// Auto map
 				CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(SelectedLayer.m_ImageID);
 
 				if(pMapper)
 				{
+					DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+					DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+					DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+
 					// label
 					DrawRect(ButtonRect, StyleColorButtonPressed);
 					DrawText(ButtonRect, Localize("Auto-map"), FontSize);
@@ -3522,6 +3525,18 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 						}
 					}
 				}
+
+				// high detail
+				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+				ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+				DrawRect(ButtonRect, vec4(0,0,0,1));
+				DrawText(ButtonRect, Localize("High Detail"), FontSize);
+				static CUICheckboxYesNo s_CbHighDetail;
+				bool NewHighDetail = SelectedLayer.m_HighDetail;
+				if(UiCheckboxYesNo(ButtonRect2, &NewHighDetail, &s_CbHighDetail))
+					EditLayerHighDetail(m_UiSelectedLayerID, NewHighDetail);
 
 				UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 			}
@@ -5288,6 +5303,26 @@ void CEditor2::EditLayerChangeImage(int LayerID, int NewImageID)
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s > %s",
 		OldImageID < 0 ? Localize("none") : m_Map.m_Assets.m_aImageNames[OldImageID].m_Buff,
 		NewImageID < 0 ? Localize("none") : m_Map.m_Assets.m_aImageNames[NewImageID].m_Buff);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+}
+
+void CEditor2::EditLayerHighDetail(int LayerID, bool NewHighDetail)
+{
+	dbg_assert(LayerID >= 0 && LayerID < m_Map.m_aLayers.size(), "LayerID out of bounds");
+
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
+	if(Layer.m_HighDetail == NewHighDetail)
+		return;
+
+	const bool OldUseClipping = Layer.m_HighDetail;
+	Layer.m_HighDetail = NewHighDetail;
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: high detail"), LayerID);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s > %s",
+		OldUseClipping ? Localize("on") : Localize("off"),
+		NewHighDetail ? Localize("on") : Localize("off"));
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
