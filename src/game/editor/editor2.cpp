@@ -497,7 +497,11 @@ bool CEditorMap2::Load(const char* pFileName)
 				m_MapMaxHeight = max(m_MapMaxHeight, Tilemap.m_Height);
 
 				CLayer LayerTile;
-				IntsToStr(Tilemap.m_aName, ARR_COUNT(Tilemap.m_aName), LayerTile.m_aName);
+                if(Tilemap.m_Version >= 3)
+                    IntsToStr(Tilemap.m_aName, ARR_COUNT(Tilemap.m_aName), LayerTile.m_aName);
+                else
+                    LayerTile.m_aName[0] = 0;
+
 				LayerTile.m_Type = LAYERTYPE_TILES;
 				LayerTile.m_ImageID = Tilemap.m_Image;
 				LayerTile.m_HighDetail = Tilemap.m_Layer.m_Flags & LAYERFLAG_DETAIL;
@@ -541,7 +545,11 @@ bool CEditorMap2::Load(const char* pFileName)
 				const CMapItemLayerQuads& ItemQuadLayer = *(CMapItemLayerQuads*)pLayer;
 
 				CLayer LayerQuad;
-				IntsToStr(ItemQuadLayer.m_aName, ARR_COUNT(ItemQuadLayer.m_aName), LayerQuad.m_aName);
+                if(ItemQuadLayer.m_Version >= 3)
+                    IntsToStr(ItemQuadLayer.m_aName, ARR_COUNT(ItemQuadLayer.m_aName), LayerQuad.m_aName);
+                else
+                    LayerQuad.m_aName[0] = 0;
+
 				LayerQuad.m_Type = LAYERTYPE_QUADS;
 				LayerQuad.m_ImageID = ItemQuadLayer.m_Image;
 				LayerQuad.m_HighDetail = ItemQuadLayer.m_Layer.m_Flags & LAYERFLAG_DETAIL;
