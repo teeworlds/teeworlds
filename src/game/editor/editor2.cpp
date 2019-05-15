@@ -1115,6 +1115,10 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 			if(li == m_GameLayerID)
 				Tilemap.m_Layer.m_Type = LAYERTYPE_GAME;
 
+            Tilemap.m_Layer.m_Flags = 0;
+            if(Layer.m_HighDetail)
+                Tilemap.m_Layer.m_Flags |= LAYERFLAG_DETAIL;
+
 			memmove(Tilemap.m_aName, aNameInt, sizeof(Tilemap.m_aName));
 			Tilemap.m_Color.r = (int)(Layer.m_Color.r*255);
 			Tilemap.m_Color.g = (int)(Layer.m_Color.g*255);
@@ -1134,6 +1138,10 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 			CMapItemLayerQuads& LayerQuads = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
 			memmove(LayerQuads.m_aName, aNameInt, sizeof(LayerQuads.m_aName));
 			LayerQuads.m_Layer.m_Type = LAYERTYPE_QUADS;
+            LayerQuads.m_Layer.m_Flags = 0;
+            if(Layer.m_HighDetail)
+                LayerQuads.m_Layer.m_Flags |= LAYERFLAG_DETAIL;
+
 			LayerQuads.m_Data = QuadStartID;
 			LayerQuads.m_NumQuads = Layer.m_aQuads.size();
 			QuadStartID += LayerQuads.m_NumQuads;
@@ -1213,6 +1221,7 @@ void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 			const CMapItemLayerTilemap& SnapTilemap = *(CMapItemLayerTilemap*)Snap.m_apLayers[li];
 			IntsToStr(SnapTilemap.m_aName, ARR_COUNT(SnapTilemap.m_aName), Layer.m_aName);
 			Layer.m_Type = LAYERTYPE_TILES;
+            Layer.m_HighDetail = SnapTilemap.m_Layer.m_Flags&LAYERFLAG_DETAIL;
 			Layer.m_ImageID = SnapTilemap.m_Image;
 			Layer.m_Color.r = SnapTilemap.m_Color.r/255.f;
 			Layer.m_Color.g = SnapTilemap.m_Color.g/255.f;
@@ -1230,6 +1239,7 @@ void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 			const CMapItemLayerQuads& SnapQuadLayer = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
 			IntsToStr(SnapQuadLayer.m_aName, ARR_COUNT(SnapQuadLayer.m_aName), Layer.m_aName);
 			Layer.m_Type = LAYERTYPE_QUADS;
+            Layer.m_HighDetail = SnapQuadLayer.m_Layer.m_Flags&LAYERFLAG_DETAIL;
 			Layer.m_ImageID = SnapQuadLayer.m_Image;
 			Layer.m_aQuads.clear();
 			Layer.m_aQuads.add(pSnapQuads, SnapQuadLayer.m_NumQuads);
@@ -1301,8 +1311,13 @@ void CEditorMap2::CompareSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 		{
 			const CMapItemLayerTilemap& SnapTilemap = *(CMapItemLayerTilemap*)Snap.m_apLayers[li];
 			dbg_assert(sizeof(SnapTilemap.m_aName) == sizeof(aNameInt), "");
-			dbg_assert(mem_comp(SnapTilemap.m_aName, aNameInt, sizeof(SnapTilemap.m_aName)) == 0,
-					   "Names don't match");
+            dbg_assert(mem_comp(SnapTilemap.m_aName, aNameInt, sizeof(SnapTilemap.m_aName)) == 0, "Names don't match");
+
+            int LayerFlags = 0;
+            if(Layer.m_HighDetail)
+                LayerFlags |= LAYERFLAG_DETAIL;
+            dbg_assert(SnapTilemap.m_Layer.m_Flags == LayerFlags, "layer flags don't match");
+
 			dbg_assert(SnapTilemap.m_Image == Layer.m_ImageID, "");
 			dbg_assert(SnapTilemap.m_ColorEnv == Layer.m_ColorEnvelopeID, "");
 			dbg_assert(SnapTilemap.m_Color.r == (int)(Layer.m_Color.r*255), "");
@@ -1319,8 +1334,13 @@ void CEditorMap2::CompareSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 		{
 			const CMapItemLayerQuads& SnapQuadLayer = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
 			dbg_assert(sizeof(SnapQuadLayer.m_aName) == sizeof(aNameInt), "");
-			dbg_assert(mem_comp(SnapQuadLayer.m_aName, aNameInt, sizeof(SnapQuadLayer.m_aName)) == 0,
-					   "Names don't match");
+            dbg_assert(mem_comp(SnapQuadLayer.m_aName, aNameInt, sizeof(SnapQuadLayer.m_aName)) == 0, "Names don't match");
+
+            int LayerFlags = 0;
+            if(Layer.m_HighDetail)
+                LayerFlags |= LAYERFLAG_DETAIL;
+            dbg_assert(SnapQuadLayer.m_Layer.m_Flags == LayerFlags, "layer flags don't match");
+
 			dbg_assert(SnapQuadLayer.m_Image == Layer.m_ImageID, "");
 			dbg_assert(SnapQuadLayer.m_NumQuads == Layer.m_aQuads.size(), "");
 			dbg_assert(mem_comp(pSnapQuads, Layer.m_aQuads.base_ptr(),
@@ -5312,16 +5332,16 @@ void CEditor2::EditLayerHighDetail(int LayerID, bool NewHighDetail)
 
 	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
 	if(Layer.m_HighDetail == NewHighDetail)
-		return;
+        return;
 
-	const bool OldUseClipping = Layer.m_HighDetail;
+    const bool OldHighDetail = Layer.m_HighDetail;
 	Layer.m_HighDetail = NewHighDetail;
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
 	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: high detail"), LayerID);
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s > %s",
-		OldUseClipping ? Localize("on") : Localize("off"),
+        OldHighDetail ? Localize("on") : Localize("off"),
 		NewHighDetail ? Localize("on") : Localize("off"));
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }

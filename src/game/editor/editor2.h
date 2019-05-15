@@ -98,13 +98,17 @@ struct CEditorMap2
 		char m_aName[12];
 		int m_Type = 0;
 		int m_ImageID = 0;
-		bool m_HighDetail;
+        bool m_HighDetail; // TODO: turn into m_Flags ?
 		vec4 m_Color;
 
 		// NOTE: we have to split the union because gcc doesn't like non-POD anonymous structs...
+        // TODO: enable c++11, please?
 
-		array2<CTile> m_aTiles;
-		array2<CQuad> m_aQuads;
+        //union
+        //{
+            array2<CTile> m_aTiles;
+            array2<CQuad> m_aQuads;
+        //};
 
 		union
 		{
