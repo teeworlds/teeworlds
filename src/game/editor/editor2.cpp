@@ -2336,6 +2336,8 @@ void CEditor2::RenderMapOverlay()
 
 void CEditor2::RenderTopPanel(CUIRect TopPanel)
 {
+	DrawRect(TopPanel, StyleColorBg);
+
 	CUIRect ButtonRect;
 	TopPanel.VSplitLeft(50.0f, &ButtonRect, &TopPanel);
 
@@ -2355,21 +2357,36 @@ void CEditor2::RenderTopPanel(CUIRect TopPanel)
 	}
 
 	// tools
-	TopPanel.VSplitLeft(50.0f, 0, &TopPanel);
-	static CUIButton s_ButTools[TOOL_COUNT_];
-	const char* aButName[] = {
-		"Se",
-		"Di",
-		"TB"
-	};
-
-	for(int t = 0; t < TOOL_COUNT_; t++)
+	if(m_Page == PAGE_MAP_EDITOR)
 	{
-		TopPanel.VSplitLeft(25.0f, &ButtonRect, &TopPanel);
+		TopPanel.VSplitLeft(50.0f, 0, &TopPanel);
+		static CUIButton s_ButTools[TOOL_COUNT_];
+		const char* aButName[] = {
+			"Se",
+			"Di",
+			"TB"
+		};
 
-		// if(UiButtonSelect(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t))
-		if(UiButtonEx(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t ? StyleColorInputSelected : StyleColorButton, m_Tool == t ? StyleColorInputSelected : StyleColorButtonHover, StyleColorButtonPressed, StyleColorButtonBorder, 10.0f))
-			ChangeTool(t);
+		for(int t = 0; t < TOOL_COUNT_; t++)
+		{
+			TopPanel.VSplitLeft(25.0f, &ButtonRect, &TopPanel);
+			if(UiButtonEx(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t ? StyleColorInputSelected : StyleColorButton, m_Tool == t ? StyleColorInputSelected : StyleColorButtonHover, StyleColorButtonPressed, StyleColorButtonBorder, 10.0f))
+				ChangeTool(t);
+		}
+	}
+
+	TopPanel.VSplitRight(20.0f, &TopPanel, 0);
+	TopPanel.VSplitRight(120.0f, &TopPanel, &ButtonRect);
+	static CUIButton s_PageSwitchButton;
+	if(m_Page == PAGE_MAP_EDITOR)
+	{
+		if(UiButton(ButtonRect, "Go to Asset Manager", &s_PageSwitchButton))
+			ChangePage(PAGE_ASSET_MANAGER);
+	}
+	else if(m_Page == PAGE_ASSET_MANAGER)
+	{
+		if(UiButton(ButtonRect, "Go to Map Editor", &s_PageSwitchButton))
+			ChangePage(PAGE_MAP_EDITOR);
 	}
 }
 
@@ -2382,7 +2399,6 @@ void CEditor2::RenderMapEditorUI()
 	UiScreenRect.VSplitRight(150.0f, &m_UiMainViewRect, &RightPanel);
 	m_UiMainViewRect.HSplitTop(20.0f, &TopPanel, &m_UiMainViewRect);
 
-	DrawRect(TopPanel, StyleColorBg);
 	RenderTopPanel(TopPanel);
 
 	DrawRect(RightPanel, StyleColorBg);
@@ -4043,8 +4059,9 @@ void CEditor2::RenderAssetManager()
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
-	CUIRect RightPanel, MainViewRect;
-	UiScreenRect.VSplitRight(150, &MainViewRect, &RightPanel);
+	CUIRect TopPanel, RightPanel, MainViewRect;
+	UiScreenRect.VSplitRight(150.0f, &MainViewRect, &RightPanel);
+	MainViewRect.HSplitTop(20.0f, &TopPanel, &MainViewRect);
 
 	DrawRect(RightPanel, StyleColorBg);
 
@@ -4185,6 +4202,8 @@ void CEditor2::RenderAssetManager()
 
 	if(m_UiSelectedImageID >= Assets.m_ImageCount)
 		m_UiSelectedImageID = -1;
+
+	RenderTopPanel(TopPanel);
 }
 
 inline void CEditor2::DrawRect(const CUIRect& Rect, const vec4& Color)
