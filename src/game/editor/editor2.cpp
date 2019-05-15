@@ -3199,10 +3199,6 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	DetailRect.Margin(3.0f, &DetailRect);
 
 	// GROUP/LAYER DETAILS
-	static CScrollRegion s_DetailSR;
-	vec2 DetailScrollOff(0, 0);
-	UiBeginScrollRegion(&s_DetailSR, &DetailRect, &DetailScrollOff);
-	DetailRect.y += DetailScrollOff.y;
 
 	// group
 	dbg_assert(m_UiSelectedGroupID >= 0, "No selected group");
@@ -3363,8 +3359,6 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	if(UiCheckboxYesNo(ButtonRect2, &NewUseClipping, &s_CbClipping))
 		EditGroupUseClipping(m_UiSelectedGroupID, NewUseClipping);
 
-	UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
-
 	// layer
 	if(m_UiSelectedLayerID >= 0)
 	{
@@ -3428,8 +3422,6 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			str_format(aBuff, sizeof(aBuff), "%d", SelectedLayer.m_Height);
 			DrawText(ButtonRect, Localize("Height"), FontSize);
 			DrawText(ButtonRect2, aBuff, FontSize);
-
-			UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 
 			// game layer
 			if(IsGameLayer)
@@ -3557,8 +3549,6 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				bool NewHighDetail = SelectedLayer.m_HighDetail;
 				if(UiCheckboxYesNo(ButtonRect2, &NewHighDetail, &s_CbHighDetail))
 					EditLayerHighDetail(m_UiSelectedLayerID, NewHighDetail);
-
-				UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 			}
 		}
 		else if(SelectedLayer.IsQuadLayer())
@@ -3588,7 +3578,6 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			if(UiCheckboxYesNo(ButtonRect2, &NewHighDetail, &s_CbHighDetail))
 				EditLayerHighDetail(m_UiSelectedLayerID, NewHighDetail);
 
-			UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
 
 			// quad count
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
@@ -3597,15 +3586,19 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			str_format(aBuff, sizeof(aBuff), "%d Quad%s:", SelectedLayer.m_aQuads.size(), SelectedLayer.m_aQuads.size() > 1 ? "s" : "");
 			DrawText(ButtonRect, aBuff, FontSize);
 
-			UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
+            static CScrollRegion s_QuadListSR;
+            vec2 QuadListScrollOff(0, 0);
+            CUIRect QuadListRegionRect = DetailRect;
+            UiBeginScrollRegion(&s_QuadListSR, &DetailRect, &QuadListScrollOff);
+            QuadListRegionRect.y += QuadListScrollOff.y;
 
 			// quad list
 			for(int QuadId = 0; QuadId < SelectedLayer.m_aQuads.size(); QuadId++)
 			{
 				const CQuad& Quad = SelectedLayer.m_aQuads[QuadId];
 				CUIRect PreviewRect;
-				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+                QuadListRegionRect.HSplitTop(ButtonHeight, &ButtonRect, &QuadListRegionRect);
+                QuadListRegionRect.HSplitTop(Spacing, 0, &QuadListRegionRect);
 				ButtonRect.VSplitRight(8.0f, &ButtonRect, 0);
 				ButtonRect.VSplitRight(ButtonHeight, &ButtonRect, &PreviewRect);
 				DrawRect(ButtonRect, vec4(0,0,0,1));
@@ -3627,12 +3620,12 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				PreviewRect.x += PreviewRect.w;
 				DrawRect(PreviewRect, vec4(Quad.m_aColors[3].r/255.0f, Quad.m_aColors[3].g/255.0f, Quad.m_aColors[3].b/255.0f, Quad.m_aColors[3].a/255.0f));
 
-				UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
+                UiScrollRegionAddRect(&s_QuadListSR, ButtonRect);
 			}
+
+            UiEndScrollRegion(&s_QuadListSR);
 		}
 	}
-
-	UiEndScrollRegion(&s_DetailSR);
 }
 
 void CEditor2::RenderPopupBrushPalette()
