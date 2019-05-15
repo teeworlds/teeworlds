@@ -98,6 +98,7 @@ struct CEditorMap2
 		char m_aName[12];
 		int m_Type = 0;
 		int m_ImageID = 0;
+		bool m_HighDetail;
 		vec4 m_Color;
 
 		// NOTE: we have to split the union because gcc doesn't like non-POD anonymous structs...
@@ -617,6 +618,7 @@ class CEditor2: public IEditor
 	int EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID);
 	int EditCreateAndAddQuadLayerUnder(int UnderLyID, int GroupID);
 	void EditLayerChangeImage(int LayerID, int NewImageID);
+	void EditLayerHighDetail(int LayerID, bool NewHighDetail);
 	void EditGroupUseClipping(int GroupID, bool NewUseClipping);
 	int EditGroupOrderMove(int GroupID, int RelativePos);
 	int EditLayerOrderMove(int LayerID, int RelativePos);
