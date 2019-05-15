@@ -3594,7 +3594,7 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 			DrawRect(ButtonRect, vec4(0,0,0,1));
-			str_format(aBuff, sizeof(aBuff), "%d Quads:", SelectedLayer.m_aQuads.size());
+			str_format(aBuff, sizeof(aBuff), "%d Quad%s:", SelectedLayer.m_aQuads.size(), SelectedLayer.m_aQuads.size() > 1 ? "s" : "");
 			DrawText(ButtonRect, aBuff, FontSize);
 
 			UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
