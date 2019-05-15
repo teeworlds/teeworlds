@@ -3577,14 +3577,58 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				EditLayerChangeImage(m_UiSelectedLayerID, ImageID);
 			}
 
+			// high detail
+			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+			ButtonRect.VSplitMid(&ButtonRect, &ButtonRect2);
+			DrawRect(ButtonRect, vec4(0,0,0,1));
+			DrawText(ButtonRect, Localize("High Detail"), FontSize);
+			static CUICheckboxYesNo s_CbHighDetail;
+			bool NewHighDetail = SelectedLayer.m_HighDetail;
+			if(UiCheckboxYesNo(ButtonRect2, &NewHighDetail, &s_CbHighDetail))
+				EditLayerHighDetail(m_UiSelectedLayerID, NewHighDetail);
+
+			UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
+
 			// quad count
 			DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 			DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 			DrawRect(ButtonRect, vec4(0,0,0,1));
-			str_format(aBuff, sizeof(aBuff), "Quads = %d", SelectedLayer.m_aQuads.size());
+			str_format(aBuff, sizeof(aBuff), "%d Quads:", SelectedLayer.m_aQuads.size());
 			DrawText(ButtonRect, aBuff, FontSize);
 
 			UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
+
+			// quad list
+			for(int QuadId = 0; QuadId < SelectedLayer.m_aQuads.size(); QuadId++)
+			{
+				const CQuad& Quad = SelectedLayer.m_aQuads[QuadId];
+				CUIRect PreviewRect;
+				DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
+				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
+				ButtonRect.VSplitRight(8.0f, &ButtonRect, 0);
+				ButtonRect.VSplitRight(ButtonHeight, &ButtonRect, &PreviewRect);
+				DrawRect(ButtonRect, vec4(0,0,0,1));
+				str_format(aBuff, sizeof(aBuff), "  Quad #%d", QuadId+1);
+				DrawText(ButtonRect, aBuff, FontSize);
+
+				// preview
+				CUIRect PreviewRectBorder = {PreviewRect.x-1, PreviewRect.y-1, PreviewRect.w+2, PreviewRect.h+2};
+				DrawRect(PreviewRectBorder, StyleColorButtonBorder);
+				DrawRect(PreviewRect, vec4(0,0,0,1));
+				PreviewRect.h /= 2;
+				PreviewRect.w /= 2;
+				DrawRect(PreviewRect, vec4(Quad.m_aColors[0].r/255.0f, Quad.m_aColors[0].g/255.0f, Quad.m_aColors[0].b/255.0f, Quad.m_aColors[0].a/255.0f));
+				PreviewRect.x += PreviewRect.w;
+				DrawRect(PreviewRect, vec4(Quad.m_aColors[1].r/255.0f, Quad.m_aColors[1].g/255.0f, Quad.m_aColors[1].b/255.0f, Quad.m_aColors[1].a/255.0f));
+				PreviewRect.x -= PreviewRect.w;
+				PreviewRect.y += PreviewRect.h;
+				DrawRect(PreviewRect, vec4(Quad.m_aColors[2].r/255.0f, Quad.m_aColors[2].g/255.0f, Quad.m_aColors[2].b/255.0f, Quad.m_aColors[2].a/255.0f));
+				PreviewRect.x += PreviewRect.w;
+				DrawRect(PreviewRect, vec4(Quad.m_aColors[3].r/255.0f, Quad.m_aColors[3].g/255.0f, Quad.m_aColors[3].b/255.0f, Quad.m_aColors[3].a/255.0f));
+
+				UiScrollRegionAddRect(&s_DetailSR, ButtonRect);
+			}
 		}
 	}
 
