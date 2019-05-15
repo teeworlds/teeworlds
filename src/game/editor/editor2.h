@@ -39,14 +39,14 @@ struct array2: public array<T>
 
 	inline T& add(const T& Elt)
 	{
-		return base_ptr()[ParentT::add(Elt)];
+		return this->base_ptr()[ParentT::add(Elt)];
 	}
 
 	T& add(const T* aElements, int EltCount)
 	{
 		for(int i = 0; i < EltCount; i++)
 			ParentT::add(aElements[i]);
-		return *(base_ptr()+size()-EltCount);
+		return *(this->base_ptr()+this->size()-EltCount);
 	}
 
 	T& add_empty(int EltCount)
@@ -54,19 +54,19 @@ struct array2: public array<T>
 		dbg_assert(EltCount > 0, "Add 0 or more");
 		for(int i = 0; i < EltCount; i++)
 			ParentT::add(T());
-		return *(base_ptr()+size()-EltCount);
+		return *(this->base_ptr()+this->size()-EltCount);
 	}
 
 	inline void remove_index_fast(int Index)
 	{
-		dbg_assert(Index >= 0 && Index < size(), "Index out of bounds");
+		dbg_assert(Index >= 0 && Index < this->size(), "Index out of bounds");
 		ParentT::remove_index_fast(Index);
 	}
 
 	// keeps order, way slower
 	inline void remove_index(int Index)
 	{
-		dbg_assert(Index >= 0 && Index < size(), "Index out of bounds");
+		dbg_assert(Index >= 0 && Index < this->size(), "Index out of bounds");
 		ParentT::remove_index(Index);
 	}
 
