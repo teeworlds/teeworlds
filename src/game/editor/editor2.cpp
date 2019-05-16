@@ -385,7 +385,7 @@ bool CEditorMap2::Save(const char* pFileName)
 
 	// check for bezier curve envelopes, otherwise use older, smaller envelope points
 	int Version = CMapItemEnvelope_v2::CURRENT_VERSION;
-	int Size = sizeof(CEnvPoint_v1);	
+	int Size = sizeof(CEnvPoint_v1);
 	// for(int e = 0; e < m_aEnvelopes.Count(); e++)
 	{
 		for(int p = 0; p < m_aEnvPoints.size(); p++)
@@ -497,10 +497,10 @@ bool CEditorMap2::Load(const char* pFileName)
 				m_MapMaxHeight = max(m_MapMaxHeight, Tilemap.m_Height);
 
 				CLayer LayerTile;
-                if(Tilemap.m_Version >= 3)
-                    IntsToStr(Tilemap.m_aName, ARR_COUNT(Tilemap.m_aName), LayerTile.m_aName);
-                else
-                    LayerTile.m_aName[0] = 0;
+				if(Tilemap.m_Version >= 3)
+					IntsToStr(Tilemap.m_aName, ARR_COUNT(Tilemap.m_aName), LayerTile.m_aName);
+				else
+					LayerTile.m_aName[0] = 0;
 
 				LayerTile.m_Type = LAYERTYPE_TILES;
 				LayerTile.m_ImageID = Tilemap.m_Image;
@@ -545,10 +545,10 @@ bool CEditorMap2::Load(const char* pFileName)
 				const CMapItemLayerQuads& ItemQuadLayer = *(CMapItemLayerQuads*)pLayer;
 
 				CLayer LayerQuad;
-                if(ItemQuadLayer.m_Version >= 3)
-                    IntsToStr(ItemQuadLayer.m_aName, ARR_COUNT(ItemQuadLayer.m_aName), LayerQuad.m_aName);
-                else
-                    LayerQuad.m_aName[0] = 0;
+				if(ItemQuadLayer.m_Version >= 3)
+					IntsToStr(ItemQuadLayer.m_aName, ARR_COUNT(ItemQuadLayer.m_aName), LayerQuad.m_aName);
+				else
+					LayerQuad.m_aName[0] = 0;
 
 				LayerQuad.m_Type = LAYERTYPE_QUADS;
 				LayerQuad.m_ImageID = ItemQuadLayer.m_Image;
@@ -1123,9 +1123,9 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 			if(li == m_GameLayerID)
 				Tilemap.m_Layer.m_Type = LAYERTYPE_GAME;
 
-            Tilemap.m_Layer.m_Flags = 0;
-            if(Layer.m_HighDetail)
-                Tilemap.m_Layer.m_Flags |= LAYERFLAG_DETAIL;
+			Tilemap.m_Layer.m_Flags = 0;
+			if(Layer.m_HighDetail)
+				Tilemap.m_Layer.m_Flags |= LAYERFLAG_DETAIL;
 
 			memmove(Tilemap.m_aName, aNameInt, sizeof(Tilemap.m_aName));
 			Tilemap.m_Color.r = (int)(Layer.m_Color.r*255);
@@ -1146,9 +1146,9 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 			CMapItemLayerQuads& LayerQuads = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
 			memmove(LayerQuads.m_aName, aNameInt, sizeof(LayerQuads.m_aName));
 			LayerQuads.m_Layer.m_Type = LAYERTYPE_QUADS;
-            LayerQuads.m_Layer.m_Flags = 0;
-            if(Layer.m_HighDetail)
-                LayerQuads.m_Layer.m_Flags |= LAYERFLAG_DETAIL;
+			LayerQuads.m_Layer.m_Flags = 0;
+			if(Layer.m_HighDetail)
+				LayerQuads.m_Layer.m_Flags |= LAYERFLAG_DETAIL;
 
 			LayerQuads.m_Data = QuadStartID;
 			LayerQuads.m_NumQuads = Layer.m_aQuads.size();
@@ -1229,7 +1229,7 @@ void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 			const CMapItemLayerTilemap& SnapTilemap = *(CMapItemLayerTilemap*)Snap.m_apLayers[li];
 			IntsToStr(SnapTilemap.m_aName, ARR_COUNT(SnapTilemap.m_aName), Layer.m_aName);
 			Layer.m_Type = LAYERTYPE_TILES;
-            Layer.m_HighDetail = SnapTilemap.m_Layer.m_Flags&LAYERFLAG_DETAIL;
+			Layer.m_HighDetail = SnapTilemap.m_Layer.m_Flags&LAYERFLAG_DETAIL;
 			Layer.m_ImageID = SnapTilemap.m_Image;
 			Layer.m_Color.r = SnapTilemap.m_Color.r/255.f;
 			Layer.m_Color.g = SnapTilemap.m_Color.g/255.f;
@@ -1247,7 +1247,7 @@ void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 			const CMapItemLayerQuads& SnapQuadLayer = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
 			IntsToStr(SnapQuadLayer.m_aName, ARR_COUNT(SnapQuadLayer.m_aName), Layer.m_aName);
 			Layer.m_Type = LAYERTYPE_QUADS;
-            Layer.m_HighDetail = SnapQuadLayer.m_Layer.m_Flags&LAYERFLAG_DETAIL;
+			Layer.m_HighDetail = SnapQuadLayer.m_Layer.m_Flags&LAYERFLAG_DETAIL;
 			Layer.m_ImageID = SnapQuadLayer.m_Image;
 			Layer.m_aQuads.clear();
 			Layer.m_aQuads.add(pSnapQuads, SnapQuadLayer.m_NumQuads);
@@ -1319,12 +1319,12 @@ void CEditorMap2::CompareSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 		{
 			const CMapItemLayerTilemap& SnapTilemap = *(CMapItemLayerTilemap*)Snap.m_apLayers[li];
 			dbg_assert(sizeof(SnapTilemap.m_aName) == sizeof(aNameInt), "");
-            dbg_assert(mem_comp(SnapTilemap.m_aName, aNameInt, sizeof(SnapTilemap.m_aName)) == 0, "Names don't match");
+			dbg_assert(mem_comp(SnapTilemap.m_aName, aNameInt, sizeof(SnapTilemap.m_aName)) == 0, "Names don't match");
 
-            int LayerFlags = 0;
-            if(Layer.m_HighDetail)
-                LayerFlags |= LAYERFLAG_DETAIL;
-            dbg_assert(SnapTilemap.m_Layer.m_Flags == LayerFlags, "layer flags don't match");
+			int LayerFlags = 0;
+			if(Layer.m_HighDetail)
+				LayerFlags |= LAYERFLAG_DETAIL;
+			dbg_assert(SnapTilemap.m_Layer.m_Flags == LayerFlags, "layer flags don't match");
 
 			dbg_assert(SnapTilemap.m_Image == Layer.m_ImageID, "");
 			dbg_assert(SnapTilemap.m_ColorEnv == Layer.m_ColorEnvelopeID, "");
@@ -1342,12 +1342,12 @@ void CEditorMap2::CompareSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 		{
 			const CMapItemLayerQuads& SnapQuadLayer = *(CMapItemLayerQuads*)Snap.m_apLayers[li];
 			dbg_assert(sizeof(SnapQuadLayer.m_aName) == sizeof(aNameInt), "");
-            dbg_assert(mem_comp(SnapQuadLayer.m_aName, aNameInt, sizeof(SnapQuadLayer.m_aName)) == 0, "Names don't match");
+			dbg_assert(mem_comp(SnapQuadLayer.m_aName, aNameInt, sizeof(SnapQuadLayer.m_aName)) == 0, "Names don't match");
 
-            int LayerFlags = 0;
-            if(Layer.m_HighDetail)
-                LayerFlags |= LAYERFLAG_DETAIL;
-            dbg_assert(SnapQuadLayer.m_Layer.m_Flags == LayerFlags, "layer flags don't match");
+			int LayerFlags = 0;
+			if(Layer.m_HighDetail)
+				LayerFlags |= LAYERFLAG_DETAIL;
+			dbg_assert(SnapQuadLayer.m_Layer.m_Flags == LayerFlags, "layer flags don't match");
 
 			dbg_assert(SnapQuadLayer.m_Image == Layer.m_ImageID, "");
 			dbg_assert(SnapQuadLayer.m_NumQuads == Layer.m_aQuads.size(), "");
@@ -1604,10 +1604,13 @@ void CEditor2::Update()
 			}
 
 			// zoom with mouse wheel
-			if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-				ChangeZoom(m_Zoom / 1.1f);
-			else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-				ChangeZoom(m_Zoom * 1.1f);
+			if(!m_WasMouseOnUiElement)
+			{
+				if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+					ChangeZoom(m_Zoom / 1.1f);
+				else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+					ChangeZoom(m_Zoom * 1.1f);
+			}
 
 			if(Input()->KeyPress(KEY_HOME))
 			{
@@ -3594,19 +3597,19 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			str_format(aBuff, sizeof(aBuff), "%d Quad%s:", SelectedLayer.m_aQuads.size(), SelectedLayer.m_aQuads.size() > 1 ? "s" : "");
 			DrawText(ButtonRect, aBuff, FontSize);
 
-            static CScrollRegion s_QuadListSR;
-            vec2 QuadListScrollOff(0, 0);
-            CUIRect QuadListRegionRect = DetailRect;
-            UiBeginScrollRegion(&s_QuadListSR, &DetailRect, &QuadListScrollOff);
-            QuadListRegionRect.y += QuadListScrollOff.y;
+			static CScrollRegion s_QuadListSR;
+			vec2 QuadListScrollOff(0, 0);
+			CUIRect QuadListRegionRect = DetailRect;
+			UiBeginScrollRegion(&s_QuadListSR, &DetailRect, &QuadListScrollOff);
+			QuadListRegionRect.y += QuadListScrollOff.y;
 
 			// quad list
 			for(int QuadId = 0; QuadId < SelectedLayer.m_aQuads.size(); QuadId++)
 			{
 				const CQuad& Quad = SelectedLayer.m_aQuads[QuadId];
 				CUIRect PreviewRect;
-                QuadListRegionRect.HSplitTop(ButtonHeight, &ButtonRect, &QuadListRegionRect);
-                QuadListRegionRect.HSplitTop(Spacing, 0, &QuadListRegionRect);
+				QuadListRegionRect.HSplitTop(ButtonHeight, &ButtonRect, &QuadListRegionRect);
+				QuadListRegionRect.HSplitTop(Spacing, 0, &QuadListRegionRect);
 				ButtonRect.VSplitRight(8.0f, &ButtonRect, 0);
 				ButtonRect.VSplitRight(ButtonHeight, &ButtonRect, &PreviewRect);
 				DrawRect(ButtonRect, vec4(0,0,0,1));
@@ -3628,10 +3631,10 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				PreviewRect.x += PreviewRect.w;
 				DrawRect(PreviewRect, vec4(Quad.m_aColors[3].r/255.0f, Quad.m_aColors[3].g/255.0f, Quad.m_aColors[3].b/255.0f, Quad.m_aColors[3].a/255.0f));
 
-                UiScrollRegionAddRect(&s_QuadListSR, ButtonRect);
+				UiScrollRegionAddRect(&s_QuadListSR, ButtonRect);
 			}
 
-            UiEndScrollRegion(&s_QuadListSR);
+			UiEndScrollRegion(&s_QuadListSR);
 		}
 	}
 }
@@ -4649,6 +4652,9 @@ void CEditor2::UiEndScrollRegion(CScrollRegion* pSr)
 	RegionRect.w += pSr->m_Params.m_ScrollbarWidth;
 	if(UI()->MouseInside(&RegionRect))
 	{
+		if(!UI()->NextHotItem())
+			UI()->SetHotItem(pSr);
+
 		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
 			pSr->m_ScrollY -= pSr->m_Params.m_ScrollSpeed;
 		else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
@@ -5377,16 +5383,16 @@ void CEditor2::EditLayerHighDetail(int LayerID, bool NewHighDetail)
 
 	CEditorMap2::CLayer& Layer = m_Map.m_aLayers[LayerID];
 	if(Layer.m_HighDetail == NewHighDetail)
-        return;
+		return;
 
-    const bool OldHighDetail = Layer.m_HighDetail;
+	const bool OldHighDetail = Layer.m_HighDetail;
 	Layer.m_HighDetail = NewHighDetail;
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
 	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: high detail"), LayerID);
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%s > %s",
-        OldHighDetail ? Localize("on") : Localize("off"),
+		OldHighDetail ? Localize("on") : Localize("off"),
 		NewHighDetail ? Localize("on") : Localize("off"));
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
