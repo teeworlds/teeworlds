@@ -2555,7 +2555,6 @@ void CEditor2::RenderMapEditorUI()
 	const float ButtonSize = 20.0f;
 	const float Margin = 5.0f;
 	m_UiMainViewRect.VSplitLeft(ButtonSize + Margin * 2, &ToolColumnRect, 0);
-	ToolColumnRect.HSplitTop(150.0f, 0, &ToolColumnRect);
 	ToolColumnRect.VMargin(Margin, &ToolColumnRect);
 
 	static CUIButton s_ButTools[TOOL_COUNT_];
@@ -3704,102 +3703,75 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 
 void CEditor2::RenderPopupMenuFile()
 {
+	if(m_UiCurrentPopupID != POPUP_MENU_FILE)
+		return;
+
 	CUIRect Rect = m_UiCurrentPopupRect;
-	if(m_UiCurrentPopupID == POPUP_MENU_FILE)
+
+	// render the actual menu
+	static CUIButton s_NewMapButton;
+	static CUIButton s_SaveButton;
+	static CUIButton s_SaveAsButton;
+	static CUIButton s_OpenButton;
+	static CUIButton s_OpenCurrentButton;
+	static CUIButton s_AppendButton;
+	static CUIButton s_ExitButton;
+
+	CUIRect Slot;
+	// Rect.HSplitTop(2.0f, &Slot, &Rect);
+	Rect.HSplitTop(20.0f, &Slot, &Rect);
+	if(UiButton(Slot, "New", &s_NewMapButton))
 	{
-		bool Inside = UI()->MouseInside(&Rect);
-		bool Close = false;
-		static int s_FileMenuID = 0;
-		UI()->SetHotItem(&s_FileMenuID);
-
-		if(UI()->CheckActiveItem(&s_FileMenuID))
+		if(HasUnsavedData())
 		{
-			if(!UI()->MouseButton(0))
-			{
-				if(!Inside)
-					Close = true;
-				UI()->SetActiveItem(0);
-			}
+
 		}
-		else if(UI()->HotItem() == &s_FileMenuID)
+		else
 		{
-			if(UI()->MouseButton(0))
-				UI()->SetActiveItem(&s_FileMenuID);
+			Reset();
+			// pEditor->m_aFileName[0] = 0;
 		}
+	}
 
-		if(Input()->KeyPress(KEY_ESCAPE))
-			Close = true;
-
-		// render the actual menu
-		static CUIButton s_NewMapButton;
-		static CUIButton s_SaveButton;
-		static CUIButton s_SaveAsButton;
-		static CUIButton s_OpenButton;
-		static CUIButton s_OpenCurrentButton;
-		static CUIButton s_AppendButton;
-		static CUIButton s_ExitButton;
-
-		CUIRect Slot;
-		// Rect.HSplitTop(2.0f, &Slot, &Rect);
-		Rect.HSplitTop(20.0f, &Slot, &Rect);
-		if(UiButton(Slot, "New", &s_NewMapButton))
+	Rect.HSplitTop(20.0f, &Slot, &Rect);
+	if(UiButton(Slot, "Load", &s_OpenButton))
+	{
+		if(HasUnsavedData())
 		{
-			if(HasUnsavedData())
-			{
 
-			}
-			else
-			{
-				Reset();
-				// pEditor->m_aFileName[0] = 0;
-			}
-			Close = true;
 		}
-
-		Rect.HSplitTop(20.0f, &Slot, &Rect);
-		if(UiButton(Slot, "Load", &s_OpenButton))
+		else
 		{
-			if(HasUnsavedData())
-			{
-
-			}
-			else
-			{
-				// pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
-			}
-			Close = true;
+			// pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		}
+	}
 
-		Rect.HSplitTop(20.0f, &Slot, &Rect);
-		if(UiButton(Slot, "Append", &s_AppendButton))
-		{
-			Close = true;
-		}
+	Rect.HSplitTop(20.0f, &Slot, &Rect);
+	if(UiButton(Slot, "Append", &s_AppendButton))
+	{
+	}
 
-		Rect.HSplitTop(20.0f, &Slot, &Rect);
-		if(UiButton(Slot, "Save", &s_SaveButton))
-		{
-			Close = true;
-		}
+	Rect.HSplitTop(20.0f, &Slot, &Rect);
+	if(UiButton(Slot, "Save", &s_SaveButton))
+	{
+	}
 
-		Rect.HSplitTop(20.0f, &Slot, &Rect);
-		if(UiButton(Slot, "Save As", &s_SaveAsButton))
-		{
-			Close = true;
-		}
+	Rect.HSplitTop(20.0f, &Slot, &Rect);
+	if(UiButton(Slot, "Save As", &s_SaveAsButton))
+	{
+	}
 
-		Rect.HSplitTop(20.0f, &Slot, &Rect);
-		if(UiButton(Slot, "Exit", &s_ExitButton))
-		{
-			Close = true;
-			g_Config.m_ClEditor = 0;
-		}
+	Rect.HSplitTop(20.0f, &Slot, &Rect);
+	if(UiButton(Slot, "Exit", &s_ExitButton))
+	{
+		g_Config.m_ClEditor = 0;
+	}
 
-		if(Close)
-		{
-			m_UiCurrentPopupID = POPUP_NONE;
-			UI()->SetActiveItem(0);
-		}
+	// close popup
+	if(Input()->KeyPress(KEY_ESCAPE) || UI()->MouseButtonClicked(0))
+	{
+		m_UiCurrentPopupID = POPUP_NONE;
+		UI()->SetActiveItem(0);
 	}
 }
 
