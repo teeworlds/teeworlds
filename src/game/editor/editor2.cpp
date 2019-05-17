@@ -3142,9 +3142,9 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 						Graphics()->QuadsBegin();
 						IGraphics::CFreeformItem Triangle(
 							x, y,
-							x, y + h,
+							x, y,
 							x - h*0.5f, y + h*0.5f,
-							x, y
+							x, y + h
 						);
 
 						Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a, Color.b*Color.a, Color.a);
@@ -3316,6 +3316,8 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 	static CUIButton s_CloseDetailPanelButton;
+	if(UiButton(ButtonRect, ">", &s_CloseDetailPanelButton, 8))
+		m_UiDetailPanelIsOpen = false;
 
 	// label
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
