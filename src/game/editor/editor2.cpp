@@ -2542,11 +2542,6 @@ void CEditor2::RenderMapEditorUI()
 		m_UiMainViewRect.VSplitRight(ButtonSize + Margin*2, 0, &DetailPanel);
 		DetailPanel.Margin(Margin, &ButtonRect);
 		ButtonRect.h = ButtonSize;
-
-		static CUIButton s_OpenDetailPanelButton;
-		if(UiButton(ButtonRect, "<", &s_OpenDetailPanelButton, 7)) {
-			m_UiDetailPanelIsOpen = true;
-		}
 	}
 
 	UI()->ClipEnable(&m_UiMainViewRect); // clip main view rect
@@ -3117,14 +3112,47 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 				if(ButState.m_Clicked)
 				{
-					m_UiSelectedLayerID = LyID;
-					m_UiSelectedGroupID = gi;
+					if(m_UiSelectedGroupID == gi && m_UiSelectedLayerID == LyID)
+					{
+						m_UiDetailPanelIsOpen ^= 1;
+					}
+					else
+					{
+						m_UiSelectedLayerID = LyID;
+						m_UiSelectedGroupID = gi;
+					}
 				}
 
 				const bool IsSelected = m_UiSelectedLayerID == LyID;
 
 				if(IsSelected)
-					DrawRectBorder(ButtonRect, ButColor, 1, vec4(1, 0, 0, 1));
+				{
+					// DrawRectBorder(ButtonRect, ButColor, 1, vec4(1, 0, 0, 1));
+					DrawRect(ButtonRect, StyleColorButtonPressed); // Fisico
+
+					if(m_UiDetailPanelIsOpen)
+					{
+						// Draw triangle on the left
+						const vec4 Color = StyleColorButtonPressed;
+						const float x = ButtonRect.x;
+						const float y = ButtonRect.y;
+						const float h = ButtonRect.h;
+
+						Graphics()->TextureClear();
+						Graphics()->QuadsBegin();
+						IGraphics::CFreeformItem Triangle(
+							x, y,
+							x, y + h,
+							x - h*0.5f, y + h*0.5f,
+							x, y
+						);
+
+						Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a, Color.b*Color.a, Color.a);
+
+						Graphics()->QuadsDrawFreeform(&Triangle, 1);
+						Graphics()->QuadsEnd();
+					}
+				}
 				else
 					DrawRect(ButtonRect, ButColor);
 
@@ -3288,9 +3316,6 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 	DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 	static CUIButton s_CloseDetailPanelButton;
-	if(UiButton(ButtonRect, ">", &s_CloseDetailPanelButton, 8)) {
-		m_UiDetailPanelIsOpen = false;
-	}
 
 	// label
 	DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
