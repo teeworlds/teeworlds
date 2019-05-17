@@ -1074,6 +1074,7 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 	ed_dbg("Map snapshot size = %luKo", SnapSize/1024);
 
 	CSnapshot& Snap = *(CSnapshot*)mem_alloc(SnapSize, 0);
+	mem_zero(&Snap, SnapSize);
 	Snap.m_GroupCount = GroupCount;
 	Snap.m_LayerCount = LayerCount;
 	Snap.m_EnvelopeCount = EnvelopeCount;
@@ -1127,7 +1128,7 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 			if(Layer.m_HighDetail)
 				Tilemap.m_Layer.m_Flags |= LAYERFLAG_DETAIL;
 
-			memmove(Tilemap.m_aName, aNameInt, sizeof(Tilemap.m_aName));
+			mem_move(Tilemap.m_aName, aNameInt, sizeof(Tilemap.m_aName));
 			Tilemap.m_Color.r = (int)(Layer.m_Color.r*255);
 			Tilemap.m_Color.g = (int)(Layer.m_Color.g*255);
 			Tilemap.m_Color.b = (int)(Layer.m_Color.b*255);
