@@ -3687,44 +3687,48 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 			str_format(aBuff, sizeof(aBuff), "%d Quad%s:", SelectedLayer.m_aQuads.size(), SelectedLayer.m_aQuads.size() > 1 ? "s" : "");
 			DrawText(ButtonRect, aBuff, FontSize);
 
-			static CScrollRegion s_QuadListSR;
-			vec2 QuadListScrollOff(0, 0);
-			CUIRect QuadListRegionRect = DetailRect;
-			UiBeginScrollRegion(&s_QuadListSR, &DetailRect, &QuadListScrollOff);
-			QuadListRegionRect.y += QuadListScrollOff.y;
-
-			// quad list
-			for(int QuadId = 0; QuadId < SelectedLayer.m_aQuads.size(); QuadId++)
+			const int QuadCount = SelectedLayer.m_aQuads.size();
+			if(QuadCount > 0)
 			{
-				const CQuad& Quad = SelectedLayer.m_aQuads[QuadId];
-				CUIRect PreviewRect;
-				QuadListRegionRect.HSplitTop(ButtonHeight, &ButtonRect, &QuadListRegionRect);
-				QuadListRegionRect.HSplitTop(Spacing, 0, &QuadListRegionRect);
-				ButtonRect.VSplitRight(8.0f, &ButtonRect, 0);
-				ButtonRect.VSplitRight(ButtonHeight, &ButtonRect, &PreviewRect);
-				DrawRect(ButtonRect, vec4(0,0,0,1));
-				str_format(aBuff, sizeof(aBuff), "  Quad #%d", QuadId+1);
-				DrawText(ButtonRect, aBuff, FontSize);
+				static CScrollRegion s_QuadListSR;
+				vec2 QuadListScrollOff(0, 0);
+				CUIRect QuadListRegionRect = DetailRect;
+				UiBeginScrollRegion(&s_QuadListSR, &DetailRect, &QuadListScrollOff);
+				QuadListRegionRect.y += QuadListScrollOff.y;
 
-				// preview
-				CUIRect PreviewRectBorder = {PreviewRect.x-1, PreviewRect.y-1, PreviewRect.w+2, PreviewRect.h+2};
-				DrawRect(PreviewRectBorder, StyleColorButtonBorder);
-				DrawRect(PreviewRect, vec4(0,0,0,1));
-				PreviewRect.h /= 2;
-				PreviewRect.w /= 2;
-				DrawRect(PreviewRect, vec4(Quad.m_aColors[0].r/255.0f, Quad.m_aColors[0].g/255.0f, Quad.m_aColors[0].b/255.0f, Quad.m_aColors[0].a/255.0f));
-				PreviewRect.x += PreviewRect.w;
-				DrawRect(PreviewRect, vec4(Quad.m_aColors[1].r/255.0f, Quad.m_aColors[1].g/255.0f, Quad.m_aColors[1].b/255.0f, Quad.m_aColors[1].a/255.0f));
-				PreviewRect.x -= PreviewRect.w;
-				PreviewRect.y += PreviewRect.h;
-				DrawRect(PreviewRect, vec4(Quad.m_aColors[2].r/255.0f, Quad.m_aColors[2].g/255.0f, Quad.m_aColors[2].b/255.0f, Quad.m_aColors[2].a/255.0f));
-				PreviewRect.x += PreviewRect.w;
-				DrawRect(PreviewRect, vec4(Quad.m_aColors[3].r/255.0f, Quad.m_aColors[3].g/255.0f, Quad.m_aColors[3].b/255.0f, Quad.m_aColors[3].a/255.0f));
+				// quad list
+				for(int QuadId = 0; QuadId < QuadCount; QuadId++)
+				{
+					const CQuad& Quad = SelectedLayer.m_aQuads[QuadId];
+					CUIRect PreviewRect;
+					QuadListRegionRect.HSplitTop(ButtonHeight, &ButtonRect, &QuadListRegionRect);
+					QuadListRegionRect.HSplitTop(Spacing, 0, &QuadListRegionRect);
+					ButtonRect.VSplitRight(8.0f, &ButtonRect, 0);
+					ButtonRect.VSplitRight(ButtonHeight, &ButtonRect, &PreviewRect);
+					DrawRect(ButtonRect, vec4(0,0,0,1));
+					str_format(aBuff, sizeof(aBuff), "  Quad #%d", QuadId+1);
+					DrawText(ButtonRect, aBuff, FontSize);
 
-				UiScrollRegionAddRect(&s_QuadListSR, ButtonRect);
+					// preview
+					CUIRect PreviewRectBorder = {PreviewRect.x-1, PreviewRect.y-1, PreviewRect.w+2, PreviewRect.h+2};
+					DrawRect(PreviewRectBorder, StyleColorButtonBorder);
+					DrawRect(PreviewRect, vec4(0,0,0,1));
+					PreviewRect.h /= 2;
+					PreviewRect.w /= 2;
+					DrawRect(PreviewRect, vec4(Quad.m_aColors[0].r/255.0f, Quad.m_aColors[0].g/255.0f, Quad.m_aColors[0].b/255.0f, Quad.m_aColors[0].a/255.0f));
+					PreviewRect.x += PreviewRect.w;
+					DrawRect(PreviewRect, vec4(Quad.m_aColors[1].r/255.0f, Quad.m_aColors[1].g/255.0f, Quad.m_aColors[1].b/255.0f, Quad.m_aColors[1].a/255.0f));
+					PreviewRect.x -= PreviewRect.w;
+					PreviewRect.y += PreviewRect.h;
+					DrawRect(PreviewRect, vec4(Quad.m_aColors[2].r/255.0f, Quad.m_aColors[2].g/255.0f, Quad.m_aColors[2].b/255.0f, Quad.m_aColors[2].a/255.0f));
+					PreviewRect.x += PreviewRect.w;
+					DrawRect(PreviewRect, vec4(Quad.m_aColors[3].r/255.0f, Quad.m_aColors[3].g/255.0f, Quad.m_aColors[3].b/255.0f, Quad.m_aColors[3].a/255.0f));
+
+					UiScrollRegionAddRect(&s_QuadListSR, ButtonRect);
+				}
+
+				UiEndScrollRegion(&s_QuadListSR);
 			}
-
-			UiEndScrollRegion(&s_QuadListSR);
 		}
 	}
 }

@@ -57,6 +57,12 @@ struct array2: public array<T>
 		return *(this->base_ptr()+this->size()-EltCount);
 	}
 
+	void clear()
+	{
+		// don't free buffer on clear
+		this->num_elements = 0;
+	}
+
 	inline void remove_index_fast(int Index)
 	{
 		dbg_assert(Index >= 0 && Index < this->size(), "Index out of bounds");
