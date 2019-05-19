@@ -20,6 +20,10 @@
 #include "chat.h"
 #include "binds.h"
 
+#include <regex>
+#include <string>
+#include <bitset>
+
 CChat::CChat()
 {
 	// init chat commands (must be in alphabetical order)
@@ -615,48 +619,67 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 
 	// play sound
 	int64 Now = time_get();
-	int EnabledChatSound = g_Config.m_ClChatSound;
-	if(EnabledChatSound)
-	{	
-		if (ClientID == SERVER_MSG && EnabledChatSound >= 4)
+
+	// default values
+	int ClChatsoundWhisper 			= 1;
+	int ClChatsoundHighlight 		= 1;
+	int ClChatsoundServerMessage 	= 1;
+	int ClChatsoundChatMessage 		= 1;
+	int ClChatsoundClientMessage 	= 1;
+	
+	// test if config string is a proper bitmask of length 5
+	std::regex IsBitmask("^[01]{5}$");
+	if(std::regex_match(g_Config.m_ClChatsound, IsBitmask))
+	{
+		std::bitset<5> ChatsoundBitmask(g_Config.m_ClChatsound);
+		
+		// bitmask is read from right to left
+		ClChatsoundWhisper = ChatsoundBitmask.test(4);
+		ClChatsoundHighlight = ChatsoundBitmask.test(3);
+		ClChatsoundServerMessage = ChatsoundBitmask.test(2);
+		ClChatsoundChatMessage = ChatsoundBitmask.test(1);
+		ClChatsoundClientMessage = ChatsoundBitmask.test(0);
+	}
+
+	// play sound depending on bitmask values
+	if (ClientID == SERVER_MSG && ClChatsoundServerMessage)
+	{
+		if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
 		{
-			if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
-			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
-				m_aLastSoundPlayed[CHAT_SERVER] = Now;
-			}
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
+			m_aLastSoundPlayed[CHAT_SERVER] = Now;
 		}
-		else if(ClientID == CLIENT_MSG && EnabledChatSound >= 5)
+	}
+	else if(ClientID == CLIENT_MSG && ClChatsoundClientMessage)
+	{
+		if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
 		{
-			if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
-			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
-				m_aLastSoundPlayed[CHAT_SERVER] = Now;
-			}
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
+			m_aLastSoundPlayed[CHAT_SERVER] = Now;
 		}
-		else if(Mode == CHAT_WHISPER && (EnabledChatSound == 1 || EnabledChatSound >= 3))
+	}
+	else if(Mode == CHAT_WHISPER && ClChatsoundWhisper)
+	{
+		if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
 		{
-			if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
-			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
-				m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
-			}
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+			m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
 		}
-		else if(Highlighted && EnabledChatSound >= 2)
+	}
+	else if(Highlighted && ClChatsoundHighlight)
+	{
+		if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
 		{
-			if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
-			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
-				m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
-			}
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+			m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
 		}
-		else if(EnabledChatSound == 6)
+	}
+	else if(ClChatsoundChatMessage)
+	{
+		if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
 		{
-			if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
-			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
-				m_aLastSoundPlayed[CHAT_CLIENT] = Now;
-			}
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
+			m_aLastSoundPlayed[CHAT_CLIENT] = Now;
 		}
 	}
 }
