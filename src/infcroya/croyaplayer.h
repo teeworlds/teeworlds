@@ -58,4 +58,6 @@ public:
 
 	IClass* GetClass();
 	void SetClass(IClass* pClass, bool DrawPurpleThing = false);
+
+	class CGameControllerMOD* GetGameControllerMOD();
 };

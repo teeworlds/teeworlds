@@ -17,10 +17,13 @@ private:
 	std::unordered_map<int, class IClass*> classes;
 	class Geolocation* geolocation;
 	class CGameWorld* m_pGameWorld;
-	bool m_NoCircleYet;
 	std::vector<int> humans;
+	class LuaLoader* lua;
+	std::vector<class CCircle*> circles;
+	std::vector<class CInfCircle*> inf_circles;
 
 	bool m_ExplosionStarted;
+	bool m_InfectedStarted;
 	int m_MapWidth;
 	int m_MapHeight;
 	int* m_GrowingMap;
@@ -30,12 +33,15 @@ public:
 	void Snap(int SnappingClient) override;
 	virtual void Tick();
 
-	/** First 10 secs after game start
-	*/
-	bool IsCroyaWarmup();
+	bool IsCroyaWarmup(); // First 10 secs after game start
 	bool RoundJustStarted();
 
+	void OnRoundStart();
 	void StartInitialInfection();
+
+	void OnRoundEnd();
+	bool DoWincheckMatch() override;
+	void DoWincheckRound() override;
 	
 	void OnCharacterSpawn(class CCharacter* pChr) override;
 	int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon) override;
@@ -53,5 +59,7 @@ public:
 
 	std::array<CroyaPlayer*, 64> GetCroyaPlayers();
 	void ResetFinalExplosion();
+
+	bool IsExplosionStarted() const;
 };
 #endif

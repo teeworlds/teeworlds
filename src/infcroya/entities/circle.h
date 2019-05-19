@@ -1,25 +1,33 @@
 #pragma once
 
 #include <game/server/entity.h>
-#include <base/tl/array.h>
 
 class CCircle : public CEntity
 {
-private:
+public:
 	enum
 	{
-		NUM_SIDE = 48,
-		NUM_HINT = 48,
-		NUM_IDS = NUM_SIDE + NUM_HINT,
+		NUM_SIDE = 12,
+		NUM_PARTICLES = 12,
+		NUM_IDS = NUM_SIDE + NUM_PARTICLES,
 	};
-	int m_Owner;
+
+public:
+	CCircle(CGameWorld* pGameWorld, vec2 Pos, int Owner, float Radius);
+	virtual ~CCircle();
+
+	virtual void Snap(int SnappingClient);
+	virtual void Reset();
+	virtual void TickPaused();
+	virtual void Tick();
+
+	int GetOwner() const;
+
+private:
 	int m_IDs[NUM_IDS];
 	float m_Radius;
-public:
-	CCircle(CGameWorld* pGameWorld, vec2 Pos, int Owner);
-	~CCircle();
 
-	void Snap(int SnappingClient) override;
-	void Tick() override;
-	void Reset() override;
+public:
+	int m_StartTick;
+	int m_Owner;
 };

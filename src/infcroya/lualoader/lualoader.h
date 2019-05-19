@@ -1,7 +1,12 @@
 #pragma once
 
-#include <functional>
+#include <vector>
+#include <base/vmath.h>
 
+/**
+Class that loads <mapname>.lua and returns circle positions.
+todo: implement circle resizing, moving etc
+*/
 class LuaLoader {
 private:
 	struct lua_State* L;
@@ -9,6 +14,14 @@ public:
 	LuaLoader();
 	~LuaLoader();
 
+	// path to file as parameter, e.g "maps/infc_normandie.lua"
 	bool load(const char* filename);
-	bool call(const char* function_name, std::function<int()> push_variables);
+
+	void init(int num_players);
+
+	std::vector<vec2> get_circle_positions();
+	std::vector<float> get_circle_radiuses();
+
+	std::vector<vec2> get_inf_circle_positions();
+	std::vector<float> get_inf_circle_radiuses();
 };

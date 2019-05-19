@@ -249,3 +249,8 @@ void CroyaPlayer::SetClass(IClass* pClass, bool DrawPurpleThing)
 	else
 		m_pGameServer->SendBroadcast(Localize(aBuf, GetLanguage()), m_pPlayer->GetCID());
 }
+
+CGameControllerMOD* CroyaPlayer::GetGameControllerMOD()
+{
+	return m_pGameController;
+}
