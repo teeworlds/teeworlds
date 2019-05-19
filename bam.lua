@@ -179,7 +179,7 @@ end
 
 function GenerateLinuxSettings(settings, conf, arch, compiler)
 	settings.cc.includes:Add("/usr/include/lua5.3/") -- INFCROYA RELATED, kind of hardcode
-	settings.link.libs:Add("lua53") -- INFCROYA RELATED, kind of hardcode
+	settings.link.libs:Add("lua5.3") -- INFCROYA RELATED, kind of hardcode
 	
 	if arch == "x86" then
 		if config.buildwithoutsseflag.value == false then
