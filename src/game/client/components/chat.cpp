@@ -615,28 +615,48 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 
 	// play sound
 	int64 Now = time_get();
-	if(ClientID < 0)
-	{
-		if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
+	int EnabledChatSound = g_Config.m_ClChatSound;
+	if(EnabledChatSound)
+	{	
+		if (ClientID == SERVER_MSG && EnabledChatSound >= 4)
 		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
-			m_aLastSoundPlayed[CHAT_SERVER] = Now;
+			if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
+			{
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
+				m_aLastSoundPlayed[CHAT_SERVER] = Now;
+			}
 		}
-	}
-	else if(Highlighted || Mode == CHAT_WHISPER)
-	{
-		if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
+		else if(ClientID == CLIENT_MSG && EnabledChatSound >= 5)
 		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
-			m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
+			if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
+			{
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
+				m_aLastSoundPlayed[CHAT_SERVER] = Now;
+			}
 		}
-	}
-	else
-	{
-		if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
+		else if(Mode == CHAT_WHISPER && (EnabledChatSound == 1 || EnabledChatSound >= 3))
 		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
-			m_aLastSoundPlayed[CHAT_CLIENT] = Now;
+			if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
+			{
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+				m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
+			}
+		}
+		else if(Highlighted && EnabledChatSound >= 2)
+		{
+			if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
+			{
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+				m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
+			}
+		}
+		else if(EnabledChatSound == 6)
+		{
+			if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
+			{
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
+				m_aLastSoundPlayed[CHAT_CLIENT] = Now;
+			}
 		}
 	}
 }
