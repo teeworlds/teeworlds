@@ -79,7 +79,6 @@ end
 
 
 function GenerateCommonSettings(settings, conf, arch, compiler)
-	settings.link.libs:Add("lua") -- INFCROYA RELATED
 	if config.geolocation.value then
 		settings.cc.defines:Add("CONF_GEOLOCATION") -- INFCROYA RELATED
 		settings.link.libs:Add("maxminddb") -- INFCROYA RELATED
@@ -179,7 +178,9 @@ function GenerateMacOSXSettings(settings, conf, arch, compiler)
 end
 
 function GenerateLinuxSettings(settings, conf, arch, compiler)
-	settings.cc.includes:Add("/usr/include/lua5.3/")-- INFCROYA RELATED, kind of hardcode
+	settings.cc.includes:Add("/usr/include/lua5.3/") -- INFCROYA RELATED, kind of hardcode
+	settings.link.libs:Add("lua53") -- INFCROYA RELATED, kind of hardcode
+	
 	if arch == "x86" then
 		if config.buildwithoutsseflag.value == false then
 			settings.cc.flags:Add("-msse2") -- for the _mm_pause call
@@ -229,6 +230,7 @@ function GenerateSolarisSettings(settings, conf, arch, compiler)
 end
 
 function GenerateWindowsSettings(settings, conf, target_arch, compiler)
+	settings.link.libs:Add("lua") -- INFCROYA RELATED
 	if compiler == "cl" then
 		-- INFCROYA BEGIN
 		settings.cc.includes:Add("other/infcroya/lua/include")
