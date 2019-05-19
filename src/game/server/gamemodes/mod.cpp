@@ -144,6 +144,12 @@ void CGameControllerMOD::Tick()
 		m_InfectedStarted = true;
 	}
 
+	bool IsGameStarted = !IsCroyaWarmup() && !IsGameEnd();
+
+	if (IsGameStarted && GetRealPlayerNum() < 2) {
+		OnRoundEnd();
+	}
+
 	// FINAL EXPLOSION BEGIN, todo: write a function for this?
 	//infclass 0.6 copypaste
 	//Start the final explosion if the time is over
