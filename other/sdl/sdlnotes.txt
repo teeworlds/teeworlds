@@ -1,3 +1,0 @@
-NOTE. This is a really stripped down version of SDL only used
-to compile teeworlds for windows. For a complete release of
-SDL, please visit their site at http://www.libsdl.org.

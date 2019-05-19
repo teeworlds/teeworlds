@@ -5,7 +5,7 @@
 #include <engine/shared/config.h>
 
 #include <game/client/render.h>
-#include <game/generated/protocol.h>
+#include <generated/protocol.h>
 
 #include "chat.h"
 #include "voting.h"
@@ -94,12 +94,7 @@ void CVoting::Vote(int v)
 CVoting::CVoting()
 {
 	ClearOptions();
-	
-	m_Closetime = 0;
-	m_aDescription[0] = 0;
-	m_aReason[0] = 0;
-	m_Yes = m_No = m_Pass = m_Total = 0;
-	m_Voted = 0;
+	Clear();
 }
 
 void CVoting::AddOption(const char *pDescription)
@@ -129,6 +124,16 @@ void CVoting::AddOption(const char *pDescription)
 	++m_NumVoteOptions;
 }
 
+void CVoting::Clear()
+{
+	m_Closetime = 0;
+	m_aDescription[0] = 0;
+	m_aReason[0] = 0;
+	m_Yes = m_No = m_Pass = m_Total = 0;
+	m_Voted = 0;
+	m_CallvoteBlockTick = 0;
+}
+
 void CVoting::ClearOptions()
 {
 	m_Heap.Reset();
@@ -146,12 +151,13 @@ void CVoting::OnReset()
 	if(Client()->State() == IClient::STATE_LOADING)	// do not reset active vote while connecting
 		return;
 
-	m_Closetime = 0;
-	m_aDescription[0] = 0;
-	m_aReason[0] = 0;
-	m_Yes = m_No = m_Pass = m_Total = 0;
-	m_Voted = 0;
-	m_CallvoteBlockTick = 0;
+	Clear();
+}
+
+void CVoting::OnStateChange(int NewState, int OldState)
+{
+	if (OldState == IClient::STATE_ONLINE || OldState == IClient::STATE_OFFLINE)
+		Clear();
 }
 
 void CVoting::OnConsoleInit()
@@ -169,27 +175,38 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 		if(pMsg->m_Timeout)
 		{
 			OnReset();
-			str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
 			str_copy(m_aReason, pMsg->m_pReason, sizeof(m_aReason));
 			m_Closetime = time_get() + time_freq() * pMsg->m_Timeout;
 			if(pMsg->m_ClientID != -1)
 			{
+				char aLabel[64];
+				CGameClient::GetPlayerLabel(aLabel, sizeof(aLabel), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName);
 				switch(pMsg->m_Type)
 				{
 				case VOTE_START_OP:
-					str_format(aBuf, sizeof(aBuf), Localize("'%s' called vote to change server option '%s' (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
-								pMsg->m_pDescription, pMsg->m_pReason);
+					str_format(aBuf, sizeof(aBuf), Localize("'%s' called vote to change server option '%s' (%s)"), aLabel, pMsg->m_pDescription, pMsg->m_pReason);
+					str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
 					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
 					break;
 				case VOTE_START_KICK:
-					str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to kick '%s' (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
-								pMsg->m_pDescription, pMsg->m_pReason);
-					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
-					break;
+					{
+						char aName[4];
+						if(!g_Config.m_ClShowsocial)
+							str_copy(aName, pMsg->m_pDescription, sizeof(aName));
+						str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to kick '%s' (%s)"), aLabel, g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName, pMsg->m_pReason);
+						str_format(m_aDescription, sizeof(m_aDescription), "Kick '%s'", g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName);
+						m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+						break;
+					}
 				case VOTE_START_SPEC:
-					str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to move '%s' to spectators (%s)"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, 
-								pMsg->m_pDescription, pMsg->m_pReason);
-					m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+					{
+						char aName[4];
+						if(!g_Config.m_ClShowsocial)
+							str_copy(aName, pMsg->m_pDescription, sizeof(aName));
+						str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to move '%s' to spectators (%s)"), aLabel, g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName, pMsg->m_pReason);
+						str_format(m_aDescription, sizeof(m_aDescription), "Move '%s' to spectators", g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName);
+						m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+					}
 				}
 				if(pMsg->m_ClientID == m_pClient->m_LocalClientID)
 					m_CallvoteBlockTick = Client()->GameTick()+Client()->GameTickSpeed()*VOTE_COOLDOWN;
@@ -307,7 +324,7 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 			{
 				char Buf[256];
 				str_format(Buf, sizeof(Buf), "%d", m_Yes);
-				UI()->DoLabel(&YesArea, Buf, Bars.h*0.75f, 0);
+				UI()->DoLabel(&YesArea, Buf, Bars.h*0.75f, CUI::ALIGN_CENTER);
 			}
 
 			PassArea.x += YesArea.w;
@@ -325,7 +342,7 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 			{
 				char Buf[256];
 				str_format(Buf, sizeof(Buf), "%d", m_No);
-				UI()->DoLabel(&NoArea, Buf, Bars.h*0.75f, 0);
+				UI()->DoLabel(&NoArea, Buf, Bars.h*0.75f, CUI::ALIGN_CENTER);
 			}
 
 			PassArea.w -= NoArea.w;
@@ -335,7 +352,7 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 		{
 			char Buf[256];
 			str_format(Buf, sizeof(Buf), "%d", m_Pass);
-			UI()->DoLabel(&PassArea, Buf, Bars.h*0.75f, 0);
+			UI()->DoLabel(&PassArea, Buf, Bars.h*0.75f, CUI::ALIGN_CENTER);
 		}
 	}
 }

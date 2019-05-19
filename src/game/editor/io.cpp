@@ -2,198 +2,14 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/client.h>
 #include <engine/console.h>
-#include <engine/graphics.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
-#include <game/gamecore.h>
+#include <game/gamecore.h> // StrToInts, IntsToStr
 #include "editor.h"
 
 template<typename T>
 static int MakeVersion(int i, const T &v)
 { return (i<<16)+sizeof(T); }
-
-// backwards compatiblity
-/*
-void editor_load_old(DATAFILE *df, MAP *map)
-{
-	class mapres_image
-	{
-	public:
-		int width;
-		int height;
-		int image_data;
-	};
-
-	struct mapres_tilemap
-	{
-		int image;
-		int width;
-		int height;
-		int x, y;
-		int scale;
-		int data;
-		int main;
-	};
-
-	struct mapres_entity
-	{
-		int x, y;
-		int data[1];
-	};
-
-	struct mapres_spawnpoint
-	{
-		int x, y;
-	};
-
-	struct mapres_item
-	{
-		int x, y;
-		int type;
-	};
-
-	struct mapres_flagstand
-	{
-		int x, y;
-	};
-
-	enum
-	{
-		MAPRES_ENTS_START=1,
-		MAPRES_SPAWNPOINT=1,
-		MAPRES_ITEM=2,
-		MAPRES_SPAWNPOINT_RED=3,
-		MAPRES_SPAWNPOINT_BLUE=4,
-		MAPRES_FLAGSTAND_RED=5,
-		MAPRES_FLAGSTAND_BLUE=6,
-		MAPRES_ENTS_END,
-
-		ITEM_NULL=0,
-		ITEM_WEAPON_GUN=0x00010001,
-		ITEM_WEAPON_SHOTGUN=0x00010002,
-		ITEM_WEAPON_ROCKET=0x00010003,
-		ITEM_WEAPON_SNIPER=0x00010004,
-		ITEM_WEAPON_HAMMER=0x00010005,
-		ITEM_HEALTH =0x00020001,
-		ITEM_ARMOR=0x00030001,
-		ITEM_NINJA=0x00040001,
-	};
-
-	enum
-	{
-		MAPRES_REGISTERED=0x8000,
-		MAPRES_IMAGE=0x8001,
-		MAPRES_TILEMAP=0x8002,
-		MAPRES_COLLISIONMAP=0x8003,
-		MAPRES_TEMP_THEME=0x8fff,
-	};
-
-	// load tilemaps
-	int game_width = 0;
-	int game_height = 0;
-	{
-		int start, num;
-		datafile_get_type(df, MAPRES_TILEMAP, &start, &num);
-		for(int t = 0; t < num; t++)
-		{
-			mapres_tilemap *tmap = (mapres_tilemap *)datafile_get_item(df, start+t,0,0);
-
-			CLayerTiles *l = new CLayerTiles(tmap->width, tmap->height);
-
-			if(tmap->main)
-			{
-				// move game layer to correct position
-				for(int i = 0; i < map->groups[0]->layers.len()-1; i++)
-				{
-					if(map->groups[0]->layers[i] == pEditor->map.game_layer)
-						map->groups[0]->swap_layers(i, i+1);
-				}
-
-				game_width = tmap->width;
-				game_height = tmap->height;
-			}
-
-			// add new layer
-			map->groups[0]->add_layer(l);
-
-			// process the data
-			unsigned char *src_data = (unsigned char *)datafile_get_data(df, tmap->data);
-			CTile *dst_data = l->tiles;
-
-			for(int y = 0; y < tmap->height; y++)
-				for(int x = 0; x < tmap->width; x++, dst_data++, src_data+=2)
-				{
-					dst_data->index = src_data[0];
-					dst_data->flags = src_data[1];
-				}
-
-			l->image = tmap->image;
-		}
-	}
-
-	// load images
-	{
-		int start, count;
-		datafile_get_type(df, MAPRES_IMAGE, &start, &count);
-		for(int i = 0; i < count; i++)
-		{
-			mapres_image *imgres = (mapres_image *)datafile_get_item(df, start+i, 0, 0);
-			void *data = datafile_get_data(df, imgres->image_data);
-
-			EDITOR_IMAGE *img = new EDITOR_IMAGE;
-			img->width = imgres->width;
-			img->height = imgres->height;
-			img->format = CImageInfo::FORMAT_RGBA;
-
-			// copy image data
-			img->data = mem_alloc(img->width*img->height*4, 1);
-			mem_copy(img->data, data, img->width*img->height*4);
-			img->tex_id = Graphics()->LoadTextureRaw(img->width, img->height, img->format, img->data, CImageInfo::FORMAT_AUTO, 0);
-			map->images.add(img);
-
-			// unload image
-			datafile_unload_data(df, imgres->image_data);
-		}
-	}
-
-	// load entities
-	{
-		CLayerGame *g = map->game_layer;
-		g->resize(game_width, game_height);
-		for(int t = MAPRES_ENTS_START; t < MAPRES_ENTS_END; t++)
-		{
-			// fetch entities of this class
-			int start, num;
-			datafile_get_type(df, t, &start, &num);
-
-
-			for(int i = 0; i < num; i++)
-			{
-				mapres_entity *e = (mapres_entity *)datafile_get_item(df, start+i,0,0);
-				int x = e->x/32;
-				int y = e->y/32;
-				int id = -1;
-
-				if(t == MAPRES_SPAWNPOINT) id = ENTITY_SPAWN;
-				else if(t == MAPRES_SPAWNPOINT_RED) id = ENTITY_SPAWN_RED;
-				else if(t == MAPRES_SPAWNPOINT_BLUE) id = ENTITY_SPAWN_BLUE;
-				else if(t == MAPRES_FLAGSTAND_RED) id = ENTITY_FLAGSTAND_RED;
-				else if(t == MAPRES_FLAGSTAND_BLUE) id = ENTITY_FLAGSTAND_BLUE;
-				else if(t == MAPRES_ITEM)
-				{
-					if(e->data[0] == ITEM_WEAPON_SHOTGUN) id = ENTITY_WEAPON_SHOTGUN;
-					else if(e->data[0] == ITEM_WEAPON_ROCKET) id = ENTITY_WEAPON_GRENADE;
-					else if(e->data[0] == ITEM_NINJA) id = ENTITY_POWERUP_NINJA;
-					else if(e->data[0] == ITEM_ARMOR) id = ENTITY_ARMOR_1;
-					else if(e->data[0] == ITEM_HEALTH) id = ENTITY_HEALTH_1;
-				}
-
-				if(id > 0 && x >= 0 && x < g->width && y >= 0 && y < g->height)
-					g->tiles[y*g->width+x].index = id+ENTITY_OFFSET;
-			}
-		}
-	}
-}*/
 
 int CEditor::Save(const char *pFilename)
 {
@@ -216,14 +32,14 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	// save version
 	{
 		CMapItemVersion Item;
-		Item.m_Version = 1;
+		Item.m_Version = CMapItemVersion::CURRENT_VERSION;
 		df.AddItem(MAPITEMTYPE_VERSION, 0, sizeof(Item), &Item);
 	}
 
 	// save map info
 	{
 		CMapItemInfo Item;
-		Item.m_Version = 1;
+		Item.m_Version = CMapItemInfo::CURRENT_VERSION;
 
 		if(m_MapInfo.m_aAuthor[0])
 			Item.m_Author = df.AddData(str_length(m_MapInfo.m_aAuthor)+1, m_MapInfo.m_aAuthor);
@@ -310,7 +126,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				pLayer->PrepareForSave();
 
 				CMapItemLayerTilemap Item;
-				Item.m_Version = 3;
+				Item.m_Version = CMapItemLayerTilemap::CURRENT_VERSION;
 
 				Item.m_Layer.m_Flags = pLayer->m_Flags;
 				Item.m_Layer.m_Type = pLayer->m_Type;
@@ -323,7 +139,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				Item.m_Height = pLayer->m_Height;
 				Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
 				Item.m_Image = pLayer->m_Image;
-				Item.m_Data = df.AddData(pLayer->m_Width*pLayer->m_Height*sizeof(CTile), pLayer->m_pTiles);
+				Item.m_Data = df.AddData(pLayer->m_SaveTilesSize, pLayer->m_pSaveTiles);
 
 				// save layer name
 				StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), pLayer->m_aName);
@@ -340,7 +156,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				if(pLayer->m_lQuads.size())
 				{
 					CMapItemLayerQuads Item;
-					Item.m_Version = 2;
+					Item.m_Version = CMapItemLayerQuads::CURRENT_VERSION;
 					Item.m_Layer.m_Flags = pLayer->m_Flags;
 					Item.m_Layer.m_Type = pLayer->m_Type;
 					Item.m_Image = pLayer->m_Image;
@@ -354,9 +170,6 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 					df.AddItem(MAPITEMTYPE_LAYER, LayerCount, sizeof(Item), &Item);
 
-					// clean up
-					//mem_free(quads);
-
 					GItem.m_NumLayers++;
 					LayerCount++;
 				}
@@ -366,12 +179,28 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		df.AddItem(MAPITEMTYPE_GROUP, GroupCount++, sizeof(GItem), &GItem);
 	}
 
+	// check for bezier curve envelopes, otherwise use older, smaller envelope points
+	int Version = CMapItemEnvelope_v2::CURRENT_VERSION;
+	int Size = sizeof(CEnvPoint_v1);	
+	for(int e = 0; e < m_lEnvelopes.size(); e++)
+	{
+		for(int p = 0; p < m_lEnvelopes[e]->m_lPoints.size(); p++)
+		{
+			if(m_lEnvelopes[e]->m_lPoints[p].m_Curvetype == CURVETYPE_BEZIER)
+			{
+				Version = CMapItemEnvelope::CURRENT_VERSION;
+				Size = sizeof(CEnvPoint);
+				break;
+			}
+		}
+	}
+
 	// save envelopes
 	int PointCount = 0;
 	for(int e = 0; e < m_lEnvelopes.size(); e++)
 	{
 		CMapItemEnvelope Item;
-		Item.m_Version = CMapItemEnvelope::CURRENT_VERSION;
+		Item.m_Version = Version;
 		Item.m_Channels = m_lEnvelopes[e]->m_Channels;
 		Item.m_StartPoint = PointCount;
 		Item.m_NumPoints = m_lEnvelopes[e]->m_lPoints.size();
@@ -383,15 +212,16 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	}
 
 	// save points
-	int TotalSize = sizeof(CEnvPoint) * PointCount;
-	CEnvPoint *pPoints = (CEnvPoint *)mem_alloc(TotalSize, 1);
-	PointCount = 0;
-
+	int TotalSize = Size * PointCount;
+	unsigned char *pPoints = (unsigned char *)mem_alloc(TotalSize, 1);
+	int Offset = 0;
 	for(int e = 0; e < m_lEnvelopes.size(); e++)
 	{
-		int Count = m_lEnvelopes[e]->m_lPoints.size();
-		mem_copy(&pPoints[PointCount], m_lEnvelopes[e]->m_lPoints.base_ptr(), sizeof(CEnvPoint)*Count);
-		PointCount += Count;
+		for(int p = 0; p < m_lEnvelopes[e]->m_lPoints.size(); p++)
+		{
+			mem_copy(pPoints + Offset, &(m_lEnvelopes[e]->m_lPoints[p]), Size);
+			Offset += Size;
+		}
 	}
 
 	df.AddItem(MAPITEMTYPE_ENVPOINTS, 0, TotalSize, pPoints);
@@ -421,10 +251,14 @@ int CEditor::Load(const char *pFileName, int StorageType)
 	return m_Map.Load(Kernel()->RequestInterface<IStorage>(), pFileName, StorageType);
 }
 
+void CEditor::LoadCurrentMap()
+{
+	CallbackOpenMap(m_pClient->GetCurrentMapPath(), IStorage::TYPE_ALL, this);
+}
+
 int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int StorageType)
 {
 	CDataFileReader DataFile;
-	//DATAFILE *df = datafile_load(filename);
 	if(!DataFile.Open(pStorage, pFileName, StorageType))
 		return 0;
 
@@ -434,16 +268,10 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 	CMapItemVersion *pItem = (CMapItemVersion *)DataFile.FindItem(MAPITEMTYPE_VERSION, 0);
 	if(!pItem)
 	{
-		// import old map
-		/*MAP old_mapstuff;
-		editor->reset();
-		editor_load_old(df, this);
-		*/
+		return 0;
 	}
-	else if(pItem->m_Version == 1)
+	else if(pItem->m_Version == CMapItemVersion::CURRENT_VERSION)
 	{
-		//editor.reset(false);
-
 		// load map info
 		{
 			CMapItemInfo *pItem = (CMapItemInfo *)DataFile.FindItem(MAPITEMTYPE_INFO, 0);
@@ -483,7 +311,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					if(m_pEditor->Graphics()->LoadPNG(&ImgInfo, aBuf, IStorage::TYPE_ALL))
 					{
 						*pImg = ImgInfo;
-						pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, 0);
+						pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 						ImgInfo.m_pData = 0;
 						pImg->m_External = 1;
 					}
@@ -499,7 +327,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					void *pData = DataFile.GetData(pItem->m_ImageData);
 					pImg->m_pData = mem_alloc(pImg->m_Width*pImg->m_Height*PixelSize, 1);
 					mem_copy(pImg->m_pData, pData, pImg->m_Width*pImg->m_Height*PixelSize);
-					pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Format, pImg->m_pData, CImageInfo::FORMAT_AUTO, 0);
+					pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Format, pImg->m_pData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 				}
 
 				// copy image name
@@ -588,7 +416,12 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						if(pTilemapItem->m_Version >= 3)
 							IntsToStr(pTilemapItem->m_aName, sizeof(pTiles->m_aName)/sizeof(int), pTiles->m_aName);
 
-						mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
+						// get tile data
+						if(pTilemapItem->m_Version > 3)
+							pTiles->ExtractTiles((CTile *)pData);
+						else
+							mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
+						
 
 						if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
 						{
@@ -630,13 +463,12 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 		// load envelopes
 		{
-			CEnvPoint *pPoints = 0;
-
+			CEnvPoint *pEnvPoints = 0;
 			{
 				int Start, Num;
 				DataFile.GetType(MAPITEMTYPE_ENVPOINTS, &Start, &Num);
 				if(Num)
-					pPoints = (CEnvPoint *)DataFile.GetItem(Start, 0, 0);
+					pEnvPoints = (CEnvPoint *)DataFile.GetItem(Start, 0, 0);
 			}
 
 			int Start, Num;
@@ -646,7 +478,31 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 				CMapItemEnvelope *pItem = (CMapItemEnvelope *)DataFile.GetItem(Start+e, 0, 0);
 				CEnvelope *pEnv = new CEnvelope(pItem->m_Channels);
 				pEnv->m_lPoints.set_size(pItem->m_NumPoints);
-				mem_copy(pEnv->m_lPoints.base_ptr(), &pPoints[pItem->m_StartPoint], sizeof(CEnvPoint)*pItem->m_NumPoints);
+				for(int n = 0; n < pItem->m_NumPoints; n++)
+				{
+					if(pItem->m_Version >= 3)
+					{
+						pEnv->m_lPoints[n] = pEnvPoints[pItem->m_StartPoint + n];
+					}
+					else
+					{
+						// backwards compatibility
+						CEnvPoint_v1 *pEnvPoint_v1 = &((CEnvPoint_v1 *)pEnvPoints)[pItem->m_StartPoint + n];
+
+						pEnv->m_lPoints[n].m_Time = pEnvPoint_v1->m_Time;
+						pEnv->m_lPoints[n].m_Curvetype = pEnvPoint_v1->m_Curvetype;
+
+						for(int c = 0; c < pItem->m_Channels; c++)
+						{
+							pEnv->m_lPoints[n].m_aValues[c] = pEnvPoint_v1->m_aValues[c];
+							pEnv->m_lPoints[n].m_aInTangentdx[c] = 0;
+							pEnv->m_lPoints[n].m_aInTangentdy[c] = 0;
+							pEnv->m_lPoints[n].m_aOutTangentdx[c] = 0;
+							pEnv->m_lPoints[n].m_aOutTangentdy[c] = 0;
+						}
+					}
+				}
+
 				if(pItem->m_aName[0] != -1)	// compatibility with old maps
 					IntsToStr(pItem->m_aName, sizeof(pItem->m_aName)/sizeof(int), pEnv->m_aName);
 				m_lEnvelopes.add(pEnv);
@@ -655,6 +511,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 			}
 		}
 	}
+	else
+		return 0;
 
 	return 1;
 }

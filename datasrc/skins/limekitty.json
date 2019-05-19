@@ -1,0 +1,35 @@
+{"skin": {
+	"body": {
+		"filename": "kitty",
+		"custom_colors": "true",
+		"hue": 70,
+		"sat": 98,
+		"lgt": 195
+	},
+	"marking": {
+		"filename": "whisker",
+		"custom_colors": "true",
+		"hue": 69,
+		"sat": 98,
+		"lgt": 224,
+		"alp": 255
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 58,
+		"sat": 104,
+		"lgt": 239
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 58,
+		"sat": 104,
+		"lgt": 239
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

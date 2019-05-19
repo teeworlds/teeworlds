@@ -1,0 +1,35 @@
+{"skin": {
+	"body": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 81,
+		"sat": 101,
+		"lgt": 70
+	},
+	"marking": {
+		"filename": "cammostripes",
+		"custom_colors": "true",
+		"hue": 29,
+		"sat": 142,
+		"lgt": 0,
+		"alp": 255
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 11,
+		"sat": 117,
+		"lgt": 0
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 29,
+		"sat": 173,
+		"lgt": 87
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

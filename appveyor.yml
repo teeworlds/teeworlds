@@ -1,0 +1,40 @@
+image: Visual Studio 2015
+
+before_build:
+- cmd: |
+    git submodule update --init
+
+    md build32 & cd build32
+    cmake -Werror=dev -G "Visual Studio 14 2015" ..
+    cd ..
+
+    md build64 & cd build64
+    cmake -Werror=dev -G "Visual Studio 14 2015 Win64" ..
+    cd ..
+
+build_script:
+  - cmd: cmake --build build32 --config Release --target everything
+  - cmd: cmake --build build64 --config Release --target everything
+
+test_script:
+  - cmd: cmake --build build32 --config Debug --target run_tests
+  - cmd: cmake --build build64 --config Debug --target run_tests
+  - cmd: cmake --build build32 --config Release --target run_tests
+  - cmd: cmake --build build64 --config Release --target run_tests
+  - cmd: |
+      cd build32
+      Release\teeworlds_srv shutdown
+      cd ..
+  - cmd: |
+      cd build64
+      Release\teeworlds_srv shutdown
+      cd ..
+
+after_build:
+  - cmd: cmake --build build32 --config Release --target package
+  - cmd: cmake --build build64 --config Release --target package
+
+environment:
+  CFLAGS: /WX
+  CXXFLAGS: /WX
+  LDFLAGS: /WX

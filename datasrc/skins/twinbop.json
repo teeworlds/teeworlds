@@ -1,0 +1,42 @@
+{"skin": {
+	"body": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 233,
+		"sat": 158,
+		"lgt": 183
+	},
+	"marking": {
+		"filename": "duodonny",
+		"custom_colors": "true",
+		"hue": 231,
+		"sat": 146,
+		"lgt": 218,
+		"alp": 255
+	},
+	"decoration": {
+		"filename": "twinbopp",
+		"custom_colors": "true",
+		"hue": 233,
+		"sat": 158,
+		"lgt": 183
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 233,
+		"sat": 158,
+		"lgt": 183
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 0,
+		"sat": 146,
+		"lgt": 224
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

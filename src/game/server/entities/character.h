@@ -3,6 +3,9 @@
 #ifndef GAME_SERVER_ENTITIES_CHARACTER_H
 #define GAME_SERVER_ENTITIES_CHARACTER_H
 
+#include <generated/protocol.h>
+
+#include <game/gamecore.h>
 #include <game/server/entity.h>
 
 
@@ -39,7 +42,7 @@ public:
 	void FireWeapon();
 
 	void Die(int Killer, int Weapon);
-	bool TakeDamage(vec2 Force, int Dmg, int From, int Weapon);
+	bool TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weapon);
 
 	bool Spawn(class CPlayer *pPlayer, vec2 Pos);
 	bool Remove();
@@ -69,7 +72,6 @@ private:
 	{
 		int m_AmmoRegenStart;
 		int m_Ammo;
-		int m_Ammocost;
 		bool m_Got;
 
 	} m_aWeapons[NUM_WEAPONS];
@@ -80,8 +82,6 @@ private:
 
 	int m_ReloadTimer;
 	int m_AttackTick;
-
-	int m_DamageTaken;
 
 	int m_EmoteType;
 	int m_EmoteStop;
@@ -95,12 +95,9 @@ private:
 	CNetObj_PlayerInput m_LatestInput;
 
 	// input
-	CNetObj_PlayerInput m_PrevInput;
 	CNetObj_PlayerInput m_Input;
 	int m_NumInputs;
 	int m_Jumped;
-
-	int m_DamageTakenTick;
 
 	int m_Health;
 	int m_Armor;

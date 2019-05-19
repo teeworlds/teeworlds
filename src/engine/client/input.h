@@ -6,30 +6,45 @@
 class CInput : public IEngineInput
 {
 	IEngineGraphics *m_pGraphics;
+	IConsole *m_pConsole;
+	SDL_Joystick *m_pJoystick;
 
 	int m_InputGrabbed;
+	char *m_pClipboardText;
 
-	int64 m_LastRelease;
-	int64 m_ReleaseDelta;
+	int m_PreviousHat;
 
-	void AddEvent(int Unicode, int Key, int Flags);
+	bool m_MouseDoubleClick;
+
+	void AddEvent(char *pText, int Key, int Flags);
+	void Clear();
+	bool IsEventValid(CEvent *pEvent) const { return pEvent->m_InputCount == m_InputCounter; };
+
+	//quick access to input
+	unsigned short m_aInputCount[g_MaxKeys];	// tw-KEY
+	unsigned char m_aInputState[g_MaxKeys];	// SDL_SCANCODE
+	int m_InputCounter;
+
+	void ClearKeyStates();
+	bool KeyState(int Key) const;
 
 	IEngineGraphics *Graphics() { return m_pGraphics; }
 
 public:
 	CInput();
+	~CInput();
 
 	virtual void Init();
+
+	bool KeyIsPressed(int Key) const { return KeyState(Key); }
+	bool KeyPress(int Key, bool CheckCounter) const { return CheckCounter ? (m_aInputCount[Key] == m_InputCounter) : m_aInputCount[Key]; }
 
 	virtual void MouseRelative(float *x, float *y);
 	virtual void MouseModeAbsolute();
 	virtual void MouseModeRelative();
 	virtual int MouseDoubleClick();
-
-	void ClearKeyStates();
-	int KeyState(int Key);
-
-	int ButtonPressed(int Button) { return m_aInputState[m_InputCurrent][Button]; }
+	virtual const char *GetClipboardText();
+	virtual void SetClipboardText(const char *pText);
 
 	virtual int Update();
 };

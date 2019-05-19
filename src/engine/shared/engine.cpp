@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <stdlib.h> // srand
 
 #include <base/system.h>
 
@@ -22,16 +23,6 @@ public:
 	IConsole *m_pConsole;
 	IStorage *m_pStorage;
 	bool m_Logging;
-
-	static void Con_DbgDumpmem(IConsole::IResult *pResult, void *pUserData)
-	{
-		CEngine *pEngine = static_cast<CEngine *>(pUserData);
-		char aBuf[32];
-		str_timestamp(aBuf, sizeof(aBuf));
-		char aFilename[128];
-		str_format(aFilename, sizeof(aFilename), "dumps/memory_%s.txt", aBuf);
-		mem_debug_dump(pEngine->m_pStorage->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE));
-	}
 
 	static void Con_DbgLognetwork(IConsole::IResult *pResult, void *pUserData)
 	{
@@ -57,6 +48,7 @@ public:
 
 	CEngine(const char *pAppname)
 	{
+		srand(time_get());
 		dbg_logger_stdout();
 		dbg_logger_debugger();
 
@@ -87,7 +79,6 @@ public:
 		if(!m_pConsole || !m_pStorage)
 			return;
 
-		m_pConsole->Register("dbg_dumpmem", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_DbgDumpmem, this, "Dump the memory");
 		m_pConsole->Register("dbg_lognetwork", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_DbgLognetwork, this, "Log the network");
 	}
 
@@ -95,7 +86,16 @@ public:
 	{
 		// open logfile if needed
 		if(g_Config.m_Logfile[0])
-			dbg_logger_file(g_Config.m_Logfile);
+		{
+			char aBuf[32];
+			if(g_Config.m_LogfileTimestamp)
+				str_timestamp(aBuf, sizeof(aBuf));
+			else
+				aBuf[0] = 0;
+			char aLogFilename[128];			
+			str_format(aLogFilename, sizeof(aLogFilename), "%s%s.txt", g_Config.m_Logfile, aBuf);
+			dbg_logger_file(aLogFilename);
+		}
 	}
 
 	void HostLookup(CHostLookup *pLookup, const char *pHostname, int Nettype)

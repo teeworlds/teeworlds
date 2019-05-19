@@ -57,7 +57,7 @@ class CConsole : public IConsole
 	static void ConToggle(IResult *pResult, void *pUser);
 	static void ConToggleStroke(IResult *pResult, void *pUser);
 	static void ConModCommandAccess(IResult *pResult, void *pUser);
-	static void ConModCommandStatus(IConsole::IResult *pResult, void *pUser);
+	static void ConModCommandStatus(IResult *pResult, void *pUser);
 
 	void ExecuteFileRecurse(const char *pFilename);
 	void ExecuteLineStroked(int Stroke, const char *pStr);
@@ -98,12 +98,11 @@ class CConsole : public IConsole
 			if(this != &Other)
 			{
 				IResult::operator=(Other);
-				int Offset = m_aStringStorage - Other.m_aStringStorage;
 				mem_copy(m_aStringStorage, Other.m_aStringStorage, sizeof(m_aStringStorage));
-				m_pArgsStart = Other.m_pArgsStart + Offset;
-				m_pCommand = Other.m_pCommand + Offset;
+				m_pArgsStart = m_aStringStorage+(Other.m_pArgsStart-Other.m_aStringStorage);
+				m_pCommand = m_aStringStorage+(Other.m_pCommand-Other.m_aStringStorage);
 				for(unsigned i = 0; i < Other.m_NumArgs; ++i)
-					m_apArgs[i] = Other.m_apArgs[i] + Offset;
+					m_apArgs[i] = m_aStringStorage+(Other.m_apArgs[i]-Other.m_aStringStorage);
 			}
 			return *this;
 		}
@@ -155,18 +154,34 @@ class CConsole : public IConsole
 	void AddCommandSorted(CCommand *pCommand);
 	CCommand *FindCommand(const char *pName, int FlagMask);
 
+	struct CMapListEntryTemp {
+		CMapListEntryTemp *m_pPrev;
+		CMapListEntryTemp *m_pNext;
+		char m_aName[TEMPMAP_NAME_LENGTH];
+	};
+
+	CHeap *m_pTempMapListHeap;
+	int m_NumMapListEntries;
+	CMapListEntryTemp *m_pFirstMapEntry;
+	CMapListEntryTemp *m_pLastMapEntry;
+
 public:
 	CConsole(int FlagMask);
+	~CConsole();
 
 	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int FlagMask) const;
 	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp);
 	virtual void PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser);
+	virtual void PossibleMaps(const char *pStr, FPossibleCallback pfnCallback, void *pUser);
 
 	virtual void ParseArguments(int NumArgs, const char **ppArguments);
 	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp);
 	virtual void RegisterTemp(const char *pName, const char *pParams, int Flags, const char *pHelp);
 	virtual void DeregisterTemp(const char *pName);
 	virtual void DeregisterTempAll();
+	virtual void RegisterTempMap(const char *pName);
+	virtual void DeregisterTempMap(const char *pName);
+	virtual void DeregisterTempMapAll();
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	virtual void StoreCommands(bool Store);
 
@@ -177,7 +192,7 @@ public:
 
 	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData);
 	virtual void SetPrintOutputLevel(int Index, int OutputLevel);
-	virtual void Print(int Level, const char *pFrom, const char *pStr);
+	virtual void Print(int Level, const char *pFrom, const char *pStr, bool Highlighted=false);
 
 	void SetAccessLevel(int AccessLevel) { m_AccessLevel = clamp(AccessLevel, (int)(ACCESS_LEVEL_ADMIN), (int)(ACCESS_LEVEL_MOD)); }
 };

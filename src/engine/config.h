@@ -11,10 +11,10 @@ class IConfig : public IInterface
 public:
 	typedef void (*SAVECALLBACKFUNC)(IConfig *pConfig, void *pUserData);
 
-	virtual void Init() = 0;
+	virtual void Init(int FlagMask) = 0;
 	virtual void Reset() = 0;
 	virtual void RestoreStrings() = 0;
-	virtual void Save() = 0;
+	virtual void Save(const char *pFilename=0) = 0;
 
 	virtual void RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData) = 0;
 

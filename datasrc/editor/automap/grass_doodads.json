@@ -1,0 +1,157 @@
+{"doodads": [
+	{"vegetation":
+		{
+			"rules": [
+			{
+				"startid": 217,
+				"endid": 251,
+				"ry": -3,
+				"Location": "floor",
+				"random": 25
+			},
+			{
+				"startid": 36,
+				"endid": 37,
+				"ry": -1,
+				"location": "floor",
+				"random": 25
+			},
+			{
+				"startid": 38,
+				"endid": 39,
+				"ry": -1,
+				"location": "floor",
+				"random": 25
+			},
+			{
+				"startid": 32,
+				"endid": 50,
+				"ry": -2,
+				"location": "floor",
+				"random": 35
+			},
+			{
+				"startid": 64,
+				"endid": 82,
+				"ry": -2,
+				"location": "floor",
+				"random": 35
+			},
+			{
+				"startid": 51,
+				"endid": 90,
+				"ry": -3,
+				"location": "floor",
+				"random": 50
+			},
+			{
+				"startid": 96,
+				"endid": 164,
+				"ry": -5,
+				"location": "floor",
+				"random": 50
+			},
+			{
+				"startid": 102,
+				"endid": 169,
+				"ry": -5,
+				"location": "floor",
+				"random": 50
+			},
+			{
+				"startid": 0,
+				"endid": 18,
+				"ry": -1,
+				"rx": -1,
+				"location": "walls",
+				"random": 75
+			},
+			{
+				"startid": 106,
+				"endid": 191,
+				"ry": -6,
+				"location": "floor",
+				"random": 50,
+				"comment": "END OF TREES"
+			},
+			{
+				"startid": 7,
+				"endid": 8,
+				"ry": -1,
+				"location": "floor",
+				"random": 35
+			},
+			{
+				"startid": 23,
+				"endid": 23,
+				"ry": -1,
+				"location": "floor",
+				"random": 35
+			},
+			{
+				"startid": 23,
+				"endid": 24,
+				"ry": -1,
+				"location": "floor",
+				"random": 35
+			},
+			{
+				"startid": 40,
+				"endid": 41,
+				"ry": -1,
+				"location": "floor",
+				"random": 35
+			},
+			{
+				"startid": 3,
+				"endid": 22,
+				"ry": -2,
+				"location": "floor",
+				"random": 50
+			},
+			{
+				"startid": 9,
+				"endid": 26,
+				"ry": -2,
+				"location": "floor",
+				"random": 50
+			},
+			{
+				"startid": 176,
+				"endid": 244,
+				"ry": -5,
+				"location": "floor",
+				"random": 50,
+				"comment": "BIG THING"
+			},
+			{
+				"startid": 204,
+				"endid": 253,
+				"ry": -1,
+				"location": "ceiling",
+				"random": 100,
+				"comment": "STALACTITE"
+			},
+			{
+				"startid": 206,
+				"endid": 255,
+				"ry": -1,
+				"location": "ceiling",
+				"random": 100,
+				"comment": "STALACTITE"
+			}]
+		}
+	},
+	{"grass":
+		{
+			"rules": [
+			{
+				"startid": 28,
+				"endid": 28,
+				"ry": -1,
+				"location": "floor",
+				"random": 1
+			}]
+		}
+	}]
+}

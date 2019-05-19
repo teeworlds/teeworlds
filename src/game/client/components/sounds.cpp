@@ -3,7 +3,7 @@
 #include <engine/engine.h>
 #include <engine/sound.h>
 #include <engine/shared/config.h>
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 #include <game/client/gameclient.h>
 #include <game/client/components/camera.h>
 #include <game/client/components/menus.h>
@@ -51,7 +51,7 @@ ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 	int Id;
 	do
 	{
-		Id = rand() % pSet->m_NumSounds;
+		Id = random_int() % pSet->m_NumSounds;
 	}
 	while(Id == pSet->m_Last);
 	pSet->m_Last = Id;
@@ -61,10 +61,10 @@ ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 void CSounds::OnInit()
 {
 	// setup sound channels
-	Sound()->SetChannel(CSounds::CHN_GUI, 1.0f, 0.0f);
-	Sound()->SetChannel(CSounds::CHN_MUSIC, 1.0f, 0.0f);
-	Sound()->SetChannel(CSounds::CHN_WORLD, 0.9f, 1.0f);
-	Sound()->SetChannel(CSounds::CHN_GLOBAL, 1.0f, 0.0f);
+	Sound()->SetChannelVolume(CSounds::CHN_GUI, 1.0f);
+	Sound()->SetChannelVolume(CSounds::CHN_MUSIC, 1.0f);
+	Sound()->SetChannelVolume(CSounds::CHN_WORLD, 0.9f);
+	Sound()->SetChannelVolume(CSounds::CHN_GLOBAL, 1.0f);
 
 	Sound()->SetListenerPos(0.0f, 0.0f);
 
@@ -114,7 +114,8 @@ void CSounds::OnRender()
 	}
 
 	// set listner pos
-	Sound()->SetListenerPos(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y);
+	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
+	Sound()->SetListenerPos(Pos.x, Pos.y);
 
 	// play sound from queue
 	if(m_QueuePos > 0)
@@ -191,4 +192,18 @@ void CSounds::Stop(int SetId)
 
 	for(int i = 0; i < pSet->m_NumSounds; i++)
 		Sound()->Stop(pSet->m_aSounds[i].m_Id);
+}
+
+bool CSounds::IsPlaying(int SetId)
+{
+	if(m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
+		return false;
+
+	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
+	for(int i = 0; i < pSet->m_NumSounds; i++)
+	{
+		if(Sound()->IsPlaying(pSet->m_aSounds[i].m_Id))
+			return true;
+	}
+	return false;
 }

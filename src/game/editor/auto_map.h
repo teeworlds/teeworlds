@@ -1,13 +1,16 @@
 #ifndef GAME_EDITOR_AUTO_MAP_H
 #define GAME_EDITOR_AUTO_MAP_H
 
-#include <stdlib.h> // rand
-
 #include <base/tl/array.h>
 #include <base/vmath.h>
 
 #include <engine/external/json-parser/json.h>
 
+typedef struct
+{
+	int x, y;
+	int w, h;
+} RECTi;
 
 class IAutoMapper
 {
@@ -24,22 +27,20 @@ public:
 		MAX_RULES=256
 	};
 
-	//
 	IAutoMapper(class CEditor *pEditor, int Type) : m_pEditor(pEditor), m_Type(Type) {}
 	virtual ~IAutoMapper() {};
 	virtual void Load(const json_value &rElement) = 0;
-	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID) {}
+	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, RECTi Area) {}
 	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, int Ammount) {} // for convenience purposes
 
 	virtual int RuleSetNum() = 0;
-	virtual const char* GetRuleSetName(int Index) = 0;
+	virtual const char* GetRuleSetName(int Index) const = 0;
 
-	//
-	int GetType() { return m_Type; }
+	int GetType() const { return m_Type; }
 
 	static bool Random(int Value)
 	{
-		return ((int)((float)rand() / ((float)RAND_MAX + 1) * Value) == 1);
+		return (random_int() % Value) == 0;
 	}
 
 	static const char *GetTypeName(int Type)
@@ -93,10 +94,10 @@ public:
 	CTilesetMapper(class CEditor *pEditor) : IAutoMapper(pEditor, TYPE_TILESET) { m_aRuleSets.clear(); }
 
 	virtual void Load(const json_value &rElement);
-	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID);
+	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, RECTi Area);
 
 	virtual int RuleSetNum() { return m_aRuleSets.size(); }
-	virtual const char* GetRuleSetName(int Index);
+	virtual const char* GetRuleSetName(int Index) const;
 };
 
 class CDoodadsMapper: public IAutoMapper
@@ -120,6 +121,23 @@ public:
 			CEILING,
 			WALLS
 		};
+
+		bool operator<(const CRule &Other) const
+		{
+			if((m_Location == CDoodadsMapper::CRule::FLOOR && Other.m_Location == CDoodadsMapper::CRule::FLOOR)
+				|| (m_Location == CDoodadsMapper::CRule::CEILING && Other.m_Location == CDoodadsMapper::CRule::CEILING))
+			{
+				if(m_Size.x < Other.m_Size.x)
+					return true;
+			}
+			else if(m_Location == CDoodadsMapper::CRule::WALLS && Other.m_Location == CDoodadsMapper::CRule::WALLS)
+			{
+				if(m_Size.y < Other.m_Size.y)
+					return true;
+			}
+
+			return false;
+		}
 	};
 
 	struct CRuleSet
@@ -136,7 +154,7 @@ public:
 	void AnalyzeGameLayer();
 
 	virtual int RuleSetNum() { return m_aRuleSets.size(); }
-	virtual const char* GetRuleSetName(int Index);
+	virtual const char* GetRuleSetName(int Index) const;
 
 private:
 	void PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array<int> > *pPositions, int Amount, int LeftWall = 0);

@@ -1,0 +1,31 @@
+{"skin": {
+	"body": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 29,
+		"sat": 173,
+		"lgt": 87
+	},
+	"marking": {
+		"filename": "warpaint",
+		"custom_colors": "false"
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 11,
+		"sat": 115,
+		"lgt": 1
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 29,
+		"sat": 173,
+		"lgt": 87
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

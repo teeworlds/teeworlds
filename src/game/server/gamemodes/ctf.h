@@ -13,13 +13,14 @@ class CGameControllerCTF : public IGameController
 	// game
 	class CFlag *m_apFlags[2];
 
-	virtual void DoWincheckMatch();
+	virtual bool DoWincheckMatch();
 
 public:
 	CGameControllerCTF(class CGameContext *pGameServer);
 	
 	// event
 	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
+	virtual void OnFlagReturn(class CFlag *pFlag);
 	virtual bool OnEntity(int Index, vec2 Pos);
 
 	// general

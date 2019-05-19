@@ -20,7 +20,7 @@ inline float sign(float f)
 	return f<0.0f?-1.0f:1.0f;
 }
 
-inline int round(float f)
+inline int round_to_int(float f)
 {
 	if(f > 0)
 		return (int)(f+0.5f);
@@ -33,11 +33,30 @@ inline T mix(const T a, const T b, TB amount)
 	return a + (b-a)*amount;
 }
 
+template<typename T, typename TB>
+inline T bezier(const T p0, const T p1, const T p2, const T p3, TB amount)
+{
+	// De-Casteljau Algorithm
+	const T c10 = mix(p0, p1, amount);
+	const T c11 = mix(p1, p2, amount);
+	const T c12 = mix(p2, p3, amount);
+
+	const T c20 = mix(c10, c11, amount);
+	const T c21 = mix(c11, c12, amount);
+
+	return mix(c20, c21, amount); // c30
+}
+
+inline int random_int() { return (((rand() & 0xffff) << 16) | (rand() & 0xffff)) & 0x7FFFFFFF; };
 inline float frandom() { return rand()/(float)(RAND_MAX); }
 
 // float to fixed
 inline int f2fx(float v) { return (int)(v*(float)(1<<10)); }
 inline float fx2f(int v) { return v*(1.0f/(1<<10)); }
+
+// int to fixed
+inline int i2fx(int v) { return v<<10; }
+inline int fx2i(int v) { return v>>10; }
 
 inline int gcd(int a, int b)
 {

@@ -25,8 +25,10 @@ CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 	m_pSnapshotDelta = pSnapshotDelta;
 }
 
+// TODO: fix demo map loading (looks broken)
+
 // Record
-int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetVersion, const char *pMap, unsigned Crc, const char *pType)
+int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetVersion, const char *pMap, SHA256_DIGEST Sha256, unsigned Crc, const char *pType)
 {
 	CDemoHeader Header;
 	if(m_File)
@@ -41,7 +43,15 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!MapFile)
 	{
-		// try the downloaded maps
+		// try the downloaded maps (sha256)
+		char aSha256[SHA256_MAXSTRSIZE];
+		sha256_str(Sha256, aSha256, sizeof(aSha256));
+		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%s.map", pMap, aSha256);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	}
+	if(!MapFile)
+	{
+		// try the downloaded maps (crc)
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
 		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	}
@@ -188,9 +198,18 @@ void CDemoRecorder::Write(int Type, const void *pData, int Size)
 	mem_copy(aBuffer2, pData, Size);
 	while(Size&3)
 		aBuffer2[Size++] = 0;
-	Size = CVariableInt::Compress(aBuffer2, Size, aBuffer); // buffer2 -> buffer
+	Size = CVariableInt::Compress(aBuffer2, Size, aBuffer, sizeof(aBuffer)); // buffer2 -> buffer
+	if(Size < 0)
+	{
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "demo_recorder", "error during intpack compression");
+		return;
+	}
 	Size = CNetBase::Compress(aBuffer, Size, aBuffer2, sizeof(aBuffer2)); // buffer -> buffer2
-
+	if(Size < 0)
+	{
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "demo_recorder", "error during network compression");
+		return;
+	}
 
 	aChunk[0] = ((Type&0x3)<<5);
 	if(Size < 30)
@@ -495,7 +514,7 @@ void CDemoPlayer::DoTick()
 				break;
 			}
 
-			DataSize = CVariableInt::Decompress(aDecompressed, DataSize, aData);
+			DataSize = CVariableInt::Decompress(aDecompressed, DataSize, aData, sizeof(aData));
 
 			if(DataSize < 0)
 			{
@@ -674,8 +693,8 @@ const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole
 	// get timeline markers
 	int Num = ((m_Info.m_Header.m_aNumTimelineMarkers[0]<<24)&0xFF000000) | ((m_Info.m_Header.m_aNumTimelineMarkers[1]<<16)&0xFF0000) |
 				((m_Info.m_Header.m_aNumTimelineMarkers[2]<<8)&0xFF00) | (m_Info.m_Header.m_aNumTimelineMarkers[3]&0xFF);
-	m_Info.m_Info.m_NumTimelineMarkers = Num;
-	for(int i = 0; i < Num && i < MAX_TIMELINE_MARKERS; i++)
+	m_Info.m_Info.m_NumTimelineMarkers = min(Num, int(MAX_TIMELINE_MARKERS));
+	for(int i = 0; i < m_Info.m_Info.m_NumTimelineMarkers; i++)
 	{
 		char *pTimelineMarker = m_Info.m_Header.m_aTimelineMarkers[i];
 		m_Info.m_Info.m_aTimelineMarkers[i] = ((pTimelineMarker[0]<<24)&0xFF000000) | ((pTimelineMarker[1]<<16)&0xFF0000) |

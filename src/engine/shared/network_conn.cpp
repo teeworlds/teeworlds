@@ -1,8 +1,10 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/math.h>
 #include <base/system.h>
 #include "config.h"
 #include "network.h"
+
 
 void CNetConnection::ResetStats()
 {
@@ -13,18 +15,33 @@ void CNetConnection::Reset()
 {
 	m_Sequence = 0;
 	m_Ack = 0;
+	m_PeerAck = 0;
 	m_RemoteClosed = 0;
 
 	m_State = NET_CONNSTATE_OFFLINE;
 	m_LastSendTime = 0;
 	m_LastRecvTime = 0;
 	m_LastUpdateTime = 0;
-	m_Token = -1;
+	m_Token = NET_TOKEN_NONE;
+	m_PeerToken = NET_TOKEN_NONE;
 	mem_zero(&m_PeerAddr, sizeof(m_PeerAddr));
 
 	m_Buffer.Init();
 
 	mem_zero(&m_Construct, sizeof(m_Construct));
+}
+
+void CNetConnection::SetToken(TOKEN Token)
+{
+	if(State() != NET_CONNSTATE_OFFLINE)
+		return;
+
+	m_Token = Token;
+}
+
+TOKEN CNetConnection::GenerateToken(const NETADDR *pPeerAddr)
+{
+	return random_int() & NET_TOKEN_MASK;
 }
 
 const char *CNetConnection::ErrorString()
@@ -75,6 +92,7 @@ int CNetConnection::Flush()
 
 	// send of the packets
 	m_Construct.m_Ack = m_Ack;
+	m_Construct.m_Token = m_PeerToken;
 	CNetBase::SendPacket(m_Socket, &m_PeerAddr, &m_Construct);
 
 	// update send times
@@ -90,7 +108,7 @@ int CNetConnection::QueueChunkEx(int Flags, int DataSize, const void *pData, int
 	unsigned char *pChunkData;
 
 	// check if we have space for it, if not, flush the connection
-	if(m_Construct.m_DataSize + DataSize + NET_MAX_CHUNKHEADERSIZE > (int)sizeof(m_Construct.m_aChunkData))
+	if(m_Construct.m_DataSize + DataSize + NET_MAX_CHUNKHEADERSIZE > (int)sizeof(m_Construct.m_aChunkData) || m_Construct.m_NumChunks == NET_MAX_PACKET_CHUNKS)
 		Flush();
 
 	// pack all the data
@@ -145,7 +163,18 @@ void CNetConnection::SendControl(int ControlMsg, const void *pExtra, int ExtraSi
 {
 	// send the control message
 	m_LastSendTime = time_get();
-	CNetBase::SendControlMsg(m_Socket, &m_PeerAddr, m_Ack, ControlMsg, pExtra, ExtraSize);
+	CNetBase::SendControlMsg(m_Socket, &m_PeerAddr, m_PeerToken, m_Ack, ControlMsg, pExtra, ExtraSize);
+}
+
+void CNetConnection::SendPacketConnless(const char *pData, int DataSize)
+{
+	CNetBase::SendPacketConnless(m_Socket, &m_PeerAddr, m_PeerToken, m_Token, pData, DataSize);
+}
+
+void CNetConnection::SendControlWithToken(int ControlMsg)
+{
+	m_LastSendTime = time_get();
+	CNetBase::SendControlMsgWithToken(m_Socket, &m_PeerAddr, m_PeerToken, 0, ControlMsg, m_Token, true);
 }
 
 void CNetConnection::ResendChunk(CNetChunkResend *pResend)
@@ -167,10 +196,13 @@ int CNetConnection::Connect(NETADDR *pAddr)
 
 	// init connection
 	Reset();
+	m_LastRecvTime = time_get();
 	m_PeerAddr = *pAddr;
+	m_PeerToken = NET_TOKEN_NONE;
+	SetToken(GenerateToken(pAddr));
 	mem_zero(m_ErrorString, sizeof(m_ErrorString));
-	m_State = NET_CONNSTATE_CONNECT;
-	SendControl(NET_CTRLMSG_CONNECT, 0, 0);
+	m_State = NET_CONNSTATE_TOKEN;
+	SendControlWithToken(NET_CTRLMSG_TOKEN);
 	return 0;
 }
 
@@ -186,9 +218,13 @@ void CNetConnection::Disconnect(const char *pReason)
 		else
 			SendControl(NET_CTRLMSG_CLOSE, 0, 0);
 
-		m_ErrorString[0] = 0;
-		if(pReason)
-			str_copy(m_ErrorString, pReason, sizeof(m_ErrorString));
+		if(pReason != m_ErrorString)
+		{
+			if(pReason)
+				str_copy(m_ErrorString, pReason, sizeof(m_ErrorString));
+			else
+				m_ErrorString[0] = 0;
+		}
 	}
 
 	Reset();
@@ -196,11 +232,30 @@ void CNetConnection::Disconnect(const char *pReason)
 
 int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 {
+	// check if actual ack value is valid(own sequence..latest peer ack)
+	if(m_Sequence >= m_PeerAck)
+	{
+		if(pPacket->m_Ack < m_PeerAck || pPacket->m_Ack > m_Sequence)
+			return 0;
+	}
+	else
+	{
+		if(pPacket->m_Ack < m_PeerAck && pPacket->m_Ack > m_Sequence)
+			return 0;
+	}
+	m_PeerAck = pPacket->m_Ack;
+
 	int64 Now = time_get();
+
+	if(pPacket->m_Token == NET_TOKEN_NONE || pPacket->m_Token != m_Token)
+		return 0;
 
 	// check if resend is requested
 	if(pPacket->m_Flags&NET_PACKETFLAG_RESEND)
 		Resend();
+
+	if(pPacket->m_Flags&NET_PACKETFLAG_CONNLESS)
+		return 1;
 
 	//
 	if(pPacket->m_Flags&NET_PACKETFLAG_CONTROL)
@@ -238,33 +293,53 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 		}
 		else
 		{
-			if(State() == NET_CONNSTATE_OFFLINE)
+			if(CtrlMsg == NET_CTRLMSG_TOKEN)
 			{
-				if(CtrlMsg == NET_CTRLMSG_CONNECT)
+				m_PeerToken = pPacket->m_ResponseToken;
+
+				if(State() == NET_CONNSTATE_TOKEN)
 				{
-					// send response and init connection
-					Reset();
-					m_State = NET_CONNSTATE_PENDING;
-					m_PeerAddr = *pAddr;
-					mem_zero(m_ErrorString, sizeof(m_ErrorString));
-					m_LastSendTime = Now;
 					m_LastRecvTime = Now;
-					m_LastUpdateTime = Now;
-					SendControl(NET_CTRLMSG_CONNECTACCEPT, 0, 0);
-					if(g_Config.m_Debug)
-						dbg_msg("connection", "got connection, sending connect+accept");
+					m_State = NET_CONNSTATE_CONNECT;
+					SendControlWithToken(NET_CTRLMSG_CONNECT);
+					dbg_msg("connection", "got token, replying, token=%x mytoken=%x", m_PeerToken, m_Token);
 				}
+				else if(g_Config.m_Debug)
+					dbg_msg("connection", "got token, token=%x", m_PeerToken);
 			}
-			else if(State() == NET_CONNSTATE_CONNECT)
+			else
 			{
-				// connection made
-				if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
+				if(State() == NET_CONNSTATE_OFFLINE)
 				{
-					m_LastRecvTime = Now;
-					SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
-					m_State = NET_CONNSTATE_ONLINE;
-					if(g_Config.m_Debug)
-						dbg_msg("connection", "got connect+accept, sending accept. connection online");
+					if(CtrlMsg == NET_CTRLMSG_CONNECT)
+					{
+						// send response and init connection
+						TOKEN Token = m_Token;
+						Reset();
+						mem_zero(m_ErrorString, sizeof(m_ErrorString));
+						m_State = NET_CONNSTATE_PENDING;
+						m_PeerAddr = *pAddr;
+						m_PeerToken = pPacket->m_ResponseToken;
+						m_Token = Token;
+						m_LastSendTime = Now;
+						m_LastRecvTime = Now;
+						m_LastUpdateTime = Now;
+						SendControl(NET_CTRLMSG_CONNECTACCEPT, 0, 0);
+						if(g_Config.m_Debug)
+							dbg_msg("connection", "got connection, sending connect+accept");
+					}
+				}
+				else if(State() == NET_CONNSTATE_CONNECT)
+				{
+					// connection made
+					if(CtrlMsg == NET_CTRLMSG_CONNECTACCEPT)
+					{
+						m_LastRecvTime = Now;
+						SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
+						m_State = NET_CONNSTATE_ONLINE;
+						if(g_Config.m_Debug)
+							dbg_msg("connection", "got connect+accept, sending accept. connection online");
+					}
 				}
 			}
 		}
@@ -298,11 +373,16 @@ int CNetConnection::Update()
 
 	// check for timeout
 	if(State() != NET_CONNSTATE_OFFLINE &&
-		State() != NET_CONNSTATE_CONNECT &&
+		State() != NET_CONNSTATE_TOKEN &&
 		(Now-m_LastRecvTime) > time_freq()*10)
 	{
 		m_State = NET_CONNSTATE_ERROR;
 		SetError("Timeout");
+	}
+	else if(State() == NET_CONNSTATE_TOKEN && (Now - m_LastRecvTime) > time_freq() * 5)
+	{
+		m_State = NET_CONNSTATE_ERROR;
+		SetError("Unable to connect to the server");
 	}
 
 	// fix resends
@@ -337,10 +417,15 @@ int CNetConnection::Update()
 		if(time_get()-m_LastSendTime > time_freq())
 			SendControl(NET_CTRLMSG_KEEPALIVE, 0, 0);
 	}
+	else if(State() == NET_CONNSTATE_TOKEN)
+	{
+		if(time_get()-m_LastSendTime > time_freq()/2) // send a new token request every 500ms
+			SendControlWithToken(NET_CTRLMSG_TOKEN);
+	}
 	else if(State() == NET_CONNSTATE_CONNECT)
 	{
 		if(time_get()-m_LastSendTime > time_freq()/2) // send a new connect every 500ms
-			SendControl(NET_CTRLMSG_CONNECT, 0, 0);
+			SendControlWithToken(NET_CTRLMSG_CONNECT);
 	}
 	else if(State() == NET_CONNSTATE_PENDING)
 	{

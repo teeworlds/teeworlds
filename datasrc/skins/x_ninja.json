@@ -1,0 +1,29 @@
+{"skin": {
+	"body": {
+		"filename": "x_ninja",
+		"custom_colors": "true",
+		"hue": 0,
+		"sat": 0,
+		"lgt": 0
+	},
+	"marking": {
+		"filename": "uppy",
+		"custom_colors": "true",
+		"hue": 0,
+		"sat": 0,
+		"lgt": 64,
+		"alp": 255
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "false"
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "false"
+	},
+	"eyes": {
+		"filename": "x_ninja",
+		"custom_colors": "false"
+	}}
+}

@@ -138,7 +138,7 @@ int CControls::SnapInput(int *pData)
 	}
 	else
 	{
-
+		ClampMousePos();
 		m_InputData.m_TargetX = (int)m_MousePos.x;
 		m_InputData.m_TargetY = (int)m_MousePos.y;
 		if(!m_InputData.m_TargetX && !m_InputData.m_TargetY)
@@ -196,6 +196,8 @@ int CControls::SnapInput(int *pData)
 
 void CControls::OnRender()
 {
+	ClampMousePos();
+
 	// update target pos
 	if(m_pClient->m_Snap.m_pGameData && !m_pClient->m_Snap.m_SpecInfo.m_Active)
 		m_TargetPos = m_pClient->m_LocalCharacterPos + m_MousePos;
@@ -212,7 +214,6 @@ bool CControls::OnMouseMove(float x, float y)
 		return false;
 
 	m_MousePos += vec2(x, y); // TODO: ugly
-	ClampMousePos();
 
 	return true;
 }
@@ -223,13 +224,18 @@ void CControls::ClampMousePos()
 	{
 		m_MousePos.x = clamp(m_MousePos.x, 200.0f, Collision()->GetWidth()*32-200.0f);
 		m_MousePos.y = clamp(m_MousePos.y, 200.0f, Collision()->GetHeight()*32-200.0f);
-
 	}
 	else
 	{
-		float CameraMaxDistance = 200.0f;
-		float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
-		float MouseMax = min(CameraMaxDistance/FollowFactor + g_Config.m_ClMouseDeadzone, (float)g_Config.m_ClMouseMaxDistance);
+		float MouseMax;
+		if(g_Config.m_ClDynamicCamera)
+		{
+			float CameraMaxDistance = 200.0f;
+			float FollowFactor = g_Config.m_ClMouseFollowfactor/100.0f;
+			MouseMax = min(CameraMaxDistance/FollowFactor + g_Config.m_ClMouseDeadzone, (float)g_Config.m_ClMouseMaxDistanceDynamic);
+		}
+		else
+			MouseMax = (float)g_Config.m_ClMouseMaxDistanceStatic;
 
 		if(length(m_MousePos) > MouseMax)
 			m_MousePos = normalize(m_MousePos)*MouseMax;

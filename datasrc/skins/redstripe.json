@@ -1,0 +1,31 @@
+{"skin": {
+	"body": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 248,
+		"sat": 214,
+		"lgt": 123
+	},
+	"marking": {
+		"filename": "stripe",
+		"custom_colors": "false"
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 0,
+		"sat": 0,
+		"lgt": 184
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 149,
+		"sat": 4,
+		"lgt": 71
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

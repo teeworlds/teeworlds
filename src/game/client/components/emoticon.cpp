@@ -2,10 +2,9 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
 #include <engine/shared/config.h>
-#include <game/generated/protocol.h>
-#include <game/generated/client_data.h>
+#include <generated/protocol.h>
+#include <generated/client_data.h>
 
-#include <game/gamecore.h> // get_angle
 #include <game/client/ui.h>
 #include <game/client/render.h>
 #include "emoticon.h"
@@ -114,12 +113,14 @@ void CEmoticon::OnRender()
 	if (length(m_SelectorMouse) > 170.0f)
 		m_SelectorMouse = normalize(m_SelectorMouse) * 170.0f;
 
-	float SelectedAngle = GetAngle(m_SelectorMouse) + 2*pi/24;
+	float SelectedAngle = angle(m_SelectorMouse) + 2*pi/24;
 	if (SelectedAngle < 0)
 		SelectedAngle += 2*pi;
 
 	if (length(m_SelectorMouse) > 110.0f)
 		m_SelectedEmote = (int)(SelectedAngle / (2*pi) * NUM_EMOTICONS);
+	else
+		m_SelectedEmote = -1;
 
 	CUIRect Screen = *UI()->Screen();
 
@@ -156,11 +157,13 @@ void CEmoticon::OnRender()
 	Graphics()->QuadsEnd();
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
+	Graphics()->WrapClamp();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,1);
 	IGraphics::CQuadItem QuadItem(m_SelectorMouse.x+Screen.w/2,m_SelectorMouse.y+Screen.h/2,24,24);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
 }
 
 void CEmoticon::Emote(int Emoticon)

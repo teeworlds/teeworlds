@@ -1,12 +1,14 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/color.h>
 #include <base/math.h>
 
 #include <engine/client.h>
+#include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 
-#include <game/generated/client_data.h>
+#include <generated/client_data.h>
 #include <game/client/localization.h>
 #include <game/client/render.h>
 #include "editor.h"
@@ -30,26 +32,117 @@ CLayerTiles::CLayerTiles(int w, int h)
 	m_pTiles = new CTile[m_Width*m_Height];
 	mem_zero(m_pTiles, m_Width*m_Height*sizeof(CTile));
 
+	m_pSaveTiles = 0;
+	m_SaveTilesSize = 0;
+
 	m_SelectedRuleSet = 0;
+	m_LiveAutoMap = false;
 	m_SelectedAmount = 50;
 }
 
 CLayerTiles::~CLayerTiles()
 {
 	delete [] m_pTiles;
+	m_pTiles = 0;
+	delete [] m_pSaveTiles;
+	m_pSaveTiles = 0;
+	m_SaveTilesSize = 0;
 }
 
 void CLayerTiles::PrepareForSave()
 {
 	for(int y = 0; y < m_Height; y++)
 		for(int x = 0; x < m_Width; x++)
+		{
 			m_pTiles[y*m_Width+x].m_Flags &= TILEFLAG_VFLIP|TILEFLAG_HFLIP|TILEFLAG_ROTATE;
+			if(m_pTiles[y*m_Width+x].m_Index == 0)
+				m_pTiles[y*m_Width+x].m_Flags = 0;
+		}
 
 	if(m_Image != -1 && m_Color.a == 255)
 	{
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
 				m_pTiles[y*m_Width+x].m_Flags |= m_pEditor->m_Map.m_lImages[m_Image]->m_aTileFlags[m_pTiles[y*m_Width+x].m_Index];
+	}
+
+	int NumSaveTiles = 0; // number of unique tiles that we have to save
+	CTile Tile; // current tile to be duplicated
+	Tile.m_Skip = MAX_SKIP; // tell the code that we can't skip the first tile
+
+	int NumHitMaxSkip = -1;
+
+	for(int i = 0; i < m_Width * m_Height; i++)
+	{
+		// we can only store MAX_SKIP empty tiles in one tile
+		if(Tile.m_Skip == MAX_SKIP)
+		{
+			Tile = m_pTiles[i];
+			Tile.m_Skip = 0;
+			NumSaveTiles++;
+			NumHitMaxSkip++;
+		}
+		// tile is different from last one? - can't skip it
+		else if(m_pTiles[i].m_Index != Tile.m_Index || m_pTiles[i].m_Flags != Tile.m_Flags)
+		{
+			Tile = m_pTiles[i];
+			Tile.m_Skip = 0;
+			NumSaveTiles++;
+		}
+		// if the tile is the same as the previous one - no need to
+		// save it separately
+		else
+			Tile.m_Skip++;
+	}
+
+	if(m_pSaveTiles)
+		delete [] m_pSaveTiles;
+
+	m_pSaveTiles = new CTile[NumSaveTiles];
+	m_SaveTilesSize = sizeof(CTile) * NumSaveTiles;
+
+	int NumWrittenSaveTiles = 0;
+	Tile.m_Skip = MAX_SKIP;
+	for(int i = 0; i < m_Width * m_Height + 1; i++)
+	{
+		// again, if an tile is the same as the previous one
+		// and we have place to store it, skip it!
+		// if we are at the end of the layer, write one more tile
+		if(i != m_Width * m_Height && Tile.m_Skip != MAX_SKIP && m_pTiles[i].m_Index == Tile.m_Index && m_pTiles[i].m_Flags == Tile.m_Flags)
+		{
+			Tile.m_Skip++;
+		}
+		// tile is not skippable
+		else
+		{
+			// if this is not the first tile, we have to save the previous
+			// tile beforehand
+			if(i != 0)
+				m_pSaveTiles[NumWrittenSaveTiles++] = Tile;
+
+			// if this isn't the last tile, store it so we can check how
+			// many tiles to skip
+			if(i != m_Width * m_Height)
+			{
+				Tile = m_pTiles[i];
+				Tile.m_Skip = 0;
+			}
+		}
+	}
+}
+
+void CLayerTiles::ExtractTiles(CTile *pSavedTiles)
+{
+	int i = 0;
+	while(i < m_Width * m_Height)
+	{
+		for(unsigned Counter = 0; Counter <= pSavedTiles->m_Skip && i < m_Width * m_Height; Counter++)
+		{
+			m_pTiles[i] = *pSavedTiles;
+			m_pTiles[i++].m_Skip = 0;
+		}
+
+		pSavedTiles++;
 	}
 }
 
@@ -123,18 +216,21 @@ void CLayerTiles::Clamp(RECTi *pRect)
 
 void CLayerTiles::BrushSelecting(CUIRect Rect)
 {
+	vec4 FillColor = HexToRgba(g_Config.m_EdColorSelectionTile);
+
 	Graphics()->TextureClear();
 	m_pEditor->Graphics()->QuadsBegin();
-	m_pEditor->Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.4f);
+	m_pEditor->Graphics()->SetColor(FillColor.r*FillColor.a, FillColor.g*FillColor.a, FillColor.b*FillColor.a, FillColor.a);
 	Snap(&Rect);
 	IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
 	m_pEditor->Graphics()->QuadsDrawTL(&QuadItem, 1);
 	m_pEditor->Graphics()->QuadsEnd();
 	char aBuf[16];
 	str_format(aBuf, sizeof(aBuf), "%d,%d", ConvertX(Rect.w), ConvertY(Rect.h));
-	TextRender()->Text(0, Rect.x+3.0f, Rect.y+3.0f, m_pEditor->m_ShowPicker?15.0f:15.0f*m_pEditor->m_WorldZoom, aBuf, -1);
+	TextRender()->Text(0, Rect.x+3.0f, Rect.y+3.0f, m_pEditor->m_ShowTilePicker?15.0f:15.0f*m_pEditor->m_WorldZoom, aBuf, -1.0f);
 }
 
+static int s_lastBrushX = -1, s_lastBrushY = -1;
 int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 {
 	RECTi r;
@@ -157,6 +253,8 @@ int CLayerTiles::BrushGrab(CLayerGroup *pBrush, CUIRect Rect)
 		for(int x = 0; x < r.w; x++)
 			pGrabbed->m_pTiles[y*pGrabbed->m_Width+x] = m_pTiles[(r.y+y)*m_Width+(r.x+x)];
 
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 	return 1;
 }
 
@@ -190,6 +288,13 @@ void CLayerTiles::FillSelection(bool Empty, CLayer *pBrush, CUIRect Rect)
 				m_pTiles[fy*m_Width+fx] = pLt->m_pTiles[(y*pLt->m_Width + x%pLt->m_Width) % (pLt->m_Width*pLt->m_Height)];
 		}
 	}
+
+	if(m_LiveAutoMap)
+	{
+		RECTi r = {sx - 1, sy - 1, w + 2, h + 2};	
+		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, r);
+	}
+
 	m_pEditor->m_Map.m_Modified = true;
 }
 
@@ -198,10 +303,13 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 	if(m_Readonly)
 		return;
 
-	//
 	CLayerTiles *l = (CLayerTiles *)pBrush;
 	int sx = ConvertX(wx);
 	int sy = ConvertY(wy);
+
+	//dont draw if the mouse is held without moving
+	if(sx == s_lastBrushX && sy == s_lastBrushY)
+		return;
 
 	for(int y = 0; y < l->m_Height; y++)
 		for(int x = 0; x < l->m_Width; x++)
@@ -213,7 +321,17 @@ void CLayerTiles::BrushDraw(CLayer *pBrush, float wx, float wy)
 
 			m_pTiles[fy*m_Width+fx] = l->m_pTiles[y*l->m_Width+x];
 		}
+
+	if(m_LiveAutoMap)
+	{
+		RECTi r = {sx - 1, sy - 1, l->m_Width + 2, l->m_Height + 2};
+		m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, r);
+	}
+
 	m_pEditor->m_Map.m_Modified = true;
+
+	s_lastBrushX = sx;
+	s_lastBrushY = sy;
 }
 
 void CLayerTiles::BrushFlipX()
@@ -230,6 +348,9 @@ void CLayerTiles::BrushFlipX()
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP : TILEFLAG_VFLIP;
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::BrushFlipY()
@@ -246,17 +367,20 @@ void CLayerTiles::BrushFlipY()
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
 				m_pTiles[y*m_Width+x].m_Flags ^= m_pTiles[y*m_Width+x].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP : TILEFLAG_HFLIP;
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::BrushRotate(float Amount)
 {
-	int Rotation = (round(360.0f*Amount/(pi*2))/90)%4;	// 0=0°, 1=90°, 2=180°, 3=270°
+	int Rotation = (round_to_int(360.0f*Amount/(pi*2))/90)%4;	// 0=0Â°, 1=90Â°, 2=180Â°, 3=270Â°
 	if(Rotation < 0)
 		Rotation +=4;
 
 	if(Rotation == 1 || Rotation == 3)
 	{
-		// 90° rotation
+		// 90Â° rotation
 		CTile *pTempData = new CTile[m_Width*m_Height];
 		mem_copy(pTempData, m_pTiles, m_Width*m_Height*sizeof(CTile));
 		CTile *pDst = m_pTiles;
@@ -283,6 +407,9 @@ void CLayerTiles::BrushRotate(float Amount)
 		BrushFlipX();
 		BrushFlipY();
 	}
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::Resize(int NewW, int NewH)
@@ -333,6 +460,9 @@ void CLayerTiles::Shift(int Direction)
 				mem_copy(&m_pTiles[y*m_Width], &m_pTiles[(y-1)*m_Width], m_Width*sizeof(CTile));
 		}
 	}
+
+	s_lastBrushX = -1;
+	s_lastBrushY = -1;
 }
 
 void CLayerTiles::ShowInfo()
@@ -389,7 +519,8 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			{
 				if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_TILESET)
 				{
-					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet);
+					RECTi r = {0, 0, m_Width, m_Height};
+					m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->Proceed(this, m_SelectedRuleSet, r);
 					return 1; // only close the popup when it's a tileset
 				}
 				else if(m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_DOODADS)
@@ -474,11 +605,15 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	{
 		if (NewVal == -1)
 		{
-			m_Texture = IGraphics::CTextureHandle();
+			m_Texture.Invalidate();
 			m_Image = -1;
 		}
 		else
+		{
 			m_Image = NewVal%m_pEditor->m_Map.m_lImages.size();
+			m_SelectedRuleSet = 0;
+			m_LiveAutoMap = false;
+		}
 	}
 	else if(Prop == PROP_COLOR)
 	{

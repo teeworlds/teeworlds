@@ -40,8 +40,8 @@ class CCommandBuffer
 		}
 
 		unsigned char *DataPtr() { return m_pData; }
-		unsigned DataSize() { return m_Size; }
-		unsigned DataUsed() { return m_Used; }
+		unsigned DataSize() const { return m_Size; }
+		unsigned DataUsed() const { return m_Used; }
 	};
 
 public:
@@ -82,6 +82,7 @@ public:
 		CMD_SWAP,
 
 		// misc
+		CMD_VSYNC,
 		CMD_SCREENSHOT,
 		CMD_VIDEOMODES,
 
@@ -97,13 +98,16 @@ public:
 		TEXFLAG_NOMIPMAPS = 1,
 		TEXFLAG_COMPRESSED = 2,
 		TEXFLAG_QUALITY = 4,
+		TEXFLAG_TEXTURE3D = 8,
+		TEXFLAG_TEXTURE2D = 16,
+		TEXTFLAG_LINEARMIPMAPS = 32,
 	};
 
 	enum
 	{
 		//
 		PRIMTYPE_INVALID = 0,
-		PRIMTYPE_LINES,	
+		PRIMTYPE_LINES,
 		PRIMTYPE_QUADS,
 	};
 
@@ -114,14 +118,8 @@ public:
 		BLEND_ADDITIVE,
 	};
 
-	enum
-	{
-		WRAP_REPEAT = 0,
-		WRAP_CLAMP,
-	};
-
 	struct SPoint { float x, y, z; };
-	struct STexCoord { float u, v; };
+	struct STexCoord { float u, v, i; };
 	struct SColor { float r, g, b, a; };
 
 	struct SVertex
@@ -142,8 +140,11 @@ public:
 	struct SState
 	{
 		int m_BlendMode;
-		int m_WrapMode;
+		int m_WrapModeU;
+		int m_WrapModeV;
 		int m_Texture;
+		int m_TextureArrayIndex;
+		int m_Dimension;
 		SPoint m_ScreenTL;
 		SPoint m_ScreenBR;
 
@@ -154,13 +155,13 @@ public:
 		int m_ClipW;
 		int m_ClipH;
 	};
-		
+
 	struct SCommand_Clear : public SCommand
 	{
 		SCommand_Clear() : SCommand(CMD_CLEAR) {}
 		SColor m_Color;
 	};
-		
+
 	struct SCommand_Signal : public SCommand
 	{
 		SCommand_Signal() : SCommand(CMD_SIGNAL) {}
@@ -185,6 +186,7 @@ public:
 	struct SCommand_Screenshot : public SCommand
 	{
 		SCommand_Screenshot() : SCommand(CMD_SCREENSHOT) {}
+		int m_X, m_Y, m_W, m_H; // specify rectangle size, -1 if fullscreen (width/height)
 		CImageInfo *m_pImage; // processor will fill this out, the one who adds this command must free the data as well
 	};
 
@@ -195,6 +197,7 @@ public:
 		CVideoMode *m_pModes; // processor will fill this in
 		int m_MaxModes; // maximum of modes the processor can write to the m_pModes
 		int *m_pNumModes; // processor will write to this pointer
+		int m_Screen;
 	};
 
 	struct SCommand_Swap : public SCommand
@@ -202,6 +205,14 @@ public:
 		SCommand_Swap() : SCommand(CMD_SWAP) {}
 
 		int m_Finish;
+	};
+
+	struct SCommand_VSync : public SCommand
+	{
+		SCommand_VSync() : SCommand(CMD_VSYNC) {}
+
+		int m_VSync;
+		bool *m_pRetOk;
 	};
 
 	struct SCommand_Texture_Create : public SCommand
@@ -243,7 +254,7 @@ public:
 		// texture information
 		int m_Slot;
 	};
-	
+
 	//
 	CCommandBuffer(unsigned CmdBufferSize, unsigned DataBufferSize)
 	: m_CmdBuffer(CmdBufferSize), m_DataBuffer(DataBufferSize)
@@ -298,17 +309,27 @@ public:
 		INITFLAG_VSYNC = 2,
 		INITFLAG_RESIZABLE = 4,
 		INITFLAG_BORDERLESS = 8,
+		INITFLAG_X11XRANDR = 16,
+		INITFLAG_HIGHDPI = 32,
 	};
 
 	virtual ~IGraphicsBackend() {}
 
-	virtual int Init(const char *pName, int *Width, int *Height, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
+	virtual int Init(const char *pName, int *Screen, int *pWindowWidth, int *pWindowHeight, int *pScreenWidth, int *pScreenHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
 	virtual int Shutdown() = 0;
 
 	virtual int MemoryUsage() const = 0;
+	virtual int GetTextureArraySize() const = 0;
+
+	virtual int GetNumScreens() const = 0;
 
 	virtual void Minimize() = 0;
 	virtual void Maximize() = 0;
+	virtual bool Fullscreen(bool State) = 0;
+	virtual void SetWindowBordered(bool State) = 0;
+	virtual bool SetWindowScreen(int Index) = 0;
+	virtual bool GetDesktopResolution(int Index, int *pDesktopWidth, int* pDesktopHeight) = 0;
+	virtual int GetWindowScreen() = 0;
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
 
@@ -325,7 +346,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 		MAX_VERTICES = 32*1024,
 		MAX_TEXTURES = 1024*4,
-		
+
 		DRAWING_QUADS=1,
 		DRAWING_LINES=2
 	};
@@ -356,6 +377,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	CTextureHandle m_InvalidTexture;
 
+	int m_TextureArrayIndex;
 	int m_aTextureIndices[MAX_TEXTURES];
 	int m_FirstFreeTexture;
 	int m_TextureMemoryUsage;
@@ -380,6 +402,7 @@ public:
 
 	virtual void WrapNormal();
 	virtual void WrapClamp();
+	virtual void WrapMode(int WrapU, int WrapV);
 
 	virtual int MemoryUsage() const;
 
@@ -390,7 +413,7 @@ public:
 	virtual void LinesEnd();
 	virtual void LinesDraw(const CLineItem *pArray, int Num);
 
-	virtual int UnloadTexture(IGraphics::CTextureHandle Index);
+	virtual int UnloadTexture(IGraphics::CTextureHandle *Index);
 	virtual IGraphics::CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
 	virtual int LoadTextureRawSub(IGraphics::CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
 
@@ -412,18 +435,24 @@ public:
 	virtual void SetColor(float r, float g, float b, float a);
 	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight);
 
-	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV);
+	void TilesetFallbackSystem(int TextureIndex);
+	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex = -1);
 	virtual void QuadsSetSubsetFree(
 		float x0, float y0, float x1, float y1,
-		float x2, float y2, float x3, float y3);
+		float x2, float y2, float x3, float y3, int TextureIndex = -1);
 
 	virtual void QuadsDraw(CQuadItem *pArray, int Num);
 	virtual void QuadsDrawTL(const CQuadItem *pArray, int Num);
 	virtual void QuadsDrawFreeform(const CFreeformItem *pArray, int Num);
 	virtual void QuadsText(float x, float y, float Size, const char *pText);
 
+	virtual int GetNumScreens() const;
 	virtual void Minimize();
 	virtual void Maximize();
+	virtual bool Fullscreen(bool State);
+	virtual void SetWindowBordered(bool State);
+	virtual bool SetWindowScreen(int Index);
+	virtual int GetWindowScreen();
 
 	virtual int WindowActive();
 	virtual int WindowOpen();
@@ -431,17 +460,16 @@ public:
 	virtual int Init();
 	virtual void Shutdown();
 
+	virtual void ReadBackbuffer(unsigned char **ppPixels, int x, int y, int w, int h);
 	virtual void TakeScreenshot(const char *pFilename);
 	virtual void Swap();
+	virtual bool SetVSync(bool State);
 
-	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes);
-
-	virtual int GetDesktopScreenWidth() { return m_DesktopScreenWidth; }
-	virtual int GetDesktopScreenHeight() { return m_DesktopScreenHeight; }
+	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen);
 
 	// syncronization
 	virtual void InsertSignal(semaphore *pSemaphore);
-	virtual bool IsIdle();
+	virtual bool IsIdle() const;
 	virtual void WaitForIdle();
 };
 

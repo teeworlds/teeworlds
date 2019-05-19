@@ -33,15 +33,20 @@
 
 #elif defined(CONF_FAMILY_WINDOWS)
 	#define WIN32_LEAN_AND_MEAN
-	#define _WIN32_WINNT 0x0501 /* required for mingw to get getaddrinfo to work */
 	#include <windows.h>
 	#include <winsock2.h>
 	#include <ws2tcpip.h>
 	#include <fcntl.h>
 	#include <direct.h>
 	#include <errno.h>
+	#include <process.h>
+	#include <wincrypt.h>
 #else
 	#error NOT IMPLEMENTED
+#endif
+
+#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_AMD64)
+	#include <immintrin.h> //_mm_pause
 #endif
 
 #if defined(CONF_PLATFORM_SOLARIS)
@@ -60,7 +65,6 @@ static DBG_LOGGER loggers[16];
 static int num_loggers = 0;
 
 static NETSTATS network_stats = {0};
-static MEMSTATS memory_stats = {0};
 
 static NETSOCKET invalid_socket = {NETTYPE_INVALID, -1, -1};
 
@@ -95,8 +99,8 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	msg = (char *)str + len;
 
 	va_start(args, fmt);
-#if defined(CONF_FAMILY_WINDOWS)
-	_vsnprintf(msg, sizeof(str)-len, fmt, args);
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
+	_vsprintf_p(msg, sizeof(str)-len, fmt, args);
 #else
 	vsnprintf(msg, sizeof(str)-len, fmt, args);
 #endif
@@ -105,6 +109,94 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	for(i = 0; i < num_loggers; i++)
 		loggers[i](str);
 }
+
+#if defined(CONF_FAMILY_WINDOWS)
+static void logger_win_console(const char *line)
+{
+	#define _MAX_LENGTH 1024
+	#define _MAX_LENGTH_ERROR (_MAX_LENGTH+32)
+
+	static const int UNICODE_REPLACEMENT_CHAR = 0xfffd;
+
+	static const char *STR_TOO_LONG = "(str too long)";
+	static const char *INVALID_UTF8 = "(invalid utf8)";
+
+	wchar_t wline[_MAX_LENGTH_ERROR];
+	size_t len = 0;
+
+	const char *read = line;
+	const char *error = STR_TOO_LONG;
+	while(len < _MAX_LENGTH)
+	{
+		// Read a character. This also advances the read pointer
+		int glyph = str_utf8_decode(&read);
+		if(glyph < 0)
+		{
+			// If there was an error decoding the UTF-8 sequence,
+			// emit a replacement character. Since the
+			// str_utf8_decode function will not work after such
+			// an error, end the string here.
+			glyph = UNICODE_REPLACEMENT_CHAR;
+			error = INVALID_UTF8;
+			wline[len] = glyph;
+			break;
+		}
+		else if(glyph == 0)
+		{
+			// A character code of 0 signals the end of the string.
+			error = 0;
+			break;
+		}
+		else if(glyph > 0xffff)
+		{
+			// Since the windows console does not really support
+			// UTF-16, don't mind doing actual UTF-16 encoding,
+			// but rather emit a replacement character.
+			glyph = UNICODE_REPLACEMENT_CHAR;
+		}
+		else if(glyph == 0x2022)
+		{
+			// The 'bullet' character might get converted to a 'beep',
+			// so it will be replaced by the 'bullet operator'.
+			glyph = 0x2219;
+		}
+
+		// Again, since the windows console does not really support
+		// UTF-16, but rather something along the lines of UCS-2,
+		// simply put the character into the output.
+		wline[len++] = glyph;
+	}
+
+	if(error)
+	{
+		read = error;
+		while(1)
+		{
+			// Errors are simple ascii, no need for UTF-8
+			// decoding
+			char character = *read;
+			if(character == 0)
+				break;
+
+			dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for error");
+			wline[len++] = character;
+			read++;
+		}
+	}
+
+	// Terminate the line
+	dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for \\r");
+	wline[len++] = '\r';
+	dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for \\n");
+	wline[len++] = '\n';
+
+	// Ignore any error that might occur
+	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), wline, len, 0, 0);
+
+	#undef _MAX_LENGTH
+	#undef _MAX_LENGTH_ERROR
+}
+#endif
 
 static void logger_stdout(const char *line)
 {
@@ -129,7 +221,18 @@ static void logger_file(const char *line)
 	io_flush(logfile);
 }
 
-void dbg_logger_stdout() { dbg_logger(logger_stdout); }
+void dbg_logger_stdout()
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	if(GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_CHAR)
+	{
+		dbg_logger(logger_win_console);
+		return;
+	}
+#endif
+	dbg_logger(logger_stdout);
+}
+
 void dbg_logger_debugger() { dbg_logger(logger_debugger); }
 void dbg_logger_file(const char *filename)
 {
@@ -140,6 +243,25 @@ void dbg_logger_file(const char *filename)
 		dbg_msg("dbg/logger", "failed to open '%s' for logging", filename);
 
 }
+
+#if defined(CONF_FAMILY_WINDOWS)
+static DWORD old_console_mode;
+
+void dbg_console_init()
+{
+	HANDLE handle;
+	DWORD console_mode;
+
+	handle = GetStdHandle(STD_INPUT_HANDLE);
+	GetConsoleMode(handle, &old_console_mode);
+	console_mode = old_console_mode & (~ENABLE_QUICK_EDIT_MODE | ENABLE_EXTENDED_FLAGS);
+	SetConsoleMode(handle, console_mode);
+}
+void dbg_console_cleanup()
+{
+	SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), old_console_mode);
+}
+#endif
 /* */
 
 typedef struct MEMHEADER
@@ -161,79 +283,13 @@ static const int MEM_GUARD_VAL = 0xbaadc0de;
 
 void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned alignment)
 {
-	/* TODO: fix alignment */
-	/* TODO: add debugging */
-	MEMTAIL *tail;
-	MEMHEADER *header = (struct MEMHEADER *)malloc(size+sizeof(MEMHEADER)+sizeof(MEMTAIL));
-	dbg_assert(header != 0, "mem_alloc failure");
-	if(!header)
-		return NULL;
-	tail = (struct MEMTAIL *)(((char*)(header+1))+size);
-	header->size = size;
-	header->filename = filename;
-	header->line = line;
-
-	memory_stats.allocated += header->size;
-	memory_stats.total_allocations++;
-	memory_stats.active_allocations++;
-
-	tail->guard = MEM_GUARD_VAL;
-
-	header->prev = (MEMHEADER *)0;
-	header->next = first;
-	if(first)
-		first->prev = header;
-	first = header;
-
-	/*dbg_msg("mem", "++ %p", header+1); */
-	return header+1;
+	return malloc(size);
 }
 
 void mem_free(void *p)
 {
-	if(p)
-	{
-		MEMHEADER *header = (MEMHEADER *)p - 1;
-		MEMTAIL *tail = (MEMTAIL *)(((char*)(header+1))+header->size);
-
-		if(tail->guard != MEM_GUARD_VAL)
-			dbg_msg("mem", "!! %p", p);
-		/* dbg_msg("mem", "-- %p", p); */
-		memory_stats.allocated -= header->size;
-		memory_stats.active_allocations--;
-
-		if(header->prev)
-			header->prev->next = header->next;
-		else
-			first = header->next;
-		if(header->next)
-			header->next->prev = header->prev;
-
-		free(header);
-	}
+	free(p);
 }
-
-void mem_debug_dump(IOHANDLE file)
-{
-	char buf[1024];
-	MEMHEADER *header = first;
-	if(!file)
-		file = io_open("memory.txt", IOFLAG_WRITE);
-
-	if(file)
-	{
-		while(header)
-		{
-			str_format(buf, sizeof(buf), "%s(%d): %d", header->filename, header->line, header->size);
-			io_write(file, buf, strlen(buf));
-			io_write_newline(file);
-			header = header->next;
-		}
-
-		io_close(file);
-	}
-}
-
 
 void mem_copy(void *dest, const void *source, unsigned size)
 {
@@ -302,6 +358,11 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
 	return fread(buffer, 1, size, (FILE*)io);
 }
 
+unsigned io_unread_byte(IOHANDLE io, unsigned char byte)
+{
+	return ungetc(byte, (FILE*)io) == EOF;
+}
+
 unsigned io_skip(IOHANDLE io, int size)
 {
 	fseek((FILE*)io, size, SEEK_CUR);
@@ -361,7 +422,7 @@ unsigned io_write_newline(IOHANDLE io)
 int io_close(IOHANDLE io)
 {
 	fclose((FILE*)io);
-	return 1;
+	return 0;
 }
 
 int io_flush(IOHANDLE io)
@@ -370,14 +431,44 @@ int io_flush(IOHANDLE io)
 	return 0;
 }
 
-void *thread_create(void (*threadfunc)(void *), void *u)
+struct THREAD_RUN
 {
+	void (*threadfunc)(void *);
+	void *u;
+};
+
 #if defined(CONF_FAMILY_UNIX)
-	pthread_t id;
-	pthread_create(&id, NULL, (void *(*)(void*))threadfunc, u);
-	return (void*)id;
+static void *thread_run(void *user)
 #elif defined(CONF_FAMILY_WINDOWS)
-	return CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)threadfunc, u, 0, NULL);
+static unsigned long __stdcall thread_run(void *user)
+#else
+#error not implemented
+#endif
+{
+	struct THREAD_RUN *data = user;
+	void (*threadfunc)(void *) = data->threadfunc;
+	void *u = data->u;
+	free(data);
+	threadfunc(u);
+	return 0;
+}
+
+void *thread_init(void (*threadfunc)(void *), void *u)
+{
+	struct THREAD_RUN *data = malloc(sizeof(*data));
+	data->threadfunc = threadfunc;
+	data->u = u;
+#if defined(CONF_FAMILY_UNIX)
+	{
+		pthread_t id;
+		if(pthread_create(&id, NULL, thread_run, data) != 0)
+		{
+			return 0;
+		}
+		return (void*)id;
+	}
+#elif defined(CONF_FAMILY_WINDOWS)
+	return CreateThread(NULL, 0, thread_run, data, 0, NULL);
 #else
 	#error not implemented
 #endif
@@ -437,6 +528,14 @@ void thread_detach(void *thread)
 #endif
 }
 
+void cpu_relax()
+{
+#if defined(CONF_ARCH_IA32) || defined(CONF_ARCH_AMD64)
+	_mm_pause();
+#else
+	(void) 0;
+#endif
+}
 
 
 
@@ -474,7 +573,7 @@ void lock_destroy(LOCK lock)
 	mem_free(lock);
 }
 
-int lock_try(LOCK lock)
+int lock_trylock(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
 	return pthread_mutex_trylock((LOCKINTERNAL *)lock);
@@ -496,7 +595,7 @@ void lock_wait(LOCK lock)
 #endif
 }
 
-void lock_release(LOCK lock)
+void lock_unlock(LOCK lock)
 {
 #if defined(CONF_FAMILY_UNIX)
 	pthread_mutex_unlock((LOCKINTERNAL *)lock);
@@ -781,7 +880,9 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 				return -1;
 		}
 #else
-		if(inet_pton(AF_INET6, buf, &sa6) != 1)
+		sa6.sin6_family = AF_INET6;
+
+		if(inet_pton(AF_INET6, buf, &sa6.sin6_addr) != 1)
 			return -1;
 #endif
 		sockaddr_to_netaddr((struct sockaddr *)&sa6, addr);
@@ -852,7 +953,7 @@ static int priv_net_close_all_sockets(NETSOCKET sock)
 	return 0;
 }
 
-static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, int sockaddrlen)
+static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, int sockaddrlen, int use_random_port)
 {
 	int sock, e;
 
@@ -882,27 +983,46 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 #endif
 
 	/* bind the socket */
-	e = bind(sock, addr, sockaddrlen);
-	if(e != 0)
+	while(1)
 	{
+		/* pick random port */
+		if(use_random_port)
+		{
+			int port = htons(rand()%16384+49152);	/* 49152 to 65535 */
+			if(domain == AF_INET)
+				((struct sockaddr_in *)(addr))->sin_port = port;
+			else
+				((struct sockaddr_in6 *)(addr))->sin6_port = port;
+		}
+
+		e = bind(sock, addr, sockaddrlen);
+		if(e == 0)
+			break;
+		else
+		{
 #if defined(CONF_FAMILY_WINDOWS)
-		char buf[128];
-		int error = WSAGetLastError();
-		if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
-			buf[0] = 0;
-		dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
+			char buf[128];
+			int error = WSAGetLastError();
+			if(error == WSAEADDRINUSE && use_random_port)
+				continue;
+			if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
+				buf[0] = 0;
+			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
-		dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
+			if(errno == EADDRINUSE && use_random_port)
+				continue;
+			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
 #endif
-		priv_net_close_socket(sock);
-		return -1;
+			priv_net_close_socket(sock);
+			return -1;
+		}
 	}
 
 	/* return the newly created socket */
 	return sock;
 }
 
-NETSOCKET net_udp_create(NETADDR bindaddr)
+NETSOCKET net_udp_create(NETADDR bindaddr, int use_random_port)
 {
 	NETSOCKET sock = invalid_socket;
 	NETADDR tmpbindaddr = bindaddr;
@@ -917,7 +1037,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV4;
 		netaddr_to_sockaddr_in(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr), use_random_port);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV4;
@@ -939,7 +1059,7 @@ NETSOCKET net_udp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV6;
 		netaddr_to_sockaddr_in6(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET6, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET6, SOCK_DGRAM, (struct sockaddr *)&addr, sizeof(addr), use_random_port);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV6;
@@ -1034,7 +1154,7 @@ int net_udp_recv(NETSOCKET sock, NETADDR *addr, void *data, int maxsize)
 	socklen_t fromlen;// = sizeof(sockaddrbuf);
 	int bytes = 0;
 
-	if(bytes == 0 && sock.ipv4sock >= 0)
+	if(sock.ipv4sock >= 0)
 	{
 		fromlen = sizeof(struct sockaddr_in);
 		bytes = recvfrom(sock.ipv4sock, (char*)data, maxsize, 0, (struct sockaddr *)&sockaddrbuf, &fromlen);
@@ -1076,7 +1196,7 @@ NETSOCKET net_tcp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV4;
 		netaddr_to_sockaddr_in(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr), 0);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV4;
@@ -1092,7 +1212,7 @@ NETSOCKET net_tcp_create(NETADDR bindaddr)
 		/* bind, we should check for error */
 		tmpbindaddr.type = NETTYPE_IPV6;
 		netaddr_to_sockaddr_in6(&tmpbindaddr, &addr);
-		socket = priv_net_create_socket(AF_INET6, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr));
+		socket = priv_net_create_socket(AF_INET6, SOCK_STREAM, (struct sockaddr *)&addr, sizeof(addr), 0);
 		if(socket >= 0)
 		{
 			sock.type |= NETTYPE_IPV6;
@@ -1293,7 +1413,7 @@ int net_init()
 	return 0;
 }
 
-int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
+void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	WIN32_FIND_DATA finddata;
@@ -1305,7 +1425,7 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	handle = FindFirstFileA(buffer, &finddata);
 
 	if (handle == INVALID_HANDLE_VALUE)
-		return 0;
+		return;
 
 	str_format(buffer, sizeof(buffer), "%s/", dir);
 	length = str_length(buffer);
@@ -1320,7 +1440,7 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	while (FindNextFileA(handle, &finddata));
 
 	FindClose(handle);
-	return 0;
+	return;
 #else
 	struct dirent *entry;
 	char buffer[1024*2];
@@ -1328,7 +1448,7 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	DIR *d = opendir(dir);
 
 	if(!d)
-		return 0;
+		return;
 
 	str_format(buffer, sizeof(buffer), "%s/", dir);
 	length = str_length(buffer);
@@ -1342,7 +1462,7 @@ int fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 
 	/* close the directory and return */
 	closedir(d);
-	return 0;
+	return;
 #endif
 }
 
@@ -1352,23 +1472,50 @@ int fs_storage_path(const char *appname, char *path, int max)
 	char *home = getenv("APPDATA");
 	if(!home)
 		return -1;
-	_snprintf(path, max, "%s/%s", home, appname);
+	str_format(path, max, "%s/%s", home, appname);
 	return 0;
 #else
 	char *home = getenv("HOME");
-#if !defined(CONF_PLATFORM_MACOSX)
 	int i;
-#endif
+	char *xdgdatahome = getenv("XDG_DATA_HOME");
+	char xdgpath[max];
+	
 	if(!home)
 		return -1;
-
+	
 #if defined(CONF_PLATFORM_MACOSX)
-	snprintf(path, max, "%s/Library/Application Support/%s", home, appname);
-#else
-	snprintf(path, max, "%s/.%s", home, appname);
+	str_format(path, max, "%s/Library/Application Support/%s", home, appname);
+	return 0;
+#endif
+
+	/* old folder location */
+	str_format(path, max, "%s/.%s", home, appname);
 	for(i = strlen(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
-#endif
+
+	if(!xdgdatahome)
+	{
+		/* use default location */
+		str_format(xdgpath, max, "%s/.local/share/%s", home, appname);
+		for(i = strlen(home)+14; xdgpath[i]; i++)
+			xdgpath[i] = tolower(xdgpath[i]);
+	}
+	else
+	{
+		str_format(xdgpath, max, "%s/%s", xdgdatahome, appname);
+		for(i = strlen(xdgdatahome)+1; xdgpath[i]; i++)
+			xdgpath[i] = tolower(xdgpath[i]);
+	}
+	
+	/* check for old location / backward compatibility */
+	if(fs_is_dir(path))
+	{
+		/* use old folder path */
+		/* for backward compatibility */
+		return 0;
+	}
+	
+	str_format(path, max, "%s", xdgpath);
 
 	return 0;
 #endif
@@ -1389,6 +1536,31 @@ int fs_makedir(const char *path)
 		return 0;
 	return -1;
 #endif
+}
+
+int fs_makedir_recursive(const char *path)
+{
+	char buffer[2048];
+	int len;
+	int i;
+	str_copy(buffer, path, sizeof(buffer));
+	len = str_length(buffer);
+	// ignore a leading slash
+	for(i = 1; i < len; i++)
+	{
+		char b = buffer[i];
+		if(b == '/' || (b == '\\' && buffer[i-1] != ':'))
+		{
+			buffer[i] = 0;
+			if(fs_makedir(buffer) < 0)
+			{
+				return -1;
+			}
+			buffer[i] = b;
+
+		}
+	}
+	return fs_makedir(path);
 }
 
 int fs_is_dir(const char *path)
@@ -1538,6 +1710,66 @@ int time_timestamp()
 	return time(0);
 }
 
+int time_houroftheday()
+{
+	time_t time_data;
+	struct tm *time_info;
+
+	time(&time_data);
+	time_info = localtime(&time_data);
+	return time_info->tm_hour;
+}
+
+int time_isxmasday()
+{
+	time_t time_data;
+	struct tm *time_info;
+
+	time(&time_data);
+	time_info = localtime(&time_data);
+	if(time_info->tm_mon == 11 && time_info->tm_mday >= 24 && time_info->tm_mday <= 26)
+		return 1;
+	return 0;
+}
+
+int time_iseasterday()
+{
+	time_t time_data_now, time_data;
+	struct tm *time_info;
+	int Y, a, b, c, d, e, f, g, h, i, k, L, m, month, day, day_offset;
+
+	time(&time_data_now);
+	time_info = localtime(&time_data_now);
+
+	// compute Easter day (Sunday) using https://en.wikipedia.org/w/index.php?title=Computus&oldid=890710285#Anonymous_Gregorian_algorithm
+	Y = time_info->tm_year + 1900;
+	a = Y % 19;
+	b = Y / 100;
+	c = Y % 100;
+	d = b / 4;
+	e = b % 4;
+	f = (b + 8) / 25;
+	g = (b - f + 1) / 3;
+	h = (19 * a + b - d - g + 15) % 30;
+	i = c / 4;
+	k = c % 4;
+	L = (32 + 2 * e + 2 * i - h - k) % 7;
+	m = (a + 11 * h + 22 * L) / 451;
+	month = (h + L - 7 * m + 114) / 31;
+	day = ((h + L - 7 * m + 114) % 31) + 1;
+
+	// (now-1d ≤ easter ≤ now+2d) <=> (easter-2d ≤ now ≤ easter+1d) <=> (Good Friday ≤ now ≤ Easter Monday)
+	for(day_offset = -1; day_offset <= 2; day_offset++)
+	{
+		time_data = time_data_now + day_offset*(60*60*24);
+		time_info = localtime(&time_data);
+
+		if(time_info->tm_mon == month-1 && time_info->tm_mday == day)
+			return 1;
+	}
+	return 0;
+}
+
 void str_append(char *dst, const char *src, int dst_size)
 {
 	int s = strlen(dst);
@@ -1560,6 +1792,16 @@ void str_copy(char *dst, const char *src, int dst_size)
 	dst[dst_size-1] = 0; /* assure null termination */
 }
 
+void str_truncate(char *dst, int dst_size, const char *src, int truncation_len)
+{
+	int size = dst_size;
+	if(truncation_len < size)
+	{
+		size = truncation_len + 1;
+	}
+	str_copy(dst, src, size);
+}
+
 int str_length(const char *str)
 {
 	return (int)strlen(str);
@@ -1567,10 +1809,10 @@ int str_length(const char *str)
 
 void str_format(char *buffer, int buffer_size, const char *format, ...)
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
 	va_list ap;
 	va_start(ap, format);
-	_vsnprintf(buffer, buffer_size, format, ap);
+	_vsprintf_p(buffer, buffer_size, format, ap);
 	va_end(ap);
 #else
 	va_list ap;
@@ -1609,6 +1851,46 @@ void str_sanitize_cc(char *str_in)
 	}
 }
 
+/* check if the string contains '..' (parent directory) paths */
+int str_check_pathname(const char* str)
+{
+	// State machine. 0 means that we're at the beginning
+	// of a new directory/filename, and a positive number represents the number of
+	// dots ('.') we found. -1 means we encountered a different character
+	// since the last path separator (or the beginning of the string).
+	int parse_counter = 0;
+	while(*str)
+	{
+		if(*str == '\\' || *str == '/')
+		{
+			// A path separator. Check how many dots we found since
+			// the last path separator.
+			//
+			// Two dots => ".." contained in the path. Return an
+			// error.
+			if(parse_counter == 2)
+				return -1;
+			else
+				parse_counter = 0;
+		}
+		else if(parse_counter >= 0)
+		{
+			// If we have not encountered a non-dot character since
+			// the last path separator, count the dots.
+			if(*str == '.')
+				parse_counter++;
+			else
+				parse_counter = -1;
+		}
+
+		++str;
+	}
+	// If there's a ".." at the end, fail too.
+	if(parse_counter == 2)
+		return -1;
+	return 0;
+}
+
 /* makes sure that the string only contains the characters between 32 and 255 + \r\n\t */
 void str_sanitize(char *str_in)
 {
@@ -1621,7 +1903,94 @@ void str_sanitize(char *str_in)
 	}
 }
 
+/* removes all forbidden windows/unix characters in filenames*/
+char* str_sanitize_filename(char* aName)
+{
+	char *str = (char *)aName;
+	while(*str)
+	{
+		// replace forbidden characters with a whispace
+		if(*str == '/' || *str == '<' || *str == '>' || *str == ':' || *str == '"'
+			|| *str == '/' || *str == '\\' || *str == '|' || *str == '?' || *str == '*')
+ 			*str = ' ';
+		str++;
+	}
+	str_clean_whitespaces(aName);
+	return aName;
+}
+
+/* removes leading and trailing spaces and limits the use of multiple spaces */
+void str_clean_whitespaces(char *str_in)
+{
+	char *read = str_in;
+	char *write = str_in;
+
+	/* skip initial whitespace */
+	while(*read == ' ')
+		read++;
+
+	/* end of read string is detected in the loop */
+	while(1)
+	{
+		/* skip whitespace */
+		int found_whitespace = 0;
+		for(; *read == ' '; read++)
+			found_whitespace = 1;
+		/* if not at the end of the string, put a found whitespace here */
+		if(*read)
+		{
+			if(found_whitespace)
+				*write++ = ' ';
+			*write++ = *read++;
+		}
+		else
+		{
+			*write = 0;
+			break;
+		}
+	}
+}
+
+/* removes leading and trailing spaces */
+void str_clean_whitespaces_simple(char *str_in)
+{
+	char *read = str_in;
+	char *write = str_in;
+
+	/* skip initial whitespace */
+	while(*read == ' ')
+		read++;
+
+	/* end of read string is detected in the loop */
+	while(1)
+	{
+		/* skip whitespace */
+		int found_whitespace = 0;
+		for(; *read == ' ' && !found_whitespace; read++)
+			found_whitespace = 1;
+		/* if not at the end of the string, put a found whitespace here */
+		if(*read)
+		{
+			if(found_whitespace)
+				*write++ = ' ';
+			*write++ = *read++;
+		}
+		else
+		{
+			*write = 0;
+			break;
+		}
+	}
+}
+
 char *str_skip_to_whitespace(char *str)
+{
+	while(*str && (*str != ' ' && *str != '\t' && *str != '\n'))
+		str++;
+	return str;
+}
+
+const char *str_skip_to_whitespace_const(const char *str)
 {
 	while(*str && (*str != ' ' && *str != '\t' && *str != '\n'))
 		str++;
@@ -1695,6 +2064,39 @@ int str_comp_filenames(const char *a, const char *b)
 	return tolower(*a) - tolower(*b);
 }
 
+const char *str_startswith(const char *str, const char *prefix)
+{
+	int prefixl = str_length(prefix);
+	if(str_comp_num(str, prefix, prefixl) == 0)
+	{
+		return str + prefixl;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+const char *str_endswith(const char *str, const char *suffix)
+{
+	int strl = str_length(str);
+	int suffixl = str_length(suffix);
+	const char *strsuffix;
+	if(strl < suffixl)
+	{
+		return 0;
+	}
+	strsuffix = str + strl - suffixl;
+	if(str_comp(strsuffix, suffix) == 0)
+	{
+		return strsuffix;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 const char *str_find_nocase(const char *haystack, const char *needle)
 {
 	while(*haystack) /* native implementation */
@@ -1764,56 +2166,9 @@ int mem_comp(const void *a, const void *b, int size)
 	return memcmp(a,b,size);
 }
 
-const MEMSTATS *mem_stats()
-{
-	return &memory_stats;
-}
-
 void net_stats(NETSTATS *stats_inout)
 {
 	*stats_inout = network_stats;
-}
-
-void gui_messagebox(const char *title, const char *message)
-{
-#if defined(CONF_PLATFORM_MACOSX)
-	DialogRef theItem;
-	DialogItemIndex itemIndex;
-
-	/* FIXME: really needed? can we rely on glfw? */
-	/* HACK - get events without a bundle */
-	ProcessSerialNumber psn;
-	GetCurrentProcess(&psn);
-	TransformProcessType(&psn,kProcessTransformToForegroundApplication);
-	SetFrontProcess(&psn);
-	/* END HACK */
-
-	CreateStandardAlert(kAlertStopAlert,
-			CFStringCreateWithCString(NULL, title, kCFStringEncodingASCII),
-			CFStringCreateWithCString(NULL, message, kCFStringEncodingASCII),
-			NULL,
-			&theItem);
-
-	RunStandardAlert(theItem, NULL, &itemIndex);
-#elif defined(CONF_FAMILY_UNIX)
-	static char cmd[1024];
-	int err;
-	/* use xmessage which is available on nearly every X11 system */
-	snprintf(cmd, sizeof(cmd), "xmessage -center -title '%s' '%s'",
-		title,
-		message);
-
-	err = system(cmd);
-	dbg_msg("gui/msgbox", "result = %i", err);
-#elif defined(CONF_FAMILY_WINDOWS)
-	MessageBox(NULL,
-		message,
-		title,
-		MB_ICONEXCLAMATION | MB_OK);
-#else
-	/* this is not critical */
-	#warning not implemented
-#endif
 }
 
 int str_isspace(char c) { return c == ' ' || c == '\n' || c == '\t'; }
@@ -1828,7 +2183,36 @@ char str_uppercase(char c)
 int str_toint(const char *str) { return atoi(str); }
 float str_tofloat(const char *str) { return atof(str); }
 
+int str_utf8_is_whitespace(int code)
+{
+	// check if unicode is not empty
+	if(code > 0x20 && code != 0xA0 && code != 0x034F && (code < 0x2000 || code > 0x200F) && (code < 0x2028 || code > 0x202F) &&
+		(code < 0x205F || code > 0x2064) && (code < 0x206A || code > 0x206F) && (code < 0xFE00 || code > 0xFE0F) &&
+		code != 0xFEFF && (code < 0xFFF9 || code > 0xFFFC))
+	{
+		return 0;
+	}
+	return 1;
+}
 
+char *str_utf8_skip_whitespaces(char *str)
+{
+	char *str_old;
+	int code;
+
+	while(*str)
+	{
+		str_old = str;
+		code = str_utf8_decode((const char **)&str);
+
+		if(!str_utf8_is_whitespace(code))
+		{
+			return str_old;
+		}
+	}
+
+	return str;
+}
 
 static int str_utf8_isstart(char c)
 {
@@ -1926,24 +2310,24 @@ int str_utf8_decode(const char **ptr)
 		}
 		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
 		{
-			ch  = (*buf++ & 0x3F) << 6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x3F) << 6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			if(ch < 0x80 || ch > 0x7FF) ch = -1;
 		}
 		else  if((*buf & 0xF0) == 0xE0)	/* 1110xxxx */
 		{
-			ch  = (*buf++ & 0x1F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x1F) << 12; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			if(ch < 0x800 || ch > 0xFFFF) ch = -1;
 		}
 		else if((*buf & 0xF8) == 0xF0)	/* 11110xxx */
 		{
-			ch  = (*buf++ & 0x0F) << 18; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) << 12; if(!(*buf)) break;
-			ch += (*buf++ & 0x3F) <<  6; if(!(*buf)) break;
+			ch  = (*buf++ & 0x0F) << 18; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) << 12; if(!(*buf) || (*buf&0xC0) != 0x80) break;
+			ch += (*buf++ & 0x3F) <<  6; if(!(*buf) || (*buf&0xC0) != 0x80) break;
 			ch += (*buf++ & 0x3F);
-			if(ch == 0) ch = -1;
+			if(ch < 0x10000 || ch > 0x10FFFF) ch = -1;
 		}
 		else
 		{
@@ -1989,6 +2373,78 @@ unsigned str_quickhash(const char *str)
 	return hash;
 }
 
+struct SECURE_RANDOM_DATA
+{
+	int initialized;
+#if defined(CONF_FAMILY_WINDOWS)
+	HCRYPTPROV provider;
+#else
+	IOHANDLE urandom;
+#endif
+};
+
+static struct SECURE_RANDOM_DATA secure_random_data = { 0 };
+
+int secure_random_init()
+{
+	if(secure_random_data.initialized)
+	{
+		return 0;
+	}
+#if defined(CONF_FAMILY_WINDOWS)
+	if(CryptAcquireContext(&secure_random_data.provider, NULL, NULL, PROV_RSA_FULL, CRYPT_VERIFYCONTEXT))
+	{
+		secure_random_data.initialized = 1;
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+#else
+	secure_random_data.urandom = io_open("/dev/urandom", IOFLAG_READ);
+	if(secure_random_data.urandom)
+	{
+		secure_random_data.initialized = 1;
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+#endif
+}
+
+void secure_random_fill(void *bytes, unsigned length)
+{
+	if(!secure_random_data.initialized)
+	{
+		dbg_msg("secure", "called secure_random_fill before secure_random_init");
+		dbg_break();
+	}
+#if defined(CONF_FAMILY_WINDOWS)
+	if(!CryptGenRandom(secure_random_data.provider, length, bytes))
+	{
+		dbg_msg("secure", "CryptGenRandom failed, last_error=%lu", GetLastError());
+		dbg_break();
+	}
+#else
+	if(length != io_read(secure_random_data.urandom, bytes, length))
+	{
+		dbg_msg("secure", "io_read returned with a short read");
+		dbg_break();
+	}
+#endif
+}
+
+int pid()
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	return _getpid();
+#else
+	return getpid();
+#endif
+}
 
 #if defined(__cplusplus)
 }

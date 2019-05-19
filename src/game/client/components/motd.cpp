@@ -5,10 +5,11 @@
 #include <engine/textrender.h>
 #include <engine/keys.h>
 
-#include <game/generated/protocol.h>
-#include <game/generated/client_data.h>
+#include <generated/protocol.h>
+#include <generated/client_data.h>
 #include <game/client/gameclient.h>
 
+#include "menus.h"
 #include "motd.h"
 
 void CMotd::Clear()
@@ -18,6 +19,9 @@ void CMotd::Clear()
 
 bool CMotd::IsActive()
 {
+	// dont render modt if the menu is active
+	if(m_pClient->m_pMenus->IsActive())
+		return false;
 	return time_get() < m_ServerMotdTime;
 }
 
@@ -41,15 +45,12 @@ void CMotd::OnRender()
 	float w = 650.0f;
 	float x = Width/2 - w/2;
 	float y = 150.0f;
+	CUIRect Rect = {x, y, w, h};
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0,0,0,0.5f);
-	RenderTools()->DrawRoundRect(x, y, w, h, 40.0f);
-	Graphics()->QuadsEnd();
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
 
-	TextRender()->Text(0, x+40.0f, y+40.0f, 32.0f, m_aServerMotd, (int)(w-80.0f));
+	TextRender()->Text(0, x+40.0f, y+40.0f, 32.0f, m_aServerMotd, w-80.0f);
 }
 
 void CMotd::OnMessage(int MsgType, void *pRawMsg)

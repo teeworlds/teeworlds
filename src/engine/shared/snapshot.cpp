@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/tl/base.h>
 #include "snapshot.h"
 #include "compression.h"
 
@@ -20,12 +21,27 @@ int CSnapshot::GetItemSize(int Index)
 int CSnapshot::GetItemIndex(int Key)
 {
 	// TODO: OPT: this should not be a linear search. very bad
-	for(int i = 0; i < m_NumItems; i++)
+	const int* pKeys = Keys();
+	const int NumItems = m_NumItems;
+
+	for(int i = 0; i < NumItems; i++)
 	{
-		if(GetItem(i)->Key() == Key)
+		if(pKeys[i] == Key)
 			return i;
 	}
 	return -1;
+}
+
+const int* CSnapshot::GetItemKeys() const
+{
+	return Keys();
+}
+
+void CSnapshot::InvalidateItem(int Index)
+{
+	CSnapshotItem* pItem = GetItem(Index);
+	pItem->m_TypeAndID = -1;
+	Keys()[Index] = -1;
 }
 
 int CSnapshot::Crc()
@@ -167,7 +183,6 @@ int CSnapshotDelta::CreateDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pDstData
 	CSnapshotItem *pFromItem;
 	CSnapshotItem *pCurItem;
 	CSnapshotItem *pPastItem;
-	int Count = 0;
 	int SizeCount = 0;
 
 	pDelta->m_NumDeletedItems = 0;
@@ -240,7 +255,6 @@ int CSnapshotDelta::CreateDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pDstData
 			SizeCount += ItemSize;
 			pData += ItemSize/4;
 			pDelta->m_NumUpdateItems++;
-			Count++;
 		}
 	}
 
@@ -330,6 +344,8 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 			return -1;
 
 		Type = *pData++;
+		if(Type < 0)
+			return -1;
 		ID = *pData++;
 		if(m_aItemSizes[Type])
 			ItemSize = m_aItemSizes[Type];
@@ -355,7 +371,7 @@ int CSnapshotDelta::UnpackDelta(CSnapshot *pFrom, CSnapshot *pTo, void *pSrcData
 		FromIndex = pFrom->GetItemIndex(Key);
 		if(FromIndex != -1)
 		{
-			// we got an update so we need pTo apply the diff
+			// we got an update so we need to apply the diff
 			UndiffItem((int *)pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize/4);
 			m_aSnapshotDataUpdates[m_SnapshotCurrent]++;
 		}
@@ -527,16 +543,58 @@ int *CSnapshotBuilder::GetItemData(int Key)
 	return 0;
 }
 
-int CSnapshotBuilder::Finish(void *SpnapData)
+int CSnapshotBuilder::Finish(void *pSpnapData)
 {
 	// flattern and make the snapshot
-	CSnapshot *pSnap = (CSnapshot *)SpnapData;
+	CSnapshot *pSnap = (CSnapshot *)pSpnapData;
 	int OffsetSize = sizeof(int)*m_NumItems;
+	int KeySize = sizeof(int)*m_NumItems;
 	pSnap->m_DataSize = m_DataSize;
 	pSnap->m_NumItems = m_NumItems;
-	mem_copy(pSnap->Offsets(), m_aOffsets, OffsetSize);
-	mem_copy(pSnap->DataStart(), m_aData, m_DataSize);
-	return sizeof(CSnapshot) + OffsetSize + m_DataSize;
+
+	const int NumItems = m_NumItems;
+	for(int i = 0; i < NumItems; i++)
+	{
+		pSnap->Keys()[i] = GetItem(i)->Key();
+	}
+
+	// get full item sizes
+	int aItemSizes[CSnapshotBuilder::MAX_ITEMS];
+
+	for(int i = 0; i < NumItems-1; i++)
+	{
+		aItemSizes[i] = m_aOffsets[i+1] - m_aOffsets[i];
+	}
+	aItemSizes[NumItems-1] = m_DataSize - m_aOffsets[NumItems-1];
+
+	// bubble sort by keys
+	bool Sorting = true;
+	while(Sorting)
+	{
+		Sorting = false;
+
+		for(int i = 1; i < NumItems; i++)
+		{
+			if(pSnap->Keys()[i-1] > pSnap->Keys()[i])
+			{
+				Sorting = true;
+				tl_swap(pSnap->Keys()[i], pSnap->Keys()[i-1]);
+				tl_swap(m_aOffsets[i], m_aOffsets[i-1]);
+				tl_swap(aItemSizes[i], aItemSizes[i-1]);
+			}
+		}
+	}
+
+	// copy sorted items
+	int OffsetCur = 0;
+	for(int i = 0; i < NumItems; i++)
+	{
+		pSnap->Offsets()[i] = OffsetCur;
+		mem_copy(pSnap->DataStart()+OffsetCur, m_aData + m_aOffsets[i], aItemSizes[i]);
+		OffsetCur += aItemSizes[i];
+	}
+
+	return sizeof(CSnapshot) + KeySize + OffsetSize + m_DataSize;
 }
 
 void *CSnapshotBuilder::NewItem(int Type, int ID, int Size)

@@ -25,13 +25,15 @@ class CSnapshot
 	int m_DataSize;
 	int m_NumItems;
 
-	int *Offsets() const { return (int *)(this+1); }
+	int *Keys() const { return (int *)(this+1); }
+	int *Offsets() const { return (int *)(Keys()+m_NumItems); }
 	char *DataStart() const { return (char*)(Offsets()+m_NumItems); }
 
 public:
 	enum
 	{
-		MAX_SIZE=64*1024
+		MAX_PARTS	= 64,
+		MAX_SIZE	= MAX_PARTS*1024
 	};
 
 	void Clear() { m_DataSize = 0; m_NumItems = 0; }
@@ -39,6 +41,8 @@ public:
 	CSnapshotItem *GetItem(int Index);
 	int GetItemSize(int Index);
 	int GetItemIndex(int Key);
+	const int* GetItemKeys() const;
+	void InvalidateItem(int Index);
 
 	int Crc();
 	void DebugDump();
@@ -107,7 +111,7 @@ public:
 	void PurgeAll();
 	void PurgeUntil(int Tick);
 	void Add(int Tick, int64 Tagtime, int DataSize, void *pData, int CreateAlt);
-	int Get(int Tick, int64 *Tagtime, CSnapshot **pData, CSnapshot **ppAltData);
+	int Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData);
 };
 
 class CSnapshotBuilder
@@ -132,7 +136,7 @@ public:
 	CSnapshotItem *GetItem(int Index);
 	int *GetItemData(int Key);
 
-	int Finish(void *Snapdata);
+	int Finish(void *pSnapdata);
 };
 
 

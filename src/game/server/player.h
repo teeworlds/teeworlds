@@ -19,7 +19,7 @@ class CPlayer
 	MACRO_ALLOC_POOL_ID()
 
 public:
-	CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy);
+	CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy, bool AsSpec = false);
 	~CPlayer();
 
 	void Init(int CID);
@@ -54,7 +54,7 @@ public:
 
 	// used for spectator mode
 	int GetSpectatorID() const { return m_SpectatorID; }
-	bool SetSpectatorID(int SpectatorID);
+	bool SetSpectatorID(int SpecMode, int SpectatorID);
 	bool m_DeadSpecMode;
 	bool DeadCanFollow(CPlayer *pPlayer) const;
 	void UpdateDeadSpecMode();
@@ -81,9 +81,9 @@ public:
 	// TODO: clean this up
 	struct
 	{
-		char m_aaSkinPartNames[6][24];
-		int m_aUseCustomColors[6];
-		int m_aSkinPartColors[6];
+		char m_aaSkinPartNames[NUM_SKINPARTS][24];
+		int m_aUseCustomColors[NUM_SKINPARTS];
+		int m_aSkinPartColors[NUM_SKINPARTS];
 	} m_TeeInfos;
 
 	int m_RespawnTick;
@@ -126,7 +126,10 @@ private:
 	bool m_Dummy;
 
 	// used for spectator mode
+	int m_SpecMode;
 	int m_SpectatorID;
+	class CFlag *m_pSpecFlag;
+	bool m_ActiveSpecSwitch;
 };
 
 #endif

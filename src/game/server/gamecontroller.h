@@ -5,7 +5,7 @@
 
 #include <base/vmath.h>
 
-#include <game/generated/protocol.h>
+#include <generated/protocol.h>
 
 /*
 	Class: Game Controller
@@ -19,8 +19,9 @@ class IGameController
 
 	// activity
 	void DoActivityCheck();
-	bool GetPlayersReadyState();
+	bool GetPlayersReadyState(int WithoutID = -1);
 	void SetPlayersReadyState(bool ReadyState);
+	void CheckReadyStates(int WithoutID = -1);
 
 	// balancing
 	enum
@@ -53,7 +54,7 @@ class IGameController
 	EGameState m_GameState;
 	int m_GameStateTimer;
 
-	virtual void DoWincheckMatch();
+	virtual bool DoWincheckMatch();		// returns true when the match is over
 	virtual void DoWincheckRound() {};
 	bool HasEnoughPlayers() const { return (IsTeamplay() && m_aTeamSize[TEAM_RED] > 0 && m_aTeamSize[TEAM_BLUE] > 0) || (!IsTeamplay() && m_aTeamSize[TEAM_RED] > 1); }
 	void ResetGame();
@@ -102,7 +103,7 @@ protected:
 	int m_aTeamscore[NUM_TEAMS];
 
 	void EndMatch() { SetGameState(IGS_END_MATCH, TIMER_END); }
-	void EndRound() { SetGameState(IGS_END_ROUND, TIMER_END); }
+	void EndRound() { SetGameState(IGS_END_ROUND, TIMER_END/2); }
 
 	// info
 	int m_GameFlags;
@@ -142,6 +143,8 @@ public:
 	*/
 	virtual void OnCharacterSpawn(class CCharacter *pChr);
 
+	virtual void OnFlagReturn(class CFlag *pFlag);
+
 	/*
 		Function: on_entity
 			Called when the map is loaded to process an entity
@@ -178,14 +181,17 @@ public:
 		else
 			SetGameState(IGS_WARMUP_USER, Seconds);
 	}
+	void SwapTeamscore();
 
 	// general
 	virtual void Snap(int SnappingClient);
 	virtual void Tick();
 
 	// info
+	void CheckGameInfo();
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
 	bool IsGamePaused() const { return m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_START_COUNTDOWN; }
+	bool IsGameRunning() const { return m_GameState == IGS_GAME_RUNNING; }
 	bool IsPlayerReadyMode() const;
 	bool IsTeamChangeAllowed() const;
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
