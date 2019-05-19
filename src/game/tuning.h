@@ -43,5 +43,5 @@ MACRO_TUNING_PARAM(LaserBounceNum, laser_bounce_num, 1)
 MACRO_TUNING_PARAM(LaserBounceCost, laser_bounce_cost, 0)
 
 MACRO_TUNING_PARAM(PlayerCollision, player_collision, 0) // INFCROYA RELATED
-MACRO_TUNING_PARAM(PlayerHooking, player_hooking, 0) // INFCROYA RELATED
+MACRO_TUNING_PARAM(PlayerHooking, player_hooking, 1)
 #endif

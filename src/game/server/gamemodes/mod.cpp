@@ -324,15 +324,6 @@ void CGameControllerMOD::OnRoundEnd()
 	IGameController::EndRound();
 }
 
-bool CGameControllerMOD::DoWincheckMatch()
-{
-	return false;
-}
-
-void CGameControllerMOD::DoWincheckRound()
-{
-}
-
 void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 {
 	int ClientID = pChr->GetPlayer()->GetCID();

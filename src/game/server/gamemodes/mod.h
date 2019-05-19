@@ -40,8 +40,6 @@ public:
 	void StartInitialInfection();
 
 	void OnRoundEnd();
-	bool DoWincheckMatch() override;
-	void DoWincheckRound() override;
 	
 	void OnCharacterSpawn(class CCharacter* pChr) override;
 	int OnCharacterDeath(class CCharacter* pVictim, class CPlayer* pKiller, int Weapon) override;
