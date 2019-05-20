@@ -575,8 +575,7 @@ static void BitsVariableCommand(IConsole::IResult *pResult, void *pUserData)
 		{
 			for (size_t i = 0; i < pData->m_BitsSize; i++)
 			{
-				// bits are being set from left to right, as opposed to a a regular behaviour
-				// this aspect takes into consideration, that the user actually types from left to right
+				// most right bit is the 0th bit.
 				if (WantedValueString.at(i) == '1')
 				{
 					// set bit
