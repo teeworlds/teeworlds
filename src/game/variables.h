@@ -16,7 +16,7 @@ MACRO_CONFIG_INT(ClAutoswitchWeapons, cl_autoswitch_weapons, 0, 0, 1, CFGFLAG_CL
 MACRO_CONFIG_INT(ClShowhud, cl_showhud, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show ingame HUD")
 MACRO_CONFIG_INT(ClFilterchat, cl_filterchat, 0, 0, 2, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show chat messages from: 0=all, 1=friends only, 2=no one")
 MACRO_CONFIG_INT(ClShowsocial, cl_showsocial, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show social data like names, clans, chat etc.")
-MACRO_CONFIG_STR(ClChatsound, cl_chatsound, 6, "11111", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Default: 11111 with 1=on and 0=off 1:whisper 2:highlight 3:server msg 4:chat msg 5:client msg")
+MACRO_CONFIG_BITS(ClChatsound, cl_chatsound, 5, "11111", CFGFLAG_CLIENT|CFGFLAG_SAVE, "Default: 11111 with 1=on and 0=off 1:whisper 2:highlight 3:server msg 4:chat msg 5:client msg")
 MACRO_CONFIG_INT(ClShowfps, cl_showfps, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show ingame FPS counter")
 
 MACRO_CONFIG_INT(ClAirjumpindicator, cl_airjumpindicator, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Show double jump indicator")

@@ -20,10 +20,6 @@
 #include "chat.h"
 #include "binds.h"
 
-#include <regex>
-#include <string>
-#include <bitset>
-
 CChat::CChat()
 {
 	// init chat commands (must be in alphabetical order)
@@ -619,27 +615,14 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 
 	// play sound
 	int64 Now = time_get();
-
-	// default values
-	int ClChatsoundWhisper 			= 1;
-	int ClChatsoundHighlight 		= 1;
-	int ClChatsoundServerMessage 	= 1;
-	int ClChatsoundChatMessage 		= 1;
-	int ClChatsoundClientMessage 	= 1;
 	
-	// test if config string is a proper bitmask of length 5
-	std::regex IsBitmask("^[01]{5}$");
-	if(std::regex_match(g_Config.m_ClChatsound, IsBitmask))
-	{
-		std::bitset<5> ChatsoundBitmask(g_Config.m_ClChatsound);
-		
-		// bitmask is read from right to left
-		ClChatsoundWhisper = ChatsoundBitmask.test(4);
-		ClChatsoundHighlight = ChatsoundBitmask.test(3);
-		ClChatsoundServerMessage = ChatsoundBitmask.test(2);
-		ClChatsoundChatMessage = ChatsoundBitmask.test(1);
-		ClChatsoundClientMessage = ChatsoundBitmask.test(0);
-	}
+	// in contrary to the user visible bit flags/bit mask(read from left to right)
+	// the actual encoding is done in the correct order(right to left)
+	int ClChatsoundWhisper		= g_Config.m_ClChatsound & (1 << 4) ? 1 : 0;
+	int ClChatsoundHighlight 	= g_Config.m_ClChatsound & (1 << 3) ? 1 : 0;
+	int ClChatsoundServerMessage= g_Config.m_ClChatsound & (1 << 2) ? 1 : 0;
+	int ClChatsoundChatMessage 	= g_Config.m_ClChatsound & (1 << 1) ? 1 : 0;
+	int ClChatsoundClientMessage= g_Config.m_ClChatsound & (1 << 0) ? 1 : 0;
 
 	// play sound depending on bitmask values
 	if (ClientID == SERVER_MSG && ClChatsoundServerMessage)

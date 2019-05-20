@@ -1,6 +1,9 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
+#include <regex>
+#include <string>
+#include <sstream>
 
 #include <base/math.h>
 #include <base/system.h>
@@ -522,6 +525,13 @@ struct CStrVariableData
 	int m_MaxSize;
 };
 
+struct CBitsVariableData
+{
+	IConsole *m_pConsole;
+	unsigned long *m_BitMask;
+	const unsigned int m_BitsSize;
+};
+
 static void IntVariableCommand(IConsole::IResult *pResult, void *pUserData)
 {
 	CIntVariableData *pData = (CIntVariableData *)pUserData;
@@ -546,6 +556,62 @@ static void IntVariableCommand(IConsole::IResult *pResult, void *pUserData)
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "Value: %d", *(pData->m_pVariable));
 		pData->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+	}
+}
+
+static void BitsVariableCommand(IConsole::IResult *pResult, void *pUserData)
+{
+	CBitsVariableData *pData = (CBitsVariableData *)pUserData;
+
+	if(pResult->NumArguments())
+	{	
+		std::stringstream ss;
+		ss << "^[01]{" << pData->m_BitsSize << "}$";
+		
+		std::regex IsCorrectBitPattern(ss.str());
+		std::string WantedValueString(pResult->GetString(0));
+		
+		if(std::regex_match(WantedValueString, IsCorrectBitPattern))
+		{
+			for (size_t i = 0; i < pData->m_BitsSize; i++)
+			{
+				// bits are being set from left to right, as opposed to a a regular behaviour
+				// this aspect takes into consideration, that the user actually types from left to right
+				if (WantedValueString.at(i) == '1')
+				{
+					// set bit
+					*(pData->m_BitMask) |= (1 << (pData->m_BitsSize - 1 - i));
+				}
+				else
+				{
+					// unset bit
+					*(pData->m_BitMask) &= ~(1 << (pData->m_BitsSize - 1 - i));
+				}	
+			}
+		}
+		else
+		{
+			// invalid bit pattern
+			char aBuf[1024];
+			str_format(aBuf, sizeof(aBuf), "Invalid bit pattern, expected size: %d", pData->m_BitsSize);
+			pData->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+			return;
+		}
+	}
+	else
+	{
+		char aBuf[1024];
+		char aBitmaskBuf[256];
+		aBitmaskBuf[pData->m_BitsSize] = '\0';
+
+		// construct valuestring
+		for (size_t i = 0; i < pData->m_BitsSize; i++)
+		{
+			aBitmaskBuf[i] = *(pData->m_BitMask) & (1 << (pData->m_BitsSize - 1 - i)) ? '1': '0';
+		}
+		str_format(aBuf, sizeof(aBuf), "Value: %s", aBitmaskBuf);
+		pData->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+
 	}
 }
 
@@ -697,10 +763,17 @@ CConsole::CConsole(int FlagMask)
 		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc); \
 	}
 
+	#define MACRO_CONFIG_BITS(Name,ScriptName,Len,Def,Flags,Desc) \
+	{ \
+		static CBitsVariableData Data = {this, &g_Config.m_##Name, Len}; \
+		Register(#ScriptName, "?r", Flags, BitsVariableCommand, &Data, Desc); \
+	}
+
 	#include "config_variables.h"
 
 	#undef MACRO_CONFIG_INT
 	#undef MACRO_CONFIG_STR
+	#undef MACRO_CONFIG_BITS
 }
 
 CConsole::~CConsole()
