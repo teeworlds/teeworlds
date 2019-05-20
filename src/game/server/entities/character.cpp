@@ -647,10 +647,12 @@ void CCharacter::SetNumObjectsHit(int NumObjectsHit)
 
 void CCharacter::Infect(int From)
 {
-	// BEGIN // do that before you actually turn someone into a zombie
-	GetCroyaPlayer()->SetOldClassNum(GetCroyaPlayer()->GetClassNum());
-	GameServer()->m_apPlayers[From]->GetCroyaPlayer()->OnKill(GetPlayer()->GetCID());
-	// END //   do that before you actually turn someone into a zombie
+	if (From >= 0) { // -1 and below is a special case (e.g infect when inside infection zone)
+		// BEGIN // do that before you actually turn someone into a zombie
+		GetCroyaPlayer()->SetOldClassNum(GetCroyaPlayer()->GetClassNum());
+		GameServer()->m_apPlayers[From]->GetCroyaPlayer()->OnKill(GetPlayer()->GetCID());
+		// END //   do that before you actually turn someone into a zombie
+	}
 	GetCroyaPlayer()->TurnIntoRandomZombie();
 }
 

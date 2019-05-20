@@ -125,6 +125,7 @@ void CGameControllerMOD::OnRoundStart()
 	}
 	StartInitialInfection();
 	m_InfectedStarted = true;
+	TurnDefaultIntoRandomHuman();
 }
 
 void CGameControllerMOD::Tick()
@@ -148,6 +149,15 @@ void CGameControllerMOD::Tick()
 
 	if (IsGameStarted && GetRealPlayerNum() < 2) {
 		OnRoundEnd();
+	}
+
+	if (IsGameStarted) {
+		for (auto each : players) {
+			if (!each)
+				continue;
+
+			each->Tick();
+		}
 	}
 
 	// FINAL EXPLOSION BEGIN, todo: write a function for this?
@@ -312,6 +322,20 @@ void CGameControllerMOD::StartInitialInfection()
 	humans.clear();
 }
 
+void CGameControllerMOD::TurnDefaultIntoRandomHuman()
+{
+	for (CroyaPlayer* each : players) {
+		if (!each)
+			continue;
+		if (!each->GetCharacter())
+			continue;
+		if (each->GetClassNum() == Class::DEFAULT && each->GetPlayer()->GetTeam() != TEAM_SPECTATORS) {
+			each->TurnIntoRandomHuman();
+			each->GetCharacter()->IncreaseArmor(10);
+		}
+	}
+}
+
 void CGameControllerMOD::OnRoundEnd()
 {
 	m_InfectedStarted = false;
@@ -436,6 +460,42 @@ void CGameControllerMOD::OnPlayerConnect(CPlayer* pPlayer)
 		players[ClientID]->SetOldClassNum(Class::MEDIC); // turn into medic on medic revive
 	}
 	GameServer()->SendChatTarget(ClientID, g_Config.m_SvWelcome);
+}
+
+std::array<CroyaPlayer*, 64> CGameControllerMOD::GetCroyaPlayers()
+{
+	return players;
+}
+
+void CGameControllerMOD::ResetFinalExplosion()
+{
+	m_ExplosionStarted = false;
+
+	for (int j = 0; j < m_MapHeight; j++)
+	{
+		for (int i = 0; i < m_MapWidth; i++)
+		{
+			if (!(m_GrowingMap[j * m_MapWidth + i] & 4))
+			{
+				m_GrowingMap[j * m_MapWidth + i] = 1;
+			}
+		}
+	}
+}
+
+bool CGameControllerMOD::IsExplosionStarted() const
+{
+	return m_ExplosionStarted;
+}
+
+std::vector<class CCircle*>& CGameControllerMOD::GetCircles()
+{
+	return circles;
+}
+
+std::vector<class CInfCircle*>& CGameControllerMOD::GetInfCircles()
+{
+	return inf_circles;
 }
 
 void CGameControllerMOD::SetLanguageByCountry(int Country, int ClientID)
@@ -612,30 +672,4 @@ void CGameControllerMOD::SetLanguageByCountry(int Country, int ClientID)
 		// set to chinese
 		break;
 	}
-}
-
-std::array<CroyaPlayer*, 64> CGameControllerMOD::GetCroyaPlayers()
-{
-	return players;
-}
-
-void CGameControllerMOD::ResetFinalExplosion()
-{
-	m_ExplosionStarted = false;
-
-	for (int j = 0; j < m_MapHeight; j++)
-	{
-		for (int i = 0; i < m_MapWidth; i++)
-		{
-			if (!(m_GrowingMap[j * m_MapWidth + i] & 4))
-			{
-				m_GrowingMap[j * m_MapWidth + i] = 1;
-			}
-		}
-	}
-}
-
-bool CGameControllerMOD::IsExplosionStarted() const
-{
-	return m_ExplosionStarted;
 }

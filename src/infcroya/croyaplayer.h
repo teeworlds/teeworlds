@@ -2,6 +2,7 @@
 
 #include <base/vmath.h>
 #include <unordered_map>
+#include <optional>
 
 class CroyaPlayer {
 private:
@@ -20,6 +21,11 @@ public:
 	CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, CGameControllerMOD* pGameController, std::unordered_map<int, class IClass*> Classes);
 	~CroyaPlayer();
 
+	void Tick();
+
+	std::optional<class CCircle*> GetClosestCircle();
+	std::optional<class CInfCircle*> GetClosestInfCircle();
+
 	int GetClassNum();
 	void SetClassNum(int Class, bool DrawPurpleThing = false);
 
@@ -34,7 +40,7 @@ public:
 	void OnKill(int Victim);
 
 	void OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon); // called in CCharacter::FireWeapon
-	void OnButtonF3(); // called in CGameContext::OnMessage { ... else if(MsgID == NETMSGTYPE_CL_VOTE) }
+	void OnButtonF3(); // (... and OnButtonF4) called in CGameContext::OnMessage { ... else if(MsgID == NETMSGTYPE_CL_VOTE) }
 	void OnMouseWheelDown(); // called in CCharacter::HandleWeaponSwitch
 	void OnMouseWheelUp(); // called in CCharacter::HandleWeaponSwitch
 
@@ -46,6 +52,7 @@ public:
 	void TurnIntoNextHumanClass();
 	void TurnIntoPrevHumanClass();
 	void TurnIntoRandomZombie();
+	void TurnIntoRandomHuman();
 
 	bool IsHookProtected() const;
 	void SetHookProtected(bool HookProtected);
@@ -56,8 +63,8 @@ public:
 	const char* GetLanguage() const;
 	void SetLanguage(const char* Language);
 
+	class CGameControllerMOD* GetGameControllerMOD();
+
 	IClass* GetClass();
 	void SetClass(IClass* pClass, bool DrawPurpleThing = false);
-
-	class CGameControllerMOD* GetGameControllerMOD();
 };

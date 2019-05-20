@@ -42,6 +42,11 @@ int CCircle::GetOwner() const
 	return m_Owner;
 }
 
+float CCircle::GetRadius() const
+{
+	return m_Radius;
+}
+
 void CCircle::Snap(int SnappingClient)
 {
 	float Radius = m_Radius;

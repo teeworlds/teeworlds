@@ -31,13 +31,14 @@ public:
 	CGameControllerMOD(class CGameContext *pGameServer);
 	~CGameControllerMOD() override;
 	void Snap(int SnappingClient) override;
-	virtual void Tick();
+	void Tick() override;
 
 	bool IsCroyaWarmup(); // First 10 secs after game start
 	bool RoundJustStarted();
 
 	void OnRoundStart();
 	void StartInitialInfection();
+	void TurnDefaultIntoRandomHuman();
 
 	void OnRoundEnd();
 	bool DoWincheckMatch() override;
@@ -55,11 +56,14 @@ public:
 	void OnPlayerDisconnect(class CPlayer* pPlayer) override;
 	void OnPlayerConnect(class CPlayer* pPlayer) override;
 
-	void SetLanguageByCountry(int Country, int ClientID);
-
 	std::array<CroyaPlayer*, 64> GetCroyaPlayers();
 	void ResetFinalExplosion();
 
 	bool IsExplosionStarted() const;
+
+	std::vector<class CCircle*>& GetCircles();
+	std::vector<class CInfCircle*>& GetInfCircles();
+
+	void SetLanguageByCountry(int Country, int ClientID);
 };
 #endif

@@ -84,10 +84,10 @@ function GenerateCommonSettings(settings, conf, arch, compiler)
 		settings.link.libs:Add("maxminddb") -- INFCROYA RELATED
 	end
 	if compiler == "gcc" or compiler == "clang" then
-		-- settings.cc.flags:Add("-Wall", "-fno-exceptions")
+		-- settings.cc.flags:Add("-Wall", "-fno-exceptions") -- INFCROYA RELATED
 		settings.cc.flags:Add("-Wall") -- INFCROYA RELATED
 		if platform ~= "macosx" then
-			settings.cc.flags_cxx:Add("-std=c++11") -- INFCROYA RELATED
+			settings.cc.flags_cxx:Add("-std=c++17") -- INFCROYA RELATED
 		end
 	end
 

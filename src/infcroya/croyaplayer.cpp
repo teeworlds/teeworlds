@@ -6,6 +6,9 @@
 #include <infcroya/entities/biologist-mine.h>
 #include <infcroya/localization/localization.h>
 #include <game/server/gamemodes/mod.h>
+#include <infcroya/entities/circle.h>
+#include <infcroya/entities/inf-circle.h>
+#include <limits>
 
 CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, CGameControllerMOD* pGameController, std::unordered_map<int, IClass*> Classes)
 {
@@ -23,6 +26,62 @@ CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServ
 
 CroyaPlayer::~CroyaPlayer()
 {
+}
+
+void CroyaPlayer::Tick()
+{
+	if (IsHuman() && m_pCharacter) {
+		if (auto circle = GetClosestInfCircle(); circle) {
+			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
+			if (dist < circle.value()->GetRadius()) {
+				m_pCharacter->Infect(-1);
+			}
+		}
+	}
+}
+
+std::optional<CCircle*> CroyaPlayer::GetClosestCircle()
+{
+	float min_distance = std::numeric_limits<float>::max();
+	CCircle* closest = nullptr;
+	for (CCircle* circle : m_pGameController->GetCircles()) {
+		if (!m_pCharacter)
+			break;
+		if (!circle)
+			continue; // maybe unnecessary, not sure
+
+		float dist = distance(m_pCharacter->GetPos(), circle->GetPos()) - circle->GetRadius();
+		if (dist < min_distance) {
+			min_distance = dist;
+			closest = circle;
+		}
+	}
+	if (closest) {
+		return closest;
+	}
+	return std::nullopt;
+}
+
+std::optional<CInfCircle*> CroyaPlayer::GetClosestInfCircle()
+{
+	float min_distance = std::numeric_limits<float>::max();
+	CInfCircle* closest = nullptr;
+	for (CInfCircle* circle : m_pGameController->GetInfCircles()) {
+		if (!m_pCharacter)
+			break;
+		if (!circle)
+			continue; // maybe unnecessary, not sure
+
+		float dist = distance(m_pCharacter->GetPos(), circle->GetPos()) - circle->GetRadius();
+		if (dist < min_distance) {
+			min_distance = dist;
+			closest = circle;
+		}
+	}
+	if (closest) {
+		return closest;
+	}
+	return std::nullopt;
 }
 
 int CroyaPlayer::GetClassNum()
@@ -151,8 +210,15 @@ void CroyaPlayer::TurnIntoPrevHumanClass()
 
 void CroyaPlayer::TurnIntoRandomZombie()
 {
-	int RandomZombieClass = random_int() % (Class::ZOMBIE_CLASS_END - Class::ZOMBIE_CLASS_START - 1) + Class::ZOMBIE_CLASS_START + 1;
+	int RandomZombieClass = random_int_range(Class::ZOMBIE_CLASS_START + 1, Class::ZOMBIE_CLASS_END - 1);
 	SetClassNum(RandomZombieClass, true);
+}
+
+void CroyaPlayer::TurnIntoRandomHuman()
+{
+	// Class::HUMAN_CLASS_START + 2 because of DEFAULT. DEFAULT comes right after HUMAN_CLASS_START
+	int RandomHumanClass = random_int_range(Class::HUMAN_CLASS_START + 2, Class::HUMAN_CLASS_END - 1);
+	SetClassNum(RandomHumanClass, true);
 }
 
 bool CroyaPlayer::IsHookProtected() const
@@ -192,6 +258,11 @@ void CroyaPlayer::SetLanguage(const char* Language)
 	m_Language = Language;
 }
 
+CGameControllerMOD* CroyaPlayer::GetGameControllerMOD()
+{
+	return m_pGameController;
+}
+
 IClass* CroyaPlayer::GetClass()
 {
 	return m_pClass;
@@ -199,12 +270,10 @@ IClass* CroyaPlayer::GetClass()
 
 void CroyaPlayer::SetClass(IClass* pClass, bool DrawPurpleThing)
 {
-	// purple animation begin
 	if (m_pCharacter && DrawPurpleThing) {
 		vec2 PrevPos = m_pCharacter->GetPos();
-		m_pGameServer->CreatePlayerSpawn(PrevPos);
+		m_pGameServer->CreatePlayerSpawn(PrevPos); // draw purple thing
 	}
-	// purple animation end
 	for (int& each : m_pPlayer->m_TeeInfos.m_aUseCustomColors) {
 		each = 1;
 	}
@@ -248,9 +317,4 @@ void CroyaPlayer::SetClass(IClass* pClass, bool DrawPurpleThing)
 		m_pGameServer->SendBroadcast(aBuf, m_pPlayer->GetCID());
 	else
 		m_pGameServer->SendBroadcast(Localize(aBuf, GetLanguage()), m_pPlayer->GetCID());
-}
-
-CGameControllerMOD* CroyaPlayer::GetGameControllerMOD()
-{
-	return m_pGameController;
 }

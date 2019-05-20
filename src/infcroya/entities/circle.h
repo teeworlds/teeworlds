@@ -22,6 +22,7 @@ public:
 	virtual void Tick();
 
 	int GetOwner() const;
+	float GetRadius() const;
 
 private:
 	int m_IDs[NUM_IDS];
