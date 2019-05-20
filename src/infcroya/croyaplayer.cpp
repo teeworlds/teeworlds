@@ -110,8 +110,10 @@ int CroyaPlayer::GetClassNum()
 {
 	int ClassNum;
 	for (const auto& c : m_Classes) {
-		if (m_pClass == c.second)
+		if (m_pClass == c.second) {
 			ClassNum = c.first;
+			break;
+		}
 	}
 	return ClassNum;
 }
@@ -148,10 +150,11 @@ void CroyaPlayer::OnCharacterSpawn(CCharacter* pChr)
 
 void CroyaPlayer::OnCharacterDeath(CCharacter* pVictim, CPlayer* pKiller, int Weapon)
 {
-	SetOldClassNum(GetClassNum());
 	m_pClass->OnCharacterDeath(pVictim, pKiller, Weapon);
-	if (IsHuman())
+	if (IsHuman()) {
+		SetOldClassNum(GetClassNum());
 		TurnIntoRandomZombie();
+	}
 	m_pCharacter = nullptr;
 }
 
