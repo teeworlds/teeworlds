@@ -17,6 +17,13 @@ private:
 	std::unordered_map<int, class IClass*> m_Classes;
 	std::string m_Language;
 	int m_OldClassNum; // set to old class on medic revive
+
+	int m_RespawnPointsNum;
+	int m_RespawnPointsDefaultNum;
+	bool m_RespawnPointPlaced;
+	vec2 m_RespawnPointPos;
+	int m_RespawnPointDefaultCooldown;
+	int m_RespawnPointCooldown;
 public:
 	CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, CGameControllerMOD* pGameController, std::unordered_map<int, class IClass*> Classes);
 	~CroyaPlayer();
@@ -43,6 +50,15 @@ public:
 	void OnButtonF3(); // (... and OnButtonF4) called in CGameContext::OnMessage { ... else if(MsgID == NETMSGTYPE_CL_VOTE) }
 	void OnMouseWheelDown(); // called in CCharacter::HandleWeaponSwitch
 	void OnMouseWheelUp(); // called in CCharacter::HandleWeaponSwitch
+
+	vec2 GetRespawnPointPos() const;
+	int GetRespawnPointsNum() const;
+	void SetRespawnPointsNum(int Num);
+	bool IsRespawnPointPlaced() const;
+	void SetRespawnPointPlaced(bool Placed);
+	int GetRespawnPointDefaultCooldown() const;
+	int GetRespawnPointCooldown();
+	void SetRespawnPointCooldown(int Cooldown);
 
 	bool IsHuman() const;
 	bool IsZombie() const;

@@ -1,11 +1,11 @@
 default_radius = 800
 default_inf_radius = 360
 
-function init()
+function infc_init()
 	-- hardcode passed C/C++ values here (e.g for tests)
 end
 
-function get_circle_pos()
+function infc_get_circle_pos()
 	-- x, y, radius
 	circle_positions = {
 		175, 22, default_radius,
@@ -13,7 +13,7 @@ function get_circle_pos()
 	return circle_positions
 end
 
-function get_inf_circle_pos()
+function infc_get_inf_circle_pos()
 	-- x, y, radius
 	inf_circle_positions = {
 		10, 55, default_inf_radius,

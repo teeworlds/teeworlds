@@ -36,7 +36,7 @@ void LuaLoader::init(int num_players)
 	lua_pushnumber(L, 228);
 	lua_setglobal(L, "inf_num_players");
 
-	lua_getglobal(L, "init");
+	lua_getglobal(L, "infc_init");
 	if (lua_pcall(L, 0, 0, 0) != LUA_OK)
 		fmt::print("{}\n", lua_tostring(L, -1));
 }
@@ -44,7 +44,7 @@ void LuaLoader::init(int num_players)
 std::vector<vec2> LuaLoader::get_circle_positions()
 {
 	std::vector<vec2> positions;
-	lua_getglobal(L, "get_circle_pos");
+	lua_getglobal(L, "infc_get_circle_pos");
 	if (lua_pcall(L, 0, 1, 0) != LUA_OK)
 		fmt::print("{}\n", lua_tostring(L, -1));
 	else {
@@ -71,7 +71,7 @@ std::vector<vec2> LuaLoader::get_circle_positions()
 std::vector<float> LuaLoader::get_circle_radiuses()
 {
 	std::vector<float> radiuses;
-	lua_getglobal(L, "get_circle_pos");
+	lua_getglobal(L, "infc_get_circle_pos");
 	if (lua_pcall(L, 0, 1, 0) != LUA_OK)
 		fmt::print("{}\n", lua_tostring(L, -1));
 	else {
@@ -93,7 +93,7 @@ std::vector<float> LuaLoader::get_circle_radiuses()
 std::vector<vec2> LuaLoader::get_inf_circle_positions()
 {
 	std::vector<vec2> positions;
-	lua_getglobal(L, "get_inf_circle_pos");
+	lua_getglobal(L, "infc_get_inf_circle_pos");
 	if (lua_pcall(L, 0, 1, 0) != LUA_OK)
 		fmt::print("{}\n", lua_tostring(L, -1));
 	else {
@@ -120,7 +120,7 @@ std::vector<vec2> LuaLoader::get_inf_circle_positions()
 std::vector<float> LuaLoader::get_inf_circle_radiuses()
 {
 	std::vector<float> radiuses;
-	lua_getglobal(L, "get_inf_circle_pos");
+	lua_getglobal(L, "infc_get_inf_circle_pos");
 	if (lua_pcall(L, 0, 1, 0) != LUA_OK)
 		fmt::print("{}\n", lua_tostring(L, -1));
 	else {

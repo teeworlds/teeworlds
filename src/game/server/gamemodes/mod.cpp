@@ -90,6 +90,21 @@ CGameControllerMOD::~CGameControllerMOD()
 void CGameControllerMOD::Snap(int SnappingClient)
 {
 	IGameController::Snap(SnappingClient);
+
+	for (CroyaPlayer* each : players) {
+		if (!each)
+			continue;
+
+		if (each->IsRespawnPointPlaced() && each->GetRespawnPointsNum() >= 1) {
+			CNetObj_Pickup* pP = static_cast<CNetObj_Pickup*>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, each->GetClientID(), sizeof(CNetObj_Pickup)));
+			if (!pP)
+				return;
+
+			pP->m_X = (int)each->GetRespawnPointPos().x;
+			pP->m_Y = (int)each->GetRespawnPointPos().y;
+			pP->m_Type = PICKUP_ARMOR;
+		}
+	}
 }
 
 void CGameControllerMOD::OnRoundStart()
@@ -367,7 +382,7 @@ void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 		m_pGameWorld = pChr->GameWorld();
 	}
 
-	if (pChr->IsZombie() && !IsCroyaWarmup() && !m_ExplosionStarted) {
+	if (pChr->IsZombie() && !IsCroyaWarmup() && !m_ExplosionStarted && !players[ClientID]->IsRespawnPointPlaced()) {
 		const int TILE_SIZE = 32;
 		int RandomInfectionCircleID = random_int_range(0, inf_circles.size() - 1);
 		vec2 NewPos = inf_circles[RandomInfectionCircleID]->GetPos();
@@ -377,6 +392,16 @@ void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 		NewPos.y += RandomShiftY * TILE_SIZE;
 		pChr->GetCharacterCore().m_Pos = NewPos;
 		pChr->GameServer()->CreatePlayerSpawn(NewPos);
+	}
+
+	if (pChr->IsZombie() && players[ClientID]->IsRespawnPointPlaced() && players[ClientID]->GetRespawnPointsNum() >= 1) {
+		vec2 NewPos = players[ClientID]->GetRespawnPointPos();
+		pChr->GetCharacterCore().m_Pos = NewPos;
+		pChr->GameServer()->CreatePlayerSpawn(NewPos);
+		players[ClientID]->SetRespawnPointsNum(players[ClientID]->GetRespawnPointsNum() - 1);
+	}
+	if (players[ClientID]->GetRespawnPointsNum() <= 0) {
+		players[ClientID]->SetRespawnPointPlaced(false);
 	}
 }
 

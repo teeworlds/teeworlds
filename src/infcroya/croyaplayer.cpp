@@ -21,6 +21,12 @@ CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServ
 	m_Infected = false;
 	m_HookProtected = true;
 	m_Classes = Classes;
+	m_RespawnPointsNum = 1;
+	m_RespawnPointsDefaultNum = 1;
+	m_RespawnPointPlaced = false;
+	m_RespawnPointPos = vec2(0, 0);
+	m_RespawnPointDefaultCooldown = 3;
+	m_RespawnPointCooldown = 0;
 	m_Language = "english";
 }
 
@@ -36,6 +42,22 @@ void CroyaPlayer::Tick()
 			if (dist < circle.value()->GetRadius()) {
 				m_pCharacter->Infect(-1);
 			}
+		}
+	}
+
+	if (IsZombie() && m_pCharacter) {
+		if (auto circle = GetClosestInfCircle(); circle) {
+			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
+			if (dist < circle.value()->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
+				m_pCharacter->IncreaseHealth(2);
+				m_RespawnPointsNum = m_RespawnPointsDefaultNum;
+			}
+		}
+	}
+
+	if (m_RespawnPointCooldown > 0) {
+		if (m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
+			m_RespawnPointCooldown -= 1;
 		}
 	}
 }
@@ -161,6 +183,16 @@ void CroyaPlayer::OnMouseWheelDown()
 		TurnIntoNextHumanClass();
 		m_pClass->OnMouseWheelDown();
 	}
+	if (IsZombie() && m_pCharacter && !m_pGameController->IsCroyaWarmup() && m_RespawnPointCooldown == 0) {
+		if (m_RespawnPointPlaced) {
+			m_RespawnPointPos = m_pCharacter->GetPos();
+		}
+		else {
+			m_RespawnPointPos = m_pCharacter->GetPos();
+			m_RespawnPointPlaced = true;
+		}
+		m_RespawnPointCooldown = m_RespawnPointDefaultCooldown;
+	}
 }
 
 void CroyaPlayer::OnMouseWheelUp()
@@ -169,6 +201,46 @@ void CroyaPlayer::OnMouseWheelUp()
 		TurnIntoPrevHumanClass();
 		m_pClass->OnMouseWheelUp();
 	}
+}
+
+vec2 CroyaPlayer::GetRespawnPointPos() const
+{
+	return m_RespawnPointPos;
+}
+
+int CroyaPlayer::GetRespawnPointsNum() const
+{
+	return m_RespawnPointsNum;
+}
+
+void CroyaPlayer::SetRespawnPointsNum(int Num)
+{
+	m_RespawnPointsNum = Num;
+}
+
+bool CroyaPlayer::IsRespawnPointPlaced() const
+{
+	return m_RespawnPointPlaced;
+}
+
+void CroyaPlayer::SetRespawnPointPlaced(bool Placed)
+{
+	m_RespawnPointPlaced = Placed;
+}
+
+int CroyaPlayer::GetRespawnPointDefaultCooldown() const
+{
+	return m_RespawnPointDefaultCooldown;
+}
+
+int CroyaPlayer::GetRespawnPointCooldown()
+{
+	return m_RespawnPointCooldown;
+}
+
+void CroyaPlayer::SetRespawnPointCooldown(int Cooldown)
+{
+	m_RespawnPointCooldown = Cooldown;
 }
 
 bool CroyaPlayer::IsHuman() const
