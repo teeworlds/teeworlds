@@ -1,9 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <new>
-#include <regex>
-#include <string>
-#include <sstream>
 
 #include <base/math.h>
 #include <base/system.h>
@@ -565,28 +562,44 @@ static void BitsVariableCommand(IConsole::IResult *pResult, void *pUserData)
 
 	if(pResult->NumArguments())
 	{	
-		std::stringstream ss;
-		ss << "^[01]{" << pData->m_BitsSize << "}$";
+		const char* WantedValueString = pResult->GetString(0);
+		int StringLength = str_length(WantedValueString);
 		
-		std::regex IsCorrectBitPattern(ss.str());
-		std::string WantedValueString(pResult->GetString(0));
-		
-		if(std::regex_match(WantedValueString, IsCorrectBitPattern))
-		{
-			for (size_t i = 0; i < pData->m_BitsSize; i++)
+		unsigned long TempBitMask = 0;
+		bool IsCorrectBitPattern = true;
+
+		if (StringLength == pData->m_BitsSize)
+		{	
+
+			for(unsigned int i = 0; i < pData->m_BitsSize; i++)
 			{
-				// most right bit is the 0th bit.
-				if (WantedValueString.at(i) == '1')
+				if (WantedValueString[i] != '0' && WantedValueString[i] != '1')
+				{
+					// string contains a value that's neither 0 nor 1
+					IsCorrectBitPattern = false;
+					break;
+				} 
+				else if (WantedValueString[i] == '1')
 				{
 					// set bit
-					*(pData->m_BitMask) |= (1 << (pData->m_BitsSize - 1 - i));
+					TempBitMask |= (1 << (pData->m_BitsSize - 1 - i));
 				}
 				else
 				{
 					// unset bit
-					*(pData->m_BitMask) &= ~(1 << (pData->m_BitsSize - 1 - i));
+					TempBitMask &= ~(1 << (pData->m_BitsSize - 1 - i));
 				}	
 			}
+		}
+		else
+		{
+			// string length doesn't match the expected length
+			IsCorrectBitPattern = false;
+		}
+				
+		if(IsCorrectBitPattern)
+		{
+			*(pData->m_BitMask) = TempBitMask;
 		}
 		else
 		{

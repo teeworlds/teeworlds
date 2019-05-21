@@ -5,8 +5,6 @@
 #include <engine/storage.h>
 #include <engine/shared/config.h>
 
-#include <regex>
-
 CConfiguration g_Config;
 
 class CConfig : public IConfig
@@ -82,15 +80,27 @@ public:
 		#define MACRO_CONFIG_INT(Name,ScriptName,def,min,max,flags,desc) g_Config.m_##Name = def;
 		#define MACRO_CONFIG_STR(Name,ScriptName,len,def,flags,desc) str_copy(g_Config.m_##Name, def, len);
 		#define MACRO_CONFIG_BITS(Name,ScriptName,len,def,flags,desc) \
-		g_Config.m_##Name = 0; \
-		if(std::regex_match(def, std::regex("^[01]{"#len"}$"))) \
+		if(str_length(def) == len) \
 		{ \
+			unsigned long TempBitmask = 0; \
 			for (size_t i = 0; i < len; i++) \
 			{ \
 				if(def[len - 1 - i] == '1') \
-					{g_Config.m_##Name |=  (1 << i);} \
+				{ \
+					TempBitmask |=  (1 << i); \
+				} else if(def[len - 1 - i] == '0') { \
+					TempBitmask &=  ~(1 << i); \
+				} else { \
+					TempBitmask = 0; \
+					break; \
+				} \
 			} \
-		}
+			g_Config.m_##Name = TempBitmask; \
+		}  else { \
+			g_Config.m_##Name = 0; \
+		} \
+		
+
 		
 		#include "config_variables.h"
 
