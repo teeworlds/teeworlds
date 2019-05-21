@@ -72,6 +72,13 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 	classes[Class::SCIENTIST] = new CScientist();
 	classes[Class::MERCENARY] = new CMercenary();
 	classes[Class::SMOKER] = new CSmoker();
+
+	LuaLoader temp;
+	std::string path_to_lua("maps/");
+	path_to_lua += g_Config.m_SvMap;
+	path_to_lua += ".lua";
+	temp.load(path_to_lua.c_str());
+	g_Config.m_SvTimelimit = temp.get_timelimit();
 }
 
 CGameControllerMOD::~CGameControllerMOD()
@@ -126,16 +133,18 @@ void CGameControllerMOD::OnRoundStart()
 			int x = positions[i].x * TILE_SIZE;
 			int y = positions[i].y * TILE_SIZE;
 			circles.push_back(new CCircle(m_pGameWorld, vec2(x, y), -1, radiuses[i]));
+			printf("BBB\n");
 		}
 
 		// infection zone circles
 		auto inf_positions = lua->get_inf_circle_positions();
 		auto inf_radiuses = lua->get_inf_circle_radiuses();
-		for (size_t i = 0; i < positions.size(); i++) {
+		for (size_t i = 0; i < inf_positions.size(); i++) {
 			const int TILE_SIZE = 32;
 			int x = inf_positions[i].x * TILE_SIZE;
 			int y = inf_positions[i].y * TILE_SIZE;
 			inf_circles.push_back(new CInfCircle(m_pGameWorld, vec2(x, y), -1, inf_radiuses[i]));
+			printf("AAA\n");
 		}
 	}
 	StartInitialInfection();
@@ -152,6 +161,10 @@ void CGameControllerMOD::Tick()
 	}
 
 	if (!IsCroyaWarmup() && IsEveryoneInfected() && !IsGameEnd() && m_InfectedStarted) {
+		int Seconds = (Server()->Tick() - m_GameStartTick) / ((float)Server()->TickSpeed());
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "Infected won the round in %d seconds", Seconds);
+		GameServer()->SendChatTarget(-1, aBuf);
 		OnRoundEnd();
 	}
 
@@ -216,7 +229,7 @@ void CGameControllerMOD::Tick()
 					if (random_prob(0.1f))
 					{
 						vec2 TilePos = vec2(16.0f, 16.0f) + vec2(i * 32.0f, j * 32.0f);
-						GameServer()->CreateExplosion(TilePos, -1, WEAPON_GAME, true);
+						GameServer()->CreateExplosion(TilePos, -1, WEAPON_GAME, 0);
 						GameServer()->CreateSound(TilePos, SOUND_GRENADE_EXPLODE);
 					}
 				}
@@ -382,7 +395,7 @@ void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 		m_pGameWorld = pChr->GameWorld();
 	}
 
-	if (pChr->IsZombie() && !IsCroyaWarmup() && !m_ExplosionStarted && !players[ClientID]->IsRespawnPointPlaced()) {
+	if (pChr->IsZombie() && !IsCroyaWarmup() && !m_ExplosionStarted && !players[ClientID]->IsRespawnPointPlaced() && inf_circles.size() > 0) {
 		const int TILE_SIZE = 32;
 		int RandomInfectionCircleID = random_int_range(0, inf_circles.size() - 1);
 		vec2 NewPos = inf_circles[RandomInfectionCircleID]->GetPos();

@@ -19,6 +19,8 @@ public:
 
 	void init(int num_players);
 
+	int get_timelimit() const;
+
 	std::vector<vec2> get_circle_positions();
 	std::vector<float> get_circle_radiuses();
 

@@ -17,7 +17,6 @@ LuaLoader::LuaLoader()
 
 LuaLoader::~LuaLoader()
 {
-	fmt::print("LuaLoader destroyed!\n");
 	lua_close(L);
 }
 
@@ -33,12 +32,23 @@ bool LuaLoader::load(const char* filename)
 
 void LuaLoader::init(int num_players)
 {
-	lua_pushnumber(L, 228);
-	lua_setglobal(L, "inf_num_players");
+	lua_pushinteger(L, num_players);
+	lua_setglobal(L, "infc_num_players");
 
 	lua_getglobal(L, "infc_init");
 	if (lua_pcall(L, 0, 0, 0) != LUA_OK)
-		fmt::print("{}\n", lua_tostring(L, -1));
+		fmt::print("[LUA]: {}\n", lua_tostring(L, -1));
+}
+
+int LuaLoader::get_timelimit() const
+{
+	lua_getglobal(L, "infc_get_timelimit");
+	if (lua_pcall(L, 0, 1, 0) != LUA_OK)
+		fmt::print("[LUA]: {}\n", lua_tostring(L, -1));
+
+	int timelimit = lua_tonumber(L, -1);
+	lua_pop(L, 1);
+	return timelimit;
 }
 
 std::vector<vec2> LuaLoader::get_circle_positions()
@@ -46,9 +56,9 @@ std::vector<vec2> LuaLoader::get_circle_positions()
 	std::vector<vec2> positions;
 	lua_getglobal(L, "infc_get_circle_pos");
 	if (lua_pcall(L, 0, 1, 0) != LUA_OK)
-		fmt::print("{}\n", lua_tostring(L, -1));
+		fmt::print("[LUA]: {}\n", lua_tostring(L, -1));
 	else {
-		size_t len = lua_rawlen(L, 1);
+		size_t len = lua_rawlen(L, -1);
 
 		for (size_t i = 1; i <= len; i++) {
 			if (i % 3 != 0) // 3 variables: x, y, Radius
@@ -73,9 +83,9 @@ std::vector<float> LuaLoader::get_circle_radiuses()
 	std::vector<float> radiuses;
 	lua_getglobal(L, "infc_get_circle_pos");
 	if (lua_pcall(L, 0, 1, 0) != LUA_OK)
-		fmt::print("{}\n", lua_tostring(L, -1));
+		fmt::print("[LUA]: {}\n", lua_tostring(L, -1));
 	else {
-		size_t len = lua_rawlen(L, 1);
+		size_t len = lua_rawlen(L, -1);
 		for (size_t i = 1; i <= len; i++) {
 			if (i % 3 != 0) // 3 variables: x, y, Radius
 				continue;
@@ -95,9 +105,9 @@ std::vector<vec2> LuaLoader::get_inf_circle_positions()
 	std::vector<vec2> positions;
 	lua_getglobal(L, "infc_get_inf_circle_pos");
 	if (lua_pcall(L, 0, 1, 0) != LUA_OK)
-		fmt::print("{}\n", lua_tostring(L, -1));
+		fmt::print("[LUA]: {}\n", lua_tostring(L, -1));
 	else {
-		size_t len = lua_rawlen(L, 1);
+		size_t len = lua_rawlen(L, -1);
 
 		for (size_t i = 1; i <= len; i++) {
 			if (i % 3 != 0) // 3 variables: x, y, Radius
@@ -122,9 +132,9 @@ std::vector<float> LuaLoader::get_inf_circle_radiuses()
 	std::vector<float> radiuses;
 	lua_getglobal(L, "infc_get_inf_circle_pos");
 	if (lua_pcall(L, 0, 1, 0) != LUA_OK)
-		fmt::print("{}\n", lua_tostring(L, -1));
+		fmt::print("[LUA]: {}\n", lua_tostring(L, -1));
 	else {
-		size_t len = lua_rawlen(L, 1);
+		size_t len = lua_rawlen(L, -1);
 		for (size_t i = 1; i <= len; i++) {
 			if (i % 3 != 0) // 3 variables: x, y, Radius
 				continue;

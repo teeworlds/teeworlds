@@ -22,8 +22,8 @@ private:
 	int m_RespawnPointsDefaultNum;
 	bool m_RespawnPointPlaced;
 	vec2 m_RespawnPointPos;
-	int m_RespawnPointDefaultCooldown;
-	int m_RespawnPointCooldown;
+	int m_RespawnPointDefaultCooldown; // in seconds
+	int m_RespawnPointCooldown; // in seconds
 public:
 	CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServer, CGameControllerMOD* pGameController, std::unordered_map<int, class IClass*> Classes);
 	~CroyaPlayer();

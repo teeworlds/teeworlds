@@ -21,13 +21,14 @@ CroyaPlayer::CroyaPlayer(int ClientID, CPlayer* pPlayer, CGameContext* pGameServ
 	m_Infected = false;
 	m_HookProtected = true;
 	m_Classes = Classes;
+	m_Language = "english";
+
 	m_RespawnPointsNum = 1;
 	m_RespawnPointsDefaultNum = 1;
 	m_RespawnPointPlaced = false;
 	m_RespawnPointPos = vec2(0, 0);
 	m_RespawnPointDefaultCooldown = 3;
 	m_RespawnPointCooldown = 0;
-	m_Language = "english";
 }
 
 CroyaPlayer::~CroyaPlayer()
@@ -37,15 +38,26 @@ CroyaPlayer::~CroyaPlayer()
 void CroyaPlayer::Tick()
 {
 	if (IsHuman() && m_pCharacter) {
+		// Infect when inside infection zone circle
 		if (auto circle = GetClosestInfCircle(); circle) {
 			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
 			if (dist < circle.value()->GetRadius()) {
 				m_pCharacter->Infect(-1);
 			}
 		}
+
+		// Take damage when outside of safezone circle
+		if (auto circle = GetClosestCircle(); circle) {
+			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
+			int Dmg = 1;
+			if (dist > circle.value()->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each n seconds
+				m_pCharacter->TakeDamage(vec2(0, 0), vec2(0, 0), Dmg, -1, WEAPON_SELF);
+			}
+		}
 	}
 
 	if (IsZombie() && m_pCharacter) {
+		// Increase health when inside infection zone circle
 		if (auto circle = GetClosestInfCircle(); circle) {
 			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
 			if (dist < circle.value()->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
