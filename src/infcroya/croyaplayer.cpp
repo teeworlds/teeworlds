@@ -39,29 +39,29 @@ void CroyaPlayer::Tick()
 {
 	if (IsHuman() && m_pCharacter) {
 		// Infect when inside infection zone circle
-		if (CInfCircle* circle = GetClosestInfCircle()) {
-			float dist = distance(m_pCharacter->GetPos(), circle->GetPos());
-			if (dist < circle->GetRadius()) {
+		if (auto circle = GetClosestInfCircle(); circle) {
+			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
+			if (dist < circle.value()->GetRadius()) {
 				m_pCharacter->Infect(-1);
 			}
 		}
 
 		// Take damage when outside of safezone circle
-		if (CCircle* circle = GetClosestCircle()) {
-			float dist = distance(m_pCharacter->GetPos(), circle->GetPos());
+		if (auto circle = GetClosestCircle(); circle) {
+			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
 			int Dmg = 1;
-			if (dist > circle->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
+			if (dist > circle.value()->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
 				m_pCharacter->TakeDamage(vec2(0, 0), vec2(0, 0), Dmg, -1, WEAPON_SELF);
-				printf("Asdasd check Take damage\n");
+				printf("This is printed on win pc & linux vps, but only on windows pc take damage work??? wtf\n");
 			}
 		}
 	}
 
 	if (IsZombie() && m_pCharacter) {
 		// Increase health when inside infection zone circle
-		if (CInfCircle* circle = GetClosestInfCircle()) {
-			float dist = distance(m_pCharacter->GetPos(), circle->GetPos());
-			if (dist < circle->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
+		if (auto circle = GetClosestInfCircle(); circle) {
+			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
+			if (dist < circle.value()->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
 				m_pCharacter->IncreaseHealth(2);
 				m_RespawnPointsNum = m_RespawnPointsDefaultNum;
 			}
@@ -75,7 +75,7 @@ void CroyaPlayer::Tick()
 	}
 }
 
-CCircle* CroyaPlayer::GetClosestCircle()
+std::optional<CCircle*> CroyaPlayer::GetClosestCircle()
 {
 	float min_distance = std::numeric_limits<float>::max();
 	CCircle* closest = nullptr;
@@ -94,10 +94,10 @@ CCircle* CroyaPlayer::GetClosestCircle()
 	if (closest) {
 		return closest;
 	}
-	return nullptr;
+	return std::nullopt;
 }
 
-CInfCircle* CroyaPlayer::GetClosestInfCircle()
+std::optional<CInfCircle*> CroyaPlayer::GetClosestInfCircle()
 {
 	float min_distance = std::numeric_limits<float>::max();
 	CInfCircle* closest = nullptr;
@@ -116,7 +116,7 @@ CInfCircle* CroyaPlayer::GetClosestInfCircle()
 	if (closest) {
 		return closest;
 	}
-	return nullptr;
+	return std::nullopt;
 }
 
 int CroyaPlayer::GetClassNum()
