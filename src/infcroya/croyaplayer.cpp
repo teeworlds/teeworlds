@@ -40,17 +40,18 @@ void CroyaPlayer::Tick()
 	if (IsHuman() && m_pCharacter) {
 		// Infect when inside infection zone circle
 		if (auto circle = GetClosestInfCircle(); circle) {
-			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
-			if (dist < circle.value()->GetRadius()) {
+			float dist = distance(m_pCharacter->GetPos(), circle->GetPos());
+			if (dist < circle->GetRadius()) {
 				m_pCharacter->Infect(-1);
 			}
 		}
 
 		// Take damage when outside of safezone circle
 		if (auto circle = GetClosestCircle(); circle) {
-			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
-			if (dist > circle.value()->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
-				m_pCharacter->TakeDamage(vec2(0, 0), vec2(0, 0), 1, -1, WEAPON_SELF);
+			float dist = distance(m_pCharacter->GetPos(), circle->GetPos());
+			int Dmg = 1;
+			if (dist > circle->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
+				m_pCharacter->TakeDamage(vec2(0, 0), vec2(0, 0), Dmg, -1, WEAPON_SELF);
 				printf("Asdasd check Take damage\n");
 			}
 		}
@@ -59,8 +60,8 @@ void CroyaPlayer::Tick()
 	if (IsZombie() && m_pCharacter) {
 		// Increase health when inside infection zone circle
 		if (auto circle = GetClosestInfCircle(); circle) {
-			float dist = distance(m_pCharacter->GetPos(), circle.value()->GetPos());
-			if (dist < circle.value()->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
+			float dist = distance(m_pCharacter->GetPos(), circle->GetPos());
+			if (dist < circle->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
 				m_pCharacter->IncreaseHealth(2);
 				m_RespawnPointsNum = m_RespawnPointsDefaultNum;
 			}
@@ -74,7 +75,7 @@ void CroyaPlayer::Tick()
 	}
 }
 
-std::optional<CCircle*> CroyaPlayer::GetClosestCircle()
+CCircle* CroyaPlayer::GetClosestCircle()
 {
 	float min_distance = std::numeric_limits<float>::max();
 	CCircle* closest = nullptr;
@@ -93,10 +94,10 @@ std::optional<CCircle*> CroyaPlayer::GetClosestCircle()
 	if (closest) {
 		return closest;
 	}
-	return std::nullopt;
+	return nullptr;
 }
 
-std::optional<CInfCircle*> CroyaPlayer::GetClosestInfCircle()
+CInfCircle* CroyaPlayer::GetClosestInfCircle()
 {
 	float min_distance = std::numeric_limits<float>::max();
 	CInfCircle* closest = nullptr;
@@ -115,7 +116,7 @@ std::optional<CInfCircle*> CroyaPlayer::GetClosestInfCircle()
 	if (closest) {
 		return closest;
 	}
-	return std::nullopt;
+	return nullptr;
 }
 
 int CroyaPlayer::GetClassNum()
