@@ -39,7 +39,7 @@ void CroyaPlayer::Tick()
 {
 	if (IsHuman() && m_pCharacter) {
 		// Infect when inside infection zone circle
-		if (auto circle = GetClosestInfCircle(); circle) {
+		if (CInfCircle* circle = GetClosestInfCircle()) {
 			float dist = distance(m_pCharacter->GetPos(), circle->GetPos());
 			if (dist < circle->GetRadius()) {
 				m_pCharacter->Infect(-1);
@@ -47,7 +47,7 @@ void CroyaPlayer::Tick()
 		}
 
 		// Take damage when outside of safezone circle
-		if (auto circle = GetClosestCircle(); circle) {
+		if (CCircle* circle = GetClosestCircle()) {
 			float dist = distance(m_pCharacter->GetPos(), circle->GetPos());
 			int Dmg = 1;
 			if (dist > circle->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
@@ -59,7 +59,7 @@ void CroyaPlayer::Tick()
 
 	if (IsZombie() && m_pCharacter) {
 		// Increase health when inside infection zone circle
-		if (auto circle = GetClosestInfCircle(); circle) {
+		if (CInfCircle* circle = GetClosestInfCircle()) {
 			float dist = distance(m_pCharacter->GetPos(), circle->GetPos());
 			if (dist < circle->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
 				m_pCharacter->IncreaseHealth(2);
