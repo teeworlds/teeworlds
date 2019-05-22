@@ -133,7 +133,6 @@ void CGameControllerMOD::OnRoundStart()
 			int x = positions[i].x * TILE_SIZE;
 			int y = positions[i].y * TILE_SIZE;
 			circles.push_back(new CCircle(m_pGameWorld, vec2(x, y), -1, radiuses[i]));
-			printf("BBB\n");
 		}
 
 		// infection zone circles
@@ -144,7 +143,6 @@ void CGameControllerMOD::OnRoundStart()
 			int x = inf_positions[i].x * TILE_SIZE;
 			int y = inf_positions[i].y * TILE_SIZE;
 			inf_circles.push_back(new CInfCircle(m_pGameWorld, vec2(x, y), -1, inf_radiuses[i]));
-			printf("AAA\n");
 		}
 	}
 	StartInitialInfection();

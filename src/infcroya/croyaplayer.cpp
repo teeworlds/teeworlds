@@ -53,7 +53,7 @@ void CroyaPlayer::Tick()
 			float dist = distance(m_pCharacter->GetPos(), inf_circle->GetPos());
 			int Dmg = 1;
 			if (dist > inf_circle->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
-				m_pCharacter->TakeDamage(vec2(0, 0), vec2(0, 0), Dmg, -1, WEAPON_SELF);
+				m_pCharacter->TakeDamage(vec2(0, 0), m_pCharacter->GetPos(), Dmg, m_ClientID, WEAPON_WORLD);
 				printf("This is printed on win pc & linux vps, but only on windows pc take damage work??? wtf\n");
 			}
 		}

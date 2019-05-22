@@ -1054,8 +1054,8 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 		Dmg = max(1, Dmg/2);
 
 	// INFCROYA BEGIN ------------------------------------------------------------
-	// search tags xd: no self harm no selfharm selfhurt self hurt
-	if (From == m_pPlayer->GetCID()) {
+	// search tags: no self harm no selfharm selfhurt self hurt
+	if (From == m_pPlayer->GetCID() && Weapon != WEAPON_WORLD) {
 		int ClassNum = GetCroyaPlayer()->GetClassNum();
 		if ((ClassNum == Class::SOLDIER && m_ActiveWeapon == WEAPON_GRENADE) || (ClassNum == Class::SCIENTIST && m_ActiveWeapon == WEAPON_LASER)) {
 			return false;
