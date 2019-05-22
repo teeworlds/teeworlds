@@ -2,7 +2,7 @@
 
 #include <base/vmath.h>
 #include <unordered_map>
-#include <optional>
+#include <string>
 
 class CroyaPlayer {
 private:
@@ -30,8 +30,8 @@ public:
 
 	void Tick();
 
-	std::optional<class CCircle*> GetClosestCircle();
-	std::optional<class CInfCircle*> GetClosestInfCircle();
+	class CCircle* GetClosestCircle();
+	class CInfCircle* GetClosestInfCircle();
 
 	int GetClassNum();
 	void SetClassNum(int Class, bool DrawPurpleThing = false);

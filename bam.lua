@@ -86,9 +86,7 @@ function GenerateCommonSettings(settings, conf, arch, compiler)
 	if compiler == "gcc" or compiler == "clang" then
 		-- settings.cc.flags:Add("-Wall", "-fno-exceptions") -- INFCROYA RELATED
 		settings.cc.flags:Add("-Wall") -- INFCROYA RELATED
-		if platform ~= "macosx" then
-			settings.cc.flags_cxx:Add("-std=c++17") -- INFCROYA RELATED
-		end
+		settings.cc.flags_cxx:Add("-std=c++11") -- INFCROYA RELATED
 	end
 
 	-- Compile zlib if needed
@@ -113,6 +111,9 @@ function GenerateCommonSettings(settings, conf, arch, compiler)
 end
 
 function GenerateMacOSXSettings(settings, conf, arch, compiler)
+	settings.link.libs:Add("c++") -- INFCROYA RELATED
+	settings.cc.includes:Add("/usr/local/opt/lua/include/lua5.3/")
+	settings.link.libs:Add("lua5.3")
 	if arch == "x86" then
 		settings.cc.flags:Add("-arch i386")
 		settings.link.flags:Add("-arch i386")

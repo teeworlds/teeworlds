@@ -60,3 +60,5 @@ src/.vs/*
 src/.bam/*
 *.json
 *.obj
+bin/server
+bin/serverlaunch

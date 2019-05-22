@@ -3,6 +3,7 @@
 #include <infcroya/skin.h>
 #include <base/vmath.h>
 #include <unordered_map>
+#include <string>
 
 class IClass {
 private:
