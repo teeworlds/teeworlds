@@ -22,6 +22,7 @@
 #include <infcroya/entities/medic-grenade.h>
 #include <infcroya/entities/merc-bomb.h>
 #include <infcroya/entities/scatter-grenade.h>
+#include <game/server/gamemodes/mod.h>
 // INFCROYA END ------------------------------------------------------------//
 
 //input count
@@ -77,6 +78,7 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_IsFrozen = false;
 	m_FrozenTime = -1;
 	m_PoisonTick = 0;
+	m_InAirTick = 0;
 	// INFCROYA END ------------------------------------------------------------//
 }
 
@@ -518,8 +520,16 @@ void CCharacter::FireWeapon()
 	if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0) // -1 == unlimited
 		m_aWeapons[m_ActiveWeapon].m_Ammo--;
 
-	if(!m_ReloadTimer)
-		m_ReloadTimer = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Firedelay * Server()->TickSpeed() / 1000;
+	// INFCROYA BEGIN ------------------------------------------------------------
+
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		m_ReloadTimer = Server()->GetFireDelay(GetInfWeaponID(m_ActiveWeapon)) * Server()->TickSpeed() / 1000;
+	}
+	else {
+		if (!m_ReloadTimer)
+			m_ReloadTimer = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Firedelay * Server()->TickSpeed() / 1000;
+	}
+	// INFCROYA END ------------------------------------------------------------//
 }
 
 void CCharacter::HandleWeapons()
@@ -538,28 +548,67 @@ void CCharacter::HandleWeapons()
 	FireWeapon();
 
 	// ammo regen
-	int AmmoRegenTime = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Ammoregentime;
-	if(AmmoRegenTime && m_aWeapons[m_ActiveWeapon].m_Ammo >= 0)
-	{
-		// If equipped and not active, regen ammo?
-		if (m_ReloadTimer <= 0)
-		{
-			if (m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart < 0)
-				m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = Server()->Tick();
+	// INFCROYA BEGIN ------------------------------------------------------------
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		int InfWID = GetInfWeaponID(m_ActiveWeapon);
+		int AmmoRegenTime = Server()->GetAmmoRegenTime(InfWID);
+		int MaxAmmo = Server()->GetMaxAmmo(InfWID);
 
-			if ((Server()->Tick() - m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
+		if (InfWID == INFWEAPON_MERCENARY_GUN)
+		{
+			if (m_InAirTick > Server()->TickSpeed() * 4)
 			{
-				// Add some ammo
-				m_aWeapons[m_ActiveWeapon].m_Ammo = min(m_aWeapons[m_ActiveWeapon].m_Ammo + 1,
-					g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Maxammo);
+				AmmoRegenTime = 0;
+			}
+		}
+
+		if (AmmoRegenTime)
+		{
+			if (m_ReloadTimer <= 0)
+			{
+				if (m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart < 0)
+					m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = Server()->Tick();
+
+				if ((Server()->Tick() - m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
+				{
+					// Add some ammo
+					m_aWeapons[m_ActiveWeapon].m_Ammo = min(m_aWeapons[m_ActiveWeapon].m_Ammo + 1, MaxAmmo);
+					m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
+				}
+			}
+		}
+	}
+	else {
+		int AmmoRegenTime = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Ammoregentime;
+		if (AmmoRegenTime && m_aWeapons[m_ActiveWeapon].m_Ammo >= 0)
+		{
+			// If equipped and not active, regen ammo?
+			if (m_ReloadTimer <= 0)
+			{
+				if (m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart < 0)
+					m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = Server()->Tick();
+
+				if ((Server()->Tick() - m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
+				{
+					// Add some ammo
+					m_aWeapons[m_ActiveWeapon].m_Ammo = min(m_aWeapons[m_ActiveWeapon].m_Ammo + 1,
+						g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Maxammo);
+					m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
+				}
+			}
+			else
+			{
 				m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
 			}
 		}
-		else
-		{
-			m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
-		}
 	}
+
+	// not in the right place, but still in Tick()
+	if (!IsGrounded() && (m_Core.m_HookState != HOOK_GRABBED || m_Core.m_HookedPlayer != -1))
+		m_InAirTick++;
+	else
+		m_InAirTick = 0;
+	// INFCROYA END ------------------------------------------------------------//
 
 	return;
 }
@@ -836,6 +885,73 @@ void CCharacter::SaturateVelocity(vec2 Force, float MaxSpeed)
 
 	m_Core.m_Vel = NewVel;
 }
+
+int CCharacter::GetInfWeaponID(int WID)
+{
+	if (WID == WEAPON_HAMMER)
+	{
+	}
+	else if (WID == WEAPON_GUN)
+	{
+		switch (GetCroyaPlayer()->GetClassNum())
+		{
+		case Class::MERCENARY:
+			return INFWEAPON_MERCENARY_GUN;
+		default:
+			return INFWEAPON_GUN;
+		}
+		return INFWEAPON_GUN;
+	}
+	else if (WID == WEAPON_SHOTGUN)
+	{
+		switch (GetCroyaPlayer()->GetClassNum())
+		{
+		case Class::MEDIC:
+			return INFWEAPON_MEDIC_SHOTGUN;
+		case Class::BIOLOGIST:
+			return INFWEAPON_BIOLOGIST_SHOTGUN;
+		default:
+			return INFWEAPON_SHOTGUN;
+		}
+	}
+	else if (WID == WEAPON_GRENADE)
+	{
+		switch (GetCroyaPlayer()->GetClassNum())
+		{
+		case Class::MERCENARY:
+			return INFWEAPON_MERCENARY_GRENADE;
+		case Class::MEDIC:
+			return INFWEAPON_MEDIC_GRENADE;
+		case Class::SOLDIER:
+			return INFWEAPON_SOLDIER_GRENADE;
+		case Class::SCIENTIST:
+			return INFWEAPON_SCIENTIST_GRENADE;
+		default:
+			return INFWEAPON_GRENADE;
+		}
+	}
+	else if (WID == WEAPON_LASER)
+	{
+		switch (GetCroyaPlayer()->GetClassNum())
+		{
+		case Class::ENGINEER:
+			return INFWEAPON_ENGINEER_RIFLE;
+		case Class::SCIENTIST:
+			return INFWEAPON_SCIENTIST_RIFLE;
+		case Class::BIOLOGIST:
+			return INFWEAPON_BIOLOGIST_RIFLE;
+		case Class::MEDIC:
+			return INFWEAPON_MEDIC_RIFLE;
+		default:
+			return INFWEAPON_RIFLE;
+		}
+	}
+	else if (WID == WEAPON_NINJA)
+	{
+		return INFWEAPON_NINJA;
+	}
+	return INFWEAPON_NONE;
+}
 // INFCROYA END ------------------------------------------------------------//
 
 void CCharacter::OnPredictedInput(CNetObj_PlayerInput *pNewInput)
@@ -988,6 +1104,9 @@ void CCharacter::TickPaused()
 		++m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart;
 	if(m_EmoteStop > -1)
 		++m_EmoteStop;
+	// INFCROYA BEGIN ------------------------------------------------------------
+	++m_HookDmgTick;
+	// INFCROYA END ------------------------------------------------------------//
 }
 
 bool CCharacter::IncreaseHealth(int Amount)

@@ -27,7 +27,7 @@ void CMercenary::InitialWeaponsHealth(CCharacter* pChr)
 {
 	pChr->IncreaseHealth(10);
 	pChr->GiveWeapon(WEAPON_HAMMER, -1);
-	pChr->GiveWeapon(WEAPON_GUN, 10);
+	pChr->GiveWeapon(WEAPON_GUN, pChr->Server()->GetMaxAmmo(INFWEAPON_MERCENARY_GUN));
 	pChr->GiveWeapon(WEAPON_GRENADE, 10);
 	pChr->SetWeapon(WEAPON_GUN);
 	pChr->SetNormalEmote(EMOTE_NORMAL);
@@ -131,6 +131,7 @@ void CMercenary::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CCh
 			pGameServer->CreateSound(pChr->GetPos(), SOUND_GRENADE_FIRE);
 
 			pChr->SetReloadTimer(pChr->Server()->TickSpeed() / 4);
+			pChr->m_aWeapons[WEAPON_GRENADE].m_Ammo++;
 		}
 	} break;
 	}

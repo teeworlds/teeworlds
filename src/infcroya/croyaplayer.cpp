@@ -54,7 +54,6 @@ void CroyaPlayer::Tick()
 			int Dmg = 1;
 			if (dist > inf_circle->GetRadius() && m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
 				m_pCharacter->TakeDamage(vec2(0, 0), m_pCharacter->GetPos(), Dmg, m_ClientID, WEAPON_WORLD);
-				printf("This is printed on win pc & linux vps, but only on windows pc take damage work??? wtf\n");
 			}
 		}
 	}
@@ -74,6 +73,32 @@ void CroyaPlayer::Tick()
 	if (m_RespawnPointCooldown > 0) {
 		if (m_pGameServer->Server()->Tick() % m_pGameServer->Server()->TickSpeed() == 0) { // each second
 			m_RespawnPointCooldown -= 1;
+		}
+	}
+
+	if (IsZombie() && m_pCharacter) {
+		if (m_pCharacter->GetCharacterCore().m_HookedPlayer >= 0) {
+			CCharacter* VictimChar = m_pGameServer->GetPlayerChar(m_pCharacter->GetCharacterCore().m_HookedPlayer);
+			if (VictimChar)
+			{
+				float Rate = 1.0f;
+				int Damage = 1;
+
+				if (GetClassNum() == Class::SMOKER)
+				{
+					Rate = 0.5f;
+					Damage = g_Config.m_InfSmokerHookDamage;
+				}
+
+				if (m_pCharacter->m_HookDmgTick + m_pGameServer->Server()->TickSpeed() * Rate < m_pGameServer->Server()->Tick())
+				{
+					m_pCharacter->m_HookDmgTick = m_pGameServer->Server()->Tick();
+					VictimChar->TakeDamage(vec2(0.0f, 0.0f), m_pCharacter->GetPos(), Damage, m_pPlayer->GetCID(), WEAPON_NINJA);
+					if (GetClassNum() == Class::SMOKER) {
+						m_pCharacter->IncreaseOverallHp(Damage); // blood licking
+					}
+				}
+			}
 		}
 	}
 }

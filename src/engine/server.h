@@ -4,6 +4,9 @@
 #define ENGINE_SERVER_H
 #include "kernel.h"
 #include "message.h"
+// INFCROYA BEGIN ------------------------------------------------------------
+#include <game/server/gamemodes/mod.h> // just to access infweapons enum
+// INFCROYA END ------------------------------------------------------------//
 
 class IServer : public IInterface
 {
@@ -68,6 +71,34 @@ public:
 
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual bool DemoRecorder_IsRecording() = 0;
+
+	// INFCROYA BEGIN ------------------------------------------------------------
+	int m_InfAmmoRegenTime[NB_INFWEAPON];
+	int m_InfFireDelay[NB_INFWEAPON];
+	int m_InfMaxAmmo[NB_INFWEAPON];
+
+	int GetFireDelay(int WID) {
+		return m_InfFireDelay[WID];
+	}
+
+	void SetFireDelay(int WID, int Time) {
+		m_InfFireDelay[WID] = Time;
+	}
+
+	virtual int GetAmmoRegenTime(int WID) {
+		return m_InfAmmoRegenTime[WID];
+	}
+	virtual void SetAmmoRegenTime(int WID, int Time) {
+		m_InfAmmoRegenTime[WID] = Time;
+	}
+
+	virtual int GetMaxAmmo(int WID) {
+		return m_InfMaxAmmo[WID];
+	}
+	virtual void SetMaxAmmo(int WID, int n) {
+		m_InfMaxAmmo[WID] = n;
+	}
+	// INFCROYA END ------------------------------------------------------------//
 };
 
 class IGameServer : public IInterface

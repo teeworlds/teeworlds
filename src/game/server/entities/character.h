@@ -107,6 +107,10 @@ public:
 	bool FindPortalPosition(vec2 Pos, vec2& Res);
 
 	void SaturateVelocity(vec2 Force, float MaxSpeed);
+
+	int m_HookDmgTick;
+	int m_InAirTick;
+	int GetInfWeaponID(int WID);
 	// INFCROYA END ------------------------------------------------------------//
 
 private:
