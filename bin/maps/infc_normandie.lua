@@ -1,4 +1,5 @@
-default_radius = 800
+default_radius = 6500
+min_radius = 800
 default_inf_radius = 360
 timelimit = 4
 
@@ -38,4 +39,7 @@ end
 
 function infc_get_timelimit()
 	return timelimit
+end
+
+function infc_tick()
 end

@@ -47,6 +47,11 @@ float CCircle::GetRadius() const
 	return m_Radius;
 }
 
+void CCircle::SetRadius(float Radius)
+{
+	m_Radius = Radius;
+}
+
 void CCircle::Snap(int SnappingClient)
 {
 	float Radius = m_Radius;

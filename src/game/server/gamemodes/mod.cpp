@@ -184,6 +184,11 @@ void CGameControllerMOD::Tick()
 
 			each->Tick();
 		}
+
+		for (CCircle* circle : circles) {
+			if (circle->GetRadius() > 800)
+				circle->SetRadius(circle->GetRadius() - 1);
+		}
 	}
 
 	// FINAL EXPLOSION BEGIN, todo: write a function for this?

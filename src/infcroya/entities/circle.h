@@ -23,6 +23,7 @@ public:
 
 	int GetOwner() const;
 	float GetRadius() const;
+	void SetRadius(float Radius);
 
 private:
 	int m_IDs[NUM_IDS];

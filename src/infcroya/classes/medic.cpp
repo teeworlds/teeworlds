@@ -31,7 +31,7 @@ void CMedic::InitialWeaponsHealth(CCharacter* pChr)
 	pChr->SetWeapon(WEAPON_GUN);
 	pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
 	pChr->GiveWeapon(WEAPON_GRENADE, 10);
-	pChr->GiveWeapon(WEAPON_LASER, 10);
+	pChr->GiveWeapon(WEAPON_LASER, 1);
 	pChr->SetNormalEmote(EMOTE_NORMAL);
 }
 
