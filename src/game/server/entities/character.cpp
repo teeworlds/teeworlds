@@ -550,30 +550,33 @@ void CCharacter::HandleWeapons()
 	// ammo regen
 	// INFCROYA BEGIN ------------------------------------------------------------
 	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
-		int InfWID = GetInfWeaponID(m_ActiveWeapon);
-		int AmmoRegenTime = Server()->GetAmmoRegenTime(InfWID);
-		int MaxAmmo = Server()->GetMaxAmmo(InfWID);
-
-		if (InfWID == INFWEAPON_MERCENARY_GUN)
+		for (int i = WEAPON_GUN; i <= WEAPON_LASER; i++)
 		{
-			if (m_InAirTick > Server()->TickSpeed() * 4)
-			{
-				AmmoRegenTime = 0;
-			}
-		}
+			int InfWID = GetInfWeaponID(i);
+			int AmmoRegenTime = Server()->GetAmmoRegenTime(InfWID);
+			int MaxAmmo = Server()->GetMaxAmmo(InfWID);
 
-		if (AmmoRegenTime)
-		{
-			if (m_ReloadTimer <= 0)
+			if (InfWID == INFWEAPON_MERCENARY_GUN)
 			{
-				if (m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart < 0)
-					m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = Server()->Tick();
-
-				if ((Server()->Tick() - m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
+				if (m_InAirTick > Server()->TickSpeed() * 4)
 				{
-					// Add some ammo
-					m_aWeapons[m_ActiveWeapon].m_Ammo = min(m_aWeapons[m_ActiveWeapon].m_Ammo + 1, MaxAmmo);
-					m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = -1;
+					AmmoRegenTime = 0;
+				}
+			}
+
+			if (AmmoRegenTime)
+			{
+				if (m_ReloadTimer <= 0)
+				{
+					if (m_aWeapons[i].m_AmmoRegenStart < 0)
+						m_aWeapons[i].m_AmmoRegenStart = Server()->Tick();
+
+					if ((Server()->Tick() - m_aWeapons[i].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
+					{
+						// Add some ammo
+						m_aWeapons[i].m_Ammo = min(m_aWeapons[i].m_Ammo + 1, MaxAmmo);
+						m_aWeapons[i].m_AmmoRegenStart = -1;
+					}
 				}
 			}
 		}

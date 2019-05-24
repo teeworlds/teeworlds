@@ -10,8 +10,10 @@ todo: implement circle resizing, moving etc
 class LuaLoader {
 private:
 	struct lua_State* L;
+	class CGameContext* m_pGameServer;
+	void log_error(const char* error_msg) const;
 public:
-	LuaLoader();
+	LuaLoader(class CGameContext* pGameServer);
 	~LuaLoader();
 
 	// path to file as parameter, e.g "maps/infc_normandie.lua"

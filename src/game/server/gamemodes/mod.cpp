@@ -73,7 +73,7 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 	classes[Class::MERCENARY] = new CMercenary();
 	classes[Class::SMOKER] = new CSmoker();
 
-	LuaLoader temp;
+	LuaLoader temp(GameServer());
 	std::string path_to_lua("maps/");
 	path_to_lua += g_Config.m_SvMap;
 	path_to_lua += ".lua";
@@ -102,7 +102,7 @@ void CGameControllerMOD::Snap(int SnappingClient)
 		if (!each)
 			continue;
 
-		if (each->IsRespawnPointPlaced() && each->GetRespawnPointsNum() >= 1) {
+		if (each->IsZombie() && each->IsRespawnPointPlaced() && each->GetRespawnPointsNum() >= 1) {
 			CNetObj_Pickup* pP = static_cast<CNetObj_Pickup*>(Server()->SnapNewItem(NETOBJTYPE_PICKUP, each->GetClientID(), sizeof(CNetObj_Pickup)));
 			if (!pP)
 				return;
@@ -120,7 +120,7 @@ void CGameControllerMOD::OnRoundStart()
 		std::string path_to_lua("maps/");
 		path_to_lua += g_Config.m_SvMap;
 		path_to_lua += ".lua";
-		lua = new LuaLoader();
+		lua = new LuaLoader(GameServer());
 		lua->load(path_to_lua.c_str());
 		lua->init(GetRealPlayerNum());
 
@@ -166,11 +166,6 @@ void CGameControllerMOD::Tick()
 		OnRoundEnd();
 	}
 
-	if (!IsCroyaWarmup() && !IsGameEnd() && GetZombieCount() < 1 && !m_InfectedStarted) {
-		StartInitialInfection();
-		m_InfectedStarted = true;
-	}
-
 	bool IsGameStarted = !IsCroyaWarmup() && !IsGameEnd();
 
 	if (IsGameStarted && GetRealPlayerNum() < 2) {
@@ -188,6 +183,11 @@ void CGameControllerMOD::Tick()
 		for (CCircle* circle : circles) {
 			if (circle->GetRadius() > 800)
 				circle->SetRadius(circle->GetRadius() - 1);
+		}
+
+		if (GetZombieCount() < 1) {
+			StartInitialInfection();
+			m_InfectedStarted = true; // there should be no need for that though
 		}
 	}
 
@@ -409,8 +409,7 @@ void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 		pChr->GetCharacterCore().m_Pos = NewPos;
 		pChr->GameServer()->CreatePlayerSpawn(NewPos);
 	}
-
-	if (pChr->IsZombie() && players[ClientID]->IsRespawnPointPlaced() && players[ClientID]->GetRespawnPointsNum() >= 1) {
+	else if (pChr->IsZombie() && players[ClientID]->IsRespawnPointPlaced() && players[ClientID]->GetRespawnPointsNum() >= 1) {
 		vec2 NewPos = players[ClientID]->GetRespawnPointPos();
 		pChr->GetCharacterCore().m_Pos = NewPos;
 		pChr->GameServer()->CreatePlayerSpawn(NewPos);

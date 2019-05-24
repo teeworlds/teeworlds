@@ -63,3 +63,4 @@ src/.bam/*
 bin/server
 bin/serverlaunch
 src/.vscode/*
+bin/infcroya.txt
