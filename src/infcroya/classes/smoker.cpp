@@ -43,8 +43,9 @@ void CSmoker::OnWeaponFire(vec2 Direction, vec2 ProjStartPos, int Weapon, CChara
 		for (int i = 0; i < Num; ++i)
 		{
 			CCharacter* pTarget = apEnts[i];
-			if (pTarget->IsZombie() && pTarget != pChr) {
+			if (pTarget->IsZombie() && pTarget != pChr && pTarget->GetHealthArmorSum() < 20) {
 				pTarget->IncreaseOverallHp(4);
+				pChr->IncreaseOverallHp(1);
 				pTarget->SetEmote(EMOTE_HAPPY, pChr->Server()->Tick() + pChr->Server()->TickSpeed());
 			}
 			if ((pTarget == pChr) || pGameServer->Collision()->IntersectLine(ProjStartPos, pTarget->GetPos(), NULL, NULL))

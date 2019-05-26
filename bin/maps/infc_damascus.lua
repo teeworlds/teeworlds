@@ -3,15 +3,16 @@
 default_radius = 10000
 min_radius = 800
 circle_shrink_speed = 1
-default_inf_radius = 360
-timelimit = 4
+default_inf_radius = 250
+timelimit = 5
 
 circle_positions = {}
 
 inf_circle_positions = {
 	-- x, y, radius
-	10, 55, default_inf_radius,
-	15, 21, default_inf_radius,
+	150, 94, default_inf_radius,
+	128, 106, default_inf_radius,
+	124, 90, default_inf_radius,
 }
 
 math.randomseed(os.time())
@@ -21,39 +22,30 @@ function infc_init()
 	-- hardcode passed C/C++ values here (e.g for tests)
 	-- passed values: infc_num_players
 	if infc_num_players < 10 then
-		case = math.random(1, 4) -- four different cases
+		timelimit = 4
+		case = math.random(1, 3) -- three different cases
 		if case == 1 then
 			circle_positions = { 
 				-- x, y, radius, minradius
-				175, 22, default_radius, min_radius, circle_shrink_speed,
+				208, 72, default_radius, min_radius, circle_shrink_speed,
 			}
 		end
 		
 		if case == 2 then
 			circle_positions = { 
 				-- x, y, radius, minradius
-				158, 35, default_radius, min_radius, circle_shrink_speed,
+				23, 89, default_radius, min_radius, circle_shrink_speed,
 			}
 		end
 		
 		if case == 3 then
-		-- Safezone near the broken wall
 			circle_positions = { 
 				-- x, y, radius, minradius
-				108, 52, default_radius, min_radius, circle_shrink_speed,
+				197, 11, default_radius, min_radius, circle_shrink_speed,
 			}
 		end
-		
-		if case == 4 then
-			-- Zombie spawn near the castle and safezone shrinking on the right of the map
-			inf_circle_positions = {
-				206, 21, default_inf_radius,
-			}
-			circle_positions = { 
-				-- x, y, radius, minradius
-				268, 30, default_radius, min_radius, circle_shrink_speed,
-			}
-		end
+	else
+		timelimit = 5
 	end
 end
 

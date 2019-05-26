@@ -147,7 +147,6 @@ void CGameControllerMOD::OnRoundStart()
 			inf_circles.push_back(new CInfCircle(m_pGameWorld, vec2(x, y), -1, inf_radiuses[i]));
 		}
 	}
-	StartInitialInfection();
 	m_InfectedStarted = true;
 	TurnDefaultIntoRandomHuman();
 }
@@ -189,7 +188,7 @@ void CGameControllerMOD::Tick()
 
 		if (GetZombieCount() < 1) {
 			StartInitialInfection();
-			m_InfectedStarted = true; // there should be no need for that though
+			m_InfectedStarted = true;
 		}
 	}
 
@@ -378,7 +377,7 @@ void CGameControllerMOD::OnRoundEnd()
 	circles.clear();
 	inf_circles.clear();
 
-	IGameController::EndRound();
+	IGameController::EndMatch(); // Endmatch instead of endround
 }
 
 bool CGameControllerMOD::DoWincheckMatch()

@@ -8,8 +8,8 @@ class CInfCircle : public CEntity
 private:
 	enum
 	{
-		NUM_SIDE = 48,
-		NUM_HINT = 48,
+		NUM_SIDE = 24,
+		NUM_HINT = 24,
 		NUM_IDS = NUM_SIDE + NUM_HINT,
 	};
 	int m_Owner;
