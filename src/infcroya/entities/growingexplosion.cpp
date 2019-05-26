@@ -171,7 +171,7 @@ void CGrowingExplosion::Tick()
 						case GROWINGEXPLOSIONEFFECT_BOOM_INFECTED:
 							if (random_prob(0.2f))
 							{
-								GameServer()->CreateExplosion(TileCenter, m_Owner, WEAPON_HAMMER, MAX_DAMAGE);
+								GameServer()->CreateExplosion(TileCenter, m_Owner, WEAPON_HAMMER, MAX_DAMAGE, true);
 							}
 							break;
 						case GROWINGEXPLOSIONEFFECT_ELECTRIC_INFECTED:

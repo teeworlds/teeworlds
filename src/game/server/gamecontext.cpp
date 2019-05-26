@@ -121,7 +121,7 @@ void CGameContext::CreateHammerHit(vec2 Pos)
 }
 
 
-void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamage)
+void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamage, bool MercBomb) // INFCROYA RELATED, (bool MercBomb)
 {
 	// create the event
 	CNetEvent_Explosion *pEvent = (CNetEvent_Explosion *)m_Events.Create(NETEVENTTYPE_EXPLOSION, sizeof(CNetEvent_Explosion));
@@ -139,6 +139,11 @@ void CGameContext::CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamag
 	int Num = m_World.FindEntities(Pos, Radius, (CEntity**)apEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 	for(int i = 0; i < Num; i++)
 	{
+		// INFCROYA BEGIN ------------------------------------------------------------
+		if (MercBomb && m_apPlayers[Owner]->GetCroyaPlayer()->IsZombie()) {
+			break;
+		}
+		// INFCROYA END ------------------------------------------------------------//
 		vec2 Diff = apEnts[i]->GetPos() - Pos;
 		vec2 Force(0, MaxForce);
 		float l = length(Diff);
