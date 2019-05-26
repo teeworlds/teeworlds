@@ -1,4 +1,6 @@
-default_radius = 6500
+-- shrinking from 6500 to 800 (with shrink speed = 1) takes 114 seconds
+-- why: 6500 - 800 = 5700; 5700 / TickSpeed = 114; where TickSpeed = 50
+default_radius = 10000
 min_radius = 800
 circle_shrink_speed = 1
 default_inf_radius = 360
@@ -19,13 +21,39 @@ function infc_init()
 	-- hardcode passed C/C++ values here (e.g for tests)
 	-- passed values: infc_num_players
 	if infc_num_players < 10 then
-		case = math.random(1, 1) -- two different cases
-		
+		case = math.random(1, 4) -- four different cases
 		if case == 1 then
 			circle_positions = { 
 				-- x, y, radius, minradius
 				175, 22, default_radius, min_radius, circle_shrink_speed,
 			}
+		end
+		
+		if case == 2 then
+			circle_positions = { 
+				-- x, y, radius, minradius
+				158, 35, default_radius, min_radius, circle_shrink_speed,
+			}
+		end
+		
+		if case == 3 then
+		-- Safezone near the broken wall
+			circle_positions = { 
+				-- x, y, radius, minradius
+				108, 52, default_radius, min_radius, circle_shrink_speed,
+			}
+		end
+		
+		if case == 4 then
+			-- Zombie spawn near the castle and safezone shrinking on the right of the map
+			inf_circle_positions = {
+				206, 21, default_inf_radius,
+			}
+			circle_positions = { 
+				-- x, y, radius, minradius
+				268, 30, default_radius, min_radius, circle_shrink_speed,
+			}
+			timelimit = 2
 		end
 	end
 end
