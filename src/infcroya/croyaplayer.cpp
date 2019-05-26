@@ -361,6 +361,9 @@ int CroyaPlayer::GetOldClassNum() const
 
 void CroyaPlayer::SetOldClassNum(int Class)
 {
+	if (Class == Class::DEFAULT) {
+		Class = Class::MEDIC;
+	}
 	m_OldClassNum = Class;
 }
 

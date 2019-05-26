@@ -9,12 +9,14 @@
 #include <game/server/entities/character.h>
 #include <game/server/player.h>
 
-CCircle::CCircle(CGameWorld* pGameWorld, vec2 Pos, int Owner, float Radius)
+CCircle::CCircle(CGameWorld* pGameWorld, vec2 Pos, int Owner, float Radius, float MinRadius, float ShrinkSpeed)
 	: CEntity(pGameWorld, CGameWorld::ENTTYPE_SCIENTIST_MINE, Pos)
 {
 	m_Pos = Pos;
 	GameWorld()->InsertEntity(this);
 	m_Radius = Radius;
+	m_MinRadius = MinRadius;
+	m_ShrinkSpeed = ShrinkSpeed;
 	m_StartTick = Server()->Tick();
 	m_Owner = Owner;
 
@@ -50,6 +52,26 @@ float CCircle::GetRadius() const
 void CCircle::SetRadius(float Radius)
 {
 	m_Radius = Radius;
+}
+
+float CCircle::GetMinRadius() const
+{
+	return m_MinRadius;
+}
+
+void CCircle::SetMinRadius(float MinRadius)
+{
+	m_MinRadius = MinRadius;
+}
+
+float CCircle::GetShrinkSpeed() const
+{
+	return m_ShrinkSpeed;
+}
+
+void CCircle::SetShrinkSpeed(float ShrinkSpeed)
+{
+	m_ShrinkSpeed = ShrinkSpeed;
 }
 
 void CCircle::Snap(int SnappingClient)

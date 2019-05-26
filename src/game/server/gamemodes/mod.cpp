@@ -77,8 +77,8 @@ CGameControllerMOD::CGameControllerMOD(class CGameContext *pGameServer)
 	std::string path_to_lua("maps/");
 	path_to_lua += g_Config.m_SvMap;
 	path_to_lua += ".lua";
-	temp.load(path_to_lua.c_str());
-	g_Config.m_SvTimelimit = temp.get_timelimit();
+	temp.Load(path_to_lua.c_str());
+	g_Config.m_SvTimelimit = temp.GetTimelimit();
 }
 
 CGameControllerMOD::~CGameControllerMOD()
@@ -121,23 +121,25 @@ void CGameControllerMOD::OnRoundStart()
 		path_to_lua += g_Config.m_SvMap;
 		path_to_lua += ".lua";
 		lua = new LuaLoader(GameServer());
-		lua->load(path_to_lua.c_str());
-		lua->init(GetRealPlayerNum());
+		lua->Load(path_to_lua.c_str());
+		lua->Init(GetRealPlayerNum());
 
 		// positions.size() should be equal to radiuses.size()
 		// safezone circles
-		auto positions = lua->get_circle_positions();
-		auto radiuses = lua->get_circle_radiuses();
+		auto positions = lua->GetCirclePositions();
+		auto radiuses = lua->GetCircleRadiuses();
+		auto min_radiuses = lua->GetCircleMinRadiuses();
+		auto shrink_speeds = lua->GetCircleShrinkSpeeds();
 		for (size_t i = 0; i < positions.size(); i++) {
 			const int TILE_SIZE = 32;
 			int x = positions[i].x * TILE_SIZE;
 			int y = positions[i].y * TILE_SIZE;
-			circles.push_back(new CCircle(m_pGameWorld, vec2(x, y), -1, radiuses[i]));
+			circles.push_back(new CCircle(m_pGameWorld, vec2(x, y), -1, radiuses[i], min_radiuses[i], shrink_speeds[i]));
 		}
 
 		// infection zone circles
-		auto inf_positions = lua->get_inf_circle_positions();
-		auto inf_radiuses = lua->get_inf_circle_radiuses();
+		auto inf_positions = lua->GetInfCirclePositions();
+		auto inf_radiuses = lua->GetInfCircleRadiuses();
 		for (size_t i = 0; i < inf_positions.size(); i++) {
 			const int TILE_SIZE = 32;
 			int x = inf_positions[i].x * TILE_SIZE;
@@ -181,8 +183,8 @@ void CGameControllerMOD::Tick()
 		}
 
 		for (CCircle* circle : circles) {
-			if (circle->GetRadius() > 800)
-				circle->SetRadius(circle->GetRadius() - 1);
+			if (circle->GetRadius() > circle->GetMinRadius())
+				circle->SetRadius(circle->GetRadius() - circle->GetShrinkSpeed());
 		}
 
 		if (GetZombieCount() < 1) {
@@ -398,12 +400,15 @@ void CGameControllerMOD::OnCharacterSpawn(CCharacter* pChr)
 		m_pGameWorld = pChr->GameWorld();
 	}
 
+	if (pChr->IsZombie() && GetZombieCount() == 1) {
+		pChr->IncreaseArmor(10); // +10 armor for lonely zombie
+	}
 	if (pChr->IsZombie() && !IsCroyaWarmup() && !m_ExplosionStarted && !players[ClientID]->IsRespawnPointPlaced() && inf_circles.size() > 0) {
 		const int TILE_SIZE = 32;
 		int RandomInfectionCircleID = random_int_range(0, inf_circles.size() - 1);
 		vec2 NewPos = inf_circles[RandomInfectionCircleID]->GetPos();
-		int RandomShiftX = random_int_range(-2, 2); // todo: make this configurable in .lua
-		int RandomShiftY = random_int_range(-1, -3); // todo: make this configurable in .lua
+		int RandomShiftX = random_int_range(-2, 2); // todo: make this configurable in .lua (?)
+		int RandomShiftY = random_int_range(-1, -3); // todo: make this configurable in .lua (?)
 		NewPos.x += RandomShiftX * TILE_SIZE;
 		NewPos.y += RandomShiftY * TILE_SIZE;
 		pChr->GetCharacterCore().m_Pos = NewPos;

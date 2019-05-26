@@ -700,11 +700,19 @@ void CCharacter::SetNumObjectsHit(int NumObjectsHit)
 void CCharacter::Infect(int From)
 {
 	if (From >= 0) { // -1 and below is a special case (e.g infect when inside infection zone)
+		// Kill message (copypasted from CCharacter::TakeDamage)
+		CNetMsg_Sv_KillMsg Msg;
+		Msg.m_Killer = From;
+		Msg.m_Victim = m_pPlayer->GetCID();
+		Msg.m_Weapon = WEAPON_HAMMER;
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+
 		// BEGIN // do that before you actually turn someone into a zombie
 		GetCroyaPlayer()->SetOldClassNum(GetCroyaPlayer()->GetClassNum());
 		GameServer()->m_apPlayers[From]->GetCroyaPlayer()->OnKill(GetPlayer()->GetCID());
 		// END //   do that before you actually turn someone into a zombie
 	}
+	GetCroyaPlayer()->SetOldClassNum(GetCroyaPlayer()->GetClassNum());
 	GetCroyaPlayer()->TurnIntoRandomZombie();
 }
 
@@ -1133,7 +1141,15 @@ void CCharacter::Die(int Killer, int Weapon)
 	// we got to wait 0.5 secs before respawning
 	m_Alive = false;
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
-	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
+	// INFCROYA BEGIN ------------------------------------------------------------
+	int ModeSpecial;
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		ModeSpecial = 0;
+	}
+	else {
+		ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
+	}
+	// INFCROYA END ------------------------------------------------------------//
 
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "kill killer='%d:%s' victim='%d:%s' weapon=%d special=%d",
@@ -1148,6 +1164,11 @@ void CCharacter::Die(int Killer, int Weapon)
 	Msg.m_Weapon = Weapon;
 	Msg.m_ModeSpecial = ModeSpecial;
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+	// INFCROYA BEGIN ------------------------------------------------------------
+	if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+		GameServer()->m_pController->OnCharacterDeath(this, GameServer()->m_apPlayers[Killer], Weapon);
+	}
+	// INFCROYA END ------------------------------------------------------------//
 
 	// a nice sound
 	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
@@ -1241,7 +1262,7 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 				pChr->m_EmoteType = EMOTE_HAPPY;
 				pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
 				// INFCROYA BEGIN ------------------------------------------------------------
-				if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0) {
+				if (str_comp_nocase(g_Config.m_SvGametype, "mod") == 0 && GameServer()->m_apPlayers[From]) {
 					pChr->GetCroyaPlayer()->OnKill(GetPlayer()->GetCID());
 				}
 				// INFCROYA END ------------------------------------------------------------//

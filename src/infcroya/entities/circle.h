@@ -13,7 +13,7 @@ public:
 	};
 
 public:
-	CCircle(CGameWorld* pGameWorld, vec2 Pos, int Owner, float Radius);
+	CCircle(CGameWorld* pGameWorld, vec2 Pos, int Owner, float Radius, float MinRadius, float ShrinkSpeed);
 	virtual ~CCircle();
 
 	virtual void Snap(int SnappingClient);
@@ -25,9 +25,17 @@ public:
 	float GetRadius() const;
 	void SetRadius(float Radius);
 
+	float GetMinRadius() const;
+	void SetMinRadius(float MinRadius);
+
+	float GetShrinkSpeed() const;
+	void SetShrinkSpeed(float ShrinkSpeed);
+
 private:
 	int m_IDs[NUM_IDS];
 	float m_Radius;
+	float m_MinRadius;
+	float m_ShrinkSpeed;
 
 public:
 	int m_StartTick;

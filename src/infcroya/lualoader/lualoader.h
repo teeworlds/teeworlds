@@ -11,21 +11,23 @@ class LuaLoader {
 private:
 	struct lua_State* L;
 	class CGameContext* m_pGameServer;
-	void log_error(const char* error_msg) const;
+	void LogError(const char* error_msg) const;
 public:
 	LuaLoader(class CGameContext* pGameServer);
 	~LuaLoader();
 
 	// path to file as parameter, e.g "maps/infc_normandie.lua"
-	bool load(const char* filename);
+	bool Load(const char* filename);
 
-	void init(int num_players);
+	void Init(int num_players);
 
-	int get_timelimit() const;
+	int GetTimelimit() const;
 
-	std::vector<vec2> get_circle_positions();
-	std::vector<float> get_circle_radiuses();
+	std::vector<vec2> GetCirclePositions();
+	std::vector<float> GetCircleRadiuses();
+	std::vector<float> GetCircleMinRadiuses();
+	std::vector<float> GetCircleShrinkSpeeds();
 
-	std::vector<vec2> get_inf_circle_positions();
-	std::vector<float> get_inf_circle_radiuses();
+	std::vector<vec2> GetInfCirclePositions();
+	std::vector<float> GetInfCircleRadiuses();
 };
