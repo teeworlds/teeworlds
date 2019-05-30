@@ -563,7 +563,7 @@ static void BitsVariableCommand(IConsole::IResult *pResult, void *pUserData)
 	if(pResult->NumArguments())
 	{	
 		const char* WantedValueString = pResult->GetString(0);
-		int StringLength = str_length(WantedValueString);
+		unsigned int StringLength = str_length(WantedValueString);
 		
 		unsigned long TempBitMask = 0;
 		bool IsCorrectBitPattern = true;
