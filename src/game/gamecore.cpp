@@ -321,18 +321,20 @@ void CCharacterCore::Tick(bool UseInput)
 			}
 
 			// handle hook influence
-			if(m_HookedPlayer == i && m_pWorld->m_Tuning.m_PlayerHooking)
+			if(m_pWorld->m_Tuning.m_PlayerHooking && Distance > PhysSize * 1.50f) // TODO: fix tweakable variable
 			{
-				if(Distance > PhysSize*1.50f) // TODO: fix tweakable variable
+				float Accel = m_pWorld->m_Tuning.m_HookDragAccel * (Distance/m_pWorld->m_Tuning.m_HookLength);
+				float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
+
+				// add force to the hooked player
+				if(pCharCore->m_HookedPlayer != -1 && m_pWorld->m_apCharacters[pCharCore->m_HookedPlayer] == this)
 				{
-					float Accel = m_pWorld->m_Tuning.m_HookDragAccel * (Distance/m_pWorld->m_Tuning.m_HookLength);
-					float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
-
-					// add force to the hooked player
-					pCharCore->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel*Dir.x*1.5f);
-					pCharCore->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel*Dir.y*1.5f);
-
-					// add a little bit force to the guy who has the grip
+					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, Accel*Dir.x*1.5f);
+					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, Accel*Dir.y*1.5f);
+				}
+				// add a little bit force to the guy who has the grip
+				if(m_HookedPlayer == i)
+				{
 					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
 					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
 				}
