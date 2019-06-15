@@ -33,11 +33,14 @@ teeworlds_srv*
 testrunner
 versionsrv*
 
+# IDE project files
 .cproject
 .idea
 .project
 .settings
+.vs
 .vscode
+out
 
 # CMake
 data
