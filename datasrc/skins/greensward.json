@@ -1,0 +1,29 @@
+{"skin": {
+	"body": {
+		"filename": "greensward",
+		"custom_colors": "true",
+		"hue": 85,
+		"sat": 255,
+		"lgt": 0
+	},
+	"marking": {
+		"filename": "duodonny",
+		"custom_colors": "true",
+		"hue": 85,
+		"sat": 255,
+		"lgt": 20,
+		"alp": 255
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "false"
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "false"
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

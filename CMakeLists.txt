@@ -963,6 +963,7 @@ set(EXPECTED_DATA
   skins/bluekitty.json
   skins/bluestripe.json
   skins/body/bear.png
+  skins/body/greensward.png
   skins/body/kitty.png
   skins/body/standard.png
   skins/body/x_ninja.png
@@ -978,6 +979,7 @@ set(EXPECTED_DATA
   skins/eyes/standardreal.png
   skins/eyes/x_ninja.png
   skins/feet/standard.png
+  skins/greensward.json
   skins/hands/standard.png
   skins/koala.json
   skins/limekitty.json
