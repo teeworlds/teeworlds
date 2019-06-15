@@ -33,6 +33,12 @@ teeworlds_srv*
 testrunner
 versionsrv*
 
+.cproject
+.idea
+.project
+.settings
+.vscode
+
 # CMake
 data
 generated
