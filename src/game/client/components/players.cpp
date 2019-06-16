@@ -272,6 +272,31 @@ void CPlayers::RenderPlayer(
 
 	// draw gun
 	{
+		if(m_pClient->m_pControls->m_ShowHookColl && m_pClient->m_LocalClientID == ClientID)
+		{
+			Graphics()->TextureClear();
+			vec2 initPos = Position + Direction * 42.0f;
+			vec2 finishPos = initPos + Direction * (m_pClient->m_Tuning.m_HookLength-60.0f);
+			Graphics()->LinesBegin();
+			Graphics()->SetColor(1.00f, 0.0f, 0.0f, 1.00f);
+
+
+			Graphics()->SetColor(1.00f, 0.0f, 0.0f, 1.00f);
+			if(Collision()->IntersectLine(initPos, finishPos, &finishPos, 0x0))
+			{
+				vec2 finishPosPost = finishPos+Direction * 1.0f;
+				if(!(Collision()->GetCollisionAt(finishPosPost.x, finishPosPost.y)&CCollision::COLFLAG_NOHOOK))
+					Graphics()->SetColor(130.0f/255.0f, 232.0f/255.0f, 160.0f/255.0f, 1.0f);
+			}
+
+			if(m_pClient->IntersectCharacter(initPos, finishPos, 12.0f, finishPos) != -1)
+				Graphics()->SetColor(1.0f, 1.0f, 0.0f, 1.0f);
+
+			IGraphics::CLineItem LineItem(Position.x, Position.y, finishPos.x, finishPos.y);
+			Graphics()->LinesDraw(&LineItem, 1);
+			Graphics()->LinesEnd();
+		}
+
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);

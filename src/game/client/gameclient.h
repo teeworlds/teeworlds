@@ -300,6 +300,10 @@ public:
 	class CItems *m_pItems;
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
+
+	// DDRace
+
+	int IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos);
 };
 
 const char *Localize(const char *pStr, const char *pContext="")
