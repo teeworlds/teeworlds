@@ -55,6 +55,16 @@ private:
 	int m_CurrentPosition;
 	vec2 m_AnimationStartPos;
 	float m_MoveTime;
+
+	// DDrace
+
+	virtual void OnReset();
+	bool m_MenuZoom;
+
+public:
+	static void ConZoomPlus(IConsole::IResult *pResult, void *pUserData);
+	static void ConZoomMinus(IConsole::IResult *pResult, void *pUserData);
+	static void ConZoomReset(IConsole::IResult *pResult, void *pUserData);
 };
 
 #endif
