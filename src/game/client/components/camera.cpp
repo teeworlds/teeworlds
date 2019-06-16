@@ -10,6 +10,8 @@
 #include "camera.h"
 #include "controls.h"
 
+#include <engine/serverbrowser.h>
+
 CCamera::CCamera()
 {
 	m_CamType = CAMTYPE_UNDEFINED;
@@ -38,7 +40,11 @@ void CCamera::OnRender()
 {
 	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
-		m_Zoom = 1.0f;
+		if(m_MenuZoom)
+		{
+			m_MenuZoom = false;
+			m_Zoom = 1.0f;
+		}
 
 		// update camera center
 		if(m_pClient->m_Snap.m_SpecInfo.m_Active && !m_pClient->m_Snap.m_SpecInfo.m_UsePosition &&
@@ -80,6 +86,7 @@ void CCamera::OnRender()
 	}
 	else
 	{
+		m_MenuZoom = true;
 		m_Zoom = 0.7f;
 		static vec2 Dir = vec2(1.0f, 0.0f);
 
@@ -139,6 +146,9 @@ void CCamera::ConSetPosition(IConsole::IResult *pResult, void *pUserData)
 void CCamera::OnConsoleInit()
 {
 	Console()->Register("set_position", "iii", CFGFLAG_CLIENT, ConSetPosition, this, "Sets the rotation position");
+	Console()->Register("zoom+", "", CFGFLAG_CLIENT, ConZoomPlus, this, "Zoom increase");
+	Console()->Register("zoom-", "", CFGFLAG_CLIENT, ConZoomMinus, this, "Zoom decrease");
+	Console()->Register("zoom", "", CFGFLAG_CLIENT, ConZoomReset, this, "Zoom reset");
 }
 
 void CCamera::OnStateChange(int NewState, int OldState)
@@ -147,4 +157,49 @@ void CCamera::OnStateChange(int NewState, int OldState)
 		m_MenuCenter = m_Center;
 	else if(NewState != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		m_Center = m_MenuCenter;
+}
+
+const float ZoomStep = 0.866025f;
+
+void CCamera::OnReset()
+{
+	m_Zoom = 1.0f;
+
+	for(int i = g_Config.m_ClDefaultZoom; i < 10; i++)
+	{
+		m_Zoom *= 1/ZoomStep;
+	}
+	for(int i = g_Config.m_ClDefaultZoom; i > 10; i--)
+	{
+		m_Zoom *= ZoomStep;
+	}
+}
+
+void CCamera::ConZoomPlus(IConsole::IResult *pResult, void *pUserData)
+{
+	CCamera *pSelf = (CCamera *)pUserData;
+	CServerInfo Info;
+	pSelf->Client()->GetServerInfo(&Info);
+	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK || str_find_nocase(Info.m_aGameType, "race"))
+		((CCamera *)pUserData)->m_Zoom *= ZoomStep;
+}
+void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData)
+{
+	CCamera *pSelf = (CCamera *)pUserData;
+	CServerInfo Info;
+	pSelf->Client()->GetServerInfo(&Info);
+	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK || str_find_nocase(Info.m_aGameType, "race"))
+	{
+		if(((CCamera *)pUserData)->m_Zoom < 500.0f/ZoomStep)
+		{
+			((CCamera *)pUserData)->m_Zoom *= 1/ZoomStep;
+		}
+	}
+}
+void CCamera::ConZoomReset(IConsole::IResult *pResult, void *pUserData)
+{
+	CCamera *pSelf = (CCamera *)pUserData;
+	CServerInfo Info;
+	pSelf->Client()->GetServerInfo(&Info);
+	((CCamera *)pUserData)->OnReset();
 }
