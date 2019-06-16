@@ -1997,6 +1997,7 @@ foreach(target ${TARGETS_OWN})
   target_include_directories(${target} PRIVATE ${ZLIB_INCLUDE_DIRS})
   if(CRYPTO_FOUND)
     target_compile_definitions(${target} PRIVATE CONF_OPENSSL)
+    target_include_directories(${target} PRIVATE ${CRYPTO_INCLUDE_DIRS})
   endif()
 endforeach()
 
