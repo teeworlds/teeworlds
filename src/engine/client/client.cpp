@@ -2358,13 +2358,13 @@ void CClient::DemoRecorder_HandleAutoStart()
 	{
 		DemoRecorder_Stop();
 		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "auto/%s", m_aCurrentMap);
+		str_format(aBuf, sizeof(aBuf), "auto-zilly/%s", m_aCurrentMap);
 		DemoRecorder_Start(aBuf, true);
 		if(g_Config.m_ClAutoDemoMax)
 		{
 			// clean up auto recorded demos
 			CFileCollection AutoDemos;
-			AutoDemos.Init(Storage(), "demos/auto", "" /* empty for wild card */, ".demo", g_Config.m_ClAutoDemoMax);
+			AutoDemos.Init(Storage(), "demos/auto-zilly", "" /* empty for wild card */, ".demo", g_Config.m_ClAutoDemoMax);
 		}
 	}
 }
