@@ -806,7 +806,6 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, const SHA
 	return 0x0;
 }
 
-
 static void FormatMapDownloadFilename(const char *pName, const SHA256_DIGEST *pSha256, int Crc, char *pBuffer, int BufferSize)
 {
 	if(pSha256)
@@ -818,6 +817,20 @@ static void FormatMapDownloadFilename(const char *pName, const SHA256_DIGEST *pS
 	else
 	{
 		str_format(pBuffer, BufferSize, "downloadedmaps/%s_%08x.map", pName, Crc);
+	}
+}
+
+static void FormatMapDownloadFilenameZilly(const char *pName, const SHA256_DIGEST *pSha256, int Crc, char *pBuffer, int BufferSize)
+{
+	if(pSha256)
+	{
+		char aSha256[SHA256_MAXSTRSIZE];
+		sha256_str(*pSha256, aSha256, sizeof(aSha256));
+		str_format(pBuffer, BufferSize, "downloadedmaps-zilly/%s_%s.map", pName, aSha256);
+	}
+	else
+	{
+		str_format(pBuffer, BufferSize, "downloadedmaps-zilly/%s_%08x.map", pName, Crc);
 	}
 }
 
@@ -840,6 +853,12 @@ const char *CClient::LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pW
 
 	// try the normal maps folder
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
+	pError = LoadMap(pMapName, aBuf, pWantedSha256, WantedCrc);
+	if(!pError)
+		return pError;
+
+	// try the downloaded maps (zilly)
+	FormatMapDownloadFilenameZilly(pMapName, pWantedSha256, WantedCrc, aBuf, sizeof(aBuf));
 	pError = LoadMap(pMapName, aBuf, pWantedSha256, WantedCrc);
 	if(!pError)
 		return pError;

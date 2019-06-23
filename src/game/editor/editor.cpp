@@ -3372,6 +3372,13 @@ void CEditor::FilelistPopulate(int StorageType)
 		Item.m_IsLink = true;
 		Item.m_StorageType = IStorage::TYPE_SAVE;
 		m_FileList.add(Item);
+
+		str_copy(Item.m_aFilename, "downloadedmaps-zilly", sizeof(Item.m_aFilename));
+		str_copy(Item.m_aName, "downloadedmaps-zilly/", sizeof(Item.m_aName));
+		Item.m_IsDir = true;
+		Item.m_IsLink = true;
+		Item.m_StorageType = IStorage::TYPE_SAVE;
+		m_FileList.add(Item);
 	}
 	Storage()->ListDirectory(StorageType, m_pFileDialogPath, EditorListdirCallback, this);
 	m_FilesSelectedIndex = m_FileList.size() ? 0 : -1;
