@@ -885,6 +885,12 @@ set(EXPECTED_DATA
   editor/checker.png
   editor/cursor.png
   editor/entities.png
+  editor/entities_clear.png
+  editor/front.png
+  editor/speed_arrow.png
+  editor/speedup.png
+  editor/switch.png
+  editor/tele.png
   emoticons.png
   fonts/DejaVuSans.ttf
   game.png
