@@ -17,6 +17,7 @@
 #include <game/client/components/motd.h>
 
 #include "menus.h"
+#include "stats.h"
 #include "scoreboard.h"
 
 
@@ -635,6 +636,9 @@ void CScoreboard::RenderRecordingNotification(float x)
 
 void CScoreboard::OnRender()
 {
+	if(m_pClient->m_pStats->IsActive())
+		return;
+
 	// check if we need to reset the player stats
 	if(!m_SkipPlayerStatsReset && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStartTick == Client()->GameTick())
 	{
