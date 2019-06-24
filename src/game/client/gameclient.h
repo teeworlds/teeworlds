@@ -279,7 +279,6 @@ public:
 	// stats hooks
 	int m_LastGameOver;
 	int m_LastRoundStartTick;
-	void OnGameRestart();
 	void OnRoundStart();
 	void OnFlagGrab(int Id);
 

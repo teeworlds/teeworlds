@@ -1458,11 +1458,6 @@ void CGameClient::OnPredict()
 	m_PredictedTick = Client()->PredGameTick();
 }
 
-void CGameClient::OnGameRestart()
-{
-
-}
-
 void CGameClient::OnActivateEditor()
 {
 	OnRelease();
