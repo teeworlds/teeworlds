@@ -925,6 +925,7 @@ void CGameClient::OnGameOver()
 
 void CGameClient::OnStartGame()
 {
+	m_pStats->OnReset();
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		Client()->DemoRecorder_HandleAutoStart();
 }
@@ -1457,10 +1458,9 @@ void CGameClient::OnPredict()
 	m_PredictedTick = Client()->PredGameTick();
 }
 
-// stats
 void CGameClient::OnGameRestart()
-{	
-	m_pStats->OnReset();
+{
+
 }
 
 void CGameClient::OnActivateEditor()
