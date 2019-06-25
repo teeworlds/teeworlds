@@ -198,7 +198,7 @@ void CStats::OnRender()
 
 		// skip specs
 		if(m_pClient->m_aClients[apPlayers[j]].m_Active && m_pClient->m_aClients[apPlayers[j]].m_Team == TEAM_SPECTATORS)
-			break;
+			continue;
 
 		const CGameClient::CClientStats Stats = m_pClient->m_aStats[apPlayers[j]];		
 		const bool HighlightedLine = (!m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_LocalClientID)
