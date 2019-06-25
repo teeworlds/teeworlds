@@ -64,6 +64,8 @@ public:
 	void OnFlagCapture(int ClientID);
 	void OnPlayerEnter(int ClientID, int Team);
 	void OnPlayerLeave(int ClientID);
+
+	const CPlayerStats *GetPlayerStats(int ClientID) const { return &m_aStats[ClientID]; }
 };
 
 #endif
