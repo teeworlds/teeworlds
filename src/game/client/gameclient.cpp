@@ -770,6 +770,8 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		// calculate team-balance
 		if(m_aClients[pMsg->m_ClientID].m_Team != TEAM_SPECTATORS)
 			m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]++;
+
+		m_pStats->OnPlayerEnter(pMsg->m_ClientID, pMsg->m_Team);
 	}
 	else if(MsgId == NETMSGTYPE_SV_CLIENTDROP && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
@@ -800,6 +802,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			m_GameInfo.m_aTeamSize[m_aClients[pMsg->m_ClientID].m_Team]--;
 
 		m_aClients[pMsg->m_ClientID].Reset(this, pMsg->m_ClientID);
+		m_pStats->OnPlayerLeave(pMsg->m_ClientID);
 	}
 	else if(MsgId == NETMSGTYPE_SV_SKINCHANGE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
