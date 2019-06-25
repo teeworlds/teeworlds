@@ -331,6 +331,15 @@ void CStats::OnRender()
 	}
 }
 
+void CStats::UpdatePlayTime(int Ticks)
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(m_pClient->m_aClients[i].m_Active && m_pClient->m_aClients[i].m_Team != TEAM_SPECTATORS)
+			m_aStats[i].m_IngameTicks += Ticks;
+	}
+}
+
 void CStats::OnMatchStart()
 {
 	for(int i = 0; i < MAX_CLIENTS; i++)

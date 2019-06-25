@@ -1193,6 +1193,9 @@ void CGameClient::OnNewSnapshot()
 					m_pStats->OnMatchStart();
 				}
 
+				if(!(GameFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
+					m_pStats->UpdatePlayTime(Client()->GameTick() - Client()->PrevGameTick());
+
 				s_LastGameFlags = GameFlags;
 				m_LastGameStartTick = m_Snap.m_pGameData->m_GameStartTick;
 			}

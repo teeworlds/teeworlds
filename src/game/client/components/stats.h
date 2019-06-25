@@ -58,6 +58,7 @@ public:
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 
+	void UpdatePlayTime(int Ticks);
 	void OnMatchStart();
 	void OnFlagGrab(int ClientID);
 	void OnFlagCapture(int ClientID);
