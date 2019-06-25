@@ -282,7 +282,7 @@ void CStats::OnRender()
 		}
 		if(g_Config.m_ClStatboardInfos & TC_STATS_FPM)
 		{
-			float Fpm = (float)(pStats->m_Frags * Client()->GameTickSpeed() * 60) / pStats->m_IngameTicks;
+			float Fpm = pStats->m_IngameTicks > 0 ? (float)(pStats->m_Frags * Client()->GameTickSpeed() * 60) / pStats->m_IngameTicks : 0.f;
 			str_format(aBuf, sizeof(aBuf), "%.1f", Fpm);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
