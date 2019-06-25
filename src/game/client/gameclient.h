@@ -56,6 +56,7 @@ class CGameClient : public IGameClient
 	int m_PredictedTick;
 	int m_LastNewPredictedTick;
 
+	int m_LastGameStartTick;
 	int m_LastFlagCarrierRed;
 	int m_LastFlagCarrierBlue;
 

@@ -427,6 +427,7 @@ void CGameClient::OnReset()
 	m_DemoSpecID = -1;
 	m_Tuning = CTuningParams();
 	m_MuteServerBroadcast = false;
+	m_LastGameStartTick = -1;
 	m_LastFlagCarrierRed = FLAG_MISSING;
 	m_LastFlagCarrierBlue = FLAG_MISSING;
 }
@@ -1175,12 +1176,22 @@ void CGameClient::OnNewSnapshot()
 			{
 				m_Snap.m_pGameData = (const CNetObj_GameData *)pData;
 
-				static bool s_GameOver = 0;
-				if(!s_GameOver && m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+				static int s_LastGameFlags = 0;
+				int GameFlags = m_Snap.m_pGameData->m_GameStateFlags;
+				if(!(s_LastGameFlags&GAMESTATEFLAG_GAMEOVER) && GameFlags&GAMESTATEFLAG_GAMEOVER)
 					OnGameOver();
-				else if(s_GameOver && !(m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
+				else if(s_LastGameFlags&GAMESTATEFLAG_GAMEOVER && !(GameFlags&GAMESTATEFLAG_GAMEOVER))
 					OnStartGame();
-				s_GameOver = m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
+
+				// stats
+				if(m_Snap.m_pGameData->m_GameStartTick != m_LastGameStartTick && !(s_LastGameFlags&GAMESTATEFLAG_ROUNDOVER)
+					&& !(s_LastGameFlags&GAMESTATEFLAG_PAUSED) && (!(GameFlags&GAMESTATEFLAG_PAUSED) || GameFlags&GAMESTATEFLAG_STARTCOUNTDOWN))
+				{
+					m_pStats->OnMatchStart();
+				}
+
+				s_LastGameFlags = GameFlags;
+				m_LastGameStartTick = m_Snap.m_pGameData->m_GameStartTick;
 			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEDATATEAM)
 			{
