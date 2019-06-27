@@ -18,6 +18,7 @@
 #include <game/client/components/stats.h>
 
 #include "menus.h"
+#include "stats.h"
 #include "scoreboard.h"
 
 
@@ -630,6 +631,9 @@ void CScoreboard::RenderRecordingNotification(float x)
 
 void CScoreboard::OnRender()
 {
+	if(m_pClient->m_pStats->IsActive())
+		return;
+
 	// postpone the active state till the render area gets updated during the rendering
 	if(m_Activate)
 	{

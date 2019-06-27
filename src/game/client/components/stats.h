@@ -57,6 +57,7 @@ public:
 	virtual void OnConsoleInit();
 	virtual void OnRender();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
+	bool IsActive() const { return m_Active; }
 
 	void UpdatePlayTime(int Ticks);
 	void OnMatchStart();
