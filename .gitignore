@@ -41,6 +41,8 @@ versionsrv*
 .vs
 .vscode
 out
+cscope.files
+cscope.out
 
 # CMake
 data

@@ -15,6 +15,7 @@
 #include <game/client/ui.h>
 #include <game/client/components/countryflags.h>
 #include <game/client/components/motd.h>
+#include <game/client/components/stats.h>
 
 #include "menus.h"
 #include "stats.h"
@@ -41,9 +42,6 @@ void CScoreboard::OnReset()
 	m_Active = false;
 	m_Activate = false;
 	m_PlayerLines = 0;
-	m_SkipPlayerStatsReset = false;
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		ResetPlayerStats(i);
 }
 
 void CScoreboard::OnRelease()
@@ -232,10 +230,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 			pTitle = Localize("Game over");
 		else if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_ROUNDOVER)
-		{
 			pTitle = Localize("Round over");
-			m_SkipPlayerStatsReset = true;
-		}
 		else
 			pTitle = Localize("Scoreboard");
 	}
@@ -567,14 +562,14 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 			// K
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
-			str_format(aBuf, sizeof(aBuf), "%d", clamp(m_aPlayerStats[pInfo->m_ClientID].m_Kills, 0, 999));
+			str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Frags, 0, 999));
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->SetCursor(&Cursor, KillOffset+KillLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
 			Cursor.m_LineWidth = KillLength;
 			TextRender()->TextEx(&Cursor, aBuf, -1);
 
 			// D
-			str_format(aBuf, sizeof(aBuf), "%d", clamp(m_aPlayerStats[pInfo->m_ClientID].m_Deaths, 0, 999));
+			str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Deaths, 0, 999));
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->SetCursor(&Cursor, DeathOffset+DeathLength/2-tw/2, y+Spacing, FontSize, TEXTFLAG_RENDER);
 			Cursor.m_LineWidth = DeathLength;
@@ -636,19 +631,6 @@ void CScoreboard::RenderRecordingNotification(float x)
 
 void CScoreboard::OnRender()
 {
-	if(m_pClient->m_pStats->IsActive())
-		return;
-
-	// check if we need to reset the player stats
-	if(!m_SkipPlayerStatsReset && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStartTick == Client()->GameTick())
-	{
-		m_SkipPlayerStatsReset = true;
-		for(int i = 0; i < MAX_CLIENTS; i++)
-			ResetPlayerStats(i);
-	}
-	else if(m_SkipPlayerStatsReset && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStartTick != Client()->GameTick())
-		m_SkipPlayerStatsReset = false;
-
 	// postpone the active state till the render area gets updated during the rendering
 	if(m_Activate)
 	{
@@ -736,32 +718,10 @@ void CScoreboard::OnRender()
 
 			float tw = TextRender()->TextWidth(0, FontSize, aText, -1, -1.0f);
 			TextRender()->Text(0, Width/2-tw/2, 39, FontSize, aText, -1.0f);
-			m_SkipPlayerStatsReset = true;
 		}
 	}
 
 	RenderRecordingNotification((Width/7)*4);
-}
-
-void CScoreboard::OnMessage(int MsgType, void *pRawMsg)
-{
-	if(MsgType == NETMSGTYPE_SV_KILLMSG)
-	{
-		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
-
-		m_aPlayerStats[pMsg->m_Victim].m_Deaths++;
-		if(pMsg->m_Victim != pMsg->m_Killer)
-			m_aPlayerStats[pMsg->m_Killer].m_Kills++;
-	}
-	else if(MsgType == NETMSGTYPE_SV_CLIENTDROP && Client()->State() != IClient::STATE_DEMOPLAYBACK)
-	{
-		CNetMsg_Sv_ClientDrop *pMsg = (CNetMsg_Sv_ClientDrop *)pRawMsg;
-
-		if(!m_pClient->m_aClients[pMsg->m_ClientID].m_Active)
-			return;
-
-		ResetPlayerStats(pMsg->m_ClientID);
-	}
 }
 
 bool CScoreboard::Active()
@@ -783,11 +743,6 @@ bool CScoreboard::Active()
 		return true;
 
 	return false;
-}
-
-void CScoreboard::ResetPlayerStats(int ClientID)
-{
-	m_aPlayerStats[ClientID].Reset();
 }
 
 CUIRect CScoreboard::GetScoreboardRect()
@@ -822,16 +777,4 @@ const char *CScoreboard::GetClanName(int Team)
 		return pClanName;
 	else
 		return 0;
-}
-
-CScoreboard::CPlayerStats::CPlayerStats()
-{
-	m_Kills = 0;
-	m_Deaths = 0;
-}
-
-void CScoreboard::CPlayerStats::Reset()
-{
-	m_Kills = 0;
-	m_Deaths = 0;
 }
