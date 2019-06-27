@@ -31,8 +31,6 @@ public:
 	vector2_base operator /(const T v) const { return vector2_base(x/v, y/v); }
 	vector2_base operator /(const vector2_base &v) const { return vector2_base(x/v.x, y/v.y); }
 
-	const vector2_base &operator =(const vector2_base &v) { x = v.x; y = v.y; return *this; }
-
 	const vector2_base &operator +=(const vector2_base &v) { x += v.x; y += v.y; return *this; }
 	const vector2_base &operator -=(const vector2_base &v) { x -= v.x; y -= v.y; return *this; }
 	const vector2_base &operator *=(const T v) { x *= v; y *= v; return *this;	}
@@ -126,8 +124,6 @@ public:
 		z = nz;
 	}
 
-	const vector3_base &operator =(const vector3_base &v) { x = v.x; y = v.y; z = v.z; return *this; }
-
 	vector3_base operator -(const vector3_base &v) const { return vector3_base(x-v.x, y-v.y, z-v.z); }
 	vector3_base operator -() const { return vector3_base(-x, -y, -z); }
 	vector3_base operator +(const vector3_base &v) const { return vector3_base(x+v.x, y+v.y, z+v.z); }
@@ -213,8 +209,6 @@ public:
 	vector4_base operator *(const T v) const { return vector4_base(x*v, y*v, z*v, w*v); }
 	vector4_base operator /(const vector4_base &v) const { return vector4_base(x/v.x, y/v.y, z/v.z, w/v.w); }
 	vector4_base operator /(const T v) const { return vector4_base(x/v, y/v, z/v, w/v); }
-
-	const vector4_base &operator =(const vector4_base &v) { x = v.x; y = v.y; z = v.z; w = v.w; return *this; }
 
 	const vector4_base &operator +=(const vector4_base &v) { x += v.x; y += v.y; z += v.z; w += v.w; return *this; }
 	const vector4_base &operator -=(const vector4_base &v) { x -= v.x; y -= v.y; z -= v.z; w -= v.w; return *this; }
