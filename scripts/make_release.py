@@ -20,7 +20,7 @@ if options.source_dir != None:
 
 valid_platforms = ["win32", "win64", "osx", "linux_x86", "linux_x86_64", "src"]
 
-name = "teeworlds"
+name = "zillywoods"
 version = sys.argv[1]
 platform = sys.argv[2]
 exe_ext = ""
@@ -157,13 +157,13 @@ if use_bundle:
 			os.system("lipo -create -output "+bin+" "+" ".join(to_lipo))
 
 	# create Teeworlds appfolder
-	clientbundle_content_dir = os.path.join(package_dir, "Teeworlds.app/Contents")
+	clientbundle_content_dir = os.path.join(package_dir, "ZillyWoods.app/Contents")
 	clientbundle_bin_dir = os.path.join(clientbundle_content_dir, "MacOS")
 	clientbundle_resource_dir = os.path.join(clientbundle_content_dir, "Resources")
 	clientbundle_framework_dir = os.path.join(clientbundle_content_dir, "Frameworks")
 	binary_path = clientbundle_bin_dir + "/" + name+exe_ext
 	freetypelib_path = clientbundle_framework_dir + "/libfreetype.6.dylib"
-	os.mkdir(os.path.join(package_dir, "Teeworlds.app"))
+	os.mkdir(os.path.join(package_dir, "ZillyWoods.app"))
 	os.mkdir(clientbundle_content_dir)
 	os.mkdir(clientbundle_bin_dir)
 	os.mkdir(clientbundle_resource_dir)
@@ -171,7 +171,7 @@ if use_bundle:
 	copy_tree(source_package_dir+"data", clientbundle_resource_dir+"/data")
 	copy_tree(languages_dir, clientbundle_resource_dir+"/data/languages")
 	copy_tree(maps_dir, clientbundle_resource_dir+"/data/maps")
-	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
+	shutil.copy("other/icons/zillywoods.icns", clientbundle_resource_dir)
 	shutil.copy(source_package_dir+name+exe_ext, clientbundle_bin_dir)
 	os.system("install_name_tool -change /usr/local/opt/freetype/lib/libfreetype.6.dylib @executable_path/../Frameworks/libfreetype.6.dylib " + binary_path)
 	os.system("install_name_tool -change /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib @executable_path/../Frameworks/libSDL2-2.0.0.dylib  " + binary_path)
@@ -187,9 +187,9 @@ if use_bundle:
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>teeworlds</string>
+	<string>zillywoods</string>
 	<key>CFBundleIconFile</key>
-	<string>Teeworlds</string>
+	<string>ZillyWoods</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -199,7 +199,7 @@ if use_bundle:
 	<key>CFBundleVersion</key>
 	<string>%s</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.TeeworldsClient.app</string>
+	<string>com.ZillyWoodsClient.app</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
 </dict>
@@ -208,10 +208,10 @@ if use_bundle:
 	open(os.path.join(clientbundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 	# create Teeworlds Server appfolder
-	serverbundle_content_dir = os.path.join(package_dir, "Teeworlds Server.app/Contents")
+	serverbundle_content_dir = os.path.join(package_dir, "ZillyWoods Server.app/Contents")
 	serverbundle_bin_dir = os.path.join(serverbundle_content_dir, "MacOS")
 	serverbundle_resource_dir = os.path.join(serverbundle_content_dir, "Resources")
-	os.mkdir(os.path.join(package_dir, "Teeworlds Server.app"))
+	os.mkdir(os.path.join(package_dir, "ZillyWoods Server.app"))
 	os.mkdir(serverbundle_content_dir)
 	os.mkdir(serverbundle_bin_dir)
 	os.mkdir(serverbundle_resource_dir)
@@ -219,7 +219,7 @@ if use_bundle:
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/maps"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/mapres"))
 	copy_tree(maps_dir, serverbundle_resource_dir+"/data/maps")
-	shutil.copy("other/icons/Teeworlds_srv.icns", serverbundle_resource_dir)
+	shutil.copy("other/icons/zillywoods_srv.icns", serverbundle_resource_dir)
 	shutil.copy(source_package_dir+name+"_srv"+exe_ext, serverbundle_bin_dir)
 	shutil.copy(source_package_dir+"serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
 	open(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
@@ -230,9 +230,9 @@ if use_bundle:
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>teeworlds_server</string>
+	<string>zillywoods_server</string>
 	<key>CFBundleIconFile</key>
-	<string>Teeworlds_srv</string>
+	<string>ZillyWoods_srv</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundlePackageType</key>
@@ -264,7 +264,7 @@ if use_gz:
 if use_dmg:
 	print("making disk image")
 	os.system("rm -f %s.dmg %s_temp.dmg" % (package, package))
-	os.system("hdiutil create -srcfolder %s -volname Teeworlds -quiet %s_temp" % (package_dir, package))
+	os.system("hdiutil create -srcfolder %s -volname ZillyWoods -quiet %s_temp" % (package_dir, package))
 	os.system("hdiutil convert %s_temp.dmg -format UDBZ -o %s.dmg -quiet" % (package, package))
 	os.system("rm -f %s_temp.dmg" % package)
 

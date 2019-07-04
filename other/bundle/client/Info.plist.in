@@ -17,7 +17,7 @@
 		<key>CFBundleVersion</key>
 		<string>${PROJECT_VERSION}</string>
 		<key>CFBundleIdentifier</key>
-		<string>com.TeeworldsClient.app</string>
+		<string>com.ZillyWoodsClient.app</string>
 		<key>NSHighResolutionCapable</key>
 		<true/>
 	</dict>
