@@ -136,10 +136,10 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
 	}
 	View.HSplitTop(Spaceing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
-	pSelf->DoScrollbarOption(&g_Config.m_InpMousesens, &g_Config.m_InpMousesens, &Button, Localize("Ingame mouse sens."), 5, 500);
+	pSelf->DoScrollbarOption(&g_Config.m_InpMousesens, &g_Config.m_InpMousesens, &Button, Localize("Ingame mouse sens."), 1, 500);
 	View.HSplitTop(Spaceing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
-	pSelf->DoScrollbarOption(&g_Config.m_UiMousesens, &g_Config.m_UiMousesens, &Button, Localize("Menu mouse sens."), 5, 500);
+	pSelf->DoScrollbarOption(&g_Config.m_UiMousesens, &g_Config.m_UiMousesens, &Button, Localize("Menu mouse sens."), 1, 500);
 
 	pSelf->UiDoGetButtons(0, 5, View, ButtonHeight, Spaceing);
 
