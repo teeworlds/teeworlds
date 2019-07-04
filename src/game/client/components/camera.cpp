@@ -47,7 +47,7 @@ void CCamera::OnRender()
 		}
 		CServerInfo Info;
 		Client()->GetServerInfo(&Info);
-		if(!(m_pClient->m_Snap.m_SpecInfo.m_Active || (str_find_nocase(Info.m_aGameType, "race") || str_find_nocase(Info.m_aGameType, "fastcap")) || Client()->State() == IClient::STATE_DEMOPLAYBACK))
+		if(!IsZoomAllowed())
 			m_Zoom = 1.0f;
 
 		// update camera center
@@ -179,12 +179,25 @@ void CCamera::OnReset()
 	}
 }
 
+bool CCamera::IsZoomAllowed()
+{
+	CServerInfo Info;
+	Client()->GetServerInfo(&Info);
+	if(m_pClient->m_Snap.m_SpecInfo.m_Active)
+		return true;
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		return true;
+	if(str_find_nocase(Info.m_aGameType, "race") || str_find_nocase(Info.m_aGameType, "fastcap"))
+		return true;
+	return false;
+}
+
 void CCamera::ConZoomPlus(IConsole::IResult *pResult, void *pUserData)
 {
 	CCamera *pSelf = (CCamera *)pUserData;
 	CServerInfo Info;
 	pSelf->Client()->GetServerInfo(&Info);
-	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK || str_find_nocase(Info.m_aGameType, "race"))
+	if(pSelf->IsZoomAllowed())
 		((CCamera *)pUserData)->m_Zoom *= ZoomStep;
 }
 void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData)
@@ -192,7 +205,7 @@ void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData)
 	CCamera *pSelf = (CCamera *)pUserData;
 	CServerInfo Info;
 	pSelf->Client()->GetServerInfo(&Info);
-	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active || pSelf->Client()->State() == IClient::STATE_DEMOPLAYBACK || str_find_nocase(Info.m_aGameType, "race"))
+	if(pSelf->IsZoomAllowed())
 	{
 		if(((CCamera *)pUserData)->m_Zoom < 500.0f/ZoomStep)
 		{

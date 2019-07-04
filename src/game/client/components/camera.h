@@ -59,6 +59,7 @@ private:
 	// DDrace
 
 	virtual void OnReset();
+	bool IsZoomAllowed();
 	bool m_MenuZoom;
 
 public:
