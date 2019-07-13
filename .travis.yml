@@ -10,8 +10,8 @@ script:
 - mkdir build_debug; cd build_debug
 - cmake -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON ..
 - make run_tests
-- cd ..
-- build/teeworlds_srv shutdown
+- cd ../build
+- ./teeworlds_srv shutdown
 env:
   global:
   - CFLAGS="-Wdeclaration-after-statement -Werror"

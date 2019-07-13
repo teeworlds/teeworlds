@@ -1854,7 +1854,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 	// run the server
 	dbg_msg("server", "starting...");
-	pServer->Run();
+	int Ret = pServer->Run();
 
 	// free
 	delete pServer;
@@ -1867,6 +1867,6 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pStorage;
 	delete pConfig;
 
-	return 0;
+	return Ret;
 }
 
