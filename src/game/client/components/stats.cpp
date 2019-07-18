@@ -103,10 +103,6 @@ void CStats::OnRender()
 		if(m_ScreenshotTime < 0 && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 			m_ScreenshotTime = time_get()+time_freq()*3;
 
-		// switch to statboard
-		// if(m_ScreenshotTime > -1 && m_ScreenshotTime < time_get())
-		// 	m_Active = true;
-
 		// when rendered, take screenshot once
 		if(!m_ScreenshotTaken && m_ScreenshotTime > -1 && m_ScreenshotTime+time_freq()/5 < time_get())
 		{
@@ -399,7 +395,6 @@ void CStats::OnPlayerLeave(int ClientID)
 
 void CStats::AutoStatScreenshot()
 {
-	dbg_msg("test", "autostatscreenshot");
 	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		Client()->AutoStatScreenshot_Start();
 }
