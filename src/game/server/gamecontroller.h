@@ -79,6 +79,7 @@ class IGameController
 
 		vec2 m_Pos;
 		bool m_Got;
+		bool m_RandomSpawn;
 		int m_FriendlyTeam;
 		float m_Score;
 	};
@@ -195,6 +196,7 @@ public:
 	bool IsPlayerReadyMode() const;
 	bool IsTeamChangeAllowed() const;
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
+	bool IsSurvival() const { return m_GameFlags&GAMEFLAG_SURVIVAL; }
 	
 	const char *GetGameType() const { return m_pGameType; }
 	
