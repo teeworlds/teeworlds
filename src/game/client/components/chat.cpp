@@ -673,10 +673,6 @@ void CChat::OnRender()
 		--m_PendingChatCounter;
 	}
 
-	// dont render chat if the menu is active
-	if(m_pClient->m_pMenus->IsActive())
-		return;
-
 	const float Height = 300.0f;
 	const float Width = Height*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
