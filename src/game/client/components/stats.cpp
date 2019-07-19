@@ -11,6 +11,8 @@
 CStats::CStats()
 {
 	m_Active = false;
+	m_ScreenshotTaken = false;
+	m_ScreenshotTime = -1;
 }
 
 void CStats::CPlayerStats::Reset()
@@ -38,6 +40,17 @@ void CStats::OnReset()
 	for(int i = 0; i < MAX_CLIENTS; i++)
 		m_aStats[i].Reset();
 	m_Active = false;
+	m_ScreenshotTaken = false;
+	m_ScreenshotTime = -1;
+}
+
+bool CStats::IsActive()
+{
+	// force statboard after three seconds of game over if autostatscreenshot is on
+	if(g_Config.m_ClAutoStatScreenshot && m_ScreenshotTime > -1 && m_ScreenshotTime < time_get())
+		return true;
+
+	return m_Active;
 }
 
 void CStats::ConKeyStats(IConsole::IResult *pResult, void *pUserData)
@@ -83,7 +96,22 @@ void CStats::OnMessage(int MsgType, void *pRawMsg)
 
 void CStats::OnRender()
 {
-	if(!m_Active)
+	// auto stat screenshot stuff
+	if(g_Config.m_ClAutoStatScreenshot)
+	{
+		// on game over, wait three seconds
+		if(m_ScreenshotTime < 0 && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+			m_ScreenshotTime = time_get()+time_freq()*3;
+
+		// when rendered, take screenshot once
+		if(!m_ScreenshotTaken && m_ScreenshotTime > -1 && m_ScreenshotTime+time_freq()/5 < time_get())
+		{
+			AutoStatScreenshot();
+			m_ScreenshotTaken = true;
+		}
+	}
+
+	if(!IsActive())
 		return;
 
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
@@ -342,8 +370,7 @@ void CStats::UpdatePlayTime(int Ticks)
 
 void CStats::OnMatchStart()
 {
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		m_aStats[i].Reset();
+	OnReset();
 }
 
 void CStats::OnFlagGrab(int ClientID)
@@ -364,4 +391,10 @@ void CStats::OnPlayerEnter(int ClientID, int Team)
 void CStats::OnPlayerLeave(int ClientID)
 {
 	m_aStats[ClientID].Reset();
+}
+
+void CStats::AutoStatScreenshot()
+{
+	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
+		Client()->AutoStatScreenshot_Start();
 }
