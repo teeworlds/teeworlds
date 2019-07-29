@@ -2197,6 +2197,7 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 		m_EnterPressed = false;
 	}
 }
+
 void CMenus::DoGameIcon(const char *pName, const CUIRect *pRect)
 {
 	char aNameBuf[128];
