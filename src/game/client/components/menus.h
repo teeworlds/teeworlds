@@ -300,6 +300,8 @@ private:
 	bool m_PopupActive;
 	int m_ActiveListBox;
 	bool m_SkinModified;
+	bool m_KeyReaderWasActive;
+	bool m_KeyReaderIsActive;
 
 	// images
 	struct CMenuImage

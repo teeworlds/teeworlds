@@ -60,6 +60,8 @@ CMenus::CMenus()
 	m_SeekBarActive = true;
 	m_UseMouseButtons = true;
 	m_SkinModified = false;
+	m_KeyReaderWasActive = false;
+	m_KeyReaderIsActive = false;
 
 	SetMenuPage(PAGE_START);
 	m_MenuPageOld = PAGE_START;
@@ -1186,8 +1188,11 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 		UI()->SetHotItem(pBC->GetID());
 
 	// draw
-	if (UI()->CheckActiveItem(pBC->GetID()) && ButtonUsed == 0)
+	if(UI()->CheckActiveItem(pBC->GetID()) && ButtonUsed == 0)
+	{
 		DoButton_KeySelect(pBC, "???", 0, pRect);
+		m_KeyReaderIsActive = true;
+	}
 	else
 	{
 		if(Key == 0)
@@ -2625,6 +2630,14 @@ void CMenus::OnRender()
 		m_PrevCursorActive = false;
 	m_CursorActive = false;
 
+	if(m_KeyReaderIsActive)
+	{
+		m_KeyReaderIsActive = false;
+		m_KeyReaderWasActive = true;
+	}
+	else if(m_KeyReaderWasActive)
+		m_KeyReaderWasActive = false;
+
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		SetActive(true);
 
@@ -2706,7 +2719,7 @@ void CMenus::OnRender()
 
 bool CMenus::CheckHotKey(int Key)
 {
-	return !m_PrevCursorActive && !m_PopupActive && Input()->KeyIsPressed(Key) && !m_pClient->m_pGameConsole->IsConsoleActive();
+	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !m_PrevCursorActive && !m_PopupActive && Input()->KeyIsPressed(Key) && !m_pClient->m_pGameConsole->IsConsoleActive();
 }
 
 void CMenus::RenderBackground()
