@@ -155,6 +155,7 @@ public:
 	virtual void OnRender();
 	virtual void OnRelease();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
+	void OnMessageZilly(int ClientID, const char * pMsg);
 	virtual bool OnInput(IInput::CEvent Event);
 };
 #endif

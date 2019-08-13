@@ -16,6 +16,7 @@
 
 #include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
+#include <game/version.h>
 
 #include "menus.h"
 #include "chat.h"
@@ -503,12 +504,23 @@ void CChat::ClearInput()
 	m_pCommands->Reset();
 }
 
+void CChat::OnMessageZilly(int ClientID, const char * pMsg)
+{
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "/ZillyWoods (v%s) https://github.com/ZillyWoods/ZillyWoods", ZILLYWOODS_VERSION);
+	if (!str_comp(pMsg, "!help"))
+		Say(CHAT_ALL, &aBuf[1]);
+	else if (ClientID == m_pClient->m_LocalClientID && !str_comp(pMsg, aBuf))
+		m_pClient->m_IsCmdSysServer = false;
+}
+
 void CChat::OnMessage(int MsgType, void *pRawMsg)
 {
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
 		AddLine(pMsg->m_ClientID, pMsg->m_Mode, pMsg->m_pMessage, pMsg->m_TargetID);
+		OnMessageZilly(pMsg->m_ClientID, pMsg->m_pMessage);
 	}
 }
 

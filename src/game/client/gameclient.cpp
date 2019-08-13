@@ -385,6 +385,17 @@ void CGameClient::OnInit()
 		m_pMenus->RenderLoading();
 	}
 
+	if(g_Config.m_ClTimeoutCode[0] == '\0')
+	{
+		for(unsigned int i = 0; i < 16; i++)
+		{
+			if (rand() % 2)
+				g_Config.m_ClTimeoutCode[i] = (rand() % 26) + 97;
+			else
+				g_Config.m_ClTimeoutCode[i] = (rand() % 26) + 65;
+		}
+	}
+
 	OnReset();
 
 	int64 End = time_get();
@@ -475,6 +486,8 @@ void CGameClient::OnReset()
 	m_LastGameStartTick = -1;
 	m_LastFlagCarrierRed = FLAG_MISSING;
 	m_LastFlagCarrierBlue = FLAG_MISSING;
+	m_SentTimeoutCode = 0;
+	m_IsCmdSysServer = true;
 }
 
 void CGameClient::UpdatePositions()
@@ -543,8 +556,27 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 	TempCore.Write(pCharacter);
 }
 
+void CGameClient::ZillyWoodsTick()
+{
+	char aBuf[128];
+	if (m_SentTimeoutCode > 0 && m_SentTimeoutCode + time_freq() * 3 < time_get())
+	{
+		m_SentTimeoutCode = -1;
+		if (m_IsCmdSysServer)
+		{
+			str_format(aBuf, sizeof(aBuf), "/timeout %s", g_Config.m_ClTimeoutCode);
+			m_pChat->Say(CHAT_ALL, aBuf);
+		}
+		else
+		{
+			m_pChat->Say(CHAT_ALL, "no chat cmd server");
+		}
+	}
+}
+
 void CGameClient::OnRender()
 {
+	ZillyWoodsTick();
 	// update the local character and spectate position
 	UpdatePositions();
 
@@ -1399,6 +1431,17 @@ void CGameClient::OnNewSnapshot()
 		m_ServerMode = SERVERMODE_PURE;
 	else
 		m_ServerMode = SERVERMODE_PUREMOD;
+
+	if(!m_SentTimeoutCode && m_ServerMode == SERVERMODE_MOD)
+		SendTimeoutCode();
+}
+
+void CGameClient::SendTimeoutCode()
+{
+	m_SentTimeoutCode = time_get();
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "/ZillyWoods (v%s) https://github.com/ZillyWoods/ZillyWoods", ZILLYWOODS_VERSION);
+	m_pChat->Say(CHAT_ALL, aBuf);
 }
 
 void CGameClient::OnDemoRecSnap()
