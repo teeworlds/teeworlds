@@ -334,7 +334,7 @@ class NetIntRange(NetIntAny):
 
 class NetEnum(NetIntRange):
 	def __init__(self, name, enum):
-		NetIntRange.__init__(self, name, 0, len(enum.values))
+		NetIntRange.__init__(self, name, 0, len(enum.values)-1)
 
 class NetFlag(NetIntAny):
 	def __init__(self, name, flag):
