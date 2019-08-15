@@ -186,6 +186,21 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 	return Changes;
 }
 
+void CLineInput::DeleteUntilCursor()
+{
+	char aBuf[MAX_SIZE];
+	str_copy(aBuf, &m_Str[m_CursorPos], sizeof(aBuf));
+	Set(aBuf); SetCursorOffset(0);
+}
+
+void CLineInput::DeleteFromCursor()
+{
+	char aBuf[MAX_SIZE];
+	str_copy(aBuf, m_Str, sizeof(aBuf));
+	aBuf[m_CursorPos] = '\0';
+	Set(aBuf);
+}
+
 bool CLineInput::ProcessInput(IInput::CEvent e)
 {
 	return Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_NumChars, m_pInput);
