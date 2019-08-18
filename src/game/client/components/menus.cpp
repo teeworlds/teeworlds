@@ -76,7 +76,7 @@ CMenus::CMenus()
 	m_DownArrowPressed = false;
 
 	m_LastInput = time_get();
-	
+
 	m_CursorActive = false;
 	m_PrevCursorActive = false;
 
@@ -604,7 +604,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	{
 		// set cursor active
 		m_CursorActive = true;
-		
+
 		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex, -1.0f);
 		Textbox = *pRect;
 		Textbox.VSplitLeft(2.0f, 0, &Textbox);
@@ -1230,7 +1230,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 		// render header backgrounds
 		CUIRect Left, Right;
-		Box.VSplitLeft(ButtonWidth*4.0f + Spacing * 3.0f, &Left, 0);
+		Box.VSplitLeft(ButtonWidth*5.0f + Spacing * 4.0f, &Left, 0);
 		Box.VSplitRight(ButtonWidth, 0, &Right);
 		RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
 		RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
@@ -1261,10 +1261,16 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		if(DoButton_MenuTabTop(&s_CallVoteButton, Localize("Call vote"), m_ActivePage == PAGE_CALLVOTE, &Button, Alpha, Alpha) || CheckHotKey(KEY_V))
 			NewPage = PAGE_CALLVOTE;
 
+		Left.VSplitLeft(Spacing, 0, &Left); // little space
+		Left.VSplitLeft(ButtonWidth, &Button, &Left);
+		static CButtonContainer s_ServerBrowserButton;
+		if(DoButton_MenuTabTop(&s_ServerBrowserButton, Localize("Browser"), m_GamePage == PAGE_INTERNET || m_GamePage == PAGE_LAN, &Button, Alpha, Alpha))
+			NewPage = PAGE_INTERNET;
+
 		static CButtonContainer s_SettingsButton;
 		if(DoButton_MenuTabTop(&s_SettingsButton, Localize("Settings"), m_GamePage == PAGE_SETTINGS, &Right) || CheckHotKey(KEY_S))
 			NewPage = PAGE_SETTINGS;
-		
+
 		Rect.HSplitTop(Spacing, 0, &Rect);
 		Rect.HSplitTop(25.0f, &Box, &Rect);
 	}
@@ -1346,44 +1352,43 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			g_Config.m_UiSettingsPage = SETTINGS_SOUND;
 		}
 	}
+	else if((Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_LAN) || (Client()->State() == IClient::STATE_ONLINE && m_GamePage >= PAGE_INTERNET && m_GamePage <= PAGE_LAN))
+	{
+		float Spacing = 3.0f;
+		float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
+
+		CUIRect Left;
+		Box.VSplitLeft(ButtonWidth*2.0f+Spacing, &Left, 0);
+
+		// render header backgrounds
+		RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
+
+		Left.HSplitBottom(25.0f, 0, &Left);
+
+		Left.VSplitLeft(ButtonWidth, &Button, &Left);
+		static CButtonContainer s_InternetButton;
+		if(DoButton_MenuTabTop(&s_InternetButton, Localize("Global"), m_ActivePage==PAGE_INTERNET, &Button) || CheckHotKey(KEY_G))
+		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
+			ServerBrowser()->SetType(IServerBrowser::TYPE_INTERNET);
+			NewPage = PAGE_INTERNET;
+			g_Config.m_UiBrowserPage = PAGE_INTERNET;
+		}
+
+		Left.VSplitLeft(Spacing, 0, &Left); // little space
+		Left.VSplitLeft(ButtonWidth, &Button, &Left);
+		static CButtonContainer s_LanButton;
+		if(DoButton_MenuTabTop(&s_LanButton, Localize("Local"), m_ActivePage==PAGE_LAN, &Button) || CheckHotKey(KEY_L))
+		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
+			ServerBrowser()->SetType(IServerBrowser::TYPE_LAN);
+			NewPage = PAGE_LAN;
+			g_Config.m_UiBrowserPage = PAGE_LAN;
+		}
+	}
 	else if(Client()->State() == IClient::STATE_OFFLINE)
 	{
-		// render menu tabs
-		if(m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_LAN)
-		{
-			float Spacing = 3.0f;
-			float ButtonWidth = (Box.w/6.0f)-(Spacing*5.0)/6.0f;
-
-			CUIRect Left;
-			Box.VSplitLeft(ButtonWidth*2.0f+Spacing, &Left, 0);
-
-			// render header backgrounds
-			RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
-			
-			Left.HSplitBottom(25.0f, 0, &Left);
-
-			Left.VSplitLeft(ButtonWidth, &Button, &Left);
-			static CButtonContainer s_InternetButton;
-			if(DoButton_MenuTabTop(&s_InternetButton, Localize("Global"), m_ActivePage==PAGE_INTERNET, &Button) || CheckHotKey(KEY_G))
-			{
-				m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
-				ServerBrowser()->SetType(IServerBrowser::TYPE_INTERNET);
-				NewPage = PAGE_INTERNET;
-				g_Config.m_UiBrowserPage = PAGE_INTERNET;
-			}
-
-			Left.VSplitLeft(Spacing, 0, &Left); // little space
-			Left.VSplitLeft(ButtonWidth, &Button, &Left);
-			static CButtonContainer s_LanButton;
-			if(DoButton_MenuTabTop(&s_LanButton, Localize("Local"), m_ActivePage==PAGE_LAN, &Button) || CheckHotKey(KEY_L))
-			{
-				m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
-				ServerBrowser()->SetType(IServerBrowser::TYPE_LAN);
-				NewPage = PAGE_LAN;
-				g_Config.m_UiBrowserPage = PAGE_LAN;
-			}
-		}
-		else if(m_MenuPage == PAGE_DEMOS)
+		if(m_MenuPage == PAGE_DEMOS)
 		{
 			// render header background
 			RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
@@ -1400,8 +1405,8 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 		}
 	}
-	
-	
+
+
 
 	if(NewPage != -1)
 	{
@@ -1764,6 +1769,8 @@ int CMenus::Render()
 			float BarHeight = 60.0f;
 			if(Client()->State() == IClient::STATE_ONLINE && m_GamePage == PAGE_SETTINGS)
 				BarHeight += 3.0f + 25.0f;
+			else if(Client()->State() == IClient::STATE_ONLINE && m_GamePage >= PAGE_INTERNET && m_GamePage <= PAGE_LAN)
+				BarHeight += 3.0f + 25.0f;
 			Screen.VMargin(Screen.w/2-365.0f, &MainView);
 			MainView.HSplitTop(BarHeight, &TabBar, &MainView);
 			RenderMenubar(TabBar);
@@ -1790,7 +1797,7 @@ int CMenus::Render()
 				// draw non-blending X
 				CUIRect XText = Button;
 				// XText.HMargin(Button.h>=20.0f?2.0f:1.0f, &XText);
-				
+
 				UI()->DoLabel(&XText, "\xE2\x9C\x95", XText.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
 				if(UI()->DoButtonLogic(s_QuitButton.GetID(), "\xE2\x9C\x95", 0, &Button))
 				// if(DoButton_SpriteCleanID(&s_QuitButton, IMAGE_FRIENDICONS, SPRITE_FRIEND_X_A, &Button, false))
@@ -1823,6 +1830,10 @@ int CMenus::Render()
 					RenderServerControl(MainView);
 				else if(m_GamePage == PAGE_SETTINGS)
 					RenderSettings(MainView);
+				else if(m_GamePage == PAGE_INTERNET)
+					RenderServerbrowser(MainView);
+				else if(m_GamePage == PAGE_LAN)
+					RenderServerbrowser(MainView);
 			}
 			else
 			{
