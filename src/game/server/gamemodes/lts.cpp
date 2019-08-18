@@ -13,6 +13,20 @@ CGameControllerLTS::CGameControllerLTS(CGameContext *pGameServer) : IGameControl
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_SURVIVAL;
 }
 
+// event
+void CGameControllerLTS::OnCharacterSpawn(class CCharacter *pChr)
+{
+	IGameController::OnCharacterSpawn(pChr);
+
+	// give start equipment
+	pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
+	pChr->GiveWeapon(WEAPON_GRENADE, 10);
+	pChr->GiveWeapon(WEAPON_LASER, 5);
+
+	// prevent respawn
+	pChr->GetPlayer()->m_RespawnDisabled = GetStartRespawnState();
+}
+
 // game
 void CGameControllerLTS::DoWincheckRound()
 {
