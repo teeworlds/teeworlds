@@ -1403,7 +1403,7 @@ int str_utf8_is_whitespace(int code);
 	Remarks:
 		- The strings are treated as zero-terminated strings.
 */
-char *str_utf8_skip_whitespaces(char *str);
+const char *str_utf8_skip_whitespaces(const char *str);
 
 /*
 	Function: str_utf8_rewind
