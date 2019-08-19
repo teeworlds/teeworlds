@@ -60,6 +60,7 @@ void CChat::OnReset()
 		m_LastWhisperFrom = -1;
 		m_ReverseCompletion = false;
 		m_Show = false;
+		m_BacklogPage = 0;
 		m_InputUpdate = false;
 		m_ChatStringOffset = 0;
 		m_CompletionChosen = -1;
