@@ -2851,8 +2851,6 @@ void CMenus::EndScrollRegion(CScrollRegion* pSr)
 	if(pSr->m_WasClipped)
 		UI()->ClipEnable(&pSr->m_OldClipRect);
 
-	dbg_assert(pSr->m_ContentH > 0, "Add some rects with ScrollRegionAddRect()");
-
 	// only show scrollbar if content overflows
 	if(pSr->m_ContentH <= pSr->m_ClipRect.h)
 		return;
