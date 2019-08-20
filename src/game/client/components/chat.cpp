@@ -203,20 +203,17 @@ bool CChat::OnInput(IInput::CEvent Event)
 	// chat history scrolling
 	if(m_Show && Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_PAGEUP || Event.m_Key == KEY_PAGEDOWN))
 	{
-		if(Event.m_Flags&IInput::FLAG_PRESS)
+		if(Event.m_Key == KEY_PAGEUP)
 		{
-			if(Event.m_Key == KEY_PAGEUP)
-			{
-				++m_BacklogPage;
-				if(m_BacklogPage >= MAX_CHAT_PAGES) // will be further capped during rendering
-					m_BacklogPage = MAX_CHAT_PAGES-1;
-			}
-			else if(Event.m_Key == KEY_PAGEDOWN)
-			{
-				--m_BacklogPage;
-				if(m_BacklogPage < 0)
-					m_BacklogPage = 0;
-			}
+			++m_BacklogPage;
+			if(m_BacklogPage >= MAX_CHAT_PAGES) // will be further capped during rendering
+				m_BacklogPage = MAX_CHAT_PAGES-1;
+		}
+		else if(Event.m_Key == KEY_PAGEDOWN)
+		{
+			--m_BacklogPage;
+			if(m_BacklogPage < 0)
+				m_BacklogPage = 0;
 		}
 		return true;
 	}
