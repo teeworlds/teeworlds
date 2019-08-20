@@ -253,7 +253,8 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	// modern scroll
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
-	bool ScrollRegionHasBegun = false;
+	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset);
+	MainView.y += ScrollOffset.y;
 
 	// options
 	static int s_aPlayerIDs[MAX_CLIENTS][2] = {{0}};
@@ -265,12 +266,6 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			if(i == m_pClient->m_LocalClientID || !m_pClient->m_aClients[i].m_Active || m_pClient->m_aClients[i].m_Team != Teams[Team])
 				continue;
 
-			if(!ScrollRegionHasBegun)
-			{
-				ScrollRegionHasBegun = true;
-				BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset);
-				MainView.y += ScrollOffset.y;
-			}
 			MainView.HSplitTop(ButtonHeight, &Row, &MainView);
 			ScrollRegionAddRect(&s_ScrollRegion, Row);
 
@@ -326,9 +321,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			}
 		}
 	}
-
-	if(ScrollRegionHasBegun)
-		EndScrollRegion(&s_ScrollRegion);
+	EndScrollRegion(&s_ScrollRegion);
 }
 
 void CMenus::RenderServerInfo(CUIRect MainView)
