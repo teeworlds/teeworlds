@@ -222,8 +222,24 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	UI()->DoLabel(&Label, Localize("Player options"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-	// headline
+	// prepare headline
 	MainView.HSplitTop(ButtonHeight, &Row, &MainView);
+
+	// background
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
+	MainView.Margin(5.0f, &MainView);
+
+	// prepare scroll
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0, 0);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollSpeed = 15;
+	if(s_ScrollRegion.m_ContentH > s_ScrollRegion.m_ClipRect.h) // scrollbar is shown
+		Row.VSplitRight(ScrollParams.m_ScrollbarWidth, &Row, 0);
+
+	// headline
 	Row.VSplitLeft(ButtonHeight+Spacing, 0, &Row);
 	Row.VSplitLeft(NameWidth, &Label, &Row);
 	Label.y += 2.0f;
@@ -246,17 +262,10 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	// background
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
-	MainView.Margin(5.0f, &MainView);
-
-	// modern scroll
-	static CScrollRegion s_ScrollRegion;
-	vec2 ScrollOffset(0, 0);
-	CScrollRegionParams ScrollParams;
-	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
-	ScrollParams.m_ScrollSpeed = 15;
+	// scroll, ignore margins
+	MainView.Margin(-5.0f, &MainView);
 	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset, &ScrollParams);
+	MainView.Margin(5.0f, &MainView);
 	MainView.y += ScrollOffset.y;
 
 	// options
