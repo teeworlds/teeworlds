@@ -253,7 +253,10 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	// modern scroll
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
-	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollSpeed = 15;
+	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset, &ScrollParams);
 	MainView.y += ScrollOffset.y;
 
 	// options

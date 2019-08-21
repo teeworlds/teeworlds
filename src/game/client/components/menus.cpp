@@ -945,9 +945,6 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 		UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	}
 
-	// list background
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-
 	// setup the variables
 	pState->m_ListBoxView = View;
 	pState->m_ListBoxSelectedIndex = SelectedIndex;

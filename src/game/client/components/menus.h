@@ -122,8 +122,8 @@ private:
 			m_ScrollbarMargin = 5;
 			m_SliderMinHeight = 25;
 			m_ScrollSpeed = 5;
-			m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
-			m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+			m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.25f);
+			m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.25f);
 			m_RailBgColor = vec4(1.0f, 1.0f, 1.0f, 0.25f);
 			m_SliderColor = vec4(0.8f, 0.8f, 0.8f, 1.0f);
 			m_SliderColorHover = vec4(1.0f, 1.0f, 1.0f, 1.0f);
