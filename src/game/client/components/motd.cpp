@@ -50,7 +50,13 @@ void CMotd::OnRender()
 	Graphics()->BlendNormal();
 	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
 
-	TextRender()->Text(0, x+40.0f, y+40.0f, 32.0f, m_aServerMotd, w-80.0f);
+	Rect.Margin(40.0f, &Rect);
+	float TextSize = 32.0f;
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, Rect.x, Rect.y, TextSize, TEXTFLAG_RENDER);
+	Cursor.m_LineWidth = Rect.w;
+	Cursor.m_MaxLines = Rect.h/TextSize;
+	TextRender()->TextEx(&Cursor, m_aServerMotd, -1);
 }
 
 void CMotd::OnMessage(int MsgType, void *pRawMsg)
