@@ -1436,30 +1436,16 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	}
 
 	// scrollbar
-	UI()->ClipEnable(&View);
-	float Length = 0.0f;
-	for(int i = 0; i < NUM_FRIEND_TYPES; ++i)
-	{
-		Length += ms_ListheaderHeight + 2.0f;
-		if(s_ListExtended[i])
-			Length += (20.0f+ms_ListheaderHeight+2.0f)*m_lFriendList[i].size();
-	}
-	static float s_ScrollValue = 0.0f;
-	int ScrollNum = (int)((Length - View.h)/ms_ListheaderHeight)+1;
-	if(ScrollNum > 0)
-	{
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
-			s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
-			s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
-	}
-	if(Length > View.h)
-	{
-		View.VSplitRight(8.0f, &View, &Button);
-		Button.HMargin(5.0f, &Button);
-		s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Button, s_ScrollValue);
-		View.y += (View.h - Length) * s_ScrollValue;
-	}
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0, 0);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollbarWidth = 14;
+	ScrollParams.m_ScrollbarMargin = 5;
+	ScrollParams.m_ScrollSpeed = 15;
+	BeginScrollRegion(&s_ScrollRegion, &View, &ScrollOffset, &ScrollParams);
+	View.y += ScrollOffset.y;
 
 	// show lists
 	// only ~10 buttons will be displayed at once, a sliding window of 20 buttons ought to be enough
@@ -1476,6 +1462,8 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			for(int f = 0; f < m_lFriendList[i].size(); ++f, ++ButtonId)
 			{
 				View.HSplitTop(20.0f + ms_ListheaderHeight, &Rect, &View);
+				ScrollRegionAddRect(&s_ScrollRegion, Rect);
+
 				RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 0.5f, 0.5f, 0.5f), CUI::CORNER_ALL, 5.0f);
 				Rect.VMargin(2.0f, &Rect);
 				Rect.VSplitRight(45.0f, &Rect, &Icon);
@@ -1549,7 +1537,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			s_ListExtended[i] ^= 1;
 		}
 	}
-	UI()->ClipDisable();
+	EndScrollRegion(&s_ScrollRegion);
 
 	// add friend
 	BottomArea.HSplitTop(ms_ListheaderHeight, &Button, &BottomArea);
@@ -2001,27 +1989,17 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		float RowWidth = (RowCount == 0) ? View.w : (View.w * 0.25f);
 		float LineHeight = 20.0f;
 
-		if(RowCount == 0)
-		{
-			float Length = 20.0f * pInfo->m_NumClients;
-			static float s_ScrollValue = 0.0f;
-			int ScrollNum = (int)((Length - View.h)/20.0f)+1;
-			if(ScrollNum > 0)
-			{
-				if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
-					s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
-				if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
-					s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
-			}
-			if(Length > View.h)
-			{
-				View.VSplitRight(8.0f, &View, &Scroll);
-				Scroll.HMargin(5.0f, &Scroll);
-				s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
-				View.y += (View.h - Length) * s_ScrollValue;
-			}
-		}
-		else
+		static CScrollRegion s_ScrollRegion;
+		vec2 ScrollOffset(0, 0);
+		CScrollRegionParams ScrollParams;
+		ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+		ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
+		ScrollParams.m_ScrollbarWidth = 5;
+		ScrollParams.m_ScrollbarMargin = 1;
+		ScrollParams.m_ScrollSpeed = 15;
+		BeginScrollRegion(&s_ScrollRegion, &View, &ScrollOffset, &ScrollParams);
+		View.y += ScrollOffset.y;
+		if(RowCount != 0)
 		{
 			float Width = RowWidth * ((pInfo->m_NumClients+RowCount-1) / RowCount);
 			static float s_ScrollValue = 0.0f;
@@ -2051,6 +2029,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			}
 	
 			Row.HSplitTop(LineHeight, &Name, &Row);
+			ScrollRegionAddRect(&s_ScrollRegion, Name);
 			RenderTools()->DrawUIRect(&Name, vec4(1.0f, 1.0f, 1.0f, (Count % 2 + 1)*0.05f), CUI::CORNER_ALL, 4.0f);
 
 			// friend
@@ -2135,6 +2114,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 
 			++Count;
 		}
+		EndScrollRegion(&s_ScrollRegion);
 	}
 }
 
@@ -2156,9 +2136,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 	//RenderTools()->DrawUIRect(&View, vec4(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
 	ServerHeader.HMargin(2.0f, &ServerHeader);
 	UI()->DoLabel(&ServerHeader, Localize("Scoreboard"), FontSize + 2.0f, CUI::ALIGN_CENTER);
-	UI()->ClipEnable(&ServerScoreboard);
 	RenderDetailScoreboard(ServerScoreboard, pInfo, 0);
-	UI()->ClipDisable();
 }
 
 void CMenus::FriendlistOnUpdate()

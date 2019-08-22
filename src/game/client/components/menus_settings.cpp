@@ -1442,7 +1442,9 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
-	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset, &ScrollParams);
 	MainView.y += ScrollOffset.y;
 
 	static int s_MovementDropdown = 0;
