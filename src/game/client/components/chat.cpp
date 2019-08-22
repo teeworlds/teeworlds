@@ -215,7 +215,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 			if(m_BacklogPage < 0)
 				m_BacklogPage = 0;
 		}
-		return true;
+		return m_Mode != CHAT_NONE;
 	}
 	if(m_Mode == CHAT_NONE)
 		return false;
