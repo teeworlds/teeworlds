@@ -2755,23 +2755,23 @@ void CMenus::BeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOu
 	pSr->m_WasClipped = UI()->IsClipped();
 	pSr->m_OldClipRect = *UI()->ClipArea();
 
-	// only show scrollbar if content overflows
-	const bool ShowScrollbar = pSr->m_ContentH > pClipRect->h ||
-		(pSr->m_Params.m_Flags&CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH);
+	const bool ContentOverflows = pSr->m_ContentH > pClipRect->h;
+	const bool ForceShowScrollbar = pSr->m_Params.m_Flags&CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 
 	CUIRect ScrollBarBg;
-	CUIRect* pModifyRect = ShowScrollbar ? pClipRect : 0;
+	CUIRect* pModifyRect = (ContentOverflows || ForceShowScrollbar) ? pClipRect : 0;
 	pClipRect->VSplitRight(pSr->m_Params.m_ScrollbarWidth, pModifyRect, &ScrollBarBg);
 	ScrollBarBg.Margin(pSr->m_Params.m_ScrollbarMargin, &pSr->m_RailRect);
 
-	if(ShowScrollbar)
+	// only show scrollbar if required
+	if(ContentOverflows || ForceShowScrollbar)
 	{
 		if(pSr->m_Params.m_ScrollbarBgColor.a > 0)
 			RenderTools()->DrawRoundRect(&ScrollBarBg, pSr->m_Params.m_ScrollbarBgColor, 4.0f);
 		if(pSr->m_Params.m_RailBgColor.a > 0)
 			RenderTools()->DrawRoundRect(&pSr->m_RailRect, pSr->m_Params.m_RailBgColor, pSr->m_RailRect.w/2.0f);
 	}
-	else
+	if(!ContentOverflows)
 		pSr->m_ContentScrollOff.y = 0;
 
 	if(pSr->m_Params.m_ClipBgColor.a > 0)
