@@ -464,7 +464,22 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	RenderTools()->DrawUIRect(&Motd, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 	Motd.Margin(5.0f, &Motd);
 
-	TextRender()->Text(0, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, m_pClient->m_pMotd->GetMotd(), Motd.w);
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0, 0);
+	BeginScrollRegion(&s_ScrollRegion, &Motd, &ScrollOffset);
+	Motd.y += ScrollOffset.y;
+
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, TEXTFLAG_RENDER);
+	Cursor.m_LineWidth = Motd.w;
+	TextRender()->TextEx(&Cursor, m_pClient->m_pMotd->GetMotd(), -1);
+
+	// define the MOTD text area and make it scrollable
+	CUIRect MotdTextArea;
+	Motd.HSplitTop(Cursor.m_Y-Motd.y+5.0f, &MotdTextArea, &Motd);
+	ScrollRegionAddRect(&s_ScrollRegion, MotdTextArea);
+
+	EndScrollRegion(&s_ScrollRegion);
 }
 
 bool CMenus::RenderServerControlServer(CUIRect MainView)
