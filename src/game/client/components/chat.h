@@ -13,7 +13,8 @@ class CChat : public CComponent
 
 	enum
 	{
-		MAX_LINES = 50,
+		MAX_LINES = 250,
+		MAX_CHAT_PAGES = 10,
 	};
 
 	struct CLine
@@ -52,6 +53,7 @@ class CChat : public CComponent
 	int m_WhisperTarget;
 	int m_LastWhisperFrom;
 	bool m_Show;
+	int m_BacklogPage;
 	bool m_InputUpdate;
 	int m_ChatStringOffset;
 	int m_OldChatStringLength;
