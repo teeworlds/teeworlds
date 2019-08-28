@@ -33,9 +33,10 @@ void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData)
 {
 	int Result = pResult->GetInteger(0);
 	if(!Result)
-		((CScoreboard *)pUserData)->m_Active = false;
+		((CScoreboard *)pUserData)->m_Activate = false;
 	else
 		((CScoreboard *)pUserData)->m_Activate = true;
+	((CScoreboard *)pUserData)->m_Active = false;
 }
 
 void CScoreboard::OnReset()
