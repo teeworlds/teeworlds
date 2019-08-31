@@ -9,10 +9,6 @@ def unzip(filename, where):
 	except:
 		return False
 
-	# remove extraction folder, if it exists
-	if os.path.exists(z.namelist()[0]):
-		shutil.rmtree(z.namelist()[0])
-
 	# extract files
 	for name in z.namelist():
 		z.extract(name, where)
