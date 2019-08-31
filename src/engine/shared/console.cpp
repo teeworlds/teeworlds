@@ -697,7 +697,7 @@ CConsole::CConsole(int FlagMask)
 	#define MACRO_CONFIG_STR(Name,ScriptName,Len,Def,Flags,Desc) \
 	{ \
 		static CStrVariableData Data = { this, g_Config.m_##Name, Len }; \
-		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc); \
+		Register(#ScriptName, "?s", Flags, StrVariableCommand, &Data, Desc); \
 	}
 
 	#include "config_variables.h"
