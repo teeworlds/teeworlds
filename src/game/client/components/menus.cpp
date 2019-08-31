@@ -1623,7 +1623,7 @@ void CMenus::OnInit()
 	// setup load amount
 	m_LoadCurrent = 0;
 	m_LoadTotal = g_pData->m_NumImages;
-	if(!g_Config.m_ClThreadsoundloading)
+	if(!g_Config.m_SndAsyncLoading)
 		m_LoadTotal += g_pData->m_NumSounds;
 }
 
