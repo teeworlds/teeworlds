@@ -2224,7 +2224,7 @@ const char *str_utf8_skip_whitespaces(const char *str)
 	while(*str)
 	{
 		str_old = str;
-		code = str_utf8_decode((const char **)&str);
+		code = str_utf8_decode(&str);
 
 		if(!str_utf8_is_whitespace(code))
 		{
