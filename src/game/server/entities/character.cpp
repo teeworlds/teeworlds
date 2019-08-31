@@ -288,6 +288,18 @@ void CCharacter::FireWeapon()
 
 	vec2 ProjStartPos = m_Pos+Direction*GetProximityRadius()*0.75f;
 
+	char aBuf[256];
+	str_format(
+		aBuf,
+		sizeof(aBuf),
+		"shot player='%d:%s' team=%d weapon=%d",
+		m_pPlayer->GetCID(),
+		Server()->ClientName(m_pPlayer->GetCID()),
+		m_pPlayer->GetTeam(),
+		m_ActiveWeapon
+	);
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+
 	switch(m_ActiveWeapon)
 	{
 		case WEAPON_HAMMER:
@@ -555,6 +567,20 @@ void CCharacter::TickDefered()
 	bool StuckBefore = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 
 	m_Core.Move();
+
+	vec2 EndPost = m_Core.m_Pos;
+
+	char aBuf[256];
+	str_format(
+		aBuf,
+		sizeof(aBuf),
+		"velocity player='%d:%s' value=%f",
+		m_pPlayer->GetCID(),
+		Server()->ClientName(m_pPlayer->GetCID()),
+		distance(EndPost, StartPos)
+	);
+	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+
 	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
 	bool StuckAfterQuant = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
