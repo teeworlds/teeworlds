@@ -1406,6 +1406,18 @@ int str_utf8_is_whitespace(int code);
 const char *str_utf8_skip_whitespaces(const char *str);
 
 /*
+	Function: str_utf8_trim_whitespaces_right
+		Clears trailing utf8 whitespace characters from a string.
+
+	Parameters:
+		str - Pointer to the string.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+void str_utf8_trim_whitespaces_right(char *str);
+
+/*
 	Function: str_utf8_rewind
 		Moves a cursor backwards in an utf8 string
 
