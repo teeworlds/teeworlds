@@ -74,7 +74,7 @@ set(OpenGL_GL_PREFERENCE LEGACY)
 
 # Set the default build type to Release
 if(NOT(CMAKE_BUILD_TYPE))
-  if(DEV)
+  if(NOT(DEV))
     set(CMAKE_BUILD_TYPE Release)
   else()
     set(CMAKE_BUILD_TYPE Debug)
