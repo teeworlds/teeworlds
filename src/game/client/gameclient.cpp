@@ -50,6 +50,7 @@
 #include "components/sounds.h"
 #include "components/spectator.h"
 #include "components/stats.h"
+#include "components/timemessages.h"
 #include "components/voting.h"
 
 // instanciate all systems
@@ -77,6 +78,7 @@ static CDamageInd gsDamageInd;
 static CVoting gs_Voting;
 static CSpectator gs_Spectator;
 static CStats gs_Stats;
+static CTimeMessages gs_Timemessages;
 
 static CPlayers gs_Players;
 static CNamePlates gs_NamePlates;
@@ -239,6 +241,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(&gs_Notifications);
 	m_All.Add(&gs_Scoreboard);
 	m_All.Add(m_pStats);
+	m_All.Add(&gs_Timemessages);
 	m_All.Add(m_pMotd);
 	m_All.Add(m_pMenus);
 	m_All.Add(&m_pMenus->m_Binder);

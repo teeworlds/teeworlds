@@ -271,6 +271,7 @@ container.images.Add(image_friendicons)
 container.images.Add(image_levelicons)
 container.images.Add(image_sidebaricons)
 container.images.Add(image_chatwhisper)
+container.images.Add(Image("raceflag", "race_flag.png"))
 
 container.pickups.Add(Pickup("health"))
 container.pickups.Add(Pickup("armor"))

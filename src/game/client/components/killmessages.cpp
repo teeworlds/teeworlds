@@ -78,6 +78,9 @@ void CKillMessages::OnMessage(int MsgType, void *pRawMsg)
 
 void CKillMessages::OnRender()
 {
+	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE)
+		return;
+
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
 
