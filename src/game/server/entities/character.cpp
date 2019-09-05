@@ -563,8 +563,6 @@ void CCharacter::TickDefered()
 
 	m_Core.Move();
 
-	vec2 EndPost = m_Core.m_Pos;
-
 	bool StuckAfterMove = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
 	m_Core.Quantize();
 	bool StuckAfterQuant = GameServer()->Collision()->TestBox(m_Core.m_Pos, vec2(28.0f, 28.0f));
