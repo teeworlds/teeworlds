@@ -586,20 +586,18 @@ int CClient::LoadData()
 
 const void *CClient::SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const
 {
-	CSnapshotItem *i;
 	dbg_assert(SnapID >= 0 && SnapID < NUM_SNAPSHOT_TYPES, "invalid SnapID");
-	i = m_aSnapshots[SnapID]->m_pAltSnap->GetItem(Index);
+	const CSnapshotItem *i = m_aSnapshots[SnapID]->m_pAltSnap->GetItem(Index);
 	pItem->m_DataSize = m_aSnapshots[SnapID]->m_pAltSnap->GetItemSize(Index);
 	pItem->m_Type = i->Type();
 	pItem->m_ID = i->ID();
-	return (void *)i->Data();
+	return i->Data();
 }
 
 void CClient::SnapInvalidateItem(int SnapID, int Index)
 {
-	CSnapshotItem *i;
 	dbg_assert(SnapID >= 0 && SnapID < NUM_SNAPSHOT_TYPES, "invalid SnapID");
-	i = m_aSnapshots[SnapID]->m_pAltSnap->GetItem(Index);
+	const CSnapshotItem *i = m_aSnapshots[SnapID]->m_pAltSnap->GetItem(Index);
 	if(i)
 	{
 		if((char *)i < (char *)m_aSnapshots[SnapID]->m_pAltSnap || (char *)i > (char *)m_aSnapshots[SnapID]->m_pAltSnap + m_aSnapshots[SnapID]->m_SnapSize)
@@ -610,33 +608,16 @@ void CClient::SnapInvalidateItem(int SnapID, int Index)
 	}
 }
 
-static const int* SnapSearchKey(const int* pKeysStart, const int* pKeysEnd, int Key)
-{
-	int MiddleIndex = (pKeysEnd - pKeysStart) / 2;
-	int Middle = pKeysStart[MiddleIndex];
-	if(MiddleIndex == 0)
-		return Middle == Key ? pKeysStart : 0x0;
-	if(Middle > Key)
-		return SnapSearchKey(pKeysStart, pKeysStart+MiddleIndex, Key);
-	if(Middle < Key)
-		return SnapSearchKey(pKeysStart+MiddleIndex, pKeysEnd, Key);
-	// ==
-	return pKeysStart + MiddleIndex;
-}
-
 const void *CClient::SnapFindItem(int SnapID, int Type, int ID) const
 {
 	if(!m_aSnapshots[SnapID])
 		return 0x0;
 
-	const int NumItems = m_aSnapshots[SnapID]->m_pSnap->NumItems();
 	CSnapshot* pAltSnap = m_aSnapshots[SnapID]->m_pAltSnap;
-	const int* pItemKeys = pAltSnap->GetItemKeys();
-
 	int Key = (Type<<16)|(ID&0xffff);
-	int Index = SnapSearchKey(pItemKeys, pItemKeys+NumItems, Key) - pItemKeys;
-	if(Index >= 0 && Index < NumItems)
-		return (void *)pAltSnap->GetItem(Index)->Data();
+	int Index = pAltSnap->GetItemIndex(Key);
+	if(Index != -1)
+		return pAltSnap->GetItem(Index)->Data();
 
 	return 0x0;
 }
