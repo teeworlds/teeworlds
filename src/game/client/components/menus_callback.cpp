@@ -159,7 +159,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View, void *pUser)
 	UpdateBindKeys(pSelf->m_pClient->m_pBinds);
 
 	bool JoystickEnabled = g_Config.m_JoystickEnable;
-	int NumOptions = JoystickEnabled ? 3+6 : 1;
+	int NumOptions = JoystickEnabled ? 2+2+6 : 2;
 	float ButtonHeight = 20.0f;
 	float Spaceing = 2.0f;
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spaceing+Spaceing;
@@ -179,6 +179,10 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View, void *pUser)
 	{
 		if(pSelf->m_pClient->Input()->HasJoystick())
 		{
+			View.HSplitTop(Spaceing, 0, &View);
+			View.HSplitTop(ButtonHeight, &Button, &View);
+			pSelf->DoScrollbarOption(&g_Config.m_JoystickSens, &g_Config.m_JoystickSens, &Button, Localize("Joystick sens."), 1, 500);
+
 			View.HSplitTop(Spaceing, 0, &View);
 			View.HSplitTop(ButtonHeight, &Button, &View);
 			pSelf->DoScrollbarOption(&g_Config.m_JoystickTolerance, &g_Config.m_JoystickTolerance, &Button, Localize("Joystick jitter tolerance"), 0, 50);

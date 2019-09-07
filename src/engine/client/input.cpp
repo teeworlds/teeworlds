@@ -108,7 +108,8 @@ void CInput::MouseRelative(float *x, float *y)
 		return;
 
 	int nx = 0, ny = 0;
-	float Sens = g_Config.m_InpMousesens/100.0f;
+	float MouseSens = g_Config.m_InpMousesens/100.0f;
+	float JoystickSens = g_Config.m_JoystickSens/100.0f;
 
 	SDL_GetRelativeMouseState(&nx,&ny);
 
@@ -128,8 +129,8 @@ void CInput::MouseRelative(float *x, float *y)
 		}
 	}
 
-	*x = (nx + j.x)*Sens;
-	*y = (ny + j.y)*Sens;
+	*x = nx*MouseSens + j.x*JoystickSens;
+	*y = ny*MouseSens + j.y*JoystickSens;
 }
 
 void CInput::MouseModeAbsolute()
