@@ -902,6 +902,31 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	return ReturnValue;
 }
 
+void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active)
+{
+	CUIRect Handle;
+	static float OffsetX;
+	pRect->VSplitLeft(7, &Handle, 0); // Slider size
+
+	Handle.x += (pRect->w-Handle.w)*Current;
+
+	// render
+	CUIRect Rail;
+	pRect->HMargin(4.0f, &Rail);
+	RenderTools()->DrawUIRect(&Rail, vec4(1.0f, 1.0f, 1.0f, Active ? 0.25f : 0.125f), CUI::CORNER_ALL, Rail.h/2.0f);
+
+	CUIRect ToleranceArea = Rail;
+	ToleranceArea.w *= Tolerance;
+	ToleranceArea.x += (Rail.w-ToleranceArea.w)/2.0f;
+	vec4 Color = Active ? vec4(0.8f, 0.35f, 0.35f, 1.0f) : vec4(0.7f, 0.5f, 0.5f, 1.0f);
+	RenderTools()->DrawUIRect(&ToleranceArea, Color, CUI::CORNER_ALL, ToleranceArea.h/2.0f);
+
+	CUIRect Slider = Handle;
+	Slider.HMargin(4.0f, &Slider);
+	Color = Active ? vec4(0.95f, 0.95f, 0.95f, 1.0f) : vec4(0.8f, 0.8f, 0.8f, 1.0f);
+	RenderTools()->DrawUIRect(&Slider, Color, CUI::CORNER_ALL, Slider.h/2.0f);
+}
+
 void CMenus::UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle,
 							   float HeaderHeight, float Spacing)
 {

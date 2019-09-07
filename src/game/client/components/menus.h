@@ -92,6 +92,7 @@ private:
 
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
+	void DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);
 	void DoButton_KeySelect(CButtonContainer *pBC, const char *pText, int Checked, const CUIRect *pRect);
 	int DoKeyReader(CButtonContainer *pPC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier);
 
@@ -680,6 +681,8 @@ private:
 						  const sorted_array<CVideoMode>& lModes);
 
 	// found in menu_callback.cpp
+	static float RenderSettingsControlsMouse(CUIRect View, void *pUser);
+	static float RenderSettingsControlsJoystick(CUIRect View, void *pUser);
 	static float RenderSettingsControlsMovement(CUIRect View, void *pUser);
 	static float RenderSettingsControlsWeapon(CUIRect View, void *pUser);
 	static float RenderSettingsControlsVoting(CUIRect View, void *pUser);
@@ -687,6 +690,8 @@ private:
 	static float RenderSettingsControlsScoreboard(CUIRect View, void *pUser);
 	static float RenderSettingsControlsStats(CUIRect View, void *pUser);
 	static float RenderSettingsControlsMisc(CUIRect View, void *pUser);
+
+	void DoJoystickAxisPicker(CUIRect View);
 
 	void SetActive(bool Active);
 
