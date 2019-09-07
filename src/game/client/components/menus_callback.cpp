@@ -89,10 +89,8 @@ void CMenus::UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeigh
 	}
 }
 
-float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
+static void UpdateBindKeys(CBinds* pBinds)
 {
-	CMenus *pSelf = (CMenus*)pUser;
-
 	// this is kinda slow, but whatever
 	for(int i = 0; i < g_KeyCount; i++)
 	{
@@ -104,7 +102,7 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
 	{
 		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
 		{
-			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
+			const char *pBind = pBinds->Get(KeyId, m);
 			if(!pBind[0])
 				continue;
 
@@ -117,6 +115,12 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
 				}
 		}
 	}
+}
+
+float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
+{
+	CMenus *pSelf = (CMenus*)pUser;
+	UpdateBindKeys(pSelf->m_pClient->m_pBinds);
 
 	int NumOptions = 8;
 	float ButtonHeight = 20.0f;
@@ -149,31 +153,7 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View, void *pUser)
 float CMenus::RenderSettingsControlsWeapon(CUIRect View, void *pUser)
 {
 	CMenus *pSelf = (CMenus*)pUser;
-
-	// this is kinda slow, but whatever
-	for(int i = 0; i < g_KeyCount; i++)
-	{
-		gs_aKeys[i].m_KeyId = 0;
-		gs_aKeys[i].m_Modifier = 0;
-	}
-
-	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
-	{
-		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
-		{
-			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
-			if(!pBind[0])
-				continue;
-
-			for(int i = 0; i < g_KeyCount; i++)
-				if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-				{
-					gs_aKeys[i].m_KeyId = KeyId;
-					gs_aKeys[i].m_Modifier = m;
-					break;
-				}
-		}
-	}
+	UpdateBindKeys(pSelf->m_pClient->m_pBinds);
 
 	int NumOptions = 7;
 	float ButtonHeight = 20.0f;
@@ -191,31 +171,7 @@ float CMenus::RenderSettingsControlsWeapon(CUIRect View, void *pUser)
 float CMenus::RenderSettingsControlsVoting(CUIRect View, void *pUser)
 {
 	CMenus *pSelf = (CMenus*)pUser;
-
-	// this is kinda slow, but whatever
-	for(int i = 0; i < g_KeyCount; i++)
-	{
-		gs_aKeys[i].m_KeyId = 0;
-		gs_aKeys[i].m_Modifier = 0;
-	}
-
-	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
-	{
-		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
-		{
-			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
-			if(!pBind[0])
-				continue;
-
-			for(int i = 0; i < g_KeyCount; i++)
-				if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-				{
-					gs_aKeys[i].m_KeyId = KeyId;
-					gs_aKeys[i].m_Modifier = m;
-					break;
-				}
-		}
-	}
+	UpdateBindKeys(pSelf->m_pClient->m_pBinds);
 
 	int NumOptions = 2;
 	float ButtonHeight = 20.0f;
@@ -233,31 +189,7 @@ float CMenus::RenderSettingsControlsVoting(CUIRect View, void *pUser)
 float CMenus::RenderSettingsControlsChat(CUIRect View, void *pUser)
 {
 	CMenus *pSelf = (CMenus*)pUser;
-
-	// this is kinda slow, but whatever
-	for(int i = 0; i < g_KeyCount; i++)
-	{
-		gs_aKeys[i].m_KeyId = 0;
-		gs_aKeys[i].m_Modifier = 0;
-	}
-
-	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
-	{
-		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
-		{
-			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
-			if(!pBind[0])
-				continue;
-
-			for(int i = 0; i < g_KeyCount; i++)
-				if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-				{
-					gs_aKeys[i].m_KeyId = KeyId;
-					gs_aKeys[i].m_Modifier = m;
-					break;
-				}
-		}
-	}
+	UpdateBindKeys(pSelf->m_pClient->m_pBinds);
 
 	int NumOptions = 4;
 	float ButtonHeight = 20.0f;
@@ -325,31 +257,7 @@ float CMenus::RenderSettingsControlsScoreboard(CUIRect View, void *pUser)
 float CMenus::RenderSettingsControlsMisc(CUIRect View, void *pUser)
 {
 	CMenus *pSelf = (CMenus*)pUser;
-
-	// this is kinda slow, but whatever
-	for(int i = 0; i < g_KeyCount; i++)
-	{
-		gs_aKeys[i].m_KeyId = 0;
-		gs_aKeys[i].m_Modifier = 0;
-	}
-
-	for(int KeyId = 0; KeyId < KEY_LAST; KeyId++)
-	{
-		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
-		{
-			const char *pBind = pSelf->m_pClient->m_pBinds->Get(KeyId, m);
-			if(!pBind[0])
-				continue;
-
-			for(int i = 0; i < g_KeyCount; i++)
-				if(str_comp(pBind, gs_aKeys[i].m_pCommand) == 0)
-				{
-					gs_aKeys[i].m_KeyId = KeyId;
-					gs_aKeys[i].m_Modifier = m;
-					break;
-				}
-		}
-	}
+	UpdateBindKeys(pSelf->m_pClient->m_pBinds);
 
 	int NumOptions = 11;
 	int StartOption = 20;
