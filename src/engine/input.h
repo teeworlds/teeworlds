@@ -58,6 +58,10 @@ public:
 	virtual bool KeyPress(int Key, bool CheckCounter=false) const = 0;
 	const char *KeyName(int Key) const { return (Key >= 0 && Key < g_MaxKeys) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
 	virtual void Clear() = 0;
+	
+	// joystick
+	virtual bool HasJoystick() const = 0;
+	virtual float GetJoystickAxisValue(int Axis) const = 0;
 
 	// mouse
 	virtual void MouseModeRelative() = 0;
