@@ -69,11 +69,12 @@ void CStats::OnMessage(int MsgType, void *pRawMsg)
 	{
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
 		
-		m_aStats[pMsg->m_Victim].m_Deaths++;
+		if(pMsg->m_Weapon != -3)	// team switch
+			m_aStats[pMsg->m_Victim].m_Deaths++;
 		m_aStats[pMsg->m_Victim].m_CurrentSpree = 0;
 		if(pMsg->m_Weapon >= 0)
 			m_aStats[pMsg->m_Victim].m_aDeathsFrom[pMsg->m_Weapon]++;
-		if(pMsg->m_ModeSpecial & 1)
+		if((pMsg->m_ModeSpecial & 1) && (pMsg->m_Weapon != -3))
 			m_aStats[pMsg->m_Victim].m_DeathsCarrying++;
 		if(pMsg->m_Victim != pMsg->m_Killer)
 		{
@@ -89,7 +90,7 @@ void CStats::OnMessage(int MsgType, void *pRawMsg)
 			if(pMsg->m_ModeSpecial & 2)
 				m_aStats[pMsg->m_Killer].m_KillsCarrying++;
 		}
-		else
+		else if(pMsg->m_Weapon != -3)
 			m_aStats[pMsg->m_Victim].m_Suicides++;
 	}
 }
