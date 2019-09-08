@@ -31,12 +31,15 @@ CScoreboard::CScoreboard()
 
 void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData)
 {
+	CScoreboard *pScoreboard = (CScoreboard *)pUserData;
 	int Result = pResult->GetInteger(0);
 	if(!Result)
-		((CScoreboard *)pUserData)->m_Activate = false;
-	else
-		((CScoreboard *)pUserData)->m_Activate = true;
-	((CScoreboard *)pUserData)->m_Active = false;
+	{
+		pScoreboard->m_Activate = false;
+		pScoreboard->m_Active = false;
+	}
+	else if(!pScoreboard->m_Active)
+		pScoreboard->m_Activate = true;	
 }
 
 void CScoreboard::OnReset()
