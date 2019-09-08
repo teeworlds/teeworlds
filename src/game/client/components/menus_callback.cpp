@@ -388,7 +388,6 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 		m_pClient->UI()->DoLabel(&Button, aBuf, 13.0f, CUI::ALIGN_CENTER);
 		
 		// Device status
-		int StatusBarHeight;
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 		Row.VSplitLeft(StatusWidth, &Button, &Row);
 		Button.HSplitTop(14.0f, &Button, 0);
