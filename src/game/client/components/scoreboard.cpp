@@ -209,7 +209,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	// count players
 	dbg_assert(Team == TEAM_RED || Team == TEAM_BLUE, "Unknown team id");
 	int NumPlayers = m_pClient->m_GameInfo.m_aTeamSize[Team];
-	m_PlayerLines = max(m_PlayerLines, NumPlayers);
+	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+		m_PlayerLines = max(m_pClient->m_GameInfo.m_aTeamSize[Team^1], NumPlayers);
+	else
+		m_PlayerLines = NumPlayers;
 
 	// clamp to 16
 	if(m_PlayerLines > 16)
