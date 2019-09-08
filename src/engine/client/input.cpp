@@ -17,6 +17,11 @@
 #include "keynames.h"
 #undef KEYS_INCLUDE
 
+// support older SDL version (pre 2.0.6)
+#ifndef SDL_JOYSTICK_AXIS_MAX
+	#define SDL_JOYSTICK_AXIS_MAX 32767
+#endif
+
 void CInput::AddEvent(char *pText, int Key, int Flags)
 {
 	if(m_NumEvents != INPUT_BUFFER_SIZE)
