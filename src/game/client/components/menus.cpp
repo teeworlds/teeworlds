@@ -905,7 +905,6 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active)
 {
 	CUIRect Handle;
-	static float OffsetX;
 	pRect->VSplitLeft(7, &Handle, 0); // Slider size
 
 	Handle.x += (pRect->w-Handle.w)*Current;
