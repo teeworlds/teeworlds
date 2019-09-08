@@ -155,7 +155,10 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 				pResult->AddArgument(pStr);
 
 				if(Command == 'r') // rest of the string
+				{
+					str_utf8_trim_whitespaces_right(pStr);
 					break;
+				}
 				else if(Command == 'i') // validate int
 					pStr = str_skip_to_whitespace(pStr);
 				else if(Command == 'f') // validate float
@@ -697,7 +700,7 @@ CConsole::CConsole(int FlagMask)
 	#define MACRO_CONFIG_STR(Name,ScriptName,Len,Def,Flags,Desc) \
 	{ \
 		static CStrVariableData Data = { this, g_Config.m_##Name, Len }; \
-		Register(#ScriptName, "?s", Flags, StrVariableCommand, &Data, Desc); \
+		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc); \
 	}
 
 	#include "config_variables.h"
