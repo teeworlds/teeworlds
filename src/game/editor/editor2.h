@@ -616,6 +616,8 @@ class CEditor2: public IEditor
 	void BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID);
 	void TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY);
 
+	void CenterViewOnQuad(const CQuad& Quad);
+
 	inline bool IsToolSelect() const { return m_Tool == TOOL_SELECT; }
 	inline bool IsToolDimension() const { return m_Tool == TOOL_DIMENSION; }
 	inline bool IsToolBrush() const { return m_Tool == TOOL_TILE_BRUSH; }

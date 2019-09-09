@@ -32,12 +32,12 @@
 
 static char s_aEdMsg[256];
 #define ed_log(...)\
-	str_format(s_aEdMsg, sizeof(s_aEdMsg), ##__VA_ARGS__);\
+	str_format(s_aEdMsg, sizeof(s_aEdMsg), __VA_ARGS__);\
 	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", s_aEdMsg);
 
 #ifdef CONF_DEBUG
 	#define ed_dbg(...)\
-		str_format(s_aEdMsg, sizeof(s_aEdMsg), ##__VA_ARGS__);\
+		str_format(s_aEdMsg, sizeof(s_aEdMsg), __VA_ARGS__);\
 		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg);
 #else
 	#define ed_dbg(...)
@@ -1809,16 +1809,13 @@ void CEditor2::RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer)
 	Graphics()->QuadsEnd();
 }
 
-inline vec2 CEditor2::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY,
-										   float ParallaxX, float ParallaxY)
+inline vec2 CEditor2::CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX, float ParallaxY)
 {
 	// we add UiScreenRect.w*0.5 and UiScreenRect.h*0.5 because in the game the view
 	// is based on the center of the screen
 	const CUIRect UiScreenRect = m_UiScreenRect;
-	const float MapOffX = (((m_MapUiPosOffset.x+UiScreenRect.w*0.5) * ParallaxX) - UiScreenRect.w*0.5)/
-						  UiScreenRect.w * WorldWidth + PosX;
-	const float MapOffY = (((m_MapUiPosOffset.y+UiScreenRect.h*0.5) * ParallaxY) - UiScreenRect.h*0.5)/
-						  UiScreenRect.h * WorldHeight + PosY;
+	const float MapOffX = (((m_MapUiPosOffset.x+UiScreenRect.w*0.5) * ParallaxX) - UiScreenRect.w*0.5)/UiScreenRect.w * WorldWidth + PosX;
+	const float MapOffY = (((m_MapUiPosOffset.y+UiScreenRect.h*0.5) * ParallaxY) - UiScreenRect.h*0.5)/UiScreenRect.h * WorldHeight + PosY;
 	return vec2(MapOffX, MapOffY);
 }
 
@@ -1917,8 +1914,7 @@ void CEditor2::RenderMap()
 	SelectedPositionX = SelectedGroup.m_OffsetX;
 	SelectedPositionY = SelectedGroup.m_OffsetY;
 
-	const vec2 SelectedScreenOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
-		SelectedPositionX, SelectedPositionY, SelectedParallaxX, SelectedParallaxY);
+	const vec2 SelectedScreenOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight, SelectedPositionX, SelectedPositionY, SelectedParallaxX, SelectedParallaxY);
 
 	// background
 	{
@@ -1958,7 +1954,7 @@ void CEditor2::RenderMap()
 		Graphics()->MapScreen(ClipScreenRect.x, ClipScreenRect.y, ClipScreenRect.x+ClipScreenRect.w,
 			ClipScreenRect.y+ClipScreenRect.h);
 
-		const bool Clipped = Group.m_ClipWidth > 0 && Group.m_ClipHeight > 0;
+		const bool Clipped = Group.m_UseClipping && Group.m_ClipWidth > 0 && Group.m_ClipHeight > 0;
 		if(Clipped)
 		{
 			float x0 = (Group.m_ClipX - ClipScreenRect.x) / ClipScreenRect.w;
@@ -3696,6 +3692,9 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				UiBeginScrollRegion(&s_QuadListSR, &DetailRect, &QuadListScrollOff);
 				QuadListRegionRect.y += QuadListScrollOff.y;
 
+				enum { MAX_QUAD_BUTTONS = 32 };
+				static CUIButton s_Buttons[MAX_QUAD_BUTTONS];
+
 				// quad list
 				for(int QuadId = 0; QuadId < QuadCount; QuadId++)
 				{
@@ -3705,8 +3704,24 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 					QuadListRegionRect.HSplitTop(Spacing, 0, &QuadListRegionRect);
 					ButtonRect.VSplitRight(8.0f, &ButtonRect, 0);
 					ButtonRect.VSplitRight(ButtonHeight, &ButtonRect, &PreviewRect);
-					DrawRect(ButtonRect, vec4(0,0,0,1));
-					str_format(aBuff, sizeof(aBuff), "  Quad #%d", QuadId+1);
+
+					CUIButton& ButBeh = s_Buttons[QuadId%MAX_QUAD_BUTTONS]; // hacky
+					UiDoButtonBehavior(&ButBeh, ButtonRect, &ButBeh);
+
+					vec4 ButtonColor = StyleColorButton;
+					if(ButBeh.m_Pressed) {
+						ButtonColor = StyleColorButtonPressed;
+					}
+					else if(ButBeh.m_Hovered) {
+						ButtonColor = StyleColorButtonHover;
+					}
+
+					if(ButBeh.m_Clicked) {
+						CenterViewOnQuad(Quad);
+					}
+
+					DrawRect(ButtonRect, ButtonColor);
+					str_format(aBuff, sizeof(aBuff), "Quad #%d", QuadId+1);
 					DrawText(ButtonRect, aBuff, FontSize);
 
 					// preview
@@ -5217,6 +5232,25 @@ void CEditor2::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int
 	}
 
 	SetNewBrush(aExtractTiles.base_ptr(), Width, Height);
+}
+
+void CEditor2::CenterViewOnQuad(const CQuad &Quad)
+{
+	// FIXME: does not work at all
+	dbg_assert(m_UiSelectedGroupID >= 0, "No group selected");
+	const CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
+
+	CUIRect Rect;
+	Rect.x = fx2f(Quad.m_aPoints[0].x);
+	Rect.y = fx2f(Quad.m_aPoints[0].y);
+	Rect.w = 10;
+	Rect.h = 10;
+
+	CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_UiSelectedGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, Rect);
+	vec2 UiOffset = vec2(UiRect.x, UiRect.y);
+
+	ed_log("ScreenOffset = { %g, %g }", UiOffset.x, UiOffset.y);
+	m_MapUiPosOffset = UiOffset - vec2(m_UiScreenRect.w/2, m_UiScreenRect.h/2);
 }
 
 bool CEditor2::LoadMap(const char* pFileName)
