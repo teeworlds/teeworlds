@@ -1629,8 +1629,9 @@ void CEditor2::Update()
 			if(IsCtrlPressed && Input()->KeyPress(KEY_A))
 				ChangePage((m_Page+1) % PAGE_COUNT_);
 
-			if(IsToolSelect() && Input()->KeyPress(KEY_ESCAPE))
+			if(IsToolSelect() && Input()->KeyPress(KEY_ESCAPE)) {
 				m_TileSelection.Deselect();
+			}
 			if(IsToolBrush() && Input()->KeyPress(KEY_ESCAPE))
 				BrushClear();
 		}
@@ -2585,8 +2586,7 @@ void CEditor2::RenderMapEditorUI()
 				(m_TileSelection.m_EndTY+1-m_TileSelection.m_StartTY)*TileSize
 			};
 
-			CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_UiSelectedGroupID, m_ZoomWorldViewWidth,
-				m_ZoomWorldViewHeight, SelectRect);
+			CUIRect UiRect = CalcUiRectFromGroupWorldRect(m_UiSelectedGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, SelectRect);
 
 			const float Margin = 4.0f;
 			const float ButtonHeight = 25;
@@ -5731,6 +5731,7 @@ void CEditor2::EditTileSelectionFlipX(int LayerID)
 		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY);
 	BrushFlipX();
 	BrushPaintLayer(m_TileSelection.m_StartTX, m_TileSelection.m_StartTY, LayerID);
+	BrushClear();
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
@@ -5748,6 +5749,7 @@ void CEditor2::EditTileSelectionFlipY(int LayerID)
 		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY);
 	BrushFlipY();
 	BrushPaintLayer(m_TileSelection.m_StartTX, m_TileSelection.m_StartTY, LayerID);
+	BrushClear();
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
