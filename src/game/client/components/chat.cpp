@@ -98,7 +98,7 @@ void CChat::OnMapLoad()
 		{
 			// display map rotation marker in chat
 			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), Localize("Map changed to %s"), Client()->GetCurrentMapName());
+			str_format(aBuf, sizeof(aBuf), Localize("Map changed to '%s'"), Client()->GetCurrentMapName());
 			AddLine(CLIENT_MSG, CHAT_ALL, aBuf);
 		}
 	}
