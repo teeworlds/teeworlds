@@ -222,30 +222,24 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	UI()->DoLabel(&Label, Localize("Player options"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-	// scroll
-	CUIRect Scroll;
-	int NumClients = 0;
-	for(int i = 0; i < MAX_CLIENTS; ++i)
-		if(i != m_pClient->m_LocalClientID && m_pClient->m_aClients[i].m_Active)
-			NumClients++;
-	float Length = ButtonHeight * NumClients;
-	static float s_ScrollValue = 0.0f;
-	int ScrollNum = (int)((Length - MainView.h)/20.0f)+1;
-	if(ScrollNum > 0)
-	{
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&MainView))
-			s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&MainView))
-			s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
-	}
-	MainView.VSplitRight(20.0f, &MainView, &Scroll);
-	Scroll.HSplitTop(ButtonHeight, 0, &Scroll);
-	RenderTools()->DrawUIRect(&Scroll, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
-	Scroll.HMargin(5.0f, &Scroll);
-	s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
+	// prepare headline
+	MainView.HSplitTop(ButtonHeight, &Row, &MainView);
+
+	// background
+	RenderTools()->DrawUIRect(&MainView, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
+	MainView.Margin(5.0f, &MainView);
+
+	// prepare scroll
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0, 0);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollSpeed = 15;
+	if(s_ScrollRegion.m_ContentH > s_ScrollRegion.m_ClipRect.h) // scrollbar is shown
+		Row.VSplitRight(ScrollParams.m_ScrollbarWidth, &Row, 0);
 
 	// headline
-	MainView.HSplitTop(ButtonHeight, &Row, &MainView);
 	Row.VSplitLeft(ButtonHeight+Spacing, 0, &Row);
 	Row.VSplitLeft(NameWidth, &Label, &Row);
 	Label.y += 2.0f;
@@ -268,13 +262,11 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	// background
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
+	// scroll, ignore margins
+	MainView.Margin(-5.0f, &MainView);
+	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset, &ScrollParams);
 	MainView.Margin(5.0f, &MainView);
-
-	UI()->ClipEnable(&MainView);
-	if(Length > MainView.h)
-		MainView.y += (MainView.h - Length) * s_ScrollValue;
+	MainView.y += ScrollOffset.y;
 
 	// options
 	static int s_aPlayerIDs[MAX_CLIENTS][2] = {{0}};
@@ -287,6 +279,8 @@ void CMenus::RenderPlayers(CUIRect MainView)
 				continue;
 
 			MainView.HSplitTop(ButtonHeight, &Row, &MainView);
+			ScrollRegionAddRect(&s_ScrollRegion, Row);
+
 			if(Count++ % 2 == 0)
 				RenderTools()->DrawUIRect(&Row, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -339,8 +333,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			}
 		}
 	}
-
-	UI()->ClipDisable();
+	EndScrollRegion(&s_ScrollRegion);
 }
 
 void CMenus::RenderServerInfo(CUIRect MainView)
@@ -471,7 +464,22 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	RenderTools()->DrawUIRect(&Motd, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 	Motd.Margin(5.0f, &Motd);
 
-	TextRender()->Text(0, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, m_pClient->m_pMotd->GetMotd(), Motd.w);
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0, 0);
+	BeginScrollRegion(&s_ScrollRegion, &Motd, &ScrollOffset);
+	Motd.y += ScrollOffset.y;
+
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, Motd.x, Motd.y, ButtonHeight*ms_FontmodHeight*0.8f, TEXTFLAG_RENDER);
+	Cursor.m_LineWidth = Motd.w;
+	TextRender()->TextEx(&Cursor, m_pClient->m_pMotd->GetMotd(), -1);
+
+	// define the MOTD text area and make it scrollable
+	CUIRect MotdTextArea;
+	Motd.HSplitTop(Cursor.m_Y-Motd.y+5.0f, &MotdTextArea, &Motd);
+	ScrollRegionAddRect(&s_ScrollRegion, MotdTextArea);
+
+	EndScrollRegion(&s_ScrollRegion);
 }
 
 bool CMenus::RenderServerControlServer(CUIRect MainView)

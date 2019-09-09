@@ -92,49 +92,12 @@ private:
 
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
+	void DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);
 	void DoButton_KeySelect(CButtonContainer *pBC, const char *pText, int Checked, const CUIRect *pRect);
 	int DoKeyReader(CButtonContainer *pPC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier);
 
 	//static int ui_do_key_reader(void *id, const CUIRect *rect, int key);
 	void UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spacing);
-
-	struct CListboxItem
-	{
-		int m_Visible;
-		int m_Selected;
-		CUIRect m_Rect;
-		CUIRect m_HitRect;
-	};
-
-	struct CListBoxState
-	{
-		CUIRect m_ListBoxOriginalView;
-		CUIRect m_ListBoxView;
-		float m_ListBoxRowHeight;
-		int m_ListBoxItemIndex;
-		int m_ListBoxSelectedIndex;
-		int m_ListBoxNewSelected;
-		int m_ListBoxDoneEvents;
-		int m_ListBoxNumItems;
-		int m_ListBoxItemsPerRow;
-		float m_ListBoxScrollValue;
-		bool m_ListBoxItemActivated;
-
-		CListBoxState()
-		{
-			m_ListBoxScrollValue = 0;
-		}
-	};
-
-	void UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing);
-	void UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight, const char *pBottomText, int NumItems,
-						int ItemsPerRow, int SelectedIndex, const CUIRect *pRect=0, bool Background=true);
-	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false, bool* pActive = NULL);
-	CListboxItem UiDoListboxNextRow(CListBoxState* pState);
-	int UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated);
-
-	//static void demolist_listdir_callback(const char *name, int is_dir, void *user);
-	//static void demolist_list_callback(const CUIRect *rect, int index, void *user);
 
 	struct CScrollRegionParams
 	{
@@ -160,8 +123,8 @@ private:
 			m_ScrollbarMargin = 5;
 			m_SliderMinHeight = 25;
 			m_ScrollSpeed = 5;
-			m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
-			m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.5f);
+			m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.25f);
+			m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.25f);
 			m_RailBgColor = vec4(1.0f, 1.0f, 1.0f, 0.25f);
 			m_SliderColor = vec4(0.8f, 0.8f, 0.8f, 1.0f);
 			m_SliderColorHover = vec4(1.0f, 1.0f, 1.0f, 1.0f);
@@ -236,6 +199,40 @@ private:
 	void ScrollRegionScrollHere(CScrollRegion* pSr, int Option = CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
 	bool ScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Rect);
 
+	struct CListboxItem
+	{
+		int m_Visible;
+		int m_Selected;
+		CUIRect m_Rect;
+	};
+
+	struct CListBoxState
+	{
+		CUIRect m_ListBoxView;
+		float m_ListBoxRowHeight;
+		int m_ListBoxItemIndex;
+		int m_ListBoxSelectedIndex;
+		int m_ListBoxNewSelected;
+		int m_ListBoxDoneEvents;
+		int m_ListBoxNumItems;
+		int m_ListBoxItemsPerRow;
+		bool m_ListBoxItemActivated;
+		CScrollRegion m_ScrollRegion;
+		vec2 m_ScrollOffset;
+
+		CListBoxState()
+		{
+			m_ScrollOffset = vec2(0,0);
+		}
+	};
+
+	void UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing);
+	void UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight, const char *pBottomText, int NumItems,
+						int ItemsPerRow, int SelectedIndex, const CUIRect *pRect=0, bool Background=true);
+	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false, bool* pActive = NULL);
+	CListboxItem UiDoListboxNextRow(CListBoxState* pState);
+	int UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated);
+
 	enum
 	{
 		POPUP_NONE=0,
@@ -300,6 +297,8 @@ private:
 	bool m_PopupActive;
 	int m_ActiveListBox;
 	bool m_SkinModified;
+	bool m_KeyReaderWasActive;
+	bool m_KeyReaderIsActive;
 
 	// images
 	struct CMenuImage
@@ -682,6 +681,8 @@ private:
 						  const sorted_array<CVideoMode>& lModes);
 
 	// found in menu_callback.cpp
+	static float RenderSettingsControlsMouse(CUIRect View, void *pUser);
+	static float RenderSettingsControlsJoystick(CUIRect View, void *pUser);
 	static float RenderSettingsControlsMovement(CUIRect View, void *pUser);
 	static float RenderSettingsControlsWeapon(CUIRect View, void *pUser);
 	static float RenderSettingsControlsVoting(CUIRect View, void *pUser);
@@ -689,6 +690,8 @@ private:
 	static float RenderSettingsControlsScoreboard(CUIRect View, void *pUser);
 	static float RenderSettingsControlsStats(CUIRect View, void *pUser);
 	static float RenderSettingsControlsMisc(CUIRect View, void *pUser);
+
+	void DoJoystickAxisPicker(CUIRect View);
 
 	void SetActive(bool Active);
 

@@ -40,7 +40,7 @@ Installing dependencies
     sudo pacman -S --needed base-devel cmake freetype2 git glu python sdl2 wavpack
 
     # macOS
-    sudo brew install cmake freetype sdl2
+    brew install cmake freetype sdl2
 
 
 Downloading repository

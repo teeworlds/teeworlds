@@ -1442,13 +1442,27 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
-	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset, &ScrollParams);
 	MainView.y += ScrollOffset.y;
 
+	CUIRect LastExpandRect;
+	static int s_MouseDropdown = 0;
+	static bool s_MouseActive = true;
+	float Split = DoIndependentDropdownMenu(&s_MouseDropdown, &MainView, Localize("Mouse"), HeaderHeight, RenderSettingsControlsMouse, &s_MouseActive);
+	
+	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
+	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	static int s_JoystickDropdown = 0;
+	static bool s_JoystickActive = m_pClient->Input()->HasJoystick(); // hide by default if no joystick found
+	Split = DoIndependentDropdownMenu(&s_JoystickDropdown, &MainView, Localize("Joystick"), HeaderHeight, RenderSettingsControlsJoystick, &s_JoystickActive);
+	
+	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
+	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
 	static int s_MovementDropdown = 0;
 	static bool s_MovementActive = true;
-	CUIRect LastExpandRect;
-	float Split = DoIndependentDropdownMenu(&s_MovementDropdown, &MainView, Localize("Movement"), HeaderHeight, RenderSettingsControlsMovement, &s_MovementActive);
+	Split = DoIndependentDropdownMenu(&s_MovementDropdown, &MainView, Localize("Movement"), HeaderHeight, RenderSettingsControlsMovement, &s_MovementActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
 	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);

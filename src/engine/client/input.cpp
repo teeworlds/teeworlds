@@ -17,6 +17,11 @@
 #include "keynames.h"
 #undef KEYS_INCLUDE
 
+// support older SDL version (pre 2.0.6)
+#ifndef SDL_JOYSTICK_AXIS_MAX
+	#define SDL_JOYSTICK_AXIS_MAX 32767
+#endif
+
 void CInput::AddEvent(char *pText, int Key, int Flags)
 {
 	if(m_NumEvents != INPUT_BUFFER_SIZE)
@@ -96,26 +101,32 @@ void CInput::Init()
 	}
 }
 
+float CInput::GetJoystickAxisValue(int Axis) const
+{
+	dbg_assert((bool)m_pJoystick, "Requesting joystic axis value, but no joysticks were initialized");
+	return static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, Axis)) / (float)(SDL_JOYSTICK_AXIS_MAX+1);
+}
+
 void CInput::MouseRelative(float *x, float *y)
 {
 	if(!m_InputGrabbed)
 		return;
 
 	int nx = 0, ny = 0;
-	float Sens = g_Config.m_InpMousesens/100.0f;
+	float MouseSens = g_Config.m_InpMousesens/100.0f;
+	float JoystickSens = g_Config.m_JoystickSens/100.0f;
 
 	SDL_GetRelativeMouseState(&nx,&ny);
 
 	vec2 j = vec2(0.0f, 0.0f);
 
-	if(m_pJoystick)
+	if(g_Config.m_JoystickEnable && m_pJoystick)
 	{
 		const float Max = 50.0f;
-		j.x = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickX)) / 32768.0f * Max;
-		j.y = static_cast<float>(SDL_JoystickGetAxis(m_pJoystick, g_Config.m_JoystickY)) / 32768.0f * Max;
+		j = vec2(GetJoystickAxisValue(g_Config.m_JoystickX), GetJoystickAxisValue(g_Config.m_JoystickY)) * Max;
 		const float Len = length(j);
 
-		if (Len <= g_Config.m_JoystickTolerance) {
+		if (Len/sqrtf(2.0f) <= g_Config.m_JoystickTolerance) {
 			j = vec2(0.0f, 0.0f);
 		} else {
 			const vec2 nj = Len > 0.0f ? j / Len : vec2(0.0f, 0.0f);
@@ -123,8 +134,8 @@ void CInput::MouseRelative(float *x, float *y)
 		}
 	}
 
-	*x = (nx + j.x)*Sens;
-	*y = (ny + j.y)*Sens;
+	*x = nx*MouseSens + j.x*JoystickSens;
+	*y = ny*MouseSens + j.y*JoystickSens;
 }
 
 void CInput::MouseModeAbsolute()

@@ -9,6 +9,8 @@ class CGameControllerLMS : public IGameController
 public:
 	CGameControllerLMS(class CGameContext *pGameServer);
 
+	// event
+	virtual void OnCharacterSpawn(class CCharacter *pChr);
 	// game
 	virtual void DoWincheckRound();
 };

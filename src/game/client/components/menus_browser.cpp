@@ -933,16 +933,15 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	// background
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_ALL, 5.0f);
 
-	// split scrollbar from view
-	CUIRect Scroll;
-	View.VSplitRight(20.0f, &View, &Scroll);
-	Scroll.HSplitTop(ms_ListheaderHeight, 0, &Scroll);
-	Scroll.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &Scroll, 0);
+	// make room for scrollbar
+	{
+		CUIRect Scroll;
+		View.VSplitRight(20.0f, &View, &Scroll);
+	}
 
 	View.HSplitTop(ms_ListheaderHeight, &Headers, &View);
 	View.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &View, &Status);
 
-	// Headers.VSplitRight(ms_ListheaderHeight, &Headers, &InfoButton); // split for info button
 	Headers.VSplitRight(2.f, &Headers, 0); // some margin on the right
 
 	// do layout
@@ -993,10 +992,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			}
 		}
 	}
-
-
-	// scrollbar background
-	RenderTools()->DrawUIRect(&Scroll, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// list background
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
@@ -1051,34 +1046,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	if(SelectedFilter == m_lFilters.size()) // no selected filter found
 		SelectedFilter = -1;
 
-	int NumFilters = m_lFilters.size();
-	float ListHeight = NumServers * ms_ListheaderHeight; // add server list height
-	ListHeight += NumFilters * SpacingH; // add filters
-	ListHeight += (NumFilters) * ButtonHeight;// add filters spacing
-	if(!m_SidebarActive && m_SelectedServer.m_Index != -1 && SelectedFilter != -1 && m_ShowServerDetails)
-		ListHeight += ms_ListheaderHeight*5;
-
-	// float LineH = ms_aBrowserCols[0].m_Rect.h;
-	float LineH = ms_ListheaderHeight;
-	static int s_ScrollBar = 0;
-	static float s_ScrollValue = 0;
-
-	Scroll.HMargin(5.0f, &Scroll);
-	s_ScrollValue = DoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
-
-	// (int)+1 is to keep the first item right on top
-	// but it doesn't work because of filters, we should detect & remove the filters that are displayed beforehand
-	int ScrollNum = ceil((ListHeight-View.h)/LineH);
-	if(ScrollNum > 0)
-	{
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
-			s_ScrollValue -= 3.0f/ScrollNum;
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
-			s_ScrollValue += 3.0f/ScrollNum;
-	}
-	else
-		ScrollNum = 0;
-
+	// handle arrow hotkeys
+	bool NewSelection = false;
 	if(SelectedFilter > -1)
 	{
 		int NewIndex = -1;
@@ -1089,7 +1058,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			if(!CtrlPressed)
 			{
 				NewIndex = SelectedIndex + 1;
-				// if(NewIndex >= NumServers)
 				if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
 					NewIndex = m_lFilters[SelectedFilter].NumSortedServers() - 1;
 			}
@@ -1123,26 +1091,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 		if(NewIndex > -1 && NewIndex < m_lFilters[NewFilter].NumSortedServers())
 		{
-			float CurViewY = (s_ScrollValue*ScrollNum*LineH);
-			float IndexY = NewIndex*LineH + (NewFilter+1)*(SpacingH+ButtonHeight); // this represents the Y position of the selected line
-
-			// Selected line = [IndexY,IndexY+LineH] must be in screen = [CurViewY,CurViewY+View.h].
-			if(IndexY < CurViewY) // scroll up
-			{
-				int NumScrolls = ceil((CurViewY-IndexY)/LineH);
-				s_ScrollValue -= NumScrolls/((float)ScrollNum);
-			}
-			if(IndexY+LineH > CurViewY+View.h) // scroll down
-			{
-				int NumScrolls = ceil( ((IndexY+LineH)-(CurViewY+View.h)) / LineH);
-				s_ScrollValue += NumScrolls/((float)ScrollNum);
-			}
-
 			m_SelectedServer.m_Filter = NewFilter;
 			if(m_SelectedServer.m_Index != NewIndex)
 			{
 				m_SelectedServer.m_Index = NewIndex;
 				m_ShowServerDetails = true;
+				NewSelection = true;
 			}
 
 			const CServerInfo *pItem = ServerBrowser()->SortedGet(NewFilter, NewIndex);
@@ -1150,14 +1104,17 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		}
 	}
 
-	if(s_ScrollValue < 0) s_ScrollValue = 0;
-	if(s_ScrollValue > 1) s_ScrollValue = 1;
-
-	// set clipping
-	UI()->ClipEnable(&View);
-
-	CUIRect OriginalView = View;
-	View.y -= s_ScrollValue*ScrollNum*LineH;
+	// scrollbar
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0, 0);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
+	ScrollParams.m_SliderMinHeight = 5;
+	ScrollParams.m_ScrollSpeed = 10;
+	View.w += ScrollParams.m_ScrollbarWidth;
+	BeginScrollRegion(&s_ScrollRegion, &View, &ScrollOffset, &ScrollParams);
+	View.y += ScrollOffset.y;
 
 	int NumPlayers = ServerBrowser()->NumClients();
 
@@ -1168,6 +1125,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		// filter header
 		CUIRect Row;
 		View.HSplitTop(20.0f, &Row, &View);
+		ScrollRegionAddRect(&s_ScrollRegion, Row);
 
 		// render header
 		RenderFilterHeader(Row, s);
@@ -1187,15 +1145,20 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					m_SelectedServer.m_Index = i;
 				}
 
-				if(!m_SidebarActive && m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i && m_ShowServerDetails)
+				bool IsSelected = m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i;
+				if(!m_SidebarActive && IsSelected && m_ShowServerDetails)
 					View.HSplitTop(ms_ListheaderHeight*6, &Row, &View);
 				else
 					View.HSplitTop(ms_ListheaderHeight, &Row, &View);
 
+				ScrollRegionAddRect(&s_ScrollRegion, Row);
+				if(IsSelected && NewSelection) // new selection (hotkeys or address input)
+					ScrollRegionScrollHere(&s_ScrollRegion, CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
+
 				// make sure that only those in view can be selected
-				if(Row.y+Row.h > OriginalView.y && Row.y < OriginalView.y+OriginalView.h)
+				if(!ScrollRegionIsRectClipped(&s_ScrollRegion, Row))
 				{
-					if(m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i)
+					if(IsSelected)
 					{
 						CUIRect r = Row;
 						RenderTools()->DrawUIRect(&r, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 4.0f);
@@ -1211,7 +1174,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					continue;
 				}
 
-				if(int ReturnValue = DoBrowserEntry(pFilter->ID(i), Row, pItem, pFilter, m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i))
+				if(int ReturnValue = DoBrowserEntry(pFilter->ID(i), Row, pItem, pFilter, IsSelected))
 				{
 					m_ShowServerDetails = !m_ShowServerDetails || ReturnValue == 2 || m_SelectedServer.m_Index != i; // click twice on line => fold server details
 					m_SelectedServer.m_Filter = s;
@@ -1230,7 +1193,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			View.HSplitTop(SpacingH, &Row, &View);
 	}
 
-	UI()->ClipDisable();
+	EndScrollRegion(&s_ScrollRegion);
 
 	// bottom
 	float SpacingW = 3.0f;
@@ -1436,30 +1399,16 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	}
 
 	// scrollbar
-	UI()->ClipEnable(&View);
-	float Length = 0.0f;
-	for(int i = 0; i < NUM_FRIEND_TYPES; ++i)
-	{
-		Length += ms_ListheaderHeight + 2.0f;
-		if(s_ListExtended[i])
-			Length += (20.0f+ms_ListheaderHeight+2.0f)*m_lFriendList[i].size();
-	}
-	static float s_ScrollValue = 0.0f;
-	int ScrollNum = (int)((Length - View.h)/ms_ListheaderHeight)+1;
-	if(ScrollNum > 0)
-	{
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
-			s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
-			s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
-	}
-	if(Length > View.h)
-	{
-		View.VSplitRight(8.0f, &View, &Button);
-		Button.HMargin(5.0f, &Button);
-		s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Button, s_ScrollValue);
-		View.y += (View.h - Length) * s_ScrollValue;
-	}
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0, 0);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollbarWidth = 14;
+	ScrollParams.m_ScrollbarMargin = 5;
+	ScrollParams.m_ScrollSpeed = 15;
+	BeginScrollRegion(&s_ScrollRegion, &View, &ScrollOffset, &ScrollParams);
+	View.y += ScrollOffset.y;
 
 	// show lists
 	// only ~10 buttons will be displayed at once, a sliding window of 20 buttons ought to be enough
@@ -1476,6 +1425,8 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			for(int f = 0; f < m_lFriendList[i].size(); ++f, ++ButtonId)
 			{
 				View.HSplitTop(20.0f + ms_ListheaderHeight, &Rect, &View);
+				ScrollRegionAddRect(&s_ScrollRegion, Rect);
+
 				RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 0.5f, 0.5f, 0.5f), CUI::CORNER_ALL, 5.0f);
 				Rect.VMargin(2.0f, &Rect);
 				Rect.VSplitRight(45.0f, &Rect, &Icon);
@@ -1549,7 +1500,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			s_ListExtended[i] ^= 1;
 		}
 	}
-	UI()->ClipDisable();
+	EndScrollRegion(&s_ScrollRegion);
 
 	// add friend
 	BottomArea.HSplitTop(ms_ListheaderHeight, &Button, &BottomArea);
@@ -2001,27 +1952,17 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		float RowWidth = (RowCount == 0) ? View.w : (View.w * 0.25f);
 		float LineHeight = 20.0f;
 
-		if(RowCount == 0)
-		{
-			float Length = 20.0f * pInfo->m_NumClients;
-			static float s_ScrollValue = 0.0f;
-			int ScrollNum = (int)((Length - View.h)/20.0f)+1;
-			if(ScrollNum > 0)
-			{
-				if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
-					s_ScrollValue = clamp(s_ScrollValue - 3.0f/ScrollNum, 0.0f, 1.0f);
-				if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
-					s_ScrollValue = clamp(s_ScrollValue + 3.0f / ScrollNum, 0.0f, 1.0f);
-			}
-			if(Length > View.h)
-			{
-				View.VSplitRight(8.0f, &View, &Scroll);
-				Scroll.HMargin(5.0f, &Scroll);
-				s_ScrollValue = DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
-				View.y += (View.h - Length) * s_ScrollValue;
-			}
-		}
-		else
+		static CScrollRegion s_ScrollRegion;
+		vec2 ScrollOffset(0, 0);
+		CScrollRegionParams ScrollParams;
+		ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+		ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
+		ScrollParams.m_ScrollbarWidth = 5;
+		ScrollParams.m_ScrollbarMargin = 1;
+		ScrollParams.m_ScrollSpeed = 15;
+		BeginScrollRegion(&s_ScrollRegion, &View, &ScrollOffset, &ScrollParams);
+		View.y += ScrollOffset.y;
+		if(RowCount != 0)
 		{
 			float Width = RowWidth * ((pInfo->m_NumClients+RowCount-1) / RowCount);
 			static float s_ScrollValue = 0.0f;
@@ -2051,6 +1992,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			}
 	
 			Row.HSplitTop(LineHeight, &Name, &Row);
+			ScrollRegionAddRect(&s_ScrollRegion, Name);
 			RenderTools()->DrawUIRect(&Name, vec4(1.0f, 1.0f, 1.0f, (Count % 2 + 1)*0.05f), CUI::CORNER_ALL, 4.0f);
 
 			// friend
@@ -2135,6 +2077,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 
 			++Count;
 		}
+		EndScrollRegion(&s_ScrollRegion);
 	}
 }
 
@@ -2156,9 +2099,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 	//RenderTools()->DrawUIRect(&View, vec4(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
 	ServerHeader.HMargin(2.0f, &ServerHeader);
 	UI()->DoLabel(&ServerHeader, Localize("Scoreboard"), FontSize + 2.0f, CUI::ALIGN_CENTER);
-	UI()->ClipEnable(&ServerScoreboard);
 	RenderDetailScoreboard(ServerScoreboard, pInfo, 0);
-	UI()->ClipDisable();
 }
 
 void CMenus::FriendlistOnUpdate()
@@ -2197,6 +2138,7 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 		m_EnterPressed = false;
 	}
 }
+
 void CMenus::DoGameIcon(const char *pName, const CUIRect *pRect)
 {
 	char aNameBuf[128];
