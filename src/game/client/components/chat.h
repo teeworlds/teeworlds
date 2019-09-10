@@ -63,6 +63,7 @@ class CChat : public CComponent
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
 	bool m_ReverseCompletion;
+	bool m_FirstMap;
 
 	int m_ChatBufferMode;
 	char m_ChatBuffer[512];
@@ -147,6 +148,7 @@ public:
 
 	virtual void OnInit();
 	virtual void OnReset();
+	virtual void OnMapLoad();
 	virtual void OnConsoleInit();
 	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnRender();

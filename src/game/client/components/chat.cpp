@@ -5,6 +5,7 @@
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/keys.h>
+#include <engine/serverbrowser.h>
 #include <engine/shared/config.h>
 
 #include <generated/protocol.h>
@@ -87,6 +88,22 @@ void CChat::OnReset()
 	}
 }
 
+void CChat::OnMapLoad()
+{
+	if(Client()->State() == IClient::STATE_LOADING)
+	{
+		if(m_FirstMap)
+			m_FirstMap = false;
+		else
+		{
+			// display map rotation marker in chat
+			char aBuf[256];
+			str_format(aBuf, sizeof(aBuf), Localize("Map changed to '%s'"), Client()->GetCurrentMapName());
+			AddLine(CLIENT_MSG, CHAT_ALL, aBuf);
+		}
+	}
+}
+
 void CChat::OnRelease()
 {
 	m_Show = false;
@@ -101,6 +118,7 @@ void CChat::OnStateChange(int NewState, int OldState)
 			m_aLines[i].m_Time = 0;
 		m_CurrentLine = 0;
 		ClearChatBuffer();
+		m_FirstMap = true;
 	}
 }
 
