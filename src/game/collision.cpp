@@ -37,13 +37,13 @@ void CCollision::Init(class CLayers *pLayers)
 		switch(Index)
 		{
 		case TILE_DEATH:
-			m_pTiles[i].m_Index = COLFLAG_DEATH;
+			m_pTiles[i].m_Index = TILE_DEATH;
 			break;
 		case TILE_SOLID:
-			m_pTiles[i].m_Index = COLFLAG_SOLID;
+			m_pTiles[i].m_Index = TILE_SOLID;
 			break;
 		case TILE_NOHOOK:
-			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+			m_pTiles[i].m_Index = TILE_NOHOOK;
 			break;
 		default:
 			m_pTiles[i].m_Index = 0;
@@ -59,9 +59,12 @@ int CCollision::GetTile(int x, int y) const
 	return m_pTiles[Ny*m_Width+Nx].m_Index > 128 ? 0 : m_pTiles[Ny*m_Width+Nx].m_Index;
 }
 
-bool CCollision::IsTile(int x, int y, int Flag) const
+bool CCollision::IsTile(int x, int y, int Id) const
 {
-	return GetTile(x, y)&Flag;
+	int index = GetTile(x,y);
+	if (Id == TILE_DEATH)
+		return index == TILE_DEATH;
+	return index == TILE_SOLID || index == TILE_NOHOOK;
 }
 
 // TODO: rewrite this smarter!
@@ -171,7 +174,7 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 
 			//You hit a deathtile, congrats to that :)
 			//Deathtiles are a bit smaller
-			if(pDeath && TestBox(vec2(NewPos.x, NewPos.y), Size*(2.0f/3.0f), COLFLAG_DEATH))
+			if(pDeath && TestBox(vec2(NewPos.x, NewPos.y), Size*(2.0f/3.0f), TILE_DEATH))
 			{
 				*pDeath = true;
 			}

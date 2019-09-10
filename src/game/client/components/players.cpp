@@ -285,7 +285,7 @@ void CPlayers::RenderPlayer(
 			if(Collision()->IntersectLine(initPos, finishPos, &finishPos, 0x0))
 			{
 				vec2 finishPosPost = finishPos+Direction * 1.0f;
-				if(!(Collision()->GetCollisionAt(finishPosPost.x, finishPosPost.y)&CCollision::COLFLAG_NOHOOK))
+				if(!(Collision()->GetCollisionAt(finishPosPost.x, finishPosPost.y) == TILE_NOHOOK))
 					Graphics()->SetColor(130.0f/255.0f, 232.0f/255.0f, 160.0f/255.0f, 1.0f);
 			}
 

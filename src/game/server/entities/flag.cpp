@@ -51,7 +51,7 @@ void CFlag::TickDefered()
 	else
 	{
 		// flag hits death-tile or left the game layer, reset it
-		if((GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y) & CCollision::COLFLAG_DEATH)
+		if((GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y) == TILE_DEATH)
 			|| GameLayerClipped(m_Pos))
 		{
 			Reset();
