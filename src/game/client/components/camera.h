@@ -56,7 +56,7 @@ private:
 	vec2 m_AnimationStartPos;
 	float m_MoveTime;
 
-	// DDrace
+	// DDRace
 
 	virtual void OnReset();
 	bool IsZoomAllowed();

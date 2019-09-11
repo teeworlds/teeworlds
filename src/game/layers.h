@@ -26,6 +26,21 @@ public:
 	CMapItemLayerTilemap *GameLayer() const { return m_pGameLayer; };
 	CMapItemGroup *GetGroup(int Index) const;
 	CMapItemLayer *GetLayer(int Index) const;
+
+	// DDRace
+
+	CMapItemLayerTilemap *TeleLayer() const { return m_pTeleLayer; };
+	CMapItemLayerTilemap *SpeedupLayer() const { return m_pSpeedupLayer; };
+	CMapItemLayerTilemap *FrontLayer() const { return m_pFrontLayer; };
+	CMapItemLayerTilemap *SwitchLayer() const { return m_pSwitchLayer; };
+	CMapItemLayerTilemap *TuneLayer() const { return m_pTuneLayer; };
+
+private:
+	CMapItemLayerTilemap *m_pTeleLayer;
+	CMapItemLayerTilemap *m_pSpeedupLayer;
+	CMapItemLayerTilemap *m_pFrontLayer;
+	CMapItemLayerTilemap *m_pSwitchLayer;
+	CMapItemLayerTilemap *m_pTuneLayer;
 };
 
 #endif

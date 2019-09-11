@@ -4,6 +4,7 @@
 #define GAME_COLLISION_H
 
 #include <base/vmath.h>
+#include <engine/shared/protocol.h>
 #include <game/mapitems.h>
 
 class CCollision
@@ -35,6 +36,26 @@ public:
 	void MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, int *pBounces) const;
 	void MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elasticity, bool *pDeath=0) const;
 	bool TestBox(vec2 Pos, vec2 Size, int Id=TILE_SOLID) const;
+
+	// DDRace
+
+private:
+	class CTeleTile *m_pTele;
+	class CSpeedupTile *m_pSpeedup;
+	class CTile *m_pFront;
+	class CSwitchTile *m_pSwitch;
+	class CTuneTile *m_pTune;
+	class CDoorTile *m_pDoor;
+	struct SSwitchers
+	{
+		bool m_Status[MAX_CLIENTS];
+		bool m_Initial;
+		int m_EndTick[MAX_CLIENTS];
+		int m_Type[MAX_CLIENTS];
+	};
+
+public:
+	SSwitchers *m_pSwitchers;
 };
 
 #endif

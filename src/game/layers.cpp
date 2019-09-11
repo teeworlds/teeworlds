@@ -11,6 +11,14 @@ CLayers::CLayers()
 	m_pGameGroup = 0;
 	m_pGameLayer = 0;
 	m_pMap = 0;
+
+	// DDRace
+
+	m_pTeleLayer = 0;
+	m_pSpeedupLayer = 0;
+	m_pFrontLayer = 0;
+	m_pSwitchLayer = 0;
+	m_pTuneLayer = 0;
 }
 
 void CLayers::Init(class IKernel *pKernel, IMap *pMap)
@@ -18,6 +26,12 @@ void CLayers::Init(class IKernel *pKernel, IMap *pMap)
 	m_pMap = pMap ? pMap : pKernel->RequestInterface<IMap>();
 	m_pMap->GetType(MAPITEMTYPE_GROUP, &m_GroupsStart, &m_GroupsNum);
 	m_pMap->GetType(MAPITEMTYPE_LAYER, &m_LayersStart, &m_LayersNum);
+
+	m_pTeleLayer = 0;
+	m_pSpeedupLayer = 0;
+	m_pFrontLayer = 0;
+	m_pSwitchLayer = 0;
+	m_pTuneLayer = 0;
 
 	for(int g = 0; g < NumGroups(); g++)
 	{
@@ -49,7 +63,47 @@ void CLayers::Init(class IKernel *pKernel, IMap *pMap)
 						m_pGameGroup->m_ClipH = 0;
 					}
 
-					break;
+					// break;
+				}
+				if(pTilemap->m_Flags&TILESLAYERFLAG_TELE)
+				{
+					if(pTilemap->m_Version <= 2)
+					{
+						pTilemap->m_Tele = *((int*)(pTilemap) + 15);
+					}
+					m_pTeleLayer = pTilemap;
+				}
+				if(pTilemap->m_Flags&TILESLAYERFLAG_SPEEDUP)
+				{
+					if(pTilemap->m_Version <= 2)
+					{
+						pTilemap->m_Speedup = *((int*)(pTilemap) + 16);
+					}
+					m_pSpeedupLayer = pTilemap;
+				}
+				if(pTilemap->m_Flags&TILESLAYERFLAG_FRONT)
+				{
+					if(pTilemap->m_Version <= 2)
+					{
+						pTilemap->m_Front = *((int*)(pTilemap) + 17);
+					}
+					m_pFrontLayer = pTilemap;
+				}
+				if(pTilemap->m_Flags&TILESLAYERFLAG_SWITCH)
+				{
+					if(pTilemap->m_Version <= 2)
+					{
+						pTilemap->m_Switch = *((int*)(pTilemap) + 18);
+					}
+					m_pSwitchLayer = pTilemap;
+				}
+				if(pTilemap->m_Flags&TILESLAYERFLAG_TUNE)
+				{
+					if(pTilemap->m_Version <= 2)
+					{
+						pTilemap->m_Tune = *((int*)(pTilemap) + 19);
+					}
+					m_pTuneLayer = pTilemap;
 				}
 			}
 		}
