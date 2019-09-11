@@ -13,6 +13,7 @@ public:
 	CMap() {}
 
 	virtual void *GetData(int Index) { return m_DataFile.GetData(Index); }
+	virtual int GetUncompressedDataSize(int Index) { return m_DataFile.GetUncompressedDataSize(Index); }
 	virtual void *GetDataSwapped(int Index) { return m_DataFile.GetDataSwapped(Index); }
 	virtual void UnloadData(int Index) { m_DataFile.UnloadData(Index); }
 	virtual void *GetItem(int Index, int *pType, int *pID) { return m_DataFile.GetItem(Index, pType, pID); }
