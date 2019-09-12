@@ -97,7 +97,7 @@ IGraphics::CTextureHandle CMapImages::GetEntitiesTexture()
 {
 	if(!m_EntitiesIsLoaded)
 	{
-		m_EntitiesTexture = Graphics()->LoadTexture("editor/entities_clear.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
+		m_EntitiesTexture = Graphics()->LoadTexture("editor/entities_ddnet.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
 		if(!m_EntitiesTexture.IsValid())
 			m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
 		if(!m_EntitiesTexture.IsValid())

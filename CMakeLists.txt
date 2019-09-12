@@ -886,6 +886,7 @@ set(EXPECTED_DATA
   editor/cursor.png
   editor/entities.png
   editor/entities_clear.png
+  editor/entities_ddnet.png
   editor/front.png
   editor/speed_arrow.png
   editor/speedup.png
