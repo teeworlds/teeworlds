@@ -573,6 +573,56 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	OldSelected = NewSelected;
 }
 
+void CMenus::RenderSkinPartPalette(CUIRect MainView)
+{
+	if(!*CSkins::ms_apUCCVariables[m_TeePartSelected])
+		return; // color selection not open
+
+	float ButtonHeight = 20.0f;
+	float Width = MainView.w;
+	float Margin = 5.0f;
+	CUIRect Palette, Button;
+
+	// palette
+	MainView.HSplitBottom(ButtonHeight/2.0f, &MainView, 0);
+	MainView.HSplitBottom(ButtonHeight+2*Margin, &MainView, &MainView);
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		MainView.VSplitLeft(Width/NUM_SKINPARTS, &Button, &MainView);
+		
+		// no palette if color is unused for this skin parts
+		static int s_aColorPalettes[NUM_SKINPARTS];
+		if(*CSkins::ms_apUCCVariables[p])
+		{
+			float HMargin = (Button.w-(ButtonHeight+2*Margin))/2.0f;
+			Button.VSplitLeft(HMargin, 0, &Button);
+			Button.VSplitRight(HMargin, &Button, 0);
+
+			vec4 PartColor = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[p], p==SKINPART_MARKING);
+			
+			bool Hovered = UI()->HotItem() == &s_aColorPalettes[p];
+			bool Clicked = UI()->DoButtonLogic(&s_aColorPalettes[p], "", 0, &Button);
+			bool Selected = m_TeePartSelected == p;
+			if(Selected)
+			{
+				CUIRect Underline = {Button.x, Button.y + ButtonHeight + 2*Margin + 2.0f, Button.w, 1.0f};
+				RenderTools()->DrawUIRect(&Underline, vec4(1.0f, 1.0f, 1.0f, 1.5f), 0, 0);
+			}
+			RenderTools()->DrawUIRect(&Button, (Hovered ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f)), CUI::CORNER_ALL, 5.0f);
+			Button.Margin(Margin, &Button);
+			RenderTools()->DrawUIRect(&Button, PartColor, CUI::CORNER_ALL, 3.0f);
+			if(Clicked && p != m_TeePartSelected)
+			{
+				int& TeePartSelectedColor = *CSkins::ms_apColorVariables[m_TeePartSelected];
+				TeePartSelectedColor = *CSkins::ms_apColorVariables[p];
+				TeePartSelectedColor -= ((TeePartSelectedColor>>24)&0xff)<<24; // remove any alpha
+				if(m_TeePartSelected == SKINPART_MARKING)
+					TeePartSelectedColor += 0xff<<24; // force full alpha
+			}
+		}
+	}
+}
+
 class CLanguage
 {
 public:
@@ -1265,6 +1315,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 
 	// HSL picker
 	RenderHSLPicker(Right);
+	RenderSkinPartPalette(Right);
 }
 
 void CMenus::RenderSettingsTee(CUIRect MainView)
