@@ -581,7 +581,7 @@ void CMenus::RenderSkinPartPalette(CUIRect MainView)
 	float ButtonHeight = 20.0f;
 	float Width = MainView.w;
 	float Margin = 5.0f;
-	CUIRect Palette, Button;
+	CUIRect Button;
 
 	// palette
 	MainView.HSplitBottom(ButtonHeight/2.0f, &MainView, 0);
