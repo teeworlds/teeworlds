@@ -723,7 +723,8 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			Label.y += 2.0f;
 			UI()->DoLabel(&Label, pSearchLabel, Search.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 			static float s_SearchOffset = 0.0f;
-			DoEditBox(&m_aFilterString, &Search, m_aFilterString, sizeof(m_aFilterString), Search.h*ms_FontmodHeight*0.8f, &s_SearchOffset);
+			if(DoEditBox(&m_aFilterString, &Search, m_aFilterString, sizeof(m_aFilterString), Search.h*ms_FontmodHeight*0.8f, &s_SearchOffset))
+				m_CallvoteSelectedOption = 0;
 
 			// render reason
 			Bottom.VSplitRight(120.0f, &Bottom, &Button);
