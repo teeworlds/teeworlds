@@ -3,28 +3,158 @@
 #include <base/math.h>
 #include <base/system.h>
 
-#include <engine/config.h>
 #include <engine/console.h>
 #include <engine/shared/config.h>
 
 #include "friends.h"
 
-CFriends::CFriends()
+IContactList::IContactList()
 {
-	mem_zero(m_aFriends, sizeof(m_aFriends));
-	m_NumFriends = 0;
+	mem_zero(m_aContacts, sizeof(m_aContacts));
+	m_NumContacts = 0;
+}
+
+const CContactInfo *IContactList::GetContact(int Index) const
+{
+	return &m_aContacts[max(0, Index%m_NumContacts)];
+}
+
+int IContactList::GetContactState(const char *pName, const char *pClan) const
+{
+	int Result = CONTACT_NO;
+	unsigned NameHash = str_quickhash(pName);
+	unsigned ClanHash = str_quickhash(pClan);
+	for(int i = 0; i < m_NumContacts; ++i)
+	{
+		if(m_aContacts[i].m_ClanHash == ClanHash)
+		{
+			if(m_aContacts[i].m_aName[0] == 0)
+				Result = CONTACT_CLAN;
+			else if(m_aContacts[i].m_NameHash == NameHash)
+			{
+				Result = CONTACT_PLAYER;
+				break;
+			}
+		}
+	}
+	return Result;
+}
+
+bool IContactList::IsContact(const char *pName, const char *pClan, bool PlayersOnly) const
+{
+	unsigned NameHash = str_quickhash(pName);
+	unsigned ClanHash = str_quickhash(pClan);
+	for(int i = 0; i < m_NumContacts; ++i)
+	{
+		if(m_aContacts[i].m_ClanHash == ClanHash &&
+			((!PlayersOnly && m_aContacts[i].m_aName[0] == 0) || m_aContacts[i].m_NameHash == NameHash))
+			return true;
+	}
+	return false;
+}
+
+void IContactList::AddContact(const char *pName, const char *pClan)
+{
+	if(m_NumContacts == MAX_CONTACTS || (pName[0] == 0 && pClan[0] == 0))
+		return;
+
+	// make sure we don't have the friend already
+	unsigned NameHash = str_quickhash(pName);
+	unsigned ClanHash = str_quickhash(pClan);
+	for(int i = 0; i < m_NumContacts; ++i)
+	{
+		if(m_aContacts[i].m_NameHash == NameHash && m_aContacts[i].m_ClanHash == ClanHash)
+			return;
+	}
+
+	str_copy(m_aContacts[m_NumContacts].m_aName, pName, sizeof(m_aContacts[m_NumContacts].m_aName));
+	str_copy(m_aContacts[m_NumContacts].m_aClan, pClan, sizeof(m_aContacts[m_NumContacts].m_aClan));
+	m_aContacts[m_NumContacts].m_NameHash = NameHash;
+	m_aContacts[m_NumContacts].m_ClanHash = ClanHash;
+	++m_NumContacts;
+}
+
+void IContactList::RemoveContact(const char *pName, const char *pClan)
+{
+	unsigned NameHash = str_quickhash(pName);
+	unsigned ClanHash = str_quickhash(pClan);
+	for(int i = 0; i < m_NumContacts; ++i)
+	{
+		if(m_aContacts[i].m_NameHash == NameHash && m_aContacts[i].m_ClanHash == ClanHash)
+		{
+			RemoveContact(i);
+			return;
+		}
+	}
+}
+
+void IContactList::RemoveContact(int Index)
+{
+	if(Index >= 0 && Index < m_NumContacts)
+	{
+		mem_move(&m_aContacts[Index], &m_aContacts[Index+1], sizeof(CContactInfo)*(m_NumContacts-(Index+1)));
+		--m_NumContacts;
+	}
+	return;
+}
+
+void IContactList::ConfigSave(IConfig *pConfig, const char* pCmdStr)
+{
+	char aBuf[128];
+	const char *pEnd = aBuf+sizeof(aBuf)-4;
+	for(int i = 0; i < this->m_NumContacts; ++i)
+	{
+		str_copy(aBuf, pCmdStr, sizeof(aBuf));
+
+		const char *pSrc = this->m_aContacts[i].m_aName;
+		char *pDst = aBuf+str_length(aBuf);
+		*pDst++ = '"';
+		while(*pSrc && pDst < pEnd)
+		{
+			if(*pSrc == '"' || *pSrc == '\\') // escape \ and "
+				*pDst++ = '\\';
+			*pDst++ = *pSrc++;
+		}
+		*pDst++ = '"';
+		*pDst++ = ' ';
+
+		pSrc = this->m_aContacts[i].m_aClan;
+		*pDst++ = '"';
+		while(*pSrc && pDst < pEnd)
+		{
+			if(*pSrc == '"' || *pSrc == '\\') // escape \ and "
+				*pDst++ = '\\';
+			*pDst++ = *pSrc++;
+		}
+		*pDst++ = '"';
+		*pDst++ = 0;
+
+		pConfig->WriteLine(aBuf);
+	}	
 }
 
 void CFriends::ConAddFriend(IConsole::IResult *pResult, void *pUserData)
 {
-	CFriends *pSelf = (CFriends *)pUserData;
+	CFriends *pSelf = static_cast<CFriends *>(pUserData);
 	pSelf->AddFriend(pResult->GetString(0), pResult->GetString(1));
 }
 
 void CFriends::ConRemoveFriend(IConsole::IResult *pResult, void *pUserData)
 {
-	CFriends *pSelf = (CFriends *)pUserData;
+	CFriends *pSelf = static_cast<CFriends *>(pUserData);
 	pSelf->RemoveFriend(pResult->GetString(0), pResult->GetString(1));
+}
+
+void CBlacklist::ConAddIgnore(IConsole::IResult *pResult, void *pUserData)
+{
+	CBlacklist *pSelf = static_cast<CBlacklist *>(pUserData);
+	pSelf->AddIgnoredPlayer(pResult->GetString(0), pResult->GetString(1));
+}
+
+void CBlacklist::ConRemoveIgnore(IConsole::IResult *pResult, void *pUserData)
+{
+	CBlacklist *pSelf = static_cast<CBlacklist *>(pUserData);
+	pSelf->RemoveIgnoredPlayer(pResult->GetString(0), pResult->GetString(1));
 }
 
 void CFriends::Init()
@@ -41,122 +171,28 @@ void CFriends::Init()
 	}
 }
 
-const CFriendInfo *CFriends::GetFriend(int Index) const
+void CBlacklist::Init()
 {
-	return &m_aFriends[max(0, Index%m_NumFriends)];
-}
+	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
+	if(pConfig)
+		pConfig->RegisterCallback(ConfigSaveCallback, this);
 
-int CFriends::GetFriendState(const char *pName, const char *pClan) const
-{
-	int Result = FRIEND_NO;
-	unsigned NameHash = str_quickhash(pName);
-	unsigned ClanHash = str_quickhash(pClan);
-	for(int i = 0; i < m_NumFriends; ++i)
+	IConsole *pConsole = Kernel()->RequestInterface<IConsole>();
+	if(pConsole)
 	{
-		if(m_aFriends[i].m_ClanHash == ClanHash)
-		{
-			if(m_aFriends[i].m_aName[0] == 0)
-				Result = FRIEND_CLAN;
-			else if(m_aFriends[i].m_NameHash == NameHash)
-			{
-				Result = FRIEND_PLAYER;
-				break;
-			}
-		}
+		pConsole->Register("add_ignore", "ss", CFGFLAG_CLIENT, ConAddIgnore, this, "Ignore a player");
+		pConsole->Register("remove_ignore", "ss", CFGFLAG_CLIENT, ConRemoveIgnore, this, "Stop ignoring a player");
 	}
-	return Result;
-}
-
-bool CFriends::IsFriend(const char *pName, const char *pClan, bool PlayersOnly) const
-{
-	unsigned NameHash = str_quickhash(pName);
-	unsigned ClanHash = str_quickhash(pClan);
-	for(int i = 0; i < m_NumFriends; ++i)
-	{
-		if(m_aFriends[i].m_ClanHash == ClanHash &&
-			((!PlayersOnly && m_aFriends[i].m_aName[0] == 0) || m_aFriends[i].m_NameHash == NameHash))
-			return true;
-	}
-	return false;
-}
-
-void CFriends::AddFriend(const char *pName, const char *pClan)
-{
-	if(m_NumFriends == MAX_FRIENDS || (pName[0] == 0 && pClan[0] == 0))
-		return;
-
-	// make sure we don't have the friend already
-	unsigned NameHash = str_quickhash(pName);
-	unsigned ClanHash = str_quickhash(pClan);
-	for(int i = 0; i < m_NumFriends; ++i)
-	{
-		if(m_aFriends[i].m_NameHash == NameHash && m_aFriends[i].m_ClanHash == ClanHash)
-			return;
-	}
-
-	str_copy(m_aFriends[m_NumFriends].m_aName, pName, sizeof(m_aFriends[m_NumFriends].m_aName));
-	str_copy(m_aFriends[m_NumFriends].m_aClan, pClan, sizeof(m_aFriends[m_NumFriends].m_aClan));
-	m_aFriends[m_NumFriends].m_NameHash = NameHash;
-	m_aFriends[m_NumFriends].m_ClanHash = ClanHash;
-	++m_NumFriends;
-}
-
-void CFriends::RemoveFriend(const char *pName, const char *pClan)
-{
-	unsigned NameHash = str_quickhash(pName);
-	unsigned ClanHash = str_quickhash(pClan);
-	for(int i = 0; i < m_NumFriends; ++i)
-	{
-		if(m_aFriends[i].m_NameHash == NameHash && m_aFriends[i].m_ClanHash == ClanHash)
-		{
-			RemoveFriend(i);
-			return;
-		}
-	}
-}
-
-void CFriends::RemoveFriend(int Index)
-{
-	if(Index >= 0 && Index < m_NumFriends)
-	{
-		mem_move(&m_aFriends[Index], &m_aFriends[Index+1], sizeof(CFriendInfo)*(m_NumFriends-(Index+1)));
-		--m_NumFriends;
-	}
-	return;
 }
 
 void CFriends::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 {
 	CFriends *pSelf = (CFriends *)pUserData;
-	char aBuf[128];
-	const char *pEnd = aBuf+sizeof(aBuf)-4;
-	for(int i = 0; i < pSelf->m_NumFriends; ++i)
-	{
-		str_copy(aBuf, "add_friend ", sizeof(aBuf));
+	pSelf->ConfigSave(pConfig, "add_friend ");
+}
 
-		const char *pSrc = pSelf->m_aFriends[i].m_aName;
-		char *pDst = aBuf+str_length(aBuf);
-		*pDst++ = '"';
-		while(*pSrc && pDst < pEnd)
-		{
-			if(*pSrc == '"' || *pSrc == '\\') // escape \ and "
-				*pDst++ = '\\';
-			*pDst++ = *pSrc++;
-		}
-		*pDst++ = '"';
-		*pDst++ = ' ';
-
-		pSrc = pSelf->m_aFriends[i].m_aClan;
-		*pDst++ = '"';
-		while(*pSrc && pDst < pEnd)
-		{
-			if(*pSrc == '"' || *pSrc == '\\') // escape \ and "
-				*pDst++ = '\\';
-			*pDst++ = *pSrc++;
-		}
-		*pDst++ = '"';
-		*pDst++ = 0;
-
-		pConfig->WriteLine(aBuf);
-	}
+void CBlacklist::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
+{
+	CBlacklist *pSelf = (CBlacklist *)pUserData;
+	pSelf->ConfigSave(pConfig, "add_ignore ");
 }
