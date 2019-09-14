@@ -3072,10 +3072,10 @@ static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, 
 
 void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 {
+	if(m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[Index].m_aName, m_aFileDialogFilterString))
+		return;
 	m_FilesCur++;
 	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur >= m_FilesStopAt)
-		return;
-	if(m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[Index].m_aName, m_aFileDialogFilterString))
 		return;
 
 	CUIRect Button, FileIcon;
@@ -3164,8 +3164,11 @@ void CEditor::RenderFileDialog()
 		UI()->DoLabel(&FileBoxLabel, "Search:", 10.0f, CUI::ALIGN_LEFT);
 		if(DoEditBox(&s_SearchBoxID, &FileBox, m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString), 10.0f, &s_SearchBoxID))
 		{
+			// reset scrolling
+			m_FileDialogScrollValue = 0;
 			if(m_FilesSelectedIndex == -1 || (m_FilesSelectedIndex >= 0 && m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[m_FilesSelectedIndex].m_aName, m_aFileDialogFilterString)))
 			{
+				// we need to refresh selection
 				m_FilesSelectedIndex = -1;
 				// find first valid entry, if it exists
 				for(int i = 0; i < m_FileList.size(); i++)
