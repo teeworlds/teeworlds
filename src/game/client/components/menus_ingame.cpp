@@ -493,6 +493,9 @@ bool CMenus::RenderServerControlServer(CUIRect MainView)
 
 	for(CVoteOptionClient *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext)
 	{
+		if(m_aFilterString[0] && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
+			continue; // no match found
+
 		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, pOption);
 
 		if(Item.m_Visible)
@@ -707,21 +710,34 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	Extended.HSplitTop(20.0f, &Note, &Extended);
 	Extended.HSplitTop(20.0f, &Bottom, &Extended);
 	{
-		if(Authed || m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS){
+		if(Authed || m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
+		{
+			CUIRect Reason, Search, ClearButton, Label;
+			// render search
+			Bottom.VSplitLeft(15.0f, 0, &Bottom);
+			Bottom.VSplitLeft(260.0f, &Search, &Bottom);
+
+			const char *pSearchLabel = Localize("Search:");
+			float w = TextRender()->TextWidth(0, Search.h*ms_FontmodHeight*0.8f, pSearchLabel, -1, -1.0f);
+			Search.VSplitLeft(w + 10.0f, &Label, &Search);
+			Label.y += 2.0f;
+			UI()->DoLabel(&Label, pSearchLabel, Search.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+			static float s_SearchOffset = 0.0f;
+			DoEditBox(&m_aFilterString, &Search, m_aFilterString, sizeof(m_aFilterString), Search.h*ms_FontmodHeight*0.8f, &s_SearchOffset);
+
+			// render reason
 			Bottom.VSplitRight(120.0f, &Bottom, &Button);
-			
-			// render kick reason
-			CUIRect Reason, ClearButton, Label;
+
 			Bottom.VSplitRight(40.0f, &Bottom, 0);
 			Bottom.VSplitRight(160.0f, &Bottom, &Reason);
 			Reason.VSplitRight(Reason.h, &Reason, &ClearButton);
-			const char *pLabel = Localize("Reason:");
-			float w = TextRender()->TextWidth(0, Reason.h*ms_FontmodHeight*0.8f, pLabel, -1, -1.0f);
+			const char *pReasonLabel = Localize("Reason:");
+			w = TextRender()->TextWidth(0, Reason.h*ms_FontmodHeight*0.8f, pReasonLabel, -1, -1.0f);
 			Reason.VSplitLeft(w + 10.0f, &Label, &Reason);
 			Label.y += 2.0f;
-			UI()->DoLabel(&Label, pLabel, Reason.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-			static float s_Offset = 0.0f;
-			DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), Reason.h*ms_FontmodHeight*0.8f, &s_Offset, false, CUI::CORNER_L);
+			UI()->DoLabel(&Label, pReasonLabel, Reason.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+			static float s_ReasonOffset = 0.0f;
+			DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), Reason.h*ms_FontmodHeight*0.8f, &s_ReasonOffset, false, CUI::CORNER_L);
 
 			// clear button
 			{
