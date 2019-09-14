@@ -3075,6 +3075,8 @@ void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 	m_FilesCur++;
 	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur >= m_FilesStopAt)
 		return;
+	if(m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[Index].m_aName, m_aFileDialogFilterString))
+		return;
 
 	CUIRect Button, FileIcon;
 	pView->HSplitTop(15.0f, &Button, pView);
@@ -3153,6 +3155,26 @@ void CEditor::RenderFileDialog()
 				if(m_aFileDialogFileName[i] == '/' || m_aFileDialogFileName[i] == '\\')
 					str_copy(&m_aFileDialogFileName[i], &m_aFileDialogFileName[i+1], (int)(sizeof(m_aFileDialogFileName))-i);
 			m_FilesSelectedIndex = -1;
+		}
+	}
+	else
+	{
+		// render search bar
+		static float s_SearchBoxID = 0;
+		UI()->DoLabel(&FileBoxLabel, "Search:", 10.0f, CUI::ALIGN_LEFT);
+		if(DoEditBox(&s_SearchBoxID, &FileBox, m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString), 10.0f, &s_SearchBoxID))
+		{
+			if(m_FilesSelectedIndex == -1 || (m_FilesSelectedIndex >= 0 && m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[m_FilesSelectedIndex].m_aName, m_aFileDialogFilterString)))
+			{
+				m_FilesSelectedIndex = -1;
+				// find first valid entry, if it exists
+				for(int i = 0; i < m_FileList.size(); i++)
+					if(str_find_nocase(m_FileList[i].m_aName, m_aFileDialogFilterString))
+					{
+						m_FilesSelectedIndex = i;
+						break;
+					}
+			}
 		}
 	}
 
@@ -3361,6 +3383,7 @@ void CEditor::InvokeFileDialog(int StorageType, int FileType, const char *pTitle
 	m_aFileDialogFileName[0] = 0;
 	m_aFileDialogCurrentFolder[0] = 0;
 	m_aFileDialogCurrentLink[0] = 0;
+	m_aFileDialogFilterString[0] = 0;
 	m_pFileDialogPath = m_aFileDialogCurrentFolder;
 	m_FileDialogFileType = FileType;
 	m_FileDialogScrollValue = 0.0f;
