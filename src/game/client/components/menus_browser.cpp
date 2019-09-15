@@ -1236,7 +1236,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	DoEditBox(&g_Config.m_UiServerAddress, &EditBox, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), ButtonHeight*ms_FontmodHeight*0.8f, &s_AddressOffset, false, CUI::CORNER_ALL);
 
 	// render status
-	if(ServerBrowser()->IsRefreshing())
+	if(ServerBrowser()->IsRefreshing() && m_ActivePage != PAGE_LAN)
 	{
 		char aBuf[128];
 		Status.HSplitTop(ButtonHeight + SpacingH, 0, &Status);
