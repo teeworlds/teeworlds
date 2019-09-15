@@ -674,6 +674,7 @@ public:
 	char m_aFileDialogFilterString[64];
 	char m_FileDialogNewFolderName[64];
 	char m_FileDialogErrString[64];
+	float m_FilesSearchBoxID;
 
 	struct CFilelistItem
 	{
