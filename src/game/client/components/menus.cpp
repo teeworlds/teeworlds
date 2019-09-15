@@ -82,6 +82,7 @@ CMenus::CMenus()
 
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
 	m_aCallvoteReason[0] = 0;
+	m_aFilterString[0] = 0;
 
 	m_SelectedFilter = 0;
 

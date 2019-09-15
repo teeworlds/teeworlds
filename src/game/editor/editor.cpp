@@ -3072,6 +3072,8 @@ static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, 
 
 void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 {
+	if(m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[Index].m_aName, m_aFileDialogFilterString))
+		return;
 	m_FilesCur++;
 	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur >= m_FilesStopAt)
 		return;
@@ -3153,6 +3155,28 @@ void CEditor::RenderFileDialog()
 				if(m_aFileDialogFileName[i] == '/' || m_aFileDialogFileName[i] == '\\')
 					str_copy(&m_aFileDialogFileName[i], &m_aFileDialogFileName[i+1], (int)(sizeof(m_aFileDialogFileName))-i);
 			m_FilesSelectedIndex = -1;
+		}
+	}
+	else
+	{
+		// render search bar
+		UI()->DoLabel(&FileBoxLabel, "Search:", 10.0f, CUI::ALIGN_LEFT);
+		if(DoEditBox(&m_FilesSearchBoxID, &FileBox, m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString), 10.0f, &m_FilesSearchBoxID))
+		{
+			// reset scrolling
+			m_FileDialogScrollValue = 0;
+			if(m_FilesSelectedIndex == -1 || (m_FilesSelectedIndex >= 0 && m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[m_FilesSelectedIndex].m_aName, m_aFileDialogFilterString)))
+			{
+				// we need to refresh selection
+				m_FilesSelectedIndex = -1;
+				// find first valid entry, if it exists
+				for(int i = 0; i < m_FileList.size(); i++)
+					if(str_find_nocase(m_FileList[i].m_aName, m_aFileDialogFilterString))
+					{
+						m_FilesSelectedIndex = i;
+						break;
+					}
+			}
 		}
 	}
 
@@ -3361,9 +3385,12 @@ void CEditor::InvokeFileDialog(int StorageType, int FileType, const char *pTitle
 	m_aFileDialogFileName[0] = 0;
 	m_aFileDialogCurrentFolder[0] = 0;
 	m_aFileDialogCurrentLink[0] = 0;
+	m_aFileDialogFilterString[0] = 0;
 	m_pFileDialogPath = m_aFileDialogCurrentFolder;
 	m_FileDialogFileType = FileType;
 	m_FileDialogScrollValue = 0.0f;
+	m_FilesSearchBoxID = 0;
+	UI()->SetActiveItem(&m_FilesSearchBoxID);
 
 	if(pDefaultName)
 		str_copy(m_aFileDialogFileName, pDefaultName, sizeof(m_aFileDialogFileName));
