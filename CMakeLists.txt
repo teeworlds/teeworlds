@@ -477,7 +477,8 @@ set_src(DEP_MD5_SRC GLOB src/engine/external/md5 md5.c md5.h)
 add_library(md5 EXCLUDE_FROM_ALL OBJECT ${DEP_MD5_SRC})
 
 list(APPEND TARGETS_DEP json md5)
-set(DEP_MD5 $<TARGET_OBJECTS:json> $<TARGET_OBJECTS:md5>)
+set(DEP_JSON $<TARGET_OBJECTS:json>)
+set(DEP_MD5 $<TARGET_OBJECTS:md5>)
 
 ########################################################################
 # DATA
@@ -1275,7 +1276,7 @@ set(GAME_GENERATED_SHARED
   src/generated/protocol.h
 )
 
-set(DEPS ${DEP_MD5} ${ZLIB_DEP})
+set(DEPS ${DEP_JSON} ${DEP_MD5} ${ZLIB_DEP})
 
 # Libraries
 set(LIBS ${CMAKE_THREAD_LIBS_INIT} ${ZLIB_LIBRARIES} ${CRYPTO_LIBRARIES} ${PLATFORM_LIBS})
