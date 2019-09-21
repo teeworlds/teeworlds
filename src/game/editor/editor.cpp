@@ -2856,11 +2856,16 @@ static void ModifySortedIndex(int *pIndex)
 		*pIndex = gs_pSortedIndex[*pIndex];
 }
 
+static int CompareImage(const CEditorImage *pImage1, const CEditorImage *pImage2)
+{
+	return *pImage1 < *pImage2;
+}
+
 void CEditor::SortImages()
 {
 	bool Sorted = true;
 	for(int i = 1; i < m_Map.m_lImages.size(); i++)
-		if( str_comp(m_Map.m_lImages[i]->m_aName, m_Map.m_lImages[i-1]->m_aName) < 0 )
+		if(*m_Map.m_lImages[i] < *m_Map.m_lImages[i-1])
 		{
 			Sorted = false;
 			break;
@@ -2871,7 +2876,7 @@ void CEditor::SortImages()
 		array<CEditorImage*> lTemp = array<CEditorImage*>(m_Map.m_lImages);
 		gs_pSortedIndex = new int[lTemp.size()];
 
-		std::stable_sort(&m_Map.m_lImages[0], &m_Map.m_lImages[m_Map.m_lImages.size()]);
+		std::stable_sort(&m_Map.m_lImages[0], &m_Map.m_lImages[m_Map.m_lImages.size()], CompareImage);
 
 		for(int OldIndex = 0; OldIndex < lTemp.size(); OldIndex++)
 			for(int NewIndex = 0; NewIndex < m_Map.m_lImages.size(); NewIndex++)

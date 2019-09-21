@@ -286,7 +286,7 @@ public:
 	char m_aName[128];
 	unsigned char m_aTileFlags[256];
 	class IAutoMapper *m_pAutoMapper;
-	bool operator<(const CEditorImage &Other) const { return str_comp(m_aName, Other.m_aName); }
+	bool operator<(const CEditorImage &Other) const { return str_comp(m_aName, Other.m_aName) < 0; }
 };
 
 class CEditorMap
