@@ -128,6 +128,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				CMapItemLayerTilemap Item;
 				Item.m_Version = CMapItemLayerTilemap::CURRENT_VERSION;
 
+				Item.m_Layer.m_Version = 0; // unused
 				Item.m_Layer.m_Flags = pLayer->m_Flags;
 				Item.m_Layer.m_Type = pLayer->m_Type;
 
@@ -157,6 +158,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				{
 					CMapItemLayerQuads Item;
 					Item.m_Version = CMapItemLayerQuads::CURRENT_VERSION;
+					Item.m_Layer.m_Version = 0; // unused
 					Item.m_Layer.m_Flags = pLayer->m_Flags;
 					Item.m_Layer.m_Type = pLayer->m_Type;
 					Item.m_Image = pLayer->m_Image;
@@ -488,6 +490,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					{
 						// backwards compatibility
 						CEnvPoint_v1 *pEnvPoint_v1 = &((CEnvPoint_v1 *)pEnvPoints)[pItem->m_StartPoint + n];
+						mem_zero((void*)&pEnv->m_lPoints[n], sizeof(CEnvPoint));
 
 						pEnv->m_lPoints[n].m_Time = pEnvPoint_v1->m_Time;
 						pEnv->m_lPoints[n].m_Curvetype = pEnvPoint_v1->m_Curvetype;
@@ -495,10 +498,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						for(int c = 0; c < pItem->m_Channels; c++)
 						{
 							pEnv->m_lPoints[n].m_aValues[c] = pEnvPoint_v1->m_aValues[c];
-							pEnv->m_lPoints[n].m_aInTangentdx[c] = 0;
-							pEnv->m_lPoints[n].m_aInTangentdy[c] = 0;
-							pEnv->m_lPoints[n].m_aOutTangentdx[c] = 0;
-							pEnv->m_lPoints[n].m_aOutTangentdy[c] = 0;
 						}
 					}
 				}
