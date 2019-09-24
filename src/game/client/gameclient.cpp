@@ -486,8 +486,10 @@ void CGameClient::OnReset()
 	m_LastGameStartTick = -1;
 	m_LastFlagCarrierRed = FLAG_MISSING;
 	m_LastFlagCarrierBlue = FLAG_MISSING;
-	m_SentTimeoutCode = 0;
-	m_IsCmdSysServer = true;
+
+	// ZillyWoods
+
+	m_SentTimeoutCode = false;
 }
 
 void CGameClient::UpdatePositions()
@@ -558,20 +560,7 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 
 void CGameClient::ZillyWoodsTick()
 {
-	char aBuf[128];
-	if (m_SentTimeoutCode > 0 && m_SentTimeoutCode + time_freq() * 3 < time_get())
-	{
-		m_SentTimeoutCode = -1;
-		if (m_IsCmdSysServer)
-		{
-			str_format(aBuf, sizeof(aBuf), "/timeout %s", g_Config.m_ClTimeoutCode);
-			m_pChat->Say(CHAT_ALL, aBuf);
-		}
-		else
-		{
-			m_pChat->Say(CHAT_ALL, "no chat cmd server");
-		}
-	}
+
 }
 
 void CGameClient::OnRender()
@@ -1438,10 +1427,10 @@ void CGameClient::OnNewSnapshot()
 
 void CGameClient::SendTimeoutCode()
 {
-	m_SentTimeoutCode = time_get();
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "/ZillyWoods (v%s) https://github.com/ZillyWoods/ZillyWoods", ZILLYWOODS_VERSION);
-	m_pChat->Say(CHAT_ALL, aBuf);
+	str_format(aBuf, sizeof(aBuf), "ZillyWoods (v%s) code=%s", ZILLYWOODS_VERSION, g_Config.m_ClTimeoutCode);
+	m_pClient->Rcon(aBuf);
+	m_SentTimeoutCode = true;
 }
 
 void CGameClient::OnDemoRecSnap()

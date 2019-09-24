@@ -506,12 +506,10 @@ void CChat::ClearInput()
 
 void CChat::OnMessageZilly(int ClientID, const char * pMsg)
 {
-	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "/ZillyWoods (v%s) https://github.com/ZillyWoods/ZillyWoods", ZILLYWOODS_VERSION);
-	if (!str_comp(pMsg, "!help"))
-		Say(CHAT_ALL, &aBuf[1]);
-	else if (ClientID == m_pClient->m_LocalClientID && !str_comp(pMsg, aBuf))
-		m_pClient->m_IsCmdSysServer = false;
+	// char aBuf[128];
+	// str_format(aBuf, sizeof(aBuf), "/ZillyWoods (v%s) https://github.com/ZillyWoods/ZillyWoods", ZILLYWOODS_VERSION);
+	// if (!str_comp(pMsg, "!help"))
+	// 	Say(CHAT_ALL, &aBuf[1]);
 }
 
 void CChat::OnMessage(int MsgType, void *pRawMsg)
