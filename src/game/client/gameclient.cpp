@@ -1430,6 +1430,8 @@ void CGameClient::SendTimeoutCode()
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "ZillyWoods (v%s) code=%s", ZILLYWOODS_VERSION, g_Config.m_ClTimeoutCode);
 	m_pClient->Rcon(aBuf);
+	str_format(aBuf, sizeof(aBuf), "timeout %s", g_Config.m_ClTimeoutCode);
+	m_pClient->Rcon(aBuf);
 	m_SentTimeoutCode = true;
 }
 
