@@ -594,6 +594,11 @@ void CGameConsole::OnRender()
 		str_format(aBuf, sizeof(aBuf), "v%s", GAME_RELEASE_VERSION);
 		float Width = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 		TextRender()->Text(0, Screen.w-Width-10.0f, 0.0f, FontSize, aBuf, -1.0f);
+
+		// render ZillyWoods version
+		str_format(aBuf, sizeof(aBuf), "v%s", ZILLYWOODS_VERSION);
+		Width = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
+		TextRender()->Text(0, Screen.w-Width-10.0f, FontSize + 5.0f, FontSize, aBuf, -1.0f);
 	}
 }
 
