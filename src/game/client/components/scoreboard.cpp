@@ -575,6 +575,13 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				RenderTools()->DrawClientID(TextRender(), &Cursor, pInfo->m_ClientID);
 			}
 
+			// admin detection
+			if(g_Config.m_ClShowAdmins && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_ADMIN))
+			{
+				if(HighlightedLine)
+					TextRender()->TextOutlineColor(0.0f, 0.1f, 0.0f, 0.5f);
+				TextRender()->TextColor(0.1f, 1.0f, 0.1f, ColorAlpha);
+			}
 			// name
 			TextRender()->SetCursor(&Cursor, NameOffset+TeeLength, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = NameLength-TeeLength;
@@ -587,16 +594,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				TextRender()->TextColor(0.1f, 1.0f, 0.1f, ColorAlpha);
 				TextRender()->SetCursor(&Cursor, Cursor.m_X, y+Spacing, FontSize, TEXTFLAG_RENDER);
 				TextRender()->TextEx(&Cursor, "\xE2\x9C\x93", str_length("\xE2\x9C\x93"));
-			}
-
-			// admin detection
-			if(g_Config.m_ClShowAdmins && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_ADMIN))
-			{
-				if(HighlightedLine)
-					TextRender()->TextOutlineColor(0.1f, 0.0f, 0.0f, 0.5f);
-				TextRender()->TextColor(1.0f, 0.1f, 0.1f, ColorAlpha);
-				TextRender()->SetCursor(&Cursor, Cursor.m_X+1, y+Spacing, FontSize, TEXTFLAG_RENDER);
-				TextRender()->TextEx(&Cursor, "*", str_length("*"));
 			}
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
 			TextRender()->TextOutlineColor(OutlineColor.r, OutlineColor.g, OutlineColor.b, OutlineColor.a);
