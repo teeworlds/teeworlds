@@ -8,7 +8,7 @@
 
 #include <engine/graphics.h>
 #include <engine/demo.h>
-#include <engine/friends.h>
+#include <engine/contacts.h>
 
 #include <game/voting.h>
 #include <game/client/component.h>

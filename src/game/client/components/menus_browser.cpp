@@ -11,7 +11,7 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
-#include <engine/client/friends.h>
+#include <engine/client/contacts.h>
 
 #include <generated/client_data.h>
 #include <generated/protocol.h>

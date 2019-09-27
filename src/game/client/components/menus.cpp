@@ -9,7 +9,7 @@
 #include <engine/config.h>
 #include <engine/editor.h>
 #include <engine/engine.h>
-#include <engine/friends.h>
+#include <engine/contacts.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>

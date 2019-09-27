@@ -6,7 +6,7 @@
 #include <engine/console.h>
 #include <engine/shared/config.h>
 
-#include "friends.h"
+#include "contacts.h"
 
 IContactList::IContactList()
 {

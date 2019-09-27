@@ -40,7 +40,7 @@
 #include <mastersrv/mastersrv.h>
 #include <versionsrv/versionsrv.h>
 
-#include "friends.h"
+#include "contacts.h"
 #include "serverbrowser.h"
 #include "client.h"
 

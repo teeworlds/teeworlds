@@ -4,7 +4,7 @@
 
 #include <engine/config.h>
 #include <engine/demo.h>
-#include <engine/friends.h>
+#include <engine/contacts.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>

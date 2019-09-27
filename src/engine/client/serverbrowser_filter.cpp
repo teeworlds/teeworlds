@@ -5,7 +5,7 @@
 #include <base/math.h>
 
 #include <engine/shared/config.h>
-#include <engine/client/friends.h>
+#include <engine/client/contacts.h>
 #include <engine/serverbrowser.h>
 
 #include "serverbrowser_entry.h"

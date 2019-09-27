@@ -5,7 +5,7 @@
 
 #include <engine/shared/console.h>
 #include <engine/config.h>
-#include <engine/friends.h>
+#include <engine/contacts.h>
 
 class IContactList
 {
