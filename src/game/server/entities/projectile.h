@@ -3,6 +3,11 @@
 #ifndef GAME_SERVER_ENTITIES_PROJECTILE_H
 #define GAME_SERVER_ENTITIES_PROJECTILE_H
 
+enum
+{
+	PLAYER_LEFT = -1
+};
+
 class CProjectile : public CEntity
 {
 public:
@@ -11,6 +16,8 @@ public:
 
 	vec2 GetPos(float Time);
 	void FillInfo(CNetObj_Projectile *pProj);
+
+	void LoseOwner(int Owner);
 
 	virtual void Reset();
 	virtual void Tick();

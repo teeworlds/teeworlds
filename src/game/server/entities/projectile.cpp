@@ -28,6 +28,12 @@ void CProjectile::Reset()
 	GameServer()->m_World.DestroyEntity(this);
 }
 
+void CProjectile::LoseOwner(int Owner)
+{
+	if(m_Owner == Owner)
+		m_Owner = PLAYER_LEFT;
+}
+
 vec2 CProjectile::GetPos(float Time)
 {
 	float Curvature = 0;

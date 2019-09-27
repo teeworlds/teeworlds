@@ -12,6 +12,7 @@
 #include <game/version.h>
 
 #include "entities/character.h"
+#include "entities/projectile.h"
 #include "gamemodes/ctf.h"
 #include "gamemodes/dm.h"
 #include "gamemodes/lms.h"
@@ -722,6 +723,11 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 			Msg.m_Silent = true;
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, -1);
 	}
+
+	// mark projectile owned by the client
+	CProjectile *p = (CProjectile *)m_World.FindFirst(CGameWorld::ENTTYPE_PROJECTILE);
+	for(; p; p = (CProjectile *)p->TypeNext())
+		p->LoseOwner(ClientID);
 
 	delete m_apPlayers[ClientID];
 	m_apPlayers[ClientID] = 0;
