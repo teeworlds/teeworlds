@@ -9,12 +9,12 @@
 #include <engine/config.h>
 #include <engine/editor.h>
 #include <engine/engine.h>
+#include <engine/friends.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
-#include <engine/client/friends.h>
 
 #include <game/version.h>
 #include <generated/protocol.h>
@@ -2250,7 +2250,7 @@ int CMenus::Render()
 				// remove friend
 				if(m_pDeleteFriend)
 				{
-					m_pClient->Friends()->RemoveFriend(m_pDeleteFriend->m_FriendState == IContactList::CONTACT_PLAYER ? m_pDeleteFriend->m_aName : "", m_pDeleteFriend->m_aClan);
+					m_pClient->Friends()->RemoveFriend(m_pDeleteFriend->m_FriendState == CONTACT_PLAYER ? m_pDeleteFriend->m_aName : "", m_pDeleteFriend->m_aClan);
 					FriendlistOnUpdate();
 					Client()->ServerBrowserUpdate();
 					m_pDeleteFriend = 0;

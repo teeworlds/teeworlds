@@ -7,6 +7,16 @@
 
 #include "kernel.h"
 
+enum
+{
+	// for contact lists
+	CONTACT_NO=0,
+	CONTACT_CLAN,
+	CONTACT_PLAYER,
+
+	MAX_CONTACTS=128,
+};
+
 struct CContactInfo
 {
 	char m_aName[MAX_NAME_LENGTH];

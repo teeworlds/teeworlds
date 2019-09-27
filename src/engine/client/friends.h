@@ -9,16 +9,6 @@
 
 class IContactList
 {
-public:
-	enum
-	{
-		CONTACT_NO=0,
-		CONTACT_CLAN,
-		CONTACT_PLAYER,
-
-		MAX_CONTACTS=128,
-	};
-
 private:
 	CContactInfo m_aContacts[MAX_CONTACTS];
 	int m_NumContacts;
