@@ -21,7 +21,7 @@ const CContactInfo *IContactList::GetContact(int Index) const
 
 int IContactList::GetContactState(const char *pName, const char *pClan) const
 {
-	int Result = CONTACT_NO;
+	int Result = CContactInfo::CONTACT_NO;
 	unsigned NameHash = str_quickhash(pName);
 	unsigned ClanHash = str_quickhash(pClan);
 	for(int i = 0; i < m_NumContacts; ++i)
@@ -29,10 +29,10 @@ int IContactList::GetContactState(const char *pName, const char *pClan) const
 		if(m_aContacts[i].m_ClanHash == ClanHash)
 		{
 			if(m_aContacts[i].m_aName[0] == 0)
-				Result = CONTACT_CLAN;
+				Result = CContactInfo::CONTACT_CLAN;
 			else if(m_aContacts[i].m_NameHash == NameHash)
 			{
-				Result = CONTACT_PLAYER;
+				Result = CContactInfo::CONTACT_PLAYER;
 				break;
 			}
 		}
@@ -55,7 +55,7 @@ bool IContactList::IsContact(const char *pName, const char *pClan, bool PlayersO
 
 void IContactList::AddContact(const char *pName, const char *pClan)
 {
-	if(m_NumContacts == MAX_CONTACTS || (pName[0] == 0 && pClan[0] == 0))
+	if(m_NumContacts == CContactInfo::MAX_CONTACTS || (pName[0] == 0 && pClan[0] == 0))
 		return;
 
 	// make sure we don't have the friend already

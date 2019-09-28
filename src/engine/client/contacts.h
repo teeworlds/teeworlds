@@ -10,7 +10,7 @@
 class IContactList
 {
 private:
-	CContactInfo m_aContacts[MAX_CONTACTS];
+	CContactInfo m_aContacts[CContactInfo::MAX_CONTACTS];
 	int m_NumContacts;
 
 public:

@@ -7,22 +7,22 @@
 
 #include "kernel.h"
 
-enum
-{
-	// for contact lists
-	CONTACT_NO=0,
-	CONTACT_CLAN,
-	CONTACT_PLAYER,
-
-	MAX_CONTACTS=128,
-};
-
 struct CContactInfo
 {
 	char m_aName[MAX_NAME_LENGTH];
 	char m_aClan[MAX_CLAN_LENGTH];
 	unsigned m_NameHash;
 	unsigned m_ClanHash;
+
+	enum
+	{
+		// for contact lists
+		CONTACT_NO=0,
+		CONTACT_CLAN,
+		CONTACT_PLAYER,
+
+		MAX_CONTACTS=128,
+	};
 };
 
 class IFriends : public IInterface

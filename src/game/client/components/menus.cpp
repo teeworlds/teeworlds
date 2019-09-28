@@ -2250,7 +2250,7 @@ int CMenus::Render()
 				// remove friend
 				if(m_pDeleteFriend)
 				{
-					m_pClient->Friends()->RemoveFriend(m_pDeleteFriend->m_FriendState == CONTACT_PLAYER ? m_pDeleteFriend->m_aName : "", m_pDeleteFriend->m_aClan);
+					m_pClient->Friends()->RemoveFriend(m_pDeleteFriend->m_FriendState == CContactInfo::CONTACT_PLAYER ? m_pDeleteFriend->m_aName : "", m_pDeleteFriend->m_aClan);
 					FriendlistOnUpdate();
 					Client()->ServerBrowserUpdate();
 					m_pDeleteFriend = 0;
