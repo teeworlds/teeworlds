@@ -260,7 +260,7 @@ void CSpectator::OnRender()
 
 			RenderTools()->SelectSprite(Flag == SPEC_FLAGRED ? SPRITE_FLAG_RED : SPRITE_FLAG_BLUE);
 
-			float Size = LineHeight/1.5f + (Selected ? 12.0f : 8.0f);
+			float Size = 60.0f/1.5f + (Selected ? 12.0f : 8.0f);
 			float FlagWidth = Width/2.0f + x + 40.0f + (Selected ? -3.0f : -2.0f);
 			float FlagHeight = Height/2.0f + y + (Selected ? -6.0f : -4.0f);
 
