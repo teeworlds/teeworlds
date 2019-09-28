@@ -327,7 +327,7 @@ void CSpectator::OnRender()
 			RenderTools()->SelectSprite(i == m_pClient->m_Snap.m_pGameDataFlag->m_FlagCarrierBlue ? SPRITE_FLAG_BLUE : SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
 
 			float Size = LineHeight;
-			IGraphics::CQuadItem QuadItem(Width/2.0f+x-Size/5.0f, Height/2.0f+y-Size/3.0f, Size/2.0f, Size);
+			IGraphics::CQuadItem QuadItem(Width/2.0f+x+20.0f-Size/4.0f, Height/2.0f+y+20.0f-Size/1.5f, Size/2.0f, Size);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 		}
