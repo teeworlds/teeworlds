@@ -312,30 +312,19 @@ public:
 		else
 		{
 			IOHANDLE Handle = 0;
-
-			if(Type == TYPE_ALL)
+			int LB = 0, UB = m_NumPaths;	// check all available directories
+			
+			if(Type >= 0 && Type < m_NumPaths)	// check wanted directory
 			{
-				// check all available directories
-				for(int i = 0; i < m_NumPaths; ++i)
-				{
-					Handle = io_open(GetPath(i, pFilename, pBuffer, BufferSize), Flags);
-					if(Handle)
-					{
-						// do an additional check on the file
-						if(pfnCheckCB && !pfnCheckCB(Handle, pCheckCBData))
-						{
-							io_close(Handle);
-							Handle = 0;
-						}
-						else
-							return Handle;
-					}
-				}
+				LB = Type;
+				UB = Type + 1;
 			}
-			else if(Type >= 0 && Type < m_NumPaths)
+			else
+				dbg_assert(Type == TYPE_ALL, "invalid storage type");
+
+			for(int i = LB; i < UB; ++i)
 			{
-				// check wanted directory
-				Handle = io_open(GetPath(Type, pFilename, pBuffer, BufferSize), Flags);
+				Handle = io_open(GetPath(i, pFilename, pBuffer, BufferSize), Flags);
 				if(Handle)
 				{
 					// do an additional check on the file
