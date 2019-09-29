@@ -684,7 +684,7 @@ void CCharacter::Die(int Killer, int Weapon)
 		if(!Server()->ClientIngame(i))
 			continue;
 
-		if(Server()->GetClientVersion(i) >= MIN_KILLMESSAGE_CLIENTVERSION)
+		if(Killer < 0 && Server()->GetClientVersion(i) < MIN_KILLMESSAGE_CLIENTVERSION)
 		{
 			Msg.m_Killer = 0;
 			Msg.m_Weapon = WEAPON_WORLD;
