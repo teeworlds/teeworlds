@@ -677,11 +677,25 @@ void CCharacter::Die(int Killer, int Weapon)
 
 	// send the kill message
 	CNetMsg_Sv_KillMsg Msg;
-	Msg.m_Killer = Killer;
 	Msg.m_Victim = m_pPlayer->GetCID();
-	Msg.m_Weapon = Weapon;
 	Msg.m_ModeSpecial = ModeSpecial;
-	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
+	for(int i = 0 ; i < Server()->MaxClients(); i++)
+	{
+		if(!Server()->ClientIngame(i))
+			continue;
+
+		if(Server()->GetClientVersion(i) >= MIN_KILLMESSAGE_CLIENTVERSION)
+		{
+			Msg.m_Killer = 0;
+			Msg.m_Weapon = WEAPON_WORLD;
+		}
+		else
+		{
+			Msg.m_Killer = Killer;
+			Msg.m_Weapon = Weapon;
+		}
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, i);
+	}
 
 	// a nice sound
 	GameServer()->CreateSound(m_Pos, SOUND_PLAYER_DIE);
