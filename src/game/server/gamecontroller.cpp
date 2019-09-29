@@ -868,6 +868,11 @@ bool IGameController::IsFriendlyFire(int ClientID1, int ClientID2) const
 	return false;
 }
 
+bool IGameController::IsFriendlyTeamFire(int Team1, int Team2) const
+{
+	return IsTeamplay() && !g_Config.m_SvTeamdamage && Team1 == Team2;
+}
+
 bool IGameController::IsPlayerReadyMode() const
 {
 	return g_Config.m_SvPlayerReadyMode != 0 && (m_GameStateTimer == TIMER_INFINITE && (m_GameState == IGS_WARMUP_USER || m_GameState == IGS_GAME_PAUSED));

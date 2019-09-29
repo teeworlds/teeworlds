@@ -5,13 +5,13 @@
 #include <engine/external/json-parser/json.h>
 
 #include <engine/config.h>
-#include <engine/friends.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
+#include <engine/client/contacts.h>
 
 #include <generated/client_data.h>
 #include <generated/protocol.h>
@@ -432,7 +432,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			}
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
-			if(pEntry->m_FriendState != IFriends::FRIEND_NO)
+			if(pEntry->m_FriendState != CContactInfo::CONTACT_NO)
 			{
 				Icon.Margin(2.0f, &Icon);
 				DoIcon(IMAGE_BROWSEICONS, Selected ? SPRITE_BROWSE_HEART_B : SPRITE_BROWSE_HEART_A, &Icon);
@@ -811,7 +811,7 @@ void CMenus::RenderServerbrowserOverlay()
 				ServerScoreBoard.HSplitTop(ButtonHeight, &Name, &ServerScoreBoard);
 				if(UI()->DoButtonLogic(&pInfo->m_aClients[i], "", 0, &Name))
 				{
-					if(pInfo->m_aClients[i].m_FriendState == IFriends::FRIEND_PLAYER)
+					if(pInfo->m_aClients[i].m_FriendState == CContactInfo::CONTACT_PLAYER)
 						m_pClient->Friends()->RemoveFriend(pInfo->m_aClients[i].m_aName, pInfo->m_aClients[i].m_aClan);
 					else
 						m_pClient->Friends()->AddFriend(pInfo->m_aClients[i].m_aName, pInfo->m_aClients[i].m_aClan);
@@ -819,7 +819,7 @@ void CMenus::RenderServerbrowserOverlay()
 					Client()->ServerBrowserUpdate();
 				}
 
-				vec4 Colour = pInfo->m_aClients[i].m_FriendState == IFriends::FRIEND_NO ? vec4(1.0f, 1.0f, 1.0f, (i%2+1)*0.05f) :
+				vec4 Colour = pInfo->m_aClients[i].m_FriendState == CContactInfo::CONTACT_NO ? vec4(1.0f, 1.0f, 1.0f, (i%2+1)*0.05f) :
 																									vec4(0.5f, 1.0f, 0.5f, 0.15f+(i%2+1)*0.05f);
 				RenderTools()->DrawUIRect(&Name, Colour, CUI::CORNER_ALL, 4.0f);
 				Name.VSplitLeft(5.0f, 0, &Name);
@@ -1357,12 +1357,12 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	m_lFriendList[2].clear();
 	for(int f = 0; f < m_pClient->Friends()->NumFriends(); ++f)
 	{
-		const CFriendInfo *pFriendInfo = m_pClient->Friends()->GetFriend(f);
+		const CContactInfo *pFriendInfo = m_pClient->Friends()->GetFriend(f);
 		CFriendItem FriendItem;
 		FriendItem.m_pServerInfo = 0;
 		str_copy(FriendItem.m_aName, pFriendInfo->m_aName, sizeof(FriendItem.m_aName));
 		str_copy(FriendItem.m_aClan, pFriendInfo->m_aClan, sizeof(FriendItem.m_aClan));
-		FriendItem.m_FriendState = pFriendInfo->m_aName[0] ? IFriends::FRIEND_PLAYER : IFriends::FRIEND_CLAN;
+		FriendItem.m_FriendState = pFriendInfo->m_aName[0] ? CContactInfo::CONTACT_PLAYER : CContactInfo::CONTACT_CLAN;
 		FriendItem.m_IsPlayer = false;
 		m_lFriendList[2].add(FriendItem);
 	}
@@ -1370,12 +1370,12 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumServers(); ++ServerIndex)
 	{
 		const CServerInfo *pEntry = ServerBrowser()->Get(ServerIndex);
-		if(pEntry->m_FriendState == IFriends::FRIEND_NO)
+		if(pEntry->m_FriendState == CContactInfo::CONTACT_NO)
 			continue;
 				
 		for(int j = 0; j < pEntry->m_NumClients; ++j)
 		{
-			if(pEntry->m_aClients[j].m_FriendState == IFriends::FRIEND_NO)
+			if(pEntry->m_aClients[j].m_FriendState == CContactInfo::CONTACT_NO)
 				continue;
 			
 			CFriendItem FriendItem;
@@ -1385,7 +1385,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			FriendItem.m_FriendState = pEntry->m_aClients[j].m_FriendState;
 			FriendItem.m_IsPlayer = !(pEntry->m_aClients[j].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC);
 
-			if(pEntry->m_aClients[j].m_FriendState == IFriends::FRIEND_PLAYER)
+			if(pEntry->m_aClients[j].m_FriendState == CContactInfo::CONTACT_PLAYER)
 				m_lFriendList[0].add(FriendItem);
 			else
 				m_lFriendList[1].add(FriendItem);
@@ -1998,7 +1998,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			// friend
 			if(UI()->DoButtonLogic(&pInfo->m_aClients[i], "", 0, &Name))
 			{
-				if(pInfo->m_aClients[i].m_FriendState == IFriends::FRIEND_PLAYER)
+				if(pInfo->m_aClients[i].m_FriendState == CContactInfo::CONTACT_PLAYER)
 					m_pClient->Friends()->RemoveFriend(pInfo->m_aClients[i].m_aName, pInfo->m_aClients[i].m_aClan);
 				else
 					m_pClient->Friends()->AddFriend(pInfo->m_aClients[i].m_aName, pInfo->m_aClients[i].m_aClan);
@@ -2007,7 +2007,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			}
 			Name.VSplitLeft(Name.h-8.0f, &Icon, &Name);
 			Icon.HMargin(4.0f, &Icon);
-			if(pInfo->m_aClients[i].m_FriendState != IFriends::FRIEND_NO)
+			if(pInfo->m_aClients[i].m_FriendState != CContactInfo::CONTACT_NO)
 				DoIcon(IMAGE_BROWSEICONS, SPRITE_BROWSE_HEART_A, &Icon);
 
 			Name.VSplitLeft(2.0f, 0, &Name);
