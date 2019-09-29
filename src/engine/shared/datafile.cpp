@@ -437,6 +437,27 @@ unsigned CDataFileReader::Crc() const
 	return m_pDataFile->m_Crc;
 }
 
+bool CDataFileReader::CheckSha256(IOHANDLE Handle, const void *pSha256)
+{
+	// read the hash of the file
+	SHA256_CTX Sha256Ctx;
+	sha256_init(&Sha256Ctx);
+	unsigned char aBuffer[64*1024];
+	
+	while(1)
+	{
+		unsigned Bytes = io_read(Handle, aBuffer, sizeof(aBuffer));
+		if(Bytes == 0)
+			break;
+		sha256_update(&Sha256Ctx, aBuffer, Bytes);
+	}
+
+	io_seek(Handle, 0, IOSEEK_START);
+	SHA256_DIGEST Sha256 = sha256_finish(&Sha256Ctx);
+
+	return !sha256_comp(*(const SHA256_DIGEST *)pSha256, Sha256);
+}
+
 
 CDataFileWriter::CDataFileWriter()
 {

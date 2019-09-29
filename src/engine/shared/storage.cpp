@@ -281,7 +281,7 @@ public:
 
 	// Open a file. This checks that the path appears to be a subdirectory
 	// of one of the storage paths.
-	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0)
+	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0, FCheckCallback pfnCheckCB = 0, const void *pCheckCBData = 0)
 	{
 		char aBuffer[MAX_PATH_LENGTH];
 		if(!pBuffer)
@@ -320,7 +320,16 @@ public:
 				{
 					Handle = io_open(GetPath(i, pFilename, pBuffer, BufferSize), Flags);
 					if(Handle)
-						return Handle;
+					{
+						// do an additional check on the file
+						if(pfnCheckCB && !pfnCheckCB(Handle, pCheckCBData))
+						{
+							io_close(Handle);
+							Handle = 0;
+						}
+						else
+							return Handle;
+					}
 				}
 			}
 			else if(Type >= 0 && Type < m_NumPaths)
@@ -328,7 +337,16 @@ public:
 				// check wanted directory
 				Handle = io_open(GetPath(Type, pFilename, pBuffer, BufferSize), Flags);
 				if(Handle)
-					return Handle;
+				{
+					// do an additional check on the file
+					if(pfnCheckCB && !pfnCheckCB(Handle, pCheckCBData))
+					{
+						io_close(Handle);
+						Handle = 0;
+					}
+					else
+						return Handle;
+				}
 			}
 		}
 
