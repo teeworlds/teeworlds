@@ -1431,12 +1431,17 @@ void CChat::Com_Mute(CChat *pChatData, const char* pCommand)
 	int TargetID = pChatData->IdentifyNameParameter(pCommand);
 	if(TargetID != -1)
 	{
+		bool isMuted = pChatData->m_pClient->m_aClients[TargetID].m_ChatIgnore;
+		if(isMuted)
+			pChatData->m_pClient->Blacklist()->RemoveIgnoredPlayer(pChatData->m_pClient->m_aClients[TargetID].m_aName, pChatData->m_pClient->m_aClients[TargetID].m_aClan);
+		else
+			pChatData->m_pClient->Blacklist()->AddIgnoredPlayer(pChatData->m_pClient->m_aClients[TargetID].m_aName, pChatData->m_pClient->m_aClients[TargetID].m_aClan);
 		pChatData->m_pClient->m_aClients[TargetID].m_ChatIgnore ^= 1;
 
 		pChatData->ClearInput();
 
 		char aMsg[128];
-		str_format(aMsg, sizeof(aMsg), pChatData->m_pClient->m_aClients[TargetID].m_ChatIgnore ? Localize("'%s' was muted") : Localize("'%s' was unmuted"), pChatData->m_pClient->m_aClients[TargetID].m_aName);
+		str_format(aMsg, sizeof(aMsg), !isMuted ? Localize("'%s' was muted") : Localize("'%s' was unmuted"), pChatData->m_pClient->m_aClients[TargetID].m_aName);
 		pChatData->AddLine(CLIENT_MSG, CHAT_ALL, aMsg, -1);
 	}
 }

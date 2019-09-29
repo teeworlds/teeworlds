@@ -5,8 +5,7 @@
 #include <base/math.h>
 
 #include <engine/shared/config.h>
-
-#include <engine/friends.h>
+#include <engine/client/contacts.h>
 #include <engine/serverbrowser.h>
 
 #include "serverbrowser_entry.h"
@@ -198,7 +197,7 @@ void CServerBrowserFilter::CServerFilter::Filter()
 		if(Filtered == 0)
 		{
 			// check for friend
-			m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState = IFriends::FRIEND_NO;
+			m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState = CContactInfo::CONTACT_NO;
 			for(int p = 0; p < m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients; p++)
 			{
 				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_FriendState = m_pServerBrowserFilter->m_pFriends->GetFriendState(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aName,
@@ -206,7 +205,7 @@ void CServerBrowserFilter::CServerFilter::Filter()
 				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState = max(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState, m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_FriendState);
 			}
 
-			if(!(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_FRIENDS) || m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState != IFriends::FRIEND_NO)
+			if(!(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_FRIENDS) || m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState != CContactInfo::CONTACT_NO)
 			{
 				m_pSortedServerlist[m_NumSortedServers++] = i;
 				m_NumSortedPlayers += RelevantClientCount;

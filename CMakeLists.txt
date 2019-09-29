@@ -1189,10 +1189,10 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   client.h
   config.h
   console.h
+  contacts.h
   demo.h
   editor.h
   engine.h
-  friends.h
   graphics.h
   input.h
   kernel.h
@@ -1298,8 +1298,8 @@ if(CLIENT)
     backend_sdl.h
     client.cpp
     client.h
-    friends.cpp
-    friends.h
+    contacts.cpp
+    contacts.h
     graphics_threaded.cpp
     graphics_threaded.h
     input.cpp

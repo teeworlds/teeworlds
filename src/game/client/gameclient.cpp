@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/editor.h>
 #include <engine/engine.h>
-#include <engine/friends.h>
+#include <engine/contacts.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/demo.h>
@@ -181,6 +181,7 @@ void CGameClient::OnConsoleInit()
 	m_pServerBrowser = Kernel()->RequestInterface<IServerBrowser>();
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
+	m_pBlacklist = Kernel()->RequestInterface<IBlacklist>();
 
 	// setup pointers
 	m_pBinds = &::gs_Binds;
@@ -262,6 +263,8 @@ void CGameClient::OnConsoleInit()
 
 	Console()->Chain("add_friend", ConchainFriendUpdate, this);
 	Console()->Chain("remove_friend", ConchainFriendUpdate, this);
+	Console()->Chain("add_ignore", ConchainBlacklistUpdate, this);
+	Console()->Chain("remove_ignore", ConchainBlacklistUpdate, this);
 	Console()->Chain("cl_show_xmas_hats", ConchainXmasHatUpdate, this);
 	Console()->Chain("player_color_body", ConchainSkinChange, this);
 	Console()->Chain("player_color_marking", ConchainSkinChange, this);
@@ -763,6 +766,16 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 
 		// update friend state
 		m_aClients[pMsg->m_ClientID].m_Friend = Friends()->IsFriend(m_aClients[pMsg->m_ClientID].m_aName, m_aClients[pMsg->m_ClientID].m_aClan, true);
+		// update chat ignore state
+		m_aClients[pMsg->m_ClientID].m_ChatIgnore = Blacklist()->IsIgnored(m_aClients[pMsg->m_ClientID].m_aName, m_aClients[pMsg->m_ClientID].m_aClan, true);
+		if(m_aClients[pMsg->m_ClientID].m_ChatIgnore)
+		{
+			char aBuf[128];
+			char aLabel[64];
+			GetPlayerLabel(aLabel, sizeof(aLabel), pMsg->m_ClientID, m_aClients[pMsg->m_ClientID].m_aName);
+			str_format(aBuf, sizeof(aBuf), Localize("%s is muted by you"), aLabel);
+			m_pChat->AddLine(-2, 0, aBuf);
+		}
 
 		m_aClients[pMsg->m_ClientID].UpdateRenderInfo(this, pMsg->m_ClientID, true);
 
@@ -1733,6 +1746,17 @@ void CGameClient::ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserDa
 	{
 		if(pClient->m_aClients[i].m_Active)
 			pClient->m_aClients[i].m_Friend = pClient->Friends()->IsFriend(pClient->m_aClients[i].m_aName, pClient->m_aClients[i].m_aClan, true);
+	}
+}
+
+void CGameClient::ConchainBlacklistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(pClient->m_aClients[i].m_Active)
+			pClient->m_aClients[i].m_ChatIgnore = pClient->Blacklist()->IsIgnored(pClient->m_aClients[i].m_aName, pClient->m_aClients[i].m_aClan, true);
 	}
 }
 
