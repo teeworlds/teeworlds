@@ -49,6 +49,10 @@ class CChat : public CComponent
 		CHAT_NUM,
 	};
 
+	void PlaySoundServer();
+	void PlaySoundHighlight();
+	void PlaySoundClient();
+
 	int m_Mode;
 	int m_WhisperTarget;
 	int m_LastWhisperFrom;

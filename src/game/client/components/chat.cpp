@@ -522,6 +522,36 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	}
 }
 
+void CChat::PlaySoundServer()
+{
+	int64 Now = time_get();
+	if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
+	{
+		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
+		m_aLastSoundPlayed[CHAT_SERVER] = Now;
+	}
+}
+
+void CChat::PlaySoundHighlight()
+{
+	int64 Now = time_get();
+	if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
+	{
+		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+		m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
+	}
+}
+
+void CChat::PlaySoundClient()
+{
+	int64 Now = time_get();
+	if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
+	{
+		m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
+		m_aLastSoundPlayed[CHAT_CLIENT] = Now;
+	}
+}
+
 void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 {
 	if(*pLine == 0 || (ClientID >= 0 && (!g_Config.m_ClShowsocial || !m_pClient->m_aClients[ClientID].m_Active || // unknown client
@@ -664,30 +694,23 @@ void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
 		m_LastWhisperFrom = ClientID; // we received a a whisper
 
 	// play sound
-	int64 Now = time_get();
 	if(ClientID < 0)
 	{
-		if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
-		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
-			m_aLastSoundPlayed[CHAT_SERVER] = Now;
-		}
+		PlaySoundServer();
 	}
 	else if(Highlighted || Mode == CHAT_WHISPER)
 	{
-		if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
-		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
-			m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
-		}
+		if (g_Config.m_ClOldChatSounds)
+			PlaySoundClient();
+		else
+			PlaySoundHighlight();
 	}
 	else
 	{
-		if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
-		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
-			m_aLastSoundPlayed[CHAT_CLIENT] = Now;
-		}
+		if (g_Config.m_ClOldChatSounds)
+			PlaySoundHighlight();
+		else
+			PlaySoundClient();
 	}
 }
 
