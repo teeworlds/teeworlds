@@ -50,7 +50,7 @@ public:
 	protected:
 		int m_AccessLevel;
 	public:
-		CCommandInfo() { m_AccessLevel = ACCESS_LEVEL_ADMIN; }
+		CCommandInfo(bool BasicAccess) { m_AccessLevel = BasicAccess ? ACCESS_LEVEL_MOD : ACCESS_LEVEL_ADMIN; }
 		virtual ~CCommandInfo() {}
 		const char *m_pName;
 		const char *m_pHelp;
