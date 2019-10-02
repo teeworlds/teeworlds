@@ -133,6 +133,16 @@ public:
 		AddPath("$APPDIR");
 	}
 
+	bool IsDuplicatePath(const char *pPath)
+	{
+		for(int i = 0; i < m_NumPaths; ++i)
+		{
+			if(!str_comp(m_aaStoragePaths[i], pPath))
+				return true;
+		}
+		return false;
+	}
+
 	void AddPath(const char *pPath)
 	{
 		if(m_NumPaths >= MAX_PATHS || !pPath[0])
@@ -142,40 +152,65 @@ public:
 		{
 			if(m_aUserDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserDir);
+				if(!IsDuplicatePath(m_aUserDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$USERDIR' ('%s')", m_aUserDir);
 			}
 		}
 		else if(!str_comp(pPath, "$DATADIR"))
 		{
 			if(m_aDataDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aDataDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDataDir);
+				if(!IsDuplicatePath(m_aDataDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aDataDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDataDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$DATADIR' ('%s')", m_aDataDir);
 			}
 		}
 		else if(!str_comp(pPath, "$CURRENTDIR"))
 		{
 			if(m_aCurrentDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aCurrentDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentDir);
+				if(!IsDuplicatePath(m_aCurrentDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aCurrentDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$CURRENTDIR' ('%s')", m_aCurrentDir);
 			}
 		}
 		else if(!str_comp(pPath, "$APPDIR"))
 		{
 			if(m_aAppDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aAppDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$APPDIR' ('%s')", m_aAppDir);
+				if(!IsDuplicatePath(m_aAppDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aAppDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$APPDIR' ('%s')", m_aAppDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$APPDIR' ('%s')", m_aAppDir);
 			}
 		}
 		else
 		{
 			if(fs_is_dir(pPath))
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], pPath, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '%s'", pPath);
+				if(!IsDuplicatePath(pPath))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], pPath, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '%s'", pPath);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '%s'", pPath);
 			}
 		}
 	}
