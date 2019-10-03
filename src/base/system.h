@@ -1354,6 +1354,7 @@ void dbg_logger(DBG_LOGGER logger);
 void dbg_logger_stdout();
 void dbg_logger_debugger();
 void dbg_logger_file(const char *filename);
+void dbg_logger_filehandle(IOHANDLE handle);
 
 #if defined(CONF_FAMILY_WINDOWS)
 void dbg_console_init();

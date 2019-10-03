@@ -240,12 +240,18 @@ void dbg_logger_stdout()
 void dbg_logger_debugger() { dbg_logger(logger_debugger); }
 void dbg_logger_file(const char *filename)
 {
-	logfile = io_open(filename, IOFLAG_WRITE);
-	if(logfile)
-		dbg_logger(logger_file);
+	IOHANDLE handle = io_open(filename, IOFLAG_WRITE);
+	if(handle)
+		dbg_logger_filehandle(handle);
 	else
 		dbg_msg("dbg/logger", "failed to open '%s' for logging", filename);
+}
 
+void dbg_logger_filehandle(IOHANDLE handle)
+{
+	logfile = handle;
+	if(logfile)
+		dbg_logger(logger_file);
 }
 
 #if defined(CONF_FAMILY_WINDOWS)
