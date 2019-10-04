@@ -48,14 +48,14 @@ void CMotd::OnRender()
 	CUIRect Rect = {x, y, w, h};
 
 	Graphics()->BlendNormal();
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 30.0f);
 
-	Rect.Margin(40.0f, &Rect);
+	Rect.Margin(30.0f, &Rect);
 	float TextSize = 32.0f;
 	CTextCursor Cursor;
 	TextRender()->SetCursor(&Cursor, Rect.x, Rect.y, TextSize, TEXTFLAG_RENDER);
 	Cursor.m_LineWidth = Rect.w;
-	Cursor.m_MaxLines = Rect.h/TextSize;
+	Cursor.m_MaxLines = ceil(Rect.h/TextSize);
 	TextRender()->TextEx(&Cursor, m_aServerMotd, -1);
 }
 
