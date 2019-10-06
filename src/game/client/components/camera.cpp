@@ -187,7 +187,7 @@ bool CCamera::IsZoomAllowed()
 		return true;
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return true;
-	if(str_find_nocase(Info.m_aGameType, "race") || str_find_nocase(Info.m_aGameType, "fastcap"))
+	if(m_pClient->IsRaceGametype())
 		return true;
 	return false;
 }
@@ -200,6 +200,7 @@ void CCamera::ConZoomPlus(IConsole::IResult *pResult, void *pUserData)
 	if(pSelf->IsZoomAllowed())
 		((CCamera *)pUserData)->m_Zoom *= ZoomStep;
 }
+
 void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData)
 {
 	CCamera *pSelf = (CCamera *)pUserData;
@@ -213,6 +214,7 @@ void CCamera::ConZoomMinus(IConsole::IResult *pResult, void *pUserData)
 		}
 	}
 }
+
 void CCamera::ConZoomReset(IConsole::IResult *pResult, void *pUserData)
 {
 	CCamera *pSelf = (CCamera *)pUserData;

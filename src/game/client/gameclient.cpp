@@ -1924,3 +1924,14 @@ int CGameClient::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& Ne
 
 	return ClosestID;
 }
+
+// DDrace
+
+bool CGameClient::IsRaceGametype()
+{
+	CServerInfo Info;
+	Client()->GetServerInfo(&Info);
+	if(str_find_nocase(Info.m_aGameType, "race") || str_find_nocase(Info.m_aGameType, "fastcap"))
+		return true;
+	return false;
+}
