@@ -17,6 +17,10 @@ else()
   message(FATAL_ERROR "Couldn't parse version from src/game/version.h")
 endif()
 
+if(POLICY CMP0072)
+  cmake_policy(SET CMP0072 OLD)
+endif()
+
 if(POLICY CMP0091)
   cmake_policy(SET CMP0091 NEW)
 endif()
