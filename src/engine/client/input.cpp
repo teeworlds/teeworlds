@@ -126,9 +126,12 @@ void CInput::MouseRelative(float *x, float *y)
 		j = vec2(GetJoystickAxisValue(g_Config.m_JoystickX), GetJoystickAxisValue(g_Config.m_JoystickY)) * Max;
 		const float Len = length(j);
 
-		if (Len/sqrtf(2.0f) <= g_Config.m_JoystickTolerance) {
+		if(Len/sqrtf(2.0f) <= g_Config.m_JoystickTolerance)
+		{
 			j = vec2(0.0f, 0.0f);
-		} else {
+		}
+		else
+		{
 			const vec2 nj = Len > 0.0f ? j / Len : vec2(0.0f, 0.0f);
 			j = nj * min(Len, Max) - nj * g_Config.m_JoystickTolerance;
 		}
