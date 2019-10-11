@@ -100,7 +100,7 @@ void CCamera::OnRender()
 			// move time
 			m_MoveTime += Client()->RenderFrameTime()*g_Config.m_ClCameraSpeed / 10.0f;
 			float XVal = 1 - m_MoveTime;
-			XVal = pow(XVal, 7.0);
+			XVal = pow(XVal, 7.0f);
 
 			m_Center = TargetPos + Dir * (XVal*Distance);
 		}

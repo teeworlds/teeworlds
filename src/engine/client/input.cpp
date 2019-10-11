@@ -130,7 +130,7 @@ void CInput::MouseRelative(float *x, float *y)
 			j = vec2(0.0f, 0.0f);
 		} else {
 			const vec2 nj = Len > 0.0f ? j / Len : vec2(0.0f, 0.0f);
-			j = nj * fminf(Len, Max) - nj * g_Config.m_JoystickTolerance;
+			j = nj * min(Len, Max) - nj * g_Config.m_JoystickTolerance;
 		}
 	}
 
