@@ -41,9 +41,11 @@ versionsrv*
 .settings
 .vs
 .vscode
-out
+compile_commands.json
 cscope.files
 cscope.out
+out
+tags
 
 # CMake
 data
