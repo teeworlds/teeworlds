@@ -127,6 +127,8 @@ void CStats::OnRender()
 	{
 		if(!m_pClient->m_aClients[i].m_Active)
 			continue;
+		if(m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+			continue;
 
 		apPlayers[NumPlayers] = i;
 		NumPlayers++;
@@ -242,11 +244,6 @@ void CStats::OnRender()
 			px += 100;
 			break;
 		}
-
-
-		// skip specs
-		if(m_pClient->m_aClients[apPlayers[j]].m_Active && m_pClient->m_aClients[apPlayers[j]].m_Team == TEAM_SPECTATORS)
-			continue;
 
 		const CPlayerStats *pStats = &m_aStats[apPlayers[j]];		
 		const bool HighlightedLine = (!m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_LocalClientID)
