@@ -482,7 +482,10 @@ add_library(md5 EXCLUDE_FROM_ALL OBJECT ${DEP_MD5_SRC})
 
 list(APPEND TARGETS_DEP json md5)
 set(DEP_JSON $<TARGET_OBJECTS:json>)
-set(DEP_MD5 $<TARGET_OBJECTS:md5>)
+set(DEP_MD5)
+if(NOT CRYPTO_FOUND)
+  set(DEP_MD5 $<TARGET_OBJECTS:md5>)
+endif()
 
 ########################################################################
 # DATA
@@ -1173,6 +1176,7 @@ set_src(BASE GLOB_RECURSE src/base
   detect.h
   hash.c
   hash.h
+  hash_bundled.c
   hash_ctxt.h
   hash_libtomcrypt.c
   hash_openssl.c
