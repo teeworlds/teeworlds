@@ -444,8 +444,9 @@ void CGameClient::OnDummySwap()
 {
 	if (g_Config.m_ClDummyResetOnSwitch)
 	{
-		m_pControls->ResetInput(!g_Config.m_ClDummy);
-		m_pControls->m_InputData[!g_Config.m_ClDummy].m_Hook = 0;
+		int PlayerOrDummy = (g_Config.m_ClDummyResetOnSwitch == 2) ? g_Config.m_ClDummy : (!g_Config.m_ClDummy);
+		m_pControls->ResetInput(PlayerOrDummy);
+		m_pControls->m_InputData[PlayerOrDummy].m_Hook = 0;
 	}
 	int tmp = m_DummyInput.m_Fire;
 	m_DummyInput = m_pControls->m_InputData[g_Config.m_ClDummy];
