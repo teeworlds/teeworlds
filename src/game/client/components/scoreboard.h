@@ -19,6 +19,15 @@ class CScoreboard : public CComponent
 	bool m_Activate;
  	class CUIRect m_TotalRect;
 
+	enum {
+		TEAM_UPPER16=-3,
+		TEAM_LOWER32=-4,
+		TEAM_UPPER32=-5,
+		TEAM_LOWER16=-6,
+		TEAM_LOWER24=-7,
+		TEAM_UPPER24=-8,
+	};
+
 public:
 	CScoreboard();
 	virtual void OnReset();
