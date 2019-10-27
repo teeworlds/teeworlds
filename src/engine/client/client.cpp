@@ -305,6 +305,11 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 	m_RecivedSnapshots = 0;
 
 	m_VersionInfo.m_State = CVersionInfo::STATE_INIT;
+
+	// ZillyWooods
+
+	m_aLocalClientID[0] = -1;
+	m_aLocalClientID[1] = -1;
 }
 
 // ----- send functions -----

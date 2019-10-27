@@ -325,6 +325,8 @@ void CGameClient::OnConsoleInit()
 	Console()->Chain("player_skin_feet", ConchainSkinChange, this);
 	Console()->Chain("player_skin_eyes", ConchainSkinChange, this);
 
+	Console()->Chain("cl_dummy", ConchainSpecialDummy, this);
+
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->m_pClient = this;
 
@@ -560,7 +562,7 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 
 void CGameClient::ZillyWoodsTick()
 {
-
+	// dbg_msg("debug", "localid=%d  [%d,%d]", m_LocalClientID, Client()->GetLocalClientID(0), Client()->GetLocalClientID(1));
 }
 
 void CGameClient::OnRender()
@@ -789,6 +791,14 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				return;
 			}
 			m_LocalClientID = pMsg->m_ClientID;
+			for (int i = 0; i < 2; i++)
+			{
+				if (Client()->GetLocalClientID(i) == -1)
+				{
+					Client()->SetLocalClientID(i, m_LocalClientID);
+					break;
+				}
+			}
 			m_TeamChangeTime = Client()->LocalTime();
 		}
 		else
@@ -1887,6 +1897,16 @@ void CGameClient::ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserD
 	{
 		if(pClient->m_aClients[i].m_Active)
 			pClient->m_aClients[i].UpdateRenderInfo(pClient, i, true);
+	}
+}
+
+void CGameClient::ConchainSpecialDummy(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	if(pResult->NumArguments())
+	{
+		pClient->m_LocalClientID = pClient->Client()->GetLocalClientID(g_Config.m_ClDummy);
 	}
 }
 

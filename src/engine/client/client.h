@@ -72,6 +72,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 		PREDICTION_MARGIN=1000/50/2, // magic network prediction value
 	};
 
+	int m_aLocalClientID[2];
 	class CNetClient m_NetClient[2];
 	class CNetClient m_ContactClient[2];
 	class CDemoPlayer m_DemoPlayer;
@@ -338,5 +339,10 @@ public:
 	void ToggleFullscreen();
 	void ToggleWindowBordered();
 	void ToggleWindowVSync();
+
+	// ZillyWoods
+
+	void SetLocalClientID(int Index, int Value) { m_aLocalClientID[Index] = Value; }
+	int GetLocalClientID(int Index) { return m_aLocalClientID[Index]; }
 };
 #endif

@@ -162,6 +162,11 @@ public:
 	virtual bool SoundInitFailed() const = 0;
 
 	virtual IGraphics::CTextureHandle GetDebugFont() const = 0; // TODO: remove this function
+
+	// ZillyWoods
+
+	virtual void SetLocalClientID(int Index, int Value) = 0;
+	virtual int GetLocalClientID(int Index) = 0;
 };
 
 class IGameClient : public IInterface
