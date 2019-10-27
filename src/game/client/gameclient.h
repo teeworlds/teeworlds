@@ -281,6 +281,7 @@ public:
 	// TODO: move these
 	void SendSwitchTeam(int Team);
 	virtual void SendStartInfo(bool IsDummy = false);
+	virtual void SwitchDummy();
 	void SendKill();
 	void SendReadyChange();
 	void SendSkinChange();

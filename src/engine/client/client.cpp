@@ -636,6 +636,9 @@ void CClient::DummyConnect(int NetClient)
 	// send enter game an finish the connection
 	CMsgPacker MsgEnter(NETMSG_ENTERGAME, true);
 	SendMsgExY(&MsgEnter, MSGFLAG_VITAL|MSGFLAG_FLUSH, NetClient);
+
+	g_Config.m_ClDummy = 1;
+	GameClient()->SwitchDummy();
 }
 
 void CClient::DummyDisconnect(const char *pReason)

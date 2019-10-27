@@ -1910,8 +1910,13 @@ void CGameClient::ConchainSpecialDummy(IConsole::IResult *pResult, void *pUserDa
 	{
 		if(g_Config.m_ClDummy && !((CGameClient*)pUserData)->Client()->DummyConnected())
 			g_Config.m_ClDummy = 0;
-		pClient->m_LocalClientID = pClient->Client()->GetLocalClientID(g_Config.m_ClDummy);
+		pClient->SwitchDummy();
 	}
+}
+
+void CGameClient::SwitchDummy()
+{
+	m_LocalClientID = Client()->GetLocalClientID(g_Config.m_ClDummy);
 }
 
 IGameClient *CreateGameClient()

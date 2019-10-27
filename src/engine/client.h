@@ -200,6 +200,7 @@ public:
 	virtual int ClientVersion() const = 0;
 
 	virtual void SendStartInfo(bool IsDummy = false) = 0;
+	virtual void SwitchDummy() = 0;
 };
 
 extern IGameClient *CreateGameClient();
