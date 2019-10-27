@@ -170,14 +170,15 @@ void CCamera::OnReset()
 {
 	m_Zoom = 1.0f;
 
-	for(int i = g_Config.m_ClDefaultZoom; i < 10; i++)
+	if(g_Config.m_ClDefaultZoom < 10)
 	{
-		m_Zoom *= 1/ZoomStep;
+		m_Zoom = pow(1/ZoomStep, 10 - g_Config.m_ClDefaultZoom);
 	}
-	for(int i = g_Config.m_ClDefaultZoom; i > 10; i--)
+	else if(g_Config.m_ClDefaultZoom > 10)
 	{
-		m_Zoom *= ZoomStep;
+		m_Zoom = pow(ZoomStep, g_Config.m_ClDefaultZoom - 10);
 	}
+
 }
 
 bool CCamera::IsZoomAllowed()
