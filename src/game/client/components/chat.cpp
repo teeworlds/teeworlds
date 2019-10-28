@@ -694,7 +694,7 @@ const char* CChat::GetCommandName(int Mode)
 
 void CChat::OnRender()
 {
-	if(Client()->State() == Client()->STATE_LOADING)
+	if(Client()->State() <= Client()->STATE_LOADING)
 		return;
 
 	// send pending chat messages
