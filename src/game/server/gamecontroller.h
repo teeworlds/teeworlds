@@ -3,7 +3,6 @@
 #ifndef GAME_SERVER_GAMECONTROLLER_H
 #define GAME_SERVER_GAMECONTROLLER_H
 
-#include <cstdio>
 #include <base/vmath.h>
 
 #include <generated/protocol.h>
