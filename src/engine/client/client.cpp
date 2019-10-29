@@ -601,6 +601,8 @@ void CClient::Connect(const char *pAddress)
 {
 	char aBuf[512];
 	int Port = 8303;
+	m_aLocalClientID[0] = -1;
+	m_aLocalClientID[1] = -1;
 
 	Disconnect();
 
@@ -699,7 +701,7 @@ void CClient::DummyConnect(int NetClient)
 		return;
 
 	m_LastDummyConnectTime = GameTick();
-
+	m_aLocalClientID[1] = -1;
 	m_RconAuthed[1] = 0;
 
 	//connecting to the server
