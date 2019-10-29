@@ -555,14 +555,12 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			{
 				m_GameState = GameState;
 				m_GameStateTimer = 3*Server()->TickSpeed();
-				GameServer()->m_World.m_Paused = true;
 
 			}
 			else if(g_Config.m_SvCountdown > 0)
 			{
 				m_GameState = GameState;
 				m_GameStateTimer = g_Config.m_SvCountdown*Server()->TickSpeed();
-				GameServer()->m_World.m_Paused = true;
 			}
 			else
 			{
@@ -577,7 +575,6 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			m_GameState = GameState;
 			m_GameStateTimer = TIMER_INFINITE;
 			SetPlayersReadyState(true);
-			GameServer()->m_World.m_Paused = false;
 		}
 		break;
 	case IGS_GAME_PAUSED:
@@ -600,7 +597,6 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 				}
 
 				m_GameState = GameState;
-				GameServer()->m_World.m_Paused = true;
 			}
 			else
 			{
@@ -619,7 +615,6 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 			m_GameState = GameState;
 			m_GameStateTimer = Timer*Server()->TickSpeed();
 			m_SuddenDeath = 0;
-			GameServer()->m_World.m_Paused = true;
 		}
 	}
 }
@@ -880,7 +875,7 @@ bool IGameController::IsPlayerReadyMode() const
 
 bool IGameController::IsTeamChangeAllowed() const
 {
-	return !GameServer()->m_World.m_Paused || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
+	return !IsGamePaused() || (m_GameState == IGS_START_COUNTDOWN && m_GameStartTick == Server()->Tick());
 }
 
 void IGameController::UpdateGameInfo(int ClientID)
@@ -998,7 +993,7 @@ void IGameController::CycleMap()
 bool IGameController::CanSpawn(int Team, vec2 *pOutPos) const
 {
 	// spectators can't spawn
-	if(Team == TEAM_SPECTATORS || GameServer()->m_World.m_Paused || GameServer()->m_World.m_ResetRequested)
+	if(Team == TEAM_SPECTATORS || IsGamePaused() || GameServer()->m_World.m_ResetRequested)
 		return false;
 
 	CSpawnEval Eval;

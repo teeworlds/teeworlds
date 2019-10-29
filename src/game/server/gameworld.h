@@ -41,7 +41,6 @@ public:
 	class IServer *Server() { return m_pServer; }
 
 	bool m_ResetRequested;
-	bool m_Paused;
 	CWorldCore m_Core;
 
 	CGameWorld();
