@@ -150,7 +150,7 @@ MACRO_CONFIG_INT(ClTextEntitiesSize, cl_text_entities_size, 100, 0, 100, CFGFLAG
 MACRO_CONFIG_INT(ClShowAdmins, cl_show_admins, 1, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Display admins in the scoreboard")
 
 // dummy
-MACRO_CONFIG_STR(DummyName, dummy_name, 16, "brainless tee", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Name of the Dummy")
+MACRO_CONFIG_STR(DummyName, dummy_name, 16, "zilly dummy", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Name of the Dummy")
 MACRO_CONFIG_STR(DummyClan, dummy_clan, 12, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Clan of the Dummy")
 MACRO_CONFIG_INT(DummyCountry, dummy_country, -1, -1, 1000, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Country of the Dummy")
 MACRO_CONFIG_INT(DummyUseCustomColor, dummy_use_custom_color, 0, 0, 1, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Toggles usage of custom colors")

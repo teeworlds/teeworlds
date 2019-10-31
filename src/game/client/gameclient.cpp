@@ -1874,6 +1874,9 @@ void CGameClient::SendStartInfo(bool IsDummy)
 	}
 	if(IsDummy)
 	{
+		Msg.m_pName = g_Config.m_DummyName;
+		Msg.m_pClan = g_Config.m_DummyClan;
+		Msg.m_Country = g_Config.m_DummyCountry;
 		CMsgPacker Packer(Msg.MsgID(), false);
 		Msg.Pack(&Packer);
 		Client()->SendMsgExY(&Packer, MSGFLAG_VITAL|MSGFLAG_FLUSH, 1);
