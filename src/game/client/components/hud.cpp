@@ -264,15 +264,25 @@ void CHud::RenderScoreHud()
 					}
 				}
 			}
-			char aScore[2][32];
+			char aScore[2][16];
 			for(int t = 0; t < 2; ++t)
 			{
 				if(aPlayerInfo[t].m_pPlayerInfo)
 				{
-					if(GameFlags&GAMEFLAG_RACE)
-						FormatTime(aScore[t], sizeof(aScore[0]), aPlayerInfo[t].m_pPlayerInfo->m_Score, m_pClient->RacePrecision());
+					if(m_pClient->IsRaceGametype() && g_Config.m_ClDDRaceScoreBoard)
+					{
+						if(aPlayerInfo[t].m_pPlayerInfo->m_Score != -9999)
+							str_format(aScore[t], sizeof(aScore[t]), "%02d:%02d", abs(aPlayerInfo[t].m_pPlayerInfo->m_Score)/60, abs(aPlayerInfo[t].m_pPlayerInfo->m_Score)%60);
+						else
+							aScore[t][0] = 0;
+					}
 					else
-						str_format(aScore[t], sizeof(aScore[0]), "%d", aPlayerInfo[t].m_pPlayerInfo->m_Score);
+					{
+						if(GameFlags&GAMEFLAG_RACE)
+							FormatTime(aScore[t], sizeof(aScore[0]), aPlayerInfo[t].m_pPlayerInfo->m_Score, m_pClient->RacePrecision());
+						else
+							str_format(aScore[t], sizeof(aScore[0]), "%d", aPlayerInfo[t].m_pPlayerInfo->m_Score);
+					}
 				}
 				else
 				{
