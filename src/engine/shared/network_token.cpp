@@ -10,8 +10,9 @@
 static unsigned int Hash(char *pData, int Size)
 {
 	MD5_DIGEST Digest = md5(pData, Size);
+	unsigned *pDigest = (unsigned *)&Digest.data;
 
-	return (Digest.data[0] ^ Digest.data[1] ^ Digest.data[2] ^ Digest.data[3]);
+	return (pDigest[0] ^ pDigest[1] ^ pDigest[2] ^ pDigest[3]);
 }
 
 int CNetTokenCache::CConnlessPacketInfo::m_UniqueID = 0;
