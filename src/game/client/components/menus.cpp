@@ -1305,6 +1305,16 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_SOUND);
 			g_Config.m_UiSettingsPage = SETTINGS_SOUND;
 		}
+
+		Box.VSplitLeft(Spacing, 0, &Box); // little space
+		Box.VSplitLeft(ButtonWidth/4, &Button, &Box);
+		static CButtonContainer s_ZillyButton;
+		if(DoButton_MenuTabTop(&s_ZillyButton, Localize("Z"), Client()->State() == IClient::STATE_OFFLINE && g_Config.m_UiSettingsPage==SETTINGS_ZILLY, &Button,
+			g_Config.m_UiSettingsPage == SETTINGS_ZILLY ? 1.0f : NotActiveAlpha, 1.0f, CUI::CORNER_ALL))
+		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_ZILLY);
+			g_Config.m_UiSettingsPage = SETTINGS_ZILLY;
+		}
 	}
 	else if((Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_LAN) || (Client()->State() == IClient::STATE_ONLINE && m_GamePage >= PAGE_INTERNET && m_GamePage <= PAGE_LAN))
 	{

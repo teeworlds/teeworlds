@@ -2112,6 +2112,110 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	}
 }
 
+void CMenus::RenderSettingsZilly(CUIRect MainView)
+{
+	CUIRect Label, Button, Game, BottomView, Background;
+
+	// cut view
+	MainView.HSplitBottom(80.0f, &MainView, &BottomView);
+	BottomView.HSplitTop(20.f, 0, &BottomView);
+
+	// render game menu backgrounds
+	int NumOptions = 6;
+	float ButtonHeight = 20.0f;
+	float Spacing = 2.0f;
+	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
+
+	if(this->Client()->State() == IClient::STATE_ONLINE)
+		Background = MainView;
+	else
+		MainView.HSplitTop(20.0f, 0, &Background);
+	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), this->Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	MainView.HSplitTop(20.0f, 0, &MainView);
+	MainView.HSplitTop(BackgroundHeight, &Game, &MainView);
+	RenderTools()->DrawUIRect(&Game, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	// render client menu background
+	NumOptions = 4;
+	if(g_Config.m_ClAutoDemoRecord) NumOptions += 1;
+	if(g_Config.m_ClAutoScreenshot) NumOptions += 1;
+	BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
+
+	CUIRect GameLeft, GameRight;
+	// render game menu
+	Game.HSplitTop(ButtonHeight, &Label, &Game);
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, Localize("ZillyWoods"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+
+	Game.VSplitMid(&GameLeft, &GameRight);
+	GameLeft.VSplitRight(Spacing * 0.5f, &GameLeft, 0);
+	GameRight.VSplitLeft(Spacing * 0.5f, 0, &GameRight);
+
+	// left side
+	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
+	GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
+	static int s_ShowAdmins = 0;
+	if(DoButton_CheckBox(&s_ShowAdmins, Localize("Show admins in scoreboard (red)"), g_Config.m_ClShowAdmins, &Button))
+		g_Config.m_ClShowAdmins ^= 1;
+
+	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
+	GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
+	static int s_SilentMessages = 0;
+	if(DoButton_CheckBox(&s_SilentMessages, Localize("Show silent chat messages"), g_Config.m_ClShowSilentMessages, &Button))
+		g_Config.m_ClShowSilentMessages ^= 1;
+
+	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
+	GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
+	static int s_TextEntities = 0;
+	if(DoButton_CheckBox(&s_TextEntities, Localize("Show text entities"), g_Config.m_ClTextEntities, &Button))
+		g_Config.m_ClTextEntities ^= 1;
+
+	// right side
+	/*
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	static int s_Showhud = 0;
+	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), g_Config.m_ClShowhud, &Button))
+		g_Config.m_ClShowhud ^= 1;
+
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	static int s_ShowUserId = 0;
+	if(DoButton_CheckBox(&s_ShowUserId, Localize("Show user IDs"), g_Config.m_ClShowUserId, &Button))
+		g_Config.m_ClShowUserId ^= 1;
+
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	static int s_Showsocial = 0;
+	if(DoButton_CheckBox(&s_Showsocial, Localize("Show social"), g_Config.m_ClShowsocial, &Button))
+		g_Config.m_ClShowsocial ^= 1;
+
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	static int s_EnableColoredBroadcasts = 0;
+	if(DoButton_CheckBox(&s_EnableColoredBroadcasts, Localize("Enable colored server broadcasts"),
+						 g_Config.m_ClColoredBroadcast, &Button))
+		g_Config.m_ClColoredBroadcast ^= 1;
+	*/
+
+	// reset button
+	Spacing = 3.0f;
+	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
+
+	BottomView.VSplitRight(ButtonWidth, 0, &BottomView);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+
+	BottomView.HSplitTop(25.0f, &BottomView, 0);
+	Button = BottomView;
+	static CButtonContainer s_ResetButton;
+	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
+	{
+		g_Config.m_ClShowAdmins = 1; // TODO: add all rest vars here
+		g_Config.m_ClShowSilentMessages = 1;
+		g_Config.m_ClTextEntities = 1;
+	}
+}
+
 void CMenus::RenderSettings(CUIRect MainView)
 {
 	// handle which page should be rendered
@@ -2127,6 +2231,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsGraphics(MainView);
 	else if(g_Config.m_UiSettingsPage == SETTINGS_SOUND)
 		RenderSettingsSound(MainView);
+	else if(g_Config.m_UiSettingsPage == SETTINGS_ZILLY)
+		RenderSettingsZilly(MainView);
 
 	MainView.HSplitBottom(32.0f, 0, &MainView);
 

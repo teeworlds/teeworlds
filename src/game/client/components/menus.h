@@ -274,6 +274,7 @@ private:
 		SETTINGS_CONTROLS,
 		SETTINGS_GRAPHICS,
 		SETTINGS_SOUND,
+		SETTINGS_ZILLY,
 
 		ACTLB_NONE=0,
 		ACTLB_LANG,
@@ -677,6 +678,7 @@ private:
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
+	void RenderSettingsZilly(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 
 	bool DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
