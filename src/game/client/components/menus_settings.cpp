@@ -2171,13 +2171,13 @@ void CMenus::RenderSettingsZilly(CUIRect MainView)
 		g_Config.m_ClTextEntities ^= 1;
 
 	// right side
-	/*
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
-	static int s_Showhud = 0;
-	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), g_Config.m_ClShowhud, &Button))
-		g_Config.m_ClShowhud ^= 1;
+	static int s_ClientChatCmds = 0;
+	if(DoButton_CheckBox(&s_ClientChatCmds, Localize("Client commands in chat (starting with '/')"), g_Config.m_ClClientChatCommands, &Button))
+		g_Config.m_ClClientChatCommands ^= 1;
 
+	/*
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 	static int s_ShowUserId = 0;
@@ -2256,9 +2256,10 @@ void CMenus::RenderSettingsZilly(CUIRect MainView)
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		g_Config.m_ClShowAdmins = 1; // TODO: add all rest vars here
+		g_Config.m_ClShowAdmins = 1;
 		g_Config.m_ClShowSilentMessages = 1;
 		g_Config.m_ClTextEntities = 1;
+		g_Config.m_ClClientChatCommands = 0;
 	}
 }
 
