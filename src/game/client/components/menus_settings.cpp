@@ -2177,19 +2177,19 @@ void CMenus::RenderSettingsZilly(CUIRect MainView)
 	if(DoButton_CheckBox(&s_ClientChatCmds, Localize("Client commands in chat (starting with '/')"), g_Config.m_ClClientChatCommands, &Button))
 		g_Config.m_ClClientChatCommands ^= 1;
 
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	static int s_OldGunPos = 0;
+	if(DoButton_CheckBox(&s_OldGunPos, Localize("Old gun position"), g_Config.m_ClOldGunPosition, &Button))
+		g_Config.m_ClOldGunPosition ^= 1;
+
+	GameRight.HSplitTop(Spacing, 0, &GameRight);
+	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	static int s_OldChatSounds = 0;
+	if(DoButton_CheckBox(&s_OldChatSounds, Localize("Old chat sounds"), g_Config.m_ClOldChatSounds, &Button))
+		g_Config.m_ClOldChatSounds ^= 1;
+
 	/*
-	GameRight.HSplitTop(Spacing, 0, &GameRight);
-	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
-	static int s_ShowUserId = 0;
-	if(DoButton_CheckBox(&s_ShowUserId, Localize("Show user IDs"), g_Config.m_ClShowUserId, &Button))
-		g_Config.m_ClShowUserId ^= 1;
-
-	GameRight.HSplitTop(Spacing, 0, &GameRight);
-	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
-	static int s_Showsocial = 0;
-	if(DoButton_CheckBox(&s_Showsocial, Localize("Show social"), g_Config.m_ClShowsocial, &Button))
-		g_Config.m_ClShowsocial ^= 1;
-
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 	static int s_EnableColoredBroadcasts = 0;
@@ -2260,6 +2260,8 @@ void CMenus::RenderSettingsZilly(CUIRect MainView)
 		g_Config.m_ClShowSilentMessages = 1;
 		g_Config.m_ClTextEntities = 1;
 		g_Config.m_ClClientChatCommands = 0;
+		g_Config.m_ClOldGunPosition = 0;
+		g_Config.m_ClOldChatSounds = 0;
 	}
 }
 
