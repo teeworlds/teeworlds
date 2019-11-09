@@ -75,7 +75,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 
 	int m_aLocalClientID[2];
 	class CNetClient m_NetClient[2];
-	class CNetClient m_ContactClient[2];
+	class CNetClient m_ContactClient;
 	class CDemoPlayer m_DemoPlayer;
 	class CDemoRecorder m_DemoRecorder;
 	class CServerBrowser m_ServerBrowser;

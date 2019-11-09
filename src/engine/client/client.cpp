@@ -1172,7 +1172,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			Packet.m_pData = VERSIONSRV_GETMAPLIST;
 			Packet.m_DataSize = sizeof(VERSIONSRV_GETMAPLIST);
 			Packet.m_Flags = NETSENDFLAG_CONNLESS;
-			m_ContactClient[g_Config.m_ClDummy].Send(&Packet);
+			m_ContactClient.Send(&Packet);
 		}
 
 		// map version list
@@ -1943,14 +1943,14 @@ void CClient::PumpNetwork()
 					ProcessServerPacket(&Packet);
 			}
 		}
+	}
 
-		// process connless packets data
-		m_ContactClient[i].Update();
-		while(m_ContactClient[i].Recv(&Packet))
-		{
-			if(Packet.m_Flags&NETSENDFLAG_CONNLESS)
-				ProcessConnlessPacket(&Packet);
-		}
+	// process connless packets data
+	m_ContactClient.Update();
+	while(m_ContactClient.Recv(&Packet))
+	{
+		if(Packet.m_Flags&NETSENDFLAG_CONNLESS)
+			ProcessConnlessPacket(&Packet);
 	}
 }
 
@@ -2199,9 +2199,7 @@ void CClient::VersionUpdate()
 {
 	if(m_VersionInfo.m_State == CVersionInfo::STATE_INIT)
 	{
-		// TODO: (chiller) maybe loop over both contact clients here
-		for(int i = 0; i < 2; i++)
-			Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer, m_ContactClient[i].NetType());
+		Engine()->HostLookup(&m_VersionInfo.m_VersionServeraddr, g_Config.m_ClVersionServer, m_ContactClient.NetType());
 		m_VersionInfo.m_State = CVersionInfo::STATE_START;
 	}
 	else if(m_VersionInfo.m_State == CVersionInfo::STATE_START)
@@ -2222,10 +2220,7 @@ void CClient::VersionUpdate()
 				Packet.m_DataSize = sizeof(VERSIONSRV_GETVERSION);
 				Packet.m_Flags = NETSENDFLAG_CONNLESS;
 
-				for(int i = 0; i < 2; i++)
-				{
-					m_ContactClient[i].Send(&Packet);
-				}
+				m_ContactClient.Send(&Packet);
 				m_VersionInfo.m_State = CVersionInfo::STATE_READY;
 			}
 			else
@@ -2257,10 +2252,7 @@ void CClient::InitInterfaces()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	//
-	for(int i = 0; i < 2;i++)
-	{
-		m_ServerBrowser.Init(&m_ContactClient[i], m_pGameClient->NetVersion());
-	}
+	m_ServerBrowser.Init(&m_ContactClient, m_pGameClient->NetVersion());
 	m_Friends.Init();
 	m_Blacklist.Init();
 }
@@ -2401,12 +2393,12 @@ void CClient::Run()
 				dbg_msg("client", "couldn't open socket(net)");
 				return;
 			}
-			BindAddr.port = 0;
-			if(!m_ContactClient[i].Open(BindAddr, 0))
-			{
-				dbg_msg("client", "couldn't open socket(contact)");
-				return;
-			}
+		}
+		BindAddr.port = 0;
+		if(!m_ContactClient.Open(BindAddr, 0))
+		{
+			dbg_msg("client", "couldn't open socket(contact)");
+			return;
 		}
 	}
 
@@ -2417,10 +2409,7 @@ void CClient::Run()
 	Input()->Init();
 
 	// start refreshing addresses while we load
-	for(int i = 0; i < 2; i++)
-	{
-		MasterServer()->RefreshAddresses(m_ContactClient[i].NetType());
-	}
+	MasterServer()->RefreshAddresses(m_ContactClient.NetType());
 
 	// init the editor
 	m_pEditor->Init();
