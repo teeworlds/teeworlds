@@ -187,6 +187,8 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	if(Team == TEAM_SPECTATORS)
 		return 0.0f;
 
+	bool IsRaceGametype = m_pClient->IsRaceGametype();
+
 	bool lower16 = false;
 	bool upper16 = false;
 	bool lower24 = false;
@@ -383,9 +385,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	if(m_pClient->m_GameInfo.m_aTeamSize[0] <= 16 || (upper16 || upper24 || upper32))
 	{
+		int Score = -9999;
 		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 		{
-			int Score = Team == TEAM_RED ? m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreRed : m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreBlue;
+			Score = Team == TEAM_RED ? m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreRed : m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreBlue;
 			str_format(aBuf, sizeof(aBuf), "%d", Score);
 		}
 		else
@@ -393,13 +396,23 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID >= 0 &&
 				m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID])
 			{
-				int Score = m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]->m_Score;
+				Score = m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]->m_Score;
 				str_format(aBuf, sizeof(aBuf), "%d", Score);
 			}
 			else if(m_pClient->m_Snap.m_pLocalInfo)
 			{
-				int Score = m_pClient->m_Snap.m_pLocalInfo->m_Score;
+				Score = m_pClient->m_Snap.m_pLocalInfo->m_Score;
 				str_format(aBuf, sizeof(aBuf), "%d", Score);
+			}
+		}
+		if(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard)
+		{
+			if(Score == -9999)
+				aBuf[0] = 0;
+			else
+			{
+				int Time = abs(Score);
+				str_format(aBuf, sizeof(aBuf), "%02d:%02d", Time/60, Time%60);
 			}
 		}
 		if(Align == -1)
@@ -501,8 +514,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			NumRenderScoreIDs++;
 		}
 	}
-
-	bool IsRaceGametype = m_pClient->IsRaceGametype();
 
 	int rendered = 0;
 	if(upper16)
