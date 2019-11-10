@@ -560,6 +560,33 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			m_pClient->m_pCountryFlags->Render(m_pClient->m_aClients[pInfo->m_ClientID].m_Country, &CFColor,
 				CountryFlagOffset, y + CountrySpacing, LineHeight*1.5f, LineHeight*0.75f);
 
+			// custom client detection
+			if(g_Config.m_ClClientRecognition)
+			{
+				if(str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-1], "gamer!")
+				|| str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-2], "gamer!"))
+				{
+					// gamer symbol
+					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CLIENTICONS].m_Id);
+					Graphics()->QuadsBegin();
+					RenderTools()->SelectSprite(SPRITE_GAMER);
+					IGraphics::CQuadItem QuadItem(CountryFlagOffset + 30.0f-10.0f, y, 10, 10);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+					Graphics()->QuadsEnd();
+				}
+				else if(str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-1], "zilly!")
+				|| str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-2], "zilly!"))
+				{
+					// gamer symbol
+					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CLIENTICONS].m_Id);
+					Graphics()->QuadsBegin();
+					RenderTools()->SelectSprite(SPRITE_ZILLY);
+					IGraphics::CQuadItem QuadItem(CountryFlagOffset + 30.0f-10.0f, y, 10, 10);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+					Graphics()->QuadsEnd();
+				}
+			}
+
 			// flag
 			if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && m_pClient->m_Snap.m_pGameDataFlag &&
 				(m_pClient->m_Snap.m_pGameDataFlag->m_FlagCarrierRed == pInfo->m_ClientID ||
@@ -616,7 +643,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			{
 				if(HighlightedLine)
 					TextRender()->TextOutlineColor(0.0f, 0.1f, 0.0f, 0.5f);
-					TextRender()->TextOutlineColor(1.0f, 0.1f, 0.0f, 0.5f);
+				TextRender()->TextOutlineColor(1.0f, 0.1f, 0.0f, 0.5f);
 				TextRender()->TextColor(1.0f, 0.5f, 0.5f, ColorAlpha);
 			}
 			TextRender()->SetCursor(&Cursor, NameOffset+TeeLength, y+Spacing, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);

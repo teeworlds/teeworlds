@@ -623,6 +623,7 @@ set(EXPECTED_DATA
   audio/wp_switch-01.wv
   audio/wp_switch-02.wv
   audio/wp_switch-03.wv
+  client_icons.png
   countryflags/AD.png
   countryflags/AE.png
   countryflags/AF.png

@@ -1875,9 +1875,14 @@ void CGameClient::SendStartInfo(bool IsDummy)
 	Msg.m_pName = g_Config.m_PlayerName;
 	Msg.m_pClan = g_Config.m_PlayerClan;
 	Msg.m_Country = g_Config.m_PlayerCountry;
+	char aClientStr[32];
+	str_format(aClientStr, sizeof(aClientStr), "zilly!%s", ZILLYWOODS_VERSION);
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[p];
+		if(g_Config.m_ClClientRecognition && (p >= NUM_SKINPARTS-2) && !str_comp(CSkins::ms_apSkinVariables[p], "standard"))
+			Msg.m_apSkinPartNames[p] = aClientStr;
+		else
+			Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[p];
 		Msg.m_aUseCustomColors[p] = *CSkins::ms_apUCCVariables[p];
 		Msg.m_aSkinPartColors[p] = *CSkins::ms_apColorVariables[p];
 	}

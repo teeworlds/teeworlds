@@ -2189,14 +2189,11 @@ void CMenus::RenderSettingsZilly(CUIRect MainView)
 	if(DoButton_CheckBox(&s_OldChatSounds, Localize("Old chat sounds"), g_Config.m_ClOldChatSounds, &Button))
 		g_Config.m_ClOldChatSounds ^= 1;
 
-	/*
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
-	static int s_EnableColoredBroadcasts = 0;
-	if(DoButton_CheckBox(&s_EnableColoredBroadcasts, Localize("Enable colored server broadcasts"),
-						 g_Config.m_ClColoredBroadcast, &Button))
-		g_Config.m_ClColoredBroadcast ^= 1;
-	*/
+	static int s_CustomClientDetection = 0;
+	if(DoButton_CheckBox(&s_CustomClientDetection, Localize("Enable custom client recognition"), g_Config.m_ClClientRecognition, &Button))
+		g_Config.m_ClClientRecognition ^= 1;
 
 	CUIRect aRects[2];
 	MainView.HSplitTop(5.0f, 0, &MainView);
@@ -2262,6 +2259,7 @@ void CMenus::RenderSettingsZilly(CUIRect MainView)
 		g_Config.m_ClClientChatCommands = 0;
 		g_Config.m_ClOldGunPosition = 0;
 		g_Config.m_ClOldChatSounds = 0;
+		g_Config.m_ClClientRecognition = 0;
 	}
 }
 
