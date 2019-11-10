@@ -460,7 +460,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, pClanStr, -1, -1.0f);
 	TextRender()->Text(0, ClanOffset+ClanLength/2-tw/2, y+Spacing, HeadlineFontsize, pClanStr, -1.0f);
 
-	if(!Race)
+	if(!(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard) && !Race)
 	{
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
 		tw = TextRender()->TextWidth(0, HeadlineFontsize, "K", -1, -1.0f);
@@ -678,7 +678,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			Cursor.m_LineWidth = ClanLength;
 			TextRender()->TextEx(&Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 
-			if(!Race)
+			if(!(IsRaceGametype && g_Config.m_ClDDRaceScoreBoard) && !Race)
 			{
 				// K
 				TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
