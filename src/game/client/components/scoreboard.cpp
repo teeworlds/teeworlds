@@ -588,7 +588,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				else if(str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-1], "zilly!")
 				|| str_startswith(m_pClient->m_aClients[pInfo->m_ClientID].m_aaSkinPartNames[NUM_SKINPARTS-2], "zilly!"))
 				{
-					// gamer symbol
+					// zilly symbol
 					Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CLIENTICONS].m_Id);
 					Graphics()->QuadsBegin();
 					RenderTools()->SelectSprite(SPRITE_ZILLY);
