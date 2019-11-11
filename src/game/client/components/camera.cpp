@@ -44,7 +44,7 @@ void CCamera::OnRender()
 		if(m_MenuZoom)
 		{
 			m_MenuZoom = false;
-			m_Zoom = 1.0f;
+			OnReset();
 		}
 		CServerInfo Info;
 		Client()->GetServerInfo(&Info);
