@@ -1065,12 +1065,14 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		if(g_Config.m_ClFilterchat == 0)
 			str_format(aBuf, sizeof(aBuf), Localize("everyone", "Show chat messages from:"));
 		else if(g_Config.m_ClFilterchat == 1)
-			str_format(aBuf, sizeof(aBuf), Localize("friends only", "Show chat messages from:"));
+			str_format(aBuf, sizeof(aBuf), Localize("friends and server", "Show chat messages from:"));
 		else if(g_Config.m_ClFilterchat == 2)
+			str_format(aBuf, sizeof(aBuf), Localize("server", "Show chat messages from:"));
+		else if(g_Config.m_ClFilterchat == 3)
 			str_format(aBuf, sizeof(aBuf), Localize("no one", "Show chat messages from:"));
 		static CButtonContainer s_ButtonFilterchat;
 		if(DoButton_Menu(&s_ButtonFilterchat, aBuf, 0, &Button))
-			g_Config.m_ClFilterchat = (g_Config.m_ClFilterchat + 1) % 3;
+			g_Config.m_ClFilterchat = (g_Config.m_ClFilterchat + 1) % 4;
 	}
 
 	GameRight.HSplitTop(Spacing, 0, &GameRight);

@@ -313,7 +313,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			// ignore button
 			Row.VSplitRight(ButtonHeight/2, &Row, 0);
 			Row.VSplitRight(ButtonHeight, &Row, &Label);
-			if(g_Config.m_ClFilterchat == 2 || (g_Config.m_ClFilterchat == 1 && !m_pClient->m_aClients[i].m_Friend))
+			if(g_Config.m_ClFilterchat > 1 || (g_Config.m_ClFilterchat == 1 && !m_pClient->m_aClients[i].m_Friend))
 				DoButton_Toggle(&s_aPlayerIDs[i][0], 1, &Label, false);
 			else
 				if(DoButton_Toggle(&s_aPlayerIDs[i][0], m_pClient->m_aClients[i].m_ChatIgnore, &Label, true))
