@@ -368,7 +368,7 @@ void CSpectator::Spectate(int SpecMode, int SpectatorID)
 		return;
 	}
 
-	if(m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SpecMode && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SpectatorID)
+	if(m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SpecMode && (SpecMode != SPEC_PLAYER || m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SpectatorID))
 		return;
 
 	CNetMsg_Cl_SetSpectatorMode Msg;
