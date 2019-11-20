@@ -3060,6 +3060,11 @@ static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, 
 	{
 		return 0;
 	}
+	if(pEditor->m_aFileDialogFilterString[0] &&
+		!str_find_nocase(pName, pEditor->m_aFileDialogFilterString))
+	{
+		return 0;
+	}
 
 	CEditor::CFilelistItem Item;
 	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
@@ -3168,6 +3173,8 @@ void CEditor::RenderFileDialog()
 		UI()->DoLabel(&FileBoxLabel, "Search:", 10.0f, CUI::ALIGN_LEFT);
 		if(DoEditBox(&m_FilesSearchBoxID, &FileBox, m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString), 10.0f, &m_FilesSearchBoxID))
 		{
+			// recreate newly filtered list
+			FilelistPopulate(m_FileDialogStorageType);
 			// reset scrolling
 			m_FileDialogScrollValue = 0;
 			if(m_FilesSelectedIndex == -1 || (m_FilesSelectedIndex >= 0 && m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[m_FilesSelectedIndex].m_aName, m_aFileDialogFilterString)))
