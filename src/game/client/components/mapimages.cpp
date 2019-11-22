@@ -107,6 +107,56 @@ IGraphics::CTextureHandle CMapImages::GetEntitiesTexture()
 	return m_EntitiesTexture;
 }
 
+IGraphics::CTextureHandle CMapImages::GetFrontTexture()
+{
+	if(!m_FrontIsLoaded)
+	{
+		m_FrontTexture = Graphics()->LoadTexture("editor/front.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
+		if(!m_FrontTexture.IsValid())
+			m_FrontTexture = GetEntitiesTexture();
+		if(!m_FrontTexture.IsValid())
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "mapimages", "Failed to load front.png");
+		m_FrontIsLoaded = true;
+	}
+	return m_FrontTexture;
+}
+
+IGraphics::CTextureHandle CMapImages::GetTeleTexture()
+{
+	if(!m_TeleIsLoaded)
+	{
+		m_TeleTexture = Graphics()->LoadTexture("editor/tele.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
+		if(!m_TeleTexture.IsValid())
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "mapimages", "Failed to load tele.png");
+		m_TeleIsLoaded = true;
+	}
+	return m_TeleTexture;
+}
+
+IGraphics::CTextureHandle CMapImages::GetSpeedupTexture()
+{
+	if(!m_SpeedupIsLoaded)
+	{
+		m_SpeedupTexture = Graphics()->LoadTexture("editor/speedup.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
+		if(!m_SpeedupTexture.IsValid())
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "mapimages", "Failed to load speedup.png");
+		m_SpeedupIsLoaded = true;
+	}
+	return m_SpeedupTexture;
+}
+
+IGraphics::CTextureHandle CMapImages::GetSwitchTexture()
+{
+	if(!m_SwitchIsLoaded)
+	{
+		m_SwitchTexture = Graphics()->LoadTexture("editor/switch.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_ARRAY_256);
+		if(!m_SwitchTexture.IsValid())
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "mapimages", "Failed to load switch.png");
+		m_SwitchIsLoaded = true;
+	}
+	return m_SwitchTexture;
+}
+
 IGraphics::CTextureHandle CMapImages::Get(int Index) const
 {
 	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)

@@ -22,8 +22,16 @@ class CMapImages : public CComponent
 
 	IGraphics::CTextureHandle m_EasterTexture;
 	IGraphics::CTextureHandle m_EntitiesTexture;
+	IGraphics::CTextureHandle m_FrontTexture;
+	IGraphics::CTextureHandle m_TeleTexture;
+	IGraphics::CTextureHandle m_SpeedupTexture;
+	IGraphics::CTextureHandle m_SwitchTexture;
 	bool m_EasterIsLoaded;
 	bool m_EntitiesIsLoaded;
+	bool m_FrontIsLoaded;
+	bool m_TeleIsLoaded;
+	bool m_SpeedupIsLoaded;
+	bool m_SwitchIsLoaded;
 
 	void LoadMapImages(class IMap *pMap, class CLayers *pLayers, int MapType);
 
@@ -41,6 +49,10 @@ public:
 	// DDRace
 
 	IGraphics::CTextureHandle GetEntitiesTexture();
+	IGraphics::CTextureHandle GetFrontTexture();
+	IGraphics::CTextureHandle GetTeleTexture();
+	IGraphics::CTextureHandle GetSpeedupTexture();
+	IGraphics::CTextureHandle GetSwitchTexture();
 };
 
 #endif

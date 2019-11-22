@@ -868,6 +868,11 @@ public:
 	IGraphics::CTextureHandle m_CursorTexture;
 	IGraphics::CTextureHandle m_EntitiesTexture;
 
+	IGraphics::CTextureHandle m_FrontTexture;
+	IGraphics::CTextureHandle m_TeleTexture;
+	IGraphics::CTextureHandle m_SpeedupTexture;
+	IGraphics::CTextureHandle m_SwitchTexture;
+
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;
 

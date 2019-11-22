@@ -4579,28 +4579,28 @@ void CEditorMap::MakeTeleLayer(CLayer *pLayer)
 {
 	m_pTeleLayer = (CLayerTele *)pLayer;
 	m_pTeleLayer->m_pEditor = m_pEditor;
-	m_pTeleLayer->m_Texture = m_pEditor->m_EntitiesTexture;
+	m_pTeleLayer->m_Texture = m_pEditor->m_TeleTexture;
 }
 
 void CEditorMap::MakeSpeedupLayer(CLayer *pLayer)
 {
 	m_pSpeedupLayer = (CLayerSpeedup *)pLayer;
 	m_pSpeedupLayer->m_pEditor = m_pEditor;
-	m_pSpeedupLayer->m_Texture = m_pEditor->m_EntitiesTexture;
+	m_pSpeedupLayer->m_Texture = m_pEditor->m_SpeedupTexture;
 }
 
 void CEditorMap::MakeFrontLayer(CLayer *pLayer)
 {
 	m_pFrontLayer = (CLayerFront *)pLayer;
 	m_pFrontLayer->m_pEditor = m_pEditor;
-	m_pFrontLayer->m_Texture = m_pEditor->m_EntitiesTexture;
+	m_pFrontLayer->m_Texture = m_pEditor->m_FrontTexture;
 }
 
 void CEditorMap::MakeSwitchLayer(CLayer *pLayer)
 {
 	m_pSwitchLayer = (CLayerSwitch *)pLayer;
 	m_pSwitchLayer->m_pEditor = m_pEditor;
-	m_pSwitchLayer->m_Texture = m_pEditor->m_EntitiesTexture;
+	m_pSwitchLayer->m_Texture = m_pEditor->m_SwitchTexture;
 }
 
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
@@ -4682,6 +4682,10 @@ void CEditor::Init()
 	m_BackgroundTexture = Graphics()->LoadTexture("editor/background.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_FrontTexture = Graphics()->LoadTexture("editor/front.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_TeleTexture = Graphics()->LoadTexture("editor/tele.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_SpeedupTexture = Graphics()->LoadTexture("editor/speedup.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_SwitchTexture = Graphics()->LoadTexture("editor/switch.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();
