@@ -164,7 +164,7 @@ void CGameClient::GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const
 {
 	if(!g_Config.m_ClShowsocial)
 		str_format(aBuf, BufferSize, "%2d:", ClientID);
-	else if(g_Config.m_ClShowUserId)
+	else if(g_Config.m_ClShowUserId || g_Config.m_Debug)
 		str_format(aBuf, BufferSize, "%2d: %s", ClientID, ClientName);
 	else
 		str_format(aBuf, BufferSize, "%s", ClientName);

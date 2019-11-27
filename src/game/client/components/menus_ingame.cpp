@@ -315,7 +315,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			Row.VSplitLeft(2*Spacing, 0, &Row);
 			Row.VSplitLeft(NameWidth, &Label, &Row);
 			Label.y += 2.0f;
-			if(g_Config.m_ClShowUserId)
+			if(g_Config.m_ClShowUserId || g_Config.m_Debug)
 			{
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Label.x, Label.y, ButtonHeight*ms_FontmodHeight*0.8f, TEXTFLAG_RENDER);
@@ -584,7 +584,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1.0f, 0.0f), vec2(Label.x + Label.h / 2, Label.y + Label.h / 2));
 
 			Row.VSplitLeft(2*Spacing, 0, &Row);
-			if(g_Config.m_ClShowUserId)
+			if(g_Config.m_ClShowUserId || g_Config.m_Debug)
 			{
 				Row.VSplitLeft(Row.h, &Label, &Row);
 				Label.y += 2.0f;
