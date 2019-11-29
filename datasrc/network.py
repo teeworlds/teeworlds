@@ -268,7 +268,6 @@ Messages = [
 		NetStringStrict("m_pMessage"),
 	]),
 
-
 	NetMessage("Sv_Team", [
 		NetIntRange("m_ClientID", -1, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Team", 'TEAM_SPECTATORS', 'TEAM_BLUE'),
@@ -377,8 +376,6 @@ Messages = [
 	]),
 
 	### Client messages
-
-
 	NetMessage("Cl_Say", [
 		NetIntRange("m_Mode", 0, 'NUM_CHATS-1'),
 		NetIntRange("m_Target", -1, 'MAX_CLIENTS-1'),
