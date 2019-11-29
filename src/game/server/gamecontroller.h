@@ -4,6 +4,7 @@
 #define GAME_SERVER_GAMECONTROLLER_H
 
 #include <base/vmath.h>
+#include <base/tl/array.h>
 
 #include <generated/protocol.h>
 
@@ -119,6 +120,32 @@ protected:
 
 	void UpdateGameInfo(int ClientID);
 
+	typedef void (*COMMAND_CALLBACK)(class CPlayer *pPlayer, const char *pArgs);
+
+	struct CChatCommand 
+	{
+		const char *m_pName;
+		const char *m_pArgsFormat;
+		const char *m_pHelpText;
+		COMMAND_CALLBACK m_Callback;
+	};
+
+	class CChatCommands
+	{
+		array<CChatCommand*> m_aCommands;
+
+	public:
+
+		// Format: i = int, s = string, p = playername
+		void AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pCallback);
+		CChatCommand *GetCommand(const char *pName);
+		array<CChatCommand*> *Commands() { return &m_aCommands; }
+	};
+
+	CChatCommands m_Commands;
+
+	CChatCommands *CommandsManager() { return &m_Commands; }
+
 public:
 	IGameController(class CGameContext *pGameServer);
 	virtual ~IGameController() {};
@@ -164,6 +191,7 @@ public:
 	void OnPlayerDisconnect(class CPlayer *pPlayer);
 	void OnPlayerInfoChange(class CPlayer *pPlayer);
 	void OnPlayerReadyChange(class CPlayer *pPlayer);
+	void OnPlayerCommand(class CPlayer *pPlayer, const char *pCommandName, const char *pCommandArgs);
 
 	void OnReset();
 

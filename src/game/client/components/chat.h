@@ -3,6 +3,7 @@
 #ifndef GAME_CLIENT_COMPONENTS_CHAT_H
 #define GAME_CLIENT_COMPONENTS_CHAT_H
 #include <base/system.h>
+#include <base/tl/array.h>
 #include <engine/shared/ringbuffer.h>
 #include <game/client/component.h>
 #include <game/client/lineinput.h>
@@ -79,26 +80,36 @@ class CChat : public CComponent
 	int64 m_LastChatSend;
 	int64 m_aLastSoundPlayed[CHAT_NUM];
 
+	typedef void (*COMMAND_CALLBACK)(CChat *pChatData, const char *pArgs);
+
 	// chat commands
 	struct CChatCommand
 	{
-		const char* m_pCommandText;
-		const char* m_pHelpText;
-		void (*m_pfnFunc)(CChat *pChatData, const char* pCommand);
+		char *m_pName;
+		char *m_pHelpText;
+		char *m_pArgsFormat;
+		// If callback is null, then it's a server-side command.
+		COMMAND_CALLBACK m_pfnCallback;
 		bool m_aFiltered; // 0 = shown, 1 = hidden
+
+		~CChatCommand();
 	};
 
 	class CChatCommands
 	{
-		CChatCommand *m_apCommands;
-		int m_Count;
+
+		array<CChatCommand*> m_aCommands;
 		CChatCommand *m_pSelectedCommand;
 
 	private:
 		int GetActiveIndex(int index) const;
 	public:
-		CChatCommands(CChatCommand apCommands[], int Count);
+		CChatCommands();
 		~CChatCommands();
+
+		void AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pfnCallback);
+		void ClearCommands();
+		CChatCommand *GetCommandByName(const char *pName);
 		void Reset();
 		void Filter(const char* pLine);
 		int CountActiveCommands() const;
@@ -108,7 +119,7 @@ class CChat : public CComponent
 		void SelectNextCommand();
 	};
 
-	CChatCommands *m_pCommands;
+	CChatCommands m_Commands;
 	bool m_IgnoreCommand;
 	bool IsTypingCommand() const;
 	void HandleCommands(float x, float y, float w);

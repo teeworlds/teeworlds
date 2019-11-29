@@ -1039,6 +1039,11 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 			m_pController->OnPlayerInfoChange(pPlayer);
 		}
+		else if (MsgID == NETMSGTYPE_CL_COMMAND)
+		{
+			CNetMsg_Cl_Command *pMsg = (CNetMsg_Cl_Command*)pRawMsg;
+			m_pController->OnPlayerCommand(pPlayer, pMsg->m_Name, pMsg->m_Arguments);
+		}
 	}
 	else
 	{

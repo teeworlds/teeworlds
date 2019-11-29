@@ -50,6 +50,8 @@ IGameController::IGameController(CGameContext *pGameServer)
 	m_aNumSpawnPoints[0] = 0;
 	m_aNumSpawnPoints[1] = 0;
 	m_aNumSpawnPoints[2] = 0;
+
+	// CommandsManager()->AddCommand("test", "i", "test command", [](CPlayer *pPlayer, const char *pArgs) {});
 }
 
 //activity
@@ -319,6 +321,19 @@ void IGameController::OnPlayerConnect(CPlayer *pPlayer)
 
 	// update game info
 	UpdateGameInfo(ClientID);
+
+	array<CChatCommand*> *pCommands = CommandsManager()->Commands();
+	for(int i = 0; i < pCommands->size(); i++)
+	{
+		CChatCommand *command = (*pCommands)[i];
+
+		CNetMsg_Sv_CommandInfo Msg;
+		Msg.m_pName = command->m_pName;
+		Msg.m_HelpText = command->m_pHelpText;
+		Msg.m_ArgsFormat = command->m_pArgsFormat;
+
+		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, pPlayer->GetCID());
+	}
 }
 
 void IGameController::OnPlayerDisconnect(CPlayer *pPlayer)
@@ -1201,4 +1216,36 @@ int IGameController::GetStartTeam()
 		return Team;
 	}
 	return TEAM_SPECTATORS;
+}
+
+void IGameController::CChatCommands::AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pCallback)
+{
+	CChatCommand *command = new CChatCommand();
+	command->m_pName = pName;
+	command->m_pArgsFormat = pArgsFormat;
+	command->m_pHelpText = pHelpText;
+	command->m_Callback = pCallback;
+
+	m_aCommands.add(command);
+}
+
+IGameController::CChatCommand *IGameController::CChatCommands::GetCommand(const char *pName)
+{
+	for(int i = 0; i < m_aCommands.size(); i++) {
+		if(str_comp(m_aCommands[i]->m_pName, pName) == 0) {
+			return m_aCommands[i];
+		}
+	}
+	return NULL;
+}
+
+void IGameController::OnPlayerCommand(CPlayer *pPlayer, const char *pCommandName, const char *pCommandArgs)
+{
+	// TODO: Add a argument parser?
+	CChatCommand *command = CommandsManager()->GetCommand(pCommandName);
+
+	if(command)
+	{
+		command->m_Callback(pPlayer, pCommandArgs);
+	}
 }
