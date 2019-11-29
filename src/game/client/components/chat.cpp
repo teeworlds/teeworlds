@@ -1522,6 +1522,10 @@ void CChat::CChatCommands::Reset()
 
 void CChat::CChatCommands::AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pfnCallback)
 {
+	// 8 is the number of vanilla commands, 14 the number of commands left to fill the chat.
+	if(m_aCommands.size() >= (8 + 14))
+		return;
+
 	CChatCommand *command = new CChatCommand();
 	command->m_pName = (char *)mem_alloc(sizeof(char) * (str_length(pName) + 1), 1);
 	str_copy(command->m_pName, pName, str_length(pName) + 1);
