@@ -50,8 +50,6 @@ IGameController::IGameController(CGameContext *pGameServer)
 	m_aNumSpawnPoints[0] = 0;
 	m_aNumSpawnPoints[1] = 0;
 	m_aNumSpawnPoints[2] = 0;
-
-	// CommandsManager()->AddCommand("test", "i", "test command", [](CPlayer *pPlayer, const char *pArgs) {});
 }
 
 //activity
@@ -325,12 +323,12 @@ void IGameController::OnPlayerConnect(CPlayer *pPlayer)
 	array<CChatCommand*> *pCommands = CommandsManager()->Commands();
 	for(int i = 0; i < pCommands->size(); i++)
 	{
-		CChatCommand *command = (*pCommands)[i];
+		CChatCommand *pCommand = (*pCommands)[i];
 
 		CNetMsg_Sv_CommandInfo Msg;
-		Msg.m_pName = command->m_pName;
-		Msg.m_HelpText = command->m_pHelpText;
-		Msg.m_ArgsFormat = command->m_pArgsFormat;
+		Msg.m_pName = pCommand->m_pName;
+		Msg.m_HelpText = pCommand->m_pHelpText;
+		Msg.m_ArgsFormat = pCommand->m_pArgsFormat;
 
 		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, pPlayer->GetCID());
 	}
@@ -1220,13 +1218,13 @@ int IGameController::GetStartTeam()
 
 void IGameController::CChatCommands::AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pCallback)
 {
-	CChatCommand *command = new CChatCommand();
-	command->m_pName = pName;
-	command->m_pArgsFormat = pArgsFormat;
-	command->m_pHelpText = pHelpText;
-	command->m_Callback = pCallback;
+	CChatCommand *pCommand = new CChatCommand();
+	pCommand->m_pName = pName;
+	pCommand->m_pArgsFormat = pArgsFormat;
+	pCommand->m_pHelpText = pHelpText;
+	pCommand->m_Callback = pCallback;
 
-	m_aCommands.add(command);
+	m_aCommands.add(pCommand);
 }
 
 IGameController::CChatCommand *IGameController::CChatCommands::GetCommand(const char *pName)
@@ -1242,10 +1240,8 @@ IGameController::CChatCommand *IGameController::CChatCommands::GetCommand(const 
 void IGameController::OnPlayerCommand(CPlayer *pPlayer, const char *pCommandName, const char *pCommandArgs)
 {
 	// TODO: Add a argument parser?
-	CChatCommand *command = CommandsManager()->GetCommand(pCommandName);
+	CChatCommand *pCommand = CommandsManager()->GetCommand(pCommandName);
 
-	if(command)
-	{
-		command->m_Callback(pPlayer, pCommandArgs);
-	}
+	if(pCommand)
+		pCommand->m_Callback(pPlayer, pCommandArgs);
 }

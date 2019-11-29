@@ -1522,24 +1522,23 @@ void CChat::CChatCommands::Reset()
 
 void CChat::CChatCommands::AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pfnCallback)
 {
-	// 8 is the number of vanilla commands, 14 the number of commands left to fill the chat.
-	if(m_aCommands.size() >= (8 + 14))
+	if(m_aCommands.size() >= MAX_COMMANDS)
 		return;
 
-	CChatCommand *command = new CChatCommand();
-	command->m_pName = (char *)mem_alloc(sizeof(char) * (str_length(pName) + 1), 1);
-	str_copy(command->m_pName, pName, str_length(pName) + 1);
+	CChatCommand *pCommand = new CChatCommand();
+	pCommand->m_pName = (char *)mem_alloc(sizeof(char) * (str_length(pName) + 1), 1);
+	str_copy(pCommand->m_pName, pName, str_length(pName) + 1);
 
-	command->m_pArgsFormat = (char *)mem_alloc(sizeof(char) * (str_length(pArgsFormat) + 1), 1);
-	str_copy(command->m_pArgsFormat, pArgsFormat, str_length(pArgsFormat) + 1);
+	pCommand->m_pArgsFormat = (char *)mem_alloc(sizeof(char) * (str_length(pArgsFormat) + 1), 1);
+	str_copy(pCommand->m_pArgsFormat, pArgsFormat, str_length(pArgsFormat) + 1);
 
-	command->m_pHelpText = (char *)mem_alloc(sizeof(char) * (str_length(pName) + 1), 1);
-	str_copy(command->m_pHelpText, pHelpText, str_length(pHelpText) + 1);
+	pCommand->m_pHelpText = (char *)mem_alloc(sizeof(char) * (str_length(pName) + 1), 1);
+	str_copy(pCommand->m_pHelpText, pHelpText, str_length(pHelpText) + 1);
 
-	command->m_pfnCallback = pfnCallback;
-	command->m_aFiltered = false;
+	pCommand->m_pfnCallback = pfnCallback;
+	pCommand->m_aFiltered = false;
 
-	m_aCommands.add(command);
+	m_aCommands.add(pCommand);
 }
 
 CChat::CChatCommand::~CChatCommand()

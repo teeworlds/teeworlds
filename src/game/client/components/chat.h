@@ -101,6 +101,12 @@ class CChat : public CComponent
 		array<CChatCommand*> m_aCommands;
 		CChatCommand *m_pSelectedCommand;
 
+		enum
+		{
+			// 8 is the number of vanilla commands, 14 the number of commands left to fill the chat.
+			MAX_COMMANDS = 8 + 14
+		};
+
 	private:
 		int GetActiveIndex(int index) const;
 	public:
