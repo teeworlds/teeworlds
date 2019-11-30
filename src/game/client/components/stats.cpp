@@ -246,7 +246,7 @@ void CStats::OnRender()
 		}
 
 		const CPlayerStats *pStats = &m_aStats[apPlayers[j]];		
-		const bool HighlightedLine = (!m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_LocalClientID)
+		const bool HighlightedLine = apPlayers[j] == m_pClient->m_LocalClientID
 			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
 
 		// background so it's easy to find the local player or the followed one in spectator mode
