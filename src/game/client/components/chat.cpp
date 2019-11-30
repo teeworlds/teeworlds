@@ -1532,7 +1532,7 @@ void CChat::CChatCommands::AddCommand(const char *pName, const char *pArgsFormat
 	pCommand->m_pArgsFormat = (char *)mem_alloc(sizeof(char) * (str_length(pArgsFormat) + 1), 1);
 	str_copy(pCommand->m_pArgsFormat, pArgsFormat, str_length(pArgsFormat) + 1);
 
-	pCommand->m_pHelpText = (char *)mem_alloc(sizeof(char) * (str_length(pName) + 1), 1);
+	pCommand->m_pHelpText = (char *)mem_alloc(sizeof(char) * (str_length(pHelpText) + 1), 1);
 	str_copy(pCommand->m_pHelpText, pHelpText, str_length(pHelpText) + 1);
 
 	pCommand->m_pfnCallback = pfnCallback;
