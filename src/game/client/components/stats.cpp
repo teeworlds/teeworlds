@@ -44,7 +44,7 @@ void CStats::OnReset()
 	m_ScreenshotTime = -1;
 }
 
-bool CStats::IsActive()
+bool CStats::IsActive() const
 {
 	// force statboard after three seconds of game over if autostatscreenshot is on
 	if(g_Config.m_ClAutoStatScreenshot && m_ScreenshotTime > -1 && m_ScreenshotTime < time_get())
