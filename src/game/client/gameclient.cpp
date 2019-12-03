@@ -1879,7 +1879,7 @@ void CGameClient::SendStartInfo(bool IsDummy)
 	str_format(aClientStr, sizeof(aClientStr), "zilly!%s", ZILLYWOODS_VERSION);
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		if(g_Config.m_ClClientRecognition && (p >= NUM_SKINPARTS-2) && !str_comp(CSkins::ms_apSkinVariables[p], "standard"))
+		if((p >= NUM_SKINPARTS-2) && !str_comp(CSkins::ms_apSkinVariables[p], "standard"))
 			Msg.m_apSkinPartNames[p] = aClientStr;
 		else
 			Msg.m_apSkinPartNames[p] = CSkins::ms_apSkinVariables[p];
