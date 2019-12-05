@@ -69,6 +69,7 @@ class CGameClient : public IGameClient
 	static void ConchainBlacklistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainSpecialDummy(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConDebugDummy(IConsole::IResult *pResult, void *pUserData);
 
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
 

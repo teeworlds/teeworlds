@@ -326,6 +326,7 @@ void CGameClient::OnConsoleInit()
 	Console()->Chain("player_skin_eyes", ConchainSkinChange, this);
 
 	Console()->Chain("cl_dummy", ConchainSpecialDummy, this);
+	Console()->Register("dbg_dummy", "", CFGFLAG_CLIENT, ConDebugDummy, this, "debug dummy ids");
 
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->m_pClient = this;
@@ -2015,6 +2016,14 @@ void CGameClient::ConchainSpecialDummy(IConsole::IResult *pResult, void *pUserDa
 			g_Config.m_ClDummy = 0;
 		pClient->SwitchDummy();
 	}
+}
+
+void CGameClient::ConDebugDummy(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "local[0]=%d local[1]=%d", pClient->m_LocalIDs[0], pClient->m_LocalIDs[1]);
+	pClient->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "dummy", aBuf);
 }
 
 void CGameClient::SwitchDummy()

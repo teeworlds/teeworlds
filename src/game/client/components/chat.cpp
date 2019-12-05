@@ -1207,6 +1207,13 @@ void CChat::OnRender()
 				else if(m_pClient->m_LocalIDs[1] != -1 && m_pClient->m_LocalIDs[1] == pLine->m_TargetID)
 					FakeLocalID = LocalCID;
 			}
+			if (Line.m_TargetID != LocalCID && Line.m_ClientID != LocalCID)
+			{
+				if(m_pClient->m_LocalIDs[0] != -1 && m_pClient->m_LocalIDs[0] == Line.m_ClientID)
+					Line.m_ClientID = LocalCID;
+				else if(m_pClient->m_LocalIDs[1] != -1 && m_pClient->m_LocalIDs[1] == Line.m_ClientID)
+					Line.m_ClientID = LocalCID;
+			}
 
 			// image orientation
 			if(pLine->m_ClientID == FakeLocalID && pLine->m_TargetID >= 0)
