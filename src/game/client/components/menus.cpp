@@ -2492,6 +2492,7 @@ void CMenus::OnConsoleInit()
 	LoadFilters();
 
 	// add standard filters in case they are missing
+	bool UseDefaultFilters = !m_lFilters.size();
 	bool FilterStandard = false;
 	bool FilterFav = false;
 	bool FilterAll = false;
@@ -2521,6 +2522,9 @@ void CMenus::OnConsoleInit()
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser()));
 	if(!FilterAll)
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser()));
+	// expand the all filter tab by default
+	if(UseDefaultFilters)
+		m_lFilters[m_lFilters.size()-1].Switch();
 }
 
 void CMenus::OnShutdown()
