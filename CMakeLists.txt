@@ -1000,6 +1000,7 @@ set(EXPECTED_DATA
   skins/body/force.png
   skins/body/fox.png
   skins/body/hippo.png
+  skins/body/greensward.png
   skins/body/kitty.png
   skins/body/koala.png
   skins/body/monkey.png
@@ -1033,6 +1034,7 @@ set(EXPECTED_DATA
   skins/fox.json
   skins/greycoon.json
   skins/greyfox.json
+  skins/greensward.json
   skins/hands/standard.png
   skins/hippo.json
   skins/koala.json
