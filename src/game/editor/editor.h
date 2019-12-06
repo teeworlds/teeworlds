@@ -594,8 +594,8 @@ public:
 	~CLayerSwitch();
 
 	CSwitchTile *m_pSwitchTile;
-	unsigned m_SwitchNum;
-	unsigned m_SwitchDelay;
+	unsigned char m_SwitchNum;
+	unsigned char m_SwitchDelay;
 
 	virtual void Resize(int NewW, int NewH);
 	virtual void BrushDraw(CLayer *pBrush, float wx, float wy);
@@ -1003,6 +1003,7 @@ public:
 	short m_SpeedupAngle;
 
 	unsigned char m_SwitchNum;
+	unsigned char m_SwitchDelay;
 };
 
 // make sure to inline this function
