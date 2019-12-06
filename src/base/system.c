@@ -2074,12 +2074,45 @@ int str_comp_filenames(const char *a, const char *b)
 	return tolower(*a) - tolower(*b);
 }
 
+const char *str_startswith_nocase(const char *str, const char *prefix)
+{
+	int prefixl = str_length(prefix);
+	if(str_comp_nocase_num(str, prefix, prefixl) == 0)
+	{
+		return str + prefixl;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 const char *str_startswith(const char *str, const char *prefix)
 {
 	int prefixl = str_length(prefix);
 	if(str_comp_num(str, prefix, prefixl) == 0)
 	{
 		return str + prefixl;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+const char *str_endswith_nocase(const char *str, const char *suffix)
+{
+	int strl = str_length(str);
+	int suffixl = str_length(suffix);
+	const char *strsuffix;
+	if(strl < suffixl)
+	{
+		return 0;
+	}
+	strsuffix = str + strl - suffixl;
+	if(str_comp_nocase(strsuffix, suffix) == 0)
+	{
+		return strsuffix;
 	}
 	else
 	{
