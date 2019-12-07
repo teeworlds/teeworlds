@@ -922,7 +922,7 @@ void CChat::OnRender()
 	const int64 TimeFreq = time_freq();
 
 	// get scoreboard data
-	const bool IsScoreboardActive = m_pClient->m_pScoreboard->Active();
+	const bool IsScoreboardActive = m_pClient->m_pScoreboard->IsActive();
 	CUIRect ScoreboardRect = m_pClient->m_pScoreboard->GetScoreboardRect();
 	const CUIRect ScoreboardScreen = *UI()->Screen();
 	CUIRect ScoreboardRectFixed;

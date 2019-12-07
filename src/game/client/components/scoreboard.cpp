@@ -25,7 +25,6 @@
 
 CScoreboard::CScoreboard()
 {
-	m_PlayerLines = 0;
 	OnReset();
 }
 
@@ -46,7 +45,6 @@ void CScoreboard::OnReset()
 {
 	m_Active = false;
 	m_Activate = false;
-	m_PlayerLines = 0;
 }
 
 void CScoreboard::OnRelease()
@@ -209,14 +207,13 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	// count players
 	dbg_assert(Team == TEAM_RED || Team == TEAM_BLUE, "Unknown team id");
 	int NumPlayers = m_pClient->m_GameInfo.m_aTeamSize[Team];
+	int PlayerLines = NumPlayers;
 	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
-		m_PlayerLines = max(m_pClient->m_GameInfo.m_aTeamSize[Team^1], NumPlayers);
-	else
-		m_PlayerLines = NumPlayers;
+		PlayerLines = max(m_pClient->m_GameInfo.m_aTeamSize[Team^1], PlayerLines);
 
 	// clamp to 16
-	if(m_PlayerLines > 16)
-		m_PlayerLines = 16;
+	if(PlayerLines > 16)
+		PlayerLines = 16;
 
 	char aBuf[128] = {0};
 
@@ -309,12 +306,12 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	Graphics()->BlendNormal();
 	{
-		CUIRect Rect = {x, y, w, LineHeight*(m_PlayerLines+1)};
+		CUIRect Rect = {x, y, w, LineHeight*(PlayerLines+1)};
 		RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
 	}
-	if(m_PlayerLines)
+	if(PlayerLines)
 	{
-		CUIRect Rect = {x, y+LineHeight, w, LineHeight*(m_PlayerLines)};
+		CUIRect Rect = {x, y+LineHeight, w, LineHeight*(PlayerLines)};
 		RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
 	}
 
@@ -611,7 +608,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 
-	return HeadlineHeight+LineHeight*(m_PlayerLines+1);
+	return HeadlineHeight+LineHeight*(PlayerLines+1);
 }
 
 void CScoreboard::RenderRecordingNotification(float x)
@@ -639,7 +636,8 @@ void CScoreboard::RenderRecordingNotification(float x)
 
 void CScoreboard::OnRender()
 {
-	if(m_pClient->m_pStats->IsActive())
+	// don't render scoreboard if menu or statboard is open
+	if(m_pClient->m_pMenus->IsActive() || m_pClient->m_pStats->IsActive())
 		return;
 
 	// postpone the active state till the render area gets updated during the rendering
@@ -653,15 +651,7 @@ void CScoreboard::OnRender()
 	if(m_Active)
 		m_pClient->m_pMotd->Clear();
 
-	// if statboard active don't show scoreboard
-	if(m_pClient->m_pStats->IsActive())
-		return;
-
-	if(!Active())
-		return;
-
-	// don't render scoreboard if menu or motd is open
-	if(m_pClient->m_pMenus->IsActive() || m_pClient->m_pMotd->IsActive())
+	if(!IsActive())
 		return;
 
 	CUIRect Screen = *UI()->Screen();
@@ -739,7 +729,7 @@ void CScoreboard::OnRender()
 	RenderRecordingNotification((Width/7)*4);
 }
 
-bool CScoreboard::Active()
+bool CScoreboard::IsActive() const
 {
 	// if we actively wanna look on the scoreboard
 	if(m_Active)
@@ -758,11 +748,6 @@ bool CScoreboard::Active()
 		return true;
 
 	return false;
-}
-
-CUIRect CScoreboard::GetScoreboardRect()
-{
-	return m_TotalRect;
 }
 
 const char *CScoreboard::GetClanName(int Team)
