@@ -49,6 +49,7 @@ class CGameContext : public IGameServer
 	static void ConChangeMap(IConsole::IResult *pResult, void *pUserData);
 	static void ConRestart(IConsole::IResult *pResult, void *pUserData);
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
+	static void ConBroadcast(IConsole::IResult *pResult, void *pUserData);
 	static void ConSetTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConSetTeamAll(IConsole::IResult *pResult, void *pUserData);
 	static void ConSwapTeams(IConsole::IResult *pResult, void *pUserData);
@@ -90,7 +91,7 @@ public:
 	int m_LockTeams;
 
 	// voting
-	void StartVote(int Type, const char *pDesc, const char *pCommand, const char *pReason);
+	void StartVote(const char *pDesc, const char *pCommand, const char *pReason);
 	void EndVote(int Type, bool Force);
 	void ForceVote(int Type, const char *pDescription, const char *pReason);
 	void SendVoteSet(int Type, int ToClientID);
@@ -99,6 +100,7 @@ public:
 	void AbortVoteOnTeamChange(int ClientID);
 
 	int m_VoteCreator;
+	int m_VoteType;
 	int64 m_VoteCloseTime;
 	int64 m_VoteCancelTime;
 	bool m_VoteUpdate;
@@ -117,25 +119,29 @@ public:
 
 		VOTE_TIME=25,
 		VOTE_CANCEL_TIME = 10,
+
+		MIN_SKINCHANGE_CLIENTVERSION = 0x0703,
 	};
 	class CHeap *m_pVoteOptionHeap;
 	CVoteOptionServer *m_pVoteOptionFirst;
 	CVoteOptionServer *m_pVoteOptionLast;
 
 	// helper functions
-	void CreateDamageInd(vec2 Pos, float AngleMod, int Amount);
+	void CreateDamage(vec2 Pos, int Id, vec2 Source, int HealthAmount, int ArmorAmount, bool Self);
 	void CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamage);
 	void CreateHammerHit(vec2 Pos);
 	void CreatePlayerSpawn(vec2 Pos);
 	void CreateDeath(vec2 Pos, int Who);
-	void CreateSound(vec2 Pos, int Sound, int Mask=-1);
+	void CreateSound(vec2 Pos, int Sound, int64 Mask=-1);
 
 	// network
 	void SendChat(int ChatterClientID, int Mode, int To, const char *pText);
+	void SendBroadcast(const char *pText, int ClientID);
 	void SendEmoticon(int ClientID, int Emoticon);
 	void SendWeaponPickup(int ClientID, int Weapon);
 	void SendMotd(int ClientID);
 	void SendSettings(int ClientID);
+	void SendSkinChange(int ClientID, int TargetID);
 
 	void SendGameMsg(int GameMsgID, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);
@@ -160,8 +166,8 @@ public:
 
 	virtual void OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID);
 
-	virtual void OnClientConnected(int ClientID) { OnClientConnected(ClientID, false); }
-	void OnClientConnected(int ClientID, bool Dummy);
+	virtual void OnClientConnected(int ClientID, bool AsSpec) { OnClientConnected(ClientID, false, AsSpec); }
+	void OnClientConnected(int ClientID, bool Dummy, bool AsSpec);
 	void OnClientTeamChange(int ClientID);
 	virtual void OnClientEnter(int ClientID);
 	virtual void OnClientDrop(int ClientID, const char *pReason);
@@ -170,14 +176,17 @@ public:
 
 	virtual bool IsClientReady(int ClientID) const;
 	virtual bool IsClientPlayer(int ClientID) const;
+	virtual bool IsClientSpectator(int ClientID) const;
 
 	virtual const char *GameType() const;
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;
+	virtual const char *NetVersionHashUsed() const;
+	virtual const char *NetVersionHashReal() const;
 };
 
-inline int CmaskAll() { return -1; }
-inline int CmaskOne(int ClientID) { return 1<<ClientID; }
-inline int CmaskAllExceptOne(int ClientID) { return 0x7fffffff^CmaskOne(ClientID); }
-inline bool CmaskIsSet(int Mask, int ClientID) { return (Mask&CmaskOne(ClientID)) != 0; }
+inline int64 CmaskAll() { return -1; }
+inline int64 CmaskOne(int ClientID) { return (int64)1<<ClientID; }
+inline int64 CmaskAllExceptOne(int ClientID) { return CmaskAll()^CmaskOne(ClientID); }
+inline bool CmaskIsSet(int64 Mask, int ClientID) { return (Mask&CmaskOne(ClientID)) != 0; }
 #endif

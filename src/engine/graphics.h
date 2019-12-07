@@ -69,6 +69,9 @@ public:
 		TEXLOAD_NOMIPMAPS = 2,
 		TEXLOAD_ARRAY_256 = 4,
 		TEXLOAD_MULTI_DIMENSION = 8,
+		TEXLOAD_LINEARMIPMAPS = 16,
+
+		NUMTILES_DIMENSION = 16,			// number of tiles in each dimension within a texture
 	};
 
 	/* Constants: Wrap Modes */
@@ -174,9 +177,6 @@ public:
 	virtual void ReadBackbuffer(unsigned char **ppPixels, int x, int y, int w, int h) = 0;
 	virtual void TakeScreenshot(const char *pFilename) = 0;
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen) = 0;
-
-	virtual int GetDesktopScreenWidth() const = 0;
-	virtual int GetDesktopScreenHeight() const = 0;
 
 	virtual void Swap() = 0;
 	virtual int GetNumScreens() const = 0;

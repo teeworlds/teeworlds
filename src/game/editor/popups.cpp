@@ -148,7 +148,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		}
 	}
 
-	// new tile layer
+	// new quad layer
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewQuadLayerButton = 0;
@@ -162,13 +162,13 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		return 1;
 	}
 
-	// new quad layer
+	// new tile layer
 	View.HSplitBottom(5.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewTileLayerButton = 0;
 	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, "Add tile layer", 0, &Button, 0, "Creates a new tile layer"))
 	{
-		CLayer *l = new CLayerTiles(50, 50);
+		CLayer *l = new CLayerTiles(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
 		l->m_pEditor = pEditor;
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
 		pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
@@ -763,6 +763,8 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 		pEditor->UI()->DoLabel(&Label, "Exit the editor", 20.0f, CUI::ALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
 		pEditor->UI()->DoLabel(&Label, "Load map", 20.0f, CUI::ALIGN_CENTER);
+	else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
+		pEditor->UI()->DoLabel(&Label, "Load current map", 20.0f, CUI::ALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
 		pEditor->UI()->DoLabel(&Label, "New map", 20.0f, CUI::ALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
@@ -779,6 +781,8 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you exit the editor.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
 		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load a new map.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
+	else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
+		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load the current map.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
 		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you create a new map.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
@@ -794,6 +798,8 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 			g_Config.m_ClEditor = 0;
 		else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
 			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
+		else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
+			pEditor->LoadCurrentMap();
 		else if(pEditor->m_PopupEventType == POPEVENT_NEW)
 		{
 			pEditor->Reset();
@@ -994,12 +1000,31 @@ int CEditor::PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View)
 	{
 		View.HSplitTop(2.0f, 0, &View);
 		View.HSplitTop(12.0f, &Button, &View);
-		if(pEditor->DoButton_Editor(&s_AutoMapperConfigButtons[i], pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->GetRuleSetName(i), 0, &Button, 0, 0))
+		if(pEditor->DoButton_Editor(&s_AutoMapperConfigButtons[i], pEditor->m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->GetRuleSetName(i), pLayer->m_LiveAutoMap && pLayer->m_SelectedRuleSet == i, &Button, 0, 0))
 		{
 			pLayer->m_SelectedRuleSet = i;
-			s_AutoMapProceedOrder = true;
+			if(!pLayer->m_LiveAutoMap)
+				s_AutoMapProceedOrder = true;
 			break;
 		}
+	}
+
+	View.HSplitTop(2.0f, 0, &View);
+
+	static int s_aIds[2] = {0};
+
+	CUIRect Label, Full, Live;
+	View.VSplitMid(&Label, &View);
+	pEditor->UI()->DoLabel(&Label, "Type", 10.0f, CUI::ALIGN_LEFT);
+
+	View.VSplitMid(&Full, &Live);
+	if(pEditor->DoButton_ButtonDec(&s_aIds[0], "Full", !pLayer->m_LiveAutoMap, &Full, 0, ""))
+	{
+		pLayer->m_LiveAutoMap = false;
+	}
+	if(pEditor->DoButton_ButtonInc(((char *)&s_aIds[0])+1, "Live", pLayer->m_LiveAutoMap, &Live, 0, ""))
+	{
+		pLayer->m_LiveAutoMap = true;
 	}
 
 	return 0;
@@ -1014,7 +1039,7 @@ void CEditor::PopupSelectConfigAutoMapInvoke(float x, float y)
 		m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->RuleSetNum())
 	{
 		if(m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_TILESET)
-			UiInvokePopupMenu(&s_AutoMapConfigSelectID, 0, x, y, 120.0f, 12.0f+14.0f*m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->RuleSetNum(), PopupSelectConfigAutoMap);
+			UiInvokePopupMenu(&s_AutoMapConfigSelectID, 0, x, y, 120.0f, 12.0f+14.0f*m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->RuleSetNum()+14.0f, PopupSelectConfigAutoMap);
 		else if(m_Map.m_lImages[pLayer->m_Image]->m_pAutoMapper->GetType() == IAutoMapper::TYPE_DOODADS)
 			UiInvokePopupMenu(&s_AutoMapConfigSelectID, 0, x, y, 120.0f, 60.0f, PopupDoodadAutoMap);
 	}
@@ -1074,7 +1099,7 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 	pEditor->Graphics()->QuadsEnd();
 
 	// marker
-	vec2 Marker = vec2(hsv.y*pEditor->UI()->Scale(), (1.0f - hsv.z)*pEditor->UI()->Scale()) * vec2(SVPicker.w, SVPicker.h);
+	vec2 Marker = vec2(hsv.y, (1.0f - hsv.z)) * vec2(SVPicker.w, SVPicker.h);
 	pEditor->Graphics()->QuadsBegin();
 	pEditor->Graphics()->SetColor(0.5f, 0.5f, 0.5f, 1.0f);
 	IGraphics::CQuadItem aMarker[2];
@@ -1122,7 +1147,7 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 
 	// marker
 	pEditor->Graphics()->SetColor(0.5f, 0.5f, 0.5f, 1.0f);
-	IGraphics::CQuadItem QuadItemMarker(HuePicker.x, HuePicker.y + (1.0f - hsv.x) * HuePicker.h * pEditor->UI()->Scale(), HuePicker.w, pEditor->UI()->PixelSize());
+	IGraphics::CQuadItem QuadItemMarker(HuePicker.x, HuePicker.y + (1.0f - hsv.x) * HuePicker.h, HuePicker.w, pEditor->UI()->PixelSize());
 	pEditor->Graphics()->QuadsDrawTL(&QuadItemMarker, 1);
 
 	pEditor->Graphics()->QuadsEnd();

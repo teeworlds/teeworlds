@@ -12,7 +12,7 @@ MACRO_ALLOC_POOL_ID_IMPL(CPlayer, MAX_CLIENTS)
 
 IServer *CPlayer::Server() const { return m_pGameServer->Server(); }
 
-CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
+CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy, bool AsSpec)
 {
 	m_pGameServer = pGameServer;
 	m_RespawnTick = Server()->Tick();
@@ -20,7 +20,7 @@ CPlayer::CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy)
 	m_ScoreStartTick = Server()->Tick();
 	m_pCharacter = 0;
 	m_ClientID = ClientID;
-	m_Team = GameServer()->m_pController->GetStartTeam();
+	m_Team = AsSpec ? TEAM_SPECTATORS : GameServer()->m_pController->GetStartTeam();
 	m_SpecMode = SPEC_FREEVIEW;
 	m_SpectatorID = -1;
 	m_pSpecFlag = 0;
@@ -189,7 +189,7 @@ void CPlayer::Snap(int SnappingClient)
 		StrToInts(pClientInfo->m_aClan, 3, Server()->ClientClan(m_ClientID));
 		pClientInfo->m_Country = Server()->ClientCountry(m_ClientID);
 
-		for(int p = 0; p < 6; p++)
+		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			StrToInts(pClientInfo->m_aaSkinPartNames[p], 6, m_TeeInfos.m_aaSkinPartNames[p]);
 			pClientInfo->m_aUseCustomColors[p] = m_TeeInfos.m_aUseCustomColors[p];
@@ -328,11 +328,12 @@ void CPlayer::KillCharacter(int Weapon)
 
 void CPlayer::Respawn()
 {
-	if(m_RespawnDisabled)
+	if(m_RespawnDisabled && m_Team != TEAM_SPECTATORS)
 	{
 		// enable spectate mode for dead players
 		m_DeadSpecMode = true;
 		m_IsReadyToPlay = true;
+		m_SpecMode = SPEC_PLAYER;
 		UpdateDeadSpecMode();
 		return;
 	}
@@ -345,9 +346,11 @@ void CPlayer::Respawn()
 
 bool CPlayer::SetSpectatorID(int SpecMode, int SpectatorID)
 {
-	if((SpecMode == SPEC_PLAYER && (SpectatorID == -1 || m_SpectatorID == SpectatorID || m_ClientID == SpectatorID)) ||
-			(SpecMode != SPEC_PLAYER && SpecMode == m_SpecMode))
+	if((SpecMode == m_SpecMode && SpecMode != SPEC_PLAYER) ||
+		(m_SpecMode == SPEC_PLAYER && SpecMode == SPEC_PLAYER && (SpectatorID == -1 || m_SpectatorID == SpectatorID || m_ClientID == SpectatorID)))
+	{
 		return false;
+	}
 
 	if(m_Team == TEAM_SPECTATORS)
 	{

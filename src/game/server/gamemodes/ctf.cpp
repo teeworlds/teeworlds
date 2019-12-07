@@ -86,7 +86,7 @@ bool CGameControllerCTF::OnEntity(int Index, vec2 Pos)
 }
 
 // game
-void CGameControllerCTF::DoWincheckMatch()
+bool CGameControllerCTF::DoWincheckMatch()
 {
 	// check score win condition
 	if((m_GameInfo.m_ScoreLimit > 0 && (m_aTeamscore[TEAM_RED] >= m_GameInfo.m_ScoreLimit || m_aTeamscore[TEAM_BLUE] >= m_GameInfo.m_ScoreLimit)) ||
@@ -95,16 +95,23 @@ void CGameControllerCTF::DoWincheckMatch()
 		if(m_SuddenDeath)
 		{
 			if(m_aTeamscore[TEAM_RED]/100 != m_aTeamscore[TEAM_BLUE]/100)
+			{
 				EndMatch();
+				return true;
+			}
 		}
 		else
 		{
 			if(m_aTeamscore[TEAM_RED] != m_aTeamscore[TEAM_BLUE])
+			{
 				EndMatch();
+				return true;
+			}
 			else
 				m_SuddenDeath = 1;
 		}
 	}
+	return false;
 }
 
 // general
@@ -172,16 +179,23 @@ void CGameControllerCTF::Tick()
 					// CAPTURE! \o/
 					m_aTeamscore[fi^1] += 100;
 					F->GetCarrier()->GetPlayer()->m_Score += 5;
+					float Diff = Server()->Tick() - F->GetGrabTick();
 
 					char aBuf[64];
-					str_format(aBuf, sizeof(aBuf), "flag_capture player='%d:%s'",
+					str_format(aBuf, sizeof(aBuf), "flag_capture player='%d:%s' team=%d time=%.2f",
 						F->GetCarrier()->GetPlayer()->GetCID(),
-						Server()->ClientName(F->GetCarrier()->GetPlayer()->GetCID()));
+						Server()->ClientName(F->GetCarrier()->GetPlayer()->GetCID()),
+						F->GetCarrier()->GetPlayer()->GetTeam(),
+						Diff / (float)Server()->TickSpeed()
+					);
 					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
-					GameServer()->SendGameMsg(GAMEMSG_CTF_CAPTURE, fi, F->GetCarrier()->GetPlayer()->GetCID(), Server()->Tick()-F->GetGrabTick(), -1);
+					GameServer()->SendGameMsg(GAMEMSG_CTF_CAPTURE, fi, F->GetCarrier()->GetPlayer()->GetCID(), Diff, -1);
 					for(int i = 0; i < 2; i++)
 						m_apFlags[i]->Reset();
+					// do a win check(capture could trigger win condition)
+					if(DoWincheckMatch())
+						return;
 				}
 			}
 		}
@@ -203,9 +217,11 @@ void CGameControllerCTF::Tick()
 						pChr->GetPlayer()->m_Score += 1;
 
 						char aBuf[256];
-						str_format(aBuf, sizeof(aBuf), "flag_return player='%d:%s'",
+						str_format(aBuf, sizeof(aBuf), "flag_return player='%d:%s' team=%d",
 							pChr->GetPlayer()->GetCID(),
-							Server()->ClientName(pChr->GetPlayer()->GetCID()));
+							Server()->ClientName(pChr->GetPlayer()->GetCID()),
+							pChr->GetPlayer()->GetTeam()
+						);
 						GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 						GameServer()->SendGameMsg(GAMEMSG_CTF_RETURN, -1);
 						F->Reset();
@@ -222,9 +238,11 @@ void CGameControllerCTF::Tick()
 					F->GetCarrier()->GetPlayer()->m_Score += 1;
 
 					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "flag_grab player='%d:%s'",
+					str_format(aBuf, sizeof(aBuf), "flag_grab player='%d:%s' team=%d",
 						F->GetCarrier()->GetPlayer()->GetCID(),
-						Server()->ClientName(F->GetCarrier()->GetPlayer()->GetCID()));
+						Server()->ClientName(F->GetCarrier()->GetPlayer()->GetCID()),
+						F->GetCarrier()->GetPlayer()->GetTeam()
+					);
 					GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 					GameServer()->SendGameMsg(GAMEMSG_CTF_GRAB, fi, -1);
 					break;
@@ -232,4 +250,6 @@ void CGameControllerCTF::Tick()
 			}
 		}
 	}
+	// do a win check(grabbing flags could trigger win condition)
+	DoWincheckMatch();
 }

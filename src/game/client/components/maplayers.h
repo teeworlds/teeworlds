@@ -13,15 +13,20 @@ class CMapLayers : public CComponent
 	int m_Type;
 	int m_CurrentLocalTick;
 	int m_LastLocalTick;
+	float m_OnlineStartTime;
 	bool m_EnvelopeUpdate;
 
 	array<CEnvPoint> m_lEnvPoints;
 	array<CEnvPoint> m_lEnvPointsMenu;
 
+	CTile* m_pEggTiles;
+	int m_EggLayerWidth;
+	int m_EggLayerHeight;
+
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
 
-	void LoadBackgroundMap();
 	void LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoints);
+	void LoadBackgroundMap();
 
 public:
 	enum
@@ -31,7 +36,9 @@ public:
 	};
 
 	CMapLayers(int Type);
+	virtual void OnStateChange(int NewState, int OldState);
 	virtual void OnInit();
+	virtual void OnShutdown();
 	virtual void OnRender();
 	virtual void OnMapLoad();
 

@@ -24,6 +24,8 @@ public:
 		TEMPCMD_HELP_LENGTH=96,
 		TEMPCMD_PARAMS_LENGTH=16,
 
+		TEMPMAP_NAME_LENGTH = 32,
+
 		MAX_PRINT_CB=4,
 	};
 
@@ -48,7 +50,7 @@ public:
 	protected:
 		int m_AccessLevel;
 	public:
-		CCommandInfo() { m_AccessLevel = ACCESS_LEVEL_ADMIN; }
+		CCommandInfo(bool BasicAccess) { m_AccessLevel = BasicAccess ? ACCESS_LEVEL_MOD : ACCESS_LEVEL_ADMIN; }
 		virtual ~CCommandInfo() {}
 		const char *m_pName;
 		const char *m_pHelp;
@@ -67,12 +69,16 @@ public:
 	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int Flagmask) const = 0;
 	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) = 0;
 	virtual void PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser) = 0;
+	virtual void PossibleMaps(const char *pStr, FPossibleCallback pfnCallback, void *pUser) = 0;
 	virtual void ParseArguments(int NumArgs, const char **ppArguments) = 0;
 
 	virtual void Register(const char *pName, const char *pParams, int Flags, FCommandCallback pfnFunc, void *pUser, const char *pHelp) = 0;
 	virtual void RegisterTemp(const char *pName, const char *pParams, int Flags, const char *pHelp) = 0;
 	virtual void DeregisterTemp(const char *pName) = 0;
 	virtual void DeregisterTempAll() = 0;
+	virtual void RegisterTempMap(const char *pName) = 0;
+	virtual void DeregisterTempMap(const char *pName) = 0;
+	virtual void DeregisterTempMapAll() = 0;
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	virtual void StoreCommands(bool Store) = 0;
 

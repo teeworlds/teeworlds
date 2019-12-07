@@ -4,6 +4,7 @@
 #define BASE_TL_ALGORITHM_H
 
 #include "range.h"
+#include <algorithm>
 
 
 /*
@@ -69,7 +70,7 @@ R find_linear(R range, T value)
 template<class R, class T>
 R find_binary(R range, T value)
 {
-	range = partition_linear(range, value);
+	range = partition_binary(range, value);
 	if(range.empty()) return range;
 	if(range.front() == value) return range;
 	return R();
@@ -93,7 +94,7 @@ void sort_bubble(R range)
 		{
 			typename R::type *cur = &section.front();
 			if(*cur < *prev)
-				swap(*cur, *prev);
+				tl_swap(*cur, *prev);
 			prev = cur;
 		}
 	}
@@ -110,7 +111,7 @@ void sort_quick(R range)
 template<class R>
 void sort(R range)
 {
-	sort_bubble(range);
+	std::stable_sort(&range.front(), &range.back()+1);
 }
 
 

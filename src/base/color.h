@@ -143,10 +143,10 @@ inline vec3 RgbToHsv(vec3 rgb)
 	if(h_max != 0.0f)
 		s = (h_max - h_min)/h_max;
 
-	// lightness
-	float l = h_max;
+	// value
+	float v = h_max;
 
-	return vec3(hue, s, l);
+	return vec3(hue, s, v);
 }
 
 #endif

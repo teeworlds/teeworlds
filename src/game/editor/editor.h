@@ -3,7 +3,7 @@
 #ifndef GAME_EDITOR_EDITOR_H
 #define GAME_EDITOR_EDITOR_H
 
-#include <math.h>
+#include <algorithm>
 
 #include <base/math.h>
 #include <base/system.h>
@@ -67,7 +67,7 @@ public:
 
 	void Resort()
 	{
-		sort(m_lPoints.all());
+		std::stable_sort(&m_lPoints[0], &m_lPoints[m_lPoints.size()]);
 		FindTopBottom(0xf);
 	}
 
@@ -286,6 +286,7 @@ public:
 	char m_aName[128];
 	unsigned char m_aTileFlags[256];
 	class IAutoMapper *m_pAutoMapper;
+	bool operator<(const CEditorImage &Other) const { return str_comp(m_aName, Other.m_aName) < 0; }
 };
 
 class CEditorMap
@@ -352,7 +353,7 @@ public:
 		if(Index1 < 0 || Index1 >= m_lGroups.size()) return Index0;
 		if(Index0 == Index1) return Index0;
 		m_Modified = true;
-		swap(m_lGroups[Index0], m_lGroups[Index1]);
+		tl_swap(m_lGroups[Index0], m_lGroups[Index1]);
 		return Index1;
 	}
 
@@ -408,12 +409,6 @@ enum
 	PROPTYPE_SHIFT,
 };
 
-typedef struct
-{
-	int x, y;
-	int w, h;
-} RECTi;
-
 class CLayerTiles : public CLayer
 {
 public:
@@ -463,6 +458,7 @@ public:
 	int m_SaveTilesSize;
 	CTile *m_pTiles;
 	int m_SelectedRuleSet;
+	bool m_LiveAutoMap;
 	int m_SelectedAmount;
 };
 
@@ -610,6 +606,7 @@ public:
 	void Reset(bool CreateDefault=true);
 	int Save(const char *pFilename);
 	int Load(const char *pFilename, int StorageType);
+	void LoadCurrentMap();
 	int Append(const char *pFilename, int StorageType);
 	void Render();
 
@@ -644,6 +641,7 @@ public:
 	{
 		POPEVENT_EXIT=0,
 		POPEVENT_LOAD,
+		POPEVENT_LOAD_CURRENT,
 		POPEVENT_NEW,
 		POPEVENT_SAVE,
 	};
@@ -673,8 +671,10 @@ public:
 	int m_FileDialogFileType;
 	float m_FileDialogScrollValue;
 	int m_FilesSelectedIndex;
+	char m_aFileDialogFilterString[64];
 	char m_FileDialogNewFolderName[64];
 	char m_FileDialogErrString[64];
+	float m_FilesSearchBoxID;
 
 	struct CFilelistItem
 	{
@@ -752,6 +752,8 @@ public:
 	CEditorMap m_Map;
 
 	static void EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser);
+	static void ConMapMagic(class IConsole::IResult *pResult, void *pUserData);
+	void DoMapMagic(int ImageID, int SrcIndex);
 
 	void DoMapBorder();
 	int DoButton_Editor_Common(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);

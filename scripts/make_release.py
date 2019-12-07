@@ -1,8 +1,9 @@
 import shutil, optparse, os, re, sys, zipfile
+from distutils.dir_util import copy_tree
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 import twlib
 
-arguments = optparse.OptionParser(usage="usage: %prog VERSION PLATFORM [options]\n\nVERSION  - Version number\nPLATFORM - Target platform (f.e. linux86, linux86_64, osx, src, win32)")
+arguments = optparse.OptionParser(usage="usage: %prog VERSION PLATFORM [options]\n\nVERSION  - Version number\nPLATFORM - Target platform (f.e. linux_x86, linux_x86_64, osx, src, win32, win64)")
 arguments.add_option("-l", "--url-languages", default = "http://github.com/teeworlds/teeworlds-translation/archive/master.zip", help = "URL from which the teeworlds language files will be downloaded")
 arguments.add_option("-m", "--url-maps", default = "http://github.com/teeworlds/teeworlds-maps/archive/master.zip", help = "URL from which the teeworlds maps files will be downloaded")
 arguments.add_option("-s", "--source-dir", help = "Source directory which is used for building the package")
@@ -17,7 +18,7 @@ if options.source_dir != None:
 		exit(1)
 	os.chdir(options.source_dir)
 
-#valid_platforms = ["win32", "osx", "linux86", "linux86_64", "src"]
+valid_platforms = ["win32", "win64", "osx", "linux_x86", "linux_x86_64", "src"]
 
 name = "teeworlds"
 version = sys.argv[1]
@@ -31,10 +32,10 @@ include_data = True
 include_exe = True
 include_src = False
 
-#if not options.platform in valid_platforms:
-#	print("not a valid platform")
-#	print(valid_platforms)
-#	sys.exit(-1)
+if not platform in valid_platforms:
+	print("not a valid platform")
+	print(valid_platforms)
+	sys.exit(-1)
 
 if platform == "src":
 	include_exe = False
@@ -88,6 +89,12 @@ def clean():
 package = "%s-%s-%s" %(name, version, platform)
 package_dir = package
 
+source_package_dir = "build/"
+if platform == 'win32' or platform == 'linux_x86':
+	source_package_dir += "x86/release/"
+else:
+	source_package_dir += "x86_64/release/"
+
 print("cleaning target")
 shutil.rmtree(package_dir, True)
 os.mkdir(package_dir)
@@ -118,18 +125,17 @@ shutil.copy("license.txt", package_dir)
 shutil.copy("storage.cfg", package_dir)
 
 if include_data and not use_bundle:
-	os.mkdir(os.path.join(package_dir, "data"))
-	copydir("data", package_dir)
-	copyfiles(languages_dir, package_dir+"/data/languages")
-	copyfiles(maps_dir, package_dir+"/data/maps")
+	copy_tree(source_package_dir+"data", package_dir+"/data")
+	copy_tree(languages_dir, package_dir+"/data/languages")
+	copy_tree(maps_dir, package_dir+"/data/maps")
 	if platform[:3] == "win":
 		shutil.copy("other/config_directory.bat", package_dir)
-		shutil.copy("SDL.dll", package_dir)
-		shutil.copy("freetype.dll", package_dir)
+		shutil.copy(source_package_dir+"SDL2.dll", package_dir)
+		shutil.copy(source_package_dir+"freetype.dll", package_dir)
 
 if include_exe and not use_bundle:
-	shutil.copy(name+exe_ext, package_dir)
-	shutil.copy(name+"_srv"+exe_ext, package_dir)
+	shutil.copy(source_package_dir+name+exe_ext, package_dir)
+	shutil.copy(source_package_dir+name+"_srv"+exe_ext, package_dir)
 	
 if include_src:
 	for p in ["src", "scripts", "datasrc", "other", "objs"]:
@@ -140,7 +146,7 @@ if include_src:
 
 if use_bundle:
 	bins = [name, name+'_srv', 'serverlaunch']
-	platforms = ('x86', 'x86_64', 'ppc')
+	platforms = ('x86_64')
 	for bin in bins:
 		to_lipo = []
 		for p in platforms:
@@ -155,20 +161,25 @@ if use_bundle:
 	clientbundle_bin_dir = os.path.join(clientbundle_content_dir, "MacOS")
 	clientbundle_resource_dir = os.path.join(clientbundle_content_dir, "Resources")
 	clientbundle_framework_dir = os.path.join(clientbundle_content_dir, "Frameworks")
+	binary_path = clientbundle_bin_dir + "/" + name+exe_ext
+	freetypelib_path = clientbundle_framework_dir + "/libfreetype.6.dylib"
 	os.mkdir(os.path.join(package_dir, "Teeworlds.app"))
 	os.mkdir(clientbundle_content_dir)
 	os.mkdir(clientbundle_bin_dir)
 	os.mkdir(clientbundle_resource_dir)
 	os.mkdir(clientbundle_framework_dir)
-	os.mkdir(os.path.join(clientbundle_resource_dir, "data"))
-	copydir("data", clientbundle_resource_dir)
-	os.chdir(languages_dir)
-	copydir("data", "../"+clientbundle_resource_dir)
-	os.chdir("..")
+	copy_tree(source_package_dir+"data", clientbundle_resource_dir+"/data")
+	copy_tree(languages_dir, clientbundle_resource_dir+"/data/languages")
+	copy_tree(maps_dir, clientbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
-	shutil.copy(name+exe_ext, clientbundle_bin_dir)
-	os.system("cp -R /Library/Frameworks/SDL.framework " + clientbundle_framework_dir)
-	file(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
+	shutil.copy(source_package_dir+name+exe_ext, clientbundle_bin_dir)
+	os.system("install_name_tool -change /usr/local/opt/freetype/lib/libfreetype.6.dylib @executable_path/../Frameworks/libfreetype.6.dylib " + binary_path)
+	os.system("install_name_tool -change /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib @executable_path/../Frameworks/libSDL2-2.0.0.dylib  " + binary_path)
+	os.system("cp /usr/local/opt/freetype/lib/libfreetype.6.dylib " + clientbundle_framework_dir)
+	os.system("cp /usr/local/opt/libpng/lib/libpng16.16.dylib " + clientbundle_framework_dir)
+	os.system("cp /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib " + clientbundle_framework_dir)
+	os.system("install_name_tool -change /usr/local/opt/libpng/lib/libpng16.16.dylib @executable_path/../Frameworks/libpng16.16.dylib " + freetypelib_path)
+	open(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -187,10 +198,14 @@ if use_bundle:
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>%s</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.TeeworldsClient.app</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 </dict>
 </plist>
 	""" % (version))
-	file(os.path.join(clientbundle_content_dir, "PkgInfo"), "w").write("APPL????")
+	open(os.path.join(clientbundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 	# create Teeworlds Server appfolder
 	serverbundle_content_dir = os.path.join(package_dir, "Teeworlds Server.app/Contents")
@@ -203,11 +218,11 @@ if use_bundle:
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/maps"))
 	os.mkdir(os.path.join(serverbundle_resource_dir, "data/mapres"))
-	copydir("data/maps", serverbundle_resource_dir)
+	copy_tree(maps_dir, serverbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds_srv.icns", serverbundle_resource_dir)
-	shutil.copy(name+"_srv"+exe_ext, serverbundle_bin_dir)
-	shutil.copy("serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
-	file(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
+	shutil.copy(source_package_dir+name+"_srv"+exe_ext, serverbundle_bin_dir)
+	shutil.copy(source_package_dir+"serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
+	open(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -229,7 +244,7 @@ if use_bundle:
 </dict>
 </plist>
 	""" % (version))
-	file(os.path.join(serverbundle_content_dir, "PkgInfo"), "w").write("APPL????")
+	open(os.path.join(serverbundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 if use_zip:
 	print("making zip archive")

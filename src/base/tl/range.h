@@ -138,11 +138,6 @@ public:
 		end = 0x0;
 	}
 
-	plain_range(const plain_range &r)
-	{
-		*this = r;
-	}
-
 	plain_range(T *b, T *e)
 	{
 		begin = b;
@@ -183,11 +178,6 @@ public:
 
 	plain_range_sorted()
 	{}
-
-	plain_range_sorted(const plain_range_sorted &r)
-	{
-		*this = r;
-	}
 
 	plain_range_sorted(T *b, T *e)
 	: parent(b, e)

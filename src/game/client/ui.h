@@ -5,8 +5,6 @@
 
 class CUIRect
 {
-	// TODO: Refactor: Redo UI scaling
-	float Scale() const;
 public:
 	float x, y, w, h;
 
@@ -30,12 +28,14 @@ class CUI
 	const void *m_pLastActiveItem;
 	const void *m_pBecommingHotItem;
 	bool m_ActiveItemValid;
+	bool m_Clipped;
 	float m_MouseX, m_MouseY; // in gui space
 	float m_MouseWorldX, m_MouseWorldY; // in world space
 	unsigned m_MouseButtons;
 	unsigned m_LastMouseButtons;
 
 	CUIRect m_Screen;
+	CUIRect m_ClipRect;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
 
@@ -101,23 +101,22 @@ public:
 	void FinishCheck() { if(!m_ActiveItemValid) SetActiveItem(0); };
 
 	int MouseInside(const CUIRect *pRect) const;
+	bool MouseInsideClip() const;
 	void ConvertMouseMove(float *x, float *y) const;
 
 	CUIRect *Screen();
 	float PixelSize();
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
-
-	// TODO: Refactor: Redo UI scaling
-	float Scale() const;
+	const CUIRect *ClipArea() const { return &m_ClipRect; };
+	inline bool IsClipped() const { return m_Clipped; };
 
 	int DoButtonLogic(const void *pID, const char *pText /* TODO: Refactor: Remove */, int Checked, const CUIRect *pRect);
 	int DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
 	int DoColorSelectionLogic(const CUIRect *pRect, const CUIRect *pButton);
 
 	// TODO: Refactor: Remove this?
-	void DoLabel(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, int MaxWidth = -1);
-	void DoLabelScaled(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, int MaxWidth = -1);
+	void DoLabel(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
 };
 
 

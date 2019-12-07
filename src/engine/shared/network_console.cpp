@@ -106,10 +106,15 @@ int CNetConsole::Update()
 	{
 		// check if we just should drop the packet
 		char aBuf[128];
-		if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf)))
+		int LastInfoQuery;
+		if(NetBan() && NetBan()->IsBanned(&Addr, aBuf, sizeof(aBuf), &LastInfoQuery))
 		{
-			// banned, reply with a message and drop
-			net_tcp_send(Socket, aBuf, str_length(aBuf));
+			// banned, reply with a message (5 second cooldown) and drop
+			int Time = time_timestamp();
+			if(LastInfoQuery + 5 < Time)
+			{
+				net_tcp_send(Socket, aBuf, str_length(aBuf));
+			}
 			net_tcp_close(Socket);
 		}
 		else

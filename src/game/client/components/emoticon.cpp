@@ -101,7 +101,7 @@ void CEmoticon::OnRender()
 		return;
 	}
 
-	if(m_pClient->m_Snap.m_SpecInfo.m_Active)
+	if(m_pClient->m_Snap.m_SpecInfo.m_Active || (m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER))
 	{
 		m_Active = false;
 		m_WasActive = false;
@@ -119,6 +119,8 @@ void CEmoticon::OnRender()
 
 	if (length(m_SelectorMouse) > 110.0f)
 		m_SelectedEmote = (int)(SelectedAngle / (2*pi) * NUM_EMOTICONS);
+	else
+		m_SelectedEmote = -1;
 
 	CUIRect Screen = *UI()->Screen();
 
@@ -155,11 +157,13 @@ void CEmoticon::OnRender()
 	Graphics()->QuadsEnd();
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
+	Graphics()->WrapClamp();
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1,1,1,1);
 	IGraphics::CQuadItem QuadItem(m_SelectorMouse.x+Screen.w/2,m_SelectorMouse.y+Screen.h/2,24,24);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
 }
 
 void CEmoticon::Emote(int Emoticon)

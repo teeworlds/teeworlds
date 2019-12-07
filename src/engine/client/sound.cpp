@@ -12,8 +12,9 @@
 
 #include "sound.h"
 
-extern "C" { // wavpack
-	#include <engine/external/wavpack/wavpack.h>
+extern "C"
+{
+	#include <wavpack.h>
 }
 #include <math.h>
 
@@ -50,9 +51,9 @@ struct CVoice
 	int m_X, m_Y;
 };
 
-static CSample m_aSamples[NUM_SAMPLES] = { {0} };
-static CVoice m_aVoices[NUM_VOICES] = { {0} };
-static CChannel m_aChannels[NUM_CHANNELS] = { {255} };
+static CSample m_aSamples[NUM_SAMPLES] = {{0}};
+static CVoice m_aVoices[NUM_VOICES] = {{0}};
+static CChannel m_aChannels[NUM_CHANNELS];
 
 static LOCK m_SoundLock = 0;
 
@@ -67,6 +68,8 @@ static volatile int m_SoundVolume = 100;
 static int m_NextVoice = 0;
 static int *m_pMixBuffer = 0;	// buffer only used by the thread callback function
 static unsigned m_MaxFrames = 0;
+
+static IOHANDLE s_File;
 
 // TODO: there should be a faster way todo this
 static short Int2Short(int i)
@@ -122,21 +125,23 @@ static void Mix(short *pFinalOut, unsigned Frames)
 				float Dist = sqrtf((float)dx*dx+dy*dy);
 				if(Dist >= 0.0f && Dist < m_MaxDistance)
 				{
-					// constant panning (-3dB center)
-					float a = 0.5f;
-					if(dx < 0)
-						a -= (Dist/m_MaxDistance)/2.0f;
-					else
-						a += (Dist/m_MaxDistance)/2.0f;
-					
-					float Lgain = sinf((1-a)*pi/2.0f);
-					float Rgain = sinf(a*pi/2.0f);
-
 					// linear falloff
 					float Falloff = 1.0f - Dist/m_MaxDistance;
 
-					Lvol = Lvol*Lgain*Falloff;
-					Rvol = Rvol*Rgain*Falloff;
+					// amplitude after falloff
+					float FalloffAmp = v->m_pChannel->m_Vol * Falloff;
+
+					// distribute volume to the channels depending on x difference
+					float Lpan = 0.5f - dx/m_MaxDistance/2.0f;
+					float Rpan = 1.0f - Lpan;
+
+					// apply square root to preserve sound power after panning
+					float LampFactor = sqrt(Lpan);
+					float RampFactor = sqrt(Rpan);
+
+					// volume of the channels
+					Lvol = FalloffAmp*LampFactor;
+					Rvol = FalloffAmp*RampFactor;
 				}
 				else
 				{
@@ -198,6 +203,9 @@ static void SdlCallback(void *pUnused, Uint8 *pStream, int Len)
 
 int CSound::Init()
 {
+	for(int i = 0; i < NUM_CHANNELS; ++i)
+		m_aChannels[i].m_Vol = 255;
+
 	m_SoundEnabled = 0;
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
@@ -206,7 +214,7 @@ int CSound::Init()
 
 	m_SoundLock = lock_create();
 
-	if(!g_Config.m_SndEnable)
+	if(!g_Config.m_SndInit)
 		return 0;
 
 	if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
@@ -325,10 +333,42 @@ void CSound::RateConvert(int SampleID)
 	pSample->m_NumFrames = NumFrames;
 }
 
-int CSound::ReadData(void *pBuffer, int Size)
+static int ReadDataOld(void *pBuffer, int Size)
 {
-	return io_read(ms_File, pBuffer, Size);
+	return io_read(s_File, pBuffer, Size);
 }
+
+#if defined(CONF_WAVPACK_OPEN_FILE_INPUT_EX)
+static int ReadData(void *pId, void *pBuffer, int Size)
+{
+	(void)pId;
+	return ReadDataOld(pBuffer, Size);
+}
+
+static int ReturnFalse(void *pId)
+{
+	(void)pId;
+	return 0;
+}
+
+static unsigned int GetPos(void *pId)
+{
+	(void)pId;
+	return io_tell(s_File);
+}
+
+static unsigned int GetLength(void *pId)
+{
+	(void)pId;
+	return io_length(s_File);
+}
+
+static int PushBackByte(void *pId, int Char)
+{
+	(void)pId;
+	return io_unread_byte(s_File, Char);
+}
+#endif
 
 ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 {
@@ -349,8 +389,8 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 		return CSampleHandle();
 
 	lock_wait(m_SoundLock);
-	ms_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!ms_File)
+	s_File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	if(!s_File)
 	{
 		dbg_msg("sound/wv", "failed to open file. filename='%s'", pFilename);
 		lock_unlock(m_SoundLock);
@@ -360,14 +400,24 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 	SampleID = AllocID();
 	if(SampleID < 0)
 	{
-		io_close(ms_File);
-		ms_File = 0;
+		io_close(s_File);
+		s_File = 0;
 		lock_unlock(m_SoundLock);
 		return CSampleHandle();
 	}
 	pSample = &m_aSamples[SampleID];
 
-	pContext = WavpackOpenFileInput(ReadData, aError);
+#if defined(CONF_WAVPACK_OPEN_FILE_INPUT_EX)
+	WavpackStreamReader Callback = {0};
+	Callback.can_seek = ReturnFalse;
+	Callback.get_length = GetLength;
+	Callback.get_pos = GetPos;
+	Callback.push_back_byte = PushBackByte;
+	Callback.read_bytes = ReadData;
+	pContext = WavpackOpenFileInputEx(&Callback, (void *)1, 0, aError, 0, 0);
+#else
+	pContext = WavpackOpenFileInput(ReadDataOld, aError);
+#endif
 	if (pContext)
 	{
 		int m_aSamples = WavpackGetNumSamples(pContext);
@@ -385,8 +435,8 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 		if(pSample->m_Channels > 2)
 		{
 			dbg_msg("sound/wv", "file is not mono or stereo. filename='%s'", pFilename);
-			io_close(ms_File);
-			ms_File = 0;
+			io_close(s_File);
+			s_File = 0;
 			lock_unlock(m_SoundLock);
 			return CSampleHandle();
 		}
@@ -401,8 +451,8 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 		if(BitsPerSample != 16)
 		{
 			dbg_msg("sound/wv", "bps is %d, not 16, filname='%s'", BitsPerSample, pFilename);
-			io_close(ms_File);
-			ms_File = 0;
+			io_close(s_File);
+			s_File = 0;
 			lock_unlock(m_SoundLock);
 			return CSampleHandle();
 		}
@@ -429,8 +479,8 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 		dbg_msg("sound/wv", "failed to open %s: %s", pFilename, aError);
 	}
 
-	io_close(ms_File);
-	ms_File = NULL;
+	io_close(s_File);
+	s_File = NULL;
 
 	if(g_Config.m_Debug)
 		dbg_msg("sound/wv", "loaded %s", pFilename);
@@ -560,7 +610,4 @@ bool CSound::IsPlaying(CSampleHandle SampleID)
 	return Ret;
 }
 
-IOHANDLE CSound::ms_File = 0;
-
 IEngineSound *CreateEngineSound() { return new CSound; }
-

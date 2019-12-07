@@ -85,6 +85,7 @@ public:
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual void DemoRecorder_Stop() = 0;
 	virtual void RecordGameMessage(bool State) = 0;
+	virtual void AutoStatScreenshot_Start() = 0;
 	virtual void AutoScreenshot_Start() = 0;
 	virtual void ServerBrowserUpdate() = 0;
 	
@@ -98,6 +99,8 @@ public:
 	virtual void EnterGame() = 0;
 
 	//
+	virtual const char *GetCurrentMapName() const = 0;
+	virtual const char *GetCurrentMapPath() const = 0;
 	virtual const char *MapDownloadName() const = 0;
 	virtual int MapDownloadAmount() const = 0;
 	virtual int MapDownloadTotalsize() const = 0;
@@ -179,6 +182,8 @@ public:
 	virtual const char *GetItemName(int Type) const = 0;
 	virtual const char *Version() const = 0;
 	virtual const char *NetVersion() const = 0;
+	virtual const char *NetVersionHashUsed() const = 0;
+	virtual const char *NetVersionHashReal() const = 0;
 	virtual int ClientVersion() const = 0;
 
 };

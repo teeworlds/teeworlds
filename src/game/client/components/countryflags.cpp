@@ -24,20 +24,20 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 		return;
 	}
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	char *pFileData = (char *)mem_alloc(FileSize, 1);
 	io_read(File, pFileData, FileSize);
-	pFileData[FileSize] = 0;
 	io_close(File);
 
 	// parse json data
 	json_settings JsonSettings;
 	mem_zero(&JsonSettings, sizeof(JsonSettings));
 	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+	mem_free(pFileData);
+
 	if(pJsonData == 0)
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
-		mem_free(pFileData);
 		return;
 	}
 
@@ -60,14 +60,14 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 					char aBuf[64];
 
 					// validate country code
-					int CountryCode = (long)rStart[i]["code"];
+					int CountryCode = (json_int_t)rStart[i]["code"];
 					if(CountryCode < CODE_LB || CountryCode > CODE_UB)
 					{
 						str_format(aBuf, sizeof(aBuf), "country code '%i' not within valid code range [%i..%i]", CountryCode, CODE_LB, CODE_UB);
 						Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
 						continue;
 					}
-					
+
 					// add entry
 					const char *pCountryName = rStart[i]["id"];
 					CCountryFlag CountryFlag;
@@ -88,8 +88,13 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 						CountryFlag.m_Texture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 						mem_free(Info.m_pData);
 					}
+					// blocked?
+					CountryFlag.m_Blocked = false;
+					const json_value Check = rStart[i]["blocked"];
+					if(Check.type == json_boolean && Check)
+						CountryFlag.m_Blocked = true;
 					m_aCountryFlags.add_unsorted(CountryFlag);
-		
+
 					// print message
 					if(g_Config.m_Debug)
 					{
@@ -103,7 +108,6 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 
 	// clean up
 	json_value_free(pJsonData);
-	mem_free(pFileData);
 	m_aCountryFlags.sort_range();
 
 	// find index of default item
@@ -114,7 +118,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 			DefaultIndex = Index;
 			break;
 		}
-	
+
 	// init LUT
 	if(DefaultIndex != 0)
 		for(int i = 0; i < CODE_RANGE; ++i)
@@ -135,6 +139,7 @@ void CCountryFlags::OnInit()
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "countryflags", "failed to load country flags. folder='countryflags/'");
 		CCountryFlag DummyEntry;
 		DummyEntry.m_CountryCode = -1;
+		DummyEntry.m_Blocked = false;
 		mem_zero(DummyEntry.m_aCountryCodeString, sizeof(DummyEntry.m_aCountryCodeString));
 		m_aCountryFlags.add(DummyEntry);
 	}
@@ -150,19 +155,28 @@ const CCountryFlags::CCountryFlag *CCountryFlags::GetByCountryCode(int CountryCo
 	return GetByIndex(m_CodeIndexLUT[max(0, (CountryCode-CODE_LB)%CODE_RANGE)]);
 }
 
-const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index) const
+const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index, bool SkipBlocked) const
 {
+	if(SkipBlocked)
+	{
+		for(int i = 0; i < m_aCountryFlags.size(); i++)
+			if(!m_aCountryFlags[i].m_Blocked)
+				if(!Index--)
+					return &m_aCountryFlags[i];
+	}
 	return &m_aCountryFlags[max(0, Index%m_aCountryFlags.size())];
 }
 
-void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h)
+void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h, bool AllowBlocked)
 {
 	const CCountryFlag *pFlag = GetByCountryCode(CountryCode);
+	if(!AllowBlocked && pFlag->m_Blocked)
+		pFlag = GetByCountryCode(-1);
 	if(pFlag->m_Texture.IsValid())
 	{
 		Graphics()->TextureSet(pFlag->m_Texture);
 		Graphics()->QuadsBegin();
-		Graphics()->SetColor(pColor->r, pColor->g, pColor->b, pColor->a);
+		Graphics()->SetColor(pColor->r*pColor->a, pColor->g*pColor->a, pColor->b*pColor->a, pColor->a);
 		IGraphics::CQuadItem QuadItem(x, y, w, h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();

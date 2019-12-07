@@ -100,13 +100,14 @@ public:
 		TEXFLAG_QUALITY = 4,
 		TEXFLAG_TEXTURE3D = 8,
 		TEXFLAG_TEXTURE2D = 16,
+		TEXTFLAG_LINEARMIPMAPS = 32,
 	};
 
 	enum
 	{
 		//
 		PRIMTYPE_INVALID = 0,
-		PRIMTYPE_LINES,	
+		PRIMTYPE_LINES,
 		PRIMTYPE_QUADS,
 	};
 
@@ -142,6 +143,7 @@ public:
 		int m_WrapModeU;
 		int m_WrapModeV;
 		int m_Texture;
+		int m_TextureArrayIndex;
 		int m_Dimension;
 		SPoint m_ScreenTL;
 		SPoint m_ScreenBR;
@@ -153,13 +155,13 @@ public:
 		int m_ClipW;
 		int m_ClipH;
 	};
-		
+
 	struct SCommand_Clear : public SCommand
 	{
 		SCommand_Clear() : SCommand(CMD_CLEAR) {}
 		SColor m_Color;
 	};
-		
+
 	struct SCommand_Signal : public SCommand
 	{
 		SCommand_Signal() : SCommand(CMD_SIGNAL) {}
@@ -252,7 +254,7 @@ public:
 		// texture information
 		int m_Slot;
 	};
-	
+
 	//
 	CCommandBuffer(unsigned CmdBufferSize, unsigned DataBufferSize)
 	: m_CmdBuffer(CmdBufferSize), m_DataBuffer(DataBufferSize)
@@ -307,14 +309,17 @@ public:
 		INITFLAG_VSYNC = 2,
 		INITFLAG_RESIZABLE = 4,
 		INITFLAG_BORDERLESS = 8,
+		INITFLAG_X11XRANDR = 16,
+		INITFLAG_HIGHDPI = 32,
 	};
 
 	virtual ~IGraphicsBackend() {}
 
-	virtual int Init(const char *pName, int *Screen, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
+	virtual int Init(const char *pName, int *Screen, int *pWindowWidth, int *pWindowHeight, int *pScreenWidth, int *pScreenHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight) = 0;
 	virtual int Shutdown() = 0;
 
 	virtual int MemoryUsage() const = 0;
+	virtual int GetTextureArraySize() const = 0;
 
 	virtual int GetNumScreens() const = 0;
 
@@ -323,6 +328,7 @@ public:
 	virtual bool Fullscreen(bool State) = 0;
 	virtual void SetWindowBordered(bool State) = 0;
 	virtual bool SetWindowScreen(int Index) = 0;
+	virtual bool GetDesktopResolution(int Index, int *pDesktopWidth, int* pDesktopHeight) = 0;
 	virtual int GetWindowScreen() = 0;
 	virtual int WindowActive() = 0;
 	virtual int WindowOpen() = 0;
@@ -340,7 +346,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 		MAX_VERTICES = 32*1024,
 		MAX_TEXTURES = 1024*4,
-		
+
 		DRAWING_QUADS=1,
 		DRAWING_LINES=2
 	};
@@ -371,6 +377,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	CTextureHandle m_InvalidTexture;
 
+	int m_TextureArrayIndex;
 	int m_aTextureIndices[MAX_TEXTURES];
 	int m_FirstFreeTexture;
 	int m_TextureMemoryUsage;
@@ -428,6 +435,7 @@ public:
 	virtual void SetColor(float r, float g, float b, float a);
 	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight);
 
+	void TilesetFallbackSystem(int TextureIndex);
 	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex = -1);
 	virtual void QuadsSetSubsetFree(
 		float x0, float y0, float x1, float y1,
@@ -458,9 +466,6 @@ public:
 	virtual bool SetVSync(bool State);
 
 	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen);
-
-	virtual int GetDesktopScreenWidth() const { return m_DesktopScreenWidth; }
-	virtual int GetDesktopScreenHeight() const { return m_DesktopScreenHeight; }
 
 	// syncronization
 	virtual void InsertSignal(semaphore *pSemaphore);

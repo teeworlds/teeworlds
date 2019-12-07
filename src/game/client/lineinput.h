@@ -17,8 +17,10 @@ class CLineInput
 	int m_Len;
 	int m_CursorPos;
 	int m_NumChars;
+	IInput *m_pInput;
 public:
-	static bool Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr);
+	static bool MoveWordStop(char c);
+	static bool Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr, IInput *pInput);
 
 	class CCallback
 	{
@@ -28,6 +30,7 @@ public:
 	};
 
 	CLineInput();
+	void Init(IInput *pInput);
 	void Clear();
 	bool ProcessInput(IInput::CEvent e);
 	void Set(const char *pString);

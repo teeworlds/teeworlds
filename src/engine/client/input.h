@@ -6,11 +6,15 @@
 class CInput : public IEngineInput
 {
 	IEngineGraphics *m_pGraphics;
+	IConsole *m_pConsole;
+	SDL_Joystick *m_pJoystick;
 
 	int m_InputGrabbed;
+	char *m_pClipboardText;
 
-	int64 m_LastRelease;
-	int64 m_ReleaseDelta;
+	int m_PreviousHat;
+
+	bool m_MouseDoubleClick;
 
 	void AddEvent(char *pText, int Key, int Flags);
 	void Clear();
@@ -28,16 +32,22 @@ class CInput : public IEngineInput
 
 public:
 	CInput();
+	~CInput();
 
 	virtual void Init();
 
 	bool KeyIsPressed(int Key) const { return KeyState(Key); }
 	bool KeyPress(int Key, bool CheckCounter) const { return CheckCounter ? (m_aInputCount[Key] == m_InputCounter) : m_aInputCount[Key]; }
+	
+	bool HasJoystick() const { return m_pJoystick; }
+	float GetJoystickAxisValue(int Axis) const;
 
 	virtual void MouseRelative(float *x, float *y);
 	virtual void MouseModeAbsolute();
 	virtual void MouseModeRelative();
 	virtual int MouseDoubleClick();
+	virtual const char *GetClipboardText();
+	virtual void SetClipboardText(const char *pText);
 
 	virtual int Update();
 };

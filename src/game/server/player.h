@@ -19,7 +19,7 @@ class CPlayer
 	MACRO_ALLOC_POOL_ID()
 
 public:
-	CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy);
+	CPlayer(CGameContext *pGameServer, int ClientID, bool Dummy, bool AsSpec = false);
 	~CPlayer();
 
 	void Init(int CID);
@@ -81,9 +81,9 @@ public:
 	// TODO: clean this up
 	struct
 	{
-		char m_aaSkinPartNames[6][24];
-		int m_aUseCustomColors[6];
-		int m_aSkinPartColors[6];
+		char m_aaSkinPartNames[NUM_SKINPARTS][24];
+		int m_aUseCustomColors[NUM_SKINPARTS];
+		int m_aSkinPartColors[NUM_SKINPARTS];
 	} m_TeeInfos;
 
 	int m_RespawnTick;

@@ -13,17 +13,18 @@ public:
 	{
 		int m_CountryCode;
 		char m_aCountryCodeString[8];
+		bool m_Blocked;
 		IGraphics::CTextureHandle m_Texture;
 
-		bool operator<(const CCountryFlag &Other) { return str_comp(m_aCountryCodeString, Other.m_aCountryCodeString) < 0; }
+		bool operator<(const CCountryFlag &Other) const { return str_comp(m_aCountryCodeString, Other.m_aCountryCodeString) < 0; }
 	};
 
 	void OnInit();
 
 	int Num() const;
 	const CCountryFlag *GetByCountryCode(int CountryCode) const;
-	const CCountryFlag *GetByIndex(int Index) const;
-	void Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h);
+	const CCountryFlag *GetByIndex(int Index, bool SkipBlocked = false) const;
+	void Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h, bool AllowBlocked=false);
 
 private:
 	enum

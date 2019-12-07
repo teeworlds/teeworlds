@@ -14,7 +14,7 @@
 #include "skins.h"
 
 
-const char * const CSkins::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "marking", "decoration", "hands", "feet", "eyes"}; /* Localize("body");Localize("marking");Localize("decoration");Localize("hands");Localize("feet");Localize("eyes"); */
+const char * const CSkins::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "marking", "decoration", "hands", "feet", "eyes"}; /* Localize("body","skins");Localize("marking","skins");Localize("decoration","skins");Localize("hands","skins");Localize("feet","skins");Localize("eyes","skins"); */
 const char * const CSkins::ms_apColorComponents[NUM_COLOR_COMPONENTS] = {"hue", "sat", "lgt", "alp"};
 
 char *const CSkins::ms_apSkinVariables[NUM_SKINPARTS] = {g_Config.m_PlayerSkinBody, g_Config.m_PlayerSkinMarking, g_Config.m_PlayerSkinDecoration,
@@ -28,8 +28,7 @@ int *const CSkins::ms_apColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerColor
 int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CSkins *pSelf = (CSkins *)pUser;
-	int l = str_length(pName);
-	if(l < 4 || IsDir || str_comp(pName+l-4, ".png") != 0)
+	if(IsDir || !str_endswith(pName, ".png"))
 		return 0;
 
 	char aBuf[512];
@@ -93,7 +92,7 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		Part.m_Flags |= SKINFLAG_SPECIAL;
 	if(DirType != IStorage::TYPE_SAVE)
 		Part.m_Flags |= SKINFLAG_STANDARD;
-	str_copy(Part.m_aName, pName, min((int)sizeof(Part.m_aName),l-3));
+	str_truncate(Part.m_aName, sizeof(Part.m_aName), pName, str_length(pName) - 4);
 	if(g_Config.m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin part %s", Part.m_aName);
@@ -106,8 +105,7 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
-	int l = str_length(pName);
-	if(l < 5 || IsDir || str_comp(pName+l-5, ".json") != 0)
+	if(IsDir || !str_endswith(pName, ".json"))
 		return 0;
 
 	CSkins *pSelf = (CSkins *)pUser;
@@ -119,14 +117,13 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	if(!File)
 		return 0;
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	char *pFileData = (char *)mem_alloc(FileSize, 1);
 	io_read(File, pFileData, FileSize);
-	pFileData[FileSize] = 0;
 	io_close(File);
 
 	// init
 	CSkin Skin = pSelf->m_DummySkin;
-	str_copy(Skin.m_aName, pName, min((int)sizeof(Skin.m_aName),l-4));
+	str_truncate(Skin.m_aName, sizeof(Skin.m_aName), pName, str_length(pName) - 5);
 	if(pSelf->Find(Skin.m_aName, true) != -1)
 		return 0;
 	bool SpecialSkin = pName[0] == 'x' && pName[1] == '_';
@@ -135,11 +132,12 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	json_settings JsonSettings;
 	mem_zero(&JsonSettings, sizeof(JsonSettings));
 	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+	mem_free(pFileData);
+
 	if(pJsonData == 0)
 	{
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, aBuf, aError);
-		mem_free(pFileData);
 		return 0;
 	}
 
@@ -152,7 +150,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 			const json_value &rPart = rStart[(const char *)ms_apSkinPartNames[PartIndex]];
 			if(rPart.type != json_object)
 				continue;
-			
+
 			// filename
 			const json_value &rFilename = rPart["filename"];
 			if(rFilename.type == json_string)
@@ -174,7 +172,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 			// color components
 			if(!UseCustomColors)
 				continue;
-				
+
 			for(int i = 0; i < NUM_COLOR_COMPONENTS; i++)
 			{
 				if(PartIndex != SKINPART_MARKING && i == 3)
@@ -197,7 +195,6 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	// clean up
 	json_value_free(pJsonData);
-	mem_free(pFileData);
 
 	// set skin data
 	Skin.m_Flags = SpecialSkin ? SKINFLAG_SPECIAL : 0;
@@ -271,6 +268,44 @@ void CSkins::OnInit()
 	// add dummy skin
 	if(!m_aSkins.size())
 		m_aSkins.add(m_DummySkin);
+
+	{
+		// add xmas hat
+		const char *pFileName = "skins/xmas_hat.png";
+		CImageInfo Info;
+		if(!Graphics()->LoadPNG(&Info, pFileName, IStorage::TYPE_ALL) || Info.m_Width != 128 || Info.m_Height != 512)
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "failed to load xmas hat '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		}
+		else
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "loaded xmas hat '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+			m_XmasHatTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+		}
+	}
+
+	{
+		// add bot decoration
+		const char *pFileName = "skins/bot.png";
+		CImageInfo Info;
+		if(!Graphics()->LoadPNG(&Info, pFileName, IStorage::TYPE_ALL) || Info.m_Width != 384 || Info.m_Height != 160)
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "failed to load bot '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		}
+		else
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "loaded bot '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+			m_BotTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+		}
+	}
 }
 
 void CSkins::AddSkin(const char *pSkinName)
@@ -354,46 +389,29 @@ vec4 CSkins::GetColorV4(int v, bool UseAlpha) const
 
 int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const
 {
-	static const int s_aTeamColors[3] = {12895054, 65387, 10223467};
+	static const int s_aTeamColors[3] = {0xC4C34E, 0x00FF6B, 0x9BFF6B};
+
+	int TeamHue = (s_aTeamColors[Team+1]>>16)&0xff;
+	int TeamSat = (s_aTeamColors[Team+1]>>8)&0xff;
+	int TeamLgt = s_aTeamColors[Team+1]&0xff;
+	int PartSat = (PartColor>>8)&0xff;
+	int PartLgt = PartColor&0xff;
+
 	if(!UseCustomColors)
 	{
-		int ColorVal = s_aTeamColors[Team+1];
-		if(Part == SKINPART_MARKING)
-			ColorVal |= 0xff000000;
-		return ColorVal;
+		PartSat = 255;
+		PartLgt = 255;
 	}
-
-	/*blue128:  128/PI*ARCSIN(COS((PI*(x+10)/128)))+182 // (decoration, marking, hands)
-	blue64:  64/PI*ARCSIN(COS((PI*(x-76)/64)))+172 // (body, feet, eyes)
-	red128:   Mod((128/PI*ARCSIN(COS((PI*(x-105)/128)))+297),256)
-	red64:    Mod((64/PI*ARCSIN(COS((PI*(x-56)/64)))+280),256)*/
 
 	int MinSat = 160;
 	int MaxSat = 255;
-	float Dark = DARKEST_COLOR_LGT/255.0f;
-	int MinLgt = Dark + 64*(1.0f-Dark);
-	int MaxLgt = Dark + 191*(1.0f-Dark);
 
-	int Hue = 0;
-	int Sat = (PartColor>>8)&0xff;
-	int Lgt = PartColor&0xff;
+	int h = TeamHue;
+	int s = clamp(mix(TeamSat, PartSat, 0.2), MinSat, MaxSat);
+	int l = clamp(mix(TeamLgt, PartLgt, 0.2), (int)DARKEST_COLOR_LGT, 200);
 
-	int NewHue;
-	if(Team == TEAM_RED)
-	{
-		if(Part == SKINPART_MARKING || Part == SKINPART_DECORATION || Part == SKINPART_HANDS)
-			NewHue = (int)(128.0f/pi*asinf(cosf(pi/128.0f*(Hue-105.0f))) + 297.0f) % 256;
-		else
-			NewHue = (int)(64.0f/pi*asinf(cosf(pi/64.0f*(Hue-56.0f))) + 280.0f) % 256;
-	}
-	else
-		NewHue = 64.0f/pi*asinf(cosf(pi/64.0f*(Hue-76.0f))) + 172.0f;
-
-	int NewSat = clamp(Sat, MinSat, MaxSat);
-	int NewLgt = clamp(Lgt, MinLgt, MaxLgt);
-	int ColorVal = (NewHue<<16) + (NewSat<<8) + NewLgt;
-
-	if(Part == SKINPART_MARKING)
+	int ColorVal = (h<<16) + (s<<8) + l;
+	if(Part == SKINPART_MARKING) // keep alpha
 		ColorVal += PartColor&0xff000000;
 
 	return ColorVal;

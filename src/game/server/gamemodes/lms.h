@@ -10,8 +10,7 @@ public:
 	CGameControllerLMS(class CGameContext *pGameServer);
 
 	// event
-	virtual int OnCharacterDeath(class CCharacter *pVictim, class CPlayer *pKiller, int Weapon);
-
+	virtual void OnCharacterSpawn(class CCharacter *pChr);
 	// game
 	virtual void DoWincheckRound();
 };

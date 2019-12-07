@@ -110,7 +110,7 @@ const char* CTilesetMapper::GetRuleSetName(int Index) const
 	return m_aRuleSets[Index].m_aName;
 }
 
-void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
+void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID, RECTi Area)
 {
 	if(pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
 		return;
@@ -120,12 +120,14 @@ void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 	if(!pConf->m_aRules.size())
 		return;
 
+	pLayer->Clamp(&Area);
+	
 	int BaseTile = pConf->m_BaseTile;
 
 	// auto map !
 	int MaxIndex = pLayer->m_Width*pLayer->m_Height;
-	for(int y = 0; y < pLayer->m_Height; y++)
-		for(int x = 0; x < pLayer->m_Width; x++)
+	for(int y = Area.y; y < Area.y + Area.h; y++)
+		for(int x = Area.x; x < Area.x + Area.w; x++)
 		{
 			CTile *pTile = &(pLayer->m_pTiles[y*pLayer->m_Width+x]);
 			if(pTile->m_Index == 0)
@@ -184,30 +186,6 @@ void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID)
 		}
 
 	m_pEditor->m_Map.m_Modified = true;
-}
-
-int CompareRules(const void *a, const void *b)
-{
-	CDoodadsMapper::CRule *ra = (CDoodadsMapper::CRule*)a;
-	CDoodadsMapper::CRule *rb = (CDoodadsMapper::CRule*)b;
-
-	if((ra->m_Location == CDoodadsMapper::CRule::FLOOR && rb->m_Location == CDoodadsMapper::CRule::FLOOR)
-		|| (ra->m_Location == CDoodadsMapper::CRule::CEILING && rb->m_Location  == CDoodadsMapper::CRule::CEILING))
-	{
-		if(ra->m_Size.x < rb->m_Size.x)
-			return +1;
-		if(rb->m_Size.x < ra->m_Size.x)
-			return -1;
-	}
-	else if(ra->m_Location == CDoodadsMapper::CRule::WALLS && rb->m_Location == CDoodadsMapper::CRule::WALLS)
-	{
-		if(ra->m_Size.y < rb->m_Size.y)
-			return +1;
-		if(rb->m_Size.y < ra->m_Size.y)
-			return -1;
-	}
-
-	return 0;
 }
 
 void CDoodadsMapper::Load(const json_value &rElement)
@@ -307,7 +285,9 @@ void CDoodadsMapper::Load(const json_value &rElement)
 
 	// sort
 	for(int i = 0; i < m_aRuleSets.size(); i++)
-		qsort(m_aRuleSets[i].m_aRules.base_ptr(), m_aRuleSets[i].m_aRules.size(), sizeof(m_aRuleSets[i].m_aRules[0]), CompareRules);
+	{
+		std::stable_sort(&m_aRuleSets[i].m_aRules[0], &m_aRuleSets[i].m_aRules[m_aRuleSets[i].m_aRules.size()]);
+	}
 }
 
 const char* CDoodadsMapper::GetRuleSetName(int Index) const

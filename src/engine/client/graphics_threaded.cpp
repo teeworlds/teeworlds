@@ -6,7 +6,8 @@
 #include <base/tl/threading.h>
 
 #include <base/system.h>
-#include <engine/external/pnglite/pnglite.h>
+
+#include <pnglite.h>
 
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
@@ -76,7 +77,7 @@ void CGraphics_Threaded::FlushVertices()
 	{
 		// kick command buffer and try again
 		KickCommandBuffer();
-		
+
 		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
 		if(Cmd.m_pVertices == 0x0)
 		{
@@ -360,14 +361,16 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	}
 	if(Flags&IGraphics::TEXLOAD_MULTI_DIMENSION)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_TEXTURE3D;
+	if(Flags&IGraphics::TEXLOAD_LINEARMIPMAPS)
+		Cmd.m_Flags |= CCommandBuffer::TEXTFLAG_LINEARMIPMAPS;
 
-	
+
 	// copy texture data
 	int MemSize = Width*Height*Cmd.m_PixelSize;
 	void *pTmpData = mem_alloc(MemSize, sizeof(void*));
 	mem_copy(pTmpData, pData, MemSize);
 	Cmd.m_pData = pTmpData;
-	
+
 
 	//
 	m_pCommandBuffer->AddCommand(Cmd);
@@ -520,6 +523,7 @@ void CGraphics_Threaded::QuadsBegin()
 	QuadsSetSubset(0,0,1,1,-1);
 	QuadsSetRotation(0);
 	SetColor(1,1,1,1);
+	m_TextureArrayIndex = m_pBackend->GetTextureArraySize() > 1 ? -1 : 0;
 }
 
 void CGraphics_Threaded::QuadsEnd()
@@ -570,9 +574,28 @@ void CGraphics_Threaded::SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft,
 	SetColorVertex(Array, 4);
 }
 
+void CGraphics_Threaded::TilesetFallbackSystem(int TextureIndex)
+{
+	int NewTextureArrayIndex = TextureIndex / (256 / m_pBackend->GetTextureArraySize());
+	if(m_TextureArrayIndex == -1)
+		m_TextureArrayIndex = NewTextureArrayIndex;
+	else if(m_TextureArrayIndex != NewTextureArrayIndex)
+	{
+		// have to switch the texture index
+		FlushVertices();
+		m_TextureArrayIndex = NewTextureArrayIndex;
+	}
+}
+
 void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex)
 {
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsSetSubset without begin");
+
+	// tileset fallback system
+	if(m_pBackend->GetTextureArraySize() > 1 && TextureIndex >= 0)
+		TilesetFallbackSystem(TextureIndex);
+
+	m_State.m_TextureArrayIndex = m_TextureArrayIndex;
 
 	m_aTexture[0].u = TlU;	m_aTexture[1].u = BrU;
 	m_aTexture[0].v = TlV;	m_aTexture[1].v = TlV;
@@ -580,7 +603,7 @@ void CGraphics_Threaded::QuadsSetSubset(float TlU, float TlV, float BrU, float B
 	m_aTexture[3].u = TlU;	m_aTexture[2].u = BrU;
 	m_aTexture[3].v = BrV;	m_aTexture[2].v = BrV;
 
-	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
+	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / (256.0f/m_pBackend->GetTextureArraySize());
 	m_State.m_Dimension = (TextureIndex < 0) ? 2 : 3;
 }
 
@@ -588,12 +611,18 @@ void CGraphics_Threaded::QuadsSetSubsetFree(
 	float x0, float y0, float x1, float y1,
 	float x2, float y2, float x3, float y3, int TextureIndex)
 {
+	// tileset fallback system
+	if(m_pBackend->GetTextureArraySize() > 1 && TextureIndex >= 0)
+		TilesetFallbackSystem(TextureIndex);
+	
+	m_State.m_TextureArrayIndex = m_TextureArrayIndex;
+
 	m_aTexture[0].u = x0; m_aTexture[0].v = y0;
 	m_aTexture[1].u = x1; m_aTexture[1].v = y1;
 	m_aTexture[2].u = x2; m_aTexture[2].v = y2;
 	m_aTexture[3].u = x3; m_aTexture[3].v = y3;
 
-	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / 256.0f;
+	m_aTexture[0].i = m_aTexture[1].i = m_aTexture[2].i = m_aTexture[3].i = (0.5f + TextureIndex) / (256.0f/m_pBackend->GetTextureArraySize());
 	m_State.m_Dimension = (TextureIndex < 0) ? 2 : 3;
 }
 
@@ -714,9 +743,13 @@ int CGraphics_Threaded::IssueInit()
 	if(g_Config.m_GfxBorderless) Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;
 	if(g_Config.m_GfxFullscreen) Flags |= IGraphicsBackend::INITFLAG_FULLSCREEN;
 	if(g_Config.m_GfxVsync) Flags |= IGraphicsBackend::INITFLAG_VSYNC;
+	if(g_Config.m_GfxHighdpi) Flags |= IGraphicsBackend::INITFLAG_HIGHDPI;
 	if(g_Config.m_DbgResizable) Flags |= IGraphicsBackend::INITFLAG_RESIZABLE;
+	if(g_Config.m_GfxUseX11XRandRWM) Flags |= IGraphicsBackend::INITFLAG_X11XRANDR;
 
-	return m_pBackend->Init("Teeworlds", &g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth, &g_Config.m_GfxScreenHeight, g_Config.m_GfxFsaaSamples, Flags, &m_DesktopScreenWidth, &m_DesktopScreenHeight);
+	return m_pBackend->Init("Teeworlds", &g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth,
+			&g_Config.m_GfxScreenHeight, &m_ScreenWidth, &m_ScreenHeight, g_Config.m_GfxFsaaSamples,
+			Flags, &m_DesktopScreenWidth, &m_DesktopScreenHeight);
 }
 
 int CGraphics_Threaded::InitWindow()
@@ -773,10 +806,6 @@ int CGraphics_Threaded::Init()
 	m_pBackend = CreateGraphicsBackend();
 	if(InitWindow() != 0)
 		return -1;
-
-	// fetch final resolusion
-	m_ScreenWidth = g_Config.m_GfxScreenWidth;
-	m_ScreenHeight = g_Config.m_GfxScreenHeight;
 
 	// create command buffers
 	for(int i = 0; i < NUM_CMDBUFFERS; i++)
@@ -864,7 +893,13 @@ void CGraphics_Threaded::SetWindowBordered(bool State)
 
 bool CGraphics_Threaded::SetWindowScreen(int Index)
 {
-	return m_pBackend->SetWindowScreen(Index);
+	if(m_pBackend->SetWindowScreen(Index))
+	{
+		// update resolution info
+		m_pBackend->GetDesktopResolution(Index, &m_DesktopScreenWidth, &m_DesktopScreenHeight);
+		return true;
+	}
+	return false;
 }
 
 int CGraphics_Threaded::GetWindowScreen()

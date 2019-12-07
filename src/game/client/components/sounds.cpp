@@ -71,7 +71,7 @@ void CSounds::OnInit()
 	ClearQueue();
 
 	// load sounds
-	if(g_Config.m_ClThreadsoundloading)
+	if(g_Config.m_SndAsyncLoading)
 	{
 		g_UserData.m_pGameClient = m_pClient;
 		g_UserData.m_Render = false;
@@ -114,7 +114,8 @@ void CSounds::OnRender()
 	}
 
 	// set listner pos
-	Sound()->SetListenerPos(m_pClient->m_pCamera->m_Center.x, m_pClient->m_pCamera->m_Center.y);
+	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
+	Sound()->SetListenerPos(Pos.x, Pos.y);
 
 	// play sound from queue
 	if(m_QueuePos > 0)

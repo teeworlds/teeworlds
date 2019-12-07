@@ -9,6 +9,7 @@ config = NewConfig()
 config:Add(OptCCompiler("compiler"))
 config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-protector -fstack-protector-all"))
 config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.7 -isysroot /Developer/SDKs/MacOSX10.7.sdk"))
+config:Add(OptTestCompileC("buildwithoutsseflag", "#include <immintrin.h>\nint main(){_mm_pause();return 0;}", ""))
 config:Add(OptLibrary("zlib", "zlib.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Add(FreeType.OptFind("freetype", true))
@@ -120,7 +121,7 @@ function GenerateMacOSXSettings(settings, conf, arch, compiler)
 		os.exit(1)
 	end
 
-	-- c++ stdlib needed 
+	-- c++ stdlib needed
 	settings.cc.flags:Add("--stdlib=libc++")
 	settings.link.flags:Add("--stdlib=libc++")
 	-- this also needs the macOS min SDK version to be at least 10.7
@@ -160,14 +161,18 @@ function GenerateMacOSXSettings(settings, conf, arch, compiler)
 	settings.link.frameworks:Add("AGL")
 	-- FIXME: the SDL config is applied in BuildClient too but is needed here before so the launcher will compile
 	config.sdl:Apply(settings)
+	settings.link.extrafiles:Merge(Compile(settings, "src/osxlaunch/client.m"))
 	BuildClient(settings)
 
 	-- Content
-	BuildContent(settings)
+	BuildContent(settings, arch, conf)
 end
 
 function GenerateLinuxSettings(settings, conf, arch, compiler)
 	if arch == "x86" then
+		if config.buildwithoutsseflag.value == false then
+			settings.cc.flags:Add("-msse2") -- for the _mm_pause call
+		end
 		settings.cc.flags:Add("-m32")
 		settings.link.flags:Add("-m32")
 	elseif arch == "x86_64" then
@@ -202,7 +207,7 @@ function GenerateLinuxSettings(settings, conf, arch, compiler)
 	BuildClient(settings)
 
 	-- Content
-	BuildContent(settings)
+	BuildContent(settings, arch, conf)
 end
 
 function GenerateSolarisSettings(settings, conf, arch, compiler)
@@ -232,6 +237,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	end
 
 	local icons = SharedIcons(compiler)
+	local manifests = SharedManifests(compiler)
 
 	-- Required libs
 	settings.link.libs:Add("gdi32")
@@ -259,13 +265,14 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 
 	-- Client
 	settings.link.extrafiles:Add(icons.client)
+	settings.link.extrafiles:Add(manifests.client)
 	settings.link.libs:Add("opengl32")
 	settings.link.libs:Add("glu32")
 	settings.link.libs:Add("winmm")
 	BuildClient(settings)
 
 	-- Content
-	BuildContent(settings)
+	BuildContent(settings, target_arch, conf)
 end
 
 function SharedCommonFiles()
@@ -274,7 +281,7 @@ function SharedCommonFiles()
 	if not shared_common_files then
 		local network_source = ContentCompile("network_source", "generated/protocol.cpp")
 		local network_header = ContentCompile("network_header", "generated/protocol.h")
-		AddDependency(network_source, network_header)
+		AddDependency(network_source, network_header, "src/engine/shared/protocol.h")
 
 		local nethash = CHash("generated/nethash.cpp", "src/engine/shared/protocol.h", "src/game/tuning.h", "src/game/gamecore.cpp", network_header)
 		shared_common_files = {network_source, nethash}
@@ -317,6 +324,14 @@ function SharedIcons(compiler)
 		shared_icons[compiler] = {server=server_icon, client=client_icon}
 	end
 	return shared_icons[compiler]
+end
+
+function SharedManifests(compiler)
+	if not shared_manifests then
+		local client_manifest = ResCompile("other/manifest/teeworlds.rc", compiler)
+		shared_manifests = {client=client_manifest}
+	end
+	return shared_manifests
 end
 
 function BuildEngineCommon(settings)
@@ -365,9 +380,24 @@ function BuildVersionserver(settings)
 	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"], libs["md5"])
 end
 
-function BuildContent(settings)
+function BuildContent(settings, arch, conf)
 	local content = {}
 	table.insert(content, CopyToDir(settings.link.Output(settings, "data"), CollectRecursive(content_src_dir .. "*.png", content_src_dir .. "*.wv", content_src_dir .. "*.ttf", content_src_dir .. "*.txt", content_src_dir .. "*.map", content_src_dir .. "*.rules", content_src_dir .. "*.json")))
+	if family == "windows" then
+		if arch == "x86_64" then
+			_arch = "64"
+		else
+			_arch = "32"
+		end
+		-- dependencies
+		dl = Python("scripts/download.py")
+		AddJob({"other/sdl/include/SDL.h", "other/sdl/windows/lib" .. _arch .. "/SDL2.dll"}, "Downloading SDL2", dl .. " sdl")
+		AddJob({"other/freetype/include/ft2build.h", "other/freetype/windows/lib" .. _arch .. "/freetype.dll"}, "Downloading freetype", dl .. " freetype")
+		table.insert(content, CopyFile(settings.link.Output(settings, "") .. "/SDL2.dll", "other/sdl/windows/lib" .. _arch .. "/SDL2.dll"))
+		table.insert(content, CopyFile(settings.link.Output(settings, "") .. "/freetype.dll", "other/freetype/windows/lib" .. _arch .. "/freetype.dll"))
+		AddDependency(settings.link.Output(settings, "") .. "/SDL2.dll", "other/sdl/include/SDL.h")
+		AddDependency(settings.link.Output(settings, "") .. "/freetype.dll", "other/freetype/include/ft2build.h")
+	end
 	PseudoTarget(settings.link.Output(settings, "content") .. settings.link.extension, content)
 end
 
@@ -412,6 +442,8 @@ function GenerateSettings(conf, arch, builddir, compiler)
 	end
 	
 	settings.cc.includes:Add("src")
+	settings.cc.includes:Add("src/engine/external/pnglite")
+	settings.cc.includes:Add("src/engine/external/wavpack")
 	settings.cc.includes:Add(generated_src_dir)
 	
 	if family == "windows" then
@@ -429,7 +461,7 @@ function GenerateSettings(conf, arch, builddir, compiler)
 	return settings
 end
 
--- String formatting wth named parameters, by RiciLake http://lua-users.org/wiki/StringInterpolation
+-- String formatting with named parameters, by RiciLake http://lua-users.org/wiki/StringInterpolation
 function interp(s, tab)
 	return (s:gsub('%%%((%a%w*)%)([-0-9%.]*[cdeEfgGiouxXsq])',
 			function(k, fmt)
@@ -497,6 +529,7 @@ for a, cur_arch in ipairs(archs) do
 		end
 	end
 end
+
 for cur_name, cur_target in pairs(targets) do
 	-- Supertarget for all configurations and architectures of that target
 	PseudoTarget(cur_name, subtargets[cur_target])

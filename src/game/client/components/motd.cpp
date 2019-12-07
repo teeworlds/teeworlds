@@ -9,6 +9,7 @@
 #include <generated/client_data.h>
 #include <game/client/gameclient.h>
 
+#include "menus.h"
 #include "motd.h"
 
 void CMotd::Clear()
@@ -18,6 +19,9 @@ void CMotd::Clear()
 
 bool CMotd::IsActive()
 {
+	// dont render modt if the menu is active
+	if(m_pClient->m_pMenus->IsActive())
+		return false;
 	return time_get() < m_ServerMotdTime;
 }
 
@@ -44,9 +48,15 @@ void CMotd::OnRender()
 	CUIRect Rect = {x, y, w, h};
 
 	Graphics()->BlendNormal();
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 30.0f);
 
-	TextRender()->Text(0, x+40.0f, y+40.0f, 32.0f, m_aServerMotd, (int)(w-80.0f));
+	Rect.Margin(30.0f, &Rect);
+	float TextSize = 32.0f;
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, Rect.x, Rect.y, TextSize, TEXTFLAG_RENDER);
+	Cursor.m_LineWidth = Rect.w;
+	Cursor.m_MaxLines = ceil(Rect.h/TextSize);
+	TextRender()->TextEx(&Cursor, m_aServerMotd, -1);
 }
 
 void CMotd::OnMessage(int MsgType, void *pRawMsg)

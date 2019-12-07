@@ -61,13 +61,12 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	if(!File)
 		return false;
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize+1, 1);
+	char *pFileData = (char *)mem_alloc(FileSize, 1);
 	io_read(File, pFileData, FileSize);
-	pFileData[FileSize] = 0;
 	io_close(File);
 
 	// init
-	char aBuf[64];
+	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "loaded '%s'", pFilename);
 	pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 	m_Strings.clear();
@@ -76,11 +75,12 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	json_settings JsonSettings;
 	mem_zero(&JsonSettings, sizeof(JsonSettings));
 	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, aError);
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+	mem_free(pFileData);
+	
 	if(pJsonData == 0)
 	{
 		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
-		mem_free(pFileData);
 		return false;
 	}
 
@@ -89,12 +89,35 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	if(rStart.type == json_array)
 	{
 		for(unsigned i = 0; i < rStart.u.array.length; ++i)
-			AddString((const char *)rStart[i]["or"], (const char *)rStart[i]["tr"], (const char *)rStart[i]["context"]);
+		{
+			bool Valid = true;
+			const char *pOr = (const char *)rStart[i]["or"];
+			const char *pTr = (const char *)rStart[i]["tr"];
+			while(pOr[0] && pTr[0])
+			{
+				for(; pOr[0] && pOr[0] != '%'; ++pOr);
+				for(; pTr[0] && pTr[0] != '%'; ++pTr);
+				if(pOr[0] && pTr[0] && ((pOr[1] == ' ' && pTr[1] == 0) || (pOr[1] == 0 && pTr[1] == ' ')))	// skip  false positive
+					break;
+				if((pOr[0] && (!pTr[0] || pOr[1] != pTr[1])) || (pTr[0] && (!pOr[0] || pTr[1] != pOr[1])))
+				{
+					Valid = false;
+					str_format(aBuf, sizeof(aBuf), "skipping invalid entry or:'%s', tr:'%s'", (const char *)rStart[i]["or"], (const char *)rStart[i]["tr"]);
+					pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
+					break;
+				}
+				if(pOr[0])
+					++pOr;
+				if(pTr[0])
+					++pTr;
+			}
+			if(Valid)
+				AddString((const char *)rStart[i]["or"], (const char *)rStart[i]["tr"], (const char *)rStart[i]["context"]);
+		}
 	}
 
 	// clean up
 	json_value_free(pJsonData);
-	mem_free(pFileData);
 	m_CurrentVersion = ++m_VersionCounter;
 	return true;
 }
@@ -103,6 +126,7 @@ const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHas
 {
 	CString String;
 	String.m_Hash = Hash;
+	String.m_ContextHash = 0; // this is ignored for the search anyway
 	sorted_array<CString>::range r = ::find_binary(m_Strings.all(), String);
 	if(r.empty())
 		return 0;

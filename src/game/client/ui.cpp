@@ -17,6 +17,7 @@ CUI::CUI()
 	m_pActiveItem = 0;
 	m_pLastActiveItem = 0;
 	m_pBecommingHotItem = 0;
+	m_Clipped = false;
 
 	m_MouseX = 0;
 	m_MouseY = 0;
@@ -53,6 +54,11 @@ int CUI::MouseInside(const CUIRect *r) const
 	return 0;
 }
 
+bool CUI::MouseInsideClip() const
+{
+	return !m_Clipped || MouseInside(&m_ClipRect) == 1;
+}
+
 void CUI::ConvertMouseMove(float *x, float *y) const
 {
 	float Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
@@ -79,18 +85,10 @@ float CUI::PixelSize()
 	return Screen()->w/Graphics()->ScreenWidth();
 }
 
-float CUI::Scale() const
-{
-	return 1.0f;
-}
-
-float CUIRect::Scale() const
-{
-	return 1.0f;
-}
-
 void CUI::ClipEnable(const CUIRect *r)
 {
+	m_ClipRect = *r;
+	m_Clipped = true;
 	float XScale = Graphics()->ScreenWidth()/Screen()->w;
 	float YScale = Graphics()->ScreenHeight()/Screen()->h;
 	Graphics()->ClipEnable((int)(r->x*XScale), (int)(r->y*YScale), (int)(r->w*XScale), (int)(r->h*YScale));
@@ -99,6 +97,7 @@ void CUI::ClipEnable(const CUIRect *r)
 void CUI::ClipDisable()
 {
 	Graphics()->ClipDisable();
+	m_Clipped = false;
 }
 
 void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom) const
@@ -126,7 +125,6 @@ void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom) const
 void CUIRect::HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	if (pTop)
 	{
@@ -148,7 +146,6 @@ void CUIRect::HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 void CUIRect::HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	if (pTop)
 	{
@@ -172,7 +169,6 @@ void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight) const
 {
 	CUIRect r = *this;
 	float Cut = r.w/2;
-//	Cut *= Scale();
 
 	if (pLeft)
 	{
@@ -194,7 +190,6 @@ void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight) const
 void CUIRect::VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	if (pLeft)
 	{
@@ -216,7 +211,6 @@ void CUIRect::VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 void CUIRect::VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	if (pLeft)
 	{
@@ -238,7 +232,6 @@ void CUIRect::VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const
 void CUIRect::Margin(float Cut, CUIRect *pOtherRect) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	pOtherRect->x = r.x + Cut;
 	pOtherRect->y = r.y + Cut;
@@ -249,7 +242,6 @@ void CUIRect::Margin(float Cut, CUIRect *pOtherRect) const
 void CUIRect::VMargin(float Cut, CUIRect *pOtherRect) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	pOtherRect->x = r.x + Cut;
 	pOtherRect->y = r.y;
@@ -260,7 +252,6 @@ void CUIRect::VMargin(float Cut, CUIRect *pOtherRect) const
 void CUIRect::HMargin(float Cut, CUIRect *pOtherRect) const
 {
 	CUIRect r = *this;
-	Cut *= Scale();
 
 	pOtherRect->x = r.x;
 	pOtherRect->y = r.y + Cut;
@@ -273,6 +264,8 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	// logic
 	int ReturnValue = 0;
 	int Inside = MouseInside(pRect);
+	if(m_Clipped)
+		Inside &= MouseInside(&m_ClipRect);
 	static int ButtonUsed = 0;
 
 	if(CheckActiveItem(pID))
@@ -319,7 +312,7 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 		if(MouseButton(0))
 			SetActiveItem(pID);
 	}
-	
+
 	if(Inside)
 		SetHotItem(pID);
 
@@ -327,9 +320,9 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 		return 0;
 
 	if(pX)
-		*pX = clamp(m_MouseX - pRect->x, 0.0f, pRect->w) / Scale();
+		*pX = clamp(m_MouseX - pRect->x, 0.0f, pRect->w);
 	if(pY)
-		*pY = clamp(m_MouseY - pRect->y, 0.0f, pRect->h) / Scale();
+		*pY = clamp(m_MouseY - pRect->y, 0.0f, pRect->h);
 
 	return 1;
 }
@@ -382,7 +375,7 @@ int CUI::DoButton(const void *id, const char *text, int checked, const CUIRect *
 	return ret;
 }*/
 
-void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Align, int MaxWidth)
+void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Align, float LineWidth, bool MultiLine)
 {
 	// TODO: FIX ME!!!!
 	//Graphics()->BlendNormal();
@@ -390,25 +383,20 @@ void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Al
 	{
 	case ALIGN_CENTER:
 	{
-		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
-		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, MaxWidth);
+		float tw = TextRender()->TextWidth(0, Size, pText, -1, LineWidth);
+		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, LineWidth, MultiLine);
 		break;
 	}
 	case ALIGN_LEFT:
 	{
-		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, MaxWidth);
+		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, LineWidth, MultiLine);
 		break;
 	}
 	case ALIGN_RIGHT:
 	{
-		float tw = TextRender()->TextWidth(0, Size, pText, MaxWidth);
-		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, MaxWidth);
+		float tw = TextRender()->TextWidth(0, Size, pText, -1, LineWidth);
+		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, LineWidth, MultiLine);
 		break;
 	}
 	}
-}
-
-void CUI::DoLabelScaled(const CUIRect *r, const char *pText, float Size, EAlignment Align, int MaxWidth)
-{
-	DoLabel(r, pText, Size*Scale(), Align, MaxWidth);
 }

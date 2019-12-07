@@ -2,7 +2,6 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/client.h>
 #include <engine/console.h>
-#include <engine/graphics.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <game/gamecore.h> // StrToInts, IntsToStr
@@ -129,6 +128,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				CMapItemLayerTilemap Item;
 				Item.m_Version = CMapItemLayerTilemap::CURRENT_VERSION;
 
+				Item.m_Layer.m_Version = 0; // unused
 				Item.m_Layer.m_Flags = pLayer->m_Flags;
 				Item.m_Layer.m_Type = pLayer->m_Type;
 
@@ -158,6 +158,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 				{
 					CMapItemLayerQuads Item;
 					Item.m_Version = CMapItemLayerQuads::CURRENT_VERSION;
+					Item.m_Layer.m_Version = 0; // unused
 					Item.m_Layer.m_Flags = pLayer->m_Flags;
 					Item.m_Layer.m_Type = pLayer->m_Type;
 					Item.m_Image = pLayer->m_Image;
@@ -180,12 +181,28 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		df.AddItem(MAPITEMTYPE_GROUP, GroupCount++, sizeof(GItem), &GItem);
 	}
 
+	// check for bezier curve envelopes, otherwise use older, smaller envelope points
+	int Version = CMapItemEnvelope_v2::CURRENT_VERSION;
+	int Size = sizeof(CEnvPoint_v1);	
+	for(int e = 0; e < m_lEnvelopes.size(); e++)
+	{
+		for(int p = 0; p < m_lEnvelopes[e]->m_lPoints.size(); p++)
+		{
+			if(m_lEnvelopes[e]->m_lPoints[p].m_Curvetype == CURVETYPE_BEZIER)
+			{
+				Version = CMapItemEnvelope::CURRENT_VERSION;
+				Size = sizeof(CEnvPoint);
+				break;
+			}
+		}
+	}
+
 	// save envelopes
 	int PointCount = 0;
 	for(int e = 0; e < m_lEnvelopes.size(); e++)
 	{
 		CMapItemEnvelope Item;
-		Item.m_Version = CMapItemEnvelope::CURRENT_VERSION;
+		Item.m_Version = Version;
 		Item.m_Channels = m_lEnvelopes[e]->m_Channels;
 		Item.m_StartPoint = PointCount;
 		Item.m_NumPoints = m_lEnvelopes[e]->m_lPoints.size();
@@ -197,15 +214,16 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	}
 
 	// save points
-	int TotalSize = sizeof(CEnvPoint) * PointCount;
-	CEnvPoint *pPoints = (CEnvPoint *)mem_alloc(TotalSize, 1);
-	PointCount = 0;
-
+	int TotalSize = Size * PointCount;
+	unsigned char *pPoints = (unsigned char *)mem_alloc(TotalSize, 1);
+	int Offset = 0;
 	for(int e = 0; e < m_lEnvelopes.size(); e++)
 	{
-		int Count = m_lEnvelopes[e]->m_lPoints.size();
-		mem_copy(&pPoints[PointCount], m_lEnvelopes[e]->m_lPoints.base_ptr(), sizeof(CEnvPoint)*Count);
-		PointCount += Count;
+		for(int p = 0; p < m_lEnvelopes[e]->m_lPoints.size(); p++)
+		{
+			mem_copy(pPoints + Offset, &(m_lEnvelopes[e]->m_lPoints[p]), Size);
+			Offset += Size;
+		}
 	}
 
 	df.AddItem(MAPITEMTYPE_ENVPOINTS, 0, TotalSize, pPoints);
@@ -233,6 +251,11 @@ int CEditor::Load(const char *pFileName, int StorageType)
 {
 	Reset();
 	return m_Map.Load(Kernel()->RequestInterface<IStorage>(), pFileName, StorageType);
+}
+
+void CEditor::LoadCurrentMap()
+{
+	CallbackOpenMap(m_pClient->GetCurrentMapPath(), IStorage::TYPE_ALL, this);
 }
 
 int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int StorageType)
@@ -467,6 +490,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					{
 						// backwards compatibility
 						CEnvPoint_v1 *pEnvPoint_v1 = &((CEnvPoint_v1 *)pEnvPoints)[pItem->m_StartPoint + n];
+						mem_zero((void*)&pEnv->m_lPoints[n], sizeof(CEnvPoint));
 
 						pEnv->m_lPoints[n].m_Time = pEnvPoint_v1->m_Time;
 						pEnv->m_lPoints[n].m_Curvetype = pEnvPoint_v1->m_Curvetype;
@@ -474,10 +498,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						for(int c = 0; c < pItem->m_Channels; c++)
 						{
 							pEnv->m_lPoints[n].m_aValues[c] = pEnvPoint_v1->m_aValues[c];
-							pEnv->m_lPoints[n].m_aInTangentdx[c] = 0;
-							pEnv->m_lPoints[n].m_aInTangentdy[c] = 0;
-							pEnv->m_lPoints[n].m_aOutTangentdx[c] = 0;
-							pEnv->m_lPoints[n].m_aOutTangentdy[c] = 0;
 						}
 					}
 				}

@@ -43,13 +43,13 @@ void CMapChecker::AddMaplist(CMapVersion *pMaplist, int Num)
 		str_copy(pEntry->m_aMapName, pMaplist[i].m_aName, sizeof(pEntry->m_aMapName));
 		pEntry->m_MapCrc = (pMaplist[i].m_aCrc[0]<<24) | (pMaplist[i].m_aCrc[1]<<16) | (pMaplist[i].m_aCrc[2]<<8) | pMaplist[i].m_aCrc[3];
 		pEntry->m_MapSize = (pMaplist[i].m_aSize[0]<<24) | (pMaplist[i].m_aSize[1]<<16) | (pMaplist[i].m_aSize[2]<<8) | pMaplist[i].m_aSize[3];
+		mem_copy(&pEntry->m_MapSha256, &pMaplist[i].m_aSha256, sizeof(pEntry->m_MapSha256));
 	}
 }
 
-bool CMapChecker::IsMapValid(const char *pMapName, unsigned MapCrc, unsigned MapSize)
+bool CMapChecker::IsMapValid(const char *pMapName, const SHA256_DIGEST *pMapSha256, unsigned MapCrc, unsigned MapSize)
 {
-	return true;
-	/*bool StandardMap = false;
+	bool StandardMap = false;
 	for(CWhitelistEntry *pCurrent = m_pFirst; pCurrent; pCurrent = pCurrent->m_pNext)
 	{
 		if(str_comp(pCurrent->m_aMapName, pMapName) == 0)
@@ -60,13 +60,12 @@ bool CMapChecker::IsMapValid(const char *pMapName, unsigned MapCrc, unsigned Map
 		}
 	}
 
-	return !StandardMap;*/
+	return !StandardMap;
 }
 
 bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, int StorageType)
 {
-	return true;
-	/*// extract map name
+	// extract map name
 	char aMapName[MAX_MAP_LENGTH];
 	char aMapNameExt[MAX_MAP_LENGTH+4];
 	bool StandardMap = false;
@@ -84,7 +83,7 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 	int Length = (int)(pEnd - pExtractedName);
 	if(Length <= 0 || Length >= MAX_MAP_LENGTH)
 		return true;
-	str_copy(aMapName, pExtractedName, min((int)MAX_MAP_LENGTH, (int)(pEnd-pExtractedName+1)));
+	str_truncate(aMapName, MAX_MAP_LENGTH, pExtractedName, pEnd - pExtractedName);
 	str_format(aMapNameExt, sizeof(aMapNameExt), "%s.map", aMapName);
 
 	// check for valid map
@@ -94,12 +93,12 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 		{
 			StandardMap = true;
 			char aBuffer[512]; // TODO: MAX_PATH_LENGTH (512) should be defined in a more central header and not in storage.cpp and editor.h
-			if(pStorage->FindFile(aMapNameExt, "maps", StorageType, aBuffer, sizeof(aBuffer), pCurrent->m_MapCrc, pCurrent->m_MapSize))
+			if(pStorage->FindFile(aMapNameExt, "maps", StorageType, aBuffer, sizeof(aBuffer), &pCurrent->m_MapSha256, pCurrent->m_MapCrc, pCurrent->m_MapSize))
 				return true;
 		}
 		else if(StandardMap)
 			break;
 	}
 
-	return !StandardMap;*/
+	return !StandardMap;
 }

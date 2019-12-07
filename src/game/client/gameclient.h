@@ -44,6 +44,7 @@ class CGameClient : public IGameClient
 	class IServerBrowser *m_pServerBrowser;
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
+	class IBlacklist *m_pBlacklist;
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
@@ -56,11 +57,17 @@ class CGameClient : public IGameClient
 	int m_PredictedTick;
 	int m_LastNewPredictedTick;
 
+	int m_LastGameStartTick;
+	int m_LastFlagCarrierRed;
+	int m_LastFlagCarrierBlue;
+
 	static void ConTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConKill(IConsole::IResult *pResult, void *pUserData);
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
+	static void ConchainSkinChange(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-
+	static void ConchainBlacklistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
 
@@ -83,11 +90,12 @@ public:
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
+	class IBlacklist *Blacklist() { return m_pBlacklist; }
 
 	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
 	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
 	const char *NetmsgFailedOn() { return m_NetObjHandler.FailedMsgOn(); };
-	
+
 	bool m_SuppressEvents;
 
 	// TODO: move this
@@ -129,7 +137,7 @@ public:
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
 		int m_GameDataFlagSnapID;
-		
+
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];
 
@@ -170,10 +178,10 @@ public:
 		char m_aName[MAX_NAME_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH];
 		int m_Country;
-		char m_aaSkinPartNames[6][24];
-		int m_aUseCustomColors[6];
-		int m_aSkinPartColors[6];
-		int m_SkinPartIDs[6];
+		char m_aaSkinPartNames[NUM_SKINPARTS][24];
+		int m_aUseCustomColors[NUM_SKINPARTS];
+		int m_aSkinPartColors[NUM_SKINPARTS];
+		int m_SkinPartIDs[NUM_SKINPARTS];
 		int m_Team;
 		int m_Emoticon;
 		int m_EmoticonStart;
@@ -187,13 +195,19 @@ public:
 		bool m_ChatIgnore;
 		bool m_Friend;
 
-		void UpdateRenderInfo(CGameClient *pGameClient, bool UpdateSkinInfo);
-		void Reset(CGameClient *pGameClient);
+		void UpdateRenderInfo(CGameClient *pGameClient, int ClientID, bool UpdateSkinInfo);
+		void UpdateBotRenderInfo(CGameClient *pGameClient, int ClientID);
+		void Reset(CGameClient *pGameClient, int CLientID);
 	};
 
 	CClientData m_aClients[MAX_CLIENTS];
 	int m_LocalClientID;
 	int m_TeamCooldownTick;
+	bool m_MuteServerBroadcast;
+	float m_TeamChangeTime;
+	bool m_IsXmasDay;
+	float m_LastSkinChangeTime;
+	bool m_IsEasterDay;
 
 	struct CGameInfo
 	{
@@ -246,8 +260,12 @@ public:
 	virtual const char *GetItemName(int Type) const;
 	virtual const char *Version() const;
 	virtual const char *NetVersion() const;
+	virtual const char *NetVersionHashUsed() const;
+	virtual const char *NetVersionHashReal() const;
 	virtual int ClientVersion() const;
-	const char *GetTeamName(int Team, bool Teamplay) const;
+	static void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
+	bool IsXmas() const;
+	bool IsEaster() const;
 
 	//
 	void DoEnterMessage(const char *pName, int ClientID, int Team);
@@ -260,6 +278,7 @@ public:
 	void SendStartInfo();
 	void SendKill();
 	void SendReadyChange();
+	void SendSkinChange();
 
 	// pointers to all systems
 	class CGameConsole *m_pGameConsole;
@@ -280,11 +299,13 @@ public:
 	class CMapImages *m_pMapimages;
 	class CVoting *m_pVoting;
 	class CScoreboard *m_pScoreboard;
+	class CStats *m_pStats;
 	class CItems *m_pItems;
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
 };
 
-extern const char *Localize(const char *Str, const char *pContext="");
+const char *Localize(const char *pStr, const char *pContext="")
+GNUC_ATTRIBUTE((format_arg(1)));
 
 #endif

@@ -8,11 +8,11 @@ class CMotd : public CComponent
 {
 	// motd
 	int64 m_ServerMotdTime;
+	char m_aServerMotd[1024];
 public:
-	char m_aServerMotd[900];
-
 	void Clear();
 	bool IsActive();
+	const char *GetMotd() const { return m_aServerMotd; }
 
 	virtual void OnRender();
 	virtual void OnStateChange(int NewState, int OldState);

@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/hash_ctxt.h>
 #include <base/system.h>
 #include <engine/storage.h>
 #include "linereader.h"
@@ -61,7 +62,7 @@ public:
 		// add save directories
 		if(StorageType != STORAGETYPE_BASIC)
 		{
-			if(m_NumPaths && (!m_aaStoragePaths[TYPE_SAVE][0] || !fs_makedir(m_aaStoragePaths[TYPE_SAVE])))
+			if(m_NumPaths && (!m_aaStoragePaths[TYPE_SAVE][0] || !fs_makedir_recursive(m_aaStoragePaths[TYPE_SAVE])))
 			{
 				char aPath[MAX_PATH_LENGTH];
 				if(StorageType == STORAGETYPE_CLIENT)
@@ -111,8 +112,11 @@ public:
 
 		while((pLine = LineReader.Get()))
 		{
-			if(str_length(pLine) > 9 && !str_comp_num(pLine, "add_path ", 9))
-				AddPath(pLine+9);
+			const char *pLineWithoutPrefix = str_startswith(pLine, "add_path ");
+			if(pLineWithoutPrefix)
+			{
+				AddPath(pLineWithoutPrefix);
+			}
 		}
 
 		io_close(File);
@@ -129,6 +133,16 @@ public:
 		AddPath("$APPDIR");
 	}
 
+	bool IsDuplicatePath(const char *pPath)
+	{
+		for(int i = 0; i < m_NumPaths; ++i)
+		{
+			if(!str_comp(m_aaStoragePaths[i], pPath))
+				return true;
+		}
+		return false;
+	}
+
 	void AddPath(const char *pPath)
 	{
 		if(m_NumPaths >= MAX_PATHS || !pPath[0])
@@ -138,40 +152,65 @@ public:
 		{
 			if(m_aUserDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserDir);
+				if(!IsDuplicatePath(m_aUserDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$USERDIR' ('%s')", m_aUserDir);
 			}
 		}
 		else if(!str_comp(pPath, "$DATADIR"))
 		{
 			if(m_aDataDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aDataDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDataDir);
+				if(!IsDuplicatePath(m_aDataDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aDataDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDataDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$DATADIR' ('%s')", m_aDataDir);
 			}
 		}
 		else if(!str_comp(pPath, "$CURRENTDIR"))
 		{
 			if(m_aCurrentDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aCurrentDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentDir);
+				if(!IsDuplicatePath(m_aCurrentDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aCurrentDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$CURRENTDIR' ('%s')", m_aCurrentDir);
 			}
 		}
 		else if(!str_comp(pPath, "$APPDIR"))
 		{
 			if(m_aAppDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aAppDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$APPDIR' ('%s')", m_aAppDir);
+				if(!IsDuplicatePath(m_aAppDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aAppDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$APPDIR' ('%s')", m_aAppDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$APPDIR' ('%s')", m_aAppDir);
 			}
 		}
 		else
 		{
 			if(fs_is_dir(pPath))
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], pPath, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '%s'", pPath);
+				if(!IsDuplicatePath(pPath))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], pPath, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '%s'", pPath);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '%s'", pPath);
 			}
 		}
 	}
@@ -277,7 +316,7 @@ public:
 
 	// Open a file. This checks that the path appears to be a subdirectory
 	// of one of the storage paths.
-	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0)
+	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0, FCheckCallback pfnCheckCB = 0, const void *pCheckCBData = 0)
 	{
 		char aBuffer[MAX_PATH_LENGTH];
 		if(!pBuffer)
@@ -308,23 +347,30 @@ public:
 		else
 		{
 			IOHANDLE Handle = 0;
-
-			if(Type == TYPE_ALL)
+			int LB = 0, UB = m_NumPaths;	// check all available directories
+			
+			if(Type >= 0 && Type < m_NumPaths)	// check wanted directory
 			{
-				// check all available directories
-				for(int i = 0; i < m_NumPaths; ++i)
+				LB = Type;
+				UB = Type + 1;
+			}
+			else
+				dbg_assert(Type == TYPE_ALL, "invalid storage type");
+
+			for(int i = LB; i < UB; ++i)
+			{
+				Handle = io_open(GetPath(i, pFilename, pBuffer, BufferSize), Flags);
+				if(Handle)
 				{
-					Handle = io_open(GetPath(i, pFilename, pBuffer, BufferSize), Flags);
-					if(Handle)
+					// do an additional check on the file
+					if(pfnCheckCB && !pfnCheckCB(Handle, pCheckCBData))
+					{
+						io_close(Handle);
+						Handle = 0;
+					}
+					else
 						return Handle;
 				}
-			}
-			else if(Type >= 0 && Type < m_NumPaths)
-			{
-				// check wanted directory
-				Handle = io_open(GetPath(Type, pFilename, pBuffer, BufferSize), Flags);
-				if(Handle)
-					return Handle;
 			}
 		}
 
@@ -339,8 +385,10 @@ public:
 		const char *m_pPath;
 		char *m_pBuffer;
 		int m_BufferSize;
+		const SHA256_DIGEST *m_pWantedSha256;
 		unsigned m_WantedCrc;
 		unsigned m_WantedSize;
+		bool m_CheckHashAndSize;
 	};
 
 	static int FindFileCallback(const char *pName, int IsDir, int Type, void *pUser)
@@ -364,14 +412,18 @@ public:
 		{
 			// found the file
 			str_format(Data.m_pBuffer, Data.m_BufferSize, "%s/%s", Data.m_pPath, Data.m_pFilename);
-			
-			// check crc and size
-			unsigned Crc = 0;
-			unsigned Size = 0;
-			if(!Data.m_pStorage->GetCrcSize(Data.m_pBuffer, Type, &Crc, &Size) || Crc != Data.m_WantedCrc || Size != Data.m_WantedSize)
+
+			if(Data.m_CheckHashAndSize)
 			{
-				Data.m_pBuffer[0] = 0;
-				return 0;
+				// check crc and size
+				SHA256_DIGEST Sha256;
+				unsigned Crc = 0;
+				unsigned Size = 0;
+				if(!Data.m_pStorage->GetHashAndSize(Data.m_pBuffer, Type, &Sha256, &Crc, &Size) || (Data.m_pWantedSha256 && Sha256 != *Data.m_pWantedSha256) || Crc != Data.m_WantedCrc || Size != Data.m_WantedSize)
+				{
+					Data.m_pBuffer[0] = 0;
+					return 0;
+				}
 			}
 			
 			return 1;
@@ -380,39 +432,62 @@ public:
 		return 0;
 	}
 
-	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, unsigned WantedCrc = 0, unsigned WantedSize = 0)
+	bool FindFileImpl(int Type, CFindCBData *pCBData)
 	{
-		if(BufferSize < 1)
+		if(pCBData->m_BufferSize < 1)
 			return false;
 
-		pBuffer[0] = 0;
+		pCBData->m_pBuffer[0] = 0;
+
 		char aBuf[MAX_PATH_LENGTH];
-		CFindCBData Data;
-		Data.m_pStorage = this;
-		Data.m_pFilename = pFilename;
-		Data.m_pPath = pPath;
-		Data.m_pBuffer = pBuffer;
-		Data.m_BufferSize = BufferSize;
-		Data.m_WantedCrc = WantedCrc;
-		Data.m_WantedSize = WantedSize;
 		
 		if(Type == TYPE_ALL)
 		{
 			// search within all available directories
 			for(int i = 0; i < m_NumPaths; ++i)
 			{
-				fs_listdir(GetPath(i, pPath, aBuf, sizeof(aBuf)), FindFileCallback, i, &Data);
-				if(pBuffer[0])
+				fs_listdir(GetPath(i, pCBData->m_pPath, aBuf, sizeof(aBuf)), FindFileCallback, i, pCBData);
+				if(pCBData->m_pBuffer[0])
 					return true;
 			}
 		}
 		else if(Type >= 0 && Type < m_NumPaths)
 		{
 			// search within wanted directory
-			fs_listdir(GetPath(Type, pPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, &Data);
+			fs_listdir(GetPath(Type, pCBData->m_pPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, pCBData);
 		}
 
-		return pBuffer[0] != 0;
+		return pCBData->m_pBuffer[0] != 0;
+	}
+
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize)
+	{
+		CFindCBData Data;
+		Data.m_pStorage = this;
+		Data.m_pFilename = pFilename;
+		Data.m_pPath = pPath;
+		Data.m_pBuffer = pBuffer;
+		Data.m_BufferSize = BufferSize;
+		Data.m_pWantedSha256 = 0;
+		Data.m_WantedCrc = 0;
+		Data.m_WantedSize = 0;
+		Data.m_CheckHashAndSize = false;
+		return FindFileImpl(Type, &Data);
+	}
+
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, const SHA256_DIGEST *pWantedSha256, unsigned WantedCrc, unsigned WantedSize)
+	{
+		CFindCBData Data;
+		Data.m_pStorage = this;
+		Data.m_pFilename = pFilename;
+		Data.m_pPath = pPath;
+		Data.m_pBuffer = pBuffer;
+		Data.m_BufferSize = BufferSize;
+		Data.m_pWantedSha256 = pWantedSha256;
+		Data.m_WantedCrc = WantedCrc;
+		Data.m_WantedSize = WantedSize;
+		Data.m_CheckHashAndSize = true;
+		return FindFileImpl(Type, &Data);
 	}
 
 	virtual bool RemoveFile(const char *pFilename, int Type)
@@ -454,13 +529,15 @@ public:
 		GetPath(Type, pDir, pBuffer, BufferSize);
 	}
 	
-	virtual bool GetCrcSize(const char *pFilename, int StorageType, unsigned *pCrc, unsigned *pSize)
+	virtual bool GetHashAndSize(const char *pFilename, int StorageType, SHA256_DIGEST *pSha256, unsigned *pCrc, unsigned *pSize)
 	{
 		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ, StorageType);
 		if(!File)
 			return false;
 
-		// get crc and size
+		// get hash and size
+		SHA256_CTX Sha256Ctx;
+		sha256_init(&Sha256Ctx);
 		unsigned Crc = 0;
 		unsigned Size = 0;
 		unsigned char aBuffer[64*1024];
@@ -469,12 +546,14 @@ public:
 			unsigned Bytes = io_read(File, aBuffer, sizeof(aBuffer));
 			if(Bytes <= 0)
 				break;
+			sha256_update(&Sha256Ctx, aBuffer, Bytes);
 			Crc = crc32(Crc, aBuffer, Bytes); // ignore_convention
 			Size += Bytes;
 		}
 
 		io_close(File);
 
+		*pSha256 = sha256_finish(&Sha256Ctx);
 		*pCrc = Crc;
 		*pSize = Size;
 		return true;
@@ -491,6 +570,18 @@ public:
 		}
 		return p;
 	}
+
+	static IStorage *CreateTest()
+	{
+		CStorage *p = new CStorage();
+		if(!p)
+		{
+			return 0;
+		}
+		p->AddPath(".");
+		return p;
+	}
 };
 
 IStorage *CreateStorage(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments) { return CStorage::Create(pApplicationName, StorageType, NumArgs, ppArguments); }
+IStorage *CreateTestStorage() { return CStorage::CreateTest(); }

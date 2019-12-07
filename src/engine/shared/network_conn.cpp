@@ -108,7 +108,7 @@ int CNetConnection::QueueChunkEx(int Flags, int DataSize, const void *pData, int
 	unsigned char *pChunkData;
 
 	// check if we have space for it, if not, flush the connection
-	if(m_Construct.m_DataSize + DataSize + NET_MAX_CHUNKHEADERSIZE > (int)sizeof(m_Construct.m_aChunkData))
+	if(m_Construct.m_DataSize + DataSize + NET_MAX_CHUNKHEADERSIZE > (int)sizeof(m_Construct.m_aChunkData) || m_Construct.m_NumChunks == NET_MAX_PACKET_CHUNKS)
 		Flush();
 
 	// pack all the data
@@ -174,7 +174,7 @@ void CNetConnection::SendPacketConnless(const char *pData, int DataSize)
 void CNetConnection::SendControlWithToken(int ControlMsg)
 {
 	m_LastSendTime = time_get();
-	CNetBase::SendControlMsgWithToken(m_Socket, &m_PeerAddr, m_PeerToken, 0, ControlMsg, m_Token);
+	CNetBase::SendControlMsgWithToken(m_Socket, &m_PeerAddr, m_PeerToken, 0, ControlMsg, m_Token, true);
 }
 
 void CNetConnection::ResendChunk(CNetChunkResend *pResend)
@@ -196,6 +196,7 @@ int CNetConnection::Connect(NETADDR *pAddr)
 
 	// init connection
 	Reset();
+	m_LastRecvTime = time_get();
 	m_PeerAddr = *pAddr;
 	m_PeerToken = NET_TOKEN_NONE;
 	SetToken(GenerateToken(pAddr));
@@ -377,6 +378,11 @@ int CNetConnection::Update()
 	{
 		m_State = NET_CONNSTATE_ERROR;
 		SetError("Timeout");
+	}
+	else if(State() == NET_CONNSTATE_TOKEN && (Now - m_LastRecvTime) > time_freq() * 5)
+	{
+		m_State = NET_CONNSTATE_ERROR;
+		SetError("Unable to connect to the server");
 	}
 
 	// fix resends

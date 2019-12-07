@@ -12,11 +12,14 @@
 #include "graphics_threaded.h"
 #include "backend_sdl.h"
 
-
 #if defined(CONF_FAMILY_WINDOWS)
 	PFNGLTEXIMAGE3DPROC glTexImage3DInternal;
 
+#if defined (_MSC_VER)
 	GLAPI void GLAPIENTRY glTexImage3D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
+#else
+	void glTexImage3D(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels)
+#endif
 	{
 		glTexImage3DInternal(target, level, internalFormat, width, height, depth, border, format, type, pixels);
 	}
@@ -160,7 +163,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	}
 	else
 		glDisable(GL_SCISSOR_TEST);
-	
+
 
 	// texture
 	int SrcBlendMode = GL_ONE;
@@ -176,7 +179,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 		else if(State.m_Dimension == 3 && (m_aTextures[State.m_Texture].m_State&CTexture::STATE_TEX3D))
 		{
 			glEnable(GL_TEXTURE_3D);
-			glBindTexture(GL_TEXTURE_3D, m_aTextures[State.m_Texture].m_Tex3D);
+			glBindTexture(GL_TEXTURE_3D, m_aTextures[State.m_Texture].m_Tex3D[State.m_TextureArrayIndex]);
 		}
 		else
 			dbg_msg("render", "invalid texture %d %d %d\n", State.m_Texture, State.m_Dimension, m_aTextures[State.m_Texture].m_State);
@@ -249,6 +252,13 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 void CCommandProcessorFragment_OpenGL::Cmd_Init(const SCommand_Init *pCommand)
 {
 	m_pTextureMemoryUsage = pCommand->m_pTextureMemoryUsage;
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_MaxTexSize);
+	glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &m_Max3DTexSize);
+	dbg_msg("render", "opengl max texture sizes: %d, %d(3D)", m_MaxTexSize, m_Max3DTexSize);
+	if(m_Max3DTexSize < IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION)
+		dbg_msg("render", "*** warning *** max 3D texture size is too low - using the fallback system");
+	m_TextureArraySize = IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION / min(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
+	*pCommand->m_pTextureArraySize = m_TextureArraySize;
 }
 
 void CCommandProcessorFragment_OpenGL::Cmd_Texture_Update(const CCommandBuffer::SCommand_Texture_Update *pCommand)
@@ -267,7 +277,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Destroy(const CCommandBuffer:
 	if(m_aTextures[pCommand->m_Slot].m_State&CTexture::STATE_TEX2D)
 		glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex2D);
 	if(m_aTextures[pCommand->m_Slot].m_State&CTexture::STATE_TEX3D)
-		glDeleteTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex3D);
+		glDeleteTextures(m_TextureArraySize, m_aTextures[pCommand->m_Slot].m_Tex3D);
 	*m_pTextureMemoryUsage -= m_aTextures[pCommand->m_Slot].m_MemSize;
 	m_aTextures[pCommand->m_Slot].m_State = CTexture::STATE_EMPTY;
 	m_aTextures[pCommand->m_Slot].m_MemSize = 0;
@@ -283,16 +293,13 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	// resample if needed
 	if(pCommand->m_Format == CCommandBuffer::TEXFORMAT_RGBA || pCommand->m_Format == CCommandBuffer::TEXFORMAT_RGB)
 	{
-		int MaxTexSize;
-		glGetIntegerv(GL_MAX_TEXTURE_SIZE, &MaxTexSize);
-		if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D)
+		int MaxTexSize = m_MaxTexSize;
+		if((pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D) && m_Max3DTexSize >= CTexture::MIN_GL_MAX_3D_TEXTURE_SIZE)
 		{
-			int Max3DTexSize;
-			glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &Max3DTexSize);
 			if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE2D)
-				MaxTexSize = min(MaxTexSize, Max3DTexSize*16);
+				MaxTexSize = min(MaxTexSize, m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION);
 			else
-				MaxTexSize = Max3DTexSize*16;
+				MaxTexSize = m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION;
 		}
 		if(Width > MaxTexSize || Height > MaxTexSize)
 		{
@@ -307,7 +314,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 			mem_free(pTexData);
 			pTexData = pTmpData;
 		}
-		else if(Width > 16 && Height > 16 && (pCommand->m_Flags&CCommandBuffer::TEXFLAG_QUALITY) == 0)
+		else if(Width > IGraphics::NUMTILES_DIMENSION && Height > IGraphics::NUMTILES_DIMENSION && (pCommand->m_Flags&CCommandBuffer::TEXFLAG_QUALITY) == 0)
 		{
 			Width>>=1;
 			Height>>=1;
@@ -331,7 +338,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 		}
 	}
 	m_aTextures[pCommand->m_Slot].m_Format = pCommand->m_Format;
-	
+
 	//
 	int Oglformat = TexFormatToOpenGLFormat(pCommand->m_Format);
 	int StoreOglformat = TexFormatToOpenGLFormat(pCommand->m_StoreFormat);
@@ -362,7 +369,10 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 		else
 		{
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+			if(pCommand->m_Flags&CCommandBuffer::TEXTFLAG_LINEARMIPMAPS)
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			else
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
 			gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pTexData);
 		}
 
@@ -377,45 +387,48 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 			m_aTextures[pCommand->m_Slot].m_MemSize += TexWidth*TexHeight*pCommand->m_PixelSize;
 		}
 	}
-	
+
 	// 3D texture
-	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D)
+	if((pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D) && m_Max3DTexSize >= CTexture::MIN_GL_MAX_3D_TEXTURE_SIZE)
 	{
-		Width /= 16;
-		Height /= 16;
-		Depth = 256;
+		Width /= IGraphics::NUMTILES_DIMENSION;
+		Height /= IGraphics::NUMTILES_DIMENSION;
+		Depth = min(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
 
 		// copy and reorder texture data
-		int MemSize = Width*Height*Depth*pCommand->m_PixelSize;
+		int MemSize = Width*Height*IGraphics::NUMTILES_DIMENSION*IGraphics::NUMTILES_DIMENSION*pCommand->m_PixelSize;
 		char *pTmpData = (char *)mem_alloc(MemSize, sizeof(void*));
 
 		const int TileSize = (Height * Width) * pCommand->m_PixelSize;
 		const int TileRowSize = Width * pCommand->m_PixelSize;
-		const int ImagePitch = Width*16 * pCommand->m_PixelSize;
+		const int ImagePitch = Width * IGraphics::NUMTILES_DIMENSION * pCommand->m_PixelSize;
 		mem_zero(pTmpData, MemSize);
-		for(int i = 0; i < 256; i++)
+		for(int i = 0; i < IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION; i++)
 		{
-			const int px = (i%16) * Width;
-			const int py = (i/16) * Height;
-			const char *pTileData = (const char *)pTexData + (py * Width*16 + px) * pCommand->m_PixelSize;
+			const int px = (i%IGraphics::NUMTILES_DIMENSION) * Width;
+			const int py = (i/IGraphics::NUMTILES_DIMENSION) * Height;
+			const char *pTileData = (const char *)pTexData + (py * Width * IGraphics::NUMTILES_DIMENSION + px) * pCommand->m_PixelSize;
 			for(int y = 0; y < Height; y++)
 				mem_copy(pTmpData + i*TileSize + y*TileRowSize, pTileData + y * ImagePitch, TileRowSize);
 		}
 
 		mem_free(pTexData);
-		pTexData = pTmpData;
-		
+
 		//
-		glGenTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex3D);
+		glGenTextures(m_TextureArraySize, m_aTextures[pCommand->m_Slot].m_Tex3D);
 		m_aTextures[pCommand->m_Slot].m_State |= CTexture::STATE_TEX3D;
-		glBindTexture(GL_TEXTURE_3D, m_aTextures[pCommand->m_Slot].m_Tex3D);
+		for(int i = 0; i < m_TextureArraySize; ++i)
+		{
+			glBindTexture(GL_TEXTURE_3D, m_aTextures[pCommand->m_Slot].m_Tex3D[i]);
+			glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			pTexData = pTmpData+i*(Width*Height*Depth*pCommand->m_PixelSize);
+			glTexImage3D(GL_TEXTURE_3D, 0, StoreOglformat, Width, Height, Depth, 0, Oglformat, GL_UNSIGNED_BYTE, pTexData);
 
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexImage3D(GL_TEXTURE_3D, 0, StoreOglformat, Width, Height, Depth, 0, Oglformat, GL_UNSIGNED_BYTE, pTexData);
-
-		m_aTextures[pCommand->m_Slot].m_MemSize += Width*Height*pCommand->m_PixelSize;
-	}	
+			m_aTextures[pCommand->m_Slot].m_MemSize += Width*Height*pCommand->m_PixelSize;
+		}
+		pTexData = pTmpData;
+	}
 
 	*m_pTextureMemoryUsage += m_aTextures[pCommand->m_Slot].m_MemSize;
 
@@ -431,7 +444,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Clear(const CCommandBuffer::SCommand_
 void CCommandProcessorFragment_OpenGL::Cmd_Render(const CCommandBuffer::SCommand_Render *pCommand)
 {
 	SetState(pCommand->m_State);
-	
+
 	glVertexPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices);
 	glTexCoordPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*3);
 	glColorPointer(4, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*6);
@@ -462,7 +475,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Screenshot(const CCommandBuffer::SCom
 	int h = pCommand->m_H == -1 ? aViewport[3] : pCommand->m_H;
 	int x = pCommand->m_X;
 	int y = aViewport[3] - pCommand->m_Y - 1 - (h - 1);
-	
+
 	// we allocate one more row to use when we are flipping the texture
 	unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
 	unsigned char *pTempRow = pPixelData+w*h*3;
@@ -616,23 +629,23 @@ void CCommandProcessor_SDL_OpenGL::RunBuffer(CCommandBuffer *pBuffer)
 		const CCommandBuffer::SCommand *pBaseCommand = pBuffer->GetCommand(&CmdIndex);
 		if(pBaseCommand == 0x0)
 			break;
-		
+
 		if(m_OpenGL.RunCommand(pBaseCommand))
 			continue;
-		
+
 		if(m_SDL.RunCommand(pBaseCommand))
 			continue;
 
 		if(m_General.RunCommand(pBaseCommand))
 			continue;
-		
+
 		dbg_msg("graphics", "unknown command %d", pBaseCommand->m_Cmd);
 	}
 }
 
 // ------------ CGraphicsBackend_SDL_OpenGL
 
-int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidth, int *pHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
+int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWindowWidth, int *pWindowHeight, int* pScreenWidth, int* pScreenHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
 {
 	if(!SDL_WasInit(SDL_INIT_VIDEO))
 	{
@@ -648,7 +661,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	m_NumScreens = SDL_GetNumVideoDisplays();
 	if(m_NumScreens > 0)
 	{
-		clamp(*Screen, 0, m_NumScreens-1);
+		*Screen = clamp(*Screen, 0, m_NumScreens-1);
 		if(SDL_GetDisplayBounds(*Screen, &ScreenPos) != 0)
 		{
 			dbg_msg("gfx", "unable to retrieve screen information: %s", SDL_GetError());
@@ -663,24 +676,23 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	}
 
 	// store desktop resolution for settings reset button
-	SDL_DisplayMode DisplayMode;
-	if(SDL_GetDesktopDisplayMode(*Screen, &DisplayMode))
+	if(!GetDesktopResolution(*Screen, pDesktopWidth, pDesktopHeight))
 	{
 		dbg_msg("gfx", "unable to get desktop resolution: %s", SDL_GetError());
 		return -1;
 	}
-	*pDesktopWidth = DisplayMode.w;
-	*pDesktopHeight = DisplayMode.h;
 
 	// use desktop resolution as default resolution
-	if (*pWidth == 0 || *pWidth == 0)
+	if (*pWindowWidth == 0 || *pWindowHeight == 0)
 	{
-		*pWidth = *pDesktopWidth;
-		*pHeight = *pDesktopHeight;
+		*pWindowWidth = *pDesktopWidth;
+		*pWindowHeight = *pDesktopHeight;
 	}
 
 	// set flags
 	int SdlFlags = SDL_WINDOW_OPENGL;
+	if(Flags&IGraphicsBackend::INITFLAG_HIGHDPI)
+		SdlFlags |= SDL_WINDOW_ALLOW_HIGHDPI;
 	if(Flags&IGraphicsBackend::INITFLAG_RESIZABLE)
 		SdlFlags |= SDL_WINDOW_RESIZABLE;
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
@@ -688,12 +700,15 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
 #if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
 		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;	// always use "fake" fullscreen
-	*pWidth = *pDesktopWidth;
-	*pHeight = *pDesktopHeight;
+	*pWindowWidth = *pDesktopWidth;
+	*pWindowHeight = *pDesktopHeight;
 #else
 		SdlFlags |= SDL_WINDOW_FULLSCREEN;
 #endif
-	
+
+	if(Flags&IGraphicsBackend::INITFLAG_X11XRANDR)
+		SDL_SetHint(SDL_HINT_VIDEO_X11_XRANDR, "1");
+
 	// set gl attributes
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	if(FsaaSamples)
@@ -710,21 +725,22 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 	// calculate centered position in windowed mode
 	int OffsetX = 0;
 	int OffsetY = 0;
-	if(!(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN) && *pDesktopWidth > *pWidth && *pDesktopHeight > *pHeight)
+	if(!(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN) && *pDesktopWidth > *pWindowWidth && *pDesktopHeight > *pWindowHeight)
 	{
-		OffsetX = (*pDesktopWidth - *pWidth) / 2;
-		OffsetY = (*pDesktopHeight - *pHeight) / 2;
+		OffsetX = (*pDesktopWidth - *pWindowWidth) / 2;
+		OffsetY = (*pDesktopHeight - *pWindowHeight) / 2;
 	}
 
 	// create window
-	m_pWindow = SDL_CreateWindow(pName, ScreenPos.x+OffsetX, ScreenPos.y+OffsetY, *pWidth, *pHeight, SdlFlags);
+	m_pWindow = SDL_CreateWindow(pName, ScreenPos.x+OffsetX, ScreenPos.y+OffsetY, *pWindowWidth, *pWindowHeight, SdlFlags);
 	if(m_pWindow == NULL)
 	{
 		dbg_msg("gfx", "unable to create window: %s", SDL_GetError());
 		return -1;
 	}
 
-	SDL_GetWindowSize(m_pWindow, pWidth, pHeight);
+	SDL_GetWindowSize(m_pWindow, pWindowWidth, pWindowHeight);
+	SDL_GL_GetDrawableSize(m_pWindow, pScreenWidth, pScreenHeight); // drawable size may differ in high dpi mode
 
 	// create gl context
 	m_GLContext = SDL_GL_CreateContext(m_pWindow);
@@ -753,13 +769,14 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWidt
 
 	// issue init commands for OpenGL and SDL
 	CCommandBuffer CmdBuffer(1024, 512);
-	CCommandProcessorFragment_OpenGL::SCommand_Init CmdOpenGL;
-	CmdOpenGL.m_pTextureMemoryUsage = &m_TextureMemoryUsage;
-	CmdBuffer.AddCommand(CmdOpenGL);
 	CCommandProcessorFragment_SDL::SCommand_Init CmdSDL;
 	CmdSDL.m_pWindow = m_pWindow;
 	CmdSDL.m_GLContext = m_GLContext;
 	CmdBuffer.AddCommand(CmdSDL);
+	CCommandProcessorFragment_OpenGL::SCommand_Init CmdOpenGL;
+	CmdOpenGL.m_pTextureMemoryUsage = &m_TextureMemoryUsage;
+	CmdOpenGL.m_pTextureArraySize = &m_TextureArraySize;
+	CmdBuffer.AddCommand(CmdOpenGL);
 	RunBuffer(&CmdBuffer);
 	WaitForIdle();
 
@@ -775,7 +792,7 @@ int CGraphicsBackend_SDL_OpenGL::Shutdown()
 	CmdBuffer.AddCommand(Cmd);
 	RunBuffer(&CmdBuffer);
 	WaitForIdle();
-			
+
 	// stop and delete the processor
 	StopProcessor();
 	delete m_pProcessor;
@@ -834,6 +851,17 @@ bool CGraphicsBackend_SDL_OpenGL::SetWindowScreen(int Index)
 int CGraphicsBackend_SDL_OpenGL::GetWindowScreen()
 {
 	return SDL_GetWindowDisplayIndex(m_pWindow);
+}
+
+bool CGraphicsBackend_SDL_OpenGL::GetDesktopResolution(int Index, int *pDesktopWidth, int* pDesktopHeight)
+{
+	SDL_DisplayMode DisplayMode;
+	if(SDL_GetDesktopDisplayMode(Index, &DisplayMode))
+		return false;
+
+	*pDesktopWidth = DisplayMode.w;
+	*pDesktopHeight = DisplayMode.h;
+	return true;
 }
 
 int CGraphicsBackend_SDL_OpenGL::WindowActive()

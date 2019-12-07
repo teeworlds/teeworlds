@@ -1,4 +1,4 @@
-Copyright (C) 2007-2016 Magnus Auvinen
+Copyright (C) 2007-2018 Magnus Auvinen
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages
@@ -20,6 +20,11 @@ freely, subject to the following restrictions:
 
 All content under 'data' and 'datasrc' except the font (which has its own license) is
 released under CC-BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0/).
+
+Authors:	android272, Chi11y (chi1), Crises, Daniel, Echchouik, Fisico,
+			Landil, Lappi, LordSk, maikka, matricks, Pocram, red_com,
+			serpis, SkizZ, somerunce, Sonix, Stephanator, teetow, Ubu,
+			Zatline
 
 ------------------------------------------------------------------------
 

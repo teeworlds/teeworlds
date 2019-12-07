@@ -124,7 +124,7 @@ static int Run()
 		{
 			if(p.m_ClientID == -1)
 			{
-				if(p.m_DataSize >= sizeof(SERVERBROWSE_GETINFO) &&
+				if(p.m_DataSize >= (int)sizeof(SERVERBROWSE_GETINFO) &&
 					mem_comp(p.m_pData, SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO)) == 0)
 				{
 					SendServerInfo(&p.m_Address);

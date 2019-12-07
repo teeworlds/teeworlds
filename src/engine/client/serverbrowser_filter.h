@@ -20,11 +20,7 @@ public:
 		CServerBrowserFilter *m_pServerBrowserFilter;
 
 		// filter settings
-		int m_SortHash;
-		int m_Ping;
-		int m_Country;
-		char m_aGametype[32];
-		char m_aServerAddress[NETADDR_MAXSTRSIZE];
+		CServerFilterInfo m_FilterInfo;
 		
 		// stats
 		int m_NumSortedPlayers;
@@ -34,6 +30,7 @@ public:
 		
 		CServerFilter();
 		~CServerFilter();
+		CServerFilter& operator=(const CServerFilter& Other);
 
 		void Filter();
 		int GetSortHash() const;
@@ -45,7 +42,9 @@ public:
 		bool SortComparePing(int Index1, int Index2) const;
 		bool SortCompareGametype(int Index1, int Index2) const;
 		bool SortCompareNumPlayers(int Index1, int Index2) const;
+		bool SortCompareNumRealPlayers(int Index1, int Index2) const;
 		bool SortCompareNumClients(int Index1, int Index2) const;
+		bool SortCompareNumRealClients(int Index1, int Index2) const;
 	};
 
 	//
@@ -62,8 +61,8 @@ public:
 	// stats
 	const void *GetID(int FilterIndex, int Index) const { return &m_lFilters[FilterIndex].m_pSortedServerlist[Index]; }
 	int GetIndex(int FilterIndex, int Index) const { return m_lFilters[FilterIndex].m_pSortedServerlist[Index]; }
-	int GetNumSortedServers(int Index) const { return m_lFilters[Index].m_NumSortedServers; }
-	int GetNumSortedPlayers(int Index) const { return m_lFilters[Index].m_NumSortedPlayers; }
+	int GetNumSortedServers(int FilterIndex) const { return m_lFilters[FilterIndex].m_NumSortedServers; }
+	int GetNumSortedPlayers(int FilterIndex) const { return m_lFilters[FilterIndex].m_NumSortedPlayers; }
 
 private:
 	class IFriends *m_pFriends;

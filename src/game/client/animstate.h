@@ -3,6 +3,8 @@
 #ifndef GAME_CLIENT_ANIMSTATE_H
 #define GAME_CLIENT_ANIMSTATE_H
 
+#include <generated/client_data.h>
+
 class CAnimState
 {
 	CAnimKeyframe m_Body;

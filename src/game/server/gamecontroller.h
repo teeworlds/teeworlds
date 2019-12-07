@@ -19,8 +19,9 @@ class IGameController
 
 	// activity
 	void DoActivityCheck();
-	bool GetPlayersReadyState();
+	bool GetPlayersReadyState(int WithoutID = -1);
 	void SetPlayersReadyState(bool ReadyState);
+	void CheckReadyStates(int WithoutID = -1);
 
 	// balancing
 	enum
@@ -53,7 +54,7 @@ class IGameController
 	EGameState m_GameState;
 	int m_GameStateTimer;
 
-	virtual void DoWincheckMatch();
+	virtual bool DoWincheckMatch();		// returns true when the match is over
 	virtual void DoWincheckRound() {};
 	bool HasEnoughPlayers() const { return (IsTeamplay() && m_aTeamSize[TEAM_RED] > 0 && m_aTeamSize[TEAM_BLUE] > 0) || (!IsTeamplay() && m_aTeamSize[TEAM_RED] > 1); }
 	void ResetGame();
@@ -78,6 +79,7 @@ class IGameController
 
 		vec2 m_Pos;
 		bool m_Got;
+		bool m_RandomSpawn;
 		int m_FriendlyTeam;
 		float m_Score;
 	};
@@ -180,6 +182,7 @@ public:
 		else
 			SetGameState(IGS_WARMUP_USER, Seconds);
 	}
+	void SwapTeamscore();
 
 	// general
 	virtual void Snap(int SnappingClient);
@@ -188,14 +191,16 @@ public:
 	// info
 	void CheckGameInfo();
 	bool IsFriendlyFire(int ClientID1, int ClientID2) const;
+	bool IsFriendlyTeamFire(int Team1, int Team2) const;
 	bool IsGamePaused() const { return m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_START_COUNTDOWN; }
 	bool IsGameRunning() const { return m_GameState == IGS_GAME_RUNNING; }
 	bool IsPlayerReadyMode() const;
 	bool IsTeamChangeAllowed() const;
 	bool IsTeamplay() const { return m_GameFlags&GAMEFLAG_TEAMS; }
-	
+	bool IsSurvival() const { return m_GameFlags&GAMEFLAG_SURVIVAL; }
+
 	const char *GetGameType() const { return m_pGameType; }
-	
+
 	// map
 	void ChangeMap(const char *pToMap);
 
