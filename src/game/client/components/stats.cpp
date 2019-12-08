@@ -138,7 +138,10 @@ void CStats::OnRender()
 		if(g_Config.m_ClStatboardInfos & (1<<i))
 		{
 			if((1<<i) == (TC_STATS_BESTSPREE))
-				w += 140;
+			{
+				if(!(g_Config.m_ClStatboardInfos & TC_STATS_SPREE))
+					w += 140;
+			}
 			else
 				w += 100;
 		}
@@ -176,12 +179,16 @@ void CStats::OnRender()
 	int px = 325;
 
 	TextRender()->Text(0, x+10, y-5, 24.0f, Localize("Name"), -1.0f);
-	const char *apHeaders[] = { Localize("Frags"), Localize("Deaths"), Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
+	const char *apHeaders[] = { "K", "D", Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
 	for(i=0; i<9; i++)
 		if(g_Config.m_ClStatboardInfos & (1<<i))
 		{
 			if(1<<i == TC_STATS_BESTSPREE)
+			{
+				if(g_Config.m_ClStatboardInfos & TC_STATS_SPREE)
+					continue;
 				px += 40.0f;
+			}
 			tw = TextRender()->TextWidth(0, 24.0f, apHeaders[i], -1, -1.0f);
 			TextRender()->Text(0, x+px-tw, y-5, 24.0f, apHeaders[i], -1.0f);
 			px += 100;
@@ -212,9 +219,12 @@ void CStats::OnRender()
 		px -= 40;
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
-		Graphics()->QuadsSetRotation(0.78f);
+		Graphics()->QuadsSetRotation(-0.39f);
+		RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
+		RenderTools()->DrawSprite(x+px-10-5, y+12.5f, 48);
+		Graphics()->QuadsSetRotation(0.39f);
 		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
-		RenderTools()->DrawSprite(x+px, y+15, 48);
+		RenderTools()->DrawSprite(x+px+10-5, y+12.5f, 48);
 		Graphics()->QuadsEnd();
 	}
 
@@ -316,12 +326,15 @@ void CStats::OnRender()
 		}
 		if(g_Config.m_ClStatboardInfos & TC_STATS_SPREE)
 		{
-			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_CurrentSpree);
+			if(g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE)
+				str_format(aBuf, sizeof(aBuf), "%d (%d)", pStats->m_CurrentSpree, pStats->m_BestSpree);
+			else
+				str_format(aBuf, sizeof(aBuf), "%d", pStats->m_CurrentSpree);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		if(g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE)
+		else if(g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE)
 		{
 			px += 40;
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_BestSpree);
@@ -348,9 +361,39 @@ void CStats::OnRender()
 		}
 		if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
 		{
-			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_FlagCaptures);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
+			if(pStats->m_FlagCaptures <= 0)
+			{
+				tw = TextRender()->TextWidth(0, FontSize, "--", -1, -1.0f);
+				TextRender()->Text(0, x-tw+px, y, FontSize, "--", -1.0f);
+			}
+			else
+			{
+				int DisplayedFlagsCount = (pStats->m_FlagCaptures <= 5) ? pStats->m_FlagCaptures : 1;
+				const float Space = 15.0f;
+				int tempx = px - ((DisplayedFlagsCount)*Space/2.0f);
+				if((pStats->m_FlagCaptures > 5))
+					tempx -= 20;
+
+				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+				Graphics()->QuadsBegin();
+				for(int n = 0; n < DisplayedFlagsCount; n++)
+				{
+					Graphics()->QuadsSetRotation(0.18f);
+					if(m_pClient->m_aClients[apPlayers[j]].m_Team == TEAM_RED)
+						RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
+					else
+						RenderTools()->SelectSprite(SPRITE_FLAG_RED);
+					RenderTools()->DrawSprite(x+tempx, y+25, 48);
+					tempx += Space;
+				}
+				Graphics()->QuadsEnd();
+
+				if((pStats->m_FlagCaptures > 5))
+				{
+					str_format(aBuf, sizeof(aBuf), "x%d", pStats->m_FlagCaptures);
+					TextRender()->Text(0, x+tempx, y, FontSize, aBuf, -1.0f);
+				}
+			}
 			px += 100;
 		}
 		y += LineHeight;
