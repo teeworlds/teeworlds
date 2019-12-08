@@ -1351,10 +1351,10 @@ if(CLIENT)
     components/flow.h
     components/hud.cpp
     components/hud.h
+    components/infomessages.cpp
+    components/infomessages.h
     components/items.cpp
     components/items.h
-    components/killmessages.cpp
-    components/killmessages.h
     components/mapimages.cpp
     components/mapimages.h
     components/maplayers.cpp
@@ -1388,8 +1388,6 @@ if(CLIENT)
     components/spectator.h
     components/stats.cpp
     components/stats.h
-    components/timemessages.cpp
-    components/timemessages.h
     components/voting.cpp
     components/voting.h
     gameclient.cpp

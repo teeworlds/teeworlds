@@ -327,7 +327,7 @@ void CRenderTools::DrawUIRect4(const CUIRect *r, vec4 ColorTopLeft, vec4 ColorTo
 	Graphics()->QuadsEnd();
 }
 
-void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos)
+void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos)
 {
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
@@ -539,7 +539,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	}
 }
 
-void CRenderTools::RenderTeeHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
+void CRenderTools::RenderTeeHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
 								 vec2 PostRotOffset)
 {
 	// in-game hand size is 15 when tee size is 64

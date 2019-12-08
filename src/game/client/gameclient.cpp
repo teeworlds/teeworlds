@@ -36,7 +36,7 @@
 #include "components/flow.h"
 #include "components/hud.h"
 #include "components/items.h"
-#include "components/killmessages.h"
+#include "components/infomessages.h"
 #include "components/mapimages.h"
 #include "components/maplayers.h"
 #include "components/menus.h"
@@ -50,7 +50,6 @@
 #include "components/sounds.h"
 #include "components/spectator.h"
 #include "components/stats.h"
-#include "components/timemessages.h"
 #include "components/voting.h"
 
 inline void AppendDecimals(char *pBuf, int Size, int Time, int Precision)
@@ -89,7 +88,7 @@ void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision)
 }
 
 // instanciate all systems
-static CKillMessages gs_KillMessages;
+static CInfoMessages gs_InfoMessages;
 static CCamera gs_Camera;
 static CChat gs_Chat;
 static CMotd gs_Motd;
@@ -113,7 +112,6 @@ static CDamageInd gsDamageInd;
 static CVoting gs_Voting;
 static CSpectator gs_Spectator;
 static CStats gs_Stats;
-static CTimeMessages gs_Timemessages;
 
 static CPlayers gs_Players;
 static CNamePlates gs_NamePlates;
@@ -269,14 +267,13 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(&gs_Hud);
 	m_All.Add(&gs_Spectator);
 	m_All.Add(&gs_Emoticon);
-	m_All.Add(&gs_KillMessages);
+	m_All.Add(&gs_InfoMessages);
 	m_All.Add(m_pChat);
 	m_All.Add(&gs_Broadcast);
 	m_All.Add(&gs_DebugHud);
 	m_All.Add(&gs_Notifications);
 	m_All.Add(&gs_Scoreboard);
 	m_All.Add(m_pStats);
-	m_All.Add(&gs_Timemessages);
 	m_All.Add(m_pMotd);
 	m_All.Add(m_pMenus);
 	m_All.Add(&m_pMenus->m_Binder);
