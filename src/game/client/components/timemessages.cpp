@@ -39,28 +39,14 @@ void CTimeMessages::OnMessage(int MsgType, void *pRawMsg)
 	}
 }
 
-void FormatTimeShort(char *pBuf, int Size, int Time, bool ForceMinutes = false)
-{
-	if(!ForceMinutes && Time < 60 * 1000)
-		str_format(pBuf, Size, "%d.%03d", Time / 1000, Time % 1000);
-	else
-		str_format(pBuf, Size, "%02d:%02d.%03d", Time / (60 * 1000), (Time / 1000) % 60, Time % 1000);
-}
-
-void FormatTimeDiff(char *pBuf, int Size, int Time, bool Milli = true)
-{
-	int PosDiff = absolute(Time);
-	char Sign = Time < 0 ? '-' : '+';
-	if(Milli)
-		str_format(pBuf, Size, "%c%d.%03d", Sign, PosDiff / 1000, PosDiff % 1000);
-	else
-		str_format(pBuf, Size, "%c%d.%02d", Sign, PosDiff / 1000, (PosDiff % 1000) / 10);
-}
-
 void CTimeMessages::OnRender()
 {
 	if(!(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE))
 		return;
+
+	int RacePrecision = 3;
+	if(m_pClient->m_Snap.m_pGameDataRace)
+		RacePrecision = m_pClient->m_Snap.m_pGameDataRace->m_Precision;
 
 	float Width = 350*3.0f*Graphics()->ScreenAspect();
 	float Height = 350*3.0f;
@@ -85,7 +71,7 @@ void CTimeMessages::OnRender()
 		{
 			char aBuf[32];
 			char aDiff[32];
-			FormatTimeDiff(aDiff, sizeof(aDiff), m_aTimemsgs[r].m_Diff);
+			FormatTimeDiff(aDiff, sizeof(aDiff), m_aTimemsgs[r].m_Diff, RacePrecision);
 			str_format(aBuf, sizeof(aBuf), "(%s)", aDiff);
 			float DiffW = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 
@@ -102,7 +88,7 @@ void CTimeMessages::OnRender()
 
 		// render time
 		char aTime[32];
-		FormatTimeShort(aTime, sizeof(aTime), m_aTimemsgs[r].m_Time, true);
+		FormatTime(aTime, sizeof(aTime), m_aTimemsgs[r].m_Time, RacePrecision);
 		float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1, -1.0f);
 
 		x -= TimeW;

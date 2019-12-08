@@ -10,6 +10,10 @@
 #include <game/gamecore.h>
 #include "render.h"
 
+// TODO: move this somewhere else
+void FormatTime(char *pBuf, int Size, int Time, int Precision = 3);
+void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision = 3);
+
 class CGameClient : public IGameClient
 {
 	class CStack
@@ -136,12 +140,14 @@ public:
 		const CNetObj_GameData *m_pGameData;
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
+		const CNetObj_GameDataRace *m_pGameDataRace;
 		int m_GameDataFlagSnapID;
 
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];
 
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
+		const CNetObj_PlayerInfoRace *m_paPlayerInfosRace[MAX_CLIENTS];
 		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
 
 		// spectate data

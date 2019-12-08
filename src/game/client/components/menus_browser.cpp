@@ -726,16 +726,9 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 static void FormatScore(char *pBuf, int BufSize, bool TimeScore, const CServerInfo::CClient *pClient)
 {
 	if(TimeScore)
-	{
-		if(pClient->m_Score == -1)
-			str_copy(pBuf, "--:--", BufSize);
-		else
-			str_format(pBuf, BufSize, "%02d:%02d", pClient->m_Score / 60, pClient->m_Score % 60);
-	}
+		FormatTime(pBuf, BufSize, pClient->m_Score * 1000, 0);
 	else
-	{
 		str_format(pBuf, BufSize, "%d", pClient->m_Score);
-	}
 }
 
 void CMenus::RenderServerbrowserOverlay()
