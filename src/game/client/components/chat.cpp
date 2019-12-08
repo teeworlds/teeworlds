@@ -910,6 +910,17 @@ void CChat::OnRender()
 
 			TextRender()->TextEx(&Marker, "|", -1);
 			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
+
+			if(ChatMode == CHAT_WHISPER)
+			{
+				//render helper annotation
+				CTextCursor InfoCursor;
+				TextRender()->SetCursor(&InfoCursor, 2.0f, y+12.0f, CategoryFontSize*0.75, TEXTFLAG_RENDER);
+
+				char aInfoText[128];
+				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients"));
+				TextRender()->TextEx(&InfoCursor, aInfoText, -1);
+			}
 		}
 	}
 
