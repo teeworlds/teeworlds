@@ -982,10 +982,6 @@ void CChat::OnRender()
 
 			if(pLine->m_ClientID >= 0)
 			{
-				int NameCID = pLine->m_ClientID;
-				if(pLine->m_Mode == CHAT_WHISPER && pLine->m_ClientID == m_pClient->m_LocalClientID && pLine->m_TargetID >= 0)
-					NameCID = pLine->m_TargetID;
-
 				Cursor.m_X += RenderTools()->GetClientIdRectSize(Cursor.m_FontSize);
 				str_format(aBuf, sizeof(aBuf), "%s: ", pLine->m_aName);
 			}
