@@ -204,6 +204,12 @@ int main(int argc, char **argv)
 		argc--; argv++;
 	}
 
+	if(secure_random_init() != 0)
+	{
+		dbg_msg("fake_server", "could not initialize secure RNG");
+		return -1;
+	}
+
 	BuildInfoMsg();
 	int RunReturn = Run();
 
