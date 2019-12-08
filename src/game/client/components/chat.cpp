@@ -919,6 +919,7 @@ void CChat::OnRender()
 
 				char aInfoText[128];
 				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients"));
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
 				TextRender()->TextEx(&InfoCursor, aInfoText, -1);
 			}
 		}
