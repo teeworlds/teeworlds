@@ -155,11 +155,7 @@ void CHud::RenderScoreHud()
 		float Whole = 300*Graphics()->ScreenAspect();
 		float StartY = 229.0f;
 
-		if(GameFlags&GAMEFLAG_RACE)
-		{
-			// TODO
-		}
-		else if(GameFlags&GAMEFLAG_TEAMS && m_pClient->m_Snap.m_pGameDataTeam)
+		if(GameFlags&GAMEFLAG_TEAMS && m_pClient->m_Snap.m_pGameDataTeam && !(GameFlags&GAMEFLAG_RACE))
 		{
 			char aScoreTeam[2][32];
 			str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreRed);
@@ -272,9 +268,16 @@ void CHud::RenderScoreHud()
 			for(int t = 0; t < 2; ++t)
 			{
 				if(aPlayerInfo[t].m_pPlayerInfo)
-					str_format(aScore[t], sizeof(aScore)/2, "%d", aPlayerInfo[t].m_pPlayerInfo->m_Score);
+				{
+					if(GameFlags&GAMEFLAG_RACE)
+						FormatTime(aScore[t], sizeof(aScore[0]), aPlayerInfo[t].m_pPlayerInfo->m_Score, m_pClient->RacePrecision());
+					else
+						str_format(aScore[t], sizeof(aScore[0]), "%d", aPlayerInfo[t].m_pPlayerInfo->m_Score);
+				}
 				else
+				{
 					aScore[t][0] = 0;
+				}
 			}
 			float aScoreWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScore[0], -1, -1.0f), TextRender()->TextWidth(0, 14.0f, aScore[1], -1, -1.0f)};
 			float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, 14.0f, "10", -1, -1.0f));
