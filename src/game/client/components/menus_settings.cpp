@@ -160,13 +160,6 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 	float Spacing = 2.0f;
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-	// color header
-	float HeaderHeight = 20.0f;
-	MainView.HSplitTop(HeaderHeight, &Label, &MainView);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Color"), HeaderHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-	MainView.HSplitTop(Spacing, 0, &MainView);
-
 	// use custom color checkbox
 	float ButtonHeight = 20.0f;
 	MainView.HSplitTop(ButtonHeight, &Button, &MainView);
