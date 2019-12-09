@@ -1,0 +1,41 @@
+name: MacOS
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
+    branches: 
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  build_windows:
+    name: Build Windows
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Prepare
+        run: |
+          git submodule update --init
+          md build32 & cd build32
+          cmake -Werror=dev -G "Visual Studio 16 2019" ..
+          cd ..
+          md build64 & cd build64
+          cmake -Werror=dev -G "Visual Studio 16 2019" -A x64 ..
+          cd ..
+      - name: Build win32 with cmake
+        run: |
+          cmake --build build32 --config Release --target everything
+      - name: Build win64 with cmake
+        run: |
+          cmake --build build64 --config Release --target everything
+      - name: Test win32
+        run: |
+          cd build32
+          Release\teeworlds_srv shutdown
+          cd ..
+      - name: Test win64
+        run: |
+          cd build64
+          Release\teeworlds_srv shutdown
+          cd ..
