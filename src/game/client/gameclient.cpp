@@ -79,11 +79,12 @@ void FormatTime(char *pBuf, int Size, int Time, int Precision)
 	AppendDecimals(pBuf, Size, Time, Precision);
 }
 
-void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision)
+void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision, bool ForceSign)
 {
-	char Sign = Time < 0 ? '-' : '+';
+	const char *pPositive = ForceSign ? "+" : "";
+	const char *pSign = Time < 0 ? "-" : pPositive;
 	Time = absolute(Time);
-	str_format(pBuf, Size, "%c%d", Sign, Time / 1000);
+	str_format(pBuf, Size, "%s%d", pSign, Time / 1000);
 	AppendDecimals(pBuf, Size, Time, Precision);
 }
 

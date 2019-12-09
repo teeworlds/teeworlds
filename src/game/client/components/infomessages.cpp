@@ -87,30 +87,48 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 	{
 		CNetMsg_Sv_RaceFinish *pMsg = (CNetMsg_Sv_RaceFinish *)pRawMsg;
 
-		// unpack messages
-		CInfoMsg Finish;
-		Finish.m_Player1ID = pMsg->m_ClientID;
-		str_format(Finish.m_aPlayer1Name, sizeof(Finish.m_aPlayer1Name), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[Finish.m_Player1ID].m_aName : "");
-		Finish.m_Player1RenderInfo = m_pClient->m_aClients[Finish.m_Player1ID].m_RenderInfo;
-
-		Finish.m_Time = pMsg->m_Time;
-		Finish.m_Diff = pMsg->m_Diff;
-		Finish.m_NewRecord = pMsg->m_NewRecord;
+		char aBuf[256];
+		char aTime[32];
+		int RacePrecision = 3;
+		if(m_pClient->m_Snap.m_pGameDataRace)
+			RacePrecision = m_pClient->m_Snap.m_pGameDataRace->m_Precision;
+		FormatTime(aTime, sizeof(aTime), pMsg->m_Time, RacePrecision);
 
 		if(pMsg->m_NewRecord)
 		{
-			int RacePrecision = 3;
-			if(m_pClient->m_Snap.m_pGameDataRace)
-				RacePrecision = m_pClient->m_Snap.m_pGameDataRace->m_Precision;
+			str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new record: %s"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, aTime);
+			if(pMsg->m_Diff < 0)
+			{
+				char aImprovement[64];
+				FormatTimeDiff(aTime, sizeof(aTime), absolute(pMsg->m_Diff), RacePrecision, false);
+				str_format(aImprovement, sizeof(aImprovement), Localize(" (%s seconds faster)"), aTime);
+				str_append(aBuf, aImprovement, sizeof(aBuf));
+			}
 
-			char aBuf[256];
-			char aTime[32];
-			FormatTime(aTime, sizeof(aTime), pMsg->m_Time, RacePrecision);
-			str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new personal record: %s"), m_pClient->m_aClients[Finish.m_Player1ID].m_aName, aTime);
 			m_pClient->m_pChat->AddLine(-1, 0, aBuf);
 		}
 
-		AddInfoMsg(INFOMSG_FINISH, Finish);
+		if(m_pClient->m_Snap.m_pGameDataRace && m_pClient->m_Snap.m_pGameDataRace->m_RaceFlags&RACEFLAG_FINISHMSG_AS_CHAT)
+		{
+			if(!pMsg->m_NewRecord) // don't print the time twice
+			{
+				str_format(aBuf, sizeof(aBuf), Localize("'%s' finished in: %s"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, aTime);
+				m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+			}
+		}
+		else
+		{
+			CInfoMsg Finish;
+			Finish.m_Player1ID = pMsg->m_ClientID;
+			str_format(Finish.m_aPlayer1Name, sizeof(Finish.m_aPlayer1Name), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[pMsg->m_ClientID].m_aName : "");
+			Finish.m_Player1RenderInfo = m_pClient->m_aClients[Finish.m_Player1ID].m_RenderInfo;
+
+			Finish.m_Time = pMsg->m_Time;
+			Finish.m_Diff = pMsg->m_Diff;
+			Finish.m_NewRecord = pMsg->m_NewRecord;
+
+			AddInfoMsg(INFOMSG_FINISH, Finish);
+		}
 	}
 }
 

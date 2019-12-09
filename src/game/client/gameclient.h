@@ -10,10 +10,6 @@
 #include <game/gamecore.h>
 #include "render.h"
 
-// TODO: move this somewhere else
-void FormatTime(char *pBuf, int Size, int Time, int Precision = 3);
-void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision = 3);
-
 class CGameClient : public IGameClient
 {
 	class CStack
@@ -310,6 +306,10 @@ public:
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
 };
+
+
+void FormatTime(char *pBuf, int Size, int Time, int Precision);
+void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision, bool ForceSign = true);
 
 const char *Localize(const char *pStr, const char *pContext="")
 GNUC_ATTRIBUTE((format_arg(1)));
