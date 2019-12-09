@@ -10,6 +10,7 @@
 #include <game/client/animstate.h>
 #include "infomessages.h"
 
+#include "chat.h"
 #include "skins.h"
 
 void CInfoMessages::OnReset()
@@ -90,6 +91,19 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 		Finish.m_Time = pMsg->m_Time;
 		Finish.m_Diff = pMsg->m_Diff;
 		Finish.m_NewRecord = pMsg->m_NewRecord;
+
+		if(pMsg->m_NewRecord)
+		{
+			int RacePrecision = 3;
+			if(m_pClient->m_Snap.m_pGameDataRace)
+				RacePrecision = m_pClient->m_Snap.m_pGameDataRace->m_Precision;
+
+			char aBuf[256];
+			char aTime[32];
+			FormatTime(aTime, sizeof(aTime), pMsg->m_Time, RacePrecision);
+			str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new personal record: %s"), m_pClient->m_aClients[Finish.m_Player1ID].m_aName, aTime);
+			m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+		}
 
 		AddInfoMsg(INFOMSG_FINISH, Finish);
 	}

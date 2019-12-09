@@ -715,8 +715,8 @@ void CHud::RenderRaceTime(const CNetObj_PlayerInfoRace *pRaceInfo)
 		return;
 
 	char aBuf[32];
-	int RaceTime = (Client()->GameTick() - pRaceInfo->m_RaceStartTick)*10/Client()->GameTickSpeed();
-	str_format(aBuf, sizeof(aBuf), "%02d:%02d.%d", RaceTime/(60*10), (RaceTime/10)%60, RaceTime%10);
+	int RaceTime = (Client()->GameTick() - pRaceInfo->m_RaceStartTick)*1000/Client()->GameTickSpeed();
+	FormatTime(aBuf, sizeof(aBuf), RaceTime, 1);
 
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
 	float w = TextRender()->TextWidth(0, 12, "00:00.0", -1, -1.0f);
