@@ -185,9 +185,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	const bool ReadyMode = Snap.m_pGameData && (Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) && Snap.m_pGameData->m_GameStateEndTick == 0;
 
 	bool Race = m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE;
-	int RacePrecision = 3;
-	if(m_pClient->m_Snap.m_pGameDataRace)
-		RacePrecision = m_pClient->m_Snap.m_pGameDataRace->m_Precision;
 
 	float HeadlineHeight = 40.0f;
 	float TitleFontsize = 20.0f;
@@ -282,7 +279,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	if(Race)
 	{
 		if(m_pClient->m_Snap.m_pGameDataRace)
-			FormatTime(aBuf, sizeof(aBuf), m_pClient->m_Snap.m_pGameDataRace->m_BestTime, RacePrecision);
+			FormatTime(aBuf, sizeof(aBuf), m_pClient->m_Snap.m_pGameDataRace->m_BestTime, m_pClient->RacePrecision());
 	}
 	else if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 	{
@@ -604,7 +601,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			{
 				aBuf[0] = 0;
 				if(pInfo->m_pPlayerInfo->m_Score >= 0)
-					FormatTime(aBuf, sizeof(aBuf), pInfo->m_pPlayerInfo->m_Score, RacePrecision);
+					FormatTime(aBuf, sizeof(aBuf), pInfo->m_pPlayerInfo->m_Score, m_pClient->RacePrecision());
 			}
 			else
 			{

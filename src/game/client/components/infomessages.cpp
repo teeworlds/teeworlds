@@ -89,10 +89,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 
 		char aBuf[256];
 		char aTime[32];
-		int RacePrecision = 3;
-		if(m_pClient->m_Snap.m_pGameDataRace)
-			RacePrecision = m_pClient->m_Snap.m_pGameDataRace->m_Precision;
-		FormatTime(aTime, sizeof(aTime), pMsg->m_Time, RacePrecision);
+		FormatTime(aTime, sizeof(aTime), pMsg->m_Time, m_pClient->RacePrecision());
 
 		if(pMsg->m_NewRecord)
 		{
@@ -100,7 +97,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 			if(pMsg->m_Diff < 0)
 			{
 				char aImprovement[64];
-				FormatTimeDiff(aTime, sizeof(aTime), absolute(pMsg->m_Diff), RacePrecision, false);
+				FormatTimeDiff(aTime, sizeof(aTime), absolute(pMsg->m_Diff), m_pClient->RacePrecision(), false);
 				str_format(aImprovement, sizeof(aImprovement), Localize(" (%s seconds faster)"), aTime);
 				str_append(aBuf, aImprovement, sizeof(aBuf));
 			}
@@ -250,10 +247,6 @@ void CInfoMessages::RenderKillMsg(const CInfoMsg *pInfoMsg, float x, float y) co
 
 void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) const
 {
-	int RacePrecision = 3;
-	if(m_pClient->m_Snap.m_pGameDataRace)
-		RacePrecision = m_pClient->m_Snap.m_pGameDataRace->m_Precision;
-
 	float FontSize = 36.0f;
 	float PlayerNameW = TextRender()->TextWidth(0, FontSize, pInfoMsg->m_aPlayer1Name, -1, -1.0f) + RenderTools()->GetClientIdRectSize(FontSize);
 
@@ -262,7 +255,7 @@ void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) 
 	{
 		char aBuf[32];
 		char aDiff[32];
-		FormatTimeDiff(aDiff, sizeof(aDiff), pInfoMsg->m_Diff, RacePrecision);
+		FormatTimeDiff(aDiff, sizeof(aDiff), pInfoMsg->m_Diff, m_pClient->RacePrecision());
 		str_format(aBuf, sizeof(aBuf), "(%s)", aDiff);
 		float DiffW = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 
@@ -279,7 +272,7 @@ void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) 
 
 	// render time
 	char aTime[32];
-	FormatTime(aTime, sizeof(aTime), pInfoMsg->m_Time, RacePrecision);
+	FormatTime(aTime, sizeof(aTime), pInfoMsg->m_Time, m_pClient->RacePrecision());
 	float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1, -1.0f);
 
 	x -= TimeW;
