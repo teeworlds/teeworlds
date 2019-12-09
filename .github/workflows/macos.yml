@@ -1,0 +1,26 @@
+name: MacOS
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
+    branches: 
+      - master
+jobs:
+  build_mac:
+    name: Build MacOS
+    runs-on: macOS-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Prepare
+        run: |
+          brew install freetype sdl2
+          git submodule update --init
+      - name: Build Bam
+        run: |
+          git clone https://github.com/matricks/bam.git ~/bam
+          cd ~/bam/
+          git reset --hard f012dd9a3e38295b8a45af5a101d29573381f169
+          ./make_unix.sh
+      - name: Build Release
+        run: |
+          ~/bam/bam conf=release all
