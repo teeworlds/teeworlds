@@ -950,7 +950,7 @@ void CMenus::UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, cons
 
 void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight,
 							  const char *pBottomText, int NumItems, int ItemsPerRow, int SelectedIndex,
-							  const CUIRect *pRect, bool Background)
+							  const CUIRect *pRect, bool Background, bool *pActive)
 {
 	CUIRect View;
 	if(pRect)
@@ -984,13 +984,16 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 	pState->m_ListBoxItemActivated = false;
 
 	// handle input
-	int NewIndex = -1;
-	if(m_DownArrowPressed)
-		NewIndex = pState->m_ListBoxNewSelected + 1;
-	if(m_UpArrowPressed)
-		NewIndex = pState->m_ListBoxNewSelected - 1;
-	if(NewIndex > -1 && NewIndex < pState->m_ListBoxNumItems)
-		pState->m_ListBoxNewSelected = NewIndex;
+	if(!pActive || *pActive)
+	{
+		int NewIndex = -1;
+		if(m_DownArrowPressed)
+			NewIndex = pState->m_ListBoxNewSelected + 1;
+		if(m_UpArrowPressed)
+			NewIndex = pState->m_ListBoxNewSelected - 1;
+		if(NewIndex > -1 && NewIndex < pState->m_ListBoxNumItems)
+			pState->m_ListBoxNewSelected = NewIndex;
+	}
 
 	// setup the scrollbar
 	pState->m_ScrollOffset = vec2(0, 0);
@@ -1020,7 +1023,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextRow(CListBoxState* pState)
 	return Item;
 }
 
-CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected, bool* pActive)
+CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected, bool *pActive)
 {
 	int ThisItemIndex = pState->m_ListBoxItemIndex;
 	if(Selected)
