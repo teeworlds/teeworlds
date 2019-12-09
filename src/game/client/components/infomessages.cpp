@@ -31,8 +31,13 @@ void CInfoMessages::AddInfoMsg(int Type, CInfoMsg NewMsg)
 
 void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 {
+	bool Race = m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE;
+
 	if(MsgType == NETMSGTYPE_SV_KILLMSG)
 	{
+		if(Race && m_pClient->m_Snap.m_pGameDataRace && m_pClient->m_Snap.m_pGameDataRace->m_RaceFlags&RACEFLAG_HIDE_KILLMSG)
+			return;
+
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
 
 		// unpack messages
@@ -78,7 +83,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 
 		AddInfoMsg(INFOMSG_KILL, Kill);
 	}
-	else if(MsgType == NETMSGTYPE_SV_RACEFINISH && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE)
+	else if(MsgType == NETMSGTYPE_SV_RACEFINISH && Race)
 	{
 		CNetMsg_Sv_RaceFinish *pMsg = (CNetMsg_Sv_RaceFinish *)pRawMsg;
 
