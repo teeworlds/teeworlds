@@ -1,4 +1,4 @@
-name: MacOS
+name: Windows
 on:
   # Trigger the workflow on push or pull request,
   # but only for the master branch
@@ -17,10 +17,12 @@ jobs:
       - name: Prepare
         run: |
           git submodule update --init
-          md build32 & cd build32
+          md build32 
+          cd build32
           cmake -Werror=dev -G "Visual Studio 16 2019" ..
           cd ..
-          md build64 & cd build64
+          md build64 
+          cd build64
           cmake -Werror=dev -G "Visual Studio 16 2019" -A x64 ..
           cd ..
       - name: Build win32 with cmake
