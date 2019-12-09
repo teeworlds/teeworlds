@@ -38,6 +38,18 @@ void CSnapshot::InvalidateItem(int Index)
 	((CSnapshotItem *)(DataStart() + Offsets()[Index]))->Invalidate();
 }
 
+int CSnapshot::Serialize(char *pDstData)
+{
+	int *pData = (int*)pDstData;
+	pData[0] = m_DataSize;
+	pData[1] = m_NumItems;
+
+	mem_copy(pData+2, Offsets(), sizeof(int)*m_NumItems);
+	mem_copy(pData+2+m_NumItems, DataStart(), m_DataSize);
+
+	return sizeof(int) * (2 + m_NumItems) + m_DataSize;
+}
+
 int CSnapshot::Crc() const
 {
 	int Crc = 0;
@@ -520,6 +532,40 @@ void CSnapshotBuilder::Init(const CSnapshot *pSnapshot)
 	m_NumItems = pSnapshot->m_NumItems;
 	mem_copy(m_aOffsets, pSnapshot->Offsets(), sizeof(int)*m_NumItems);
 	mem_copy(m_aData, pSnapshot->DataStart(), m_DataSize);
+}
+
+bool CSnapshotBuilder::UnserializeSnap(const char *pSrcData, int SrcSize)
+{
+	m_DataSize = 0;
+	m_NumItems = 0;
+
+	const int *pData = (const int*)pSrcData;
+	if(SrcSize < (int)sizeof(int)*2)
+		return false;
+
+	int DataSize = pData[0];
+	int NumItems = pData[1];
+	int CompleteSize = DataSize + sizeof(int) * (2 + NumItems);
+	int NewSnapSize = DataSize + sizeof(CSnapshot) + NumItems * sizeof(int)*2;
+	if(NewSnapSize > CSnapshot::MAX_SIZE || NumItems > MAX_ITEMS || CompleteSize != SrcSize)
+		return false;
+
+	// check offsets
+	const int *pOffsets = pData+2;
+	int LastOffset = DataSize;
+	for(int i = NumItems-1; i >= 0; i--)
+	{
+		int ItemSize = LastOffset - pOffsets[i];
+		LastOffset = pOffsets[i];
+		if(pOffsets[i] < 0 || ItemSize < (int)sizeof(CSnapshotItem))
+			return false;
+	}
+
+	m_DataSize = DataSize;
+	m_NumItems = NumItems;
+	mem_copy(m_aOffsets, pOffsets, sizeof(int)*m_NumItems);
+	mem_copy(m_aData, pOffsets+m_NumItems, m_DataSize);
+	return true;
 }
 
 CSnapshotItem *CSnapshotBuilder::GetItem(int Index)
