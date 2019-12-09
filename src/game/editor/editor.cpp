@@ -2856,11 +2856,16 @@ static void ModifySortedIndex(int *pIndex)
 		*pIndex = gs_pSortedIndex[*pIndex];
 }
 
+static int CompareImage(const CEditorImage *pImage1, const CEditorImage *pImage2)
+{
+	return *pImage1 < *pImage2;
+}
+
 void CEditor::SortImages()
 {
 	bool Sorted = true;
 	for(int i = 1; i < m_Map.m_lImages.size(); i++)
-		if( str_comp(m_Map.m_lImages[i]->m_aName, m_Map.m_lImages[i-1]->m_aName) < 0 )
+		if(*m_Map.m_lImages[i] < *m_Map.m_lImages[i-1])
 		{
 			Sorted = false;
 			break;
@@ -2871,7 +2876,7 @@ void CEditor::SortImages()
 		array<CEditorImage*> lTemp = array<CEditorImage*>(m_Map.m_lImages);
 		gs_pSortedIndex = new int[lTemp.size()];
 
-		std::stable_sort(&m_Map.m_lImages[0], &m_Map.m_lImages[m_Map.m_lImages.size()]);
+		std::stable_sort(&m_Map.m_lImages[0], &m_Map.m_lImages[m_Map.m_lImages.size()], CompareImage);
 
 		for(int OldIndex = 0; OldIndex < lTemp.size(); OldIndex++)
 			for(int NewIndex = 0; NewIndex < m_Map.m_lImages.size(); NewIndex++)
@@ -3072,6 +3077,8 @@ static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, 
 
 void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 {
+	if(m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[Index].m_aName, m_aFileDialogFilterString))
+		return;
 	m_FilesCur++;
 	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur >= m_FilesStopAt)
 		return;
@@ -3153,6 +3160,28 @@ void CEditor::RenderFileDialog()
 				if(m_aFileDialogFileName[i] == '/' || m_aFileDialogFileName[i] == '\\')
 					str_copy(&m_aFileDialogFileName[i], &m_aFileDialogFileName[i+1], (int)(sizeof(m_aFileDialogFileName))-i);
 			m_FilesSelectedIndex = -1;
+		}
+	}
+	else
+	{
+		// render search bar
+		UI()->DoLabel(&FileBoxLabel, "Search:", 10.0f, CUI::ALIGN_LEFT);
+		if(DoEditBox(&m_FilesSearchBoxID, &FileBox, m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString), 10.0f, &m_FilesSearchBoxID))
+		{
+			// reset scrolling
+			m_FileDialogScrollValue = 0;
+			if(m_FilesSelectedIndex == -1 || (m_FilesSelectedIndex >= 0 && m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[m_FilesSelectedIndex].m_aName, m_aFileDialogFilterString)))
+			{
+				// we need to refresh selection
+				m_FilesSelectedIndex = -1;
+				// find first valid entry, if it exists
+				for(int i = 0; i < m_FileList.size(); i++)
+					if(str_find_nocase(m_FileList[i].m_aName, m_aFileDialogFilterString))
+					{
+						m_FilesSelectedIndex = i;
+						break;
+					}
+			}
 		}
 	}
 
@@ -3361,9 +3390,12 @@ void CEditor::InvokeFileDialog(int StorageType, int FileType, const char *pTitle
 	m_aFileDialogFileName[0] = 0;
 	m_aFileDialogCurrentFolder[0] = 0;
 	m_aFileDialogCurrentLink[0] = 0;
+	m_aFileDialogFilterString[0] = 0;
 	m_pFileDialogPath = m_aFileDialogCurrentFolder;
 	m_FileDialogFileType = FileType;
 	m_FileDialogScrollValue = 0.0f;
+	m_FilesSearchBoxID = 0;
+	UI()->SetActiveItem(&m_FilesSearchBoxID);
 
 	if(pDefaultName)
 		str_copy(m_aFileDialogFileName, pDefaultName, sizeof(m_aFileDialogFileName));

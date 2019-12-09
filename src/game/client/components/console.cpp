@@ -185,7 +185,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				}
 
 				// maplist completion
-				if(str_comp_nocase_num(GetString(), "sv_map ", 7) == 0 && m_Type != CGameConsole::CONSOLETYPE_LOCAL)
+				if(str_startswith_nocase(GetString(), "sv_map ") && m_Type != CGameConsole::CONSOLETYPE_LOCAL)
 				{
 					m_CompletionMapChosen++;
 					m_CompletionMapEnumerationCount = 0;
@@ -223,7 +223,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			m_CompletionChosen = -1;
 			str_copy(m_aCompletionBuffer, m_Input.GetString(), sizeof(m_aCompletionBuffer));
 
-			if(str_comp_nocase_num(GetString(), "sv_map ", 7) == 0)
+			if(str_startswith_nocase(GetString(), "sv_map "))
 			{
 				m_CompletionMapChosen = -1;
 				str_copy(m_aCompletionMapBuffer, &m_Input.GetString()[7], sizeof(m_aCompletionBuffer));

@@ -160,13 +160,6 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 	float Spacing = 2.0f;
 	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-	// color header
-	float HeaderHeight = 20.0f;
-	MainView.HSplitTop(HeaderHeight, &Label, &MainView);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Color"), HeaderHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-	MainView.HSplitTop(Spacing, 0, &MainView);
-
 	// use custom color checkbox
 	float ButtonHeight = 20.0f;
 	MainView.HSplitTop(ButtonHeight, &Button, &MainView);
@@ -573,6 +566,56 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	OldSelected = NewSelected;
 }
 
+void CMenus::RenderSkinPartPalette(CUIRect MainView)
+{
+	if(!*CSkins::ms_apUCCVariables[m_TeePartSelected])
+		return; // color selection not open
+
+	float ButtonHeight = 20.0f;
+	float Width = MainView.w;
+	float Margin = 5.0f;
+	CUIRect Button;
+
+	// palette
+	MainView.HSplitBottom(ButtonHeight/2.0f, &MainView, 0);
+	MainView.HSplitBottom(ButtonHeight+2*Margin, &MainView, &MainView);
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		MainView.VSplitLeft(Width/NUM_SKINPARTS, &Button, &MainView);
+		
+		// no palette if color is unused for this skin parts
+		static int s_aColorPalettes[NUM_SKINPARTS];
+		if(*CSkins::ms_apUCCVariables[p])
+		{
+			float HMargin = (Button.w-(ButtonHeight+2*Margin))/2.0f;
+			Button.VSplitLeft(HMargin, 0, &Button);
+			Button.VSplitRight(HMargin, &Button, 0);
+
+			vec4 PartColor = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[p], p==SKINPART_MARKING);
+			
+			bool Hovered = UI()->HotItem() == &s_aColorPalettes[p];
+			bool Clicked = UI()->DoButtonLogic(&s_aColorPalettes[p], "", 0, &Button);
+			bool Selected = m_TeePartSelected == p;
+			if(Selected)
+			{
+				CUIRect Underline = {Button.x, Button.y + ButtonHeight + 2*Margin + 2.0f, Button.w, 1.0f};
+				RenderTools()->DrawUIRect(&Underline, vec4(1.0f, 1.0f, 1.0f, 1.5f), 0, 0);
+			}
+			RenderTools()->DrawUIRect(&Button, (Hovered ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f)), CUI::CORNER_ALL, 5.0f);
+			Button.Margin(Margin, &Button);
+			RenderTools()->DrawUIRect(&Button, PartColor, CUI::CORNER_ALL, 3.0f);
+			if(Clicked && p != m_TeePartSelected)
+			{
+				int& TeePartSelectedColor = *CSkins::ms_apColorVariables[m_TeePartSelected];
+				TeePartSelectedColor = *CSkins::ms_apColorVariables[p];
+				TeePartSelectedColor -= ((TeePartSelectedColor>>24)&0xff)<<24; // remove any alpha
+				if(m_TeePartSelected == SKINPART_MARKING)
+					TeePartSelectedColor += 0xff<<24; // force full alpha
+			}
+		}
+	}
+}
+
 class CLanguage
 {
 public:
@@ -738,11 +781,11 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 
 	if(Header)
 		UiDoListboxHeader(&s_ListBoxState, &MainView, Localize("Language"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ListBoxState, &s_LanguageList, 20.0f, 0, s_Languages.size(), 1, s_SelectedLanguage, Header?0:&MainView, Header?true:false);
+	bool IsActive = m_ActiveListBox == ACTLB_LANG;
+	UiDoListboxStart(&s_ListBoxState, &s_LanguageList, 20.0f, 0, s_Languages.size(), 1, s_SelectedLanguage, Header?0:&MainView, Header?true:false, &IsActive);
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
-		bool IsActive = m_ActiveListBox == ACTLB_LANG;
 		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &r.front(), false, &IsActive);
 		if(IsActive)
 			m_ActiveListBox = ACTLB_LANG;
@@ -804,11 +847,11 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 
 	if(Header)
 		UiDoListboxHeader(&s_ListBoxState_Theme, &MainView, Localize("Theme"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ListBoxState_Theme, &s_ThemeList, 20.0f, 0, m_lThemes.size(), 1, s_SelectedTheme, Header?0:&MainView, Header?true:false);
+	bool IsActive = m_ActiveListBox == ACTLB_THEME;
+	UiDoListboxStart(&s_ListBoxState_Theme, &s_ThemeList, 20.0f, 0, m_lThemes.size(), 1, s_SelectedTheme, Header?0:&MainView, Header?true:false, &IsActive);
 
 	for(sorted_array<CTheme>::range r = m_lThemes.all(); !r.empty(); r.pop_front())
 	{
-		bool IsActive = m_ActiveListBox == ACTLB_THEME;
 		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState_Theme, &r.front(), false, &IsActive);
 		if(IsActive)
 			m_ActiveListBox = ACTLB_THEME;
@@ -1265,6 +1308,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 
 	// HSL picker
 	RenderHSLPicker(Right);
+	RenderSkinPartPalette(Right);
 }
 
 void CMenus::RenderSettingsTee(CUIRect MainView)
@@ -1442,13 +1486,27 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
-	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset, &ScrollParams);
 	MainView.y += ScrollOffset.y;
 
+	CUIRect LastExpandRect;
+	static int s_MouseDropdown = 0;
+	static bool s_MouseActive = true;
+	float Split = DoIndependentDropdownMenu(&s_MouseDropdown, &MainView, Localize("Mouse"), HeaderHeight, RenderSettingsControlsMouse, &s_MouseActive);
+	
+	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
+	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	static int s_JoystickDropdown = 0;
+	static bool s_JoystickActive = m_pClient->Input()->HasJoystick(); // hide by default if no joystick found
+	Split = DoIndependentDropdownMenu(&s_JoystickDropdown, &MainView, Localize("Joystick"), HeaderHeight, RenderSettingsControlsJoystick, &s_JoystickActive);
+	
+	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
+	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
 	static int s_MovementDropdown = 0;
 	static bool s_MovementActive = true;
-	CUIRect LastExpandRect;
-	float Split = DoIndependentDropdownMenu(&s_MovementDropdown, &MainView, Localize("Movement"), HeaderHeight, RenderSettingsControlsMovement, &s_MovementActive);
+	Split = DoIndependentDropdownMenu(&s_MovementDropdown, &MainView, Localize("Movement"), HeaderHeight, RenderSettingsControlsMovement, &s_MovementActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
 	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);

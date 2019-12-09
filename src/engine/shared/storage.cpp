@@ -133,6 +133,16 @@ public:
 		AddPath("$APPDIR");
 	}
 
+	bool IsDuplicatePath(const char *pPath)
+	{
+		for(int i = 0; i < m_NumPaths; ++i)
+		{
+			if(!str_comp(m_aaStoragePaths[i], pPath))
+				return true;
+		}
+		return false;
+	}
+
 	void AddPath(const char *pPath)
 	{
 		if(m_NumPaths >= MAX_PATHS || !pPath[0])
@@ -142,40 +152,65 @@ public:
 		{
 			if(m_aUserDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserDir);
+				if(!IsDuplicatePath(m_aUserDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$USERDIR' ('%s')", m_aUserDir);
 			}
 		}
 		else if(!str_comp(pPath, "$DATADIR"))
 		{
 			if(m_aDataDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aDataDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDataDir);
+				if(!IsDuplicatePath(m_aDataDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aDataDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDataDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$DATADIR' ('%s')", m_aDataDir);
 			}
 		}
 		else if(!str_comp(pPath, "$CURRENTDIR"))
 		{
 			if(m_aCurrentDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aCurrentDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentDir);
+				if(!IsDuplicatePath(m_aCurrentDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aCurrentDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$CURRENTDIR' ('%s')", m_aCurrentDir);
 			}
 		}
 		else if(!str_comp(pPath, "$APPDIR"))
 		{
 			if(m_aAppDir[0])
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], m_aAppDir, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '$APPDIR' ('%s')", m_aAppDir);
+				if(!IsDuplicatePath(m_aAppDir))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aAppDir, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '$APPDIR' ('%s')", m_aAppDir);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '$APPDIR' ('%s')", m_aAppDir);
 			}
 		}
 		else
 		{
 			if(fs_is_dir(pPath))
 			{
-				str_copy(m_aaStoragePaths[m_NumPaths++], pPath, MAX_PATH_LENGTH);
-				dbg_msg("storage", "added path '%s'", pPath);
+				if(!IsDuplicatePath(pPath))
+				{
+					str_copy(m_aaStoragePaths[m_NumPaths++], pPath, MAX_PATH_LENGTH);
+					dbg_msg("storage", "added path '%s'", pPath);
+				}
+				else
+					dbg_msg("storage", "skipping duplicate path '%s'", pPath);
 			}
 		}
 	}
@@ -281,7 +316,7 @@ public:
 
 	// Open a file. This checks that the path appears to be a subdirectory
 	// of one of the storage paths.
-	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0)
+	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0, FCheckCallback pfnCheckCB = 0, const void *pCheckCBData = 0)
 	{
 		char aBuffer[MAX_PATH_LENGTH];
 		if(!pBuffer)
@@ -312,23 +347,30 @@ public:
 		else
 		{
 			IOHANDLE Handle = 0;
-
-			if(Type == TYPE_ALL)
+			int LB = 0, UB = m_NumPaths;	// check all available directories
+			
+			if(Type >= 0 && Type < m_NumPaths)	// check wanted directory
 			{
-				// check all available directories
-				for(int i = 0; i < m_NumPaths; ++i)
+				LB = Type;
+				UB = Type + 1;
+			}
+			else
+				dbg_assert(Type == TYPE_ALL, "invalid storage type");
+
+			for(int i = LB; i < UB; ++i)
+			{
+				Handle = io_open(GetPath(i, pFilename, pBuffer, BufferSize), Flags);
+				if(Handle)
 				{
-					Handle = io_open(GetPath(i, pFilename, pBuffer, BufferSize), Flags);
-					if(Handle)
+					// do an additional check on the file
+					if(pfnCheckCB && !pfnCheckCB(Handle, pCheckCBData))
+					{
+						io_close(Handle);
+						Handle = 0;
+					}
+					else
 						return Handle;
 				}
-			}
-			else if(Type >= 0 && Type < m_NumPaths)
-			{
-				// check wanted directory
-				Handle = io_open(GetPath(Type, pFilename, pBuffer, BufferSize), Flags);
-				if(Handle)
-					return Handle;
 			}
 		}
 

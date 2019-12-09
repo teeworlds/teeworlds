@@ -78,6 +78,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	class CDemoRecorder m_DemoRecorder;
 	class CServerBrowser m_ServerBrowser;
 	class CFriends m_Friends;
+	class CBlacklist m_Blacklist;
 	class CMapChecker m_MapChecker;
 
 	char m_aServerAddressStr[256];
@@ -266,6 +267,7 @@ public:
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
 
+	const char *GetCurrentMapName() const { return m_aCurrentMap; }
 	const char *GetCurrentMapPath() const { return m_aCurrentMapPath; }
 	virtual const char *MapDownloadName() const { return m_aMapdownloadName; }
 	virtual int MapDownloadAmount() const { return m_MapdownloadAmount; }

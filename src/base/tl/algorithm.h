@@ -70,7 +70,7 @@ R find_linear(R range, T value)
 template<class R, class T>
 R find_binary(R range, T value)
 {
-	range = partition_linear(range, value);
+	range = partition_binary(range, value);
 	if(range.empty()) return range;
 	if(range.front() == value) return range;
 	return R();

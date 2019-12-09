@@ -260,7 +260,7 @@ void CSpectator::OnRender()
 
 			RenderTools()->SelectSprite(Flag == SPEC_FLAGRED ? SPRITE_FLAG_RED : SPRITE_FLAG_BLUE);
 
-			float Size = LineHeight/1.5f + (Selected ? 12.0f : 8.0f);
+			float Size = 60.0f/1.5f + (Selected ? 12.0f : 8.0f);
 			float FlagWidth = Width/2.0f + x + 40.0f + (Selected ? -3.0f : -2.0f);
 			float FlagHeight = Height/2.0f + y + (Selected ? -6.0f : -4.0f);
 
@@ -324,10 +324,10 @@ void CSpectator::OnRender()
 			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 			Graphics()->QuadsBegin();
 
-			RenderTools()->SelectSprite(m_pClient->m_aClients[i].m_Team==TEAM_RED ? SPRITE_FLAG_BLUE : SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
+			RenderTools()->SelectSprite(i == m_pClient->m_Snap.m_pGameDataFlag->m_FlagCarrierBlue ? SPRITE_FLAG_BLUE : SPRITE_FLAG_RED, SPRITE_FLAG_FLIP_X);
 
 			float Size = LineHeight;
-			IGraphics::CQuadItem QuadItem(Width/2.0f+x-Size/5.0f, Height/2.0f+y-Size/3.0f, Size/2.0f, Size);
+			IGraphics::CQuadItem QuadItem(Width/2.0f+x+20.0f-Size/4.0f, Height/2.0f+y+20.0f-Size/1.5f, Size/2.0f, Size);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 		}
@@ -368,7 +368,7 @@ void CSpectator::Spectate(int SpecMode, int SpectatorID)
 		return;
 	}
 
-	if(m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SpecMode && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SpectatorID)
+	if(m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SpecMode && (SpecMode != SPEC_PLAYER || m_pClient->m_Snap.m_SpecInfo.m_SpectatorID == SpectatorID))
 		return;
 
 	CNetMsg_Cl_SetSpectatorMode Msg;

@@ -179,7 +179,7 @@ if use_bundle:
 	os.system("cp /usr/local/opt/libpng/lib/libpng16.16.dylib " + clientbundle_framework_dir)
 	os.system("cp /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib " + clientbundle_framework_dir)
 	os.system("install_name_tool -change /usr/local/opt/libpng/lib/libpng16.16.dylib @executable_path/../Frameworks/libpng16.16.dylib " + freetypelib_path)
-	file(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
+	open(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -205,7 +205,7 @@ if use_bundle:
 </dict>
 </plist>
 	""" % (version))
-	file(os.path.join(clientbundle_content_dir, "PkgInfo"), "w").write("APPL????")
+	open(os.path.join(clientbundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 	# create Teeworlds Server appfolder
 	serverbundle_content_dir = os.path.join(package_dir, "Teeworlds Server.app/Contents")
@@ -222,7 +222,7 @@ if use_bundle:
 	shutil.copy("other/icons/Teeworlds_srv.icns", serverbundle_resource_dir)
 	shutil.copy(source_package_dir+name+"_srv"+exe_ext, serverbundle_bin_dir)
 	shutil.copy(source_package_dir+"serverlaunch"+exe_ext, serverbundle_bin_dir + "/"+name+"_server")
-	file(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
+	open(os.path.join(serverbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -244,7 +244,7 @@ if use_bundle:
 </dict>
 </plist>
 	""" % (version))
-	file(os.path.join(serverbundle_content_dir, "PkgInfo"), "w").write("APPL????")
+	open(os.path.join(serverbundle_content_dir, "PkgInfo"), "w").write("APPL????")
 
 if use_zip:
 	print("making zip archive")
