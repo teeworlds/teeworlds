@@ -27,7 +27,6 @@ jobs:
           md bam
           git clone https://github.com/matricks/bam.git bam
           cd bam
-          git reset --hard f012dd9a3e38295b8a45af5a101d29573381f169
           .\make_win64_msvc.bat
       - name: Build win with Bam in Release mode
         run: |
