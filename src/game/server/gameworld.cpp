@@ -238,7 +238,7 @@ CEntity *CGameWorld::ClosestEntity(vec2 Pos, float Radius, int Type, CEntity *pN
 	float ClosestRange = Radius*2;
 	CEntity *pClosest = 0;
 
-	CEntity *p = GameServer()->m_World.FindFirst(Type);
+	CEntity *p = FindFirst(Type);
 	for(; p; p = p->TypeNext())
  	{
 		if(p == pNotThis)

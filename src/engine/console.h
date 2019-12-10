@@ -50,7 +50,7 @@ public:
 	protected:
 		int m_AccessLevel;
 	public:
-		CCommandInfo() { m_AccessLevel = ACCESS_LEVEL_ADMIN; }
+		CCommandInfo(bool BasicAccess) { m_AccessLevel = BasicAccess ? ACCESS_LEVEL_MOD : ACCESS_LEVEL_ADMIN; }
 		virtual ~CCommandInfo() {}
 		const char *m_pName;
 		const char *m_pHelp;
@@ -86,7 +86,7 @@ public:
 	virtual void ExecuteLine(const char *pStr) = 0;
 	virtual void ExecuteLineFlag(const char *pStr, int FlagMask) = 0;
 	virtual void ExecuteLineStroked(int Stroke, const char *pStr) = 0;
-	virtual void ExecuteFile(const char *pFilename) = 0;
+	virtual bool ExecuteFile(const char *pFilename) = 0;
 
 	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData) = 0;
 	virtual void SetPrintOutputLevel(int Index, int OutputLevel) = 0;

@@ -1,6 +1,6 @@
-#!/bin/env python3
+#!/usr/bin/env python3
 # coding: utf-8
-from socket import *
+from socket import socket, AF_INET, SOCK_DGRAM
 import sys
 import threading
 import time
@@ -10,7 +10,17 @@ import random
 NUM_MASTERSERVERS = 4
 MASTERSERVER_PORT = 8283
 
+
 TIMEOUT = 2
+BUFFER_SIZE = 4096
+NUM_RETRIES =  3
+
+
+# retries after waiting a specific time if the simple retry method failed.
+# SLEEP_SECS is multiplied with 2 on every retry
+FORCE_SLEEP = True
+SLEEP_SECS = 2.0
+NUM_SLEEP_RETRIES = 2
 
 # src/mastersrv/mastersrv.h
 PACKET_GETLIST = b"\xff\xff\xff\xffreq2"
@@ -18,6 +28,7 @@ PACKET_LIST = b"\xff\xff\xff\xfflis2"
 
 PACKET_GETINFO = b"\xff\xff\xff\xffgie3"
 PACKET_INFO = b"\xff\xff\xff\xffinf3"
+
 
 # see CNetBase::SendControlMsgWithToken
 def pack_control_msg_with_token(token_srv,token_cl):
@@ -39,11 +50,13 @@ def pack_control_msg_with_token(token_srv,token_cl):
 	b[11] = (token_cl) & 0xff
 	return bytes(b)
 
+
 def unpack_control_msg_with_token(msg):
 	b = list(msg)
 	token_cl = (b[3] << 24) + (b[4] << 16) + (b[5] << 8) + (b[6])
 	token_srv = (b[8] << 24) + (b[9] << 16) + (b[10] << 8) + (b[11])
 	return token_cl,token_srv
+
 
 # CNetBase::SendPacketConnless
 def header_connless(token_srv, token_cl):
@@ -63,70 +76,135 @@ def header_connless(token_srv, token_cl):
 	b[8] = (token_cl) & 0xff
 	return bytes(b)
 
+
 # CVariableInt::Unpack from src/engine/shared/compression.cpp
 def unpack_int(b):
 	l = list(b[:5])
 	i = 0
-	Sign = (l[i]>>6)&1;
-	res = l[i] & 0x3F;
+	Sign = (l[i]>>6)&1
+	res = l[i] & 0x3F
 
 	for _ in (0,):
 		if not (l[i]&0x80):
 			break
 		i+=1
-		res |= (l[i]&(0x7F))<<(6);
+		res |= (l[i]&(0x7F))<<(6)
 
 		if not (l[i]&0x80):
 			break
 		i+=1
-		res |= (l[i]&(0x7F))<<(6+7);
+		res |= (l[i]&(0x7F))<<(6+7)
 
 		if not (l[i]&0x80):
 			break
 		i+=1
-		res |= (l[i]&(0x7F))<<(6+7+7);
+		res |= (l[i]&(0x7F))<<(6+7+7)
 
 		if not (l[i]&0x80):
 			break
 		i+=1
-		res |= (l[i]&(0x7F))<<(6+7+7+7);
+		res |= (l[i]&(0x7F))<<(6+7+7+7)
 
-	i += 1;
+	i += 1
 	res ^= -Sign
 	return res, b[i:]
+
 
 class Server_Info(threading.Thread):
 
 	def __init__(self, address):
 		self.address = address
+		self.info = None
 		self.finished = False
 		threading.Thread.__init__(self, target = self.run)
 
+	def  __str__(self):
+		return str(self.info)
+	
+	def __getitem__(self, key):
+		return self.info[key]
+
 	def run(self):
-		self.info = None
 		self.info = get_server_info(self.address)
 		self.finished = True
 
+
 def get_server_info(address):
+
 	try:
 		sock = socket(AF_INET, SOCK_DGRAM)
 		sock.settimeout(TIMEOUT)
-		token = random.randrange(0x100000000)
+		
+		# function definition
+		def send_token(sock, address, timeout=TIMEOUT):
+			token = random.randrange(0x100000000)
 
-		# Token request
-		sock.sendto(pack_control_msg_with_token(-1,token),address)
-		data, addr = sock.recvfrom(1024)
-		token_cl, token_srv = unpack_control_msg_with_token(data)
-		assert token_cl == token, "Server %s send wrong token: %d (%d expected)" % (address, token_cl, token)
+			# Token request
+			sock.sendto(pack_control_msg_with_token(-1,token),address)
 
-		# Get info request
-		sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETINFO + b'\x00', address)
-		data, addr = sock.recvfrom(4096)
-		head = 	header_connless(token_cl, token_srv) + PACKET_INFO + b'\x00'
-		assert data[:len(head)] == head, "Server %s info header mismatch: %r != %r (expected)" % (address, data[:len(head)], head)
-		sock.close()
+			# send and receive
+			sock.settimeout(timeout)
+			data, _ = sock.recvfrom(BUFFER_SIZE)
 
-		data = data[len(head):] # skip header
+			# calculate expected token
+			token_cl, token_srv = unpack_control_msg_with_token(data)
+
+			# return, whether the correct token was received
+			return token_cl == token, token_cl, token_srv
+		
+
+		retries = NUM_RETRIES
+		token_success, token_cl, token_srv = send_token(sock, address)
+
+		while not token_success and retries > 0:
+			retries -= 1
+			token_success, token_cl, token_srv = send_token(sock, address, sock.gettimeout() * 2)
+		
+		sock.settimeout(TIMEOUT) # reset to default value
+
+		if retries == 0:
+			raise ValueError(f"Failed to retrieve token from: {address}")
+		
+		# function definition
+		def send_header(sock, address, token_cl, token_srv, timeout=TIMEOUT, sleep_secs = None):
+			# Get info request
+			sock.sendto(header_connless(token_srv, token_cl) + PACKET_GETINFO + b'\x00', address)
+			sock.settimeout(timeout)
+			if isinstance(sleep_secs, int):
+				time.sleep(sleep_secs)
+			data, _ = sock.recvfrom(BUFFER_SIZE)
+			
+			head = 	header_connless(token_cl, token_srv) + PACKET_INFO + b'\x00'
+
+			received_head = data[:len(head)] # get header
+			data = data[len(head):] # skip header
+
+			return received_head == head, data # we don't need the header
+		
+
+		data_success, data = send_header(sock, address, token_cl, token_srv)
+		retries = NUM_RETRIES
+
+		while not data_success and retries > 0:
+			retries -= 1
+			data_success, data = send_header(sock, address, token_cl, token_srv, sock.gettimeout() * 2)
+
+		sock.settimeout(TIMEOUT) # reset to default value
+
+		# fast way didn't work, let's try the slow way
+		if FORCE_SLEEP and not data_success and retries == 0:
+			retries = NUM_SLEEP_RETRIES
+			sleep_secs = SLEEP_SECS / 2.0
+
+			while not data_success and retries > 0:
+				retries -= 1
+				sleep_secs *= 2
+				data_success, data = send_header(sock, address, token_cl, token_srv, sock.gettimeout() * 2.0, sleep_secs=sleep_secs)
+			if not data_success and retries == 0:
+				raise ValueError(f"Failed to retrieve server info from {address}")
+		
+		elif not data_success and retries == 0:
+			raise ValueError(f"Failed to retrieve server info from {address}")
 
 		slots = data.split(b"\x00", maxsplit=5)
 
@@ -149,7 +227,7 @@ def get_server_info(address):
 		server_info["max_clients"], data = unpack_int(data)
 		server_info["players"] = []
 
-		for i in range(server_info["num_clients"]):
+		for _ in range(server_info["num_clients"]):
 			player = {}
 			slots = data.split(b"\x00", maxsplit=2)
 			player["name"] = slots[0].decode()
@@ -164,14 +242,17 @@ def get_server_info(address):
 	except AssertionError as e:
 		print(*e.args)
 	except OSError as e: # Timeout
-		print('> Server %s did not answer' % (address,))
-	except:
+		#print('> Server %s did not answer' % (address,))
+		pass
+	except ValueError as e:
+		print(e)
+	except Exception as e:
+		print(e)
 		# print('> Server %s did something wrong here' % (address,))
 		# import traceback
 		# traceback.print_exc()
-		pass
 	finally:
-		sock.close()
+		sock.close() # socket is closed in any case
 	return None
 
 
@@ -179,6 +260,7 @@ class Master_Server_Info(threading.Thread):
 
 	def __init__(self, address):
 		self.address = address
+		self.servers = []
 		self.finished = False
 		threading.Thread.__init__(self, target = self.run)
 
@@ -199,7 +281,7 @@ def get_list(address):
 
 		# Token request
 		sock.sendto(pack_control_msg_with_token(-1,token),address)
-		data, addr = sock.recvfrom(1024)
+		data, addr = sock.recvfrom(BUFFER_SIZE)
 		token_cl, token_srv = unpack_control_msg_with_token(data)
 		assert token_cl == token, "Master %s send wrong token: %d (%d expected)" % (address, token_cl, token)
 		answer = True
@@ -209,7 +291,7 @@ def get_list(address):
 		head = 	header_connless(token_cl, token_srv) + PACKET_LIST
 
 		while 1:
-			data, addr = sock.recvfrom(1024)
+			data, addr = sock.recvfrom(BUFFER_SIZE)
 			# Header should keep consistent
 			assert data[:len(head)] == head, "Master %s list header mismatch: %r != %r (expected)" % (address, data[:len(head)], head)
 
@@ -231,12 +313,15 @@ def get_list(address):
 	except OSError as e: # Timeout
 		if not answer:
 			print('> Master %s did not answer' % (address,))
-	except:
+	except Exception as e:
 		# import traceback
 		# traceback.print_exc()
+		print(e)
+	finally:
 		sock.close()
 
 	return servers
+
 
 if __name__ == '__main__':
 	master_servers = []
@@ -245,26 +330,26 @@ if __name__ == '__main__':
 		m = Master_Server_Info(("master%d.teeworlds.com"%i, MASTERSERVER_PORT))
 		master_servers.append(m)
 		m.start()
-		time.sleep(0.001) # avoid issues
 
 	servers = set()
 
 	while len(master_servers) != 0:
+		master_servers[0].join()
+
 		if master_servers[0].finished == True:
 			if master_servers[0].servers:
 				servers.update(master_servers[0].servers)
 			del master_servers[0]
-		time.sleep(0.001) # be nice
+
 
 	servers_info = []
 
-	print(str(len(servers)) + " servers")
+	print(len(servers), "servers")
 
 	for server in servers:
 		s = Server_Info(server)
 		servers_info.append(s)
 		s.start()
-		time.sleep(0.001) # avoid issues
 
 	num_players = 0
 	num_clients = 0
@@ -272,6 +357,8 @@ if __name__ == '__main__':
 	num_botspectators = 0
 
 	while len(servers_info) != 0:
+		servers_info[0].join()
+		
 		if servers_info[0].finished == True:
 			if servers_info[0].info:
 				server_info = servers_info[0].info
@@ -303,6 +390,5 @@ if __name__ == '__main__':
 
 			del servers_info[0]
 
-		time.sleep(0.001) # be nice
 
 	print('%d players (%d bots) and %d spectators (%d bots)' % (num_players, num_botplayers, num_clients - num_players, num_botspectators))

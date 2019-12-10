@@ -1068,8 +1068,26 @@ int str_comp_num(const char *a, const char *b, const int num);
 int str_comp_filenames(const char *a, const char *b);
 
 /*
+	Function: str_startswith_nocase
+		Checks case insensitive whether the string begins with a certain prefix.
+
+	Parameter:
+		str - String to check.
+		prefix - Prefix to look for.
+
+	Returns:
+		A pointer to the string str after the string prefix, or 0 if
+		the string prefix isn't a prefix of the string str.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+const char *str_startswith_nocase(const char *str, const char *prefix);
+
+
+/*
 	Function: str_startswith
-		Checks whether the string begins with a certain prefix.
+		Checks case sensitive whether the string begins with a certain prefix.
 
 	Parameter:
 		str - String to check.
@@ -1085,8 +1103,25 @@ int str_comp_filenames(const char *a, const char *b);
 const char *str_startswith(const char *str, const char *prefix);
 
 /*
+	Function: str_endswith_nocase
+		Checks case insensitive whether the string ends with a certain suffix.
+
+	Parameter:
+		str - String to check.
+		suffix - Suffix to look for.
+
+	Returns:
+		A pointer to the beginning of the suffix in the string str, or
+		0 if the string suffix isn't a suffix of the string str.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+const char *str_endswith_nocase(const char *str, const char *suffix);
+
+/*
 	Function: str_endswith
-		Checks whether the string ends with a certain suffix.
+		Checks case sensitive whether the string ends with a certain suffix.
 
 	Parameter:
 		str - String to check.
@@ -1354,6 +1389,7 @@ void dbg_logger(DBG_LOGGER logger);
 void dbg_logger_stdout();
 void dbg_logger_debugger();
 void dbg_logger_file(const char *filename);
+void dbg_logger_filehandle(IOHANDLE handle);
 
 #if defined(CONF_FAMILY_WINDOWS)
 void dbg_console_init();
@@ -1404,6 +1440,18 @@ int str_utf8_is_whitespace(int code);
 		- The strings are treated as zero-terminated strings.
 */
 const char *str_utf8_skip_whitespaces(const char *str);
+
+/*
+	Function: str_utf8_trim_whitespaces_right
+		Clears trailing utf8 whitespace characters from a string.
+
+	Parameters:
+		str - Pointer to the string.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+void str_utf8_trim_whitespaces_right(char *str);
 
 /*
 	Function: str_utf8_rewind

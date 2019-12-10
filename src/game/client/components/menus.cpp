@@ -9,7 +9,7 @@
 #include <engine/config.h>
 #include <engine/editor.h>
 #include <engine/engine.h>
-#include <engine/friends.h>
+#include <engine/contacts.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
@@ -82,6 +82,7 @@ CMenus::CMenus()
 
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
 	m_aCallvoteReason[0] = 0;
+	m_aFilterString[0] = 0;
 
 	m_SelectedFilter = 0;
 
@@ -902,6 +903,30 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	return ReturnValue;
 }
 
+void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active)
+{
+	CUIRect Handle;
+	pRect->VSplitLeft(7, &Handle, 0); // Slider size
+
+	Handle.x += (pRect->w-Handle.w)*Current;
+
+	// render
+	CUIRect Rail;
+	pRect->HMargin(4.0f, &Rail);
+	RenderTools()->DrawUIRect(&Rail, vec4(1.0f, 1.0f, 1.0f, Active ? 0.25f : 0.125f), CUI::CORNER_ALL, Rail.h/2.0f);
+
+	CUIRect ToleranceArea = Rail;
+	ToleranceArea.w *= Tolerance;
+	ToleranceArea.x += (Rail.w-ToleranceArea.w)/2.0f;
+	vec4 Color = Active ? vec4(0.8f, 0.35f, 0.35f, 1.0f) : vec4(0.7f, 0.5f, 0.5f, 1.0f);
+	RenderTools()->DrawUIRect(&ToleranceArea, Color, CUI::CORNER_ALL, ToleranceArea.h/2.0f);
+
+	CUIRect Slider = Handle;
+	Slider.HMargin(4.0f, &Slider);
+	Color = Active ? vec4(0.95f, 0.95f, 0.95f, 1.0f) : vec4(0.8f, 0.8f, 0.8f, 1.0f);
+	RenderTools()->DrawUIRect(&Slider, Color, CUI::CORNER_ALL, Slider.h/2.0f);
+}
+
 void CMenus::UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle,
 							   float HeaderHeight, float Spacing)
 {
@@ -920,18 +945,18 @@ void CMenus::UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, cons
 	View.HSplitTop(Spacing, &Header, &View);
 
 	// setup the variables
-	pState->m_ListBoxOriginalView = View;
+	pState->m_ListBoxView = View;
 }
 
 void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight,
 							  const char *pBottomText, int NumItems, int ItemsPerRow, int SelectedIndex,
-							  const CUIRect *pRect, bool Background)
+							  const CUIRect *pRect, bool Background, bool *pActive)
 {
-	CUIRect View, Scroll, Row;
+	CUIRect View;
 	if(pRect)
 		View = *pRect;
 	else
-		View = pState->m_ListBoxOriginalView;
+		View = pState->m_ListBoxView;
 	CUIRect Footer;
 
 	// background
@@ -947,17 +972,8 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 		UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	}
 
-	// prepare the scroll
-	View.VSplitRight(20.0f, &View, &Scroll);
-
-	// scroll background
-	RenderTools()->DrawUIRect(&Scroll, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-
-	// list background
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-
 	// setup the variables
-	pState->m_ListBoxOriginalView = View;
+	pState->m_ListBoxView = View;
 	pState->m_ListBoxSelectedIndex = SelectedIndex;
 	pState->m_ListBoxNewSelected = SelectedIndex;
 	pState->m_ListBoxItemIndex = 0;
@@ -967,75 +983,47 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 	pState->m_ListBoxDoneEvents = 0;
 	pState->m_ListBoxItemActivated = false;
 
-	// do the scrollbar
-	View.HSplitTop(pState->m_ListBoxRowHeight, &Row, 0);
-
-	int NumViewable = (int)(pState->m_ListBoxOriginalView.h/Row.h) + 1;
-	int Num = (NumItems+pState->m_ListBoxItemsPerRow-1)/pState->m_ListBoxItemsPerRow-NumViewable+1;
-	if(Num < 0)
-		Num = 0;
-	if(Num > 0)
+	// handle input
+	if(!pActive || *pActive)
 	{
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP) && UI()->MouseInside(&View))
-			pState->m_ListBoxScrollValue -= 3.0f/Num;
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) && UI()->MouseInside(&View))
-			pState->m_ListBoxScrollValue += 3.0f/Num;
-
-		if(pState->m_ListBoxScrollValue < 0.0f) pState->m_ListBoxScrollValue = 0.0f;
-		if(pState->m_ListBoxScrollValue > 1.0f) pState->m_ListBoxScrollValue = 1.0f;
+		int NewIndex = -1;
+		if(m_DownArrowPressed)
+			NewIndex = pState->m_ListBoxNewSelected + 1;
+		if(m_UpArrowPressed)
+			NewIndex = pState->m_ListBoxNewSelected - 1;
+		if(NewIndex > -1 && NewIndex < pState->m_ListBoxNumItems)
+			pState->m_ListBoxNewSelected = NewIndex;
 	}
 
-	Scroll.HMargin(5.0f, &Scroll);
-	pState->m_ListBoxScrollValue = DoScrollbarV(pID, &Scroll, pState->m_ListBoxScrollValue);
-
-	// the list
-	pState->m_ListBoxView = pState->m_ListBoxOriginalView;
-	UI()->ClipEnable(&pState->m_ListBoxView);
-	pState->m_ListBoxView.y -= pState->m_ListBoxScrollValue*Num*Row.h;
+	// setup the scrollbar
+	pState->m_ScrollOffset = vec2(0, 0);
+	BeginScrollRegion(&pState->m_ScrollRegion, &pState->m_ListBoxView, &pState->m_ScrollOffset);
+	pState->m_ListBoxView.y += pState->m_ScrollOffset.y;
 }
 
 CMenus::CListboxItem CMenus::UiDoListboxNextRow(CListBoxState* pState)
 {
 	static CUIRect s_RowView;
 	CListboxItem Item = {0};
+
 	if(pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow == 0)
 		pState->m_ListBoxView.HSplitTop(pState->m_ListBoxRowHeight /*-2.0f*/, &s_RowView, &pState->m_ListBoxView);
+	ScrollRegionAddRect(&pState->m_ScrollRegion, s_RowView);
+	if(pState->m_ListBoxNewSelected != pState->m_ListBoxSelectedIndex && pState->m_ListBoxNewSelected == pState->m_ListBoxItemIndex)
+		ScrollRegionScrollHere(&pState->m_ScrollRegion, CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
 
 	s_RowView.VSplitLeft(s_RowView.w/(pState->m_ListBoxItemsPerRow-pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow), &Item.m_Rect, &s_RowView);
-
-	Item.m_Visible = 1;
-	//item.rect = row;
-
-	Item.m_HitRect = Item.m_Rect;
-
-	//CUIRect select_hit_box = item.rect;
 
 	if(pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex)
 		Item.m_Selected = 1;
 
-	// make sure that only those in view can be selected
-	if(Item.m_Rect.y+Item.m_Rect.h > pState->m_ListBoxOriginalView.y)
-	{
-
-		if(Item.m_HitRect.y < pState->m_ListBoxOriginalView.y) // clip the selection
-		{
-			Item.m_HitRect.h -= pState->m_ListBoxOriginalView.y-Item.m_HitRect.y;
-			Item.m_HitRect.y = pState->m_ListBoxOriginalView.y;
-		}
-
-	}
-	else
-		Item.m_Visible = 0;
-
-	// check if we need to do more
-	if(Item.m_Rect.y > pState->m_ListBoxOriginalView.y+pState->m_ListBoxOriginalView.h)
-		Item.m_Visible = 0;
+	Item.m_Visible = !ScrollRegionIsRectClipped(&pState->m_ScrollRegion, Item.m_Rect);
 
 	pState->m_ListBoxItemIndex++;
 	return Item;
 }
 
-CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected, bool* pActive)
+CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected, bool *pActive)
 {
 	int ThisItemIndex = pState->m_ListBoxItemIndex;
 	if(Selected)
@@ -1048,7 +1036,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 	CListboxItem Item = UiDoListboxNextRow(pState);
 	static bool s_ItemClicked = false;
 
-	if(Item.m_Visible && UI()->DoButtonLogic(pId, "", pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex, &Item.m_HitRect))
+	if(Item.m_Visible && UI()->DoButtonLogic(pId, "", pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex, &Item.m_Rect))
 	{
 		s_ItemClicked = true;
 		pState->m_ListBoxNewSelected = ThisItemIndex;
@@ -1072,42 +1060,8 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 				pState->m_ListBoxItemActivated = true;
 				UI()->SetActiveItem(0);
 			}
-			else
-			{
-				int NewIndex = -1;
-				if(m_DownArrowPressed) NewIndex = pState->m_ListBoxNewSelected + 1;
-				if(m_UpArrowPressed) NewIndex = pState->m_ListBoxNewSelected - 1;
-				if(NewIndex > -1 && NewIndex < pState->m_ListBoxNumItems)
-				{
-					// scroll
-					float Offset = (NewIndex/pState->m_ListBoxItemsPerRow-pState->m_ListBoxNewSelected/pState->m_ListBoxItemsPerRow)*pState->m_ListBoxRowHeight;
-					int Scroll = pState->m_ListBoxOriginalView.y > Item.m_Rect.y+Offset ? -1 :
-									pState->m_ListBoxOriginalView.y+pState->m_ListBoxOriginalView.h < Item.m_Rect.y+Item.m_Rect.h+Offset ? 1 : 0;
-					if(Scroll)
-					{
-						int NumViewable = (int)(pState->m_ListBoxOriginalView.h/pState->m_ListBoxRowHeight) + 1;
-						int ScrollNum = (pState->m_ListBoxNumItems+pState->m_ListBoxItemsPerRow-1)/pState->m_ListBoxItemsPerRow-NumViewable+1;
-						if(Scroll < 0)
-						{
-							int Num = (pState->m_ListBoxOriginalView.y-Item.m_Rect.y-Offset+pState->m_ListBoxRowHeight-1.0f)/pState->m_ListBoxRowHeight;
-							pState->m_ListBoxScrollValue -= (1.0f/ScrollNum)*Num;
-						}
-						else
-						{
-							int Num = (Item.m_Rect.y+Item.m_Rect.h+Offset-(pState->m_ListBoxOriginalView.y+pState->m_ListBoxOriginalView.h)+pState->m_ListBoxRowHeight-1.0f)/
-								pState->m_ListBoxRowHeight;
-							pState->m_ListBoxScrollValue += (1.0f/ScrollNum)*Num;
-						}
-						if(pState->m_ListBoxScrollValue < 0.0f) pState->m_ListBoxScrollValue = 0.0f;
-						if(pState->m_ListBoxScrollValue > 1.0f) pState->m_ListBoxScrollValue = 1.0f;
-					}
-
-					pState->m_ListBoxNewSelected = NewIndex;
-				}
-			}
 		}
 
-		//selected_index = i;
 		CUIRect r = Item.m_Rect;
 		RenderTools()->DrawUIRect(&r, vec4(1,1,1,ProcessInput?0.5f:0.33f), CUI::CORNER_ALL, 5.0f);
 	}
@@ -1122,7 +1076,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 
 int CMenus::UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated)
 {
-	UI()->ClipDisable();
+	EndScrollRegion(&pState->m_ScrollRegion);
 	if(pItemActivated)
 		*pItemActivated = pState->m_ListBoxItemActivated;
 	return pState->m_ListBoxNewSelected;
@@ -1708,7 +1662,7 @@ void CMenus::OnInit()
 	// setup load amount
 	m_LoadCurrent = 0;
 	m_LoadTotal = g_pData->m_NumImages;
-	if(!g_Config.m_ClThreadsoundloading)
+	if(!g_Config.m_SndAsyncLoading)
 		m_LoadTotal += g_pData->m_NumSounds;
 }
 
@@ -2311,7 +2265,7 @@ int CMenus::Render()
 				// remove friend
 				if(m_pDeleteFriend)
 				{
-					m_pClient->Friends()->RemoveFriend(m_pDeleteFriend->m_FriendState == IFriends::FRIEND_PLAYER ? m_pDeleteFriend->m_aName : "", m_pDeleteFriend->m_aClan);
+					m_pClient->Friends()->RemoveFriend(m_pDeleteFriend->m_FriendState == CContactInfo::CONTACT_PLAYER ? m_pDeleteFriend->m_aName : "", m_pDeleteFriend->m_aClan);
 					FriendlistOnUpdate();
 					Client()->ServerBrowserUpdate();
 					m_pDeleteFriend = 0;
@@ -2552,6 +2506,7 @@ void CMenus::OnConsoleInit()
 	LoadFilters();
 
 	// add standard filters in case they are missing
+	bool UseDefaultFilters = !m_lFilters.size();
 	bool FilterStandard = false;
 	bool FilterFav = false;
 	bool FilterAll = false;
@@ -2581,6 +2536,9 @@ void CMenus::OnConsoleInit()
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser()));
 	if(!FilterAll)
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser()));
+	// expand the all filter tab by default
+	if(UseDefaultFilters)
+		m_lFilters[m_lFilters.size()-1].Switch();
 }
 
 void CMenus::OnShutdown()
@@ -2840,23 +2798,23 @@ void CMenus::BeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOu
 	pSr->m_WasClipped = UI()->IsClipped();
 	pSr->m_OldClipRect = *UI()->ClipArea();
 
-	// only show scrollbar if content overflows
-	const bool ShowScrollbar = pSr->m_ContentH > pClipRect->h ||
-		(pSr->m_Params.m_Flags&CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH);
+	const bool ContentOverflows = pSr->m_ContentH > pClipRect->h;
+	const bool ForceShowScrollbar = pSr->m_Params.m_Flags&CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 
 	CUIRect ScrollBarBg;
-	CUIRect* pModifyRect = ShowScrollbar ? pClipRect : 0;
+	CUIRect* pModifyRect = (ContentOverflows || ForceShowScrollbar) ? pClipRect : 0;
 	pClipRect->VSplitRight(pSr->m_Params.m_ScrollbarWidth, pModifyRect, &ScrollBarBg);
 	ScrollBarBg.Margin(pSr->m_Params.m_ScrollbarMargin, &pSr->m_RailRect);
 
-	if(ShowScrollbar)
+	// only show scrollbar if required
+	if(ContentOverflows || ForceShowScrollbar)
 	{
 		if(pSr->m_Params.m_ScrollbarBgColor.a > 0)
 			RenderTools()->DrawRoundRect(&ScrollBarBg, pSr->m_Params.m_ScrollbarBgColor, 4.0f);
 		if(pSr->m_Params.m_RailBgColor.a > 0)
 			RenderTools()->DrawRoundRect(&pSr->m_RailRect, pSr->m_Params.m_RailBgColor, pSr->m_RailRect.w/2.0f);
 	}
-	else
+	if(!ContentOverflows)
 		pSr->m_ContentScrollOff.y = 0;
 
 	if(pSr->m_Params.m_ClipBgColor.a > 0)
@@ -2874,8 +2832,6 @@ void CMenus::EndScrollRegion(CScrollRegion* pSr)
 	UI()->ClipDisable();
 	if(pSr->m_WasClipped)
 		UI()->ClipEnable(&pSr->m_OldClipRect);
-
-	dbg_assert(pSr->m_ContentH > 0, "Add some rects with ScrollRegionAddRect()");
 
 	// only show scrollbar if content overflows
 	if(pSr->m_ContentH <= pSr->m_ClipRect.h)

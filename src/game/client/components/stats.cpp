@@ -44,7 +44,7 @@ void CStats::OnReset()
 	m_ScreenshotTime = -1;
 }
 
-bool CStats::IsActive()
+bool CStats::IsActive() const
 {
 	// force statboard after three seconds of game over if autostatscreenshot is on
 	if(g_Config.m_ClAutoStatScreenshot && m_ScreenshotTime > -1 && m_ScreenshotTime < time_get())
@@ -69,11 +69,12 @@ void CStats::OnMessage(int MsgType, void *pRawMsg)
 	{
 		CNetMsg_Sv_KillMsg *pMsg = (CNetMsg_Sv_KillMsg *)pRawMsg;
 		
-		m_aStats[pMsg->m_Victim].m_Deaths++;
+		if(pMsg->m_Weapon != -3)	// team switch
+			m_aStats[pMsg->m_Victim].m_Deaths++;
 		m_aStats[pMsg->m_Victim].m_CurrentSpree = 0;
 		if(pMsg->m_Weapon >= 0)
 			m_aStats[pMsg->m_Victim].m_aDeathsFrom[pMsg->m_Weapon]++;
-		if(pMsg->m_ModeSpecial & 1)
+		if((pMsg->m_ModeSpecial & 1) && (pMsg->m_Weapon != -3))
 			m_aStats[pMsg->m_Victim].m_DeathsCarrying++;
 		if(pMsg->m_Victim != pMsg->m_Killer)
 		{
@@ -89,7 +90,7 @@ void CStats::OnMessage(int MsgType, void *pRawMsg)
 			if(pMsg->m_ModeSpecial & 2)
 				m_aStats[pMsg->m_Killer].m_KillsCarrying++;
 		}
-		else
+		else if(pMsg->m_Weapon != -3)
 			m_aStats[pMsg->m_Victim].m_Suicides++;
 	}
 }
@@ -125,6 +126,8 @@ void CStats::OnRender()
 	for(i=0; i<MAX_CLIENTS; i++)
 	{
 		if(!m_pClient->m_aClients[i].m_Active)
+			continue;
+		if(m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 			continue;
 
 		apPlayers[NumPlayers] = i;
@@ -242,13 +245,8 @@ void CStats::OnRender()
 			break;
 		}
 
-
-		// skip specs
-		if(m_pClient->m_aClients[apPlayers[j]].m_Active && m_pClient->m_aClients[apPlayers[j]].m_Team == TEAM_SPECTATORS)
-			continue;
-
 		const CPlayerStats *pStats = &m_aStats[apPlayers[j]];		
-		const bool HighlightedLine = (!m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_LocalClientID)
+		const bool HighlightedLine = apPlayers[j] == m_pClient->m_LocalClientID
 			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
 
 		// background so it's easy to find the local player or the followed one in spectator mode

@@ -2,7 +2,7 @@
     <img src="https://repology.org/badge/vertical-allrepos/teeworlds.svg" alt="Packaging status" align="right">
 </a>
 
-Teeworlds [![CircleCI](https://circleci.com/gh/teeworlds/teeworlds.svg?style=svg)](https://circleci.com/gh/teeworlds/teeworlds) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/teeworlds/teeworlds?branch=master&svg=true)](https://ci.appveyor.com/project/heinrich5991/teeworlds)
+Teeworlds [![CircleCI](https://circleci.com/gh/teeworlds/teeworlds.svg?style=svg)](https://circleci.com/gh/teeworlds/teeworlds) [![Travis CI Build Status](https://travis-ci.org/teeworlds/teeworlds.svg?branch=master)](https://travis-ci.org/teeworlds/teeworlds) [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/github/teeworlds/teeworlds?branch=master&svg=true)](https://ci.appveyor.com/project/heinrich5991/teeworlds)
 =========
 
 A retro multiplayer shooter
