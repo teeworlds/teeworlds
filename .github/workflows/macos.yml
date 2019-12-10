@@ -55,5 +55,11 @@ jobs:
           cd build_debug
           ./teeworlds_srv shutdown
           cd ..
+      - name: Test Bam release
+        run: |
+          ./build/x86_64/release/teeworlds_srv shutdown
+      - name: Test Bam debug
+        run: |
+          ./build/x86_64/debug/teeworlds_srv shutdown
 
             
