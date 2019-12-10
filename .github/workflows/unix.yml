@@ -1,0 +1,48 @@
+name: Unix
+on:
+  # Trigger the workflow on push or pull request,
+  # but only for the master branch
+  push:
+    branches: 
+      - master
+jobs:
+  build_unix:
+    name: Build Unix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Prepare
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install cmake libfreetype6-dev libsdl2-dev -y
+          git submodule update --init
+      - name: Build Bam
+        run: |
+          git clone https://github.com/matricks/bam.git ~/bam
+          cd ~/bam/
+          git reset --hard f012dd9a3e38295b8a45af5a101d29573381f169
+          ./make_unix.sh
+      - name: Build Teeworlds with Bam in Release mode
+        run: |
+          ~/bam/bam conf=release all
+      - name: Build Teeworlds with Bam in Debug mode
+        run: |
+          ~/bam/bam conf=debug all
+      - name: Build Teeworlds with cmake in Release mode
+        run: |
+          mkdir -p release
+          cd release
+          env CFLAGS="-Wdeclaration-after-statement -Werror" CXXFLAGS="-Werror" cmake -Werror=dev -DDOWNLOAD_GTEST=ON -DOpenGL_GL_PREFERENCE=LEGACY ..
+          make everything
+          make run_tests
+          ./teeworlds_srv shutdown
+          cd ..
+      - name: Build Teeworlds with cmake in Debug mode
+        run: |
+          mkdir -p debug
+          cd debug
+          env CFLAGS="-Wdeclaration-after-statement -Werror" CXXFLAGS="-Werror" cmake -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DOpenGL_GL_PREFERENCE=LEGACY ..
+          make everything
+          make run_tests
+          ./teeworlds_srv shutdown
+          cd ..
