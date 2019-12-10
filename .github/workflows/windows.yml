@@ -1,6 +1,6 @@
 name: Windows
 on:
-  # Trigger the workflow on push or pull request,
+  # Trigger the workflow on push,
   # but only for the master branch
   push:
     branches: 
@@ -22,7 +22,16 @@ jobs:
           cd build64
           cmake -Werror=dev -G "Visual Studio 16 2019" -A x64 ..
           cd ..
-      - name: Build win32 with cmake
+      - name: Build Bam
+        run: |
+          git clone https://github.com/matricks/bam.git ~/bam
+          cd ~/bam/
+          git reset --hard f012dd9a3e38295b8a45af5a101d29573381f169
+          ./make_unix.sh
+      - name: Build win with Bam in Release mode
+        run: |
+          ~/bam/bam.exe conf=release all
+      - name: Build win32 with cmake in Release mode
         run: |
           cmake --build build32 --config Release --target everything
       - name: Build win64 with cmake

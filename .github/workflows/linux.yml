@@ -1,13 +1,13 @@
-name: Unix
+name: Linux
 on:
-  # Trigger the workflow on push or pull request,
+  # Trigger the workflow on push,
   # but only for the master branch
   push:
     branches: 
       - master
 jobs:
-  build_unix:
-    name: Build Unix
+  build_linux:
+    name: Build Linux
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master

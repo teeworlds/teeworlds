@@ -1,13 +1,13 @@
-name: MacOS
+name: macOS
 on:
-  # Trigger the workflow on push or pull request,
+  # Trigger the workflow on push,
   # but only for the master branch
   push:
     branches: 
       - master
 jobs:
   build_mac:
-    name: Build MacOS
+    name: Build macOS
     runs-on: macOS-latest
     steps:
       - uses: actions/checkout@master
@@ -21,6 +21,39 @@ jobs:
           cd ~/bam/
           git reset --hard f012dd9a3e38295b8a45af5a101d29573381f169
           ./make_unix.sh
-      - name: Build Release
+      - name: Build Teeworlds with Bam in Release mode
         run: |
           ~/bam/bam conf=release all
+          ./teeworlds_srv shutdown
+      - name: Build Teeworlds with Bam in Debug mode
+        run: |
+          ~/bam/bam conf=debug all
+          ./teeworlds_srv shutdown
+      - name: Build Teeworlds with cmake in Release mode
+        run: |
+          mkdir build_release
+          cd build_release
+          cmake -Werror=dev -DDOWNLOAD_GTEST=ON ..
+          make everything
+          make run_tests
+          cd ..
+      - name: Build Teeworlds with cmake in Debug mode
+        run: |
+          mkdir build_debug
+          cd build_debug
+          cmake -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON ..
+          make everything
+          make run_tests
+          cd ..
+      - name: Test cmake release
+        run: |
+          cd build_release
+          ./teeworlds_srv shutdown
+          cd ..
+      - name: Test cmake debug
+        run: |
+          cd build_debug
+          ./teeworlds_srv shutdown
+          cd ..
+
+            
