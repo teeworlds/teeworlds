@@ -1,4 +1,3 @@
-version: 2
 jobs:
   build:
     docker:
@@ -10,7 +9,7 @@ jobs:
           command: |
             apt-get update -y
             apt-get install cmake libfreetype6-dev libsdl2-dev -y
-            git submodule update --init
+            git submodule update --init    
       - run:
           name: Build bam
           command: |
@@ -39,3 +38,48 @@ jobs:
             make everything
             make run_tests
             ./teeworlds_srv shutdown
+
+  publish-github-release:
+    docker:
+      - image: circleci/golang
+    steps:
+      - checkout
+      - run:
+          name: Prepare for deploy
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install cmake libfreetype6-dev libsdl2-dev -y
+            git submodule update --init
+            go get -u github.com/tcnksm/ghr
+      - run:
+          name: Build bam
+          command: |
+            git clone https://github.com/matricks/bam.git ~/bam
+            cd ~/bam/
+            git reset --hard f012dd9a3e38295b8a45af5a101d29573381f169
+            ./make_unix.sh
+      - run:
+          name: Build teeworlds with bam
+          command: |
+            mkdir -p /tmp/release
+            ~/bam/bam conf=release all
+            cp build/x86_64/release/teeworlds_srv /tmp/release
+            cp build/x86_64/release/teeworlds /tmp/release
+      - store_artifacts:
+          path: /tmp/release
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} --replace trunk-unix /tmp/release
+
+workflows:
+  version: 2
+  build_and_deploy:
+    jobs:
+      - build
+      - publish-github-release:
+          requires:
+            - build
+          filters:
+            branches:
+              only: master
