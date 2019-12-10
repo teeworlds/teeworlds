@@ -34,6 +34,38 @@ after_build:
   - cmd: cmake --build build32 --config Release --target package
   - cmd: cmake --build build64 --config Release --target package
 
+artifacts:
+  - path: 'build32\Release\teeworld*.exe'
+    name: Release32
+    
+  - path: 'build64\Release\teeworld*.exe'
+    name: Release64
+    
+deploy:
+  - provider: GitHub
+    tag: trunk-win32
+    artifact: Release32
+    auth_token:
+      secure: XM6P3saTtiKqc+QAmqTVpb38FYa0nsFwcnqVWMrERdYWjeF91dK4+42PVwiDnkFb
+    draft: false
+    prerelease: false
+    force_update: true
+    on:
+      branch: master
+      APPVEYOR_REPO_TAG: false
+  
+  - provider: GitHub
+    tag: trunk-win64
+    artifact: Release64
+    auth_token:
+      secure: XM6P3saTtiKqc+QAmqTVpb38FYa0nsFwcnqVWMrERdYWjeF91dK4+42PVwiDnkFb
+    draft: false
+    prerelease: false
+    force_update: true
+    on:
+      branch: master
+      APPVEYOR_REPO_TAG: false
+
 environment:
   CFLAGS: /WX
   CXXFLAGS: /WX

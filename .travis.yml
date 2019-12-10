@@ -17,3 +17,22 @@ env:
   global:
   - CFLAGS="-Wdeclaration-after-statement -Werror"
   - CXXFLAGS="-Werror"
+before_deploy:
+  - git config --local user.name AssassinTee
+  - git config --local user.email $USER_EMAIL
+  - export TRAVIS_TAG='OSX_TRUNK_TAG'
+  - git tag -f $TRAVIS_TAG
+deploy:
+  provider: releases
+  api_key:
+    secure: QjDI8t9qMfMZ3TiIVSv2QhXUxZwyhqjfdcX238xMyaY85b47MSnbzyonY2t7PLZTKCQ7Dy6lDBW2zBsuV9bGO2H1PvvdjmAgj2IYWTKcd9pdxrCmq3CxRDt3Am2Z0T2t+WIvvaw0d8AbvjZCs5T4jUrOfoEInp90LW3krGYMUI0HvSGvb1C1ZsLQwp/bedwYsDqR+Qw2XUDbe7jpJcuP8QKBHx7jWQBkrBe55rAL9o5ubuHils26aBPg/qhPwdHGljLAjHb6MpepjXdo68C82aS7OdYaEhLa/yM6y8kz5+DvZKQ50ttqyERZp5ZmjjbDL2TxcfXLvROtNPAgLE4H+hQU+Je51OMUt/8MMI+JU9IJcaE1FzFzOYj4NbfiTfBUKsrxKtQJi6+TOc2wT6kEFWW2ekRN+S1OLsH+ZiXOEVL7jmpgr6AgYKtHwu4GnnX2J1aqWM8x5iKcPPqGpcXmdJ+wX6afqLE7Dgcg+bJRrPVyjFkjOsejjoZfK2PrCooZ8g1rMWVY9qxhCoMlzWSg5es/xtRshEl/UXCNTe53Hwfxnf3cfyLsO0I+oO5/rxEWc9x5i11u5gG2mmacDxHCXcJYE8lbx6npjVlSXTDk83JZME4WY8PvpryY/DKNk/lVthtZpN8+LcPPNr+1p8AoH/bSK3uUcgD/Thx1rV9Fy4Q=
+  file: 
+    - build/teeworlds_srv
+    - build/teeworlds
+  name: trunk-osx
+  body: Automatic teeworlds build of $TRAVIS_BRANCH ($TRAVIS_COMMIT) built by Travis CI on $(date +'%F %T %Z').
+  overwrite: true
+  skip_cleanup: true
+  on:
+    repo: AssassinTee/teeworlds
+    branch: master
