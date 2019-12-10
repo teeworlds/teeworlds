@@ -28,10 +28,10 @@ jobs:
           git clone https://github.com/matricks/bam.git bam
           cd bam
           git reset --hard f012dd9a3e38295b8a45af5a101d29573381f169
-          ./make_unix.sh
+          .\make_win64_msvc.bat
       - name: Build win with Bam in Release mode
         run: |
-          bam/bam.exe conf=release all
+          .\bam\bam conf=release all
       - name: Build win32 with cmake in Release mode
         run: |
           cmake --build build32 --config Release --target everything

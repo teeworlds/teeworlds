@@ -24,11 +24,9 @@ jobs:
       - name: Build Teeworlds with Bam in Release mode
         run: |
           ~/bam/bam conf=release all
-          ./teeworlds_srv shutdown
       - name: Build Teeworlds with Bam in Debug mode
         run: |
           ~/bam/bam conf=debug all
-          ./teeworlds_srv shutdown
       - name: Build Teeworlds with cmake in Release mode
         run: |
           mkdir build_release
