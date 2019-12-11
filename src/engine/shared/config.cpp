@@ -111,7 +111,7 @@ public:
 		if(!m_ConfigFile)
 			return;
 
-		WriteLine("# Teeworlds " GAME_VERSION);
+		WriteLine("# ZillyWoods " ZILLYWOODS_VERSION " based on Teeworlds " GAME_VERSION);
 
 		char aLineBuf[1024*2];
 		char aEscapeBuf[1024*2];
