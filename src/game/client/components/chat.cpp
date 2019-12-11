@@ -1199,24 +1199,25 @@ void CChat::OnRender()
 
 			const int LocalCID = m_pClient->m_LocalClientID;
 			int FakeLocalID = LocalCID;
+			int LineClientID = pLine->m_ClientID;
 			// hacky ZillyWoods dummy id fix
 			if(LocalCID != -1)
 			{
 				if(m_pClient->m_LocalIDs[0] != -1 && m_pClient->m_LocalIDs[0] == pLine->m_TargetID)
-					FakeLocalID = LocalCID;
+					FakeLocalID = pLine->m_TargetID;
 				else if(m_pClient->m_LocalIDs[1] != -1 && m_pClient->m_LocalIDs[1] == pLine->m_TargetID)
-					FakeLocalID = LocalCID;
+					FakeLocalID = pLine->m_TargetID;
 			}
-			if (Line.m_TargetID != LocalCID && Line.m_ClientID != LocalCID)
+			if (pLine->m_TargetID != LocalCID && pLine->m_ClientID != LocalCID)
 			{
-				if(m_pClient->m_LocalIDs[0] != -1 && m_pClient->m_LocalIDs[0] == Line.m_ClientID)
-					Line.m_ClientID = LocalCID;
-				else if(m_pClient->m_LocalIDs[1] != -1 && m_pClient->m_LocalIDs[1] == Line.m_ClientID)
-					Line.m_ClientID = LocalCID;
+				if(m_pClient->m_LocalIDs[0] != -1 && m_pClient->m_LocalIDs[0] == pLine->m_ClientID)
+					LineClientID = LocalCID;
+				else if(m_pClient->m_LocalIDs[1] != -1 && m_pClient->m_LocalIDs[1] == pLine->m_ClientID)
+					LineClientID = LocalCID;
 			}
 
 			// image orientation
-			if(pLine->m_ClientID == FakeLocalID && pLine->m_TargetID >= 0)
+			if(LineClientID == FakeLocalID && pLine->m_TargetID >= 0)
 				Graphics()->QuadsSetSubset(1, 0, 0, 1); // To
 			else if(pLine->m_TargetID == FakeLocalID)
 				Graphics()->QuadsSetSubset(0, 0, 1, 1); // From
@@ -1226,6 +1227,7 @@ void CChat::OnRender()
 			{
 				dbg_msg("zilly", "crash on whisper msg '%s'", pLine->m_aText);
 				dbg_msg("zilly", "target=%d local=%d fakelocal=%d local[0]=%d local[1]=%d", pLine->m_TargetID, LocalCID, FakeLocalID, m_pClient->m_LocalIDs[0], m_pClient->m_LocalIDs[1]);
+				dbg_msg("zilly", "pLine->m_ClientID=%d LineClientID=%d", pLine->m_ClientID, LineClientID);
 				dbg_break();
 			}
 
