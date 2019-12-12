@@ -188,11 +188,15 @@ void CCharacterCore::Tick(bool UseInput)
 		// make sure that the hook doesn't go though the ground
 		bool GoingToHitGround = false;
 		bool GoingToRetract = false;
-		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0);
+		bool GoingThroughTele = false;
+		int teleNr = 0;
+		int Hit = m_pCollision->IntersectLineTeleHook(m_HookPos, NewPos, &NewPos, 0, &teleNr);
 		if(Hit)
 		{
 			if(Hit == TILE_NOHOOK)
 				GoingToRetract = true;
+			else if (Hit == TILE_TELEINHOOK)
+				GoingThroughTele = true;
 			else
 				GoingToHitGround = true;
 		}
@@ -236,6 +240,24 @@ void CCharacterCore::Tick(bool UseInput)
 			}
 
 			m_HookPos = NewPos;
+			/*
+			// TODO: ZillyWoods tele hook
+			if(GoingThroughTele && m_pTeleOuts && m_pTeleOuts->size() && (*m_pTeleOuts)[teleNr-1].size())
+			{
+				m_TriggeredEvents = 0;
+				m_HookedPlayer = -1;
+
+				m_NewHook = true;
+				int Num = (*m_pTeleOuts)[teleNr-1].size();
+				m_HookPos = (*m_pTeleOuts)[teleNr-1][(Num==1)?0:rand() % Num]+TargetDirection*PhysSize*1.5f;
+				m_HookDir = TargetDirection;
+				m_HookTeleBase = m_HookPos;
+			}
+			else
+			{
+				m_HookPos = NewPos;
+			}
+			*/
 		}
 	}
 

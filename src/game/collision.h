@@ -39,6 +39,21 @@ public:
 
 	// DDRace
 
+	int IntersectLineTeleHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int *pTeleNr);
+
+	int GetPureMapIndex(float x, float y);
+	int GetPureMapIndex(vec2 Pos) { return GetPureMapIndex(Pos.x, Pos.y); }
+	int IsTeleport(int Index);
+	int IsEvilTeleport(int Index);
+	int IsCheckTeleport(int Index);
+	int IsCheckEvilTeleport(int Index);
+	int IsTeleportWeapon(int Index);
+	int IsTeleportHook(int Index);
+	int IsTCheckpoint(int Index);
+
+	bool IsThrough(int x, int y, int xoff, int yoff, vec2 pos0, vec2 pos1);
+	bool IsHookBlocker(int x, int y, vec2 pos0, vec2 pos1);
+
 private:
 	class CTeleTile *m_pTele;
 	class CSpeedupTile *m_pSpeedup;
@@ -58,4 +73,5 @@ public:
 	SSwitchers *m_pSwitchers;
 };
 
+void ThroughOffset(vec2 Pos0, vec2 Pos1, int *Ox, int *Oy);
 #endif

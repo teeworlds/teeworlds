@@ -12,6 +12,8 @@
 #include <game/layers.h>
 #include <game/collision.h>
 
+#include <engine/shared/config.h>
+
 CCollision::CCollision()
 {
 	m_pTiles = 0;
@@ -271,4 +273,225 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 
 	*pInoutPos = Pos;
 	*pInoutVel = Vel;
+}
+
+// DDRace
+
+int CCollision::IntersectLineTeleHook(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision, int *pTeleNr)
+{
+	float Distance = distance(Pos0, Pos1);
+	int End(Distance+1);
+	vec2 Last = Pos0;
+	int ix = 0, iy = 0; // Temporary position for checking collision
+	int dx = 0, dy = 0; // Offset for checking the "through" tile
+	ThroughOffset(Pos0, Pos1, &dx, &dy);
+	for(int i = 0; i <= End; i++)
+	{
+		float a = i/(float)End;
+		vec2 Pos = mix(Pos0, Pos1, a);
+		ix = round_to_int(Pos.x);
+		iy = round_to_int(Pos.y);
+
+		int Index = GetPureMapIndex(Pos);
+		if (g_Config.m_SvOldTeleportHook)
+			*pTeleNr = IsTeleport(Index);
+		else
+			*pTeleNr = IsTeleportHook(Index);
+		if(*pTeleNr)
+		{
+			if(pOutCollision)
+				*pOutCollision = Pos;
+			if(pOutBeforeCollision)
+				*pOutBeforeCollision = Last;
+			return TILE_TELEINHOOK;
+		}
+
+		int hit = 0;
+		if(CheckPoint(ix, iy))
+		{
+			if(!IsThrough(ix, iy, dx, dy, Pos0, Pos1))
+				hit = GetCollisionAt(ix, iy);
+		}
+		else if(IsHookBlocker(ix, iy, Pos0, Pos1))
+		{
+			hit = TILE_NOHOOK;
+		}
+		if(hit)
+		{
+			if(pOutCollision)
+				*pOutCollision = Pos;
+			if(pOutBeforeCollision)
+				*pOutBeforeCollision = Last;
+			return hit;
+		}
+
+		Last = Pos;
+	}
+	if(pOutCollision)
+		*pOutCollision = Pos1;
+	if(pOutBeforeCollision)
+		*pOutBeforeCollision = Pos1;
+	return 0;
+}
+
+int CCollision::GetPureMapIndex(float x, float y)
+{
+	int Nx = clamp(round_to_int(x)/32, 0, m_Width-1);
+	int Ny = clamp(round_to_int(y)/32, 0, m_Height-1);
+	return Ny*m_Width+Nx;
+}
+
+int CCollision::IsTeleport(int Index)
+{
+	if(Index < 0 || !m_pTele)
+		return 0;
+
+	if(m_pTele[Index].m_Type == TILE_TELEIN)
+		return m_pTele[Index].m_Number;
+
+	return 0;
+}
+
+int CCollision::IsEvilTeleport(int Index)
+{
+	if(Index < 0)
+		return 0;
+	if(!m_pTele)
+		return 0;
+
+	if(m_pTele[Index].m_Type == TILE_TELEINEVIL)
+		return m_pTele[Index].m_Number;
+
+	return 0;
+}
+
+int CCollision::IsCheckTeleport(int Index)
+{
+	if(Index < 0)
+		return 0;
+	if(!m_pTele)
+		return 0;
+
+	if(m_pTele[Index].m_Type == TILE_TELECHECKIN)
+		return m_pTele[Index].m_Number;
+
+	return 0;
+}
+
+int CCollision::IsCheckEvilTeleport(int Index)
+{
+	if(Index < 0)
+		return 0;
+	if(!m_pTele)
+		return 0;
+
+	if(m_pTele[Index].m_Type == TILE_TELECHECKINEVIL)
+		return m_pTele[Index].m_Number;
+
+	return 0;
+}
+
+int CCollision::IsTCheckpoint(int Index)
+{
+	if(Index < 0)
+		return 0;
+
+	if(!m_pTele)
+		return 0;
+
+	if(m_pTele[Index].m_Type == TILE_TELECHECK)
+		return m_pTele[Index].m_Number;
+
+	return 0;
+}
+
+int CCollision::IsTeleportWeapon(int Index)
+{
+	if(Index < 0 || !m_pTele)
+		return 0;
+
+	if(m_pTele[Index].m_Type == TILE_TELEINWEAPON)
+		return m_pTele[Index].m_Number;
+
+	return 0;
+}
+
+int CCollision::IsTeleportHook(int Index)
+{
+	if(Index < 0 || !m_pTele)
+		return 0;
+
+	if(m_pTele[Index].m_Type == TILE_TELEINHOOK)
+		return m_pTele[Index].m_Number;
+
+	return 0;
+}
+
+bool CCollision::IsThrough(int x, int y, int xoff, int yoff, vec2 pos0, vec2 pos1)
+{
+	int pos = GetPureMapIndex(x, y);
+	if(m_pFront && (m_pFront[pos].m_Index == TILE_THROUGH_ALL || m_pFront[pos].m_Index == TILE_THROUGH_CUT))
+		return true;
+	if(m_pFront && m_pFront[pos].m_Index == TILE_THROUGH_DIR && (
+		(m_pFront[pos].m_Flags == ROTATION_0   && pos0.y > pos1.y) ||
+		(m_pFront[pos].m_Flags == ROTATION_90  && pos0.x < pos1.x) ||
+		(m_pFront[pos].m_Flags == ROTATION_180 && pos0.y < pos1.y) ||
+		(m_pFront[pos].m_Flags == ROTATION_270 && pos0.x > pos1.x) ))
+		return true;
+	int offpos = GetPureMapIndex(x+xoff, y+yoff);
+	if(m_pTiles[offpos].m_Index == TILE_THROUGH || (m_pFront && m_pFront[offpos].m_Index == TILE_THROUGH))
+		return true;
+	return false;
+}
+
+bool CCollision::IsHookBlocker(int x, int y, vec2 pos0, vec2 pos1)
+{
+	int pos = GetPureMapIndex(x, y);
+	if(m_pTiles[pos].m_Index == TILE_THROUGH_ALL || (m_pFront && m_pFront[pos].m_Index == TILE_THROUGH_ALL))
+		return true;
+	if(m_pTiles[pos].m_Index == TILE_THROUGH_DIR && (
+		(m_pTiles[pos].m_Flags == ROTATION_0   && pos0.y < pos1.y) ||
+		(m_pTiles[pos].m_Flags == ROTATION_90  && pos0.x > pos1.x) ||
+		(m_pTiles[pos].m_Flags == ROTATION_180 && pos0.y > pos1.y) ||
+		(m_pTiles[pos].m_Flags == ROTATION_270 && pos0.x < pos1.x) ))
+		return true;
+	if(m_pFront && m_pFront[pos].m_Index == TILE_THROUGH_DIR && (
+		(m_pFront[pos].m_Flags == ROTATION_0   && pos0.y < pos1.y) ||
+		(m_pFront[pos].m_Flags == ROTATION_90  && pos0.x > pos1.x) ||
+		(m_pFront[pos].m_Flags == ROTATION_180 && pos0.y > pos1.y) ||
+		(m_pFront[pos].m_Flags == ROTATION_270 && pos0.x < pos1.x) ))
+		return true;
+	return false;
+}
+
+void ThroughOffset(vec2 Pos0, vec2 Pos1, int *Ox, int *Oy)
+{
+	float x = Pos0.x - Pos1.x;
+	float y = Pos0.y - Pos1.y;
+	if (fabs(x) > fabs(y))
+	{
+		if (x < 0)
+		{
+			*Ox = -32;
+			*Oy = 0;
+		}
+		else
+		{
+			*Ox = 32;
+			*Oy = 0;
+		}
+	}
+	else
+	{
+		if (y < 0)
+		{
+			*Ox = 0;
+			*Oy = -32;
+		}
+		else
+		{
+			*Ox = 0;
+			*Oy = 32;
+		}
+	}
 }

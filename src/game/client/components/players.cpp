@@ -282,7 +282,8 @@ void CPlayers::RenderPlayer(
 
 
 			Graphics()->SetColor(1.00f, 0.0f, 0.0f, 1.00f);
-			if(Collision()->IntersectLine(initPos, finishPos, &finishPos, 0x0))
+			int TeleNr = 0;
+			if(Collision()->IntersectLineTeleHook(initPos, finishPos, &finishPos, 0x0, &TeleNr))
 			{
 				vec2 finishPosPost = finishPos+Direction * 1.0f;
 				if(!(Collision()->GetCollisionAt(finishPosPost.x, finishPosPost.y) == TILE_NOHOOK))
