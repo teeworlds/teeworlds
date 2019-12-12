@@ -52,6 +52,7 @@ static CKeyInfo gs_aKeys[] =
 	{ "Ready", "ready_change", 0, 0},
 	{ "Add demo marker", "add_demomarker", 0, 0},
 	{ "Toggle sounds", "snd_toggle", 0, 0},
+	{ "Toggle dynamic camera", "toggle cl_dynamic_camera 1 0", 0, 0},
 };
 
 /*	This is for scripts/update_localization.py to work, don't remove!
@@ -333,7 +334,7 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View, void *pUser)
 	CMenus *pSelf = (CMenus*)pUser;
 	UpdateBindKeys(pSelf->m_pClient->m_pBinds);
 
-	int NumOptions = 11;
+	int NumOptions = 12;
 	int StartOption = 20;
 	float ButtonHeight = 20.0f;
 	float Spaceing = 2.0f;
