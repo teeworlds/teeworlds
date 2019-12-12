@@ -1540,6 +1540,12 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
 	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	static int s_ZillyDropdown = 0;
+	static bool s_ZillyActive = true;
+	Split = DoIndependentDropdownMenu(&s_ZillyDropdown, &MainView, Localize("ZillyWoods"), HeaderHeight, RenderSettingsControlsZilly, &s_ZillyActive);
+
+	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
+	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
 
 	EndScrollRegion(&s_ScrollRegion);
 

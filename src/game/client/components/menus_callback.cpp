@@ -52,6 +52,8 @@ static CKeyInfo gs_aKeys[] =
 	{ "Ready", "ready_change", 0, 0},
 	{ "Add demo marker", "add_demomarker", 0, 0},
 	{ "Toggle sounds", "snd_toggle", 0, 0},
+
+	{ "Toggle dummy", "toggle cl_dummy 1 0", 0, 0},
 };
 
 /*	This is for scripts/update_localization.py to work, don't remove!
@@ -403,4 +405,25 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 			g_Config.m_JoystickY = i;
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 	}
+}
+
+// ZillyWoods
+
+float CMenus::RenderSettingsControlsZilly(CUIRect View, void *pUser)
+{
+	CMenus *pSelf = (CMenus*)pUser;
+	UpdateBindKeys(pSelf->m_pClient->m_pBinds);
+
+	int NumOptions = 1;
+	int StartOption = 31;
+	float ButtonHeight = 20.0f;
+	float Spaceing = 2.0f;
+	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spaceing;
+
+	View.HSplitTop(BackgroundHeight, &View, 0);
+	pSelf->RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+
+	pSelf->UiDoGetButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spaceing);
+
+	return BackgroundHeight;
 }
