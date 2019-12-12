@@ -6,6 +6,9 @@
 #include <base/system.h>
 #include <base/math.h>
 
+#include <map>
+#include <vector>
+
 #include <math.h>
 #include "collision.h"
 #include <engine/shared/protocol.h>
@@ -175,6 +178,14 @@ public:
 	void Read(const CNetObj_CharacterCore *pObjCore);
 	void Write(CNetObj_CharacterCore *pObjCore);
 	void Quantize();
+
+	// DDRace
+
+	vec2 m_HookTeleBase;
+	bool m_NewHook;
+
+private:
+	std::map<int, std::vector<vec2> > *m_pTeleOuts;
 };
 
 #endif

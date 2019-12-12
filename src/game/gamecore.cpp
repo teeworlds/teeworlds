@@ -61,12 +61,17 @@ void CCharacterCore::Init(CWorldCore *pWorld, CCollision *pCollision)
 {
 	m_pWorld = pWorld;
 	m_pCollision = pCollision;
+
+	// DDRace
+
+	m_pTeleOuts = NULL;
 }
 
 void CCharacterCore::Reset()
 {
 	m_Pos = vec2(0,0);
 	m_Vel = vec2(0,0);
+	m_NewHook = false;
 	m_HookPos = vec2(0,0);
 	m_HookDir = vec2(0,0);
 	m_HookTick = 0;
@@ -179,7 +184,8 @@ void CCharacterCore::Tick(bool UseInput)
 	else if(m_HookState == HOOK_FLYING)
 	{
 		vec2 NewPos = m_HookPos+m_HookDir*m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookFireSpeed;
-		if(distance(m_Pos, NewPos) > m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookLength)
+		if((!m_NewHook && distance(m_Pos, NewPos) > m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookLength)
+			|| (m_NewHook && distance(m_HookTeleBase, NewPos) > m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookLength))
 		{
 			m_HookState = HOOK_RETRACT_START;
 			NewPos = m_Pos + normalize(NewPos-m_Pos) * m_pWorld->m_Tuning[g_Config.m_ClDummy].m_HookLength;
@@ -191,6 +197,9 @@ void CCharacterCore::Tick(bool UseInput)
 		bool GoingThroughTele = false;
 		int teleNr = 0;
 		int Hit = m_pCollision->IntersectLineTeleHook(m_HookPos, NewPos, &NewPos, 0, &teleNr);
+
+		//m_NewHook = false;
+
 		if(Hit)
 		{
 			if(Hit == TILE_NOHOOK)
@@ -239,9 +248,6 @@ void CCharacterCore::Tick(bool UseInput)
 				m_HookState = HOOK_RETRACT_START;
 			}
 
-			m_HookPos = NewPos;
-			/*
-			// TODO: ZillyWoods tele hook
 			if(GoingThroughTele && m_pTeleOuts && m_pTeleOuts->size() && (*m_pTeleOuts)[teleNr-1].size())
 			{
 				m_TriggeredEvents = 0;
@@ -257,7 +263,6 @@ void CCharacterCore::Tick(bool UseInput)
 			{
 				m_HookPos = NewPos;
 			}
-			*/
 		}
 	}
 
@@ -361,6 +366,11 @@ void CCharacterCore::Tick(bool UseInput)
 					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
 				}
 			}
+		}
+
+		if (m_HookState != HOOK_FLYING)
+		{
+			m_NewHook = false;
 		}
 	}
 
