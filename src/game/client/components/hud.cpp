@@ -722,8 +722,16 @@ void CHud::RenderRaceTime(const CNetObj_PlayerInfoRace *pRaceInfo)
 	FormatTime(aBuf, sizeof(aBuf), RaceTime, min(m_pClient->RacePrecision(), 1));
 
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
-	float w = TextRender()->TextWidth(0, 12, "00:00.0", -1, -1.0f);
-	TextRender()->Text(0, Half-w/2, 20, 12, aBuf, -1);
+	float w = TextRender()->TextWidth(0, 12, "00:00.0", -1, -1.0f) + 18.f;
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_TIMERCLOCK].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(SPRITE_TIMERCLOCK_A);
+	IGraphics::CQuadItem QuadItem(Half-w/2, 20, 15, 15);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	TextRender()->Text(0, Half-w/2+18.f, 20, 12, aBuf, -1);
 }
 
 void CHud::RenderCheckpoint()
