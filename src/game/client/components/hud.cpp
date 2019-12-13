@@ -279,8 +279,10 @@ void CHud::RenderScoreHud()
 					aScore[t][0] = 0;
 				}
 			}
-			float aScoreWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScore[0], -1, -1.0f), TextRender()->TextWidth(0, 14.0f, aScore[1], -1, -1.0f)};
-			float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, 14.0f, "10", -1, -1.0f));
+
+			float FontSize = (GameFlags&GAMEFLAG_RACE) ? 10.f : 14.f;
+			float aScoreWidth[2] = {TextRender()->TextWidth(0, FontSize, aScore[0], -1, -1.0f), TextRender()->TextWidth(0, FontSize, aScore[1], -1, -1.0f)};
+			float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, FontSize, "10", -1, -1.0f));
 			float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
 
 			// todo: add core hud for LMS
@@ -293,7 +295,8 @@ void CHud::RenderScoreHud()
 				RenderTools()->DrawUIRect(&Rect, t == Local ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_L, 5.0f);
 
 				// draw score
-				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreWidth[t])/2-Split, StartY+t*20, 14.0f, aScore[t], -1.0f);
+				float Spacing = (GameFlags&GAMEFLAG_RACE) ? 2.f : 0.f;
+				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreWidth[t])/2-Split, StartY+t*20+Spacing, FontSize, aScore[t], -1.0f);
 
 				if(aPlayerInfo[t].m_pPlayerInfo)
 				{
@@ -722,16 +725,16 @@ void CHud::RenderRaceTime(const CNetObj_PlayerInfoRace *pRaceInfo)
 	FormatTime(aBuf, sizeof(aBuf), RaceTime, min(m_pClient->RacePrecision(), 1));
 
 	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
-	float w = TextRender()->TextWidth(0, 12, "00:00.0", -1, -1.0f) + 18.f;
+	float w = TextRender()->TextWidth(0, 12, "00:00.0", -1, -1.0f);
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_TIMERCLOCK].m_Id);
 	Graphics()->QuadsBegin();
 	RenderTools()->SelectSprite(SPRITE_TIMERCLOCK_A);
-	IGraphics::CQuadItem QuadItem(Half-w/2, 20, 15, 15);
+	IGraphics::CQuadItem QuadItem(Half-w/2-18.f, 20, 15, 15);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	TextRender()->Text(0, Half-w/2+18.f, 20, 12, aBuf, -1);
+	TextRender()->Text(0, Half-w/2, 20, 12, aBuf, -1);
 }
 
 void CHud::RenderCheckpoint()
