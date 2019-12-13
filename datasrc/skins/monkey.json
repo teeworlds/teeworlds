@@ -1,0 +1,42 @@
+{"skin": {
+	"body": {
+		"filename": "monkey",
+		"custom_colors": "true",
+		"hue": 21,
+		"sat": 175,
+		"lgt": 196
+	},
+	"marking": {
+		"filename": "monkey",
+		"custom_colors": "true",
+		"hue": 22,
+		"sat": 132,
+		"lgt": 50,
+		"alp": 255
+	},
+	"decoration": {
+		"filename": "hair",
+		"custom_colors": "true",
+		"hue": 35,
+		"sat": 230,
+		"lgt": 155
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 25,
+		"sat": 82,
+		"lgt": 144
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 19,
+		"sat": 113,
+		"lgt": 175
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}
