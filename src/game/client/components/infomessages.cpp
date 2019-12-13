@@ -89,11 +89,17 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 
 		char aBuf[256];
 		char aTime[32];
+		char aLabel[64];
+
 		FormatTime(aTime, sizeof(aTime), pMsg->m_Time, m_pClient->RacePrecision());
+		m_pClient->GetPlayerLabel(aLabel, sizeof(aLabel), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName);
+
+		str_format(aBuf, sizeof(aBuf), "%2d: %s: finished in %s", pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName, aTime);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "race", aBuf);
 
 		if(pMsg->m_NewRecord)
 		{
-			str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new record: %s"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, aTime);
+			str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new record: %s"), aLabel, aTime);
 			if(pMsg->m_Diff < 0)
 			{
 				char aImprovement[64];
@@ -109,7 +115,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 		{
 			if(!pMsg->m_NewRecord) // don't print the time twice
 			{
-				str_format(aBuf, sizeof(aBuf), Localize("'%s' finished in: %s"), m_pClient->m_aClients[pMsg->m_ClientID].m_aName, aTime);
+				str_format(aBuf, sizeof(aBuf), Localize("'%s' finished in: %s"), aLabel, aTime);
 				m_pClient->m_pChat->AddLine(-1, 0, aBuf);
 			}
 		}
@@ -280,7 +286,7 @@ void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) 
 		TextRender()->TextColor(0.0f, 0.5f, 1.0f, 1.0f);
 	TextRender()->Text(0, x, y, FontSize, aTime, -1);
 
-	x -= 52.0f;
+	x -= 52.0f + 10.0f;
 
 	// render flag
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_RACEFLAG].m_Id);
