@@ -7,7 +7,7 @@
 		"lgt": 121
 	},
 	"marking": {
-		"filename": "racoon",
+		"filename": "coonfluff",
 		"custom_colors": "true",
 		"hue": 17,
 		"sat": 110,
@@ -15,7 +15,7 @@
 		"alp": 255
 	},
 	"hands": {
-		"filename": "strandard",
+		"filename": "standard",
 		"custom_colors": "true",
 		"hue": 16,
 		"sat": 133,
