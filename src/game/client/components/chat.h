@@ -20,7 +20,7 @@ class CChat : public CComponent
 	struct CLine
 	{
 		int64 m_Time;
-		vec2 m_Size[2];
+		vec2 m_Size;
 		int m_ClientID;
 		int m_TargetID;
 		int m_Mode;
@@ -64,6 +64,7 @@ class CChat : public CComponent
 	int m_PlaceholderLength;
 	bool m_ReverseCompletion;
 	bool m_FirstMap;
+	float m_CurrentLineWidth;
 
 	int m_ChatBufferMode;
 	char m_ChatBuffer[512];

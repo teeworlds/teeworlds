@@ -1134,8 +1134,12 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	pPacker->AddString(GameServer()->GameType(), 16);
 
 	// flags
-	int Flag = g_Config.m_Password[0] ? SERVERINFO_FLAG_PASSWORD : 0;	// password set
-	pPacker->AddInt(Flag);
+	int Flags = 0;
+	if(g_Config.m_Password[0])  // password set
+		Flags |= SERVERINFO_FLAG_PASSWORD;
+	if(GameServer()->TimeScore())
+		Flags |= SERVERINFO_FLAG_TIMESCORE;
+	pPacker->AddInt(Flags);
 
 	pPacker->AddInt(g_Config.m_SvSkillLevel);	// server skill level
 	pPacker->AddInt(PlayerCount); // num players

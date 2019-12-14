@@ -950,7 +950,7 @@ void CMenus::UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, cons
 
 void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight,
 							  const char *pBottomText, int NumItems, int ItemsPerRow, int SelectedIndex,
-							  const CUIRect *pRect, bool Background)
+							  const CUIRect *pRect, bool Background, bool *pActive)
 {
 	CUIRect View;
 	if(pRect)
@@ -983,6 +983,18 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 	pState->m_ListBoxDoneEvents = 0;
 	pState->m_ListBoxItemActivated = false;
 
+	// handle input
+	if(!pActive || *pActive)
+	{
+		int NewIndex = -1;
+		if(m_DownArrowPressed)
+			NewIndex = pState->m_ListBoxNewSelected + 1;
+		if(m_UpArrowPressed)
+			NewIndex = pState->m_ListBoxNewSelected - 1;
+		if(NewIndex > -1 && NewIndex < pState->m_ListBoxNumItems)
+			pState->m_ListBoxNewSelected = NewIndex;
+	}
+
 	// setup the scrollbar
 	pState->m_ScrollOffset = vec2(0, 0);
 	BeginScrollRegion(&pState->m_ScrollRegion, &pState->m_ListBoxView, &pState->m_ScrollOffset);
@@ -997,6 +1009,8 @@ CMenus::CListboxItem CMenus::UiDoListboxNextRow(CListBoxState* pState)
 	if(pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow == 0)
 		pState->m_ListBoxView.HSplitTop(pState->m_ListBoxRowHeight /*-2.0f*/, &s_RowView, &pState->m_ListBoxView);
 	ScrollRegionAddRect(&pState->m_ScrollRegion, s_RowView);
+	if(pState->m_ListBoxNewSelected != pState->m_ListBoxSelectedIndex && pState->m_ListBoxNewSelected == pState->m_ListBoxItemIndex)
+		ScrollRegionScrollHere(&pState->m_ScrollRegion, CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
 
 	s_RowView.VSplitLeft(s_RowView.w/(pState->m_ListBoxItemsPerRow-pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow), &Item.m_Rect, &s_RowView);
 
@@ -1009,7 +1023,7 @@ CMenus::CListboxItem CMenus::UiDoListboxNextRow(CListBoxState* pState)
 	return Item;
 }
 
-CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected, bool* pActive)
+CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected, bool *pActive)
 {
 	int ThisItemIndex = pState->m_ListBoxItemIndex;
 	if(Selected)

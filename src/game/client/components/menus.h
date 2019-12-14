@@ -228,8 +228,8 @@ private:
 
 	void UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing);
 	void UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight, const char *pBottomText, int NumItems,
-						int ItemsPerRow, int SelectedIndex, const CUIRect *pRect=0, bool Background=true);
-	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false, bool* pActive = NULL);
+						int ItemsPerRow, int SelectedIndex, const CUIRect *pRect=0, bool Background=true, bool *pActive = 0);
+	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false, bool *pActive = 0);
 	CListboxItem UiDoListboxNextRow(CListBoxState* pState);
 	int UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated);
 

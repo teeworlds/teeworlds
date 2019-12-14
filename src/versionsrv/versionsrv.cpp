@@ -84,6 +84,11 @@ int main(int argc, char **argv) // ignore_convention
 	mem_zero(&BindAddr, sizeof(BindAddr));
 	BindAddr.type = NETTYPE_ALL;
 	BindAddr.port = VERSIONSRV_PORT;
+	if(secure_random_init() != 0)
+	{
+		dbg_msg("versionsrv", "could not initialize secure RNG");
+		return -1;
+	}
 	if(!g_NetOp.Open(BindAddr, 0))
 	{
 		dbg_msg("mastersrv", "couldn't start network");

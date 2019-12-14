@@ -978,6 +978,7 @@ set(EXPECTED_DATA
   maps/lms1.map
   maps/readme.txt
   particles.png
+  race_flag.png
   skins/beaver.json
   skins/bluekitty.json
   skins/bluestripe.json
@@ -1123,6 +1124,7 @@ set(EXPECTED_DATA
   ui/icons/level.png
   ui/icons/menu.png
   ui/icons/sidebar.png
+  ui/icons/timer_clock.png
   ui/icons/tools.png
   ui/menuimages/demos.png
   ui/menuimages/editor.png
@@ -1337,7 +1339,7 @@ set_src(ENGINE_SHARED GLOB src/engine/shared
   snapshot.h
   storage.cpp
 )
-set(ENGINE_GENERATED_SHARED src/generated/protocol.cpp src/generated/protocol.h)
+set(ENGINE_GENERATED_SHARED src/generated/nethash.cpp src/generated/protocol.cpp src/generated/protocol.h)
 set_src(GAME_SHARED GLOB src/game
   collision.cpp
   collision.h
@@ -1427,10 +1429,10 @@ if(CLIENT)
     components/flow.h
     components/hud.cpp
     components/hud.h
+    components/infomessages.cpp
+    components/infomessages.h
     components/items.cpp
     components/items.h
-    components/killmessages.cpp
-    components/killmessages.h
     components/mapimages.cpp
     components/mapimages.h
     components/maplayers.cpp

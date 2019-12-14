@@ -136,12 +136,14 @@ public:
 		const CNetObj_GameData *m_pGameData;
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
+		const CNetObj_GameDataRace *m_pGameDataRace;
 		int m_GameDataFlagSnapID;
 
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];
 
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
+		const CNetObj_PlayerInfoRace *m_paPlayerInfosRace[MAX_CLIENTS];
 		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
 
 		// spectate data
@@ -267,6 +269,8 @@ public:
 	bool IsXmas() const;
 	bool IsEaster() const;
 
+	int RacePrecision() const { return m_Snap.m_pGameDataRace ? m_Snap.m_pGameDataRace->m_Precision : 3; }
+
 	//
 	void DoEnterMessage(const char *pName, int ClientID, int Team);
 	void DoLeaveMessage(const char *pName, int ClientID, const char *pReason);
@@ -304,6 +308,10 @@ public:
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
 };
+
+
+void FormatTime(char *pBuf, int Size, int Time, int Precision);
+void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision, bool ForceSign = true);
 
 const char *Localize(const char *pStr, const char *pContext="")
 GNUC_ATTRIBUTE((format_arg(1)));
