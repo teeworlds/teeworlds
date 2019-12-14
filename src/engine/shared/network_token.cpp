@@ -1,21 +1,18 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
+#include <base/hash_ctxt.h>
 #include <base/math.h>
 #include <base/system.h>
-
-#include <engine/external/md5/md5.h>
 
 #include "network.h"
 
 static unsigned int Hash(char *pData, int Size)
 {
-	md5_state_t State;
-	unsigned int aDigest[4]; // make sure this is 16 byte
-
-	md5_init(&State);
-	md5_append(&State, (const md5_byte_t *)pData, Size);
-	md5_finish(&State, (md5_byte_t *)aDigest);
+	unsigned aDigest[4];
+	MD5_DIGEST Digest = md5(pData, Size);
+	for(int i = 0; i < 4; i++)
+		aDigest[i] = bytes_be_to_uint(&Digest.data[i * 4]);
 
 	return (aDigest[0] ^ aDigest[1] ^ aDigest[2] ^ aDigest[3]);
 }
@@ -220,7 +217,7 @@ void CNetTokenCache::PurgeStoredPacket(int TrackID)
 			if(pInfo == m_pConnlessPacketList)
 				m_pConnlessPacketList = pNext;
 			delete pInfo;
-			
+
 			break;
 		}
 		else
