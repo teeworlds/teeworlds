@@ -976,6 +976,7 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 	pState->m_ListBoxView = View;
 	pState->m_ListBoxSelectedIndex = SelectedIndex;
 	pState->m_ListBoxNewSelected = SelectedIndex;
+	pState->m_ListBoxNewSelOffset = 0;
 	pState->m_ListBoxItemIndex = 0;
 	pState->m_ListBoxRowHeight = RowHeight;
 	pState->m_ListBoxNumItems = NumItems;
@@ -988,11 +989,9 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 	{
 		int NewIndex = -1;
 		if(m_DownArrowPressed)
-			NewIndex = pState->m_ListBoxNewSelected + 1;
+			pState->m_ListBoxNewSelOffset += 1;
 		if(m_UpArrowPressed)
-			NewIndex = pState->m_ListBoxNewSelected - 1;
-		if(NewIndex > -1 && NewIndex < pState->m_ListBoxNumItems)
-			pState->m_ListBoxNewSelected = NewIndex;
+			pState->m_ListBoxNewSelOffset -= 1;
 	}
 
 	// setup the scrollbar
@@ -1009,8 +1008,11 @@ CMenus::CListboxItem CMenus::UiDoListboxNextRow(CListBoxState* pState)
 	if(pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow == 0)
 		pState->m_ListBoxView.HSplitTop(pState->m_ListBoxRowHeight /*-2.0f*/, &s_RowView, &pState->m_ListBoxView);
 	ScrollRegionAddRect(&pState->m_ScrollRegion, s_RowView);
-	if(pState->m_ListBoxNewSelected != pState->m_ListBoxSelectedIndex && pState->m_ListBoxNewSelected == pState->m_ListBoxItemIndex)
+	if(pState->m_ListBoxUpdateScroll && pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex)
+	{
 		ScrollRegionScrollHere(&pState->m_ScrollRegion, CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
+		pState->m_ListBoxUpdateScroll = false;
+	}
 
 	s_RowView.VSplitLeft(s_RowView.w/(pState->m_ListBoxItemsPerRow-pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow), &Item.m_Rect, &s_RowView);
 
@@ -1077,6 +1079,11 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 int CMenus::UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated)
 {
 	EndScrollRegion(&pState->m_ScrollRegion);
+	if(pState->m_ListBoxNewSelOffset != 0 && pState->m_ListBoxSelectedIndex != -1 && pState->m_ListBoxSelectedIndex == pState->m_ListBoxNewSelected)
+	{
+		pState->m_ListBoxNewSelected = clamp(pState->m_ListBoxNewSelected + pState->m_ListBoxNewSelOffset, 0, pState->m_ListBoxNumItems - 1);
+		pState->m_ListBoxUpdateScroll = true;
+	}
 	if(pItemActivated)
 		*pItemActivated = pState->m_ListBoxItemActivated;
 	return pState->m_ListBoxNewSelected;

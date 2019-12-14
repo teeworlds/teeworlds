@@ -213,6 +213,8 @@ private:
 		int m_ListBoxItemIndex;
 		int m_ListBoxSelectedIndex;
 		int m_ListBoxNewSelected;
+		int m_ListBoxNewSelOffset;
+		int m_ListBoxUpdateScroll;
 		int m_ListBoxDoneEvents;
 		int m_ListBoxNumItems;
 		int m_ListBoxItemsPerRow;
@@ -223,6 +225,7 @@ private:
 		CListBoxState()
 		{
 			m_ScrollOffset = vec2(0,0);
+			m_ListBoxUpdateScroll = false;
 		}
 	};
 
