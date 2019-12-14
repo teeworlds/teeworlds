@@ -723,6 +723,14 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	}
 }
 
+static void FormatScore(char *pBuf, int BufSize, bool TimeScore, const CServerInfo::CClient *pClient)
+{
+	if(TimeScore)
+		FormatTime(pBuf, BufSize, pClient->m_Score * 1000, 0);
+	else
+		str_format(pBuf, BufSize, "%d", pClient->m_Score);
+}
+
 void CMenus::RenderServerbrowserOverlay()
 {
 	if(!m_InfoOverlayActive)
@@ -832,7 +840,7 @@ void CMenus::RenderServerbrowserOverlay()
 				if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
 				{
 					char aTemp[16];
-					str_format(aTemp, sizeof(aTemp), "%d", pInfo->m_aClients[i].m_Score);
+					FormatScore(aTemp, sizeof(aTemp), pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE, &pInfo->m_aClients[i]);
 					TextRender()->SetCursor(&Cursor, Score.x, Score.y+(Score.h-FontSize)/4.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 					Cursor.m_LineWidth = Score.w;
 					TextRender()->TextEx(&Cursor, aTemp, -1);
@@ -2020,7 +2028,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
 			{
 				char aTemp[16];
-				str_format(aTemp, sizeof(aTemp), "%d", pInfo->m_aClients[i].m_Score);
+				FormatScore(aTemp, sizeof(aTemp), pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE, &pInfo->m_aClients[i]);
 				TextRender()->SetCursor(&Cursor, Score.x, Score.y + (Score.h - FontSize-2) / 4.0f, FontSize-2, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Score.w;
 				TextRender()->TextEx(&Cursor, aTemp, -1);

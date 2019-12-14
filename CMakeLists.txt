@@ -978,6 +978,7 @@ set(EXPECTED_DATA
   maps/lms1.map
   maps/readme.txt
   particles.png
+  race_flag.png
   skins/bluekitty.json
   skins/bluestripe.json
   skins/body/bear.png
@@ -1046,6 +1047,7 @@ set(EXPECTED_DATA
   ui/icons/level.png
   ui/icons/menu.png
   ui/icons/sidebar.png
+  ui/icons/timer_clock.png
   ui/icons/tools.png
   ui/menuimages/demos.png
   ui/menuimages/editor.png
@@ -1350,10 +1352,10 @@ if(CLIENT)
     components/flow.h
     components/hud.cpp
     components/hud.h
+    components/infomessages.cpp
+    components/infomessages.h
     components/items.cpp
     components/items.h
-    components/killmessages.cpp
-    components/killmessages.h
     components/mapimages.cpp
     components/mapimages.h
     components/maplayers.cpp

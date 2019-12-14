@@ -892,6 +892,9 @@ void IGameController::UpdateGameInfo(int ClientID)
 	GameInfoMsg.m_MatchNum = m_GameInfo.m_MatchNum;
 	GameInfoMsg.m_MatchCurrent = m_GameInfo.m_MatchCurrent;
 
+	CNetMsg_Sv_GameInfo GameInfoMsgNoRace = GameInfoMsg;
+	GameInfoMsgNoRace.m_GameFlags &= ~GAMEFLAG_RACE;
+
 	if(ClientID == -1)
 	{
 		for(int i = 0; i < MAX_CLIENTS; ++i)
@@ -899,11 +902,15 @@ void IGameController::UpdateGameInfo(int ClientID)
 			if(!GameServer()->m_apPlayers[i] || !Server()->ClientIngame(i))
 				continue;
 
-			Server()->SendPackMsg(&GameInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+			CNetMsg_Sv_GameInfo *pInfoMsg = (Server()->GetClientVersion(i) < CGameContext::MIN_RACE_CLIENTVERSION) ? &GameInfoMsgNoRace : &GameInfoMsg;
+			Server()->SendPackMsg(pInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
 		}
 	}
 	else
-		Server()->SendPackMsg(&GameInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
+	{
+		CNetMsg_Sv_GameInfo *pInfoMsg = (Server()->GetClientVersion(ClientID) < CGameContext::MIN_RACE_CLIENTVERSION) ? &GameInfoMsgNoRace : &GameInfoMsg;
+		Server()->SendPackMsg(pInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
+	}
 }
 
 // map
