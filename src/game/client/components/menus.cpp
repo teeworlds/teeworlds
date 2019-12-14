@@ -934,11 +934,12 @@ void CMenus::UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, cons
 	CUIRect View = *pRect;
 
 	// background
-	View.HSplitTop(ms_ListheaderHeight+Spacing, &Header, 0);
+	const float Height = GetListHeaderHeight();
+	View.HSplitTop(Height+Spacing, &Header, 0);
 	RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
 
 	// draw header
-	View.HSplitTop(ms_ListheaderHeight, &Header, &View);
+	View.HSplitTop(Height, &Header, &View);
 	Header.y += 2.0f;
 	UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
@@ -966,7 +967,8 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 	// draw footers
 	if(pBottomText)
 	{
-		View.HSplitBottom(ms_ListheaderHeight, &View, &Footer);
+		const float Height = GetListHeaderHeight();
+		View.HSplitBottom(Height, &View, &Footer);
 		Footer.VSplitLeft(10.0f, 0, &Footer);
 		Footer.y += 2.0f;
 		UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
@@ -1338,6 +1340,40 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			ServerBrowser()->SetType(IServerBrowser::TYPE_LAN);
 			NewPage = PAGE_LAN;
 			g_Config.m_UiBrowserPage = PAGE_LAN;
+		}
+
+		if(Client()->State() == IClient::STATE_OFFLINE)
+		{
+			CUIRect Right, Button;
+			Box.VSplitRight(20.0f, &Box, 0);
+			Box.VSplitRight(60.0f, 0, &Right);
+			Right.HSplitBottom(20.0f, 0, &Button);
+			
+			// do fading button with two icons for browser view
+			{
+				static CButtonContainer s_SwitchViewButton;
+				float Seconds = 0.6f; //  for fade
+				float FadeVal = ButtonFade(&s_SwitchViewButton, Seconds, 0) / Seconds;
+
+				RenderTools()->DrawUIRect(&Button, vec4(0.0f + FadeVal, 0.0f + FadeVal, 0.0f + FadeVal, 0.25f + FadeVal * 0.5f), CUI::CORNER_ALL, 5.0f);
+
+				for(int IconId = 0; IconId < 2; IconId++)
+				{
+					// rewrites CMenus::DoButton_SpriteID
+					CUIRect Icon = Button;
+					Icon.VMargin(Icon.w/4.0f, &Icon);
+					Icon.x += IconId*Icon.w*0.50f;
+					Icon.w *= 0.50f;
+					if(Icon.w > Icon.h)
+						Icon.VMargin((Icon.w - Icon.h) / 2, &Icon);
+					else if(Icon.w < Icon.h)
+						Icon.HMargin((Icon.h - Icon.w) / 2, &Icon);
+					Icon.Margin(2.0f, &Icon);
+					DoIcon(IMAGE_ARROWICONS, (IconId ^ g_Config.m_UiWideview) ? SPRITE_ARROW_RIGHT_A:SPRITE_ARROW_LEFT_A, &Icon);
+				}
+				if(UI()->DoButtonLogic(s_SwitchViewButton.GetID(), "", 0, &Button))
+					g_Config.m_UiWideview ^= 1;
+			}
 		}
 	}
 	else if(Client()->State() == IClient::STATE_OFFLINE)
@@ -1725,7 +1761,11 @@ int CMenus::Render()
 				BarHeight += 3.0f + 25.0f;
 			else if(Client()->State() == IClient::STATE_ONLINE && m_GamePage >= PAGE_INTERNET && m_GamePage <= PAGE_LAN)
 				BarHeight += 3.0f + 25.0f;
-			Screen.VMargin(Screen.w/2-365.0f, &MainView);
+			float VMargin = Screen.w/2-365.0f;
+			if(g_Config.m_UiWideview)
+				VMargin = min(VMargin, 60.0f);
+
+			Screen.VMargin(VMargin, &MainView);
 			MainView.HSplitTop(BarHeight, &TabBar, &MainView);
 			RenderMenubar(TabBar);
 
@@ -1769,6 +1809,11 @@ int CMenus::Render()
 						m_MenuPage = PAGE_SETTINGS;
 					}
 				}
+				Row.VSplitRight(5.0f, &Row, 0);
+				Row.VSplitRight(TopOffset, &Row, &Button);
+				static CButtonContainer s_WideButton;
+				if(DoButton_MenuTabTop(&s_WideButton, g_Config.m_UiWideview ? "\xe2\x97\xbe" : "\xe2\x96\xac", false, &Button, 1.0f, 1.0f, CUI::CORNER_B))
+					g_Config.m_UiWideview ^= 1;
 			}
 
 			// render current page

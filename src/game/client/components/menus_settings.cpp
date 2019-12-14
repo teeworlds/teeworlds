@@ -2143,7 +2143,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		// background
 		CUIRect RestartWarning;
 		MainView.HSplitTop(25.0f, &RestartWarning, 0);
-		RestartWarning.VMargin(140.0f, &RestartWarning);
+		RestartWarning.VMargin(g_Config.m_UiWideview ? 210.0f : 140.0f, &RestartWarning);
 		RenderTools()->DrawUIRect(&RestartWarning, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		// text
