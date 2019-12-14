@@ -1013,7 +1013,7 @@ set(EXPECTED_DATA
   skins/decoration/unipento.png
   skins/default.json
   skins/eyes/colorable.png
-  skins/eyes/negativ.png
+  skins/eyes/negative.png
   skins/eyes/standard.png
   skins/eyes/standardreal.png
   skins/eyes/x_ninja.png

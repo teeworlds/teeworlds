@@ -29,7 +29,7 @@
 		"lgt": 255
 	},
 	"eyes": {
-		"filename": "negativ",
+		"filename": "negative",
 		"custom_colors": "true",
 		"hue": 0,
 		"sat": 200,
