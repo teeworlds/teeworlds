@@ -987,7 +987,6 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 	// handle input
 	if(!pActive || *pActive)
 	{
-		int NewIndex = -1;
 		if(m_DownArrowPressed)
 			pState->m_ListBoxNewSelOffset += 1;
 		if(m_UpArrowPressed)
