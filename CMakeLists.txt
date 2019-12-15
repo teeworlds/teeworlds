@@ -1143,6 +1143,9 @@ set(EXPECTED_DATA
   ui/themes/jungle_day.map
   ui/themes/jungle_night.map
   ui/themes/none.png
+  ui/themes/winter.png
+  ui/themes/winter_day.map
+  ui/themes/winter_night.map
 )
 
 if(NOT EXISTS ${PROJECT_SOURCE_DIR}/datasrc/languages/index.json)
