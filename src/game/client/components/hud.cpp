@@ -285,7 +285,15 @@ void CHud::RenderScoreHud()
 			float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, FontSize, "10", -1, -1.0f));
 			float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
 
-			// todo: add core hud for LMS
+			if(GameFlags&GAMEFLAG_SURVIVAL)
+			{
+				// draw number of alive players
+				char aBuf[32];
+				str_format(aBuf, sizeof(aBuf), m_pClient->m_Snap.m_AliveCount[0] == 1 ? Localize("%d player left") : Localize("%d players left"),
+					m_pClient->m_Snap.m_AliveCount[0]);
+				float w = TextRender()->TextWidth(0, 8.0f, aBuf, -1, -1.0f);
+				TextRender()->Text(0, min(Whole - w - 1.0f, Whole - ScoreWidthMax - ImageSize - 2 * Split), StartY - 12.0f, 8.0f, aBuf, -1.0f);
+			}
 
 			for(int t = 0; t < 2; t++)
 			{
