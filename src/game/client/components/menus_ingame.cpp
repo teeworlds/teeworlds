@@ -738,14 +738,18 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			Bottom.VSplitLeft(15.0f, 0, &Bottom);
 			Bottom.VSplitLeft(260.0f, &Search, &Bottom);
 
-			const char *pSearchLabel = Localize("Search:");
-			float w = TextRender()->TextWidth(0, Search.h*ms_FontmodHeight*0.8f, pSearchLabel, -1, -1.0f);
-			Search.VSplitLeft(w + 10.0f, &Label, &Search);
-			Label.y += 2.0f;
-			UI()->DoLabel(&Label, pSearchLabel, Search.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-			static float s_SearchOffset = 0.0f;
-			if(DoEditBox(&m_aFilterString, &Search, m_aFilterString, sizeof(m_aFilterString), Search.h*ms_FontmodHeight*0.8f, &s_SearchOffset))
-				m_CallvoteSelectedOption = 0;
+			float w;
+			if(s_ControlPage == 0)
+			{
+				const char *pSearchLabel = Localize("Search:");
+				w = TextRender()->TextWidth(0, Search.h*ms_FontmodHeight*0.8f, pSearchLabel, -1, -1.0f);
+				Search.VSplitLeft(w + 10.0f, &Label, &Search);
+				Label.y += 2.0f;
+				UI()->DoLabel(&Label, pSearchLabel, Search.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+				static float s_SearchOffset = 0.0f;
+				if(DoEditBox(&m_aFilterString, &Search, m_aFilterString, sizeof(m_aFilterString), Search.h*ms_FontmodHeight*0.8f, &s_SearchOffset))
+					m_CallvoteSelectedOption = 0;
+			}
 
 			// render reason
 			Bottom.VSplitRight(120.0f, &Bottom, &Button);
