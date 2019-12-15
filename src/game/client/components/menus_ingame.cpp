@@ -593,7 +593,21 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 void CMenus::HandleCallvote(int Page, bool Force)
 {
 	if(Page == 0)
-		m_pClient->m_pVoting->CallvoteOption(m_CallvoteSelectedOption, m_aCallvoteReason, Force);
+	{
+		// find the correct index within the filtered list
+		int RealIndex = 0, FilteredIndex = 0;
+		for(CVoteOptionClient *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext, RealIndex++)
+		{
+			if(m_aFilterString[0] && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
+				continue; // no match found
+
+			if(FilteredIndex == m_CallvoteSelectedOption)
+				break;
+
+			FilteredIndex++;
+		}
+		m_pClient->m_pVoting->CallvoteOption(RealIndex, m_aCallvoteReason, Force);
+	}
 	else if(Page == 1)
 	{
 		if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
