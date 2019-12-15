@@ -397,10 +397,10 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 		// Bind to X,Y
 		Row.VSplitLeft(2*StatusMargin, 0, &Row);
 		Row.VSplitLeft(BindWidth, &Button, &Row);
-		if(DoButton_CheckBox(&aActive[i][0], Localize("X"), g_Config.m_JoystickX == i, &Button, g_Config.m_JoystickY == i))
+		if(DoButton_CheckBox(&aActive[i][0], "X", g_Config.m_JoystickX == i, &Button, g_Config.m_JoystickY == i))
 			g_Config.m_JoystickX = i;
 		Row.VSplitLeft(BindWidth, &Button, &Row);
-		if(DoButton_CheckBox(&aActive[i][1], Localize("Y"), g_Config.m_JoystickY == i, &Button, g_Config.m_JoystickX == i))
+		if(DoButton_CheckBox(&aActive[i][1], "Y", g_Config.m_JoystickY == i, &Button, g_Config.m_JoystickX == i))
 			g_Config.m_JoystickY = i;
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 	}
