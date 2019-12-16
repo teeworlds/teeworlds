@@ -942,7 +942,12 @@ void CDemoEditor::Slice(const char *pDemo, const char *pDst, int StartTick, int 
 		return;
 
 	const CDemoPlayer::CMapInfo *pMapInfo = m_pDemoPlayer->GetMapInfo();
-	if(m_pDemoRecorder->Start(m_pStorage, m_pConsole, pDst, m_pNetVersion, pMapInfo->m_aName, pMapInfo->m_Crc, "client") == -1)
+	SHA256_DIGEST Fake;
+	for(unsigned i = 0; i < sizeof(Fake.data); i++)
+	{
+		Fake.data[i] = 0xff;
+	}
+	if(m_pDemoRecorder->Start(m_pStorage, m_pConsole, pDst, m_pNetVersion, pMapInfo->m_aName, Fake, pMapInfo->m_Crc, "client") == -1)
 		return;
 
 	m_pDemoPlayer->Play();
