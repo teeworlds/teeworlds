@@ -876,6 +876,7 @@ set(EXPECTED_DATA
   countryflags/default.png
   countryflags/index.json
   deadtee.png
+  demo_buttons2.png
   editor/automap/desert_main.json
   editor/automap/grass_doodads.json
   editor/automap/grass_main.json

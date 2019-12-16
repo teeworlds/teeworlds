@@ -320,9 +320,9 @@ public:
 	void DemoRecorder_HandleAutoStart();
 	void DemoRecorder_Stop();
 	void DemoRecorder_AddDemoMarker();
-	virtual void DemoSliceBegin() = 0;
-	virtual void DemoSliceEnd() = 0;
-	virtual void DemoSlice() = 0;
+	virtual void DemoSliceBegin();
+	virtual void DemoSliceEnd();
+	virtual void DemoSlice(const char *pDstPath);
 	void RecordGameMessage(bool State) { m_RecordGameMessage = State; }
 
 	void AutoScreenshot_Start();
@@ -331,24 +331,10 @@ public:
 
 	void ServerBrowserUpdate();
 
-<<<<<<< HEAD
 	// gfx
 	void SwitchWindowScreen(int Index);
 	void ToggleFullscreen();
 	void ToggleWindowBordered();
 	void ToggleWindowVSync();
-=======
-	// DDRace
-
-	virtual const char* GetCurrentMap();
-	virtual int GetCurrentMapCrc();
-	virtual const char* RaceRecordStart(const char *pFilename);
-	virtual void RaceRecordStop();
-	virtual bool DemoIsRecording();
-
-	virtual void DemoSliceBegin();
-	virtual void DemoSliceEnd();
-	virtual void DemoSlice(const char *pDstPath);
->>>>>>> 8624d0a74... DemoPlayer: Save dialog added
 };
 #endif

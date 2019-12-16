@@ -131,7 +131,7 @@ public:
 
 	const CPlaybackInfo *Info() const { return &m_Info; }
 	int IsPlaying() const { return m_File != 0; }
-	const CMapInfo *GetMapInfo() { return &m_MapInfo; };
+	const CMapInfo *GetMapInfo() const { return &m_MapInfo; };
 };
 
 class CDemoEditor : public IDemoEditor, public CDemoPlayer::IListner
@@ -149,7 +149,7 @@ class CDemoEditor : public IDemoEditor, public CDemoPlayer::IListner
 
 public:
 	virtual void Init(const char *pNetVersion, class CSnapshotDelta *pSnapshotDelta, class IConsole *pConsole, class IStorage *pStorage);
-	virtual void Slice(const char *pDemo, const char *pDst, int StartTick, int EndTick);
+	virtual void Slice(const char *pDemo, const char *pDst, int StartTick, int EndTick, const char *pNetVersion);
 
 	virtual void OnDemoPlayerSnapshot(void *pData, int Size);
 	virtual void OnDemoPlayerMessage(void *pData, int Size);
