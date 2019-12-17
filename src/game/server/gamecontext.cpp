@@ -510,7 +510,7 @@ void CGameContext::ValidateSkinParts(const char** aPartNames, int* aUseCustomCol
 				EyeHsl.l = clamp(EyeHsl.l, 0.f, 1.f);
 
 				// white eye can't go to black because of our DARKEST_COLOR_LGT restriction, so switch to standard (black) eyes
-				if(EyeHsl.l < 0.5)
+				if(EyeHsl.l < DARKEST_COLOR_LGT/255.f)
 					aPartNames[SKINPART_EYES] = "standard"; // black
 				else
 				{
