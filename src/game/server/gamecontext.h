@@ -155,6 +155,8 @@ public:
 	//
 	void SwapTeams();
 
+	void ValidateSkinParts(const char **aPartNames, int *aUseCustomColors, int *aPartColors);
+
 	// engine events
 	virtual void OnInit();
 	virtual void OnConsoleInit();
