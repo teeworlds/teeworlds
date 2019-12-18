@@ -450,7 +450,7 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 				EyeHsl = vec3(0, 0, 1);
 
 			vec3 OrgEyeHsl = EyeHsl;
-			EyeHsl.l *= 0.925;
+			EyeHsl.l *= 0.925f;
 
 			vec3 EyeRgb = HslToRgb(EyeHsl);
 			vec3 EyeLab = RgbToLab(EyeRgb);
@@ -487,7 +487,7 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 
 			if(Dist < MIN_EYE_BODY_COLOR_DIST)
 			{
-				OrgEyeHsl.l -= 0.6;
+				OrgEyeHsl.l -= 0.6f;
 				OrgEyeHsl.l = clamp(OrgEyeHsl.l, 0.f, 1.f);
 
 				aUseCustomColors[SKINPART_EYES] = 1;
