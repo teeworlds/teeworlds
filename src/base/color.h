@@ -158,13 +158,15 @@ inline vec3 RgbToLab(vec3 rgb)
 		0.0193324 * rgb.r + 0.119193 * rgb.g + 0.950444 * rgb.b
 	);
 
-#define H(VAL) ((VAL > 0.008856f) ? powf(VAL, 0.333333f) : (7.787f*VAL + 0.137931f))
+#define RGB_TO_LAB_H(VAL) ((VAL > 0.008856f) ? powf(VAL, 0.333333f) : (7.787f*VAL + 0.137931f))
 
 	return vec3(
-		116 * H( xyz.y / adapt.y) - 16,
-		500 * (H(xyz.x / adapt.x) - H(xyz.y / adapt.y)),
-		200 * (H(xyz.y / adapt.y) - H(xyz.z / adapt.z))
+		116 * RGB_TO_LAB_H( xyz.y / adapt.y) - 16,
+		500 * (RGB_TO_LAB_H(xyz.x / adapt.x) - RGB_TO_LAB_H(xyz.y / adapt.y)),
+		200 * (RGB_TO_LAB_H(xyz.y / adapt.y) - RGB_TO_LAB_H(xyz.z / adapt.z))
 	);
+
+#undef RGB_TO_LAB_H
 }
 
 inline float LabDistance(vec3 labA, vec3 labB)
