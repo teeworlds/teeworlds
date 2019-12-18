@@ -21,23 +21,6 @@
 #include "chat.h"
 #include "binds.h"
 
-CChat::CChat()
-{
-	// init chat commands (must be in alphabetical order)
-	m_Commands.AddCommand("all", "", "Switch to all chat", &Com_All);
-	m_Commands.AddCommand("friend", "p", "Add player as friend", &Com_Befriend);
-	m_Commands.AddCommand("m", "p", "Mute a player", &Com_Mute);
-	m_Commands.AddCommand("mute", "p", "Mute a player", &Com_Mute);
-	m_Commands.AddCommand("r", "", "Reply to a whisper", &Com_Reply);
-	m_Commands.AddCommand("team", "", "Switch to team chat", &Com_Team);
-	m_Commands.AddCommand("w", "p", "Whisper another player", &Com_Whisper);
-	m_Commands.AddCommand("whisper", "p", "Whisper another player", &Com_Whisper);
-}
-
-CChat::~CChat()
-{
-	m_Commands.ClearCommands();
-}
 
 void CChat::OnReset()
 {
@@ -82,6 +65,17 @@ void CChat::OnReset()
 	}
 
 	m_CurrentLineWidth = -1.0f;
+
+	// init chat commands (must be in alphabetical order)
+	m_Commands.ClearCommands();
+	m_Commands.AddCommand("all", "", "Switch to all chat", &Com_All);
+	m_Commands.AddCommand("friend", "p", "Add player as friend", &Com_Befriend);
+	m_Commands.AddCommand("m", "p", "Mute a player", &Com_Mute);
+	m_Commands.AddCommand("mute", "p", "Mute a player", &Com_Mute);
+	m_Commands.AddCommand("r", "", "Reply to a whisper", &Com_Reply);
+	m_Commands.AddCommand("team", "", "Switch to team chat", &Com_Team);
+	m_Commands.AddCommand("w", "p", "Whisper another player", &Com_Whisper);
+	m_Commands.AddCommand("whisper", "p", "Whisper another player", &Com_Whisper);
 }
 
 void CChat::OnMapLoad()

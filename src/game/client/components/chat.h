@@ -147,9 +147,6 @@ class CChat : public CComponent
 	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
 
 public:
-	CChat();
-	~CChat();
-
 	bool IsActive() const { return m_Mode != CHAT_NONE; }
 
 	void AddLine(int ClientID, int Team, const char *pLine, int TargetID = -1);
