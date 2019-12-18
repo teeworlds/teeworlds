@@ -50,6 +50,10 @@ IGameController::IGameController(CGameContext *pGameServer)
 	m_aNumSpawnPoints[0] = 0;
 	m_aNumSpawnPoints[1] = 0;
 	m_aNumSpawnPoints[2] = 0;
+
+	CommandsManager()->AddCommand("test", "i", "hello world", [](CPlayer *player, const char *Args) {
+			player->GetCharacter()->GameServer()->SendBroadcast("Hello boy", player->GetCID());
+			});
 }
 
 //activity
@@ -320,18 +324,8 @@ void IGameController::OnPlayerConnect(CPlayer *pPlayer)
 	// update game info
 	UpdateGameInfo(ClientID);
 
-	array<CChatCommand*> *pCommands = CommandsManager()->Commands();
-	for(int i = 0; i < pCommands->size(); i++)
-	{
-		CChatCommand *pCommand = (*pCommands)[i];
-
-		CNetMsg_Sv_CommandInfo Msg;
-		Msg.m_pName = pCommand->m_pName;
-		Msg.m_HelpText = pCommand->m_pHelpText;
-		Msg.m_ArgsFormat = pCommand->m_pArgsFormat;
-
-		Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, pPlayer->GetCID());
-	}
+	CommandsManager()->SendRemoveCommand(Server(), "all", pPlayer->GetCID());
+	CommandsManager()->OnPlayerConnect(Server(), pPlayer);
 }
 
 void IGameController::OnPlayerDisconnect(CPlayer *pPlayer)
@@ -1223,25 +1217,78 @@ int IGameController::GetStartTeam()
 	return TEAM_SPECTATORS;
 }
 
-void IGameController::CChatCommands::AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pCallback)
+IGameController::CChatCommands::CChatCommands()
 {
-	CChatCommand *pCommand = new CChatCommand();
-	pCommand->m_pName = pName;
-	pCommand->m_pArgsFormat = pArgsFormat;
-	pCommand->m_pHelpText = pHelpText;
-	pCommand->m_Callback = pCallback;
+	mem_zero(m_aCommands, sizeof(m_aCommands));
+}
 
-	m_aCommands.add(pCommand);
+void IGameController::CChatCommands::AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pfnCallback)
+{
+	if(GetCommand(pName))
+		return;
+
+	for(int i = 0; i < MAX_COMMANDS; i++) {
+		if(!m_aCommands[i].m_Used) {
+			mem_zero(&m_aCommands[i], sizeof(CChatCommand));
+
+			str_copy(m_aCommands[i].m_aName, pName, sizeof(m_aCommands[i].m_aName));
+			str_copy(m_aCommands[i].m_aHelpText, pHelpText, sizeof(m_aCommands[i].m_aHelpText));
+			str_copy(m_aCommands[i].m_aArgsFormat, pArgsFormat, sizeof(m_aCommands[i].m_aArgsFormat));
+
+			m_aCommands[i].m_pfnCallback = pfnCallback;
+			m_aCommands[i].m_Used = true;
+			break;
+		}
+	}
+}
+
+void IGameController::CChatCommands::SendRemoveCommand(IServer *pServer, const char *pName, int ID)
+{
+	CNetMsg_Sv_CommandInfoRemove Msg;
+	Msg.m_pName = pName;
+
+	pServer->SendPackMsg(&Msg, MSGFLAG_VITAL, ID);
+
+}
+
+void IGameController::CChatCommands::RemoveCommand(const char *pName)
+{
+	CChatCommand *pCommand = GetCommand(pName);
+
+	if(pCommand)
+	{
+		mem_zero(pCommand, sizeof(CChatCommand));
+	}
 }
 
 IGameController::CChatCommand *IGameController::CChatCommands::GetCommand(const char *pName)
 {
-	for(int i = 0; i < m_aCommands.size(); i++) {
-		if(str_comp(m_aCommands[i]->m_pName, pName) == 0) {
-			return m_aCommands[i];
+	for(int i = 0; i < MAX_COMMANDS; i++)
+	{
+		if(m_aCommands[i].m_Used && str_comp(m_aCommands[i].m_aName, pName) == 0)
+		{
+			return &m_aCommands[i];
 		}
 	}
-	return NULL;
+	return 0;
+}
+
+void IGameController::CChatCommands::OnPlayerConnect(IServer *pServer, CPlayer *pPlayer)
+{
+	for(int i = 0; i < MAX_COMMANDS; i++)
+	{
+		CChatCommand *pCommand = &m_aCommands[i];
+
+		if(pCommand->m_Used)
+		{
+			CNetMsg_Sv_CommandInfo Msg;
+			Msg.m_pName = pCommand->m_aName;
+			Msg.m_HelpText = pCommand->m_aHelpText;
+			Msg.m_ArgsFormat = pCommand->m_aArgsFormat;
+
+			pServer->SendPackMsg(&Msg, MSGFLAG_VITAL, pPlayer->GetCID());
+		}
+	}
 }
 
 void IGameController::OnPlayerCommand(CPlayer *pPlayer, const char *pCommandName, const char *pCommandArgs)
@@ -1250,5 +1297,5 @@ void IGameController::OnPlayerCommand(CPlayer *pPlayer, const char *pCommandName
 	CChatCommand *pCommand = CommandsManager()->GetCommand(pCommandName);
 
 	if(pCommand)
-		pCommand->m_Callback(pPlayer, pCommandArgs);
+		pCommand->m_pfnCallback(pPlayer, pCommandArgs);
 }

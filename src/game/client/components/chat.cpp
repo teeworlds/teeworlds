@@ -515,6 +515,16 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 			m_Commands.AddCommand(pMsg->m_pName, pMsg->m_ArgsFormat, pMsg->m_HelpText, NULL);
 		}
 	}
+	else if(MsgType == NETMSGTYPE_SV_COMMANDINFOREMOVE) {
+		CNetMsg_Sv_CommandInfoRemove *pMsg = (CNetMsg_Sv_CommandInfoRemove *)pRawMsg;
+		
+		CChatCommand *pCommand = m_Commands.GetCommandByName(pMsg->m_pName);
+
+		if(pCommand) {
+			mem_zero(pCommand, sizeof(CChatCommand));
+			dbg_msg("chat_commands", "removed chat command: name='%s'", pMsg->m_pName);
+		}
+	}
 }
 
 void CChat::AddLine(int ClientID, int Mode, const char *pLine, int TargetID)
@@ -1322,11 +1332,11 @@ void CChat::HandleCommands(float x, float y, float w)
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Rect.x + 5.0f, y, 5.0f, TEXTFLAG_RENDER);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-				TextRender()->TextEx(&Cursor, pCommand->m_pName, -1);
+				TextRender()->TextEx(&Cursor, pCommand->m_aName, -1);
 				TextRender()->TextEx(&Cursor, " ", -1);
 
 				TextRender()->TextColor(0.0f, 0.5f, 0.5f, 1.0f);
-				for(const char *c = pCommand->m_pArgsFormat; *c; c++)
+				for(const char *c = pCommand->m_aArgsFormat; *c; c++)
 				{
 					// Integer argument
 					if(*c == 'i')
@@ -1345,7 +1355,7 @@ void CChat::HandleCommands(float x, float y, float w)
 					}
 				}
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
-				TextRender()->TextEx(&Cursor, pCommand->m_pHelpText, -1);
+				TextRender()->TextEx(&Cursor, pCommand->m_aHelpText, -1);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
@@ -1360,7 +1370,7 @@ bool CChat::ExecuteCommand()
 	const char* pCommandStr = m_Input.GetString();
 	const CChatCommand* pCommand = m_Commands.GetSelectedCommand();
 	dbg_assert(pCommand != 0, "selected command does not exist");
-	bool IsFullMatch = str_find(pCommandStr + 1, pCommand->m_pName); // if the command text is fully inside pCommandStr (aka, not a shortcut)
+	bool IsFullMatch = str_find(pCommandStr + 1, pCommand->m_aName); // if the command text is fully inside pCommandStr (aka, not a shortcut)
 
 	if(IsFullMatch)
 	{
@@ -1371,7 +1381,7 @@ bool CChat::ExecuteCommand()
 		{
 			// Send server-side command.
 			CNetMsg_Cl_Command Msg;
-			Msg.m_Name = pCommand->m_pName;
+			Msg.m_Name = pCommand->m_aName;
 			Msg.m_Arguments = pCommandStr;
 			Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 		}
@@ -1382,7 +1392,7 @@ bool CChat::ExecuteCommand()
 		// autocomplete command
 		char aBuf[128];
 		str_copy(aBuf, "/", sizeof(aBuf));
-		str_append(aBuf, pCommand->m_pName, sizeof(aBuf));
+		str_append(aBuf, pCommand->m_aName, sizeof(aBuf));
 		str_append(aBuf, " ", sizeof(aBuf));
 
 		m_Input.Set(aBuf);
@@ -1528,51 +1538,40 @@ void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
 
 
 // CChatCommands methods
-CChat::CChatCommands::CChatCommands() : m_pSelectedCommand(NULL) { }
-CChat::CChatCommands::~CChatCommands() {
-	m_aCommands.delete_all();
+CChat::CChatCommands::CChatCommands() : m_pSelectedCommand(NULL) {
+	mem_zero(m_aCommands, sizeof(m_aCommands));
 }
+CChat::CChatCommands::~CChatCommands() {}
 
 // selection
 void CChat::CChatCommands::Reset()
 {
-	m_pSelectedCommand = NULL;
+	m_pSelectedCommand = 0;
 }
 
 void CChat::CChatCommands::AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pfnCallback)
 {
-	if(m_aCommands.size() >= MAX_COMMANDS)
-		return;
+	for(int i = 0; i < MAX_COMMANDS; i++)
+	{
+		if(!m_aCommands[i].m_Used)
+		{
+			mem_zero(&m_aCommands[i], sizeof(CChatCommand));
 
-	CChatCommand *pCommand = new CChatCommand();
-	pCommand->m_pName = (char *)mem_alloc(sizeof(char) * (str_length(pName) + 1), 1);
-	str_copy(pCommand->m_pName, pName, str_length(pName) + 1);
+			str_copy(m_aCommands[i].m_aName, pName, sizeof(m_aCommands[i].m_aName));
+			str_copy(m_aCommands[i].m_aHelpText, pHelpText, sizeof(m_aCommands[i].m_aHelpText));
+			str_copy(m_aCommands[i].m_aArgsFormat, pArgsFormat, sizeof(m_aCommands[i].m_aArgsFormat));
 
-	pCommand->m_pArgsFormat = (char *)mem_alloc(sizeof(char) * (str_length(pArgsFormat) + 1), 1);
-	str_copy(pCommand->m_pArgsFormat, pArgsFormat, str_length(pArgsFormat) + 1);
-
-	pCommand->m_pHelpText = (char *)mem_alloc(sizeof(char) * (str_length(pHelpText) + 1), 1);
-	str_copy(pCommand->m_pHelpText, pHelpText, str_length(pHelpText) + 1);
-
-	pCommand->m_pfnCallback = pfnCallback;
-	pCommand->m_aFiltered = false;
-
-	m_aCommands.add(pCommand);
-}
-
-CChat::CChatCommand::~CChatCommand()
-{
-	if(m_pName)
-		mem_free(m_pName);
-	if(m_pHelpText)
-		mem_free(m_pHelpText);
-	if(m_pArgsFormat)
-		mem_free(m_pArgsFormat);
+			m_aCommands[i].m_pfnCallback = pfnCallback;
+			m_aCommands[i].m_aFiltered = false;
+			m_aCommands[i].m_Used = true;
+			break;
+		}
+	}
 }
 
 void CChat::CChatCommands::ClearCommands()
 {
-	m_aCommands.delete_all();
+	mem_zero(m_aCommands, sizeof(m_aCommands));
 }
 
 // Example: /whisper command will match "/whi", "/whisper" and "/whisper tee"
@@ -1588,16 +1587,17 @@ void CChat::CChatCommands::Filter(const char* pLine)
 	if(pFirstWhitespace)
 		*pFirstWhitespace = 0;
 
-	for(int i = 0; i < m_aCommands.size(); i++)
-		m_aCommands[i]->m_aFiltered = (str_find_nocase(m_aCommands[i]->m_pName, aCommandStr) != m_aCommands[i]->m_pName);
+	for(int i = 0; i < MAX_COMMANDS; i++)
+		if(m_aCommands[i].m_Used)
+			m_aCommands[i].m_aFiltered = (str_find_nocase(m_aCommands[i].m_aName, aCommandStr) != m_aCommands[i].m_aName);
 
 	// also update selected command
 	if(!GetSelectedCommand() || GetSelectedCommand()->m_aFiltered)
 	{
 		if(CountActiveCommands() > 0)
-			m_pSelectedCommand = m_aCommands[GetActiveIndex(0)]; // default to first command
+			m_pSelectedCommand = &m_aCommands[GetActiveIndex(0)]; // default to first command
 		else
-			m_pSelectedCommand = NULL;
+			m_pSelectedCommand = 0;
 	}
 }
 
@@ -1605,8 +1605,9 @@ void CChat::CChatCommands::Filter(const char* pLine)
 int CChat::CChatCommands::CountActiveCommands() const
 {
 	int n = 0;
-	for(int i = 0; i < m_aCommands.size(); i++) {
-		if(!m_aCommands[i]->m_aFiltered)
+	for(int i = 0; i < MAX_COMMANDS; i++)
+	{
+		if(m_aCommands[i].m_Used && !m_aCommands[i].m_aFiltered)
 			n++;
 	}
 	return n;
@@ -1614,18 +1615,18 @@ int CChat::CChatCommands::CountActiveCommands() const
 
 const CChat::CChatCommand* CChat::CChatCommands::GetCommand(int index) const
 {
-	return m_aCommands[GetActiveIndex(index)];
+	return &m_aCommands[GetActiveIndex(index)];
 }
 
 CChat::CChatCommand *CChat::CChatCommands::GetCommandByName(const char *pName)
 {
-	for(int i = 0; i < m_aCommands.size(); i++)
+	for(int i = 0; i < MAX_COMMANDS; i++)
 	{
-		if(str_comp(m_aCommands[i]->m_pName, pName) == 0)
-			return m_aCommands[i];
+		if(m_aCommands[i].m_Used && str_comp(m_aCommands[i].m_aName, pName) == 0)
+			return &m_aCommands[i];
 	}
 
-	return NULL;
+	return 0;
 }
 
 const CChat::CChatCommand* CChat::CChatCommands::GetSelectedCommand() const
@@ -1636,41 +1637,41 @@ const CChat::CChatCommand* CChat::CChatCommands::GetSelectedCommand() const
 void CChat::CChatCommands::SelectPreviousCommand()
 {
 	CChatCommand* LastCommand = 0x0;
-	for(int i = 0; i < m_aCommands.size(); i++)
+	for(int i = 0; i < MAX_COMMANDS; i++)
 	{
-		if(m_aCommands[i]->m_aFiltered)
+		if(m_aCommands[i].m_aFiltered)
 			continue;
-		if(m_aCommands[i] == m_pSelectedCommand)
+		if(&m_aCommands[i] == m_pSelectedCommand)
 		{
 			m_pSelectedCommand = LastCommand;
 			return;
 		}
-		LastCommand = m_aCommands[i];
+		LastCommand = &m_aCommands[i];
 	}
 }
 
 void CChat::CChatCommands::SelectNextCommand()
 {
 	bool FoundSelected = false;
-	for(int i = 0; i < m_aCommands.size(); i++)
+	for(int i = 0; i < MAX_COMMANDS; i++)
 	{
-		if(m_aCommands[i]->m_aFiltered)
+		if(!m_aCommands[i].m_Used || m_aCommands[i].m_aFiltered)
 			continue;
 		if(FoundSelected)
 		{
-			m_pSelectedCommand = m_aCommands[i];
+			m_pSelectedCommand = &m_aCommands[i];
 			return;
 		}
-		if(m_aCommands[i] == m_pSelectedCommand)
+		if(&m_aCommands[i] == m_pSelectedCommand)
 			FoundSelected = true;
 	}
 }
 
 int CChat::CChatCommands::GetActiveIndex(int index) const
 {
-	for(int i = 0; i < m_aCommands.size(); i++)
+	for(int i = 0; i < MAX_COMMANDS; i++)
 	{
-		if(m_aCommands[i]->m_aFiltered)
+		if(!m_aCommands[i].m_Used || m_aCommands[i].m_aFiltered)
 			index++;
 		if(i == index)
 			return i;

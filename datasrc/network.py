@@ -465,6 +465,10 @@ Messages = [
                 NetStringStrict("m_HelpText")
         ]),
 
+        NetMessage("Sv_CommandInfoRemove", [
+                NetStringStrict("m_pName")
+        ]),
+
         NetMessage("Cl_Command", [
                 NetStringStrict("m_Name"),
                 NetStringStrict("m_Arguments")

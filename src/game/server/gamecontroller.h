@@ -124,22 +124,32 @@ protected:
 
 	struct CChatCommand 
 	{
-		const char *m_pName;
-		const char *m_pArgsFormat;
-		const char *m_pHelpText;
-		COMMAND_CALLBACK m_Callback;
+		char m_aName[32];
+		char m_aHelpText[64];
+		char m_aArgsFormat[16];
+		COMMAND_CALLBACK m_pfnCallback;
+		bool m_Used;
 	};
 
 	class CChatCommands
 	{
-		array<CChatCommand*> m_aCommands;
+		enum
+		{
+			// 8 is the number of vanilla commands, 14 the number of commands left to fill the chat.
+			MAX_COMMANDS = 8 + 14
+		};
 
+		CChatCommand m_aCommands[MAX_COMMANDS];
 	public:
+		CChatCommands();
 
-		// Format: i = int, s = string, p = playername
-		void AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pCallback);
+		// Format: i = int, s = string, p = playername, c = subcommand
+		void AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pfnCallback);
+		void RemoveCommand(const char *pName);
+		void SendRemoveCommand(class IServer *pServer, const char *pName, int ID);
 		CChatCommand *GetCommand(const char *pName);
-		array<CChatCommand*> *Commands() { return &m_aCommands; }
+
+		void OnPlayerConnect(class IServer *pServer, class CPlayer *pPlayer);
 	};
 
 	CChatCommands m_Commands;

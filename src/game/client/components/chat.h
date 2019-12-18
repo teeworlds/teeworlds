@@ -86,27 +86,25 @@ class CChat : public CComponent
 	// chat commands
 	struct CChatCommand
 	{
-		char *m_pName;
-		char *m_pHelpText;
-		char *m_pArgsFormat;
+		char m_aName[32];
+		char m_aHelpText[64];
+		char m_aArgsFormat[16];
 		// If callback is null, then it's a server-side command.
 		COMMAND_CALLBACK m_pfnCallback;
 		bool m_aFiltered; // 0 = shown, 1 = hidden
-
-		~CChatCommand();
+		bool m_Used;
 	};
 
 	class CChatCommands
 	{
-
-		array<CChatCommand*> m_aCommands;
-		CChatCommand *m_pSelectedCommand;
-
 		enum
 		{
 			// 8 is the number of vanilla commands, 14 the number of commands left to fill the chat.
 			MAX_COMMANDS = 8 + 14
 		};
+
+		CChatCommand m_aCommands[MAX_COMMANDS];
+		CChatCommand *m_pSelectedCommand;
 
 	private:
 		int GetActiveIndex(int index) const;
