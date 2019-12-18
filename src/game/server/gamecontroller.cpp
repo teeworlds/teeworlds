@@ -50,10 +50,6 @@ IGameController::IGameController(CGameContext *pGameServer)
 	m_aNumSpawnPoints[0] = 0;
 	m_aNumSpawnPoints[1] = 0;
 	m_aNumSpawnPoints[2] = 0;
-
-	CommandsManager()->AddCommand("test", "i", "hello world", [](CPlayer *player, const char *Args) {
-			player->GetCharacter()->GameServer()->SendBroadcast("Hello boy", player->GetCID());
-			});
 }
 
 //activity
@@ -324,7 +320,6 @@ void IGameController::OnPlayerConnect(CPlayer *pPlayer)
 	// update game info
 	UpdateGameInfo(ClientID);
 
-	CommandsManager()->SendRemoveCommand(Server(), "all", pPlayer->GetCID());
 	CommandsManager()->OnPlayerConnect(Server(), pPlayer);
 }
 
