@@ -1353,6 +1353,11 @@ void CChat::HandleCommands(float x, float y, float w)
 					{
 						TextRender()->TextEx(&Cursor, "<text> ", -1);
 					}
+					// Subcommand argument
+					else if(*c == 'c')
+					{
+						TextRender()->TextEx(&Cursor, "<subcommand> ", -1);
+					}
 				}
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
 				TextRender()->TextEx(&Cursor, pCommand->m_aHelpText, -1);
