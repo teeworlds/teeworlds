@@ -44,6 +44,7 @@ class CGameClient : public IGameClient
 	class IServerBrowser *m_pServerBrowser;
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
+	class IBlacklist *m_pBlacklist;
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
@@ -65,6 +66,7 @@ class CGameClient : public IGameClient
 	static void ConReadyChange(IConsole::IResult *pResult, void *pUserData);
 	static void ConchainSkinChange(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainFriendUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainBlacklistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
@@ -88,6 +90,7 @@ public:
 	class CCollision *Collision() { return &m_Collision; };
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
+	class IBlacklist *Blacklist() { return m_pBlacklist; }
 
 	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
 	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
@@ -133,12 +136,14 @@ public:
 		const CNetObj_GameData *m_pGameData;
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
+		const CNetObj_GameDataRace *m_pGameDataRace;
 		int m_GameDataFlagSnapID;
 
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];
 
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
+		const CNetObj_PlayerInfoRace *m_paPlayerInfosRace[MAX_CLIENTS];
 		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
 
 		// spectate data
@@ -264,6 +269,8 @@ public:
 	bool IsXmas() const;
 	bool IsEaster() const;
 
+	int RacePrecision() const { return m_Snap.m_pGameDataRace ? m_Snap.m_pGameDataRace->m_Precision : 3; }
+
 	//
 	void DoEnterMessage(const char *pName, int ClientID, int Team);
 	void DoLeaveMessage(const char *pName, int ClientID, const char *pReason);
@@ -301,6 +308,10 @@ public:
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
 };
+
+
+void FormatTime(char *pBuf, int Size, int Time, int Precision);
+void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision, bool ForceSign = true);
 
 const char *Localize(const char *pStr, const char *pContext="")
 GNUC_ATTRIBUTE((format_arg(1)));

@@ -426,7 +426,7 @@ void CBroadcast::OnRender()
 	RenderServerBroadcast();
 
 	// client broadcast
-	if(m_pClient->m_pScoreboard->Active() || m_pClient->m_pMotd->IsActive())
+	if(m_pClient->m_pScoreboard->IsActive() || m_pClient->m_pMotd->IsActive())
 		return;
 
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);

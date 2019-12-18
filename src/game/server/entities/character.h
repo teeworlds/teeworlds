@@ -17,6 +17,11 @@ public:
 	//character's size
 	static const int ms_PhysSize = 28;
 
+	enum
+	{
+		MIN_KILLMESSAGE_CLIENTVERSION=0x0704,   // todo 0.8: remove me
+	};
+
 	CCharacter(CGameWorld *pWorld);
 
 	virtual void Reset();

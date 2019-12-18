@@ -34,6 +34,8 @@ public:
 
 	SHA256_DIGEST Sha256() const;
 	unsigned Crc() const;
+
+	static bool CheckSha256(IOHANDLE Handle, const void *pSha256);
 };
 
 // write access

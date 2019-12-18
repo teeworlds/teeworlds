@@ -101,6 +101,8 @@ public:
 	virtual const char *NetVersion() const = 0;
 	virtual const char *NetVersionHashUsed() const = 0;
 	virtual const char *NetVersionHashReal() const = 0;
+
+	virtual bool TimeScore() const { return false; }
 };
 
 extern IGameServer *CreateGameServer();

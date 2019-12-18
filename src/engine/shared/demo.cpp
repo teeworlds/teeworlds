@@ -7,6 +7,7 @@
 #include <engine/storage.h>
 
 #include "compression.h"
+#include "datafile.h"
 #include "demo.h"
 #include "memheap.h"
 #include "network.h"
@@ -25,8 +26,6 @@ CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 	m_pSnapshotDelta = pSnapshotDelta;
 }
 
-// TODO: fix demo map loading (looks broken)
-
 // Record
 int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetVersion, const char *pMap, SHA256_DIGEST Sha256, unsigned Crc, const char *pType)
 {
@@ -40,20 +39,20 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	char aMapFilename[128];
 	// try the normal maps folder
 	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
-	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
 	if(!MapFile)
 	{
 		// try the downloaded maps (sha256)
 		char aSha256[SHA256_MAXSTRSIZE];
 		sha256_str(Sha256, aSha256, sizeof(aSha256));
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%s.map", pMap, aSha256);
-		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
 	}
 	if(!MapFile)
 	{
 		// try the downloaded maps (crc)
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
-		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
 	}
 	if(!MapFile)
 	{
@@ -61,7 +60,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 		char aBuf[512];
 		str_format(aMapFilename, sizeof(aMapFilename), "%s.map", pMap);
 		if(pStorage->FindFile(aMapFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
-			MapFile = pStorage->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
+			MapFile = pStorage->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
 	}
 	if(!MapFile)
 	{
@@ -239,31 +238,31 @@ void CDemoRecorder::Write(int Type, const void *pData, int Size)
 
 void CDemoRecorder::RecordSnapshot(int Tick, const void *pData, int Size)
 {
+	char aTmpData[CSnapshot::MAX_SIZE];
+
 	if(m_LastKeyFrame == -1 || (Tick-m_LastKeyFrame) > SERVER_TICK_SPEED*5)
 	{
 		// write full tickmarker
 		WriteTickMarker(Tick, 1);
 
 		// write snapshot
-		Write(CHUNKTYPE_SNAPSHOT, pData, Size);
+		int SnapSize = ((CSnapshot*)pData)->Serialize(aTmpData);
+		Write(CHUNKTYPE_SNAPSHOT, aTmpData, SnapSize);
 
 		m_LastKeyFrame = Tick;
 		mem_copy(m_aLastSnapshotData, pData, Size);
 	}
 	else
 	{
-		// create delta, prepend tick
-		char aDeltaData[CSnapshot::MAX_SIZE+sizeof(int)];
-		int DeltaSize;
-
 		// write tickmarker
 		WriteTickMarker(Tick, 0);
 
-		DeltaSize = m_pSnapshotDelta->CreateDelta((CSnapshot*)m_aLastSnapshotData, (CSnapshot*)pData, &aDeltaData);
+		// create delta
+		int DeltaSize = m_pSnapshotDelta->CreateDelta((CSnapshot*)m_aLastSnapshotData, (CSnapshot*)pData, &aTmpData);
 		if(DeltaSize)
 		{
 			// record delta
-			Write(CHUNKTYPE_DELTA, aDeltaData, DeltaSize);
+			Write(CHUNKTYPE_DELTA, aTmpData, DeltaSize);
 			mem_copy(m_aLastSnapshotData, pData, Size);
 		}
 	}
@@ -469,6 +468,7 @@ void CDemoPlayer::DoTick()
 	static char aCompresseddata[CSnapshot::MAX_SIZE];
 	static char aDecompressed[CSnapshot::MAX_SIZE];
 	static char aData[CSnapshot::MAX_SIZE];
+	static char aNewsnap[CSnapshot::MAX_SIZE];
 	int ChunkType, ChunkTick, ChunkSize;
 	int DataSize = 0;
 	int GotSnapshot = 0;
@@ -480,6 +480,7 @@ void CDemoPlayer::DoTick()
 
 	while(1)
 	{
+		DataSize = 0;
 		if(ReadChunkHeader(&ChunkType, &ChunkSize, &ChunkTick))
 		{
 			// stop on error or eof
@@ -527,9 +528,11 @@ void CDemoPlayer::DoTick()
 		if(ChunkType == CHUNKTYPE_DELTA)
 		{
 			// process delta snapshot
-			static char aNewsnap[CSnapshot::MAX_SIZE];
-
 			GotSnapshot = 1;
+
+			// only unpack the delta if we have a valid snapshot
+			if(m_LastSnapshotDataSize == -1)
+				continue;
 
 			DataSize = m_pSnapshotDelta->UnpackDelta((CSnapshot*)m_aLastSnapshotData, (CSnapshot*)aNewsnap, aData, DataSize);
 
@@ -551,12 +554,27 @@ void CDemoPlayer::DoTick()
 		else if(ChunkType == CHUNKTYPE_SNAPSHOT)
 		{
 			// process full snapshot
+			CSnapshotBuilder Builder;
 			GotSnapshot = 1;
 
-			m_LastSnapshotDataSize = DataSize;
-			mem_copy(m_aLastSnapshotData, aData, DataSize);
-			if(m_pListner)
-				m_pListner->OnDemoPlayerSnapshot(aData, DataSize);
+			if(Builder.UnserializeSnap(aData, DataSize))
+				DataSize = Builder.Finish(aNewsnap);
+			else
+				DataSize = -1;
+			
+			if(DataSize >= 0)
+			{
+				m_LastSnapshotDataSize = DataSize;
+				mem_copy(m_aLastSnapshotData, aNewsnap, DataSize);
+				if(m_pListner)
+					m_pListner->OnDemoPlayerSnapshot(aNewsnap, DataSize);
+			}
+			else
+			{
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "error during unpacking of snapshot, err=%d", DataSize);
+				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "demo_player", aBuf);
+			}
 		}
 		else
 		{

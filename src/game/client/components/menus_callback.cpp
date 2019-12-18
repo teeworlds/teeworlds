@@ -52,6 +52,7 @@ static CKeyInfo gs_aKeys[] =
 	{ "Ready", "ready_change", 0, 0},
 	{ "Add demo marker", "add_demomarker", 0, 0},
 	{ "Toggle sounds", "snd_toggle", 0, 0},
+	{ "Toggle dynamic camera", "toggle cl_dynamic_camera 1 0", 0, 0},
 };
 
 /*	This is for scripts/update_localization.py to work, don't remove!
@@ -59,7 +60,7 @@ static CKeyInfo gs_aKeys[] =
 	Localize("Pistol");Localize("Shotgun");Localize("Grenade");Localize("Laser");Localize("Next weapon");Localize("Prev. weapon");
 	Localize("Vote yes");Localize("Vote no");Localize("Chat");Localize("Team chat");Localize("Whisper");Localize("Show chat");Localize("Emoticon");
 	Localize("Spectator mode");Localize("Spectate next");Localize("Spectate previous");Localize("Console");Localize("Remote console");
-	Localize("Screenshot");Localize("Scoreboard");Localize("Statboard");Localize("Respawn");Localize("Ready");Localize("Add demo marker"); Localize("Toggle sounds")
+	Localize("Screenshot");Localize("Scoreboard");Localize("Statboard");Localize("Respawn");Localize("Ready");Localize("Add demo marker");Localize("Toggle sounds");Localize("Toggle dynamic camera")
 */
 
 const int g_KeyCount = sizeof(gs_aKeys) / sizeof(CKeyInfo);
@@ -333,7 +334,7 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View, void *pUser)
 	CMenus *pSelf = (CMenus*)pUser;
 	UpdateBindKeys(pSelf->m_pClient->m_pBinds);
 
-	int NumOptions = 11;
+	int NumOptions = 12;
 	int StartOption = 20;
 	float ButtonHeight = 20.0f;
 	float Spaceing = 2.0f;
@@ -396,10 +397,10 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 		// Bind to X,Y
 		Row.VSplitLeft(2*StatusMargin, 0, &Row);
 		Row.VSplitLeft(BindWidth, &Button, &Row);
-		if(DoButton_CheckBox(&aActive[i][0], Localize("X"), g_Config.m_JoystickX == i, &Button, g_Config.m_JoystickY == i))
+		if(DoButton_CheckBox(&aActive[i][0], "X", g_Config.m_JoystickX == i, &Button, g_Config.m_JoystickY == i))
 			g_Config.m_JoystickX = i;
 		Row.VSplitLeft(BindWidth, &Button, &Row);
-		if(DoButton_CheckBox(&aActive[i][1], Localize("Y"), g_Config.m_JoystickY == i, &Button, g_Config.m_JoystickX == i))
+		if(DoButton_CheckBox(&aActive[i][1], "Y", g_Config.m_JoystickY == i, &Button, g_Config.m_JoystickX == i))
 			g_Config.m_JoystickY = i;
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 	}

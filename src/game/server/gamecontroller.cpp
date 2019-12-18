@@ -868,6 +868,11 @@ bool IGameController::IsFriendlyFire(int ClientID1, int ClientID2) const
 	return false;
 }
 
+bool IGameController::IsFriendlyTeamFire(int Team1, int Team2) const
+{
+	return IsTeamplay() && !g_Config.m_SvTeamdamage && Team1 == Team2;
+}
+
 bool IGameController::IsPlayerReadyMode() const
 {
 	return g_Config.m_SvPlayerReadyMode != 0 && (m_GameStateTimer == TIMER_INFINITE && (m_GameState == IGS_WARMUP_USER || m_GameState == IGS_GAME_PAUSED));
@@ -887,6 +892,9 @@ void IGameController::UpdateGameInfo(int ClientID)
 	GameInfoMsg.m_MatchNum = m_GameInfo.m_MatchNum;
 	GameInfoMsg.m_MatchCurrent = m_GameInfo.m_MatchCurrent;
 
+	CNetMsg_Sv_GameInfo GameInfoMsgNoRace = GameInfoMsg;
+	GameInfoMsgNoRace.m_GameFlags &= ~GAMEFLAG_RACE;
+
 	if(ClientID == -1)
 	{
 		for(int i = 0; i < MAX_CLIENTS; ++i)
@@ -894,11 +902,15 @@ void IGameController::UpdateGameInfo(int ClientID)
 			if(!GameServer()->m_apPlayers[i] || !Server()->ClientIngame(i))
 				continue;
 
-			Server()->SendPackMsg(&GameInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
+			CNetMsg_Sv_GameInfo *pInfoMsg = (Server()->GetClientVersion(i) < CGameContext::MIN_RACE_CLIENTVERSION) ? &GameInfoMsgNoRace : &GameInfoMsg;
+			Server()->SendPackMsg(pInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, i);
 		}
 	}
 	else
-		Server()->SendPackMsg(&GameInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
+	{
+		CNetMsg_Sv_GameInfo *pInfoMsg = (Server()->GetClientVersion(ClientID) < CGameContext::MIN_RACE_CLIENTVERSION) ? &GameInfoMsgNoRace : &GameInfoMsg;
+		Server()->SendPackMsg(pInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
+	}
 }
 
 // map
@@ -1145,7 +1157,7 @@ void IGameController::DoTeamChange(CPlayer *pPlayer, int Team, bool DoChatMsg)
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, -1);
 
 	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' m_Team=%d", ClientID, Server()->ClientName(ClientID), Team);
+	str_format(aBuf, sizeof(aBuf), "team_join player='%d:%s' team=%d->%d", ClientID, Server()->ClientName(ClientID), OldTeam, Team);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 	// update effected game settings

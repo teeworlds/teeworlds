@@ -8,7 +8,7 @@
 
 #include <engine/graphics.h>
 #include <engine/demo.h>
-#include <engine/friends.h>
+#include <engine/contacts.h>
 
 #include <game/voting.h>
 #include <game/client/component.h>
@@ -213,6 +213,8 @@ private:
 		int m_ListBoxItemIndex;
 		int m_ListBoxSelectedIndex;
 		int m_ListBoxNewSelected;
+		int m_ListBoxNewSelOffset;
+		int m_ListBoxUpdateScroll;
 		int m_ListBoxDoneEvents;
 		int m_ListBoxNumItems;
 		int m_ListBoxItemsPerRow;
@@ -223,13 +225,14 @@ private:
 		CListBoxState()
 		{
 			m_ScrollOffset = vec2(0,0);
+			m_ListBoxUpdateScroll = false;
 		}
 	};
 
 	void UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing);
 	void UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight, const char *pBottomText, int NumItems,
-						int ItemsPerRow, int SelectedIndex, const CUIRect *pRect=0, bool Background=true);
-	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false, bool* pActive = NULL);
+						int ItemsPerRow, int SelectedIndex, const CUIRect *pRect=0, bool Background=true, bool *pActive = 0);
+	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false, bool *pActive = 0);
 	CListboxItem UiDoListboxNextRow(CListBoxState* pState);
 	int UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated);
 
@@ -397,6 +400,7 @@ private:
 	// for call vote
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
+	char m_aFilterString[VOTE_REASON_LENGTH];
 	char m_aCallvoteReason[VOTE_REASON_LENGTH];
 
 	// for callbacks
@@ -655,7 +659,7 @@ private:
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainToggleMusic(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-	void DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const void *pID, const CFriendInfo *pFriendInfo, const CServerInfo *pServerInfo, bool Checked, bool Clan = false);
+	void DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const void *pID, const CContactInfo *pFriendInfo, const CServerInfo *pServerInfo, bool Checked, bool Clan = false);
 	void SetOverlay(int Type, float x, float y, const void *pData);
 	void UpdateFriendCounter(const CServerInfo *pEntry);
 	void UpdateFriends();
@@ -666,6 +670,7 @@ private:
 	void RenderHSLPicker(CUIRect Picker);
 	void RenderSkinSelection(CUIRect MainView);
 	void RenderSkinPartSelection(CUIRect MainView);
+	void RenderSkinPartPalette(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
 	void RenderSettingsTee(CUIRect MainView);
@@ -674,7 +679,6 @@ private:
 	void RenderSettingsControls(CUIRect MainView);
 	void RenderSettingsGraphics(CUIRect MainView);
 	void RenderSettingsSound(CUIRect MainView);
-	void RenderSettingsStats(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 
 	bool DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,

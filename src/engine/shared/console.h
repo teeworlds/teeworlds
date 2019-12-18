@@ -3,6 +3,7 @@
 #ifndef ENGINE_SHARED_CONSOLE_H
 #define ENGINE_SHARED_CONSOLE_H
 
+#include <new>
 #include <engine/console.h>
 #include "memheap.h"
 
@@ -11,6 +12,7 @@ class CConsole : public IConsole
 	class CCommand : public CCommandInfo
 	{
 	public:
+		CCommand(bool BasicAccess) : CCommandInfo(BasicAccess) {};
 		CCommand *m_pNext;
 		int m_Flags;
 		bool m_Temp;
@@ -188,7 +190,7 @@ public:
 	virtual bool LineIsValid(const char *pStr);
 	virtual void ExecuteLine(const char *pStr);
 	virtual void ExecuteLineFlag(const char *pStr, int FlagMask);
-	virtual void ExecuteFile(const char *pFilename);
+	virtual bool ExecuteFile(const char *pFilename);
 
 	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData);
 	virtual void SetPrintOutputLevel(int Index, int OutputLevel);
