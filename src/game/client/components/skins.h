@@ -72,6 +72,8 @@ public:
 	vec4 GetColorV4(int v, bool UseAlpha) const;
 	int GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const;
 
+	void ValidateSkinParts(char aPartNames[NUM_SKINPARTS][24], int* aUseCustomColors, int* aPartColors, int GameFlags) const;
+
 private:
 	int m_ScanningPart;
 	sorted_array<CSkinPart> m_aaSkinParts[NUM_SKINPARTS];

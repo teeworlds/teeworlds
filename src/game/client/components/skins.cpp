@@ -416,3 +416,82 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part)
 
 	return ColorVal;
 }
+
+void CSkins::ValidateSkinParts(char aPartNames[NUM_SKINPARTS][24], int* aUseCustomColors, int* aPartColors, int GameFlags) const
+{
+	// force standard (black) eyes on team skins
+	if(GameFlags&GAMEFLAG_TEAMS)
+	{
+		// TODO: adjust eye color here as well?
+		if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0 || str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
+		{
+			str_copy(aPartNames[SKINPART_EYES], "standard", 24);
+		}
+	}
+	else
+	{
+		const float MIN_DISTANCE = 80.f;
+
+		const int BodyColor = aPartColors[SKINPART_BODY];
+		const int EyeColor = aPartColors[SKINPART_EYES];
+
+		const int Dark = DARKEST_COLOR_LGT/255.0f;
+		vec3 BodyHsl(((BodyColor>>16)&0xff)/255.0f, ((BodyColor>>8)&0xff)/255.0f, Dark+(BodyColor&0xff)/255.0f*(1.0f-Dark));
+		vec3 EyeHsl(((EyeColor>>16)&0xff)/255.0f, ((EyeColor>>8)&0xff)/255.0f, Dark+(EyeColor&0xff)/255.0f*(1.0f-Dark));
+
+		if(!aUseCustomColors[SKINPART_BODY])
+			BodyHsl = vec3(0, 0, 1);
+
+		if(str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
+		{
+			if(!aUseCustomColors[SKINPART_EYES])
+				EyeHsl = vec3(0, 0, 0.93);
+
+			vec3 BodyRgb = HslToRgb(BodyHsl);
+			vec3 EyeRgb = HslToRgb(EyeHsl);
+
+			vec3 BodyLab = RgbToLab(BodyRgb);
+			vec3 EyeLab = RgbToLab(EyeRgb);
+			float Dist = LabDistance(BodyLab, EyeLab);
+
+			if(Dist < MIN_DISTANCE)
+			{
+				EyeHsl.l -= 0.2;
+				EyeHsl.l = clamp(EyeHsl.l, 0.f, 1.f);
+
+				// white eye can't go to black because of our DARKEST_COLOR_LGT restriction, so switch to standard (black) eyes
+				if(EyeHsl.l < DARKEST_COLOR_LGT/255.f)
+					str_copy(aPartNames[SKINPART_EYES], "standard", 24); // black
+				else
+				{
+					aUseCustomColors[SKINPART_EYES] = 1;
+					aPartColors[SKINPART_EYES] = (int(EyeHsl.h*255) << 16) | (int(EyeHsl.s*255) << 8) | (int(EyeHsl.l*255));
+				}
+			}
+		}
+		else if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0)
+		{
+			if(!aUseCustomColors[SKINPART_EYES])
+				EyeHsl = vec3(0, 0, 1);
+
+			vec3 OrgEyeHsl = EyeHsl;
+			EyeHsl.l = clamp(EyeHsl.l * 0.0823f, 0.f, 1.f);
+
+			vec3 BodyRgb = HslToRgb(BodyHsl);
+			vec3 EyeRgb = HslToRgb(EyeHsl);
+
+			vec3 BodyLab = RgbToLab(BodyRgb);
+			vec3 EyeLab = RgbToLab(EyeRgb);
+			float Dist = LabDistance(BodyLab, EyeLab);
+
+			if(Dist < MIN_DISTANCE)
+			{
+				OrgEyeHsl.l -= 0.6;
+				OrgEyeHsl.l = clamp(OrgEyeHsl.l, 0.f, 1.f);
+
+				aUseCustomColors[SKINPART_EYES] = 1;
+				aPartColors[SKINPART_EYES] = (int(OrgEyeHsl.h*255) << 16) | (int(OrgEyeHsl.s*255) << 8) | (int(OrgEyeHsl.l*255));
+			}
+		}
+	}
+}

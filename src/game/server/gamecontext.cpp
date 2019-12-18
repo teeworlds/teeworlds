@@ -1,7 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/math.h>
-#include <base/color.h>
 
 #include <engine/shared/config.h>
 #include <engine/shared/memheap.h>
@@ -291,7 +290,6 @@ void CGameContext::SendSkinChange(int ClientID, int TargetID)
 		Msg.m_aUseCustomColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aUseCustomColors[p];
 		Msg.m_aSkinPartColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartColors[p];
 	}
-	ValidateSkinParts(Msg.m_apSkinPartNames, Msg.m_aUseCustomColors, Msg.m_aSkinPartColors);
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_NORECORD, TargetID);
 }
 
@@ -465,87 +463,6 @@ void CGameContext::SwapTeams()
 	m_pController->SwapTeamscore();
 }
 
-void CGameContext::ValidateSkinParts(const char** aPartNames, int* aUseCustomColors, int* aPartColors)
-{
-	// force standard (black) eyes on team skins
-	if(m_pController->IsTeamplay())
-	{
-		// TODO: adjust eye color here as well?
-		if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0 || str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
-		{
-			aPartNames[SKINPART_EYES] = "standard";
-		}
-	}
-	else
-	{
-		const float MIN_DISTANCE = 80.f;
-
-		const int BodyColor = aPartColors[SKINPART_BODY];
-		const int EyeColor = aPartColors[SKINPART_EYES];
-
-		// from skins.h
-		const int DARKEST_COLOR_LGT = 61;
-		const int Dark = DARKEST_COLOR_LGT/255.0f;
-		vec3 BodyHsl(((BodyColor>>16)&0xff)/255.0f, ((BodyColor>>8)&0xff)/255.0f, Dark+(BodyColor&0xff)/255.0f*(1.0f-Dark));
-		vec3 EyeHsl(((EyeColor>>16)&0xff)/255.0f, ((EyeColor>>8)&0xff)/255.0f, Dark+(EyeColor&0xff)/255.0f*(1.0f-Dark));
-
-		if(!aUseCustomColors[SKINPART_BODY])
-			BodyHsl = vec3(0, 0, 1);
-
-		if(str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
-		{
-			if(!aUseCustomColors[SKINPART_EYES])
-				EyeHsl = vec3(0, 0, 0.93);
-
-			vec3 BodyRgb = HslToRgb(BodyHsl);
-			vec3 EyeRgb = HslToRgb(EyeHsl);
-
-			vec3 BodyLab = RgbToLab(BodyRgb);
-			vec3 EyeLab = RgbToLab(EyeRgb);
-			float Dist = LabDistance(BodyLab, EyeLab);
-
-			if(Dist < MIN_DISTANCE)
-			{
-				EyeHsl.l -= 0.2;
-				EyeHsl.l = clamp(EyeHsl.l, 0.f, 1.f);
-
-				// white eye can't go to black because of our DARKEST_COLOR_LGT restriction, so switch to standard (black) eyes
-				if(EyeHsl.l < DARKEST_COLOR_LGT/255.f)
-					aPartNames[SKINPART_EYES] = "standard"; // black
-				else
-				{
-					aUseCustomColors[SKINPART_EYES] = 1;
-					aPartColors[SKINPART_EYES] = (int(EyeHsl.h*255) << 16) | (int(EyeHsl.s*255) << 8) | (int(EyeHsl.l*255));
-				}
-			}
-		}
-		else if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0)
-		{
-			if(!aUseCustomColors[SKINPART_EYES])
-				EyeHsl = vec3(0, 0, 1);
-
-			vec3 OrgEyeHsl = EyeHsl;
-			EyeHsl.l = clamp(EyeHsl.l * 0.0823f, 0.f, 1.f); // default is 0.3 l
-
-			vec3 BodyRgb = HslToRgb(BodyHsl);
-			vec3 EyeRgb = HslToRgb(EyeHsl);
-
-			vec3 BodyLab = RgbToLab(BodyRgb);
-			vec3 EyeLab = RgbToLab(EyeRgb);
-			float Dist = LabDistance(BodyLab, EyeLab);
-
-			if(Dist < MIN_DISTANCE)
-			{
-				OrgEyeHsl.l -= 0.6;
-				OrgEyeHsl.l = clamp(OrgEyeHsl.l, 0.f, 1.f);
-
-				aUseCustomColors[SKINPART_EYES] = 1;
-				aPartColors[SKINPART_EYES] = (int(OrgEyeHsl.h*255) << 16) | (int(OrgEyeHsl.s*255) << 8) | (int(OrgEyeHsl.l*255));
-			}
-		}
-	}
-}
-
 void CGameContext::OnTick()
 {
 	// check tuning
@@ -710,6 +627,7 @@ void CGameContext::OnClientEnter(int ClientID)
 		NewClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[ClientID]->m_TeeInfos.m_aSkinPartColors[p];
 	}
 
+
 	for(int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if(i == ClientID || !m_apPlayers[i] || (!Server()->ClientIngame(i) && !m_apPlayers[i]->IsDummy()))
@@ -734,14 +652,10 @@ void CGameContext::OnClientEnter(int ClientID)
 			ClientInfoMsg.m_aUseCustomColors[p] = m_apPlayers[i]->m_TeeInfos.m_aUseCustomColors[p];
 			ClientInfoMsg.m_aSkinPartColors[p] = m_apPlayers[i]->m_TeeInfos.m_aSkinPartColors[p];
 		}
-
-		ValidateSkinParts(ClientInfoMsg.m_apSkinPartNames, ClientInfoMsg.m_aUseCustomColors, ClientInfoMsg.m_aSkinPartColors);
-
 		Server()->SendPackMsg(&ClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
 	}
 
 	// local info
-	ValidateSkinParts(NewClientInfoMsg.m_apSkinPartNames, NewClientInfoMsg.m_aUseCustomColors, NewClientInfoMsg.m_aSkinPartColors);
 	NewClientInfoMsg.m_Local = 1;
 	Server()->SendPackMsg(&NewClientInfoMsg, MSGFLAG_VITAL|MSGFLAG_NORECORD, ClientID);
 
