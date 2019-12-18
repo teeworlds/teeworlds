@@ -1,0 +1,42 @@
+{"skin": {
+	"body": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 72,
+		"sat": 214,
+		"lgt": 123
+	},
+	"marking": {
+		"filename": "wildpaint",
+		"custom_colors": "true",
+		"hue": 65,
+		"sat": 0,
+		"lgt": 128,
+		"alp": 218
+	},
+	"decoration": {
+		"filename": "unimelo",
+		"custom_colors": "true",
+		"hue": 244,
+		"sat": 0,
+		"lgt": 140
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 0,
+		"sat": 0,
+		"lgt": 184
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 149,
+		"sat": 4,
+		"lgt": 71
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

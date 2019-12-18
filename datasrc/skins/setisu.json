@@ -1,0 +1,42 @@
+{"skin": {
+	"body": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 12,
+		"sat": 255,
+		"lgt": 52
+	},
+	"marking": {
+		"filename": "setisu",
+		"custom_colors": "true",
+		"hue": 34,
+		"sat": 255,
+		"lgt": 198,
+		"alp": 178
+	},
+	"decoration": {
+		"filename": "hair",
+		"custom_colors": "true",
+		"hue": 25,
+		"sat": 70,
+		"lgt": 41
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 30,
+		"sat": 147,
+		"lgt": 63
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 25,
+		"sat": 154,
+		"lgt": 76
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}

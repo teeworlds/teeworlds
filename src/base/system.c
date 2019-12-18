@@ -1489,10 +1489,10 @@ int fs_storage_path(const char *appname, char *path, int max)
 	int i;
 	char *xdgdatahome = getenv("XDG_DATA_HOME");
 	char xdgpath[max];
-	
+
 	if(!home)
 		return -1;
-	
+
 #if defined(CONF_PLATFORM_MACOSX)
 	str_format(path, max, "%s/Library/Application Support/%s", home, appname);
 	return 0;
@@ -1516,7 +1516,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 		for(i = strlen(xdgdatahome)+1; xdgpath[i]; i++)
 			xdgpath[i] = tolower(xdgpath[i]);
 	}
-	
+
 	/* check for old location / backward compatibility */
 	if(fs_is_dir(path))
 	{
@@ -1524,7 +1524,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 		/* for backward compatibility */
 		return 0;
 	}
-	
+
 	str_format(path, max, "%s", xdgpath);
 
 	return 0;
@@ -2074,12 +2074,45 @@ int str_comp_filenames(const char *a, const char *b)
 	return tolower(*a) - tolower(*b);
 }
 
+const char *str_startswith_nocase(const char *str, const char *prefix)
+{
+	int prefixl = str_length(prefix);
+	if(str_comp_nocase_num(str, prefix, prefixl) == 0)
+	{
+		return str + prefixl;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 const char *str_startswith(const char *str, const char *prefix)
 {
 	int prefixl = str_length(prefix);
 	if(str_comp_num(str, prefix, prefixl) == 0)
 	{
 		return str + prefixl;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+const char *str_endswith_nocase(const char *str, const char *suffix)
+{
+	int strl = str_length(str);
+	int suffixl = str_length(suffix);
+	const char *strsuffix;
+	if(strl < suffixl)
+	{
+		return 0;
+	}
+	strsuffix = str + strl - suffixl;
+	if(str_comp_nocase(strsuffix, suffix) == 0)
+	{
+		return strsuffix;
 	}
 	else
 	{
@@ -2487,6 +2520,11 @@ int pid()
 #else
 	return getpid();
 #endif
+}
+
+unsigned bytes_be_to_uint(const unsigned char *bytes)
+{
+	return (bytes[0]<<24) | (bytes[1]<<16) | (bytes[2]<<8) | bytes[3];
 }
 
 #if defined(__cplusplus)
