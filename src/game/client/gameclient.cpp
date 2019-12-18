@@ -1599,7 +1599,11 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, int Cl
 	// update skin info
 	if(UpdateSkinInfo)
 	{
-		pGameClient->m_pSkins->ValidateSkinParts(m_aaSkinPartNames, m_aUseCustomColors, m_aSkinPartColors, pGameClient->m_GameInfo.m_GameFlags);
+		char* apSkinParts[NUM_SKINPARTS];
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+			apSkinParts[p] = m_aaSkinPartNames[p];
+
+		pGameClient->m_pSkins->ValidateSkinParts(apSkinParts, m_aUseCustomColors, m_aSkinPartColors, pGameClient->m_GameInfo.m_GameFlags);
 
 		m_SkinInfo.m_Size = 64;
 		if(pGameClient->IsXmas())
