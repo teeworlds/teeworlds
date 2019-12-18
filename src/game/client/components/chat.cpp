@@ -512,7 +512,7 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 		if(!m_Commands.GetCommandByName(pMsg->m_pName))
 		{
 			dbg_msg("chat_commands", "adding server chat command: name='%s' args='%s' help='%s'", pMsg->m_pName, pMsg->m_ArgsFormat, pMsg->m_HelpText);
-			m_Commands.AddCommand(pMsg->m_pName, pMsg->m_ArgsFormat, pMsg->m_HelpText, NULL);
+			m_Commands.AddCommand(pMsg->m_pName, pMsg->m_ArgsFormat, pMsg->m_HelpText, 0);
 		}
 	}
 	else if(MsgType == NETMSGTYPE_SV_COMMANDINFOREMOVE) {
@@ -1543,7 +1543,7 @@ void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
 
 
 // CChatCommands methods
-CChat::CChatCommands::CChatCommands() : m_pSelectedCommand(NULL) {
+CChat::CChatCommands::CChatCommands() : m_pSelectedCommand(0) {
 	mem_zero(m_aCommands, sizeof(m_aCommands));
 }
 CChat::CChatCommands::~CChatCommands() {}
