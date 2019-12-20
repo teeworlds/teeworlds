@@ -140,7 +140,7 @@ void CStats::OnRender()
 			if((1<<i) == (TC_STATS_BESTSPREE))
 			{
 				if(!(g_Config.m_ClStatboardInfos & TC_STATS_SPREE))
-					w += 140;
+					w += 140; // Best spree is a long column name, add a bit more
 			}
 			else
 				w += 100;
@@ -152,7 +152,6 @@ void CStats::OnRender()
 	bool aDisplayWeapon[NUM_WEAPONS] = {false};
 	if(g_Config.m_ClStatboardInfos & TC_STATS_WEAPS)
 	{
-		w += 10;
 		for(i=0; i<NumPlayers; i++)
 		{
 			const CPlayerStats *pStats = &m_aStats[apPlayers[i]];
@@ -162,6 +161,7 @@ void CStats::OnRender()
 		for(i=0; i<NUM_WEAPONS; i++)
 			if(aDisplayWeapon[i])
 				w += 80;
+		// w += 10;
 	}
 
 	float x = Width/2-w/2;
@@ -189,6 +189,8 @@ void CStats::OnRender()
 					continue;
 				px += 40.0f;
 			}
+			if(1<<i == TC_STATS_FLAGGRABS && !(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS))
+				continue;
 			tw = TextRender()->TextWidth(0, 24.0f, apHeaders[i], -1, -1.0f);
 			TextRender()->Text(0, x+px-tw, y-5, 24.0f, apHeaders[i], -1.0f);
 			px += 100;
@@ -198,20 +200,20 @@ void CStats::OnRender()
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
-		for(i=0, px-=40; i<NUM_WEAPONS; i++)
+		for(i=0; i<NUM_WEAPONS; i++)
 		{
 			if(!aDisplayWeapon[i])
 				continue;
 
 			RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[i].m_pSpriteBody);
 			if(i == 0)
-				RenderTools()->DrawSprite(x+px, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize*0.8);
+				RenderTools()->DrawSprite(x+px-40, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize*0.8);
 			else
-				RenderTools()->DrawSprite(x+px, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize);
+				RenderTools()->DrawSprite(x+px-40, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize);
 			px += 80;
 		}
 		Graphics()->QuadsEnd();
-		px += 40;
+		// px += 10;
 	}
 
 	if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
@@ -221,10 +223,10 @@ void CStats::OnRender()
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetRotation(-0.39f);
 		RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
-		RenderTools()->DrawSprite(x+px-10-5, y+12.5f, 48);
+		RenderTools()->DrawSprite(x+px-10, y+12.5f, 48);
 		Graphics()->QuadsSetRotation(0.39f);
 		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
-		RenderTools()->DrawSprite(x+px+10-5, y+12.5f, 48);
+		RenderTools()->DrawSprite(x+px+10, y+12.5f, 48);
 		Graphics()->QuadsEnd();
 	}
 
@@ -349,30 +351,68 @@ void CStats::OnRender()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		for(i=0, px=px-40; i<NUM_WEAPONS; i++)
+		px -= 40;
+		if(g_Config.m_ClStatboardInfos & TC_STATS_WEAPS)
 		{
-			if(!aDisplayWeapon[i])
-				continue;
-
-			str_format(aBuf, sizeof(aBuf), "%d/%d", pStats->m_aFragsWith[i], pStats->m_aDeathsFrom[i]);
-			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-			TextRender()->Text(0, x+px-tw/2, y, FontSize, aBuf, -1.0f);
-			px += 80;
+			const float Offset = 40.0f;
+			const float StartX = px - Offset;
+			const float RoundSize = 10.0f;
+			float EndX = StartX; // each bar will have its width incremented by the roundsize so this avoids that last one would overflow
+			int TotalFrags = 0;
+			int TotalDeaths = 0;
+			for(i=0; i<NUM_WEAPONS; i++)
+			{
+				if(aDisplayWeapon[i])
+				{
+					EndX += 80.0f;
+					TotalFrags += pStats->m_aFragsWith[i];
+					TotalDeaths += pStats->m_aDeathsFrom[i];
+				}					
+			}
+			float ExploitableLength = (EndX-StartX) - RoundSize;
+			CUIRect Rect = {x + StartX, y+0.3f*LineHeight, 0.0f, 0.3f*LineHeight};
+			for(i=0; i<NUM_WEAPONS; i++)
+			{
+				extern int _dummy[(int)(NUM_WEAPONS == 6)]; (void)_dummy; // static assert that there are 6 weapons
+				static const vec4 Colors[NUM_WEAPONS] =
+				{
+					// crosshair colors
+					vec4(0.792f, 0.761f, 0.815, 1.0f),
+					vec4(0.696f, 0.706f, 0.307, 1.0f),
+					vec4(0.459f, 0.341f, 0.102, 1.0f),
+					vec4(0.802f, 0.034f, 0.068, 1.0f),
+					vec4(0.113f, 0.331f, 0.774, 1.0f),
+					vec4(0.832f, 0.587f, 0.041, 1.0f),
+				};
+				if(pStats->m_aFragsWith[i])
+				{
+					Rect.w = ExploitableLength * pStats->m_aFragsWith[i] / (float)TotalFrags;
+					Rect.w += RoundSize;
+					RenderTools()->DrawRoundRect(&Rect, Colors[i], RoundSize);
+					Rect.w -= RoundSize;
+					Rect.x += Rect.w;
+				}
+			}
+			px = EndX + Offset;
+			// px += 10;
 		}
+
 		if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
 		{
 			if(pStats->m_FlagCaptures <= 0)
 			{
 				tw = TextRender()->TextWidth(0, FontSize, "--", -1, -1.0f);
-				TextRender()->Text(0, x-tw+px, y, FontSize, "--", -1.0f);
+				TextRender()->Text(0, x-tw/2.0f+px, y, FontSize, "--", -1.0f);
 			}
 			else
 			{
-				int DisplayedFlagsCount = (pStats->m_FlagCaptures <= 5) ? pStats->m_FlagCaptures : 1;
+				const bool DigitalDisplay = pStats->m_FlagCaptures > 5;
+				const int DisplayedFlagsCount = !DigitalDisplay ? pStats->m_FlagCaptures : 1;
 				const float Space = 15.0f;
-				int tempx = px - ((DisplayedFlagsCount)*Space/2.0f);
-				if((pStats->m_FlagCaptures > 5))
-					tempx -= 20;
+				int TempX = px - ((DisplayedFlagsCount-1)*Space/2.0f);
+				TempX += 2.5f; // some offset
+				if(DigitalDisplay)
+					TempX -= 20;
 
 				Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 				Graphics()->QuadsBegin();
@@ -383,15 +423,15 @@ void CStats::OnRender()
 						RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
 					else
 						RenderTools()->SelectSprite(SPRITE_FLAG_RED);
-					RenderTools()->DrawSprite(x+tempx, y+25, 48);
-					tempx += Space;
+					RenderTools()->DrawSprite(x+TempX, y+25, 48);
+					TempX += Space;
 				}
 				Graphics()->QuadsEnd();
 
-				if((pStats->m_FlagCaptures > 5))
+				if(DigitalDisplay)
 				{
 					str_format(aBuf, sizeof(aBuf), "x%d", pStats->m_FlagCaptures);
-					TextRender()->Text(0, x+tempx, y, FontSize, aBuf, -1.0f);
+					TextRender()->Text(0, x+TempX, y, FontSize, aBuf, -1.0f);
 				}
 			}
 			px += 100;
