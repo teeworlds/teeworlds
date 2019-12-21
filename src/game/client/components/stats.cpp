@@ -407,12 +407,12 @@ void CStats::OnRender()
 				static const vec4 Colors[NUM_WEAPONS] =
 				{
 					// crosshair colors
-					vec4(0.792f, 0.761f, 0.815, 1.0f),
-					vec4(0.696f, 0.706f, 0.307, 1.0f),
-					vec4(0.459f, 0.341f, 0.102, 1.0f),
-					vec4(0.802f, 0.034f, 0.068, 1.0f),
-					vec4(0.113f, 0.331f, 0.774, 1.0f),
-					vec4(0.832f, 0.587f, 0.041, 1.0f),
+					vec4(0.792f, 0.761f, 0.815f, 1.0f),
+					vec4(0.696f, 0.706f, 0.307f, 1.0f),
+					vec4(0.459f, 0.341f, 0.102f, 1.0f),
+					vec4(0.802f, 0.034f, 0.068f, 1.0f),
+					vec4(0.113f, 0.331f, 0.774f, 1.0f),
+					vec4(0.832f, 0.587f, 0.041f, 1.0f),
 				};
 				if(pStats->m_aFragsWith[i])
 				{
