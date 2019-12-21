@@ -763,6 +763,14 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWind
 
 	SDL_GL_MakeCurrent(NULL, NULL);
 
+	// print sdl version
+	SDL_version Compiled;
+	SDL_version Linked;
+
+	SDL_VERSION(&Compiled);
+	SDL_GetVersion(&Linked);
+	dbg_msg("sdl", "SDL version %d.%d.%d (dll = %d.%d.%d)", Compiled.major, Compiled.minor, Compiled.patch, Linked.major, Linked.minor, Linked.patch);
+
 	// start the command processor
 	m_pProcessor = new CCommandProcessor_SDL_OpenGL;
 	StartProcessor(m_pProcessor);
