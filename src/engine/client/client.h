@@ -287,6 +287,7 @@ public:
 	void Run();
 
 	void ConnectOnStart(const char *pAddress);
+	void DoVersionSpecificActions();
 
 	static void Con_Connect(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Disconnect(IConsole::IResult *pResult, void *pUserData);
