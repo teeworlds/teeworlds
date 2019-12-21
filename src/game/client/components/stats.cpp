@@ -137,6 +137,11 @@ void CStats::OnRender()
 	for(int i=0; i<9; i++)
 		if(g_Config.m_ClStatboardInfos & (1<<i))
 		{
+			if((1<<i) == (TC_STATS_DEATHS) && g_Config.m_ClStatboardInfos & TC_STATS_FRAGS)
+			{
+				w += 20;
+				continue;
+			}
 			if((1<<i) == (TC_STATS_BESTSPREE))
 			{
 				if(!(g_Config.m_ClStatboardInfos & TC_STATS_SPREE))
@@ -185,6 +190,16 @@ void CStats::OnRender()
 	for(i=0; i<9; i++)
 		if(g_Config.m_ClStatboardInfos & (1<<i))
 		{
+			const char* pText = apHeaders[i];
+			// handle K:D merge (in the frags column)
+			if(1<<i == TC_STATS_FRAGS && g_Config.m_ClStatboardInfos & TC_STATS_DEATHS)
+			{
+				pText = "K:D";
+				px += 20.0f; // some extra for the merge
+			}
+			else if(1<<i == TC_STATS_DEATHS && g_Config.m_ClStatboardInfos & TC_STATS_FRAGS)
+				continue;
+			// handle spree columns merge
 			if(1<<i == TC_STATS_BESTSPREE)
 			{
 				if(g_Config.m_ClStatboardInfos & TC_STATS_SPREE)
@@ -192,14 +207,15 @@ void CStats::OnRender()
 				px += 40.0f; // some extra for the long name
 			}
 			else if(1<<i == TC_STATS_SPREE && g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE)
-				px += 20.0f;
+				px += 20.0f; // some extra for the merge
 			if(1<<i == TC_STATS_FLAGGRABS && !(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS))
 				continue;
-			tw = TextRender()->TextWidth(0, 24.0f, apHeaders[i], -1, -1.0f);
-			TextRender()->Text(0, x+px-tw, y-5, 24.0f, apHeaders[i], -1.0f);
+			tw = TextRender()->TextWidth(0, 24.0f, pText, -1, -1.0f);
+			TextRender()->Text(0, x+px-tw, y-5, 24.0f, pText, -1.0f);
 			px += 100;
 		}
 
+	// sprite headers now
 	if(g_Config.m_ClStatboardInfos & TC_STATS_WEAPS)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
@@ -286,12 +302,18 @@ void CStats::OnRender()
 		px = 325;
 		if(g_Config.m_ClStatboardInfos & TC_STATS_FRAGS)
 		{
-			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Frags);
+			if(g_Config.m_ClStatboardInfos & TC_STATS_DEATHS)
+			{
+				px += 20;
+				str_format(aBuf, sizeof(aBuf), "%d:%d", pStats->m_Frags, pStats->m_Deaths);
+			}
+			else
+				str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Frags);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		if(g_Config.m_ClStatboardInfos & TC_STATS_DEATHS)
+		else if(g_Config.m_ClStatboardInfos & TC_STATS_DEATHS)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Deaths);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
