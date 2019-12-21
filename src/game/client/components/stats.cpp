@@ -361,9 +361,10 @@ void CStats::OnRender()
 		px -= 40;
 		if(g_Config.m_ClStatboardInfos & TC_STATS_WEAPS)
 		{
+			const float BarHeight = 0.3f*LineHeight;
 			const float Offset = 40.0f;
 			const float StartX = px - Offset;
-			const float RoundSize = 10.0f;
+			const float RoundSize = BarHeight/2.0f;
 			float EndX = StartX; // each bar will have its width incremented by the roundsize so this avoids that last one would overflow
 			int TotalFrags = 0;
 			int TotalDeaths = 0;
@@ -377,7 +378,7 @@ void CStats::OnRender()
 				}					
 			}
 			float ExploitableLength = (EndX-StartX) - RoundSize;
-			CUIRect Rect = {x + StartX, y+0.3f*LineHeight, 0.0f, 0.3f*LineHeight};
+			CUIRect Rect = {x + StartX, y+0.3f*LineHeight, 0.0f, BarHeight};
 			for(i=0; i<NUM_WEAPONS; i++)
 			{
 				extern int _dummy[(int)(NUM_WEAPONS == 6)]; (void)_dummy; // static assert that there are 6 weapons
