@@ -141,6 +141,8 @@ void CStats::OnRender()
 			{
 				if(!(g_Config.m_ClStatboardInfos & TC_STATS_SPREE))
 					w += 140; // Best spree is a long column name, add a bit more
+				else
+					w += 20; // The combined colunms are a bit long, add some extra
 			}
 			else
 				w += 100;
@@ -187,8 +189,10 @@ void CStats::OnRender()
 			{
 				if(g_Config.m_ClStatboardInfos & TC_STATS_SPREE)
 					continue;
-				px += 40.0f;
+				px += 40.0f; // some extra for the long name
 			}
+			else if(1<<i == TC_STATS_SPREE && g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE)
+				px += 20.0f;
 			if(1<<i == TC_STATS_FLAGGRABS && !(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS))
 				continue;
 			tw = TextRender()->TextWidth(0, 24.0f, apHeaders[i], -1, -1.0f);
@@ -329,7 +333,10 @@ void CStats::OnRender()
 		if(g_Config.m_ClStatboardInfos & TC_STATS_SPREE)
 		{
 			if(g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE)
+			{
+				px += 20; // extra space
 				str_format(aBuf, sizeof(aBuf), "%d (%d)", pStats->m_CurrentSpree, pStats->m_BestSpree);
+			}
 			else
 				str_format(aBuf, sizeof(aBuf), "%d", pStats->m_CurrentSpree);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
