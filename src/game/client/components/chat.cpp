@@ -218,24 +218,26 @@ int CChat::LevenshteinDistance(char *aNickname1, char *aNickname2)
 	// min of three args
 	#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 
-	unsigned int Nickname1Len, Nickname2Len, x, y, lastdiag, olddiag;
+	int Nickname1Len, Nickname2Len, x, y, lastdiag, olddiag;
     Nickname1Len = strlen(aNickname1);
     Nickname2Len = strlen(aNickname2);
 
-    unsigned int column[Nickname1Len+1];
+    int *aColumn = new int[Nickname1Len+1];
 
     for (y = 1; y <= Nickname1Len; y++)
-        column[y] = y;
+        aColumn[y] = y;
 
     for (x = 1; x <= Nickname2Len; x++) {
-        column[0] = x;
+        aColumn[0] = x;
         for (y = 1, lastdiag = x-1; y <= Nickname1Len; y++) {
-            olddiag = column[y];
-            column[y] = MIN3(column[y] + 1, column[y-1] + 1, lastdiag + (aNickname1[y-1] == aNickname2[x-1] ? 0 : 1));
+            olddiag = aColumn[y];
+            aColumn[y] = MIN3(aColumn[y] + 1, aColumn[y-1] + 1, lastdiag + (aNickname1[y-1] == aNickname2[x-1] ? 0 : 1));
             lastdiag = olddiag;
         }
     }
-    return(column[Nickname1Len]);
+	int result = aColumn[Nickname1Len];
+	delete [] aColumn;
+    return result;
 }
 
 bool CChat::OnInput(IInput::CEvent Event)

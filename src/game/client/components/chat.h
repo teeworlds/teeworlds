@@ -136,11 +136,7 @@ class CChat : public CComponent
 	{
 		int m_ID;
 		int m_Distance;
-		bool operator<(const DistanceIDTuple& rhs) const
-		{
-			const DistanceIDTuple& lhs = *this;
-			return lhs.m_Distance < rhs.m_Distance;
-		};
+		bool operator<(const DistanceIDTuple& rhs) const { return m_Distance < rhs.m_Distance; };
 	};
 	static int LevenshteinDistance(char *aNickname1, char *aNickname2);
 	
