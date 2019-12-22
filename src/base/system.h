@@ -1137,6 +1137,55 @@ const char *str_endswith_nocase(const char *str, const char *suffix);
 const char *str_endswith(const char *str, const char *suffix);
 
 /*
+	Function: str_utf8_dist
+		Computes the edit distance between two strings.
+	Parameters:
+		a - First string for the edit distance.
+		b - Second string for the edit distance.
+	Returns:
+		The edit distance between the both strings.
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int str_utf8_dist(const char *a, const char *b);
+
+/*
+	Function: str_utf8_dist_buffer
+		Computes the edit distance between two strings, allows buffers
+		to be passed in.
+	Parameters:
+		a - First string for the edit distance.
+		b - Second string for the edit distance.
+		buf - Buffer for the function.
+		buf_len - Length of the buffer, must be at least as long as
+		          twice the length of both strings combined plus two.
+	Returns:
+		The edit distance between the both strings.
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int str_utf8_dist_buffer(const char *a, const char *b, int *buf, int buf_len);
+
+/*
+	Function: str_utf32_dist_buffer
+		Computes the edit distance between two strings, allows buffers
+		to be passed in.
+	Parameters:
+		a - First string for the edit distance.
+		a_len - Length of the first string.
+		b - Second string for the edit distance.
+		b_len - Length of the second string.
+		buf - Buffer for the function.
+		buf_len - Length of the buffer, must be at least as long as
+		          the length of both strings combined plus two.
+	Returns:
+		The edit distance between the both strings.
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int str_utf32_dist_buffer(const int *a, int a_len, const int *b, int b_len, int *buf, int buf_len);
+
+/*
 	Function: str_find_nocase
 		Finds a string inside another string case insensitive.
 

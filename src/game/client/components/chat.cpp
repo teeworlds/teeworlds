@@ -213,33 +213,6 @@ void CChat::ClearChatBuffer()
 	m_ChatBufferMode = CHAT_NONE;
 }
 
-int CChat::LevenshteinDistance(char *aNickname1, char *aNickname2)
-{
-	// min of three args
-	#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
-
-	int Nickname1Len, Nickname2Len, x, y, lastdiag, olddiag;
-    Nickname1Len = str_length(aNickname1);
-    Nickname2Len = str_length(aNickname2);
-
-    int *aColumn = new int[Nickname1Len+1];
-
-    for (y = 1; y <= Nickname1Len; y++)
-        aColumn[y] = y;
-
-    for (x = 1; x <= Nickname2Len; x++) {
-        aColumn[0] = x;
-        for (y = 1, lastdiag = x-1; y <= Nickname1Len; y++) {
-            olddiag = aColumn[y];
-            aColumn[y] = MIN3(aColumn[y] + 1, aColumn[y-1] + 1, lastdiag + (aNickname1[y-1] == aNickname2[x-1] ? 0 : 1));
-            lastdiag = olddiag;
-        }
-    }
-	int result = aColumn[Nickname1Len];
-	delete [] aColumn;
-    return result;
-}
-
 bool CChat::OnInput(IInput::CEvent Event)
 {
 	if(Client()->State() != Client()->STATE_ONLINE)
@@ -346,8 +319,8 @@ bool CChat::OnInput(IInput::CEvent Event)
 				str_truncate(m_aCompletionBuffer, sizeof(m_aCompletionBuffer), m_Input.GetString()+m_PlaceholderOffset, m_PlaceholderLength);
 			}
 
-			array<DistanceIDTuple> TupleArray;
-			TupleArray.hint_size(MAX_CLIENTS);
+			array<CDistanceIDTuple> aTupleArray;
+			aTupleArray.hint_size(MAX_CLIENTS);
 
 			int CompletionBufferLen = str_length(m_aCompletionBuffer);
 
@@ -361,20 +334,20 @@ bool CChat::OnInput(IInput::CEvent Event)
 						if (str_find_nocase(m_pClient->m_aClients[i].m_aName, m_aCompletionBuffer))
 						{
 							int ID = i;
-							int Distance = LevenshteinDistance(m_aCompletionBuffer, m_pClient->m_aClients[i].m_aName);
+							int Distance = str_utf8_dist(m_aCompletionBuffer, m_pClient->m_aClients[i].m_aName);
 
 							// prefer nicks that start with the substring even more.
 							if (str_startswith_nocase(m_pClient->m_aClients[i].m_aName, m_aCompletionBuffer))
 								Distance -= 5;
 							
-							DistanceIDTuple Item = {ID, Distance};
-							TupleArray.add(Item);
+							CDistanceIDTuple Item = {ID, Distance};
+							aTupleArray.add(Item);
 						}
 					}	
 				}
 			}
 
-			int FoundClients = TupleArray.size();
+			int FoundClients = aTupleArray.size();
 			const char *pCompletionString = 0;
 
 			if (FoundClients == 0)
@@ -386,12 +359,12 @@ bool CChat::OnInput(IInput::CEvent Event)
 					{
 						int ID = i;
 						int Distance = 0;
-						DistanceIDTuple Item = {ID, Distance};
-						TupleArray.add(Item);
+						CDistanceIDTuple Item = {ID, Distance};
+						aTupleArray.add(Item);
 					}	
 				}
 
-				FoundClients = TupleArray.size();
+				FoundClients = aTupleArray.size();
 
 				// cycle through players, sorted by IDs
 				if(m_ReverseCompletion)
@@ -404,14 +377,14 @@ bool CChat::OnInput(IInput::CEvent Event)
 				else
 					m_CompletionChosen = (m_CompletionChosen + 1) % FoundClients;
 				
-				pCompletionString = m_pClient->m_aClients[TupleArray[m_CompletionChosen].m_ID].m_aName;
+				pCompletionString = m_pClient->m_aClients[aTupleArray[m_CompletionChosen].m_ID].m_aName;
 			}
 			else
 			{
 				// sort by levenshtein distance
-				sort(TupleArray.all());
+				sort(aTupleArray.all());
 				
-				// cycle through TupleArray indices
+				// cycle through aTupleArray indices
 				if(m_ReverseCompletion)
 					if (m_CompletionChosen == -1)
 						m_CompletionChosen = (m_CompletionChosen + FoundClients) % FoundClients;	
@@ -421,7 +394,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 					m_CompletionChosen = (m_CompletionChosen + 1) % FoundClients;
 
 
-				int ChosenID = TupleArray[m_CompletionChosen].m_ID;
+				int ChosenID = aTupleArray[m_CompletionChosen].m_ID;
 				pCompletionString = m_pClient->m_aClients[ChosenID].m_aName;
 			}
 

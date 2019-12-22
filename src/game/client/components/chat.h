@@ -49,6 +49,13 @@ class CChat : public CComponent
 		CHAT_NUM,
 	};
 
+	struct CDistanceIDTuple
+	{
+		int m_ID;
+		int m_Distance;
+		bool operator<(const CDistanceIDTuple& rhs) const { return m_Distance < rhs.m_Distance; };
+	};
+
 	int m_Mode;
 	int m_WhisperTarget;
 	int m_LastWhisperFrom;
@@ -129,17 +136,7 @@ class CChat : public CComponent
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConWhisper(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
-	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
-
-
-	struct DistanceIDTuple
-	{
-		int m_ID;
-		int m_Distance;
-		bool operator<(const DistanceIDTuple& rhs) const { return m_Distance < rhs.m_Distance; };
-	};
-	static int LevenshteinDistance(char *aNickname1, char *aNickname2);
-	
+	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);	
 
 public:
 	CChat();
