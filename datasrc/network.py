@@ -458,4 +458,20 @@ Messages = [
 	NetMessage("Sv_Checkpoint", [
 		NetIntAny("m_Diff"),
 	]),
+  
+        NetMessage("Sv_CommandInfo", [
+                NetStringStrict("m_pName"),
+                NetStringStrict("m_ArgsFormat"),
+                NetStringStrict("m_HelpText")
+        ]),
+
+        NetMessage("Sv_CommandInfoRemove", [
+                NetStringStrict("m_pName")
+        ]),
+
+        NetMessage("Cl_Command", [
+                NetStringStrict("m_Name"),
+                NetStringStrict("m_Arguments")
+        ]),
+  
 ]

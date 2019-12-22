@@ -4,6 +4,7 @@
 #define GAME_SERVER_GAMECONTROLLER_H
 
 #include <base/vmath.h>
+#include <base/tl/array.h>
 
 #include <generated/protocol.h>
 
@@ -119,6 +120,42 @@ protected:
 
 	void UpdateGameInfo(int ClientID);
 
+	typedef void (*COMMAND_CALLBACK)(class CPlayer *pPlayer, const char *pArgs);
+
+	struct CChatCommand 
+	{
+		char m_aName[32];
+		char m_aHelpText[64];
+		char m_aArgsFormat[16];
+		COMMAND_CALLBACK m_pfnCallback;
+		bool m_Used;
+	};
+
+	class CChatCommands
+	{
+		enum
+		{
+			// 8 is the number of vanilla commands, 14 the number of commands left to fill the chat.
+			MAX_COMMANDS = 8 + 14
+		};
+
+		CChatCommand m_aCommands[MAX_COMMANDS];
+	public:
+		CChatCommands();
+
+		// Format: i = int, s = string, p = playername, c = subcommand
+		void AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pfnCallback);
+		void RemoveCommand(const char *pName);
+		void SendRemoveCommand(class IServer *pServer, const char *pName, int ID);
+		CChatCommand *GetCommand(const char *pName);
+
+		void OnPlayerConnect(class IServer *pServer, class CPlayer *pPlayer);
+	};
+
+	CChatCommands m_Commands;
+
+	CChatCommands *CommandsManager() { return &m_Commands; }
+
 public:
 	IGameController(class CGameContext *pGameServer);
 	virtual ~IGameController() {};
@@ -164,6 +201,7 @@ public:
 	void OnPlayerDisconnect(class CPlayer *pPlayer);
 	void OnPlayerInfoChange(class CPlayer *pPlayer);
 	void OnPlayerReadyChange(class CPlayer *pPlayer);
+	void OnPlayerCommand(class CPlayer *pPlayer, const char *pCommandName, const char *pCommandArgs);
 
 	void OnReset();
 

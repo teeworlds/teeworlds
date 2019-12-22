@@ -319,6 +319,8 @@ void IGameController::OnPlayerConnect(CPlayer *pPlayer)
 
 	// update game info
 	UpdateGameInfo(ClientID);
+
+	CommandsManager()->OnPlayerConnect(Server(), pPlayer);
 }
 
 void IGameController::OnPlayerDisconnect(CPlayer *pPlayer)
@@ -1208,4 +1210,87 @@ int IGameController::GetStartTeam()
 		return Team;
 	}
 	return TEAM_SPECTATORS;
+}
+
+IGameController::CChatCommands::CChatCommands()
+{
+	mem_zero(m_aCommands, sizeof(m_aCommands));
+}
+
+void IGameController::CChatCommands::AddCommand(const char *pName, const char *pArgsFormat, const char *pHelpText, COMMAND_CALLBACK pfnCallback)
+{
+	if(GetCommand(pName))
+		return;
+
+	for(int i = 0; i < MAX_COMMANDS; i++) {
+		if(!m_aCommands[i].m_Used) {
+			mem_zero(&m_aCommands[i], sizeof(CChatCommand));
+
+			str_copy(m_aCommands[i].m_aName, pName, sizeof(m_aCommands[i].m_aName));
+			str_copy(m_aCommands[i].m_aHelpText, pHelpText, sizeof(m_aCommands[i].m_aHelpText));
+			str_copy(m_aCommands[i].m_aArgsFormat, pArgsFormat, sizeof(m_aCommands[i].m_aArgsFormat));
+
+			m_aCommands[i].m_pfnCallback = pfnCallback;
+			m_aCommands[i].m_Used = true;
+			break;
+		}
+	}
+}
+
+void IGameController::CChatCommands::SendRemoveCommand(IServer *pServer, const char *pName, int ID)
+{
+	CNetMsg_Sv_CommandInfoRemove Msg;
+	Msg.m_pName = pName;
+
+	pServer->SendPackMsg(&Msg, MSGFLAG_VITAL, ID);
+
+}
+
+void IGameController::CChatCommands::RemoveCommand(const char *pName)
+{
+	CChatCommand *pCommand = GetCommand(pName);
+
+	if(pCommand)
+	{
+		mem_zero(pCommand, sizeof(CChatCommand));
+	}
+}
+
+IGameController::CChatCommand *IGameController::CChatCommands::GetCommand(const char *pName)
+{
+	for(int i = 0; i < MAX_COMMANDS; i++)
+	{
+		if(m_aCommands[i].m_Used && str_comp(m_aCommands[i].m_aName, pName) == 0)
+		{
+			return &m_aCommands[i];
+		}
+	}
+	return 0;
+}
+
+void IGameController::CChatCommands::OnPlayerConnect(IServer *pServer, CPlayer *pPlayer)
+{
+	for(int i = 0; i < MAX_COMMANDS; i++)
+	{
+		CChatCommand *pCommand = &m_aCommands[i];
+
+		if(pCommand->m_Used)
+		{
+			CNetMsg_Sv_CommandInfo Msg;
+			Msg.m_pName = pCommand->m_aName;
+			Msg.m_HelpText = pCommand->m_aHelpText;
+			Msg.m_ArgsFormat = pCommand->m_aArgsFormat;
+
+			pServer->SendPackMsg(&Msg, MSGFLAG_VITAL, pPlayer->GetCID());
+		}
+	}
+}
+
+void IGameController::OnPlayerCommand(CPlayer *pPlayer, const char *pCommandName, const char *pCommandArgs)
+{
+	// TODO: Add a argument parser?
+	CChatCommand *pCommand = CommandsManager()->GetCommand(pCommandName);
+
+	if(pCommand)
+		pCommand->m_pfnCallback(pPlayer, pCommandArgs);
 }
