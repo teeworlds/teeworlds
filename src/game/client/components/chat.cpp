@@ -538,7 +538,8 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 			m_Commands.AddCommand(pMsg->m_pName, pMsg->m_ArgsFormat, pMsg->m_HelpText, 0);
 		}
 	}
-	else if(MsgType == NETMSGTYPE_SV_COMMANDINFOREMOVE) {
+	else if(MsgType == NETMSGTYPE_SV_COMMANDINFOREMOVE)
+	{
 		CNetMsg_Sv_CommandInfoRemove *pMsg = (CNetMsg_Sv_CommandInfoRemove *)pRawMsg;
 		
 		CChatCommand *pCommand = m_Commands.GetCommandByName(pMsg->m_pName);
@@ -1349,8 +1350,6 @@ void CChat::HandleCommands(float x, float y, float w)
 				if(pCommand == m_Commands.GetSelectedCommand())
 					RenderTools()->DrawUIRect(&HighlightRect,  vec4(0.25f, 0.25f, 0.6f, Alpha), CUI::CORNER_ALL, 2.0f);
 
-
-
 				// print command
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Rect.x + 5.0f, y, 5.0f, TEXTFLAG_RENDER);
@@ -1566,7 +1565,8 @@ void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
 
 
 // CChatCommands methods
-CChat::CChatCommands::CChatCommands() : m_pSelectedCommand(0) {
+CChat::CChatCommands::CChatCommands() : m_pSelectedCommand(0)
+{
 	mem_zero(m_aCommands, sizeof(m_aCommands));
 }
 CChat::CChatCommands::~CChatCommands() {}

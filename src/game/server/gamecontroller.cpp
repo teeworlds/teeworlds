@@ -1222,8 +1222,10 @@ void IGameController::CChatCommands::AddCommand(const char *pName, const char *p
 	if(GetCommand(pName))
 		return;
 
-	for(int i = 0; i < MAX_COMMANDS; i++) {
-		if(!m_aCommands[i].m_Used) {
+	for(int i = 0; i < MAX_COMMANDS; i++)
+	{
+		if(!m_aCommands[i].m_Used)
+		{
 			mem_zero(&m_aCommands[i], sizeof(CChatCommand));
 
 			str_copy(m_aCommands[i].m_aName, pName, sizeof(m_aCommands[i].m_aName));
@@ -1243,7 +1245,6 @@ void IGameController::CChatCommands::SendRemoveCommand(IServer *pServer, const c
 	Msg.m_pName = pName;
 
 	pServer->SendPackMsg(&Msg, MSGFLAG_VITAL, ID);
-
 }
 
 void IGameController::CChatCommands::RemoveCommand(const char *pName)
