@@ -219,8 +219,8 @@ int CChat::LevenshteinDistance(char *aNickname1, char *aNickname2)
 	#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
 
 	int Nickname1Len, Nickname2Len, x, y, lastdiag, olddiag;
-    Nickname1Len = strlen(aNickname1);
-    Nickname2Len = strlen(aNickname2);
+    Nickname1Len = str_length(aNickname1);
+    Nickname2Len = str_length(aNickname2);
 
     int *aColumn = new int[Nickname1Len+1];
 
@@ -349,7 +349,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 			array<DistanceIDTuple> TupleArray;
 			TupleArray.hint_size(MAX_CLIENTS);
 
-			int CompletionBufferLen = strlen(m_aCompletionBuffer);
+			int CompletionBufferLen = str_length(m_aCompletionBuffer);
 
 			if (CompletionBufferLen > 0)
 			{
