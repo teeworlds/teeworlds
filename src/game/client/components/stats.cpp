@@ -142,18 +142,18 @@ void CStats::OnRender()
 				w += 20;
 				continue;
 			}
-			if((1<<i) == (TC_STATS_BESTSPREE))
+			else if((1<<i) == (TC_STATS_BESTSPREE))
 			{
 				if(!(g_Config.m_ClStatboardInfos & TC_STATS_SPREE))
 					w += 140; // Best spree is a long column name, add a bit more
 				else
 					w += 20; // The combined colunms are a bit long, add some extra
 			}
-			else
+			else if(!(g_Config.m_ClStatboardInfos&TC_STATS_FLAGGRABS))
 				w += 100;
 		}
 
-	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
+	if((m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS) && (g_Config.m_ClStatboardInfos&TC_STATS_FLAGCAPTURES))
 		w += 100;
 
 	bool aDisplayWeapon[NUM_WEAPONS] = {false};
