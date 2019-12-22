@@ -16,7 +16,7 @@ class CLocalizationDatabase
 		// TODO: do this as an const char * and put everything on a incremental heap
 		string m_Replacement;
 
-		bool operator <(const CString &Other) const { return m_Hash < Other.m_Hash; }
+		bool operator <(const CString &Other) const { return m_Hash < Other.m_Hash || (m_Hash == Other.m_Hash && m_ContextHash < Other.m_ContextHash); }
 		bool operator <=(const CString &Other) const { return m_Hash <= Other.m_Hash; }
 		bool operator ==(const CString &Other) const { return m_Hash == Other.m_Hash; }
 	};
