@@ -1190,9 +1190,10 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 		// render header backgrounds
 		CUIRect Left, Right;
-		Box.VSplitLeft(ButtonWidth*4.0f + Spacing * 3.0f, &Left, 0);
-		Box.VSplitRight(ButtonWidth*2.0f + Spacing, 0, &Right);
-		RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
+		Box.VSplitLeft(ButtonWidth*5.0f + Spacing * 4.0f, &Left, 0);
+		Box.VSplitRight(ButtonWidth, 0, &Right);
+		RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
+		RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
 
 		Left.HSplitBottom(25.0f, 0, &Left);
 		Right.HSplitBottom(25.0f, 0, &Right);
@@ -1220,16 +1221,15 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		if(DoButton_MenuTabTop(&s_CallVoteButton, Localize("Call vote"), m_ActivePage == PAGE_CALLVOTE, &Button, Alpha, Alpha) || CheckHotKey(KEY_V))
 			NewPage = PAGE_CALLVOTE;
 
-		Right.VSplitRight(Spacing, &Right, 0);
-		Right.VSplitRight(ButtonWidth/2.0f, &Right, &Button);
-		static CButtonContainer s_SettingsButton;
-		if(DoButton_MenuTabTop(&s_SettingsButton, "\xE2\x9A\x99", m_ActivePage == PAGE_SETTINGS, &Button, Alpha, Alpha) || CheckHotKey(KEY_S))
-			NewPage = PAGE_SETTINGS;
-
-		Right.VSplitRight(ButtonWidth/2.0f, &Right, &Button);
+		Left.VSplitLeft(Spacing, 0, &Left); // little space
+		Left.VSplitLeft(ButtonWidth, &Button, &Left);
 		static CButtonContainer s_ServerBrowserButton;
 		if(DoButton_SpriteID(&s_ServerBrowserButton, IMAGE_BROWSER, UI()->MouseInside(&Button) ? SPRITE_BROWSER_B : SPRITE_BROWSER_A, m_GamePage == PAGE_INTERNET || m_GamePage == PAGE_LAN, &Button) || CheckHotKey(KEY_B))
 			NewPage = PAGE_INTERNET;
+
+		static CButtonContainer s_SettingsButton;
+		if(DoButton_MenuTabTop(&s_SettingsButton, Localize("Settings"), m_GamePage == PAGE_SETTINGS, &Right) || CheckHotKey(KEY_S))
+			NewPage = PAGE_SETTINGS;
 
 		Rect.HSplitTop(Spacing, 0, &Rect);
 		Rect.HSplitTop(25.0f, &Box, &Rect);
@@ -1761,6 +1761,7 @@ int CMenus::Render()
 
 				// draw non-blending X
 				CUIRect XText = Button;
+				// XText.HMargin(Button.h>=20.0f?2.0f:1.0f, &XText);
 
 				UI()->DoLabel(&XText, "\xE2\x9C\x95", XText.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
 				if(UI()->DoButtonLogic(s_QuitButton.GetID(), "\xE2\x9C\x95", 0, &Button))
