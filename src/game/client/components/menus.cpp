@@ -1786,7 +1786,7 @@ int CMenus::Render()
 				Row.VSplitRight(5.0f, &Row, 0);
 				Row.VSplitRight(TopOffset, &Row, &Button);
 				static CButtonContainer s_WideButton;
-				if(DoButton_MenuTabTop(&s_WideButton, g_Config.m_UiWideview ? "\xe2\x96\xaa" : "\xe2\x96\xac", false, &Button, 1.0f, 1.0f, CUI::CORNER_B))
+				if((m_MenuPage == PAGE_INTERNET || m_MenuPage == PAGE_LAN || m_MenuPage == PAGE_DEMOS) && DoButton_MenuTabTop(&s_WideButton, g_Config.m_UiWideview ? "\xe2\x96\xaa" : "\xe2\x96\xac", false, &Button, 1.0f, 1.0f, CUI::CORNER_B))
 					g_Config.m_UiWideview ^= 1;
 			}
 
