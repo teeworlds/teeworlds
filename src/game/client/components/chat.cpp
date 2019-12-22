@@ -213,6 +213,31 @@ void CChat::ClearChatBuffer()
 	m_ChatBufferMode = CHAT_NONE;
 }
 
+int CChat::LevenshteinDistance(char *aNickname1, char *aNickname2)
+{
+	// min of three args
+	#define MIN3(a, b, c) ((a) < (b) ? ((a) < (c) ? (a) : (c)) : ((b) < (c) ? (b) : (c)))
+
+	unsigned int Nickname1Len, Nickname2Len, x, y, lastdiag, olddiag;
+    Nickname1Len = strlen(aNickname1);
+    Nickname2Len = strlen(aNickname2);
+
+    unsigned int column[Nickname1Len+1];
+
+    for (y = 1; y <= Nickname1Len; y++)
+        column[y] = y;
+
+    for (x = 1; x <= Nickname2Len; x++) {
+        column[0] = x;
+        for (y = 1, lastdiag = x-1; y <= Nickname1Len; y++) {
+            olddiag = column[y];
+            column[y] = MIN3(column[y] + 1, column[y-1] + 1, lastdiag + (aNickname1[y-1] == aNickname2[x-1] ? 0 : 1));
+            lastdiag = olddiag;
+        }
+    }
+    return(column[Nickname1Len]);
+}
+
 bool CChat::OnInput(IInput::CEvent Event)
 {
 	if(Client()->State() != Client()->STATE_ONLINE)
@@ -319,54 +344,83 @@ bool CChat::OnInput(IInput::CEvent Event)
 				str_truncate(m_aCompletionBuffer, sizeof(m_aCompletionBuffer), m_Input.GetString()+m_PlaceholderOffset, m_PlaceholderLength);
 			}
 
-			// find next possible name
-			const char *pCompletionString = 0;
-			if(m_CompletionChosen < 0 && m_CompletionFav >= 0)
-				m_CompletionChosen = m_CompletionFav;
-			else
+			array<DistanceIDTuple> TupleArray;
+			TupleArray.hint_size(MAX_CLIENTS);
+
+			int CompletionBufferLen = strlen(m_aCompletionBuffer);
+
+			if (CompletionBufferLen > 0)
 			{
-				if (m_ReverseCompletion)
-					m_CompletionChosen = (m_CompletionChosen - 1 + 2 * MAX_CLIENTS) % (2 * MAX_CLIENTS);
-				else
-					m_CompletionChosen = (m_CompletionChosen + 1) % (2 * MAX_CLIENTS);
+				for (int i = 0; i < MAX_CLIENTS; i++)
+				{
+					if (m_pClient->m_aClients[i].m_Active)
+					{
+						// nickname contains substring
+						if (str_find_nocase(m_pClient->m_aClients[i].m_aName, m_aCompletionBuffer))
+						{
+							int ID = i;
+							int Distance = LevenshteinDistance(m_aCompletionBuffer, m_pClient->m_aClients[i].m_aName);
+
+							// prefer nicks that start with the substring even more.
+							if (str_startswith_nocase(m_pClient->m_aClients[i].m_aName, m_aCompletionBuffer))
+								Distance -= 5;
+							
+							DistanceIDTuple Item = {ID, Distance};
+							TupleArray.add(Item);
+						}
+					}	
+				}
 			}
 
-			for(int i = 0; i < 2*MAX_CLIENTS; ++i)
-			{
-				int SearchType;
-				int Index;
+			int FoundClients = TupleArray.size();
+			const char *pCompletionString = 0;
 
+			if (FoundClients == 0)
+			{
+				// no player name contains the substring, cycle through all players
+				for (int i = 0; i < MAX_CLIENTS; i++)
+				{
+					if (m_pClient->m_aClients[i].m_Active)
+					{
+						int ID = i;
+						int Distance = 0;
+						DistanceIDTuple Item = {ID, Distance};
+						TupleArray.add(Item);
+					}	
+				}
+
+				FoundClients = TupleArray.size();
+
+				// cycle through players, sorted by IDs
 				if(m_ReverseCompletion)
 				{
-					SearchType = ((m_CompletionChosen-i +2*MAX_CLIENTS)%(2*MAX_CLIENTS))/MAX_CLIENTS;
-					Index = (m_CompletionChosen-i + MAX_CLIENTS )%MAX_CLIENTS;
+					if (m_CompletionChosen == -1)
+						m_CompletionChosen = (m_CompletionChosen + FoundClients) % FoundClients;	
+					else
+						m_CompletionChosen = (m_CompletionChosen - 1 + FoundClients) % FoundClients;	
 				}
 				else
-				{
-					SearchType = ((m_CompletionChosen+i)%(2*MAX_CLIENTS))/MAX_CLIENTS;
-					Index = (m_CompletionChosen+i)%MAX_CLIENTS;
-				}
+					m_CompletionChosen = (m_CompletionChosen + 1) % FoundClients;
+				
+				pCompletionString = m_pClient->m_aClients[TupleArray[m_CompletionChosen].m_ID].m_aName;
+			}
+			else
+			{
+				// sort by levenshtein distance
+				sort(TupleArray.all());
+				
+				// cycle through TupleArray indices
+				if(m_ReverseCompletion)
+					if (m_CompletionChosen == -1)
+						m_CompletionChosen = (m_CompletionChosen + FoundClients) % FoundClients;	
+					else
+						m_CompletionChosen = (m_CompletionChosen - 1 + FoundClients) % FoundClients;
+				else
+					m_CompletionChosen = (m_CompletionChosen + 1) % FoundClients;
 
-				if(!m_pClient->m_aClients[Index].m_Active)
-					continue;
 
-				bool Found = false;
-				if(SearchType == 1)
-				{
-					if(!str_startswith_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer) &&
-						str_find_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
-						Found = true;
-				}
-				else if(str_startswith_nocase(m_pClient->m_aClients[Index].m_aName, m_aCompletionBuffer))
-					Found = true;
-
-				if(Found)
-				{
-					pCompletionString = m_pClient->m_aClients[Index].m_aName;
-					m_CompletionChosen = Index+SearchType*MAX_CLIENTS;
-					m_CompletionFav = m_CompletionChosen%MAX_CLIENTS;
-					break;
-				}
+				int ChosenID = TupleArray[m_CompletionChosen].m_ID;
+				pCompletionString = m_pClient->m_aClients[ChosenID].m_aName;
 			}
 
 			// insert the name
