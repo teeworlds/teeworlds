@@ -1115,6 +1115,7 @@ set(EXPECTED_DATA
   ui/gametypes/lms.png
   ui/gametypes/lts.png
   ui/gametypes/mod.png
+  ui/gametypes/race.png
   ui/gametypes/tdm.png
   ui/gui_buttons.png
   ui/gui_cursor.png
