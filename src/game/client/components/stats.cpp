@@ -187,7 +187,7 @@ void CStats::OnRender()
 	float tw;
 	int px = 325;
 
-	TextRender()->Text(0, x+10, y-5, 24.0f, Localize("Name"), -1.0f);
+	TextRender()->Text(0, x+10, y-5, 20.0f, Localize("Name"), -1.0f);
 	const char *apHeaders[] = { "K", "D", Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
 	for(i=0; i<9; i++)
 		if(g_Config.m_ClStatboardInfos & (1<<i))
@@ -212,8 +212,8 @@ void CStats::OnRender()
 				px += 20.0f; // some extra for the merge
 			if(1<<i == TC_STATS_FLAGGRABS && !(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS))
 				continue;
-			tw = TextRender()->TextWidth(0, 24.0f, pText, -1, -1.0f);
-			TextRender()->Text(0, x+px-tw, y-5, 24.0f, pText, -1.0f);
+			tw = TextRender()->TextWidth(0, 20.0f, pText, -1, -1.0f);
+			TextRender()->Text(0, x+px-tw, y-5, 20.0f, pText, -1.0f);
 			px += 100;
 		}
 
