@@ -1348,32 +1348,6 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			Box.VSplitRight(20.0f, &Box, 0);
 			Box.VSplitRight(60.0f, 0, &Right);
 			Right.HSplitBottom(20.0f, 0, &Button);
-			
-			// do fading button with two icons for browser view
-			{
-				static CButtonContainer s_SwitchViewButton;
-				float Seconds = 0.6f; //  for fade
-				float FadeVal = ButtonFade(&s_SwitchViewButton, Seconds, 0) / Seconds;
-
-				RenderTools()->DrawUIRect(&Button, vec4(0.0f + FadeVal, 0.0f + FadeVal, 0.0f + FadeVal, 0.25f + FadeVal * 0.5f), CUI::CORNER_ALL, 5.0f);
-
-				for(int IconId = 0; IconId < 2; IconId++)
-				{
-					// rewrites CMenus::DoButton_SpriteID
-					CUIRect Icon = Button;
-					Icon.VMargin(Icon.w/4.0f, &Icon);
-					Icon.x += IconId*Icon.w*0.50f;
-					Icon.w *= 0.50f;
-					if(Icon.w > Icon.h)
-						Icon.VMargin((Icon.w - Icon.h) / 2, &Icon);
-					else if(Icon.w < Icon.h)
-						Icon.HMargin((Icon.h - Icon.w) / 2, &Icon);
-					Icon.Margin(2.0f, &Icon);
-					DoIcon(IMAGE_ARROWICONS, (IconId ^ g_Config.m_UiWideview) ? SPRITE_ARROW_RIGHT_A:SPRITE_ARROW_LEFT_A, &Icon);
-				}
-				if(UI()->DoButtonLogic(s_SwitchViewButton.GetID(), "", 0, &Button))
-					g_Config.m_UiWideview ^= 1;
-			}
 		}
 	}
 	else if(Client()->State() == IClient::STATE_OFFLINE)
