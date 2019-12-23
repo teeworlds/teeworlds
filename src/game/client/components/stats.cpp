@@ -144,7 +144,7 @@ void CStats::OnRender()
 		{
 			if((1<<i) == (TC_STATS_DEATHS) && g_Config.m_ClStatboardInfos & TC_STATS_FRAGS)
 			{
-				w += 20;
+				w += 60; // some extra for the merge
 				continue;
 			}
 			else if((1<<i) == (TC_STATS_BESTSPREE))
@@ -152,7 +152,7 @@ void CStats::OnRender()
 				if(!(g_Config.m_ClStatboardInfos & TC_STATS_SPREE))
 					w += 140; // Best spree is a long column name, add a bit more
 				else
-					w += 20; // The combined colunms are a bit long, add some extra
+					w += 40; // The combined colunms are a bit long, add some extra
 				continue;
 			}
 			else if((1<<i) == (TC_STATS_FLAGGRABS) && !(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS))
@@ -164,6 +164,7 @@ void CStats::OnRender()
 		w += 100;
 
 	bool aDisplayWeapon[NUM_WEAPONS] = {false};
+	bool NoDisplayedWeapon = true;
 	if(g_Config.m_ClStatboardInfos & TC_STATS_WEAPS)
 	{
 		for(i=0; i<NumPlayers; i++)
@@ -174,8 +175,12 @@ void CStats::OnRender()
 		}
 		for(i=0; i<NUM_WEAPONS; i++)
 			if(aDisplayWeapon[i])
+			{
 				w += 80;
-		// w += 10;
+				NoDisplayedWeapon = false;
+			}
+		if(!NoDisplayedWeapon)
+			w += 10;
 	}
 
 	float x = Width/2-w/2;
@@ -202,7 +207,7 @@ void CStats::OnRender()
 			if(1<<i == TC_STATS_FRAGS && g_Config.m_ClStatboardInfos & TC_STATS_DEATHS)
 			{
 				pText = "K:D";
-				px += 20.0f; // some extra for the merge
+				px += 60.0f; // some extra for the merge
 			}
 			else if(1<<i == TC_STATS_DEATHS && g_Config.m_ClStatboardInfos & TC_STATS_FRAGS)
 				continue;
@@ -214,7 +219,7 @@ void CStats::OnRender()
 				px += 40.0f; // some extra for the long name
 			}
 			else if(1<<i == TC_STATS_SPREE && g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE)
-				px += 20.0f; // some extra for the merge
+				px += 40.0f; // some extra for the merge
 			if(1<<i == TC_STATS_FLAGGRABS && !(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS))
 				continue;
 			tw = TextRender()->TextWidth(0, 20.0f, pText, -1, -1.0f);
@@ -240,7 +245,8 @@ void CStats::OnRender()
 			px += 80;
 		}
 		Graphics()->QuadsEnd();
-		// px += 10;
+		if(!NoDisplayedWeapon)
+			px += 10;
 	}
 
 	if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
@@ -311,7 +317,7 @@ void CStats::OnRender()
 		{
 			if(g_Config.m_ClStatboardInfos & TC_STATS_DEATHS)
 			{
-				px += 20;
+				px += 60;
 				str_format(aBuf, sizeof(aBuf), "%d:%d", pStats->m_Frags, pStats->m_Deaths);
 			}
 			else
@@ -363,7 +369,7 @@ void CStats::OnRender()
 		{
 			if(g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE)
 			{
-				px += 20; // extra space
+				px += 40; // extra space
 				str_format(aBuf, sizeof(aBuf), "%d (%d)", pStats->m_CurrentSpree, pStats->m_BestSpree);
 			}
 			else
@@ -431,7 +437,8 @@ void CStats::OnRender()
 				}
 			}
 			px = EndX + Offset;
-			// px += 10;
+			if(!NoDisplayedWeapon)
+				px += 10;
 		}
 
 		if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && g_Config.m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
