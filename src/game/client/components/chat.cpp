@@ -1634,7 +1634,7 @@ void CChat::CChatCommands::SelectPreviousCommand()
 	CChatCommand* LastCommand = 0x0;
 	for(int i = 0; i < MAX_COMMANDS; i++)
 	{
-		if(m_aCommands[i].m_aFiltered)
+		if(!m_aCommands[i].m_Used || m_aCommands[i].m_aFiltered)
 			continue;
 		if(&m_aCommands[i] == m_pSelectedCommand)
 		{
