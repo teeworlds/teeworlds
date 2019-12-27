@@ -1439,29 +1439,25 @@ int CChat::IdentifyNameParameter(const char* pCommand) const
 void CChat::Com_All(CChat *pChatData, const char* pCommand)
 {
 	const char* pParameter = str_skip_to_whitespace_const(pCommand);
-	char *pBuf = 0x0;
+	pChatData->m_ChatCmdBuffer[0] = 0;
 	if(pParameter++ && *pParameter) // skip the first space
 	{
 		// save the parameter in a buffer before EnableMode clears it
-		pBuf = (char*)mem_alloc(str_length(pParameter) + 1, 1);
-		str_copy(pBuf, pParameter, str_length(pParameter) + 1);
+		str_copy(pChatData->m_ChatCmdBuffer, pParameter, sizeof(pChatData->m_ChatCmdBuffer));
 	}
-	pChatData->EnableMode(CHAT_ALL, pBuf);
-	mem_free(pBuf);
+	pChatData->EnableMode(CHAT_ALL, pChatData->m_ChatCmdBuffer);
 }
 
 void CChat::Com_Team(CChat *pChatData, const char* pCommand)
 {
 	const char* pParameter = str_skip_to_whitespace_const(pCommand);
-	char *pBuf = 0x0;
+	pChatData->m_ChatCmdBuffer[0] = 0;
 	if(pParameter++ && *pParameter) // skip the first space
 	{
 		// save the parameter in a buffer before EnableMode clears it
-		pBuf = (char*)mem_alloc(str_length(pParameter) + 1, 1);
-		str_copy(pBuf, pParameter, str_length(pParameter) + 1);
+		str_copy(pChatData->m_ChatCmdBuffer, pParameter, sizeof(pChatData->m_ChatCmdBuffer));
 	}
-	pChatData->EnableMode(CHAT_TEAM, pBuf);
-	mem_free(pBuf);
+	pChatData->EnableMode(CHAT_TEAM, pChatData->m_ChatCmdBuffer);
 }
 
 void CChat::Com_Reply(CChat *pChatData, const char* pCommand)
@@ -1473,15 +1469,13 @@ void CChat::Com_Reply(CChat *pChatData, const char* pCommand)
 		pChatData->m_WhisperTarget = pChatData->m_LastWhisperFrom;
 
 		const char* pParameter = str_skip_to_whitespace_const(pCommand);
-		char *pBuf = 0x0;
+		pChatData->m_ChatCmdBuffer[0] = 0;
 		if(pParameter++ && *pParameter) // skip the first space
 		{
 			// save the parameter in a buffer before EnableMode clears it
-			pBuf = (char*)mem_alloc(str_length(pParameter) + 1, 1);
-			str_copy(pBuf, pParameter, sizeof(pBuf));
+			str_copy(pChatData->m_ChatCmdBuffer, pParameter, sizeof(pChatData->m_ChatCmdBuffer));
 		}
-		pChatData->EnableMode(CHAT_WHISPER, pBuf);
-		mem_free(pBuf);
+		pChatData->EnableMode(CHAT_WHISPER, pChatData->m_ChatCmdBuffer);
 	}
 }
 

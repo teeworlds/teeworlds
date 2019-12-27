@@ -69,6 +69,7 @@ class CChat : public CComponent
 
 	int m_ChatBufferMode;
 	char m_ChatBuffer[512];
+	char m_ChatCmdBuffer[1024];
 
 	struct CHistoryEntry
 	{
