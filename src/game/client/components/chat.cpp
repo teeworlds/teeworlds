@@ -515,7 +515,8 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 		
 		CChatCommand *pCommand = m_Commands.GetCommandByName(pMsg->m_pName);
 
-		if(pCommand) {
+		if(pCommand)
+		{
 			mem_zero(pCommand, sizeof(CChatCommand));
 			dbg_msg("chat_commands", "removed chat command: name='%s'", pMsg->m_pName);
 		}
@@ -1612,9 +1613,10 @@ int CChat::CChatCommands::CountActiveCommands() const
 	return n;
 }
 
-const CChat::CChatCommand* CChat::CChatCommands::GetCommand(int index) const
+const CChat::CChatCommand* CChat::CChatCommands::GetCommand(int Index) const
 {
-	return &m_aCommands[GetActiveIndex(index)];
+	int RealIndex = GetActiveIndex(Index);
+	return RealIndex != -1 ? &m_aCommands[RealIndex] : 0;
 }
 
 CChat::CChatCommand *CChat::CChatCommands::GetCommandByName(const char *pName)
@@ -1666,15 +1668,15 @@ void CChat::CChatCommands::SelectNextCommand()
 	}
 }
 
-int CChat::CChatCommands::GetActiveIndex(int index) const
+int CChat::CChatCommands::GetActiveIndex(int Index) const
 {
 	for(int i = 0; i < MAX_COMMANDS; i++)
 	{
 		if(!m_aCommands[i].m_Used || m_aCommands[i].m_aFiltered)
-			index++;
-		if(i == index)
+			Index++;
+		if(i == Index)
 			return i;
 	}
-	dbg_break();
+	
 	return -1;
 }
