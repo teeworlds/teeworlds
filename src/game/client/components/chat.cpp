@@ -1385,7 +1385,6 @@ bool CChat::ExecuteCommand()
 			Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 			m_Mode = CHAT_NONE;
 		}
-		ClearInput();
 	}
 	else
 	{
