@@ -1383,6 +1383,7 @@ bool CChat::ExecuteCommand()
 			Msg.m_Name = pCommand->m_aName;
 			Msg.m_Arguments = pCommandStr;
 			Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+			m_Mode = CHAT_NONE;
 		}
 		ClearInput();
 	}
@@ -1507,6 +1508,7 @@ void CChat::Com_Mute(CChat *pChatData, const char* pCommand)
 		str_format(aMsg, sizeof(aMsg), !isMuted ? Localize("'%s' was muted") : Localize("'%s' was unmuted"), pChatData->m_pClient->m_aClients[TargetID].m_aName);
 		pChatData->AddLine(CLIENT_MSG, CHAT_ALL, aMsg, -1);
 	}
+	pChatData->m_Mode = CHAT_NONE;
 }
 
 void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
@@ -1527,6 +1529,7 @@ void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
 		str_format(aMsg, sizeof(aMsg), !isFriend ? Localize("'%s' was added as a friend") : Localize("'%s' was removed as a friend"), pChatData->m_pClient->m_aClients[TargetID].m_aName);
 		pChatData->AddLine(CLIENT_MSG, CHAT_ALL, aMsg, -1);
 	}
+	pChatData->m_Mode = CHAT_NONE;
 }
 
 
