@@ -129,7 +129,7 @@ class CChat : public CComponent
 	bool m_IgnoreCommand;
 	bool IsTypingCommand() const;
 	void HandleCommands(float x, float y, float w);
-	bool ExecuteCommand();
+	bool ExecuteCommand(bool Execute);
 	int IdentifyNameParameter(const char* pCommand) const;
 
 	static void Com_All(CChat *pChatData, const char* pCommand);
