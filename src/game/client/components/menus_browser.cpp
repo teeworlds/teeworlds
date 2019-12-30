@@ -437,10 +437,11 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 	}
 
 	vec3 TextBaseColor = vec3(1.0f, 1.0f, 1.0f);
+	vec4 TextBaseOutlineColor = vec4(0.0, 0.0, 0.0, 0.3f);
 	if(Selected || Inside)
 	{
 		TextBaseColor = vec3(0.0f, 0.0f, 0.0f);
-		TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+		TextBaseOutlineColor = vec4(0.8f, 0.8f, 0.8f, 0.25f);
 	}
 
 	float TextAlpha = (pEntry->m_NumClients == pEntry->m_MaxClients) ? 0.5f : 1.0f;
@@ -510,6 +511,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			}
 
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
+			TextRender()->TextOutlineColor(TextBaseOutlineColor.r, TextBaseOutlineColor.g, TextBaseOutlineColor.b, TextBaseOutlineColor.a);
 
 			if(Config()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_SERVERNAME))
 			{
@@ -521,6 +523,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr, str_length(Config()->m_BrFilterString));
 					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
+					TextRender()->TextOutlineColor(TextBaseOutlineColor.r, TextBaseOutlineColor.g, TextBaseOutlineColor.b, TextBaseOutlineColor.a);
 					TextRender()->TextEx(&Cursor, pStr+str_length(Config()->m_BrFilterString), -1);
 				}
 				else
@@ -553,6 +556,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr, str_length(Config()->m_BrFilterString));
 					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
+					TextRender()->TextOutlineColor(TextBaseOutlineColor.r, TextBaseOutlineColor.g, TextBaseOutlineColor.b, TextBaseOutlineColor.a);
 					TextRender()->TextEx(&Cursor, pStr+str_length(Config()->m_BrFilterString), -1);
 				}
 				else
@@ -564,6 +568,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		else if(ID == COL_BROWSER_PLAYERS)
 		{
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
+			TextRender()->TextOutlineColor(TextBaseOutlineColor.r, TextBaseOutlineColor.g, TextBaseOutlineColor.b, TextBaseOutlineColor.a);
 			CServerFilterInfo FilterInfo;
 			pFilter->GetFilter(&FilterInfo);
 
@@ -640,6 +645,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 
 			str_format(aTemp, sizeof(aTemp), "%d", pEntry->m_Latency);
 			TextRender()->TextColor(Color.r, Color.g, Color.b, Color.a);
+			TextRender()->TextOutlineColor(TextBaseOutlineColor.r, TextBaseOutlineColor.g, TextBaseOutlineColor.b, TextBaseOutlineColor.a);
 			Button.y += 2.0f;
 			Button.w -= 4.0f;
 			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_RIGHT);
@@ -674,7 +680,11 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 					TextRender()->TextEx(&Cursor, pEntry->m_aGameType, -1);
 			}
 			else
+			{
+				TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
+				TextRender()->TextOutlineColor(TextBaseOutlineColor.r, TextBaseOutlineColor.g, TextBaseOutlineColor.b, TextBaseOutlineColor.a);
 				TextRender()->TextEx(&Cursor, pEntry->m_aGameType, -1);
+			}
 		}
 	}
 
@@ -691,7 +701,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		RenderDetailInfo(Info, pEntry);
 
 		UI()->ClipEnable(&View);
-		RenderDetailScoreboard(View, pEntry, 4, vec4(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha));
+		RenderDetailScoreboard(View, pEntry, 4, vec4(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha), TextBaseOutlineColor);
 		UI()->ClipDisable();
 	}
 
@@ -2089,7 +2099,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 	}
 }
 
-void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, vec4 TextColor)
+void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, vec4 TextColor, vec4 TextOutlineColor)
 {
 	CBrowserFilter *pFilter = GetSelectedBrowserFilter();
 	CServerFilterInfo FilterInfo;
@@ -2097,6 +2107,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		pFilter->GetFilter(&FilterInfo);
 
 	TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
+	TextRender()->TextOutlineColor(TextOutlineColor.r, TextOutlineColor.g, TextOutlineColor.b, TextOutlineColor.a);
 
 	// server scoreboard
 	CTextCursor Cursor;
@@ -2199,9 +2210,11 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 				if(s)
 				{
 					TextRender()->TextEx(&Cursor, pName, (int)(s - pName));
-					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
+					TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
+					TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
 					TextRender()->TextEx(&Cursor, s, str_length(Config()->m_BrFilterString));
 					TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
+					TextRender()->TextOutlineColor(TextOutlineColor.r, TextOutlineColor.g, TextOutlineColor.b, TextOutlineColor.a);
 					TextRender()->TextEx(&Cursor, s + str_length(Config()->m_BrFilterString), -1);
 				}
 				else
@@ -2221,9 +2234,11 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 				if(s)
 				{
 					TextRender()->TextEx(&Cursor, pClan, (int)(s - pClan));
-					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
+					TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
+					TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
 					TextRender()->TextEx(&Cursor, s, str_length(Config()->m_BrFilterString));
 					TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
+					TextRender()->TextOutlineColor(TextOutlineColor.r, TextOutlineColor.g, TextOutlineColor.b, TextOutlineColor.a);
 					TextRender()->TextEx(&Cursor, s + str_length(Config()->m_BrFilterString), -1);
 				}
 				else
@@ -2261,7 +2276,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 	//RenderTools()->DrawUIRect(&View, vec4(0, 0, 0, 0.15f), CUI::CORNER_B, 4.0f);
 	ServerHeader.HMargin(2.0f, &ServerHeader);
 	UI()->DoLabel(&ServerHeader, Localize("Scoreboard"), FontSize + 2.0f, CUI::ALIGN_CENTER);
-	RenderDetailScoreboard(ServerScoreboard, pInfo, 0);
+	RenderDetailScoreboard(ServerScoreboard, pInfo, 0, vec4(1.0f, 1.0f, 1.0f, 1.0f), vec4(0.0f, 0.0f, 0.0f, 0.3f));
 }
 
 void CMenus::FriendlistOnUpdate()
