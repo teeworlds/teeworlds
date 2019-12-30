@@ -125,6 +125,7 @@ public:
 		FILTER_COUNTRY= 16384,
 	};
 
+	virtual int GetType() = 0;
 	virtual void SetType(int Type) = 0;
 	virtual void Refresh(int RefreshFlags) = 0;
 	virtual bool IsRefreshing() const = 0;
