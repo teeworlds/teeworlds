@@ -1393,8 +1393,9 @@ bool CChat::ExecuteCommand(bool Execute)
 			m_Mode = CHAT_NONE;
 			m_pClient->OnRelease();
 		}
+		return true;
 	}
-	else if(!Execute)
+	else if(!IsFullMatch && !Execute)
 	{
 		// autocomplete command
 		char aBuf[128];
@@ -1405,8 +1406,9 @@ bool CChat::ExecuteCommand(bool Execute)
 		m_Input.Set(aBuf);
 		m_Input.SetCursorOffset(str_length(aBuf));
 		m_InputUpdate = true;
+		return true;
 	}
-	return true;
+	return false;
 }
 
 // returns -1 if not found or duplicate
