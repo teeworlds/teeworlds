@@ -1231,7 +1231,8 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		Right.VSplitRight(Spacing, &Right, 0); // little space
 		Right.VSplitRight(ButtonWidth/2.0f, &Right, &Button);
 		static CButtonContainer s_ServerBrowserButton;
-		if(DoButton_SpriteID(&s_ServerBrowserButton, IMAGE_BROWSER, UI()->MouseInside(&Button) ? SPRITE_BROWSER_B : SPRITE_BROWSER_A, m_GamePage == PAGE_INTERNET || m_GamePage == PAGE_LAN, &Button) || CheckHotKey(KEY_B))
+		if(DoButton_SpriteID(&s_ServerBrowserButton, IMAGE_BROWSER, UI()->MouseInside(&Button) || m_GamePage == PAGE_INTERNET || m_GamePage == PAGE_LAN ? SPRITE_BROWSER_B : SPRITE_BROWSER_A,
+			m_GamePage == PAGE_INTERNET || m_GamePage == PAGE_LAN, &Button) || CheckHotKey(KEY_B))
 			NewPage = PAGE_INTERNET;
 
 		Rect.HSplitTop(Spacing, 0, &Rect);
