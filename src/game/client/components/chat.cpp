@@ -1384,6 +1384,7 @@ bool CChat::ExecuteCommand()
 			Msg.m_Arguments = pCommandStr;
 			Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 			m_Mode = CHAT_NONE;
+			m_pClient->OnRelease();
 		}
 	}
 	else
@@ -1508,6 +1509,7 @@ void CChat::Com_Mute(CChat *pChatData, const char* pCommand)
 		pChatData->AddLine(CLIENT_MSG, CHAT_ALL, aMsg, -1);
 	}
 	pChatData->m_Mode = CHAT_NONE;
+	pChatData->m_pClient->OnRelease();
 }
 
 void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
@@ -1529,6 +1531,7 @@ void CChat::Com_Befriend(CChat *pChatData, const char* pCommand)
 		pChatData->AddLine(CLIENT_MSG, CHAT_ALL, aMsg, -1);
 	}
 	pChatData->m_Mode = CHAT_NONE;
+	pChatData->m_pClient->OnRelease();
 }
 
 
