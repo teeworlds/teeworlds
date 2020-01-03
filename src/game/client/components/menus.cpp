@@ -2280,10 +2280,14 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_REMOVE_FRIEND)
 		{
-			CUIRect Yes, No;
-			Box.HSplitTop(27.0f, 0, &Box);
-			Box.VMargin(5.0f, &Box);
+			CUIRect NameLabel, Yes, No;
+
+			Box.Margin(5.0f, &Box);
+			Box.HSplitMid(&Box, &NameLabel);
+
 			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign, Box.w);
+			UI()->DoLabel(&NameLabel, m_pDeleteFriend->m_FriendState == CContactInfo::CONTACT_PLAYER ? m_pDeleteFriend->m_aName : m_pDeleteFriend->m_aClan,
+				ButtonHeight*ms_FontmodHeight*1.2f, CUI::ALIGN_CENTER, NameLabel.w);
 
 			// buttons
 			BottomBar.VSplitMid(&No, &Yes);
@@ -2292,7 +2296,10 @@ int CMenus::Render()
 
 			static CButtonContainer s_ButtonNo;
 			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || m_EscapePressed)
+			{
 				m_Popup = POPUP_NONE;
+				m_pDeleteFriend = 0;
+			}
 
 			static CButtonContainer s_ButtonYes;
 			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), 0, &Yes) || m_EnterPressed)
