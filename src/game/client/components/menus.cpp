@@ -793,7 +793,7 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 {
 	CUIRect Handle;
 	static float OffsetY;
-	pRect->HSplitTop(33, &Handle, 0);
+	pRect->HSplitTop(pRect->h/8.0f, &Handle, 0);
 
 	Handle.y += (pRect->h-Handle.h)*Current;
 
@@ -850,7 +850,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
 	CUIRect Handle;
 	static float OffsetX;
-	pRect->VSplitLeft(33, &Handle, 0);
+	pRect->VSplitLeft(pRect->w/8.0f, &Handle, 0);
 
 	Handle.x += (pRect->w-Handle.w)*Current;
 
