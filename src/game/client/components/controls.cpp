@@ -139,7 +139,6 @@ int CControls::SnapInput(int *pData)
 	}
 	else
 	{
-		ClampMousePos();
 		m_InputData.m_TargetX = (int)m_MousePos.x;
 		m_InputData.m_TargetY = (int)m_MousePos.y;
 		if(!m_InputData.m_TargetX && !m_InputData.m_TargetY)
