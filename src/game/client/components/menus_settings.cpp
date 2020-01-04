@@ -1032,6 +1032,17 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(DoButton_CheckBox(&s_ShowUserId, Localize("Show user IDs"), g_Config.m_ClShowUserId, &Button))
 		g_Config.m_ClShowUserId ^= 1;
 
+	// show user ids in nameplates
+	if (g_Config.m_ClShowUserId)
+	{
+		GameRight.HSplitTop(Spacing, 0, &GameRight);
+		GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ShowUserIdNameplate = 0;
+		if (DoButton_CheckBox(&s_ShowUserIdNameplate, Localize("Show user IDs in name plates"), g_Config.m_ClShowUserIdNameplate, &Button))
+			g_Config.m_ClShowUserIdNameplate ^= 1;
+	}
+
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 	static int s_Showsocial = 0;
