@@ -124,7 +124,7 @@ void CServerBrowserFilter::CServerFilter::Filter()
 			Filtered = 1;
 		else if(m_FilterInfo.m_aAddress[0] && !str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aAddress, m_FilterInfo.m_aAddress))
 			Filtered = 1;
-		else if(m_FilterInfo.m_ServerLevel & (1 << m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_ServerLevel))
+		else if(m_FilterInfo.IsLevelFiltered(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_ServerLevel))
 			Filtered = 1;
 		else
 		{
