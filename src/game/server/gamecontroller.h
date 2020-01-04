@@ -122,6 +122,8 @@ protected:
 
 	typedef void (*COMMAND_CALLBACK)(class CPlayer *pPlayer, const char *pArgs);
 
+	//static void Com_Example(class CPlayer *pPlayer, const char *pArgs);
+
 	struct CChatCommand 
 	{
 		char m_aName[32];
@@ -150,6 +152,8 @@ protected:
 		CChatCommand *GetCommand(const char *pName);
 
 		void OnPlayerConnect(class IServer *pServer, class CPlayer *pPlayer);
+
+		void OnInit();
 	};
 
 	CChatCommands m_Commands;
