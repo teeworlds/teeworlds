@@ -1760,21 +1760,11 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		ServerFilter.HSplitTop(LineSize - 4.f, &Button, &ServerFilter);
 
 	{
-		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
-		CUIRect EditBox;
-		Button.VSplitRight(60.0f, &Button, &EditBox);
-
-		UI()->DoLabel(&Button, Localize("Maximum ping:"), FontSize, CUI::ALIGN_LEFT);
-
-		char aBuf[5];
-		str_format(aBuf, sizeof(aBuf), "%d", FilterInfo.m_Ping);
-		static float Offset = 0.0f;
 		static int s_BrFilterPing = 0;
-		DoEditBox(&s_BrFilterPing, &EditBox, aBuf, sizeof(aBuf), FontSize, &Offset);
-		int NewPing = clamp(str_toint(aBuf), 0, 999);
-		if(NewPing != FilterInfo.m_Ping)
-		{
-			FilterInfo.m_Ping = NewPing;
+		int currentVal = FilterInfo.m_Ping;
+		DoScrollbarOption(&s_BrFilterPing, &currentVal, &Button, Localize("Max. ping"), 20, 999);
+		if(currentVal != FilterInfo.m_Ping) {
+			FilterInfo.m_Ping = currentVal;
 			pFilter->SetFilter(&FilterInfo);
 		}
 	}
