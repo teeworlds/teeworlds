@@ -1915,7 +1915,9 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_REMOVE_FRIEND)
 		{
 			pTitle = Localize("Remove friend");
-			pExtraText = Localize("Are you sure that you want to remove the player from your friends list?");
+			pExtraText = Localize(m_pDeleteFriend->m_FriendState == CContactInfo::CONTACT_PLAYER
+						? "Are you sure that you want to remove the player from your friends list?"
+						: "Are you sure that you want to remove the clan from your friends list?");
 			ExtraAlign = CUI::ALIGN_LEFT;
 		}
 		else if(m_Popup == POPUP_REMOVE_FILTER)
