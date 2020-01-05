@@ -24,11 +24,13 @@ CHud::CHud()
 	m_AverageFPS = 1.0f;
 
 	m_WarmupHideTick = 0;
+	m_CheckpointTime = 0;
 }
 
 void CHud::OnReset()
 {
 	m_WarmupHideTick = 0;
+	m_CheckpointTime = 0;
 }
 
 void CHud::RenderGameTimer()
@@ -153,7 +155,7 @@ void CHud::RenderScoreHud()
 		float Whole = 300*Graphics()->ScreenAspect();
 		float StartY = 229.0f;
 
-		if(GameFlags&GAMEFLAG_TEAMS && m_pClient->m_Snap.m_pGameDataTeam)
+		if(GameFlags&GAMEFLAG_TEAMS && m_pClient->m_Snap.m_pGameDataTeam && !(GameFlags&GAMEFLAG_RACE))
 		{
 			char aScoreTeam[2][32];
 			str_format(aScoreTeam[TEAM_RED], sizeof(aScoreTeam)/2, "%d", m_pClient->m_Snap.m_pGameDataTeam->m_TeamscoreRed);
@@ -266,15 +268,32 @@ void CHud::RenderScoreHud()
 			for(int t = 0; t < 2; ++t)
 			{
 				if(aPlayerInfo[t].m_pPlayerInfo)
-					str_format(aScore[t], sizeof(aScore)/2, "%d", aPlayerInfo[t].m_pPlayerInfo->m_Score);
+				{
+					if(GameFlags&GAMEFLAG_RACE)
+						FormatTime(aScore[t], sizeof(aScore[0]), aPlayerInfo[t].m_pPlayerInfo->m_Score, m_pClient->RacePrecision());
+					else
+						str_format(aScore[t], sizeof(aScore[0]), "%d", aPlayerInfo[t].m_pPlayerInfo->m_Score);
+				}
 				else
+				{
 					aScore[t][0] = 0;
+				}
 			}
-			float aScoreWidth[2] = {TextRender()->TextWidth(0, 14.0f, aScore[0], -1, -1.0f), TextRender()->TextWidth(0, 14.0f, aScore[1], -1, -1.0f)};
-			float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, 14.0f, "10", -1, -1.0f));
+
+			float FontSize = (GameFlags&GAMEFLAG_RACE) ? 10.f : 14.f;
+			float aScoreWidth[2] = {TextRender()->TextWidth(0, FontSize, aScore[0], -1, -1.0f), TextRender()->TextWidth(0, FontSize, aScore[1], -1, -1.0f)};
+			float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, FontSize, "10", -1, -1.0f));
 			float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
 
-			// todo: add core hud for LMS
+			if(GameFlags&GAMEFLAG_SURVIVAL)
+			{
+				// draw number of alive players
+				char aBuf[32];
+				str_format(aBuf, sizeof(aBuf), m_pClient->m_Snap.m_AliveCount[0] == 1 ? Localize("%d player left") : Localize("%d players left"),
+					m_pClient->m_Snap.m_AliveCount[0]);
+				float w = TextRender()->TextWidth(0, 8.0f, aBuf, -1, -1.0f);
+				TextRender()->Text(0, min(Whole - w - 1.0f, Whole - ScoreWidthMax - ImageSize - 2 * Split), StartY - 12.0f, 8.0f, aBuf, -1.0f);
+			}
 
 			for(int t = 0; t < 2; t++)
 			{
@@ -284,7 +303,8 @@ void CHud::RenderScoreHud()
 				RenderTools()->DrawUIRect(&Rect, t == Local ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_L, 5.0f);
 
 				// draw score
-				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreWidth[t])/2-Split, StartY+t*20, 14.0f, aScore[t], -1.0f);
+				float Spacing = (GameFlags&GAMEFLAG_RACE) ? 2.f : 0.f;
+				TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreWidth[t])/2-Split, StartY+t*20+Spacing, FontSize, aScore[t], -1.0f);
 
 				if(aPlayerInfo[t].m_pPlayerInfo)
 				{
@@ -703,6 +723,69 @@ void CHud::RenderReadyUpNotification()
 	}
 }
 
+void CHud::RenderRaceTime(const CNetObj_PlayerInfoRace *pRaceInfo)
+{
+	if(!pRaceInfo || pRaceInfo->m_RaceStartTick == -1)
+		return;
+
+	char aBuf[32];
+	int RaceTime = (Client()->GameTick() - pRaceInfo->m_RaceStartTick)*1000/Client()->GameTickSpeed();
+	FormatTime(aBuf, sizeof(aBuf), RaceTime, min(m_pClient->RacePrecision(), 1));
+
+	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
+	float w = TextRender()->TextWidth(0, 12, "00:00.0", -1, -1.0f);
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_TIMERCLOCK].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(SPRITE_TIMERCLOCK_A);
+	IGraphics::CQuadItem QuadItem(Half-w/2-18.f, 20, 15, 15);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	TextRender()->Text(0, Half-w/2, 20, 12, aBuf, -1);
+}
+
+void CHud::RenderCheckpoint()
+{
+	int64 TimeSinceCheckpoint = time_get() - m_CheckpointTime;
+	if(m_CheckpointTime != 0 && TimeSinceCheckpoint < time_freq() * 4)
+	{
+		char aBuf[64];
+		FormatTimeDiff(aBuf, sizeof(aBuf), m_CheckpointDiff, 2);
+			
+		// calculate alpha (2 sec 1 than get lower the next 2 sec)
+		float a = 1.0f;
+		if(TimeSinceCheckpoint > time_freq() * 2)
+		{
+			// lower the alpha slowly to blend text out
+			a = (time_freq() * 4 - TimeSinceCheckpoint) / (float)(time_freq() * 2);
+		}
+			
+		if(m_CheckpointDiff > 0)
+			TextRender()->TextColor(1.0f,0.5f,0.5f,a); // red
+		else if(m_CheckpointDiff < 0)
+			TextRender()->TextColor(0.5f,1.0f,0.5f,a); // green
+		else if(!m_CheckpointDiff)
+			TextRender()->TextColor(1,1,1,a); // white
+
+		float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
+		float w = TextRender()->TextWidth(0, 10, aBuf, -1, -1.0f);
+		TextRender()->Text(0, Half-w/2, 33, 10, aBuf, -1);
+
+		TextRender()->TextColor(1,1,1,1);
+	}
+}
+
+void CHud::OnMessage(int MsgType, void *pRawMsg)
+{
+	if(MsgType == NETMSGTYPE_SV_CHECKPOINT)
+	{
+		CNetMsg_Sv_Checkpoint *pMsg = (CNetMsg_Sv_Checkpoint *)pRawMsg;
+		m_CheckpointDiff = pMsg->m_Diff;
+		m_CheckpointTime = time_get();
+	}
+}
+
 void CHud::OnRender()
 {
 	if(!m_pClient->m_Snap.m_pGameData)
@@ -712,6 +795,8 @@ void CHud::OnRender()
 	if(m_pClient->m_pMenus->IsActive())
 		return;
 
+	bool Race = m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE;
+
 	m_Width = 300.0f*Graphics()->ScreenAspect();
 	m_Height = 300.0f;
 	Graphics()->MapScreen(0.0f, 0.0f, m_Width, m_Height);
@@ -719,11 +804,25 @@ void CHud::OnRender()
 	if(g_Config.m_ClShowhud)
 	{
 		if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
+		{
 			RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
+			if(Race)
+			{
+				RenderRaceTime(m_pClient->m_Snap.m_paPlayerInfosRace[m_pClient->m_LocalClientID]);
+				RenderCheckpoint();
+			}
+		}
 		else if(m_pClient->m_Snap.m_SpecInfo.m_Active)
 		{
 			if(m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
+			{
 				RenderHealthAndAmmo(&m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_Cur);
+				if(Race)
+				{
+					RenderRaceTime(m_pClient->m_Snap.m_paPlayerInfosRace[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]);
+					RenderCheckpoint();
+				}
+			}
 			RenderSpectatorHud();
 			RenderSpectatorNotification();
 		}

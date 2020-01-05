@@ -24,6 +24,7 @@ public:
 	void Update(bool ForceResort);	
 
 	// interface functions
+	int GetType() { return m_ActServerlistType; };
 	void SetType(int Type);
 	void Refresh(int RefreshFlags);
 	bool IsRefreshing() const { return m_pFirstReqServer != 0; }

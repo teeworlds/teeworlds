@@ -1,0 +1,38 @@
+{"skin": {
+	"body": {
+		"filename": "raccoon",
+		"custom_colors": "true",
+		"hue": 16,
+		"sat": 133,
+		"lgt": 121
+	},
+	"marking": {
+		"filename": "coonfluff",
+		"custom_colors": "true",
+		"hue": 17,
+		"sat": 110,
+		"lgt": 54,
+		"alp": 255
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 16,
+		"sat": 133,
+		"lgt": 121
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 17,
+		"sat": 129,
+		"lgt": 38
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 23,
+		"sat": 196,
+		"lgt": 45
+	}}
+}

@@ -36,7 +36,7 @@
 #include "components/flow.h"
 #include "components/hud.h"
 #include "components/items.h"
-#include "components/killmessages.h"
+#include "components/infomessages.h"
 #include "components/mapimages.h"
 #include "components/maplayers.h"
 #include "components/menus.h"
@@ -52,8 +52,44 @@
 #include "components/stats.h"
 #include "components/voting.h"
 
+inline void AppendDecimals(char *pBuf, int Size, int Time, int Precision)
+{
+	if(Precision > 0)
+	{
+		char aInvalid[] = ".---";
+		char aMSec[] = {
+			'.',
+			(char)('0' + (Time / 100) % 10),
+			(char)('0' + (Time / 10) % 10),
+			(char)('0' + Time % 10),
+			0
+		};
+		char *pDecimals = Time < 0 ? aInvalid : aMSec;
+		pDecimals[min(Precision, 3)+1] = 0;
+		str_append(pBuf, pDecimals, Size);
+	}
+}
+
+void FormatTime(char *pBuf, int Size, int Time, int Precision)
+{
+	if(Time < 0)
+		str_copy(pBuf, "-:--", Size);
+	else
+		str_format(pBuf, Size, "%02d:%02d", Time / (60 * 1000), (Time / 1000) % 60);
+	AppendDecimals(pBuf, Size, Time, Precision);
+}
+
+void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision, bool ForceSign)
+{
+	const char *pPositive = ForceSign ? "+" : "";
+	const char *pSign = Time < 0 ? "-" : pPositive;
+	Time = absolute(Time);
+	str_format(pBuf, Size, "%s%d", pSign, Time / 1000);
+	AppendDecimals(pBuf, Size, Time, Precision);
+}
+
 // instanciate all systems
-static CKillMessages gs_KillMessages;
+static CInfoMessages gs_InfoMessages;
 static CCamera gs_Camera;
 static CChat gs_Chat;
 static CMotd gs_Motd;
@@ -232,7 +268,7 @@ void CGameClient::OnConsoleInit()
 	m_All.Add(&gs_Hud);
 	m_All.Add(&gs_Spectator);
 	m_All.Add(&gs_Emoticon);
-	m_All.Add(&gs_KillMessages);
+	m_All.Add(&gs_InfoMessages);
 	m_All.Add(m_pChat);
 	m_All.Add(&gs_Broadcast);
 	m_All.Add(&gs_DebugHud);
@@ -313,7 +349,10 @@ void CGameClient::OnInit()
 
 	// TODO: this should be different
 	// setup item sizes
-	for(int i = 0; i < NUM_NETOBJTYPES; i++)
+	// HACK: only set static size for items, which were available in the first 0.7 release
+	// so new items don't break the snapshot delta
+	static const int OLD_NUM_NETOBJTYPES = 23;
+	for(int i = 0; i < OLD_NUM_NETOBJTYPES; i++)
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 
 	// load default font
@@ -1018,6 +1057,22 @@ void CGameClient::ProcessTriggeredEvents(int Events, vec2 Pos)
 		m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_JUMP, 1.0f, Pos);*/
 }
 
+typedef bool (*FCompareFunc)(const CNetObj_PlayerInfo*, const CNetObj_PlayerInfo*);
+
+bool CompareScore(const CNetObj_PlayerInfo *Pl1, const CNetObj_PlayerInfo *Pl2)
+{
+	return Pl1->m_Score < Pl2->m_Score;
+}
+
+bool CompareTime(const CNetObj_PlayerInfo *Pl1, const CNetObj_PlayerInfo *Pl2)
+{
+	if(Pl1->m_Score < 0)
+		return true;
+	if(Pl2->m_Score < 0)
+		return false;
+	return Pl1->m_Score > Pl2->m_Score;
+}
+
 void CGameClient::OnNewSnapshot()
 {
 	// clear out the invalid pointers
@@ -1154,6 +1209,15 @@ void CGameClient::OnNewSnapshot()
 					m_aClients[ClientID].UpdateBotRenderInfo(this, ClientID);
 				}
 			}
+			else if(Item.m_Type == NETOBJTYPE_PLAYERINFORACE)
+			{
+				const CNetObj_PlayerInfoRace *pInfo = (const CNetObj_PlayerInfoRace *)pData;
+				int ClientID = Item.m_ID;
+				if(ClientID < MAX_CLIENTS && m_aClients[ClientID].m_Active)
+				{
+					m_Snap.m_paPlayerInfosRace[ClientID] = pInfo;
+				}
+			}
 			else if(Item.m_Type == NETOBJTYPE_CHARACTER)
 			{
 				if(Item.m_ID < MAX_CLIENTS)
@@ -1230,8 +1294,14 @@ void CGameClient::OnNewSnapshot()
 				m_LastFlagCarrierRed = m_Snap.m_pGameDataFlag->m_FlagCarrierRed;
 				m_LastFlagCarrierBlue = m_Snap.m_pGameDataFlag->m_FlagCarrierBlue;
 			}
+			else if(Item.m_Type == NETOBJTYPE_GAMEDATARACE)
+			{
+				m_Snap.m_pGameDataRace = (const CNetObj_GameDataRace *)pData;
+			}
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
+			{
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
+			}
 		}
 	}
 
@@ -1276,12 +1346,14 @@ void CGameClient::OnNewSnapshot()
 	}
 
 	// sort player infos by score
+	FCompareFunc Compare = (m_GameInfo.m_GameFlags&GAMEFLAG_RACE) ? CompareTime : CompareScore;
+
 	for(int k = 0; k < MAX_CLIENTS-1; k++) // ffs, bubblesort
 	{
 		for(int i = 0; i < MAX_CLIENTS-k-1; i++)
 		{
 			if(m_Snap.m_aInfoByScore[i+1].m_pPlayerInfo && (!m_Snap.m_aInfoByScore[i].m_pPlayerInfo ||
-				m_Snap.m_aInfoByScore[i].m_pPlayerInfo->m_Score < m_Snap.m_aInfoByScore[i+1].m_pPlayerInfo->m_Score))
+				Compare(m_Snap.m_aInfoByScore[i].m_pPlayerInfo, m_Snap.m_aInfoByScore[i+1].m_pPlayerInfo)))
 			{
 				CPlayerInfoItem Tmp = m_Snap.m_aInfoByScore[i];
 				m_Snap.m_aInfoByScore[i] = m_Snap.m_aInfoByScore[i+1];
@@ -1527,6 +1599,12 @@ void CGameClient::CClientData::UpdateRenderInfo(CGameClient *pGameClient, int Cl
 	// update skin info
 	if(UpdateSkinInfo)
 	{
+		char* apSkinParts[NUM_SKINPARTS];
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+			apSkinParts[p] = m_aaSkinPartNames[p];
+
+		pGameClient->m_pSkins->ValidateSkinParts(apSkinParts, m_aUseCustomColors, m_aSkinPartColors, pGameClient->m_GameInfo.m_GameFlags);
+
 		m_SkinInfo.m_Size = 64;
 		if(pGameClient->IsXmas())
 		{

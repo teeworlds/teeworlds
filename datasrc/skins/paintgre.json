@@ -1,0 +1,35 @@
+{"skin": {
+	"body": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 36,
+		"sat": 154,
+		"lgt": 106
+	},
+	"marking": {
+		"filename": "lowpaint",
+		"custom_colors": "true",
+		"hue": 52,
+		"sat": 255,
+		"lgt": 255,
+		"alp": 255
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 39,
+		"sat": 171,
+		"lgt": 139
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 32,
+		"sat": 132,
+		"lgt": 59
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "false"
+	}}
+}
