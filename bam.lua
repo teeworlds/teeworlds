@@ -20,11 +20,16 @@ generated_icon_dir = "build/icons"
 builddir = "build/%(arch)s/%(conf)s"
 content_src_dir = "datasrc/"
 
+python_in_path = ExecuteSilent("python -V") == 0
+
 -- data compiler
 function Python(name)
 	if family == "windows" then
-		-- Python is usually registered for .py files in Windows
-		return "python " .. str_replace(name, "/", "\\")
+		name = str_replace(name, "/", "\\")
+		if not python_in_path then
+			-- Python is usually registered for .py files in Windows
+			return name
+		end
 	end
 	return "python " .. name
 end
