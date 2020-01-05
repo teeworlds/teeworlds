@@ -41,13 +41,13 @@ jobs:
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update -y
-        sudo apt-get install cmake ninja-build libfreetype6-dev libsdl2-dev -y
+        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev -y
 
     - name: Prepare MacOS
       if: contains(matrix.os, 'macOS')
       run: |
         brew update
-        brew install ninja freetype sdl2
+        brew install pkg-config ninja freetype sdl2
 
     - name: Prepare Windows
       uses: ilammy/msvc-dev-cmd@v1
