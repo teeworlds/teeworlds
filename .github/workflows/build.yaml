@@ -7,9 +7,17 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest]
+        os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-16.04]
         include:
         - os: ubuntu-latest
+          cmake-args: -G "Unix Makefiles"
+          build-args: --parallel
+          package-file: teeworlds-*-linux_x86_64.tar.xz
+          env:
+            CFLAGS: -Wdeclaration-after-statement -Werror
+            CXXFLAGS: -Werror
+        - os: ubuntu-16.04
+          cmake-path: /usr/bin/
           cmake-args: -G "Unix Makefiles"
           package-file: teeworlds-*-linux_x86_64.tar.xz
           env:
@@ -17,6 +25,7 @@ jobs:
             CXXFLAGS: -Werror
         - os: macOS-latest
           cmake-args: -G "Unix Makefiles"
+          build-args: --parallel
           package-file: teeworlds-*-osx.dmg
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
@@ -55,12 +64,13 @@ jobs:
       run: |
         mkdir debug
         cd debug
-        cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
-        cmake --build . --config Debug --parallel --target everything
+        ${{ matrix.cmake-path }}cmake --version
+        ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
+        ${{ matrix.cmake-path }}cmake --build . --config Debug ${{ matrix.build-args }} --target everything
     - name: Test debug
       run: |
         cd debug
-        cmake --build . --config Debug --parallel --target run_tests
+        ${{ matrix.cmake-path }}cmake --build . --config Debug ${{ matrix.build-args }} --target run_tests
         ./teeworlds_srv shutdown
 
     - name: Build in release mode
@@ -68,18 +78,18 @@ jobs:
       run: |
         mkdir release
         cd release
-        cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -Werror=dev -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
-        cmake --build . --config Release --parallel --target everything
+        ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -Werror=dev -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
+        ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target everything
     - name: Test release
       run: |
         cd release
-        cmake --build . --config Release --parallel --target run_tests
+        ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target run_tests
         ./teeworlds_srv shutdown
 
     - name: Package
       run: |
         cd release
-        cmake --build . --config Release --parallel --target package_default
+        ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target package_default
         mkdir artifacts
         mv ${{ matrix.package-file }} artifacts
 
