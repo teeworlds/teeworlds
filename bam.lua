@@ -24,7 +24,7 @@ content_src_dir = "datasrc/"
 function Python(name)
 	if family == "windows" then
 		-- Python is usually registered for .py files in Windows
-		return str_replace(name, "/", "\\")
+		return "python " .. str_replace(name, "/", "\\")
 	end
 	return "python " .. name
 end
