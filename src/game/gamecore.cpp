@@ -376,7 +376,7 @@ void CCharacterCore::Move()
 				if(!pCharCore || pCharCore == this)
 					continue;
 				float D = distance(Pos, pCharCore->m_Pos);
-				if((D < PhysSize && D > 0.0f) || (D <= 0.001f && D >= 0.f))
+				if(D < PhysSize && D >= 0.0f)
 				{
 					if(a > 0.0f)
 						m_Pos = LastPos;
