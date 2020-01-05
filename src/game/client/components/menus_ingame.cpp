@@ -442,7 +442,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	GameInfo.HSplitTop(ButtonHeight, &Label, &GameInfo);
 	Label.y += 2.0f;
-	const char *pLevelName;
+	const char *pLevelName = "";
 	switch(CurrentServerInfo.m_ServerLevel)
 	{
 		case CServerInfo::LEVEL_CASUAL:
