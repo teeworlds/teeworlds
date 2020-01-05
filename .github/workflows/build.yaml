@@ -10,20 +10,21 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
         include:
         - os: ubuntu-latest
+          cmake-args: -G "Unix Makefiles"
           package-file: teeworlds-*-linux_x86_64.tar.xz
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: macOS-latest
+          cmake-args: -G "Unix Makefiles"
           package-file: teeworlds-*-osx.dmg
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: windows-latest
+          cmake-args: -G "Visual Studio 16 2019" -A x64
           package-file: teeworlds-*-win64.zip
           env:
-            CC: cl
-            CCX: cl
             CFLAGS: /WX
             CXXFLAGS: /WX
             LDFLAGS: /WX
@@ -41,31 +42,25 @@ jobs:
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update -y
-        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev -y
+        sudo apt-get install pkg-config cmake libfreetype6-dev libsdl2-dev -y
 
     - name: Prepare MacOS
       if: contains(matrix.os, 'macOS')
       run: |
         brew update
-        brew install pkg-config ninja freetype sdl2
-
-    - name: Prepare Windows
-      uses: ilammy/msvc-dev-cmd@v1
-      if: contains(matrix.os, 'windows')
-      with:
-        arch: x64
+        brew install pkg-config freetype sdl2
 
     - name: Build in debug mode
       env: ${{ matrix.env }}
       run: |
         mkdir debug
         cd debug
-        cmake -GNinja -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON ..
-        ninja everything
+        cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
+        cmake --build . --config Debug --parallel --target everything
     - name: Test debug
       run: |
         cd debug
-        ninja run_tests
+        cmake --build . --config Debug --parallel --target run_tests
         ./teeworlds_srv shutdown
 
     - name: Build in release mode
@@ -73,18 +68,18 @@ jobs:
       run: |
         mkdir release
         cd release
-        cmake -GNinja -DCMAKE_BUILD_TYPE=Release -Werror=dev -DDOWNLOAD_GTEST=ON ..
-        ninja everything
+        cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -Werror=dev -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
+        cmake --build . --config Release --parallel --target everything
     - name: Test release
       run: |
         cd release
-        ninja run_tests
+        cmake --build . --config Release --parallel --target run_tests
         ./teeworlds_srv shutdown
 
     - name: Package
       run: |
         cd release
-        ninja package_default
+        cmake --build . --config Release --parallel --target package_default
         mkdir artifacts
         mv ${{ matrix.package-file }} artifacts
 
