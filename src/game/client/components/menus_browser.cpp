@@ -1760,21 +1760,20 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		ServerFilter.HSplitTop(LineSize - 4.f, &Button, &ServerFilter);
 
 	{
+		int Value = FilterInfo.m_Ping, Min = 20, Max = 999;
+
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%s %d", Localize("Maximum ping:"), Value);
+		UI()->DoLabel(&Button, aBuf, FontSize, CUI::ALIGN_LEFT);
+
 		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
-		CUIRect EditBox;
-		Button.VSplitRight(60.0f, &Button, &EditBox);
 
-		UI()->DoLabel(&Button, Localize("Maximum ping:"), FontSize, CUI::ALIGN_LEFT);
-
-		char aBuf[5];
-		str_format(aBuf, sizeof(aBuf), "%d", FilterInfo.m_Ping);
-		static float Offset = 0.0f;
+		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Button.VMargin(4.0f, &Button);
 		static int s_BrFilterPing = 0;
-		DoEditBox(&s_BrFilterPing, &EditBox, aBuf, sizeof(aBuf), FontSize, &Offset);
-		int NewPing = clamp(str_toint(aBuf), 0, 999);
-		if(NewPing != FilterInfo.m_Ping)
-		{
-			FilterInfo.m_Ping = NewPing;
+		Value = round_to_int(DoScrollbarH(&s_BrFilterPing, &Button, (float)(Value - Min) / (float)(Max - Min))*(float)(Max - Min) + (float)Min + 0.1f);
+		if(Value != FilterInfo.m_Ping) {
+			FilterInfo.m_Ping = Value;
 			pFilter->SetFilter(&FilterInfo);
 		}
 	}
