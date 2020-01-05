@@ -40,7 +40,8 @@ void CControls::OnRelease()
 
 void CControls::OnPlayerDeath()
 {
-	m_LastData.m_WantedWeapon = m_InputData.m_WantedWeapon = 0;
+	if(!m_pClient->m_Snap.m_pGameDataRace || !(m_pClient->m_Snap.m_pGameDataRace->m_RaceFlags&RACEFLAG_KEEP_WANTED_WEAPON))
+		m_LastData.m_WantedWeapon = m_InputData.m_WantedWeapon = 0;
 }
 
 static void ConKeyInputState(IConsole::IResult *pResult, void *pUserData)
@@ -138,7 +139,6 @@ int CControls::SnapInput(int *pData)
 	}
 	else
 	{
-		ClampMousePos();
 		m_InputData.m_TargetX = (int)m_MousePos.x;
 		m_InputData.m_TargetY = (int)m_MousePos.y;
 		if(!m_InputData.m_TargetX && !m_InputData.m_TargetY)

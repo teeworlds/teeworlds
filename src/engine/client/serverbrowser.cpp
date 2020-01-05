@@ -531,7 +531,7 @@ void CServerBrowser::SetInfo(int ServerlistType, CServerEntry *pEntry, const CSe
 {
 	int Fav = pEntry->m_Info.m_Favorite;
 	pEntry->m_Info = Info;
-	pEntry->m_Info.m_Flags &= FLAG_PASSWORD;
+	pEntry->m_Info.m_Flags &= FLAG_PASSWORD|FLAG_TIMESCORE;
 	if(str_comp(pEntry->m_Info.m_aGameType, "DM") == 0 || str_comp(pEntry->m_Info.m_aGameType, "TDM") == 0 || str_comp(pEntry->m_Info.m_aGameType, "CTF") == 0 ||
 		str_comp(pEntry->m_Info.m_aGameType, "LTS") == 0 ||	str_comp(pEntry->m_Info.m_aGameType, "LMS") == 0)
 		pEntry->m_Info.m_Flags |= FLAG_PURE;

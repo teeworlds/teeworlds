@@ -1358,6 +1358,42 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		Right.VSplitLeft(SpacingW/2.0f, 0, &Right);
 
 		// handle left
+
+		// validate skin parts for solo mode
+		CTeeRenderInfo OwnSkinInfo;
+		OwnSkinInfo.m_Size = 50.0f;
+
+		char aSkinParts[NUM_SKINPARTS][24];
+		char* apSkinPartsPtr[NUM_SKINPARTS];
+		int aUCCVars[NUM_SKINPARTS];
+		int aColorVars[NUM_SKINPARTS];
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[p], 24);
+			apSkinPartsPtr[p] = aSkinParts[p];
+			aUCCVars[p] = *CSkins::ms_apUCCVariables[p];
+			aColorVars[p] = *CSkins::ms_apColorVariables[p];
+		}
+
+		m_pClient->m_pSkins->ValidateSkinParts(apSkinPartsPtr, aUCCVars, aColorVars, 0);
+
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, apSkinPartsPtr[p], false);
+			const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
+			if(aUCCVars[p])
+			{
+				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
+				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(aColorVars[p], p==SKINPART_MARKING);
+			}
+			else
+			{
+				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
+				OwnSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+		}
+
+		// draw preview
 		RenderTools()->DrawUIRect(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		Left.VSplitMid(&Label, &Left);
@@ -1366,26 +1402,41 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		RenderTools()->DrawUIRect(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-		CTeeRenderInfo OwnSkinInfo;
-		OwnSkinInfo.m_Size = 50.0f;
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
+
+
+		// handle right (team skins)
+
+		// validate skin parts for team game mode
+		CTeeRenderInfo TeamSkinInfo = OwnSkinInfo;
+
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, CSkins::ms_apSkinVariables[p], false);
+			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[p], 24);
+			apSkinPartsPtr[p] = aSkinParts[p];
+			aUCCVars[p] = *CSkins::ms_apUCCVariables[p];
+			aColorVars[p] = *CSkins::ms_apColorVariables[p];
+		}
+
+		m_pClient->m_pSkins->ValidateSkinParts(apSkinPartsPtr, aUCCVars, aColorVars, GAMEFLAG_TEAMS);
+
+		for(int p = 0; p < NUM_SKINPARTS; p++)
+		{
+			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, apSkinPartsPtr[p], false);
 			const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
-			if(*CSkins::ms_apUCCVariables[p])
+			if(aUCCVars[p])
 			{
-				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[p], p==SKINPART_MARKING);
+				TeamSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
+				TeamSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(aColorVars[p], p==SKINPART_MARKING);
 			}
 			else
 			{
-				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
-				OwnSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+				TeamSkinInfo.m_aTextures[p] = pSkinPart->m_OrgTexture;
+				TeamSkinInfo.m_aColors[p] = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
 
-		// handle right (team skins)
+		// draw preview
 		RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		Right.VSplitLeft(Right.w/3.0f+SpacingW/2.0f, &Label, &Right);
@@ -1400,19 +1451,19 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int TeamColor = m_pClient->m_pSkins->GetTeamColor(*CSkins::ms_apUCCVariables[p], *CSkins::ms_apColorVariables[p], TEAM_RED, p);
-			OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_MARKING);
+			int TeamColor = m_pClient->m_pSkins->GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_RED, p);
+			TeamSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_MARKING);
 		}
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeamSkinInfo, 0, vec2(1, 0), vec2(Left.x+Left.w/2.0f, Left.y+Left.h/2.0f+2.0f));
 
 		RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int TeamColor = m_pClient->m_pSkins->GetTeamColor(*CSkins::ms_apUCCVariables[p], *CSkins::ms_apColorVariables[p], TEAM_BLUE, p);
-			OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_MARKING);
+			int TeamColor = m_pClient->m_pSkins->GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_BLUE, p);
+			TeamSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_MARKING);
 		}
-		RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, 0, vec2(1, 0), vec2(Right.x+Right.w/2.0f, Right.y+Right.h/2.0f+2.0f));
+		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeamSkinInfo, 0, vec2(1, 0), vec2(Right.x+Right.w/2.0f, Right.y+Right.h/2.0f+2.0f));
 	}
 
 	if(!s_CustomSkinMenu)
@@ -2143,7 +2194,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		// background
 		CUIRect RestartWarning;
 		MainView.HSplitTop(25.0f, &RestartWarning, 0);
-		RestartWarning.VMargin(140.0f, &RestartWarning);
+		RestartWarning.VMargin(g_Config.m_UiWideview ? 210.0f : 140.0f, &RestartWarning);
 		RenderTools()->DrawUIRect(&RestartWarning, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		// text

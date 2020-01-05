@@ -1,0 +1,38 @@
+{"skin": {
+	"body": {
+		"filename": "piglet",
+		"custom_colors": "true",
+		"hue": 251,
+		"sat": 220,
+		"lgt": 180
+	},
+	"marking": {
+		"filename": "hipbel",
+		"custom_colors": "true",
+		"hue": 3,
+		"sat": 101,
+		"lgt": 112,
+		"alp": 171
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 249,
+		"sat": 189,
+		"lgt": 147
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 252,
+		"sat": 180,
+		"lgt": 143
+	},
+	"eyes": {
+		"filename": "colorable",
+		"custom_colors": "true",
+		"hue": 0,
+		"sat": 255,
+		"lgt": 128
+	}}
+}

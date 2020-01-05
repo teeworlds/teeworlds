@@ -16,6 +16,7 @@ JSON_KEY_AUTHORS="authors"
 JSON_KEY_TRANSL="translated strings"
 JSON_KEY_UNTRANSL="needs translation"
 JSON_KEY_OLDTRANSL="old translations"
+JSON_KEY_CTXT="context"
 JSON_KEY_OR="or"
 JSON_KEY_TR="tr"
 
@@ -75,8 +76,10 @@ def write_languagefile(outputfilename, l10n_src, old_l10n_data):
 		JSON_KEY_UNTRANSL,
 		JSON_KEY_TRANSL,
 	):
+		if type_ not in old_l10n_data:
+			continue
 		translations.update({
-			t[JSON_KEY_OR]: t[JSON_KEY_TR]
+			(t[JSON_KEY_OR], t.get(JSON_KEY_CTXT)): t[JSON_KEY_TR]
 			for t in old_l10n_data[type_]
 			if t[JSON_KEY_TR]
 		})
@@ -86,10 +89,11 @@ def write_languagefile(outputfilename, l10n_src, old_l10n_data):
 	old_items = set(translations) - set(l10n_src)
 	new_items = set(l10n_src) - set(translations)
 
-	for msg in all_items:
+	for msg, ctxt in all_items:
 		po.append(polib.POEntry(
 			msgid=msg,
-			msgstr=translations.get(msg, ""),
+			msgctxt=ctxt,
+			msgstr=translations.get((msg, ctxt), ""),
 			obsolete=(msg in old_items),
 			occurrences=l10n_src[msg],
 		))

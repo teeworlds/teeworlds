@@ -24,6 +24,7 @@ int *const CSkins::ms_apUCCVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerUseCust
 int *const CSkins::ms_apColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerColorBody, &g_Config.m_PlayerColorMarking, &g_Config.m_PlayerColorDecoration,
 													&g_Config.m_PlayerColorHands, &g_Config.m_PlayerColorFeet, &g_Config.m_PlayerColorEyes};
 
+const float MIN_EYE_BODY_COLOR_DIST = 80.f; // between body and eyes (LAB color space)
 
 int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
@@ -415,4 +416,87 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part)
 		ColorVal += PartColor&0xff000000;
 
 	return ColorVal;
+}
+
+bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomColors, int* aPartColors, int GameFlags) const
+{
+	// force standard (black) eyes on team skins
+	if(GameFlags&GAMEFLAG_TEAMS)
+	{
+		// TODO: adjust eye color here as well?
+		if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0 || str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
+		{
+			str_copy(aPartNames[SKINPART_EYES], "standard", 24);
+			return false;
+		}
+	}
+	else
+	{
+		const int BodyColor = aPartColors[SKINPART_BODY];
+		const int EyeColor = aPartColors[SKINPART_EYES];
+
+		vec3 BodyHsl(((BodyColor>>16)&0xff)/255.0f, ((BodyColor>>8)&0xff)/255.0f, (BodyColor&0xff)/255.0f);
+		vec3 EyeHsl(((EyeColor>>16)&0xff)/255.0f, ((EyeColor>>8)&0xff)/255.0f, (EyeColor&0xff)/255.0f);
+
+		if(!aUseCustomColors[SKINPART_BODY])
+			BodyHsl = vec3(0, 0, 1);
+
+		vec3 BodyRgb = HslToRgb(BodyHsl);
+		vec3 BodyLab = RgbToLab(BodyRgb);
+
+		if(str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
+		{
+			if(!aUseCustomColors[SKINPART_EYES])
+				EyeHsl = vec3(0, 0, 1);
+
+			vec3 OrgEyeHsl = EyeHsl;
+			EyeHsl.l *= 0.925f;
+
+			vec3 EyeRgb = HslToRgb(EyeHsl);
+			vec3 EyeLab = RgbToLab(EyeRgb);
+			float Dist = LabDistance(BodyLab, EyeLab);
+
+			if(Dist < MIN_EYE_BODY_COLOR_DIST)
+			{
+				OrgEyeHsl.l = clamp(OrgEyeHsl.l - 0.22f, 0.f, 1.f);
+
+				// white eye can't go to black because of our DARKEST_COLOR_LGT restriction, so switch to standard (black) eyes
+				if(OrgEyeHsl.l < DARKEST_COLOR_LGT/255.f)
+					str_copy(aPartNames[SKINPART_EYES], "standard", 24); // black
+				else
+				{
+					aUseCustomColors[SKINPART_EYES] = 1;
+					aPartColors[SKINPART_EYES] = (int(OrgEyeHsl.h*255) << 16) | (int(OrgEyeHsl.s*255) << 8) | (int(OrgEyeHsl.l*255));
+				}
+
+				return false;
+			}
+		}
+		else if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0)
+		{
+			if(!aUseCustomColors[SKINPART_EYES])
+				EyeHsl = vec3(0, 0, 1);
+
+			vec3 OrgEyeHsl = EyeHsl;
+			EyeHsl.l = clamp(EyeHsl.l * 0.0823f, 0.f, 1.f);
+
+
+			vec3 EyeRgb = HslToRgb(EyeHsl);
+			vec3 EyeLab = RgbToLab(EyeRgb);
+			float Dist = LabDistance(BodyLab, EyeLab);
+
+			if(Dist < MIN_EYE_BODY_COLOR_DIST)
+			{
+				OrgEyeHsl.l -= 0.6f;
+				OrgEyeHsl.l = clamp(OrgEyeHsl.l, 0.f, 1.f);
+
+				aUseCustomColors[SKINPART_EYES] = 1;
+				aPartColors[SKINPART_EYES] = (int(OrgEyeHsl.h*255) << 16) | (int(OrgEyeHsl.s*255) << 8) | (int(OrgEyeHsl.l*255));
+
+				return false;
+			}
+		}
+	}
+
+	return true;
 }

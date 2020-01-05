@@ -48,6 +48,8 @@ public:
 	int GetItemIndex(int Key) const;
 	void InvalidateItem(int Index);
 
+	int Serialize(char *pDstData);
+
 	int Crc() const;
 	void DebugDump() const;
 };
@@ -134,6 +136,7 @@ class CSnapshotBuilder
 public:
 	void Init();
 	void Init(const CSnapshot *pSnapshot);
+	bool UnserializeSnap(const char *pSrcData, int SrcSize);
 
 	void *NewItem(int Type, int ID, int Size);
 

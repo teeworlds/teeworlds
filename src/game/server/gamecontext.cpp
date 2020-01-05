@@ -853,6 +853,13 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					{
 						str_format(aDesc, sizeof(aDesc), "%s", pOption->m_aDescription);
 						str_format(aCmd, sizeof(aCmd), "%s", pOption->m_aCommand);
+						char aBuf[128];
+						str_format(aBuf, sizeof(aBuf),
+							"'%d:%s' voted %s '%s' reason='%s' cmd='%s' force=%d",
+							ClientID, Server()->ClientName(ClientID), pMsg->m_Type,
+							aDesc, pReason, aCmd, pMsg->m_Force
+						);
+						Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 						if(pMsg->m_Force)
 						{
 							Server()->SetRconCID(ClientID);
@@ -889,6 +896,13 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 					Server()->GetClientAddr(KickID, aAddrStr, sizeof(aAddrStr));
 					str_format(aCmd, sizeof(aCmd), "ban %s %d Banned by vote", aAddrStr, g_Config.m_SvVoteKickBantime);
 				}
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf),
+					"'%d:%s' voted %s '%d:%s' reason='%s' cmd='%s' force=%d",
+					ClientID, Server()->ClientName(ClientID), pMsg->m_Type,
+					KickID, Server()->ClientName(KickID), pReason, aCmd, pMsg->m_Force
+				);
+				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 				if(pMsg->m_Force)
 				{
 					Server()->SetRconCID(ClientID);
@@ -910,6 +924,13 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 				str_format(aDesc, sizeof(aDesc), "%2d: %s", SpectateID, Server()->ClientName(SpectateID));
 				str_format(aCmd, sizeof(aCmd), "set_team %d -1 %d", SpectateID, g_Config.m_SvVoteSpectateRejoindelay);
+				char aBuf[128];
+				str_format(aBuf, sizeof(aBuf),
+					"'%d:%s' voted %s '%d:%s' reason='%s' cmd='%s' force=%d",
+					ClientID, Server()->ClientName(ClientID), pMsg->m_Type,
+					SpectateID, Server()->ClientName(SpectateID), pReason, aCmd, pMsg->m_Force
+				);
+				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 				if(pMsg->m_Force)
 				{
 					Server()->SetRconCID(ClientID);
@@ -1038,6 +1059,11 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			}
 
 			m_pController->OnPlayerInfoChange(pPlayer);
+		}
+		else if (MsgID == NETMSGTYPE_CL_COMMAND)
+		{
+			CNetMsg_Cl_Command *pMsg = (CNetMsg_Cl_Command*)pRawMsg;
+			m_pController->OnPlayerCommand(pPlayer, pMsg->m_Name, pMsg->m_Arguments);
 		}
 	}
 	else
@@ -1484,7 +1510,10 @@ void CGameContext::OnInit()
 	m_World.SetGameServer(this);
 	m_Events.SetGameServer(this);
 
-	for(int i = 0; i < NUM_NETOBJTYPES; i++)
+	// HACK: only set static size for items, which were available in the first 0.7 release
+	// so new items don't break the snapshot delta
+	static const int OLD_NUM_NETOBJTYPES = 23;
+	for(int i = 0; i < OLD_NUM_NETOBJTYPES; i++)
 		Server()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 
 	m_Layers.Init(Kernel());

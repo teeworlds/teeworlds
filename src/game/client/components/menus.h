@@ -213,6 +213,8 @@ private:
 		int m_ListBoxItemIndex;
 		int m_ListBoxSelectedIndex;
 		int m_ListBoxNewSelected;
+		int m_ListBoxNewSelOffset;
+		int m_ListBoxUpdateScroll;
 		int m_ListBoxDoneEvents;
 		int m_ListBoxNumItems;
 		int m_ListBoxItemsPerRow;
@@ -223,6 +225,7 @@ private:
 		CListBoxState()
 		{
 			m_ScrollOffset = vec2(0,0);
+			m_ListBoxUpdateScroll = false;
 		}
 	};
 
@@ -617,6 +620,8 @@ private:
 	void RenderMenubar(CUIRect r);
 	void RenderNews(CUIRect MainView);
 	void RenderBackButton(CUIRect MainView);
+	inline float GetListHeaderHeight() const { return ms_ListheaderHeight + (g_Config.m_UiWideview ? 3.0f : 0.0f); }
+	inline float GetListHeaderHeightFactor() const { return 1.0f + (g_Config.m_UiWideview ? (3.0f/ms_ListheaderHeight) : 0.0f); }
 
 	// found in menus_demo.cpp
 	void RenderDemoPlayer(CUIRect MainView);

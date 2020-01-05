@@ -1,0 +1,38 @@
+{"skin": {
+	"body": {
+		"filename": "bat",
+		"custom_colors": "true",
+		"hue": 16,
+		"sat": 167,
+		"lgt": 185
+	},
+	"marking": {
+		"filename": "belly2",
+		"custom_colors": "true",
+		"hue": 10,
+		"sat": 39,
+		"lgt": 45,
+		"alp": 152
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 10,
+		"sat": 45,
+		"lgt": 72
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 14,
+		"sat": 123,
+		"lgt": 156
+	},
+	"eyes": {
+		"filename": "colorable",
+		"custom_colors": "true",
+		"hue": 8,
+		"sat": 112,
+		"lgt": 47
+	}}
+}
