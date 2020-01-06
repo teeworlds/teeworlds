@@ -30,6 +30,37 @@ public:
 	virtual bool OnInput(IInput::CEvent Event);
 };
 
+class IScrollbarScale
+{
+public:
+	virtual float ToRelative(int AbsoluteValue, int Min, int Max) = 0;
+	virtual int ToAbsolute(float RelativeValue, int Min, int Max) = 0;
+};
+static class : public IScrollbarScale
+{
+public:
+	float ToRelative(int AbsoluteValue, int Min, int Max)
+	{
+		return (AbsoluteValue - Min) / (float)(Max - Min);
+	}
+	int ToAbsolute(float RelativeValue, int Min, int Max)
+	{
+		return round_to_int(RelativeValue*(Max - Min) + Min + 0.1f);
+	}
+} LinearScrollbarScale;
+static class : public IScrollbarScale
+{
+public:
+	float ToRelative(int AbsoluteValue, int Min, int Max)
+	{
+		return (log(AbsoluteValue) - log(Min)) / (float)(log(Max) - log(Min));
+	}
+	int ToAbsolute(float RelativeValue, int Min, int Max)
+	{
+		return round_to_int(exp(RelativeValue*(log(Max) - log(Min)) + log(Min)));
+	}
+} LogarithmicScrollbarScale;
+
 class CMenus : public CComponent
 {
 public:
@@ -84,7 +115,7 @@ private:
 	*/
 	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
 	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden=false);
-	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, bool Infinite=false);
+	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite=false);
 	float DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback);
 	float DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool* pActive);
 	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
