@@ -1138,7 +1138,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		g_Config.m_ClDynamicCamera = 1;
+		g_Config.m_ClDynamicCamera = 0;
+		g_Config.m_ClMouseMaxDistanceStatic = 400;
 		g_Config.m_ClMouseMaxDistanceDynamic = 1000;
 		g_Config.m_ClMouseFollowfactor = 60;
 		g_Config.m_ClMouseDeadzone = 300;
