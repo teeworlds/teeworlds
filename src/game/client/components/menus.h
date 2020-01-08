@@ -53,10 +53,18 @@ static class : public IScrollbarScale
 public:
 	float ToRelative(int AbsoluteValue, int Min, int Max)
 	{
+		if(Min == 0)
+		{
+			return ToRelative(AbsoluteValue+1, Min+1, Max+1);
+		}
 		return (log(AbsoluteValue) - log(Min)) / (float)(log(Max) - log(Min));
 	}
 	int ToAbsolute(float RelativeValue, int Min, int Max)
 	{
+		if(Min == 0)
+		{
+			return ToAbsolute(RelativeValue, Min+1, Max+1)-1;
+		}
 		return round_to_int(exp(RelativeValue*(log(Max) - log(Min)) + log(Min)));
 	}
 } LogarithmicScrollbarScale;
