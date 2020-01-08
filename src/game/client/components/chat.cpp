@@ -908,13 +908,20 @@ void CChat::OnRender()
 			CTextCursor InfoCursor;
 			TextRender()->SetCursor(&InfoCursor, 2.0f, y+12.0f, CategoryFontSize*0.75, TEXTFLAG_RENDER);
 
-			//find keyname and format text
-			char aKeyName[64];
-			m_pClient->m_pBinds->GetKey(GetCommandName(m_ChatBufferMode), aKeyName, sizeof(aKeyName));
+			//Check if key exists with bind
+			int KeyID, Modifier;
+			m_pClient->m_pBinds->GetKeyID(GetCommandName(m_ChatBufferMode), KeyID, Modifier);
+			
+			if(KeyID < KEY_LAST)
+			{
+				//find keyname and format text
+				char aKeyName[64];
+				m_pClient->m_pBinds->GetKey(GetCommandName(m_ChatBufferMode), aKeyName, sizeof(aKeyName), KeyID, Modifier);
 
-			char aInfoText[128];
-			str_format(aInfoText, sizeof(aInfoText), Localize("Press %s to resume chatting"), aKeyName);
-			TextRender()->TextEx(&InfoCursor, aInfoText, -1);
+				char aInfoText[128];
+				str_format(aInfoText, sizeof(aInfoText), Localize("Press %s to resume chatting"), aKeyName);
+				TextRender()->TextEx(&InfoCursor, aInfoText, -1);
+			}
 		}
 		else
 		{
