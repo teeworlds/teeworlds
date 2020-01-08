@@ -16,7 +16,7 @@ def unzip(filename, where):
 	return z.namelist()[0]
 
 def downloadAll(targets):
-	version = "4bf6dbc8c9f9b2fa89b2b5be1928f5e85bca01e6"
+	version = "9e78876d7a7ebb66807b2f09207d4211d2265de8"
 	url = "https://github.com/teeworlds/teeworlds-libs/archive/{}.zip".format(version)
 
 	# download and unzip
