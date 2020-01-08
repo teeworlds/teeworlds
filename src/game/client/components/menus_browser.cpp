@@ -36,6 +36,7 @@ CServerFilterInfo CMenus::CBrowserFilter::ms_FilterStandard = {IServerBrowser::F
 CServerFilterInfo CMenus::CBrowserFilter::ms_FilterFavorites = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_FAVORITE, 999, -1, 0, {{0}}, {0}};
 CServerFilterInfo CMenus::CBrowserFilter::ms_FilterAll = {IServerBrowser::FILTER_COMPAT_VERSION, 999, -1, 0, {{0}}, {0}};
 
+vec3 TextHighlightColor = vec3(0.4f, 0.4f, 1.0f);
 
 // filters
 CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser)
@@ -461,12 +462,12 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_SERVERNAME))
 			{
-				// highlight the parts that matches
+				// highlight the part that matches
 				const char *pStr = str_find_nocase(pEntry->m_aName, g_Config.m_BrFilterString);
 				if(pStr)
 				{
 					TextRender()->TextEx(&Cursor, pEntry->m_aName, (int)(pStr-pEntry->m_aName));
-					TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
+					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr, str_length(g_Config.m_BrFilterString));
 					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr+str_length(g_Config.m_BrFilterString), -1);
@@ -493,12 +494,12 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_MAPNAME))
 			{
-				// highlight the parts that matches
+				// highlight the part that matches
 				const char *pStr = str_find_nocase(pEntry->m_aMap, g_Config.m_BrFilterString);
 				if(pStr)
 				{
 					TextRender()->TextEx(&Cursor, pEntry->m_aMap, (int)(pStr-pEntry->m_aMap));
-					TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
+					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr, str_length(g_Config.m_BrFilterString));
 					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 					TextRender()->TextEx(&Cursor, pStr+str_length(g_Config.m_BrFilterString), -1);
@@ -543,7 +544,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 
 			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
 			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
-				TextRender()->TextColor(0.4f, 0.4f, 1.0f, TextAlpha);
+				TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
 			Button.y += 2.0f;
 
 			if(Num < 100)
@@ -602,13 +603,27 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 
 			// gametype text
 			CTextCursor Cursor;
-			{
-				TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-				Cursor.m_LineWidth = Button.w;
-			}
-
+			TextRender()->SetCursor(&Cursor, Button.x, Button.y, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
+			Cursor.m_LineWidth = Button.w;
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
-			TextRender()->TextEx(&Cursor, pEntry->m_aGameType, -1);
+
+			if(g_Config.m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_GAMETYPE))
+			{
+				// highlight the part that matches
+				const char *pStr = str_find_nocase(pEntry->m_aGameType, g_Config.m_BrFilterString);
+				if(pStr)
+				{
+					TextRender()->TextEx(&Cursor, pEntry->m_aGameType, (int)(pStr-pEntry->m_aGameType));
+					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
+					TextRender()->TextEx(&Cursor, pStr, str_length(g_Config.m_BrFilterString));
+					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
+					TextRender()->TextEx(&Cursor, pStr+str_length(g_Config.m_BrFilterString), -1);
+				}
+				else
+					TextRender()->TextEx(&Cursor, pEntry->m_aGameType, -1);
+			}
+			else
+				TextRender()->TextEx(&Cursor, pEntry->m_aGameType, -1);
 		}
 	}
 
@@ -795,9 +810,10 @@ void CMenus::RenderServerbrowserOverlay()
 
 		CUIRect Screen = *UI()->Screen();
 		float ButtonHeight = 20.0f;
+		vec4 TextColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 		TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
-		TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+		TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
 
 		if(pInfo && pInfo->m_NumClients)
 		{
@@ -859,14 +875,14 @@ void CMenus::RenderServerbrowserOverlay()
 				const char *pName = pInfo->m_aClients[i].m_aName;
 				if(g_Config.m_BrFilterString[0])
 				{
-					// highlight the parts that matches
+					// highlight the part that matches
 					const char *s = str_find_nocase(pName, g_Config.m_BrFilterString);
 					if(s)
 					{
 						TextRender()->TextEx(&Cursor, pName, (int)(s-pName));
-						TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
+						TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
 						TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
-						TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+						TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
 						TextRender()->TextEx(&Cursor, s+str_length(g_Config.m_BrFilterString), -1);
 					}
 					else
@@ -881,14 +897,14 @@ void CMenus::RenderServerbrowserOverlay()
 				const char *pClan = pInfo->m_aClients[i].m_aClan;
 				if(g_Config.m_BrFilterString[0])
 				{
-					// highlight the parts that matches
+					// highlight the part that matches
 					const char *s = str_find_nocase(pClan, g_Config.m_BrFilterString);
 					if(s)
 					{
 						TextRender()->TextEx(&Cursor, pClan, (int)(s-pClan));
-						TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
+						TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
 						TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
-						TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
+						TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
 						TextRender()->TextEx(&Cursor, s+str_length(g_Config.m_BrFilterString), -1);
 					}
 					else
@@ -2046,12 +2062,12 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			const char *pName = pInfo->m_aClients[i].m_aName;
 			if(g_Config.m_BrFilterString[0])
 			{
-				// highlight the parts that matches
+				// highlight the part that matches
 				const char *s = str_find_nocase(pName, g_Config.m_BrFilterString);
 				if(s)
 				{
 					TextRender()->TextEx(&Cursor, pName, (int)(s - pName));
-					TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
+					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
 					TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
 					TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
 					TextRender()->TextEx(&Cursor, s + str_length(g_Config.m_BrFilterString), -1);
@@ -2068,12 +2084,12 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			const char *pClan = pInfo->m_aClients[i].m_aClan;
 			if(g_Config.m_BrFilterString[0])
 			{
-				// highlight the parts that matches
+				// highlight the part that matches
 				const char *s = str_find_nocase(pClan, g_Config.m_BrFilterString);
 				if(s)
 				{
 					TextRender()->TextEx(&Cursor, pClan, (int)(s - pClan));
-					TextRender()->TextColor(0.4f, 0.4f, 1.0f, 1.0f);
+					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
 					TextRender()->TextEx(&Cursor, s, str_length(g_Config.m_BrFilterString));
 					TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
 					TextRender()->TextEx(&Cursor, s + str_length(g_Config.m_BrFilterString), -1);

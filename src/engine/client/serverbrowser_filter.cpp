@@ -189,6 +189,13 @@ void CServerBrowserFilter::CServerFilter::Filter()
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
 				}
 
+				// match against game type
+				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, g_Config.m_BrFilterString))
+				{
+					MatchFound = 1;
+					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_GAMETYPE;
+				}
+
 				if(!MatchFound)
 					Filtered = 1;
 			}
