@@ -486,6 +486,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 {
 	static bool s_InitSkinPartList = true;
 	static sorted_array<const CSkins::CSkinPart *> s_paList[6];
+	static CListBox s_ListBox(this);
 	if(s_InitSkinPartList)
 	{
 		for(int p = 0; p < NUM_SKINPARTS; p++)
@@ -495,16 +496,18 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			{
 				const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(p, i);
 				// no special skins
-				if((s->m_Flags&CSkins::SKINFLAG_SPECIAL) == 0)
+				if((s->m_Flags&CSkins::SKINFLAG_SPECIAL) == 0 && s_ListBox.FilterMatches(s->m_aName))
+				{
 					s_paList[p].add(s);
+				}
 			}
 		}
 		s_InitSkinPartList = false;
 	}
 
 	static int OldSelected = -1;
-	static CListBox s_ListBox(this);
 	s_ListBox.DoHeader(&MainView, Localize(CSkins::ms_apSkinPartNames[m_TeePartSelected]));
+	s_InitSkinPartList = s_ListBox.DoFilter();
 	s_ListBox.DoStart(50.0f, 0, s_paList[m_TeePartSelected].size(), 5, OldSelected);
 
 	for(int i = 0; i < s_paList[m_TeePartSelected].size(); ++i)
