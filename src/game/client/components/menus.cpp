@@ -450,10 +450,10 @@ int CMenus::DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect)
 	return Inside;
 }
 
-int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
+bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
 {
 	int Inside = UI()->MouseInside(pRect);
-	bool ReturnValue = false;
+	bool Changed = false;
 	bool UpdateOffset = false;
 	static int s_AtIndex = 0;
 	static bool s_DoScroll = false;
@@ -516,7 +516,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 			{
 				Len = str_length(pStr);
 				int NumChars = Len;
-				ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars, Input());
+				Changed |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars, Input());
 			}
 		}
 	}
@@ -616,7 +616,7 @@ int CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrS
 	}
 	UI()->ClipDisable();
 
-	return ReturnValue;
+	return Changed;
 }
 
 void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr,  float VSplitVal, float *pOffset, bool Hidden)
@@ -947,6 +947,34 @@ void CMenus::UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, cons
 
 	// setup the variables
 	pState->m_ListBoxView = View;
+}
+
+bool CMenus::UiDoListboxFilter(CListBoxState* pState, float FilterHeight, float Spacing)
+{
+	CUIRect Filter;
+	CUIRect View = pState->m_ListBoxView;
+
+	// background
+	View.HSplitTop(FilterHeight+Spacing, &Filter, 0);
+	RenderTools()->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 5.0f);
+
+	// draw filter
+	View.HSplitTop(FilterHeight, &Filter, &View);
+	Filter.Margin(Spacing, &Filter);
+
+	float FontSize = Filter.h*ms_FontmodHeight*0.8f;
+
+	CUIRect Label, EditBox;
+	Filter.VSplitLeft(Filter.w/5.0f, &Label, &EditBox);
+	Label.y += Spacing;
+	UI()->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_CENTER);
+	bool Changed = DoEditBox(pState->m_aFilterString, &EditBox, pState->m_aFilterString, sizeof(pState->m_aFilterString), FontSize, &pState->m_OffsetFilter);
+
+	View.HSplitTop(Spacing, &Filter, &View);
+
+	pState->m_ListBoxView = View;
+
+	return Changed;
 }
 
 void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight,
