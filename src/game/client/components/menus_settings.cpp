@@ -417,8 +417,10 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		{
 			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(i);
 			// no special skins
-			if((s->m_Flags&CSkins::SKINFLAG_SPECIAL) == 0)
+			if((s->m_Flags&CSkins::SKINFLAG_SPECIAL) == 0 && s_ListBoxState.FilterMatches(s->m_aName))
+			{
 				s_paSkinList.add(s);
+			}
 		}
 		m_RefreshSkinSelector = false;
 	}
@@ -426,6 +428,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 	m_pSelectedSkin = 0;
 	int OldSelected = -1;
 	UiDoListboxHeader(&s_ListBoxState, &MainView, Localize("Skins"), 20.0f, 2.0f);
+	m_RefreshSkinSelector = UiDoListboxFilter(&s_ListBoxState, 20.0f, 2.0f);
 	UiDoListboxStart(&s_ListBoxState, &m_RefreshSkinSelector, 50.0f, 0, s_paSkinList.size(), 10, OldSelected);
 
 	for(int i = 0; i < s_paSkinList.size(); ++i)
@@ -464,20 +467,17 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 	}
 
 	const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
-	if(NewSelected != -1)
+	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
-		if(NewSelected != OldSelected)
+		m_pSelectedSkin = s_paSkinList[NewSelected];
+		mem_copy(g_Config.m_PlayerSkin, m_pSelectedSkin->m_aName, sizeof(g_Config.m_PlayerSkin));
+		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			m_pSelectedSkin = s_paSkinList[NewSelected];
-			mem_copy(g_Config.m_PlayerSkin, m_pSelectedSkin->m_aName, sizeof(g_Config.m_PlayerSkin));
-			for(int p = 0; p < NUM_SKINPARTS; p++)
-			{
-				mem_copy(CSkins::ms_apSkinVariables[p], m_pSelectedSkin->m_apParts[p]->m_aName, 24);
-				*CSkins::ms_apUCCVariables[p] = m_pSelectedSkin->m_aUseCustomColors[p];
-				*CSkins::ms_apColorVariables[p] = m_pSelectedSkin->m_aPartColors[p];
-			}
-			m_SkinModified = true;
+			mem_copy(CSkins::ms_apSkinVariables[p], m_pSelectedSkin->m_apParts[p]->m_aName, 24);
+			*CSkins::ms_apUCCVariables[p] = m_pSelectedSkin->m_aUseCustomColors[p];
+			*CSkins::ms_apColorVariables[p] = m_pSelectedSkin->m_aPartColors[p];
 		}
+		m_SkinModified = true;
 	}
 	OldSelected = NewSelected;
 }

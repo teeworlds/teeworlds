@@ -127,7 +127,7 @@ private:
 	static void ui_draw_checkbox(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	static void ui_draw_checkbox_number(const void *id, const char *text, int checked, const CUIRect *r, const void *extra);
 	*/
-	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
+	bool DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
 	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden=false);
 	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite=false);
 	float DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback);
@@ -251,8 +251,9 @@ private:
 		CUIRect m_Rect;
 	};
 
-	struct CListBoxState
+	class CListBoxState
 	{
+	public:
 		CUIRect m_ListBoxView;
 		float m_ListBoxRowHeight;
 		int m_ListBoxItemIndex;
@@ -266,15 +267,25 @@ private:
 		bool m_ListBoxItemActivated;
 		CScrollRegion m_ScrollRegion;
 		vec2 m_ScrollOffset;
+		char m_aFilterString[64];
+		float m_OffsetFilter;
 
 		CListBoxState()
 		{
 			m_ScrollOffset = vec2(0,0);
 			m_ListBoxUpdateScroll = false;
+			m_aFilterString[0] = '\0';
+			m_OffsetFilter = 0.0f;
+		}
+
+		bool FilterMatches(const char *pNeedle)
+		{
+			return !m_aFilterString[0] || str_find_nocase(pNeedle, m_aFilterString);
 		}
 	};
 
 	void UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing);
+	bool UiDoListboxFilter(CListBoxState* pState, float FilterHeight, float Spacing);
 	void UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight, const char *pBottomText, int NumItems,
 						int ItemsPerRow, int SelectedIndex, const CUIRect *pRect=0, bool Background=true, bool *pActive = 0);
 	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false, bool *pActive = 0);
