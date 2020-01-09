@@ -256,9 +256,10 @@ private:
 		CUIRect m_Rect;
 	};
 
-	class CListBoxState
+	class CListBox
 	{
-	public:
+	private:
+		CMenus *m_pMenus;
 		CUIRect m_ListBoxView;
 		float m_ListBoxRowHeight;
 		int m_ListBoxItemIndex;
@@ -275,27 +276,18 @@ private:
 		char m_aFilterString[64];
 		float m_OffsetFilter;
 
-		CListBoxState()
-		{
-			m_ScrollOffset = vec2(0,0);
-			m_ListBoxUpdateScroll = false;
-			m_aFilterString[0] = '\0';
-			m_OffsetFilter = 0.0f;
-		}
+	public:
+		CListBox(CMenus *pMenus);
 
-		bool FilterMatches(const char *pNeedle)
-		{
-			return !m_aFilterString[0] || str_find_nocase(pNeedle, m_aFilterString);
-		}
+		void DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight = 20.0f, float Spacing = 2.0f);
+		bool DoFilter(float FilterHeight = 20.0f, float Spacing = 2.0f);
+		void DoStart(float RowHeight, const char *pBottomText, int NumItems, int ItemsPerRow, int SelectedIndex,
+					const CUIRect *pRect = 0, bool Background = true, bool *pActive = 0);
+		CListboxItem DoNextItem(const void *pID, bool Selected = false, bool *pActive = 0);
+		CListboxItem DoNextRow();
+		int DoEnd(bool *pItemActivated);
+		bool FilterMatches(const char *pNeedle);
 	};
-
-	void UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle, float HeaderHeight, float Spacing);
-	bool UiDoListboxFilter(CListBoxState* pState, float FilterHeight, float Spacing);
-	void UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight, const char *pBottomText, int NumItems,
-						int ItemsPerRow, int SelectedIndex, const CUIRect *pRect=0, bool Background=true, bool *pActive = 0);
-	CListboxItem UiDoListboxNextItem(CListBoxState* pState, const void *pID, bool Selected = false, bool *pActive = 0);
-	CListboxItem UiDoListboxNextRow(CListBoxState* pState);
-	int UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated);
 
 	enum
 	{
@@ -744,7 +736,7 @@ private:
 	void RenderSettingsSound(CUIRect MainView);
 	void RenderSettings(CUIRect MainView);
 
-	bool DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
+	bool DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 						  const sorted_array<CVideoMode>& lModes);
 
 	// found in menu_callback.cpp

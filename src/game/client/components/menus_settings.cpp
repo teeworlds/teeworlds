@@ -409,7 +409,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 void CMenus::RenderSkinSelection(CUIRect MainView)
 {
 	static sorted_array<const CSkins::CSkin *> s_paSkinList;
-	static CListBoxState s_ListBoxState;
+	static CListBox s_ListBox(this);
 	if(m_RefreshSkinSelector)
 	{
 		s_paSkinList.clear();
@@ -417,7 +417,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		{
 			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(i);
 			// no special skins
-			if((s->m_Flags&CSkins::SKINFLAG_SPECIAL) == 0 && s_ListBoxState.FilterMatches(s->m_aName))
+			if((s->m_Flags&CSkins::SKINFLAG_SPECIAL) == 0 && s_ListBox.FilterMatches(s->m_aName))
 			{
 				s_paSkinList.add(s);
 			}
@@ -427,9 +427,9 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 
 	m_pSelectedSkin = 0;
 	int OldSelected = -1;
-	UiDoListboxHeader(&s_ListBoxState, &MainView, Localize("Skins"), 20.0f, 2.0f);
-	m_RefreshSkinSelector = UiDoListboxFilter(&s_ListBoxState, 20.0f, 2.0f);
-	UiDoListboxStart(&s_ListBoxState, &m_RefreshSkinSelector, 50.0f, 0, s_paSkinList.size(), 10, OldSelected);
+	s_ListBox.DoHeader(&MainView, Localize("Skins"));
+	m_RefreshSkinSelector = s_ListBox.DoFilter();
+	s_ListBox.DoStart(50.0f, 0, s_paSkinList.size(), 10, OldSelected);
 
 	for(int i = 0; i < s_paSkinList.size(); ++i)
 	{
@@ -442,7 +442,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 			OldSelected = i;
 		}
 
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &s_paSkinList[i], OldSelected == i);
+		CListboxItem Item = s_ListBox.DoNextItem(&s_paSkinList[i], OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CTeeRenderInfo Info;
@@ -466,7 +466,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		}
 	}
 
-	const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
+	const int NewSelected = s_ListBox.DoEnd(0);
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
 		m_pSelectedSkin = s_paSkinList[NewSelected];
@@ -503,9 +503,9 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	}
 
 	static int OldSelected = -1;
-	static CListBoxState s_ListBoxState;
-	UiDoListboxHeader(&s_ListBoxState, &MainView, Localize(CSkins::ms_apSkinPartNames[m_TeePartSelected]), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ListBoxState, &s_InitSkinPartList, 50.0f, 0, s_paList[m_TeePartSelected].size(), 5, OldSelected);
+	static CListBox s_ListBox(this);
+	s_ListBox.DoHeader(&MainView, Localize(CSkins::ms_apSkinPartNames[m_TeePartSelected]));
+	s_ListBox.DoStart(50.0f, 0, s_paList[m_TeePartSelected].size(), 5, OldSelected);
 
 	for(int i = 0; i < s_paList[m_TeePartSelected].size(); ++i)
 	{
@@ -515,7 +515,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		if(!str_comp(s->m_aName, CSkins::ms_apSkinVariables[m_TeePartSelected]))
 			OldSelected = i;
 
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &s_paList[m_TeePartSelected][i], OldSelected == i);
+		CListboxItem Item = s_ListBox.DoNextItem(&s_paList[m_TeePartSelected][i], OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CTeeRenderInfo Info;
@@ -552,7 +552,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		}
 	}
 
-	const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
+	const int NewSelected = s_ListBox.DoEnd(0);
 	if(NewSelected != -1)
 	{
 		if(NewSelected != OldSelected)
@@ -760,33 +760,34 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 
 void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 {
-	static int s_LanguageList = 0;
 	static int s_SelectedLanguage = -1;
 	static sorted_array<CLanguage> s_Languages;
-	static CListBoxState s_ListBoxState;
+	static CListBox s_ListBox(this);
 
 	if(s_Languages.size() == 0)
 	{
 		s_Languages.add(CLanguage("English", "", 826));
 		LoadLanguageIndexfile(Storage(), Console(), &s_Languages);
 		for(int i = 0; i < s_Languages.size(); i++)
+		{
 			if(str_comp(s_Languages[i].m_FileName, g_Config.m_ClLanguagefile) == 0)
 			{
 				s_SelectedLanguage = i;
 				break;
 			}
+		}
 	}
 
 	int OldSelected = s_SelectedLanguage;
 
 	if(Header)
-		UiDoListboxHeader(&s_ListBoxState, &MainView, Localize("Language"), 20.0f, 2.0f);
+		s_ListBox.DoHeader(&MainView, Localize("Language"));
 	bool IsActive = m_ActiveListBox == ACTLB_LANG;
-	UiDoListboxStart(&s_ListBoxState, &s_LanguageList, 20.0f, 0, s_Languages.size(), 1, s_SelectedLanguage, Header?0:&MainView, Header?true:false, &IsActive);
+	s_ListBox.DoStart(20.0f, 0, s_Languages.size(), 1, s_SelectedLanguage, Header?0:&MainView, Header, &IsActive);
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &r.front(), false, &IsActive);
+		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), false, &IsActive);
 		if(IsActive)
 			m_ActiveListBox = ACTLB_LANG;
 
@@ -812,7 +813,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 		}
 	}
 
-	s_SelectedLanguage = UiDoListboxEnd(&s_ListBoxState, 0);
+	s_SelectedLanguage = s_ListBox.DoEnd(0);
 
 	if(OldSelected != s_SelectedLanguage)
 	{
@@ -824,9 +825,8 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 
 void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 {
-	static int s_ThemeList = 0;
 	static int s_SelectedTheme = -1;
-	static CListBoxState s_ListBoxState_Theme;
+	static CListBox s_ListBox(this);
 
 	if(m_lThemes.size() == 0) // not loaded yet
 	{
@@ -846,13 +846,13 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 	int OldSelected = s_SelectedTheme;
 
 	if(Header)
-		UiDoListboxHeader(&s_ListBoxState_Theme, &MainView, Localize("Theme"), 20.0f, 2.0f);
+		s_ListBox.DoHeader(&MainView, Localize("Theme"));
 	bool IsActive = m_ActiveListBox == ACTLB_THEME;
-	UiDoListboxStart(&s_ListBoxState_Theme, &s_ThemeList, 20.0f, 0, m_lThemes.size(), 1, s_SelectedTheme, Header?0:&MainView, Header?true:false, &IsActive);
+	s_ListBox.DoStart(20.0f, 0, m_lThemes.size(), 1, s_SelectedTheme, Header?0:&MainView, Header, &IsActive);
 
 	for(sorted_array<CTheme>::range r = m_lThemes.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState_Theme, &r.front(), false, &IsActive);
+		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), false, &IsActive);
 		if(IsActive)
 			m_ActiveListBox = ACTLB_THEME;
 
@@ -904,7 +904,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 		}
 	}
 
-	s_SelectedTheme = UiDoListboxEnd(&s_ListBoxState_Theme, 0);
+	s_SelectedTheme = s_ListBox.DoEnd(0);
 
 	if(OldSelected != s_SelectedTheme)
 	{
@@ -1207,10 +1207,10 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	// country flag selector
 	MainView.HSplitTop(10.0f, 0, &MainView);
-	static CListBoxState s_ListBoxState;
+	static CListBox s_ListBox(this);
 	int OldSelected = -1;
-	UiDoListboxHeader(&s_ListBoxState, &MainView, Localize("Country"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ListBoxState, &s_ListBoxState, 40.0f, 0, m_pClient->m_pCountryFlags->Num(), 18, OldSelected);
+	s_ListBox.DoHeader(&MainView, Localize("Country"));
+	s_ListBox.DoStart(40.0f, 0, m_pClient->m_pCountryFlags->Num(), 18, OldSelected);
 
 	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{
@@ -1220,7 +1220,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		if(pEntry->m_CountryCode == g_Config.m_PlayerCountry)
 			OldSelected = i;
 
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &pEntry->m_CountryCode, OldSelected == i);
+		CListboxItem Item = s_ListBox.DoNextItem(&pEntry->m_CountryCode, OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CUIRect Label;
@@ -1248,7 +1248,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		}
 	}
 
-	const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
+	const int NewSelected = s_ListBox.DoEnd(0);
 	if(OldSelected != NewSelected)
 		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
@@ -1662,14 +1662,13 @@ float CMenus::RenderSettingsControlsStats(CUIRect View, void *pUser)
 	return 11*20.0f;
 }
 
-bool CMenus::DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
+bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 							  const sorted_array<CVideoMode>& lModes)
 {
 	int OldSelected = -1;
 	char aBuf[32];
 
-	UiDoListboxStart(pListBoxState, pListBoxState, 20.0f, 0, lModes.size(), 1,
-					 OldSelected, pRect);
+	pListBox->DoStart(20.0f, 0, lModes.size(), 1, OldSelected, pRect);
 
 	for(int i = 0; i < lModes.size(); ++i)
 	{
@@ -1679,7 +1678,7 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
 			OldSelected = i;
 		}
 
-		CListboxItem Item = UiDoListboxNextItem(pListBoxState, &lModes[i], OldSelected == i);
+		CListboxItem Item = pListBox->DoNextItem(&lModes[i], OldSelected == i);
 		if(Item.m_Visible)
 		{
 			int G = gcd(lModes[i].m_Width, lModes[i].m_Height);
@@ -1709,7 +1708,7 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBoxState* pListBoxState,
 		}
 	}
 
-	const int NewSelected = UiDoListboxEnd(pListBoxState, 0);
+	const int NewSelected = pListBox->DoEnd(0);
 	if(OldSelected != NewSelected)
 	{
 		g_Config.m_GfxScreenWidth = lModes[NewSelected].m_Width;
@@ -1945,10 +1944,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		ListRec.VSplitRight(1.5f, &ListRec, 0);
 		ListOth.VSplitLeft(1.5f, 0, &ListOth);
 
-		static CListBoxState s_RecListBoxState;
-		static CListBoxState s_OthListBoxState;
-		CheckSettings |= DoResolutionList(&ListRec, &s_RecListBoxState, m_lRecommendedVideoModes);
-		CheckSettings |= DoResolutionList(&ListOth, &s_OthListBoxState, m_lOtherVideoModes);
+		static CListBox s_RecListBox(this);
+		static CListBox s_OthListBox(this);
+		CheckSettings |= DoResolutionList(&ListRec, &s_RecListBox, m_lRecommendedVideoModes);
+		CheckSettings |= DoResolutionList(&ListOth, &s_OthListBox, m_lOtherVideoModes);
 	}
 
 	// reset button

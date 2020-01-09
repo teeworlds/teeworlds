@@ -503,19 +503,17 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 bool CMenus::RenderServerControlServer(CUIRect MainView)
 {
-	bool doCallVote = false;
-	static int s_VoteList = 0;
-	static CListBoxState s_ListBoxState;
+	static CListBox s_ListBox(this);
 	CUIRect List = MainView;
-	UiDoListboxHeader(&s_ListBoxState, &List, Localize("Option"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ListBoxState, &s_VoteList, 20.0f, 0, m_pClient->m_pVoting->m_NumVoteOptions, 1, m_CallvoteSelectedOption, 0, true);
+	s_ListBox.DoHeader(&List, Localize("Option"));
+	s_ListBox.DoStart(20.0f, 0, m_pClient->m_pVoting->m_NumVoteOptions, 1, m_CallvoteSelectedOption, 0, true);
 
 	for(CVoteOptionClient *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext)
 	{
 		if(m_aFilterString[0] && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
 			continue; // no match found
 
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, pOption);
+		CListboxItem Item = s_ListBox.DoNextItem(pOption);
 
 		if(Item.m_Visible)
 		{			
@@ -525,7 +523,8 @@ bool CMenus::RenderServerControlServer(CUIRect MainView)
 		}
 	}
 
-	m_CallvoteSelectedOption = UiDoListboxEnd(&s_ListBoxState, &doCallVote);
+	bool doCallVote = false;
+	m_CallvoteSelectedOption = s_ListBox.DoEnd(&doCallVote);
 	return doCallVote;
 }
 
@@ -552,15 +551,15 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 	const float Spacing = 2.0f;
 	const float NameWidth = 250.0f;
 	const float ClanWidth = 250.0f;
-	static int s_VoteList = 0;
-	static CListBoxState s_ListBoxState;
+
+	static CListBox s_ListBox(this);
 	CUIRect List = MainView;
-	UiDoListboxHeader(&s_ListBoxState, &List, Localize("Player"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ListBoxState, &s_VoteList, 20.0f, 0, NumOptions, 1, Selected, 0, true);
+	s_ListBox.DoHeader(&List, Localize("Player"));
+	s_ListBox.DoStart(20.0f, 0, NumOptions, 1, Selected, 0, true);
 
 	for(int i = 0; i < NumOptions; i++)
 	{
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &aPlayerIDs[i]);
+		CListboxItem Item = s_ListBox.DoNextItem(&aPlayerIDs[i]);
 
 		if(Item.m_Visible)
 		{
@@ -598,7 +597,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 		}
 	}
 
-	Selected = UiDoListboxEnd(&s_ListBoxState, 0);
+	Selected = s_ListBox.DoEnd(0);
 	m_CallvoteSelectedPlayer = Selected != -1 ? aPlayerIDs[Selected] : -1;
 }
 

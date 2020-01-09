@@ -927,36 +927,46 @@ void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance,
 	RenderTools()->DrawUIRect(&Slider, Color, CUI::CORNER_ALL, Slider.h/2.0f);
 }
 
-void CMenus::UiDoListboxHeader(CListBoxState* pState, const CUIRect *pRect, const char *pTitle,
+
+CMenus::CListBox::CListBox(CMenus *pMenus)
+{
+	m_pMenus = pMenus;
+	m_ScrollOffset = vec2(0,0);
+	m_ListBoxUpdateScroll = false;
+	m_aFilterString[0] = '\0';
+	m_OffsetFilter = 0.0f;
+}
+
+void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 							   float HeaderHeight, float Spacing)
 {
 	CUIRect Header;
 	CUIRect View = *pRect;
 
 	// background
-	const float Height = GetListHeaderHeight();
+	const float Height = m_pMenus->GetListHeaderHeight();
 	View.HSplitTop(Height+Spacing, &Header, 0);
-	RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
+	m_pMenus->RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
 
 	// draw header
 	View.HSplitTop(Height, &Header, &View);
 	Header.y += 2.0f;
-	UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+	m_pMenus->UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 	View.HSplitTop(Spacing, &Header, &View);
 
 	// setup the variables
-	pState->m_ListBoxView = View;
+	m_ListBoxView = View;
 }
 
-bool CMenus::UiDoListboxFilter(CListBoxState* pState, float FilterHeight, float Spacing)
+bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 {
 	CUIRect Filter;
-	CUIRect View = pState->m_ListBoxView;
+	CUIRect View = m_ListBoxView;
 
 	// background
 	View.HSplitTop(FilterHeight+Spacing, &Filter, 0);
-	RenderTools()->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 5.0f);
+	m_pMenus->RenderTools()->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 5.0f);
 
 	// draw filter
 	View.HSplitTop(FilterHeight, &Filter, &View);
@@ -967,17 +977,17 @@ bool CMenus::UiDoListboxFilter(CListBoxState* pState, float FilterHeight, float 
 	CUIRect Label, EditBox;
 	Filter.VSplitLeft(Filter.w/5.0f, &Label, &EditBox);
 	Label.y += Spacing;
-	UI()->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_CENTER);
-	bool Changed = DoEditBox(pState->m_aFilterString, &EditBox, pState->m_aFilterString, sizeof(pState->m_aFilterString), FontSize, &pState->m_OffsetFilter);
+	m_pMenus->UI()->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_CENTER);
+	bool Changed = m_pMenus->DoEditBox(m_aFilterString, &EditBox, m_aFilterString, sizeof(m_aFilterString), FontSize, &m_OffsetFilter);
 
 	View.HSplitTop(Spacing, &Filter, &View);
 
-	pState->m_ListBoxView = View;
+	m_ListBoxView = View;
 
 	return Changed;
 }
 
-void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowHeight,
+void CMenus::CListBox::DoStart(float RowHeight,
 							  const char *pBottomText, int NumItems, int ItemsPerRow, int SelectedIndex,
 							  const CUIRect *pRect, bool Background, bool *pActive)
 {
@@ -985,92 +995,92 @@ void CMenus::UiDoListboxStart(CListBoxState* pState, const void *pID, float RowH
 	if(pRect)
 		View = *pRect;
 	else
-		View = pState->m_ListBoxView;
+		View = m_ListBoxView;
 	CUIRect Footer;
 
 	// background
 	if(Background)
-		RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+		m_pMenus->RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
 	// draw footers
 	if(pBottomText)
 	{
-		const float Height = GetListHeaderHeight();
+		const float Height = m_pMenus->GetListHeaderHeight();
 		View.HSplitBottom(Height, &View, &Footer);
 		Footer.VSplitLeft(10.0f, 0, &Footer);
 		Footer.y += 2.0f;
-		UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+		m_pMenus->UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	}
 
 	// setup the variables
-	pState->m_ListBoxView = View;
-	pState->m_ListBoxSelectedIndex = SelectedIndex;
-	pState->m_ListBoxNewSelected = SelectedIndex;
-	pState->m_ListBoxNewSelOffset = 0;
-	pState->m_ListBoxItemIndex = 0;
-	pState->m_ListBoxRowHeight = RowHeight;
-	pState->m_ListBoxNumItems = NumItems;
-	pState->m_ListBoxItemsPerRow = ItemsPerRow;
-	pState->m_ListBoxDoneEvents = 0;
-	pState->m_ListBoxItemActivated = false;
+	m_ListBoxView = View;
+	m_ListBoxSelectedIndex = SelectedIndex;
+	m_ListBoxNewSelected = SelectedIndex;
+	m_ListBoxNewSelOffset = 0;
+	m_ListBoxItemIndex = 0;
+	m_ListBoxRowHeight = RowHeight;
+	m_ListBoxNumItems = NumItems;
+	m_ListBoxItemsPerRow = ItemsPerRow;
+	m_ListBoxDoneEvents = 0;
+	m_ListBoxItemActivated = false;
 
 	// handle input
 	if(!pActive || *pActive)
 	{
-		if(m_DownArrowPressed)
-			pState->m_ListBoxNewSelOffset += 1;
-		if(m_UpArrowPressed)
-			pState->m_ListBoxNewSelOffset -= 1;
+		if(m_pMenus->m_DownArrowPressed)
+			m_ListBoxNewSelOffset += 1;
+		if(m_pMenus->m_UpArrowPressed)
+			m_ListBoxNewSelOffset -= 1;
 	}
 
 	// setup the scrollbar
-	pState->m_ScrollOffset = vec2(0, 0);
-	BeginScrollRegion(&pState->m_ScrollRegion, &pState->m_ListBoxView, &pState->m_ScrollOffset);
-	pState->m_ListBoxView.y += pState->m_ScrollOffset.y;
+	m_ScrollOffset = vec2(0, 0);
+	m_pMenus->BeginScrollRegion(&m_ScrollRegion, &m_ListBoxView, &m_ScrollOffset);
+	m_ListBoxView.y += m_ScrollOffset.y;
 }
 
-CMenus::CListboxItem CMenus::UiDoListboxNextRow(CListBoxState* pState)
+CMenus::CListboxItem CMenus::CListBox::DoNextRow()
 {
 	static CUIRect s_RowView;
 	CListboxItem Item = {0};
 
-	if(pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow == 0)
-		pState->m_ListBoxView.HSplitTop(pState->m_ListBoxRowHeight /*-2.0f*/, &s_RowView, &pState->m_ListBoxView);
-	ScrollRegionAddRect(&pState->m_ScrollRegion, s_RowView);
-	if(pState->m_ListBoxUpdateScroll && pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex)
+	if(m_ListBoxItemIndex%m_ListBoxItemsPerRow == 0)
+		m_ListBoxView.HSplitTop(m_ListBoxRowHeight /*-2.0f*/, &s_RowView, &m_ListBoxView);
+	m_pMenus->ScrollRegionAddRect(&m_ScrollRegion, s_RowView);
+	if(m_ListBoxUpdateScroll && m_ListBoxSelectedIndex == m_ListBoxItemIndex)
 	{
-		ScrollRegionScrollHere(&pState->m_ScrollRegion, CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
-		pState->m_ListBoxUpdateScroll = false;
+		m_pMenus->ScrollRegionScrollHere(&m_ScrollRegion, CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
+		m_ListBoxUpdateScroll = false;
 	}
 
-	s_RowView.VSplitLeft(s_RowView.w/(pState->m_ListBoxItemsPerRow-pState->m_ListBoxItemIndex%pState->m_ListBoxItemsPerRow), &Item.m_Rect, &s_RowView);
+	s_RowView.VSplitLeft(s_RowView.w/(m_ListBoxItemsPerRow-m_ListBoxItemIndex%m_ListBoxItemsPerRow), &Item.m_Rect, &s_RowView);
 
-	if(pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex)
+	if(m_ListBoxSelectedIndex == m_ListBoxItemIndex)
 		Item.m_Selected = 1;
 
-	Item.m_Visible = !ScrollRegionIsRectClipped(&pState->m_ScrollRegion, Item.m_Rect);
+	Item.m_Visible = !m_pMenus->ScrollRegionIsRectClipped(&m_ScrollRegion, Item.m_Rect);
 
-	pState->m_ListBoxItemIndex++;
+	m_ListBoxItemIndex++;
 	return Item;
 }
 
-CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const void *pId, bool Selected, bool *pActive)
+CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected, bool *pActive)
 {
-	int ThisItemIndex = pState->m_ListBoxItemIndex;
+	int ThisItemIndex = m_ListBoxItemIndex;
 	if(Selected)
 	{
-		if(pState->m_ListBoxSelectedIndex == pState->m_ListBoxNewSelected)
-			pState->m_ListBoxNewSelected = ThisItemIndex;
-		pState->m_ListBoxSelectedIndex = ThisItemIndex;
+		if(m_ListBoxSelectedIndex == m_ListBoxNewSelected)
+			m_ListBoxNewSelected = ThisItemIndex;
+		m_ListBoxSelectedIndex = ThisItemIndex;
 	}
 
-	CListboxItem Item = UiDoListboxNextRow(pState);
+	CListboxItem Item = DoNextRow();
 	static bool s_ItemClicked = false;
 
-	if(Item.m_Visible && UI()->DoButtonLogic(pId, "", pState->m_ListBoxSelectedIndex == pState->m_ListBoxItemIndex, &Item.m_Rect))
+	if(Item.m_Visible && m_pMenus->UI()->DoButtonLogic(pId, "", m_ListBoxSelectedIndex == m_ListBoxItemIndex, &Item.m_Rect))
 	{
 		s_ItemClicked = true;
-		pState->m_ListBoxNewSelected = ThisItemIndex;
+		m_ListBoxNewSelected = ThisItemIndex;
 		if(pActive)
 			*pActive = true;
 	}
@@ -1080,43 +1090,49 @@ CMenus::CListboxItem CMenus::UiDoListboxNextItem(CListBoxState* pState, const vo
 	const bool ProcessInput = !pActive || *pActive;
 
 	// process input, regard selected index
-	if(pState->m_ListBoxSelectedIndex == ThisItemIndex)
+	if(m_ListBoxSelectedIndex == ThisItemIndex)
 	{
-		if(ProcessInput && !pState->m_ListBoxDoneEvents)
+		if(ProcessInput && !m_ListBoxDoneEvents)
 		{
-			pState->m_ListBoxDoneEvents = 1;
+			m_ListBoxDoneEvents = 1;
 
-			if(m_EnterPressed || (s_ItemClicked && Input()->MouseDoubleClick()))
+			if(m_pMenus->m_EnterPressed || (s_ItemClicked && m_pMenus->Input()->MouseDoubleClick()))
 			{
-				pState->m_ListBoxItemActivated = true;
-				UI()->SetActiveItem(0);
+				m_ListBoxItemActivated = true;
+				m_pMenus->UI()->SetActiveItem(0);
 			}
 		}
 
 		CUIRect r = Item.m_Rect;
-		RenderTools()->DrawUIRect(&r, vec4(1,1,1,ProcessInput?0.5f:0.33f), CUI::CORNER_ALL, 5.0f);
+		m_pMenus->RenderTools()->DrawUIRect(&r, vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f), CUI::CORNER_ALL, 5.0f);
 	}
-	/*else*/ if(UI()->HotItem() == pId)
+	/*else*/ if(m_pMenus->UI()->HotItem() == pId)
 	{
 		CUIRect r = Item.m_Rect;
-		RenderTools()->DrawUIRect(&r, vec4(1,1,1,0.33f), CUI::CORNER_ALL, 5.0f);
+		m_pMenus->RenderTools()->DrawUIRect(&r, vec4(1, 1, 1, 0.33f), CUI::CORNER_ALL, 5.0f);
 	}
 
 	return Item;
 }
 
-int CMenus::UiDoListboxEnd(CListBoxState* pState, bool *pItemActivated)
+int CMenus::CListBox::DoEnd(bool *pItemActivated)
 {
-	EndScrollRegion(&pState->m_ScrollRegion);
-	if(pState->m_ListBoxNewSelOffset != 0 && pState->m_ListBoxSelectedIndex != -1 && pState->m_ListBoxSelectedIndex == pState->m_ListBoxNewSelected)
+	m_pMenus->EndScrollRegion(&m_ScrollRegion);
+	if(m_ListBoxNewSelOffset != 0 && m_ListBoxSelectedIndex != -1 && m_ListBoxSelectedIndex == m_ListBoxNewSelected)
 	{
-		pState->m_ListBoxNewSelected = clamp(pState->m_ListBoxNewSelected + pState->m_ListBoxNewSelOffset, 0, pState->m_ListBoxNumItems - 1);
-		pState->m_ListBoxUpdateScroll = true;
+		m_ListBoxNewSelected = clamp(m_ListBoxNewSelected + m_ListBoxNewSelOffset, 0, m_ListBoxNumItems - 1);
+		m_ListBoxUpdateScroll = true;
 	}
 	if(pItemActivated)
-		*pItemActivated = pState->m_ListBoxItemActivated;
-	return pState->m_ListBoxNewSelected;
+		*pItemActivated = m_ListBoxItemActivated;
+	return m_ListBoxNewSelected;
 }
+
+bool CMenus::CListBox::FilterMatches(const char *pNeedle)
+{
+	return !m_aFilterString[0] || str_find_nocase(pNeedle, m_aFilterString);
+}
+
 
 int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier)
 {
@@ -2162,9 +2178,9 @@ int CMenus::Render()
 			static int ActSelection = -2;
 			if(ActSelection == -2)
 				ActSelection = FilterInfo.m_Country;
-			static CListBoxState s_ListBoxState;
+			static CListBox s_ListBox(this);
 			int OldSelected = -1;
-			UiDoListboxStart(&s_ListBoxState, &s_ListBoxState, 40.0f, 0, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, &Box, false);
+			s_ListBox.DoStart(40.0f, 0, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, &Box, false);
 
 			for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 			{
@@ -2174,7 +2190,7 @@ int CMenus::Render()
 				if(pEntry->m_CountryCode == ActSelection)
 					OldSelected = i;
 
-				CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, &pEntry->m_CountryCode, OldSelected == i);
+				CListboxItem Item = s_ListBox.DoNextItem(&pEntry->m_CountryCode, OldSelected == i);
 				if(Item.m_Visible)
 				{
 					CUIRect Label;
@@ -2202,7 +2218,7 @@ int CMenus::Render()
 				}
 			}
 
-			const int NewSelected = UiDoListboxEnd(&s_ListBoxState, 0);
+			const int NewSelected = s_ListBox.DoEnd(0);
 			if(OldSelected != NewSelected)
 				ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
