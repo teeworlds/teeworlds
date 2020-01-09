@@ -1211,7 +1211,22 @@ void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
 	if(pResult->NumArguments())
-		pSelf->m_pController->DoWarmup(clamp(pResult->GetInteger(0), -1, 1000));
+	{
+		const char *pStringArg = pResult->GetString(0);
+		if(str_comp_nocase(pStringArg, "-a") == 0 || str_comp_nocase(pStringArg, "abort") == 0)
+		{
+			pSelf->m_pController->AbortWarmup();
+		}
+		else
+		{
+			int Seconds = clamp(pResult->GetInteger(0), -1, 1000);
+			if(Seconds != 0 || pStringArg[0] == '0')
+			{
+				// Only allow instant restart if zero was actually entered, not if the argument isn't a number.
+				pSelf->m_pController->DoWarmup(Seconds);
+			}
+		}
+	}
 	else
 		pSelf->m_pController->DoWarmup(0);
 }
@@ -1514,7 +1529,7 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("pause", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConPause, this, "Pause/unpause game");
 	Console()->Register("change_map", "?r", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "Change map");
-	Console()->Register("restart", "?i", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "Restart in x seconds (0 = abort)");
+	Console()->Register("restart", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "Restart in x seconds (0 = restart now, '-a' or 'abort' to abort warmup)");
 	Console()->Register("say", "r", CFGFLAG_SERVER, ConSay, this, "Say in chat");
 	Console()->Register("broadcast", "r", CFGFLAG_SERVER, ConBroadcast, this, "Broadcast message");
 	Console()->Register("set_team", "ii?i", CFGFLAG_SERVER, ConSetTeam, this, "Set team of player to team");
