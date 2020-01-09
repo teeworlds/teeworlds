@@ -376,12 +376,12 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	CUIRect ListBox, Button, FileIcon;
 	MainView.HSplitTop(MainView.h - BackgroundHeight - 2 * HMargin, &ListBox, &MainView);
 
-	static CListBoxState s_ListBoxState;
-	UiDoListboxHeader(&s_ListBoxState, &ListBox, Localize("Recorded"), 20.0f, 2.0f);
-	UiDoListboxStart(&s_ListBoxState, &s_ListBoxState, 20.0f, 0, m_lDemos.size(), 1, m_DemolistSelectedIndex);
+	static CListBox s_ListBox(this);
+	s_ListBox.DoHeader(&ListBox, Localize("Recorded"), 20.0f, 2.0f);
+	s_ListBox.DoStart(20.0f, 0, m_lDemos.size(), 1, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = UiDoListboxNextItem(&s_ListBoxState, (void*)(&r.front()));
+		CListboxItem Item = s_ListBox.DoNextItem((void*)(&r.front()));
 		// marker count
 		const CDemoItem& DemoItem = r.front();
 		int DemoMarkerCount = 0;
@@ -421,7 +421,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		}
 	}
 	bool Activated = false;
-	m_DemolistSelectedIndex = UiDoListboxEnd(&s_ListBoxState, &Activated);
+	m_DemolistSelectedIndex = s_ListBox.DoEnd(&Activated);
 	DemolistOnUpdate(false);
 
 	MainView.HSplitTop(HMargin, 0, &MainView);
