@@ -1787,7 +1787,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 		Button.VMargin(4.0f, &Button);
 		static int s_BrFilterPing = 0;
-		Value = round_to_int(DoScrollbarH(&s_BrFilterPing, &Button, (float)(Value - Min) / (float)(Max - Min))*(float)(Max - Min) + (float)Min + 0.1f);
+		Value = LogarithmicScrollbarScale.ToAbsolute(DoScrollbarH(&s_BrFilterPing, &Button, LogarithmicScrollbarScale.ToRelative(Value, Min, Max)), Min, Max);
 		if(Value != FilterInfo.m_Ping) {
 			FilterInfo.m_Ping = Value;
 			pFilter->SetFilter(&FilterInfo);

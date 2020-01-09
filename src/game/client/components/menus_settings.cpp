@@ -1086,7 +1086,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	Client.HSplitTop(Spacing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
-	DoScrollbarOption(&g_Config.m_ClMenuAlpha, &g_Config.m_ClMenuAlpha, &Button, Localize("Menu background transparency"), 0, 75, false);
+	DoScrollbarOption(&g_Config.m_ClMenuAlpha, &g_Config.m_ClMenuAlpha, &Button, Localize("Menu background transparency"), 0, 75);
 
 	Client.HSplitTop(Spacing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
@@ -1099,7 +1099,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Client.HSplitTop(Spacing, 0, &Client);
 		Client.HSplitTop(ButtonHeight, &Button, &Client);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		DoScrollbarOption(&g_Config.m_ClAutoDemoMax, &g_Config.m_ClAutoDemoMax, &Button, Localize("Max"), 0, 1000, true);
+		DoScrollbarOption(&g_Config.m_ClAutoDemoMax, &g_Config.m_ClAutoDemoMax, &Button, Localize("Max"), 0, 1000, &LogarithmicScrollbarScale, true);
 	}
 
 	Client.HSplitTop(Spacing, 0, &Client);
@@ -1113,7 +1113,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Client.HSplitTop(Spacing, 0, &Client);
 		Client.HSplitTop(ButtonHeight, &Button, &Client);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		DoScrollbarOption(&g_Config.m_ClAutoScreenshotMax, &g_Config.m_ClAutoScreenshotMax, &Button, Localize("Max"), 0, 1000, true);
+		DoScrollbarOption(&g_Config.m_ClAutoScreenshotMax, &g_Config.m_ClAutoScreenshotMax, &Button, Localize("Max"), 0, 1000, &LogarithmicScrollbarScale, true);
 	}
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
@@ -2108,7 +2108,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		}
 
 		Right.HSplitTop(ButtonHeight, &Button, &Right);
-		DoScrollbarOption(&g_Config.m_SndVolume, &g_Config.m_SndVolume, &Button, Localize("Volume"), 0, 100);
+		DoScrollbarOption(&g_Config.m_SndVolume, &g_Config.m_SndVolume, &Button, Localize("Volume"), 0, 100, &LogarithmicScrollbarScale);
 	}
 	else
 	{
