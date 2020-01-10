@@ -55,11 +55,11 @@ private:
 public:
 	CLogarithmicScrollbarScale(int MinAdjustment)
 	{
-		m_MinAdjustment = max(MinAdjustment, 1); // must be at least 1 to support Min == 0 with logarithm
+		m_MinAdjustment = min(max(MinAdjustment, 1), 1<<30); // must be at least 1 to support Min == 0 with logarithm
 	}
 	float ToRelative(int AbsoluteValue, int Min, int Max)
 	{
-		if(Min < m_MinAdjustment)
+		if(Min < m_MinAdjustment && Min < 1<<30)
 		{
 			return ToRelative(AbsoluteValue+m_MinAdjustment, Min+m_MinAdjustment, Max+m_MinAdjustment);
 		}
@@ -67,7 +67,7 @@ public:
 	}
 	int ToAbsolute(float RelativeValue, int Min, int Max)
 	{
-		if(Min < m_MinAdjustment)
+		if(Min < m_MinAdjustment && Min < 1<<30)
 		{
 			return ToAbsolute(RelativeValue, Min+m_MinAdjustment, Max+m_MinAdjustment)-m_MinAdjustment;
 		}
