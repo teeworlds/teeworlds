@@ -53,7 +53,7 @@ static class CLogarithmicScrollbarScale : public IScrollbarScale
 private:
 	int m_MinAdjustment;
 public:
-	CLogarithmicScrollbarScale(int MinAdjustment)
+	CLogarithmicScrollbarScale(int MinAdjustment = 25)
 	{
 		m_MinAdjustment = min(max(MinAdjustment, 1), 1<<30); // must be at least 1 to support Min == 0 with logarithm
 	}
@@ -73,7 +73,7 @@ public:
 		}
 		return round_to_int(exp(RelativeValue*(log(Max) - log(Min)) + log(Min)));
 	}
-} LogarithmicScrollbarScale(25);
+} LogarithmicScrollbarScale;
 
 class CMenus : public CComponent
 {
