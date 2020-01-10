@@ -61,17 +61,22 @@ public:
 	{
 		if(Min < m_MinAdjustment)
 		{
-			return ToRelative(AbsoluteValue+m_MinAdjustment, Min+m_MinAdjustment, Max+m_MinAdjustment);
+			AbsoluteValue += m_MinAdjustment;
+			Min += m_MinAdjustment;
+			Max += m_MinAdjustment;
 		}
 		return (log(AbsoluteValue) - log(Min)) / (float)(log(Max) - log(Min));
 	}
 	int ToAbsolute(float RelativeValue, int Min, int Max)
 	{
+		int ResultAdjustment = 0;
 		if(Min < m_MinAdjustment)
 		{
-			return ToAbsolute(RelativeValue, Min+m_MinAdjustment, Max+m_MinAdjustment)-m_MinAdjustment;
+			Min += m_MinAdjustment;
+			Max += m_MinAdjustment;
+			ResultAdjustment = -m_MinAdjustment;
 		}
-		return round_to_int(exp(RelativeValue*(log(Max) - log(Min)) + log(Min)));
+		return round_to_int(exp(RelativeValue*(log(Max) - log(Min)) + log(Min))) + ResultAdjustment;
 	}
 } LogarithmicScrollbarScale(25);
 
