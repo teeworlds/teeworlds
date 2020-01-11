@@ -222,7 +222,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View, void *pUser)
 		}
 		else
 		{
-			View.HSplitTop((View.y-2*ButtonHeight)/2.0f, 0, &View);
+			View.HSplitTop((View.h-ButtonHeight)/2.0f, 0, &View);
 			View.HSplitTop(ButtonHeight, &Button, &View);
 			pSelf->m_pClient->UI()->DoLabel(&Button, Localize("No joysticks found. Plug in a joystick and restart the game."), 13.0f, CUI::ALIGN_CENTER);
 		}
