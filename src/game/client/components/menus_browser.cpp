@@ -1455,7 +1455,10 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			// entries
 			for(int f = 0; f < m_lFriendList[i].size(); ++f, ++ButtonId)
 			{
-				View.HSplitTop(20.0f + GetListHeaderHeight(), &Rect, &View);
+				if(i == FRIEND_OFF)
+					View.HSplitTop(8.0f + GetListHeaderHeight(), &Rect, &View);
+				else
+					View.HSplitTop(20.0f + GetListHeaderHeight(), &Rect, &View);
 				ScrollRegionAddRect(&s_ScrollRegion, Rect);
 				if(i == FRIEND_PLAYER_ON)
 					RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 1.0f, 0.5f, 0.30f), CUI::CORNER_ALL, 5.0f);
@@ -1464,6 +1467,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 				else
 					RenderTools()->DrawUIRect(&Rect, vec4(1.0f, 0.5f, 0.5f, 0.30f), CUI::CORNER_ALL, 5.0f);
 				Rect.VMargin(2.0f, &Rect);
+				Rect.HMargin(2.0f, &Rect);
 				Rect.VSplitRight(45.0f, &Rect, &Icon);
 				Rect.HSplitTop(20.0f, &Button, 0);
 				// name
@@ -1487,14 +1491,15 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 					UI()->DoLabel(&Button, aBuf, FontSize - 2, CUI::ALIGN_LEFT);
 				}
 				// delete button
-				Icon.HSplitTop(20.0f, &Rect, 0);
-				Rect.VSplitRight(10.0f, &Button, &Icon);
+				Icon.HSplitTop(14.0f, &Rect, 0);
+				Rect.VSplitRight(12.0f, 0, &Icon);
 				Icon.HMargin((Icon.h - Icon.w) / 2, &Icon);
 				if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_B, &Icon))
 				{
 					m_pDeleteFriend = &m_lFriendList[i][f];
 				}
 				// join button
+				Rect.VSplitRight(15.0f, &Button, 0);
 				if(m_lFriendList[i][f].m_pServerInfo)
 				{
 					Button.Margin((Button.h - GetListHeaderHeight() + 2.0f) / 2, &Button);
