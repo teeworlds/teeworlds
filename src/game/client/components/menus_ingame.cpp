@@ -495,7 +495,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	// define the MOTD text area and make it scrollable
 	CUIRect MotdTextArea;
-	Motd.HSplitTop(Cursor.m_Y-Motd.y+5.0f, &MotdTextArea, &Motd);
+	Motd.HSplitTop(Cursor.m_Y-Motd.y+ButtonHeight*ms_FontmodHeight*0.8f+5.0f, &MotdTextArea, &Motd);
 	ScrollRegionAddRect(&s_ScrollRegion, MotdTextArea);
 
 	EndScrollRegion(&s_ScrollRegion);
