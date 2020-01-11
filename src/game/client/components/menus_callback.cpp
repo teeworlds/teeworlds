@@ -162,7 +162,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View, void *pUser)
 	bool JoystickEnabled = g_Config.m_JoystickEnable;
 	int NumJoysticks = pSelf->m_pClient->Input()->NumJoysticks();
 	int NumOptions = 2; // expandable header & message
-	if(JoystickEnabled)
+	if(JoystickEnabled && NumJoysticks > 0)
 	{
 		if(NumJoysticks > 1)
 		{
