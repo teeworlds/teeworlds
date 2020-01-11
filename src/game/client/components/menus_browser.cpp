@@ -1491,14 +1491,15 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 					UI()->DoLabel(&Button, aBuf, FontSize - 2, CUI::ALIGN_LEFT);
 				}
 				// delete button
-				Icon.HSplitTop(20.0f, &Rect, 0);
-				Rect.VSplitRight(10.0f, &Button, &Icon);
+				Icon.HSplitTop(14.0f, &Rect, 0);
+				Rect.VSplitRight(12.0f, 0, &Icon);
 				Icon.HMargin((Icon.h - Icon.w) / 2, &Icon);
 				if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_B, &Icon))
 				{
 					m_pDeleteFriend = &m_lFriendList[i][f];
 				}
 				// join button
+				Rect.VSplitRight(15.0f, &Button, 0);
 				if(m_lFriendList[i][f].m_pServerInfo)
 				{
 					Button.Margin((Button.h - GetListHeaderHeight() + 2.0f) / 2, &Button);
