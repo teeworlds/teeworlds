@@ -1455,7 +1455,10 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			// entries
 			for(int f = 0; f < m_lFriendList[i].size(); ++f, ++ButtonId)
 			{
-				View.HSplitTop(20.0f + GetListHeaderHeight(), &Rect, &View);
+				if(i == FRIEND_OFF)
+					View.HSplitTop(8.0f + GetListHeaderHeight(), &Rect, &View);
+				else
+					View.HSplitTop(20.0f + GetListHeaderHeight(), &Rect, &View);
 				ScrollRegionAddRect(&s_ScrollRegion, Rect);
 				if(i == FRIEND_PLAYER_ON)
 					RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 1.0f, 0.5f, 0.30f), CUI::CORNER_ALL, 5.0f);
@@ -1464,6 +1467,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 				else
 					RenderTools()->DrawUIRect(&Rect, vec4(1.0f, 0.5f, 0.5f, 0.30f), CUI::CORNER_ALL, 5.0f);
 				Rect.VMargin(2.0f, &Rect);
+				Rect.HMargin(2.0f, &Rect);
 				Rect.VSplitRight(45.0f, &Rect, &Icon);
 				Rect.HSplitTop(20.0f, &Button, 0);
 				// name
