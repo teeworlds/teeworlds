@@ -207,22 +207,30 @@ const char *CBinds::Get(int KeyID, int Modifier)
 
 void CBinds::GetKeyID(const char *pBindStr, int& KeyID, int& Modifier)
 {
-	for(KeyID = 0; KeyID < KEY_LAST; KeyID++)
+	KeyID = KEY_LAST;
+	Modifier = MODIFIER_COUNT;
+
+	for(int LocalKeyID = 0; LocalKeyID < KEY_LAST; LocalKeyID++)
 	{
-		for(Modifier = 0; Modifier < MODIFIER_COUNT; Modifier++)
+		for(int LocalModifier = 0; LocalModifier < MODIFIER_COUNT; LocalModifier++)
 		{
-			const char *pBind = Get(KeyID, Modifier);
+			const char *pBind = Get(LocalKeyID, LocalModifier);
 			if(!pBind[0])
 				continue;
 
-			if(str_find(pBind, pBindStr) != 0)
+			if(str_comp(pBind, pBindStr) == 0)
+			{
+				KeyID = LocalKeyID;
+				Modifier = LocalModifier;
 				return;
+			}
+			if(str_find(pBind, pBindStr) != 0)
+			{
+				KeyID = LocalKeyID;
+				Modifier = LocalModifier;
+			}
 		}
 	}
-	
-	//this is already given by the loops above
-	KeyID = KEY_LAST;
-	Modifier = MODIFIER_COUNT;
 }
 
 void CBinds::GetKey(const char *pBindStr, char aKey[64], unsigned BufSize, int KeyID, int Modifier)
