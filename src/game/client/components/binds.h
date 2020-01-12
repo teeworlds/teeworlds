@@ -42,6 +42,8 @@ public:
 	void SetDefaults();
 	void UnbindAll();
 	const char *Get(int KeyID, int Modifier);
+	void GetKeyID(const char *pBindStr, int& KeyID, int& Modifier);
+	void GetKey(const char *pBindStr, char aKey[64], unsigned BufSize, int KeyID, int Modifier);
 	void GetKey(const char *pBindStr, char aKey[64], unsigned BufSize);
 	static const char *GetModifierName(int m);
 	static int GetModifierMask(IInput *i);
