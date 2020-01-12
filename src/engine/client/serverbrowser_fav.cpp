@@ -172,10 +172,8 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 					{
 						str_copy(pEntry->m_aHostname, m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_aHostname, sizeof(pEntry->m_aHostname));
 						pEntry->m_State = FAVSTATE_HOST;
-						dbg_msg("test", "fav aquired hostname, %s", m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_aHostname);
 					}
 					RemoveFavoriteEntry(m_FavLookup.m_FavoriteIndex);
-					dbg_msg("test", "fav removed multiple entry");
 				}
 				else
 				{
@@ -186,12 +184,10 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 						m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_Addr = m_FavLookup.m_HostLookup.m_Addr;
 						m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_State = FAVSTATE_HOST;
 						pResult = &m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_Addr;
-						dbg_msg("test", "fav added, %s", m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_aHostname);
 					}
 					else
 					{
 						RemoveFavoriteEntry(m_FavLookup.m_FavoriteIndex);
-						dbg_msg("test", "fav removed entry that failed hostname-address check");
 					}
 				}
 			}
@@ -201,12 +197,10 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 				if(m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_State == FAVSTATE_LOOKUP)
 				{
 					m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_State = FAVSTATE_INVALID;
-					dbg_msg("test", "fav invalid, %s", m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_aHostname);
 				}
 				else
 				{
 					RemoveFavoriteEntry(m_FavLookup.m_FavoriteIndex);
-					dbg_msg("test", "fav removed invalid check-based entry");
 				}
 			}
 		}
