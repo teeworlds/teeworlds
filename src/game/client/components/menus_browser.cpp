@@ -43,6 +43,8 @@ CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBro
 {
 	m_Extended = false;
 	m_Custom = Custom;
+	for(int Type = 0; Type < IServerBrowser::NUM_TYPES; Type++)
+		m_aSelectedServers[Type] = -1;
 	str_copy(m_aName, pName, sizeof(m_aName));
 	m_pServerBrowser = pServerBrowser;
 	switch(m_Custom)
@@ -66,13 +68,13 @@ void CMenus::CBrowserFilter::Reset()
 	switch(m_Custom)
 	{
 	case CBrowserFilter::FILTER_STANDARD:
-		m_pServerBrowser->SetFilter(m_Filter, &ms_FilterStandard);
+		SetFilter(&ms_FilterStandard);
 		break;
 	case CBrowserFilter::FILTER_FAVORITES:
-		m_pServerBrowser->SetFilter(m_Filter, &ms_FilterFavorites);
+		SetFilter(&ms_FilterFavorites);
 		break;
 	default:
-		m_pServerBrowser->SetFilter(m_Filter, &ms_FilterAll);
+		SetFilter(&ms_FilterAll);
 	}
 }
 
@@ -116,11 +118,16 @@ int CMenus::CBrowserFilter::NumPlayers() const
 	return m_pServerBrowser->NumSortedPlayers(m_Filter);
 }
 
-const CServerInfo *CMenus::CBrowserFilter::SortedGet(int Index) const
+const CServerInfo* CMenus::CBrowserFilter::SortedGet(int Index) const
 {
 	if(Index < 0 || Index >= m_pServerBrowser->NumSortedServers(m_Filter))
 		return 0;
 	return m_pServerBrowser->SortedGet(m_Filter, Index);
+}
+
+const CServerInfo* CMenus::CBrowserFilter::SortedGetSelected() const
+{
+	return SortedGet(m_aSelectedServers[m_pServerBrowser->GetType()]);
 }
 
 void CMenus::CBrowserFilter::SetFilterNum(int Num)
@@ -665,7 +672,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Button, EditButtons;
-	if(UI()->DoButtonLogic(&m_lFilters[FilterIndex], "", 0, &View))
+	if(UI()->DoButtonLogic(pFilter, "", 0, &View))
 	{
 		Switch = true; // switch later, to make sure we haven't clicked one of the filter buttons (edit...)
 	}
@@ -984,7 +991,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 			if(i+1 < NUM_BROWSER_COLS)
 			{
-				//Cols[i].flags |= SPACER;
 				Headers.VSplitLeft(2, &ms_aBrowserCols[i].m_Spacer, &Headers);
 			}
 		}
@@ -1050,93 +1056,145 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.05f), CUI::CORNER_ALL, 5.0f);
 	}
 
-	// display important messages in the middle of the screen so no user misses it
-	{
-		CUIRect MsgBox = View;
-		MsgBox.y += View.h/3;
+	const int BrowserType = ServerBrowser()->GetType();
+	int ToBeSelectedFilter = -1;
+	int ToBeSelectedServer = -1;
+	bool AddressChanged = str_comp(m_LastServerAddress, g_Config.m_UiServerAddress) != 0; // only update selection based on address if it changed
+	bool ClearAddressIfNotFound = false;
+	bool ScrollToSelection = false;
 
-		if(m_ActivePage == PAGE_INTERNET && ServerBrowser()->IsRefreshingMasters())
-			UI()->DoLabel(&MsgBox, Localize("Refreshing master servers"), 16.0f, CUI::ALIGN_CENTER);
-		else if(!ServerBrowser()->NumServers())
-			UI()->DoLabel(&MsgBox, Localize("No servers found"), 16.0f, CUI::ALIGN_CENTER);
-		/*else if(ServerBrowser()->NumServers() && !NumServers)
-			UI()->DoLabel(&MsgBox, Localize("No servers match your filter criteria"), 16.0f, CUI::ALIGN_CENTER);*/
+	if(BrowserType != m_LastBrowserType)
+	{
+		// restore selected filter and server when changing browser page
+		m_LastBrowserType = BrowserType;
+		ToBeSelectedFilter = m_aSelectedFilters[BrowserType];
+		if(ToBeSelectedFilter != -1)
+		{
+			ScrollToSelection = true;
+			ToBeSelectedServer = m_lFilters[ToBeSelectedFilter].m_aSelectedServers[BrowserType];
+			if(ToBeSelectedServer == -1)
+			{
+				AddressChanged = true;
+				ClearAddressIfNotFound = true;
+			}
+		}
 	}
 
-	// count all the servers
+	// count all the servers and update selected filter based on UI state
 	int NumServers = 0;
+	int SelectedFilter = -1;
 	for(int i = 0; i < m_lFilters.size(); i++)
-		if(m_lFilters[i].Extended())
-			NumServers += m_lFilters[i].NumSortedServers();
+	{
+		// restore selected filter from browser page
+		if(ToBeSelectedFilter != -1 && (ToBeSelectedFilter == i) != m_lFilters[i].Extended())
+		{
+			m_lFilters[i].Switch();
+		}
 
-	int SelectedIndex = m_SelectedServer.m_Index;
-	int SelectedFilter;
-	for(SelectedFilter = 0; SelectedFilter < m_lFilters.size(); SelectedFilter++)
-		if(m_lFilters[SelectedFilter].Extended())
-			break;
-	if(SelectedFilter == m_lFilters.size()) // no selected filter found
-		SelectedFilter = -1;
+		if(m_lFilters[i].Extended())
+		{
+			if(SelectedFilter == -1)
+			{
+				SelectedFilter = i;
+			}
+			NumServers += m_lFilters[i].NumSortedServers();
+		}
+	}
+
+	if(SelectedFilter != m_aSelectedFilters[BrowserType])
+	{
+		// update stored state based on updated state of UI
+		m_aSelectedFilters[BrowserType] = SelectedFilter;
+		ScrollToSelection = true;
+		UpdateServerBrowserAddress();
+		if(SelectedFilter == -1)
+		{
+			AddressChanged = true;
+			ClearAddressIfNotFound = true;
+		}
+	}
+
+	const bool CtrlPressed = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
 
 	// handle arrow hotkeys
-	bool NewSelection = false;
 	if(SelectedFilter > -1)
 	{
-		int NewIndex = -1;
+		int SelectedIndex = m_lFilters[SelectedFilter].m_aSelectedServers[BrowserType];
 		int NewFilter = SelectedFilter;
-		bool CtrlPressed = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
+
 		if(m_DownArrowPressed)
 		{
 			if(!CtrlPressed)
 			{
-				NewIndex = SelectedIndex + 1;
-				if(NewIndex >= m_lFilters[SelectedFilter].NumSortedServers())
-					NewIndex = m_lFilters[SelectedFilter].NumSortedServers() - 1;
+				ToBeSelectedServer = SelectedIndex + 1;
+				if(ToBeSelectedServer >= m_lFilters[SelectedFilter].NumSortedServers())
+					ToBeSelectedServer = m_lFilters[SelectedFilter].NumSortedServers() - 1;
 			}
 			else if(SelectedFilter + 1 < m_lFilters.size())
 			{
 				// move to next filter
 				NewFilter = SelectedFilter + 1;
-				NewIndex = 0;
 			}
 		}
 		else if(m_UpArrowPressed)
 		{
 			if(!CtrlPressed)
 			{
-				NewIndex = SelectedIndex - 1;
-				if(NewIndex < 0)
-					NewIndex = 0;
+				ToBeSelectedServer = SelectedIndex - 1;
+				if(ToBeSelectedServer < 0)
+					ToBeSelectedServer = 0;
 			}
 			else if(SelectedFilter - 1 >= 0)
 			{
 				// move to previous filter
 				NewFilter = SelectedFilter - 1;
-				NewIndex = 0;
 			}
 		}
+
 		if(NewFilter != SelectedFilter)
 		{
 			m_lFilters[NewFilter].Switch();
 			m_lFilters[SelectedFilter].Switch();
+			// try to restore selected server
+			ToBeSelectedServer = clamp(m_lFilters[NewFilter].m_aSelectedServers[BrowserType], 0, m_lFilters[NewFilter].NumSortedServers()-1);
 		}
 
-		if(NewIndex > -1 && NewIndex < m_lFilters[NewFilter].NumSortedServers())
+		if(ToBeSelectedServer > -1 && ToBeSelectedServer < m_lFilters[NewFilter].NumSortedServers())
 		{
-			m_SelectedServer.m_Filter = NewFilter;
-			if(m_SelectedServer.m_Index != NewIndex)
+			m_aSelectedFilters[BrowserType] = NewFilter;
+			if(m_lFilters[NewFilter].m_aSelectedServers[BrowserType] != ToBeSelectedServer)
 			{
-				m_SelectedServer.m_Index = NewIndex;
+				m_lFilters[NewFilter].m_aSelectedServers[BrowserType] = ToBeSelectedServer;
 				m_ShowServerDetails = true;
-				NewSelection = true;
+				ScrollToSelection = true;
 			}
 
-			const CServerInfo *pItem = ServerBrowser()->SortedGet(NewFilter, NewIndex);
-			str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
+			UpdateServerBrowserAddress();
+		}
+	}
+
+	// display important messages in the middle of the screen so no user misses it
+	{
+		const char *pImportantMessage = NULL;
+		if(m_ActivePage == PAGE_INTERNET && ServerBrowser()->IsRefreshingMasters())
+			pImportantMessage = Localize("Refreshing master servers");
+		else if(SelectedFilter == -1)
+			pImportantMessage = Localize("No filter category is selected");
+		else if(!ServerBrowser()->NumServers())
+			pImportantMessage = Localize("No servers found");
+		else if(ServerBrowser()->NumServers() && !NumServers)
+			pImportantMessage = Localize("No servers match your filter criteria");
+
+		if(pImportantMessage)
+		{
+			CUIRect MsgBox = View;
+			MsgBox.y += View.h/3;
+			UI()->DoLabel(&MsgBox, pImportantMessage, 16.0f, CUI::ALIGN_CENTER);
 		}
 	}
 
 	// scrollbar
-	static CScrollRegion s_ScrollRegion;
+	static CScrollRegion s_ScrollRegion(this);
 	vec2 ScrollOffset(0, 0);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
@@ -1144,50 +1202,56 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	ScrollParams.m_SliderMinHeight = 5;
 	ScrollParams.m_ScrollSpeed = 10;
 	View.w += ScrollParams.m_ScrollbarWidth;
-	BeginScrollRegion(&s_ScrollRegion, &View, &ScrollOffset, &ScrollParams);
+	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
-	int NumPlayers = ServerBrowser()->NumClients();
-
-	for(int s = 0; s < m_lFilters.size(); s++)
+	for(int FilterIndex = 0; FilterIndex < m_lFilters.size(); FilterIndex++)
 	{
-		CBrowserFilter *pFilter = &m_lFilters[s];
+		CBrowserFilter *pFilter = &m_lFilters[FilterIndex];
 
 		// filter header
 		CUIRect Row;
 		View.HSplitTop(20.0f, &Row, &View);
-		ScrollRegionAddRect(&s_ScrollRegion, Row);
+		s_ScrollRegion.AddRect(Row);
 
 		// render header
-		RenderFilterHeader(Row, s);
+		RenderFilterHeader(Row, FilterIndex);
 
+		bool NoMatchingAddressFound = true; // reset selection if server address change and not found
 		if(pFilter->Extended())
 		{
-			for (int i = 0; i < pFilter->NumSortedServers(); i++)
+			for (int ServerIndex = 0; ServerIndex < pFilter->NumSortedServers(); ServerIndex++)
 			{
-				const CServerInfo *pItem = pFilter->SortedGet(i);
+				const CServerInfo *pItem = pFilter->SortedGet(ServerIndex);
 
-				// select server
-				if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
+				// select server if address changed and match found
+				bool IsSelected = m_aSelectedFilters[BrowserType] == FilterIndex && pFilter->m_aSelectedServers[BrowserType] == ServerIndex;
+				if(AddressChanged && !str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
 				{
-					if(m_SelectedServer.m_Index != i) // new server selected
+					if(!IsSelected)
+					{
 						m_ShowServerDetails = true;
-					m_SelectedServer.m_Filter = s;
-					m_SelectedServer.m_Index = i;
+						m_aSelectedFilters[BrowserType] = FilterIndex;
+						pFilter->m_aSelectedServers[BrowserType] = ServerIndex;
+						IsSelected = true;
+						ScrollToSelection = true;
+					}
+					NoMatchingAddressFound = false;
 				}
 
-				bool IsSelected = m_SelectedServer.m_Filter == s && m_SelectedServer.m_Index == i;
+				float ItemHeight = GetListHeaderHeight();
 				if(!m_SidebarActive && IsSelected && m_ShowServerDetails)
-					View.HSplitTop(GetListHeaderHeight()*6, &Row, &View);
-				else
-					View.HSplitTop(GetListHeaderHeight(), &Row, &View);
+				{
+					ItemHeight *= 6.0f;
+				}
+				View.HSplitTop(ItemHeight, &Row, &View);
 
-				ScrollRegionAddRect(&s_ScrollRegion, Row);
-				if(IsSelected && NewSelection) // new selection (hotkeys or address input)
-					ScrollRegionScrollHere(&s_ScrollRegion, CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
+				s_ScrollRegion.AddRect(Row);
+				if(IsSelected && ScrollToSelection) // new selection (hotkeys or address input)
+					s_ScrollRegion.ScrollHere(CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
 
 				// make sure that only those in view can be selected
-				if(!ScrollRegionIsRectClipped(&s_ScrollRegion, Row))
+				if(!s_ScrollRegion.IsRectClipped(Row))
 				{
 					if(IsSelected)
 					{
@@ -1205,30 +1269,43 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					continue;
 				}
 
-				if(int ReturnValue = DoBrowserEntry(pFilter->ID(i), Row, pItem, pFilter, IsSelected))
+				if(int ReturnValue = DoBrowserEntry(pFilter->ID(ServerIndex), Row, pItem, pFilter, IsSelected))
 				{
-					m_ShowServerDetails = !m_ShowServerDetails || ReturnValue == 2 || m_SelectedServer.m_Index != i; // click twice on line => fold server details
-					m_SelectedServer.m_Filter = s;
-					m_SelectedServer.m_Index = i;
+					m_ShowServerDetails = !m_ShowServerDetails || ReturnValue == 2 || pFilter->m_aSelectedServers[BrowserType] != ServerIndex; // click twice on line => fold server details
+					m_aSelectedFilters[BrowserType] = FilterIndex;
+					pFilter->m_aSelectedServers[BrowserType] = ServerIndex;
+					NoMatchingAddressFound = false;
 					if(g_Config.m_UiAutoswitchInfotab)
 						m_SidebarTab = 0;
-					str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
+					UpdateServerBrowserAddress();
 					if(Input()->MouseDoubleClick())
 						Client()->Connect(g_Config.m_UiServerAddress);
 				}
-				
+			}
+
+			if(AddressChanged && NoMatchingAddressFound)
+			{
+				pFilter->m_aSelectedServers[BrowserType] = -1;
+				if(ClearAddressIfNotFound)
+				{
+					g_Config.m_UiServerAddress[0] = '\0';
+				}
 			}
 		}
 
-		if(s < m_lFilters.size()-1)
+		if(FilterIndex < m_lFilters.size()-1)
 			View.HSplitTop(SpacingH, &Row, &View);
+
 	}
 
-	EndScrollRegion(&s_ScrollRegion);
+	str_copy(m_LastServerAddress, g_Config.m_UiServerAddress, sizeof(m_LastServerAddress));
+
+	s_ScrollRegion.End();
 
 	// bottom
 	float SpacingW = 3.0f;
 	float ButtonWidth = (Status.w/6.0f)-(SpacingW*5.0)/6.0f;
+	float FontSize = ButtonHeight*ms_FontmodHeight*0.8f;
 
 	// cut view
 	CUIRect Left, Label, EditBox, Button;
@@ -1240,10 +1317,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Label.VSplitLeft(2.0f, 0, &Label);
 	Label.VSplitRight(ButtonWidth*2.0f+SpacingH, &Label, &EditBox);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Search:"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_LEFT);
 	EditBox.VSplitRight(EditBox.h, &EditBox, &Button);
 	static float s_ClearOffset = 0.0f;
-	if(DoEditBox(&g_Config.m_BrFilterString, &EditBox, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), ButtonHeight*ms_FontmodHeight*0.8f, &s_ClearOffset, false, CUI::CORNER_ALL))
+	if(DoEditBox(&g_Config.m_BrFilterString, &EditBox, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), FontSize, &s_ClearOffset, false, CUI::CORNER_ALL))
 		Client()->ServerBrowserUpdate();
 
 	// clear button
@@ -1262,9 +1339,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Label.VSplitLeft(2.0f, 0, &Label);
 	Label.VSplitRight(ButtonWidth*2.0f+SpacingH, &Label, &EditBox);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Host address:"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&Label, Localize("Host address:"), FontSize, CUI::ALIGN_LEFT);
 	static float s_AddressOffset = 0.0f;
-	DoEditBox(&g_Config.m_UiServerAddress, &EditBox, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), ButtonHeight*ms_FontmodHeight*0.8f, &s_AddressOffset, false, CUI::CORNER_ALL);
+	DoEditBox(&g_Config.m_UiServerAddress, &EditBox, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), FontSize, &s_AddressOffset, false, CUI::CORNER_ALL);
 
 	// render status
 	if(ServerBrowser()->IsRefreshing() && m_ActivePage != PAGE_LAN)
@@ -1293,12 +1370,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			OffsetServer += RenderOffset;
 		if(Num < 10)
 			OffsetServer += RenderOffset;
-		Num = NumPlayers;
-		if(Num < 1000)
+		int NumPlayers = ServerBrowser()->NumClients();;
+		if(NumPlayers < 1000)
 			OffsetPlayer += RenderOffset;
-		if(Num < 100)
+		if(NumPlayers < 100)
 			OffsetPlayer += RenderOffset;
-		if(Num < 10)
+		if(NumPlayers < 10)
 			OffsetPlayer += RenderOffset;
 		char aBuf[128];
 		Status.VSplitLeft(20.0f, 0, &Status);
@@ -1430,7 +1507,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	}
 
 	// scrollbar
-	static CScrollRegion s_ScrollRegion;
+	static CScrollRegion s_ScrollRegion(this);
 	vec2 ScrollOffset(0, 0);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
@@ -1438,7 +1515,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	ScrollParams.m_ScrollbarWidth = 14;
 	ScrollParams.m_ScrollbarMargin = 5;
 	ScrollParams.m_ScrollSpeed = 15;
-	BeginScrollRegion(&s_ScrollRegion, &View, &ScrollOffset, &ScrollParams);
+	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
 	// show lists
@@ -1459,7 +1536,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 					View.HSplitTop(8.0f + GetListHeaderHeight(), &Rect, &View);
 				else
 					View.HSplitTop(20.0f + GetListHeaderHeight(), &Rect, &View);
-				ScrollRegionAddRect(&s_ScrollRegion, Rect);
+				s_ScrollRegion.AddRect(Rect);
 				if(i == FRIEND_PLAYER_ON)
 					RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 1.0f, 0.5f, 0.30f), CUI::CORNER_ALL, 5.0f);
 				else if(i == FRIEND_CLAN_ON)
@@ -1535,7 +1612,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			s_ListExtended[i] ^= 1;
 		}
 	}
-	EndScrollRegion(&s_ScrollRegion);
+	s_ScrollRegion.End();
 
 	// add friend
 	BottomArea.HSplitTop(GetListHeaderHeight(), &Button, &BottomArea);
@@ -1606,17 +1683,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		s_aFilterName[0] = 0;
 	}
 
-	// slected filter
-	CBrowserFilter *pFilter = 0;
-	for(int i = 0; i < m_lFilters.size(); ++i)
-	{
-		if(m_lFilters[i].Extended())
-		{
-			pFilter = &m_lFilters[i];
-			m_SelectedFilter = i;
-			break;
-		}
-	}
+	CBrowserFilter *pFilter = GetSelectedBrowserFilter();
 	if(!pFilter)
 		return;
 
@@ -1677,10 +1744,11 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	if(DoButton_CheckBox(&s_BrFilterPureMap, Localize("Standard map"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE_MAP, &Button))
 		NewSortHash = FilterInfo.m_SortHash^IServerBrowser::FILTER_PURE_MAP;
 
+	bool UpdateFilter = false;
 	if(FilterInfo.m_SortHash != NewSortHash)
 	{
 		FilterInfo.m_SortHash = NewSortHash;
-		pFilter->SetFilter(&FilterInfo);
+		UpdateFilter = true;
 	}
 
 	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
@@ -1724,7 +1792,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 						str_copy(FilterInfo.m_aGametype[j], FilterInfo.m_aGametype[j + 1], sizeof(FilterInfo.m_aGametype[j]));
 					FilterInfo.m_aGametype[j][0] = 0;
 				}
-				pFilter->SetFilter(&FilterInfo);
+				UpdateFilter = true;
 			}
 			Button.VSplitLeft(2.0f, 0, &Button);
 		}
@@ -1758,7 +1826,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 			if(!FilterInfo.m_aGametype[i][0])
 			{
 				str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
-				pFilter->SetFilter(&FilterInfo);
+				UpdateFilter = true;
 				s_aGametype[0] = 0;
 				break;
 			}
@@ -1773,7 +1841,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		{
 			FilterInfo.m_aGametype[i][0] = 0;
 		}
-		pFilter->SetFilter(&FilterInfo);
+		UpdateFilter = true;
 	}
 
 	if(!NeedScrollbar)
@@ -1794,7 +1862,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		Value = LogarithmicScrollbarScale.ToAbsolute(DoScrollbarH(&s_BrFilterPing, &Button, LogarithmicScrollbarScale.ToRelative(Value, Min, Max)), Min, Max);
 		if(Value != FilterInfo.m_Ping) {
 			FilterInfo.m_Ping = Value;
-			pFilter->SetFilter(&FilterInfo);
+			UpdateFilter = true;
 		}
 	}
 
@@ -1806,7 +1874,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	static float OffsetAddr = 0.0f;
 	static int s_BrFilterServerAddress = 0;
 	if(DoEditBox(&s_BrFilterServerAddress, &Button, FilterInfo.m_aAddress, sizeof(FilterInfo.m_aAddress), FontSize, &OffsetAddr))
-		pFilter->SetFilter(&FilterInfo);
+		UpdateFilter = true;
 
 	// player country
 	{
@@ -1820,7 +1888,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		if(DoButton_CheckBox(&s_BrFilterCountry, "", FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY, &Button))
 		{
 			FilterInfo.m_SortHash ^= IServerBrowser::FILTER_COUNTRY;
-			pFilter->SetFilter(&FilterInfo);
+			UpdateFilter = true;
 		}
 		Rect.w = Rect.h * 2;
 		vec4 Color(1.0f, 1.0f, 1.0f, FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY ? 1.0f : 0.5f);
@@ -1843,20 +1911,25 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	if(DoButton_SpriteID(&s_LevelButton1, IMAGE_LEVELICONS, FilterInfo.IsLevelFiltered(CServerInfo::LEVEL_CASUAL) ? SPRITE_LEVEL_A_B : SPRITE_LEVEL_A_ON, false, &Icon, CUI::CORNER_L, 5.0f, true))
 	{
 		FilterInfo.ToggleLevel(CServerInfo::LEVEL_CASUAL);
-		pFilter->SetFilter(&FilterInfo);
+		UpdateFilter = true;
 	}
 	Button.VSplitLeft(Button.h, &Icon, &Button);
 	static CButtonContainer s_LevelButton2;
 	if(DoButton_SpriteID(&s_LevelButton2, IMAGE_LEVELICONS, FilterInfo.IsLevelFiltered(CServerInfo::LEVEL_NORMAL) ? SPRITE_LEVEL_B_B : SPRITE_LEVEL_B_ON, false, &Icon, 0, 5.0f, true))
 	{
 		FilterInfo.ToggleLevel(CServerInfo::LEVEL_NORMAL);
-		pFilter->SetFilter(&FilterInfo);
+		UpdateFilter = true;
 	}
 	Button.VSplitLeft(Button.h, &Icon, &Button);
 	static CButtonContainer s_LevelButton3;
 	if(DoButton_SpriteID(&s_LevelButton3, IMAGE_LEVELICONS, FilterInfo.IsLevelFiltered(CServerInfo::LEVEL_COMPETITIVE) ? SPRITE_LEVEL_C_B : SPRITE_LEVEL_C_ON, false, &Icon, CUI::CORNER_R, 5.0f, true))
 	{
 		FilterInfo.ToggleLevel(CServerInfo::LEVEL_COMPETITIVE);
+		UpdateFilter = true;
+	}
+
+	if(UpdateFilter)
+	{
 		pFilter->SetFilter(&FilterInfo);
 	}
 
@@ -1868,15 +1941,21 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset filter"), 0, &Button))
 	{
 		pFilter->Reset();
+		UpdateFilter = true;
+	}
+
+	if(UpdateFilter)
+	{
+		ServerBrowserFilterOnUpdate();
 	}
 }
 
 void CMenus::RenderServerbrowserInfoTab(CUIRect View)
 {
-	const CServerInfo *pItem = 0;
-	if(m_SelectedServer.m_Filter >= 0 && m_SelectedServer.m_Filter < m_lFilters.size())
+	CBrowserFilter *pFilter = GetSelectedBrowserFilter();
+	if(pFilter)
 	{
-		pItem = m_lFilters[m_SelectedServer.m_Filter].SortedGet(m_SelectedServer.m_Index);
+		const CServerInfo *pItem = pFilter->SortedGet(pFilter->m_aSelectedServers[ServerBrowser()->GetType()]);
 		RenderServerbrowserServerDetail(View, pItem);
 	}
 }
@@ -1911,7 +1990,6 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 
 		for(unsigned int i = 0; i < sizeof(s_aLabels) / sizeof(s_aLabels[0]); i++)
 		{
-
 			LeftColumn.HSplitTop(15.0f, &Row, &LeftColumn);
 			UI()->DoLabel(&Row, s_aLabels[i], FontSize, CUI::ALIGN_LEFT, Row.w, false);
 		}
@@ -1953,17 +2031,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 
 void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, vec4 TextColor)
 {
-	// slected filter
-	CBrowserFilter *pFilter = 0;
-	for(int i = 0; i < m_lFilters.size(); ++i)
-	{
-		if(m_lFilters[i].Extended())
-		{
-			pFilter = &m_lFilters[i];
-			m_SelectedFilter = i;
-			break;
-		}
-	}
+	CBrowserFilter *pFilter = GetSelectedBrowserFilter();
 	CServerFilterInfo FilterInfo;
 	if(pFilter)
 		pFilter->GetFilter(&FilterInfo);
@@ -1986,7 +2054,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		float RowWidth = (RowCount == 0) ? View.w : (View.w * 0.25f);
 		float LineHeight = 20.0f;
 
-		static CScrollRegion s_ScrollRegion;
+		static CScrollRegion s_ScrollRegion(this);
 		vec2 ScrollOffset(0, 0);
 		CScrollRegionParams ScrollParams;
 		ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
@@ -1994,7 +2062,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		ScrollParams.m_ScrollbarWidth = 5;
 		ScrollParams.m_ScrollbarMargin = 1;
 		ScrollParams.m_ScrollSpeed = 15;
-		BeginScrollRegion(&s_ScrollRegion, &View, &ScrollOffset, &ScrollParams);
+		s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 		View.y += ScrollOffset.y;
 		if(RowCount != 0)
 		{
@@ -2026,7 +2094,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			}
 	
 			Row.HSplitTop(LineHeight, &Name, &Row);
-			ScrollRegionAddRect(&s_ScrollRegion, Name);
+			s_ScrollRegion.AddRect(Name);
 			RenderTools()->DrawUIRect(&Name, vec4(1.0f, 1.0f, 1.0f, (Count % 2 + 1)*0.05f), CUI::CORNER_ALL, 4.0f);
 
 			// friend
@@ -2111,7 +2179,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 
 			++Count;
 		}
-		EndScrollRegion(&s_ScrollRegion);
+		s_ScrollRegion.End();
 	}
 }
 
@@ -2289,6 +2357,24 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 
 	// render overlay if there is any
 	RenderServerbrowserOverlay();
+}
+
+void CMenus::UpdateServerBrowserAddress()
+{
+	const CServerInfo *pItem = GetSelectedServerInfo();
+	if(pItem == NULL)
+	{
+		g_Config.m_UiServerAddress[0] = '\0';
+	}
+	else
+	{
+		str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
+	}
+}
+
+void CMenus::ServerBrowserFilterOnUpdate()
+{
+	m_LastBrowserType = -1; // enforces update on server address
 }
 
 void CMenus::ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)

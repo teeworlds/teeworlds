@@ -44,9 +44,14 @@ CMenus::CMenus()
 	m_NextPopup = POPUP_NONE;
 	m_ActivePage = PAGE_INTERNET;
 	m_GamePage = PAGE_GAME;
+
 	m_SidebarTab = 0;
 	m_SidebarActive = true;
 	m_ShowServerDetails = true;
+	m_LastBrowserType = -1;
+	m_LastServerAddress[0] = '\0';
+	for(int Type = 0; Type < IServerBrowser::NUM_TYPES; Type++)
+		m_aSelectedFilters[Type] = 0;
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
@@ -84,10 +89,6 @@ CMenus::CMenus()
 	m_aCallvoteReason[0] = 0;
 	m_aFilterString[0] = 0;
 
-	m_SelectedFilter = 0;
-
-	m_SelectedServer.m_Filter = -1;
-	m_SelectedServer.m_Index = -1;
 	m_ActiveListBox = ACTLB_NONE;
 }
 
@@ -943,213 +944,6 @@ void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance,
 	vec4 SliderColor = Active ? vec4(0.95f, 0.95f, 0.95f, 1.0f) : vec4(0.8f, 0.8f, 0.8f, 1.0f);
 	RenderTools()->DrawUIRect(&Slider, SliderColor, CUI::CORNER_ALL, Slider.h/2.0f);
 }
-
-
-CMenus::CListBox::CListBox(CMenus *pMenus)
-{
-	m_pMenus = pMenus;
-	m_ScrollOffset = vec2(0,0);
-	m_ListBoxUpdateScroll = false;
-	m_aFilterString[0] = '\0';
-	m_OffsetFilter = 0.0f;
-}
-
-void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
-							   float HeaderHeight, float Spacing)
-{
-	CUIRect Header;
-	CUIRect View = *pRect;
-
-	// background
-	const float Height = m_pMenus->GetListHeaderHeight();
-	View.HSplitTop(Height+Spacing, &Header, 0);
-	m_pMenus->RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
-
-	// draw header
-	View.HSplitTop(Height, &Header, &View);
-	Header.y += 2.0f;
-	m_pMenus->UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-	View.HSplitTop(Spacing, &Header, &View);
-
-	// setup the variables
-	m_ListBoxView = View;
-}
-
-bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
-{
-	CUIRect Filter;
-	CUIRect View = m_ListBoxView;
-
-	// background
-	View.HSplitTop(FilterHeight+Spacing, &Filter, 0);
-	m_pMenus->RenderTools()->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 5.0f);
-
-	// draw filter
-	View.HSplitTop(FilterHeight, &Filter, &View);
-	Filter.Margin(Spacing, &Filter);
-
-	float FontSize = Filter.h*ms_FontmodHeight*0.8f;
-
-	CUIRect Label, EditBox;
-	Filter.VSplitLeft(Filter.w/5.0f, &Label, &EditBox);
-	Label.y += Spacing;
-	m_pMenus->UI()->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_CENTER);
-	bool Changed = m_pMenus->DoEditBox(m_aFilterString, &EditBox, m_aFilterString, sizeof(m_aFilterString), FontSize, &m_OffsetFilter);
-
-	View.HSplitTop(Spacing, &Filter, &View);
-
-	m_ListBoxView = View;
-
-	return Changed;
-}
-
-void CMenus::CListBox::DoStart(float RowHeight,
-							  const char *pBottomText, int NumItems, int ItemsPerRow, int SelectedIndex,
-							  const CUIRect *pRect, bool Background, bool *pActive)
-{
-	CUIRect View;
-	if(pRect)
-		View = *pRect;
-	else
-		View = m_ListBoxView;
-	CUIRect Footer;
-
-	// background
-	if(Background)
-		m_pMenus->RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
-
-	// draw footers
-	if(pBottomText)
-	{
-		const float Height = m_pMenus->GetListHeaderHeight();
-		View.HSplitBottom(Height, &View, &Footer);
-		Footer.VSplitLeft(10.0f, 0, &Footer);
-		Footer.y += 2.0f;
-		m_pMenus->UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-	}
-
-	// setup the variables
-	m_ListBoxView = View;
-	m_ListBoxSelectedIndex = SelectedIndex;
-	m_ListBoxNewSelected = SelectedIndex;
-	m_ListBoxNewSelOffset = 0;
-	m_ListBoxItemIndex = 0;
-	m_ListBoxRowHeight = RowHeight;
-	m_ListBoxNumItems = NumItems;
-	m_ListBoxItemsPerRow = ItemsPerRow;
-	m_ListBoxDoneEvents = 0;
-	m_ListBoxItemActivated = false;
-
-	// handle input
-	if(!pActive || *pActive)
-	{
-		if(m_pMenus->m_DownArrowPressed)
-			m_ListBoxNewSelOffset += 1;
-		if(m_pMenus->m_UpArrowPressed)
-			m_ListBoxNewSelOffset -= 1;
-	}
-
-	// setup the scrollbar
-	m_ScrollOffset = vec2(0, 0);
-	m_pMenus->BeginScrollRegion(&m_ScrollRegion, &m_ListBoxView, &m_ScrollOffset);
-	m_ListBoxView.y += m_ScrollOffset.y;
-}
-
-CMenus::CListboxItem CMenus::CListBox::DoNextRow()
-{
-	static CUIRect s_RowView;
-	CListboxItem Item = {0};
-
-	if(m_ListBoxItemIndex%m_ListBoxItemsPerRow == 0)
-		m_ListBoxView.HSplitTop(m_ListBoxRowHeight /*-2.0f*/, &s_RowView, &m_ListBoxView);
-	m_pMenus->ScrollRegionAddRect(&m_ScrollRegion, s_RowView);
-	if(m_ListBoxUpdateScroll && m_ListBoxSelectedIndex == m_ListBoxItemIndex)
-	{
-		m_pMenus->ScrollRegionScrollHere(&m_ScrollRegion, CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
-		m_ListBoxUpdateScroll = false;
-	}
-
-	s_RowView.VSplitLeft(s_RowView.w/(m_ListBoxItemsPerRow-m_ListBoxItemIndex%m_ListBoxItemsPerRow), &Item.m_Rect, &s_RowView);
-
-	if(m_ListBoxSelectedIndex == m_ListBoxItemIndex)
-		Item.m_Selected = 1;
-
-	Item.m_Visible = !m_pMenus->ScrollRegionIsRectClipped(&m_ScrollRegion, Item.m_Rect);
-
-	m_ListBoxItemIndex++;
-	return Item;
-}
-
-CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected, bool *pActive)
-{
-	int ThisItemIndex = m_ListBoxItemIndex;
-	if(Selected)
-	{
-		if(m_ListBoxSelectedIndex == m_ListBoxNewSelected)
-			m_ListBoxNewSelected = ThisItemIndex;
-		m_ListBoxSelectedIndex = ThisItemIndex;
-	}
-
-	CListboxItem Item = DoNextRow();
-	static bool s_ItemClicked = false;
-
-	if(Item.m_Visible && m_pMenus->UI()->DoButtonLogic(pId, "", m_ListBoxSelectedIndex == m_ListBoxItemIndex, &Item.m_Rect))
-	{
-		s_ItemClicked = true;
-		m_ListBoxNewSelected = ThisItemIndex;
-		if(pActive)
-			*pActive = true;
-	}
-	else
-		s_ItemClicked = false;
-
-	const bool ProcessInput = !pActive || *pActive;
-
-	// process input, regard selected index
-	if(m_ListBoxSelectedIndex == ThisItemIndex)
-	{
-		if(ProcessInput && !m_ListBoxDoneEvents)
-		{
-			m_ListBoxDoneEvents = 1;
-
-			if(m_pMenus->m_EnterPressed || (s_ItemClicked && m_pMenus->Input()->MouseDoubleClick()))
-			{
-				m_ListBoxItemActivated = true;
-				m_pMenus->UI()->SetActiveItem(0);
-			}
-		}
-
-		CUIRect r = Item.m_Rect;
-		m_pMenus->RenderTools()->DrawUIRect(&r, vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f), CUI::CORNER_ALL, 5.0f);
-	}
-	/*else*/ if(m_pMenus->UI()->HotItem() == pId)
-	{
-		CUIRect r = Item.m_Rect;
-		m_pMenus->RenderTools()->DrawUIRect(&r, vec4(1, 1, 1, 0.33f), CUI::CORNER_ALL, 5.0f);
-	}
-
-	return Item;
-}
-
-int CMenus::CListBox::DoEnd(bool *pItemActivated)
-{
-	m_pMenus->EndScrollRegion(&m_ScrollRegion);
-	if(m_ListBoxNewSelOffset != 0 && m_ListBoxSelectedIndex != -1 && m_ListBoxSelectedIndex == m_ListBoxNewSelected)
-	{
-		m_ListBoxNewSelected = clamp(m_ListBoxNewSelected + m_ListBoxNewSelOffset, 0, m_ListBoxNumItems - 1);
-		m_ListBoxUpdateScroll = true;
-	}
-	if(pItemActivated)
-		*pItemActivated = m_ListBoxItemActivated;
-	return m_ListBoxNewSelected;
-}
-
-bool CMenus::CListBox::FilterMatches(const char *pNeedle)
-{
-	return !m_aFilterString[0] || str_find_nocase(pNeedle, m_aFilterString);
-}
-
 
 int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier)
 {
@@ -2199,13 +1993,13 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_COUNTRY)
 		{
 			// selected filter
-			CBrowserFilter *pFilter = &m_lFilters[m_SelectedFilter];
+			CBrowserFilter *pFilter = GetSelectedBrowserFilter();
 			CServerFilterInfo FilterInfo;
 			pFilter->GetFilter(&FilterInfo);
 
-			static int ActSelection = -2;
-			if(ActSelection == -2)
-				ActSelection = FilterInfo.m_Country;
+			static int s_ActSelection = -2;
+			if(s_ActSelection == -2)
+				s_ActSelection = FilterInfo.m_Country;
 			static CListBox s_ListBox(this);
 			int OldSelected = -1;
 			s_ListBox.DoStart(40.0f, 0, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, &Box, false);
@@ -2215,7 +2009,7 @@ int CMenus::Render()
 				const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
 				if(pEntry->m_Blocked)
 					continue;
-				if(pEntry->m_CountryCode == ActSelection)
+				if(pEntry->m_CountryCode == s_ActSelection)
 					OldSelected = i;
 
 				CListboxItem Item = s_ListBox.DoNextItem(&pEntry->m_CountryCode, OldSelected == i);
@@ -2248,21 +2042,21 @@ int CMenus::Render()
 
 			const int NewSelected = s_ListBox.DoEnd(0);
 			if(OldSelected != NewSelected)
-				ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
+				s_ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
 			Part.VMargin(120.0f, &Part);
 
 			static CButtonContainer s_ButtonCountry;
 			if(DoButton_Menu(&s_ButtonCountry, pButtonText, 0, &BottomBar) || m_EnterPressed)
 			{
-				FilterInfo.m_Country = ActSelection;
+				FilterInfo.m_Country = s_ActSelection;
 				pFilter->SetFilter(&FilterInfo);
 				m_Popup = POPUP_NONE;
 			}
 
 			if(m_EscapePressed)
 			{
-				ActSelection = FilterInfo.m_Country;
+				s_ActSelection = FilterInfo.m_Country;
 				m_Popup = POPUP_NONE;
 			}
 		}
@@ -2903,178 +2697,4 @@ void CMenus::SetMenuPage(int NewPage)
 		if(CameraPos != -1 && m_pClient && m_pClient->m_pCamera)
 			m_pClient->m_pCamera->ChangePosition(CameraPos);
 	}
-}
-
-
-void CMenus::BeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
-{
-	if(pParams)
-		pSr->m_Params = *pParams;
-
-	pSr->m_WasClipped = UI()->IsClipped();
-	pSr->m_OldClipRect = *UI()->ClipArea();
-
-	const bool ContentOverflows = pSr->m_ContentH > pClipRect->h;
-	const bool ForceShowScrollbar = pSr->m_Params.m_Flags&CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
-
-	CUIRect ScrollBarBg;
-	CUIRect* pModifyRect = (ContentOverflows || ForceShowScrollbar) ? pClipRect : 0;
-	pClipRect->VSplitRight(pSr->m_Params.m_ScrollbarWidth, pModifyRect, &ScrollBarBg);
-	ScrollBarBg.Margin(pSr->m_Params.m_ScrollbarMargin, &pSr->m_RailRect);
-
-	// only show scrollbar if required
-	if(ContentOverflows || ForceShowScrollbar)
-	{
-		if(pSr->m_Params.m_ScrollbarBgColor.a > 0)
-			RenderTools()->DrawRoundRect(&ScrollBarBg, pSr->m_Params.m_ScrollbarBgColor, 4.0f);
-		if(pSr->m_Params.m_RailBgColor.a > 0)
-			RenderTools()->DrawRoundRect(&pSr->m_RailRect, pSr->m_Params.m_RailBgColor, pSr->m_RailRect.w/2.0f);
-	}
-	if(!ContentOverflows)
-		pSr->m_ContentScrollOff.y = 0;
-
-	if(pSr->m_Params.m_ClipBgColor.a > 0)
-		RenderTools()->DrawRoundRect(pClipRect, pSr->m_Params.m_ClipBgColor, 4.0f);
-
-	CUIRect ClipRect = *pClipRect;
-	if(pSr->m_WasClipped)
-	{
-		CUIRect Intersection;
-		Intersection.x = max(ClipRect.x, pSr->m_OldClipRect.x);
-		Intersection.y = max(ClipRect.y, pSr->m_OldClipRect.y);
-		Intersection.w = min(ClipRect.x+ClipRect.w, pSr->m_OldClipRect.x+pSr->m_OldClipRect.w) - ClipRect.x;
-		Intersection.h = min(ClipRect.y+ClipRect.h, pSr->m_OldClipRect.y+pSr->m_OldClipRect.h) - ClipRect.y;
-		ClipRect = Intersection;
-	}
-
-	UI()->ClipEnable(&ClipRect);
-
-	pSr->m_ClipRect = *pClipRect;
-	pSr->m_ContentH = 0;
-	*pOutOffset = pSr->m_ContentScrollOff;
-}
-
-void CMenus::EndScrollRegion(CScrollRegion* pSr)
-{
-	UI()->ClipDisable();
-	if(pSr->m_WasClipped)
-		UI()->ClipEnable(&pSr->m_OldClipRect);
-
-	// only show scrollbar if content overflows
-	if(pSr->m_ContentH <= pSr->m_ClipRect.h)
-		return;
-
-	// scroll wheel
-	CUIRect RegionRect = pSr->m_ClipRect;
-	RegionRect.w += pSr->m_Params.m_ScrollbarWidth;
-	if(UI()->MouseInside(&RegionRect))
-	{
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-			pSr->m_ScrollY -= pSr->m_Params.m_ScrollSpeed;
-		else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-			pSr->m_ScrollY += pSr->m_Params.m_ScrollSpeed;
-	}
-
-	const float SliderHeight = max(pSr->m_Params.m_SliderMinHeight,
-		pSr->m_ClipRect.h/pSr->m_ContentH * pSr->m_RailRect.h);
-
-	CUIRect Slider = pSr->m_RailRect;
-	Slider.h = SliderHeight;
-	const float MaxScroll = pSr->m_RailRect.h - SliderHeight;
-
-	if(pSr->m_RequestScrollY >= 0)
-	{
-		pSr->m_ScrollY = pSr->m_RequestScrollY/(pSr->m_ContentH - pSr->m_ClipRect.h) * MaxScroll;
-		pSr->m_RequestScrollY = -1;
-	}
-
-	pSr->m_ScrollY = clamp(pSr->m_ScrollY, 0.0f, MaxScroll);
-	Slider.y += pSr->m_ScrollY;
-
-	bool Hovered = false;
-	bool Grabbed = false;
-	const void* pID = &pSr->m_ScrollY;
-	int Inside = UI()->MouseInside(&Slider);
-
-	if(Inside)
-	{
-		UI()->SetHotItem(pID);
-
-		if(!UI()->CheckActiveItem(pID) && UI()->MouseButtonClicked(0))
-		{
-			UI()->SetActiveItem(pID);
-			pSr->m_MouseGrabStart.y = UI()->MouseY();
-		}
-
-		Hovered = true;
-	}
-
-	if(UI()->CheckActiveItem(pID) && !UI()->MouseButton(0))
-		UI()->SetActiveItem(0);
-
-	// move slider
-	if(UI()->CheckActiveItem(pID) && UI()->MouseButton(0))
-	{
-		float my = UI()->MouseY();
-		pSr->m_ScrollY += my - pSr->m_MouseGrabStart.y;
-		pSr->m_MouseGrabStart.y = my;
-
-		Grabbed = true;
-	}
-
-	pSr->m_ScrollY = clamp(pSr->m_ScrollY, 0.0f, MaxScroll);
-	pSr->m_ContentScrollOff.y = -pSr->m_ScrollY/MaxScroll * (pSr->m_ContentH - pSr->m_ClipRect.h);
-
-	vec4 SliderColor = pSr->m_Params.m_SliderColor;
-	if(Grabbed)
-		SliderColor = pSr->m_Params.m_SliderColorGrabbed;
-	else if(Hovered)
-		SliderColor = pSr->m_Params.m_SliderColorHover;
-
-	RenderTools()->DrawRoundRect(&Slider, SliderColor, Slider.w/2.0f);
-}
-
-void CMenus::ScrollRegionAddRect(CScrollRegion* pSr, CUIRect Rect)
-{
-	vec2 ContentPos = vec2(pSr->m_ClipRect.x, pSr->m_ClipRect.y);
-	ContentPos.x += pSr->m_ContentScrollOff.x;
-	ContentPos.y += pSr->m_ContentScrollOff.y;
-	pSr->m_LastAddedRect = Rect;
-	pSr->m_ContentH = max(Rect.y + Rect.h - ContentPos.y, pSr->m_ContentH);
-}
-
-void CMenus::ScrollRegionScrollHere(CScrollRegion* pSr, int Option)
-{
-	const float MinHeight = min(pSr->m_ClipRect.h, pSr->m_LastAddedRect.h);
-	const float TopScroll = pSr->m_LastAddedRect.y -
-		(pSr->m_ClipRect.y + pSr->m_ContentScrollOff.y);
-
-	switch(Option)
-	{
-		case CScrollRegion::SCROLLHERE_TOP:
-			pSr->m_RequestScrollY = TopScroll;
-			break;
-
-		case CScrollRegion::SCROLLHERE_BOTTOM:
-			pSr->m_RequestScrollY = TopScroll - (pSr->m_ClipRect.h - MinHeight);
-			break;
-
-		case CScrollRegion::SCROLLHERE_KEEP_IN_VIEW:
-		default: {
-			const float dy = pSr->m_LastAddedRect.y - pSr->m_ClipRect.y;
-
-			if(dy < 0)
-				pSr->m_RequestScrollY = TopScroll;
-			else if(dy > (pSr->m_ClipRect.h-MinHeight))
-				pSr->m_RequestScrollY = TopScroll - (pSr->m_ClipRect.h - MinHeight);
-		} break;
-	}
-}
-
-bool CMenus::ScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Rect)
-{
-	return (pSr->m_ClipRect.x > (Rect.x + Rect.w)
-		|| (pSr->m_ClipRect.x + pSr->m_ClipRect.w) < Rect.x
-		|| pSr->m_ClipRect.y > (Rect.y + Rect.h)
-		|| (pSr->m_ClipRect.y + pSr->m_ClipRect.h) < Rect.y);
 }

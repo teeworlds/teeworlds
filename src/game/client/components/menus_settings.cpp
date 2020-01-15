@@ -1539,11 +1539,11 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	const float HeaderHeight = 20.0f;
 
-	static CScrollRegion s_ScrollRegion;
+	static CScrollRegion s_ScrollRegion(this);
 	vec2 ScrollOffset(0, 0);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
-	BeginScrollRegion(&s_ScrollRegion, &MainView, &ScrollOffset, &ScrollParams);
+	s_ScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
 	MainView.y += ScrollOffset.y;
 
 	CUIRect LastExpandRect;
@@ -1552,51 +1552,51 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	float Split = DoIndependentDropdownMenu(&s_MouseDropdown, &MainView, Localize("Mouse"), HeaderHeight, RenderSettingsControlsMouse, &s_MouseActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
-	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	s_ScrollRegion.AddRect(LastExpandRect);
 	static int s_JoystickDropdown = 0;
 	static bool s_JoystickActive = m_pClient->Input()->NumJoysticks() > 0; // hide by default if no joystick found
 	Split = DoIndependentDropdownMenu(&s_JoystickDropdown, &MainView, Localize("Joystick"), HeaderHeight, RenderSettingsControlsJoystick, &s_JoystickActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
-	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	s_ScrollRegion.AddRect(LastExpandRect);
 	static int s_MovementDropdown = 0;
 	static bool s_MovementActive = true;
 	Split = DoIndependentDropdownMenu(&s_MovementDropdown, &MainView, Localize("Movement"), HeaderHeight, RenderSettingsControlsMovement, &s_MovementActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
-	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	s_ScrollRegion.AddRect(LastExpandRect);
 	static int s_WeaponDropdown = 0;
 	static bool s_WeaponActive = true;
 	Split = DoIndependentDropdownMenu(&s_WeaponDropdown, &MainView, Localize("Weapon"), HeaderHeight, RenderSettingsControlsWeapon, &s_WeaponActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
-	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	s_ScrollRegion.AddRect(LastExpandRect);
 	static int s_VotingDropdown = 0;
 	static bool s_VotingActive = true;
 	Split = DoIndependentDropdownMenu(&s_VotingDropdown, &MainView, Localize("Voting"), HeaderHeight, RenderSettingsControlsVoting, &s_VotingActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
-	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	s_ScrollRegion.AddRect(LastExpandRect);
 	static int s_ChatDropdown = 0;
 	static bool s_ChatActive = true;
 	Split = DoIndependentDropdownMenu(&s_ChatDropdown, &MainView, Localize("Chat"), HeaderHeight, RenderSettingsControlsChat, &s_ChatActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
-	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	s_ScrollRegion.AddRect(LastExpandRect);
 	static int s_ScoreboardDropdown = 0;
 	static bool s_ScoreboardActive = true;
 	Split = DoIndependentDropdownMenu(&s_ScoreboardDropdown, &MainView, Localize("Scoreboard"), HeaderHeight, RenderSettingsControlsScoreboard, &s_ScoreboardActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
-	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	s_ScrollRegion.AddRect(LastExpandRect);
 	static int s_MiscDropdown = 0;
 	static bool s_MiscActive = true;
 	Split = DoIndependentDropdownMenu(&s_MiscDropdown, &MainView, Localize("Misc"), HeaderHeight, RenderSettingsControlsMisc, &s_MiscActive);
 
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
-	ScrollRegionAddRect(&s_ScrollRegion, LastExpandRect);
+	s_ScrollRegion.AddRect(LastExpandRect);
 
-	EndScrollRegion(&s_ScrollRegion);
+	s_ScrollRegion.End();
 
 	// reset button
 	float Spacing = 3.0f;
