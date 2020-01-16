@@ -183,10 +183,10 @@ private:
 		Content.HSplitTop(SomeValue, &Rect, &Content);
 		s_ScrollRegion.AddRect(Rect);
 
-		-- [Optionnal] Knowing if a rect is clipped --
+		-- [Optional] Knowing if a rect is clipped --
 		s_ScrollRegion.IsRectClipped(Rect);
 
-		-- [Optionnal] Scroll to a rect (to the last added rect)--
+		-- [Optional] Scroll to a rect (to the last added rect)--
 		...
 		s_ScrollRegion.AddRect(Rect);
 		s_ScrollRegion.ScrollHere(Option);
@@ -194,6 +194,7 @@ private:
 		-- End --
 		s_ScrollRegion.End();
 	*/
+	// Instances of CScrollRegion must be static, as member addresses are used as UI item IDs
 	class CScrollRegion
 	{
 	private:
@@ -234,6 +235,7 @@ private:
 		CUIRect m_Rect;
 	};
 
+	// Instances of CListBox must be static, as member addresses are used as UI item IDs
 	class CListBox
 	{
 	private:
