@@ -789,8 +789,6 @@ void IGameController::Tick()
 				// check if player ready mode was disabled and it waits that all players are ready -> end warmup
 				if(!Config()->m_SvPlayerReadyMode && m_GameStateTimer == TIMER_INFINITE)
 					SetGameState(IGS_WARMUP_USER, 0);
-				else if(m_GameStateTimer == 3 * Server()->TickSpeed())
-					StartMatch();
 				break;
 			case IGS_START_COUNTDOWN:
 			case IGS_GAME_PAUSED:
