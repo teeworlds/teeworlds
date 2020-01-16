@@ -617,16 +617,14 @@ private:
 	{
 		const int Tab = ServerBrowser()->GetType();
 		if(m_aSelectedFilters[Tab] == -1)
-			return NULL;
+			return 0;
 		return &m_lFilters[m_aSelectedFilters[Tab]];
 	}
 
 	const CServerInfo* GetSelectedServerInfo()
 	{
 		CBrowserFilter* pSelectedFilter = GetSelectedBrowserFilter();
-		if(pSelectedFilter == NULL)
-			return NULL;
-		return pSelectedFilter->SortedGetSelected();
+		return pSelectedFilter ? pSelectedFilter->SortedGetSelected() : 0;
 	}
 
 	void UpdateServerBrowserAddress();
