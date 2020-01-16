@@ -510,8 +510,8 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		}
 		break;
 	case IGS_WARMUP_USER:
-		// user based warmup is only possible when the game or a user based warmup is running
-		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_WARMUP_USER)
+		// user based warmup is only possible when the game or any warmup is running
+		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_WARMUP_GAME || m_GameState == IGS_WARMUP_USER)
 		{
 			if(Timer != 0)
 			{
@@ -582,8 +582,8 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		}
 		break;
 	case IGS_GAME_PAUSED:
-		// only possible when game is running or paused
-		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED)
+		// only possible when game is running or paused, or when game based warmup is running
+		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_WARMUP_GAME)
 		{
 			if(Timer != 0)
 			{
@@ -596,7 +596,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 				}
 				else
 				{
-					// pauses for a specific time intervall
+					// pauses for a specific time interval
 					m_GameStateTimer = Timer*Server()->TickSpeed();
 				}
 
