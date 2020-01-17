@@ -791,28 +791,27 @@ void CMenus::DoInfoBox(const CUIRect *pRect, const char *pLabel, const char *pVa
 
 float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 {
+	// layout
 	CUIRect Handle;
-	static float OffsetY;
 	pRect->HSplitTop(min(pRect->h/8.0f, 33.0f), &Handle, 0);
-
 	Handle.y += (pRect->h-Handle.h)*Current;
+	Handle.VMargin(5.0f, &Handle);
+
+	CUIRect Rail;
+	pRect->VMargin(5.0f, &Rail);
 
 	// logic
+	static float OffsetY;
+	const bool InsideHandle = UI()->MouseInside(&Handle);
+	const bool InsideRail = UI()->MouseInside(&Rail);
 	float ReturnValue = Current;
-	bool Inside = UI()->MouseInside(&Handle);
-	bool Grabbed = false;
+	bool Grabbed = false; // whether to apply the offset
 
 	if(UI()->CheckActiveItem(pID))
 	{
 		if(!UI()->MouseButton(0))
 			UI()->SetActiveItem(0);
 
-		float Min = pRect->y;
-		float Max = pRect->h-Handle.h;
-		float Cur = UI()->MouseY()-OffsetY;
-		ReturnValue = (Cur-Min)/Max;
-		if(ReturnValue < 0.0f) ReturnValue = 0.0f;
-		if(ReturnValue > 1.0f) ReturnValue = 1.0f;
 		Grabbed = true;
 	}
 	else if(UI()->HotItem() == pID)
@@ -823,53 +822,61 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 			OffsetY = UI()->MouseY()-Handle.y;
 		}
 	}
+	else if(UI()->MouseButton(0) && !InsideHandle && InsideRail)
+	{
+		bool Up = UI()->MouseY() < Handle.y + Handle.h/2;
+		OffsetY = UI()->MouseY() - Handle.y + 8 * (Up ? 1 : -1);
+		Grabbed = true;
+	}
 
-	if(Inside)
+	if(Grabbed)
+	{
+		const float Min = pRect->y;
+		const float Max = pRect->h-Handle.h;
+		const float Cur = UI()->MouseY()-OffsetY;
+		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
+	}
+
+	if(InsideHandle)
 		UI()->SetHotItem(pID);
 
 	// render
-	CUIRect Rail;
-	pRect->VMargin(5.0f, &Rail);
 	RenderTools()->DrawUIRect(&Rail, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, Rail.w/2.0f);
 
-	CUIRect Slider = Handle;
-	Slider.VMargin(5.0f, &Slider);
 	vec4 Color;
 	if(Grabbed)
 		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
-	else if(Inside)
+	else if(InsideHandle)
 		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	else
 		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
-	RenderTools()->DrawUIRect(&Slider, Color, CUI::CORNER_ALL, Slider.w/2.0f);
+	RenderTools()->DrawUIRect(&Handle, Color, CUI::CORNER_ALL, Handle.w/2.0f);
 
 	return ReturnValue;
 }
 
 float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
+	// layout
 	CUIRect Handle;
-	static float OffsetX;
 	pRect->VSplitLeft(min(pRect->w/8.0f, 33.0f), &Handle, 0);
-
 	Handle.x += (pRect->w-Handle.w)*Current;
+	Handle.HMargin(5.0f, &Handle);
+
+	CUIRect Rail;
+	pRect->HMargin(5.0f, &Rail);
 
 	// logic
+	static float OffsetX;
+	const bool InsideHandle = UI()->MouseInside(&Handle);
+	const bool InsideRail = UI()->MouseInside(&Rail);
 	float ReturnValue = Current;
-	bool Inside = UI()->MouseInside(&Handle);
-	bool Grabbed = false;
+	bool Grabbed = false; // whether to apply the offset
 
 	if(UI()->CheckActiveItem(pID))
 	{
 		if(!UI()->MouseButton(0))
 			UI()->SetActiveItem(0);
-
-		float Min = pRect->x;
-		float Max = pRect->w-Handle.w;
-		float Cur = UI()->MouseX()-OffsetX;
-		ReturnValue = (Cur-Min)/Max;
-		if(ReturnValue < 0.0f) ReturnValue = 0.0f;
-		if(ReturnValue > 1.0f) ReturnValue = 1.0f;
 		Grabbed = true;
 	}
 	else if(UI()->HotItem() == pID)
@@ -880,25 +887,35 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 			OffsetX = UI()->MouseX()-Handle.x;
 		}
 	}
+	else if(UI()->MouseButton(0) && !InsideHandle && InsideRail)
+	{
+		bool Left = UI()->MouseX() < Handle.x + Handle.w/2;
+		OffsetX = UI()->MouseX() - Handle.x + 8 * (Left ? 1 : -1);
+		Grabbed = true;
+	}
 
-	if(Inside)
+	if(Grabbed)
+	{
+		const float Min = pRect->x;
+		const float Max = pRect->w-Handle.w;
+		const float Cur = UI()->MouseX()-OffsetX;
+		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
+	}
+
+	if(InsideHandle)
 		UI()->SetHotItem(pID);
 
 	// render
-	CUIRect Rail;
-	pRect->HMargin(5.0f, &Rail);
 	RenderTools()->DrawUIRect(&Rail, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, Rail.h/2.0f);
 
-	CUIRect Slider = Handle;
-	Slider.HMargin(5.0f, &Slider);
 	vec4 Color;
 	if(Grabbed)
 		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
-	else if(Inside)
+	else if(InsideHandle)
 		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	else
 		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
-	RenderTools()->DrawUIRect(&Slider, Color, CUI::CORNER_ALL, Slider.h/2.0f);
+	RenderTools()->DrawUIRect(&Handle, Color, CUI::CORNER_ALL, Handle.h/2.0f);
 
 	return ReturnValue;
 }
