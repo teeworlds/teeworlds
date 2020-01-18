@@ -605,14 +605,20 @@ private:
 		COL_BROWSER_PLAYERS,
 		COL_BROWSER_PING,
 		NUM_BROWSER_COLS,
-	};
 
+		ADDR_SELECTION_CHANGE = 1,
+		ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND = 2,
+		ADDR_SELECTION_RESET_ADDRESS_IF_NOT_FOUND = 4,
+		ADDR_SELECTION_REVEAL = 8,
+		ADDR_SELECTION_UPDATE_ADDRESS = 16,
+	};
 	int m_SidebarTab;
 	bool m_SidebarActive;
 	bool m_ShowServerDetails;
-	int m_LastBrowserType;
-	int m_aSelectedFilters[IServerBrowser::NUM_TYPES];
-	char m_LastServerAddress[sizeof(g_Config.m_UiServerAddress)];
+	int m_LastBrowserType; // -1 if not initialized
+	int m_aSelectedFilters[IServerBrowser::NUM_TYPES]; // -1 if none selected, -2 if not initialized
+	char m_aLastServerAddress[sizeof(g_Config.m_UiServerAddress)]; // a[0] == 0 if not initialized
+	int m_AddressSelection;
 	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
 
 	CBrowserFilter* GetSelectedBrowserFilter()

@@ -49,9 +49,10 @@ CMenus::CMenus()
 	m_SidebarActive = true;
 	m_ShowServerDetails = true;
 	m_LastBrowserType = -1;
-	m_LastServerAddress[0] = '\0';
+	m_aLastServerAddress[0] = '\0';
+	m_AddressSelection = 0;
 	for(int Type = 0; Type < IServerBrowser::NUM_TYPES; Type++)
-		m_aSelectedFilters[Type] = -1;
+		m_aSelectedFilters[Type] = -2;
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;

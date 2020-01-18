@@ -1057,27 +1057,30 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	}
 
 	const int BrowserType = ServerBrowser()->GetType();
-	int ToBeSelectedFilter = -1;
+	int ToBeSelectedFilter = -2; // -2 to not restore, -1 to restore all filters closed
 	int ToBeSelectedServer = -1;
-	bool AddressChanged = str_comp(m_LastServerAddress, g_Config.m_UiServerAddress) != 0; // only update selection based on address if it changed
-	bool ClearAddressIfNotFound = false;
-	bool ScrollToSelection = false;
+	// update selection based on address if it changed
+	if(!(m_AddressSelection&ADDR_SELECTION_CHANGE) && m_aLastServerAddress[0] && str_comp(m_aLastServerAddress, g_Config.m_UiServerAddress) != 0)
+		m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_REVEAL;
+	else if(ServerBrowser()->IsRefreshing())
+		m_AddressSelection |= ADDR_SELECTION_CHANGE;
 
-	if(BrowserType != m_LastBrowserType)
+	if(m_LastBrowserType == -1)
+		m_LastBrowserType = BrowserType;
+	else if(BrowserType != m_LastBrowserType)
 	{
 		// restore selected filter and server when changing browser page
 		m_LastBrowserType = BrowserType;
 		ToBeSelectedFilter = m_aSelectedFilters[BrowserType];
 		if(ToBeSelectedFilter != -1)
 		{
-			ScrollToSelection = true;
 			ToBeSelectedServer = m_lFilters[ToBeSelectedFilter].m_aSelectedServers[BrowserType];
 			if(ToBeSelectedServer == -1)
 			{
-				AddressChanged = true;
-				ClearAddressIfNotFound = true;
+				m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_ADDRESS_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
 			}
 		}
+		m_AddressSelection |= ADDR_SELECTION_UPDATE_ADDRESS;
 	}
 
 	// count all the servers and update selected filter based on UI state
@@ -1086,7 +1089,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	for(int i = 0; i < m_lFilters.size(); i++)
 	{
 		// restore selected filter from browser page
-		if(ToBeSelectedFilter != -1 && (ToBeSelectedFilter == i) != m_lFilters[i].Extended())
+		if(ToBeSelectedFilter != -2 && (ToBeSelectedFilter == i) != m_lFilters[i].Extended())
 		{
 			m_lFilters[i].Switch();
 		}
@@ -1101,16 +1104,23 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		}
 	}
 
-	if(SelectedFilter != m_aSelectedFilters[BrowserType])
+	if(m_aSelectedFilters[BrowserType] == -2)
+		m_aSelectedFilters[BrowserType] = SelectedFilter;
+	else if(SelectedFilter != m_aSelectedFilters[BrowserType])
 	{
 		// update stored state based on updated state of UI
 		m_aSelectedFilters[BrowserType] = SelectedFilter;
-		ScrollToSelection = true;
 		UpdateServerBrowserAddress();
+		m_AddressSelection |= ADDR_SELECTION_REVEAL;
 		if(SelectedFilter == -1)
 		{
-			AddressChanged = true;
-			ClearAddressIfNotFound = true;
+			// reset address when all filters are closed
+			m_AddressSelection |= ADDR_SELECTION_RESET_ADDRESS_IF_NOT_FOUND;
+		}
+		else if(m_lFilters[SelectedFilter].m_aSelectedServers[BrowserType] == -1)
+		{
+			// restore selection based on address only if no stored selection index for this filter
+			m_AddressSelection |= ADDR_SELECTION_CHANGE;
 		}
 	}
 
@@ -1166,10 +1176,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			{
 				m_lFilters[NewFilter].m_aSelectedServers[BrowserType] = ToBeSelectedServer;
 				m_ShowServerDetails = true;
-				ScrollToSelection = true;
+				m_AddressSelection |= ADDR_SELECTION_REVEAL;
 			}
 
-			UpdateServerBrowserAddress();
+			m_AddressSelection |= ADDR_SELECTION_UPDATE_ADDRESS;
 		}
 	}
 
@@ -1180,6 +1190,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			pImportantMessage = Localize("Refreshing master servers");
 		else if(SelectedFilter == -1)
 			pImportantMessage = Localize("No filter category is selected");
+		else if(ServerBrowser()->IsRefreshing() && !NumServers)
+			pImportantMessage = Localize("Fetching server info");
 		else if(!ServerBrowser()->NumServers())
 			pImportantMessage = Localize("No servers found");
 		else if(ServerBrowser()->NumServers() && !NumServers)
@@ -1217,7 +1229,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		// render header
 		RenderFilterHeader(Row, FilterIndex);
 
-		bool NoMatchingAddressFound = true; // reset selection if server address change and not found
 		if(pFilter->Extended())
 		{
 			for (int ServerIndex = 0; ServerIndex < pFilter->NumSortedServers(); ServerIndex++)
@@ -1226,7 +1237,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 				// select server if address changed and match found
 				bool IsSelected = m_aSelectedFilters[BrowserType] == FilterIndex && pFilter->m_aSelectedServers[BrowserType] == ServerIndex;
-				if(AddressChanged && !str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
+				if((m_AddressSelection&ADDR_SELECTION_CHANGE) && !str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
 				{
 					if(!IsSelected)
 					{
@@ -1234,9 +1245,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 						m_aSelectedFilters[BrowserType] = FilterIndex;
 						pFilter->m_aSelectedServers[BrowserType] = ServerIndex;
 						IsSelected = true;
-						ScrollToSelection = true;
 					}
-					NoMatchingAddressFound = false;
+					m_AddressSelection &= ~(ADDR_SELECTION_CHANGE|ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND|ADDR_SELECTION_RESET_ADDRESS_IF_NOT_FOUND);
 				}
 
 				float ItemHeight = GetListHeaderHeight();
@@ -1247,8 +1257,11 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				View.HSplitTop(ItemHeight, &Row, &View);
 
 				s_ScrollRegion.AddRect(Row);
-				if(IsSelected && ScrollToSelection) // new selection (hotkeys or address input)
+				if(IsSelected && (m_AddressSelection&ADDR_SELECTION_REVEAL)) // new selection (hotkeys or address input)
+				{
 					s_ScrollRegion.ScrollHere(CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
+					m_AddressSelection &= ~ADDR_SELECTION_REVEAL;
+				}
 
 				// make sure that only those in view can be selected
 				if(!s_ScrollRegion.IsRectClipped(Row))
@@ -1274,22 +1287,24 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					m_ShowServerDetails = !m_ShowServerDetails || ReturnValue == 2 || pFilter->m_aSelectedServers[BrowserType] != ServerIndex; // click twice on line => fold server details
 					m_aSelectedFilters[BrowserType] = FilterIndex;
 					pFilter->m_aSelectedServers[BrowserType] = ServerIndex;
-					NoMatchingAddressFound = false;
+					m_AddressSelection &= ~(ADDR_SELECTION_CHANGE|ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND|ADDR_SELECTION_RESET_ADDRESS_IF_NOT_FOUND);
 					if(g_Config.m_UiAutoswitchInfotab)
 						m_SidebarTab = 0;
-					UpdateServerBrowserAddress();
+					UpdateServerBrowserAddress(); // update now instead of using flag because of connect
 					if(Input()->MouseDoubleClick())
 						Client()->Connect(g_Config.m_UiServerAddress);
 				}
 			}
 
-			if(AddressChanged && NoMatchingAddressFound)
+			if(m_AddressSelection&ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND)
 			{
 				pFilter->m_aSelectedServers[BrowserType] = -1;
-				if(ClearAddressIfNotFound)
-				{
-					g_Config.m_UiServerAddress[0] = '\0';
-				}
+				m_AddressSelection &= ~ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND;
+			}
+			if(m_AddressSelection&ADDR_SELECTION_RESET_ADDRESS_IF_NOT_FOUND)
+			{
+				g_Config.m_UiServerAddress[0] = '\0';
+				m_AddressSelection &= ~ADDR_SELECTION_RESET_ADDRESS_IF_NOT_FOUND;
 			}
 		}
 
@@ -1298,7 +1313,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	}
 
-	str_copy(m_LastServerAddress, g_Config.m_UiServerAddress, sizeof(m_LastServerAddress));
+	if(m_AddressSelection&ADDR_SELECTION_UPDATE_ADDRESS)
+	{
+		UpdateServerBrowserAddress();
+		m_AddressSelection &= ~ADDR_SELECTION_UPDATE_ADDRESS;
+	}
+	str_copy(m_aLastServerAddress, g_Config.m_UiServerAddress, sizeof(m_aLastServerAddress));
 
 	s_ScrollRegion.End();
 
@@ -1341,7 +1361,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Host address:"), FontSize, CUI::ALIGN_LEFT);
 	static float s_AddressOffset = 0.0f;
-	DoEditBox(&g_Config.m_UiServerAddress, &EditBox, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), FontSize, &s_AddressOffset, false, CUI::CORNER_ALL);
+	if(DoEditBox(&g_Config.m_UiServerAddress, &EditBox, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), FontSize, &s_AddressOffset, false, CUI::CORNER_ALL))
+	{
+		m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
+	}
 
 	// render status
 	if(ServerBrowser()->IsRefreshing() && m_ActivePage != PAGE_LAN)
@@ -2374,7 +2397,7 @@ void CMenus::UpdateServerBrowserAddress()
 
 void CMenus::ServerBrowserFilterOnUpdate()
 {
-	m_LastBrowserType = -1; // enforces update on server address
+	m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND;
 }
 
 void CMenus::ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
@@ -2390,6 +2413,4 @@ void CMenus::ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserDat
 void CMenus::ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
-	/*if(pResult->NumArguments() && ((CMenus *)pUserData)->m_MenuPage == PAGE_FAVORITES && ((CMenus *)pUserData)->Client()->State() == IClient::STATE_OFFLINE)
-		((CMenus *)pUserData)->ServerBrowser()->Refresh(IServerBrowser::TYPE_FAVORITES);*/
 }
