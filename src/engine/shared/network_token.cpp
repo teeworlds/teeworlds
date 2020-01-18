@@ -150,8 +150,8 @@ CNetTokenCache::~CNetTokenCache()
 		CConnlessPacketInfo *pTemp = m_pConnlessPacketList->m_pNext;
 		delete m_pConnlessPacketList;
 		m_pConnlessPacketList = pTemp;
-		m_pConnlessPacketList = 0;
 	}
+	m_pConnlessPacketList = 0;
 }
 
 void CNetTokenCache::Init(NETSOCKET Socket, const CNetTokenManager *pTokenManager)
@@ -327,8 +327,7 @@ void CNetTokenCache::Update()
 	// drop expired packets
 	while(m_pConnlessPacketList && m_pConnlessPacketList->m_Expiry <= Now)
 	{
-		CConnlessPacketInfo *pNewList;
-		pNewList = m_pConnlessPacketList->m_pNext;
+		CConnlessPacketInfo *pNewList = m_pConnlessPacketList->m_pNext;
 		delete m_pConnlessPacketList;
 		m_pConnlessPacketList = pNewList;
 	}
