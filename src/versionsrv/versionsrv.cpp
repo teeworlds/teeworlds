@@ -80,6 +80,7 @@ int main(int argc, char **argv) // ignore_convention
 
 	dbg_logger_stdout();
 	net_init();
+	CNetBase::Init();
 
 	mem_zero(&BindAddr, sizeof(BindAddr));
 	BindAddr.type = NETTYPE_ALL;

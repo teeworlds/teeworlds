@@ -288,6 +288,7 @@ int main(int argc, const char **argv) // ignore_convention
 
 	dbg_logger_stdout();
 	net_init();
+	CNetBase::Init();
 
 	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
 
