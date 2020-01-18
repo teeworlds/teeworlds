@@ -108,7 +108,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 				str_append(aBuf, aImprovement, sizeof(aBuf));
 			}
 
-			m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+			m_pClient->m_pChat->AddLine(aBuf);
 		}
 
 		if(m_pClient->m_Snap.m_pGameDataRace && m_pClient->m_Snap.m_pGameDataRace->m_RaceFlags&RACEFLAG_FINISHMSG_AS_CHAT)
@@ -116,7 +116,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 			if(!pMsg->m_NewRecord) // don't print the time twice
 			{
 				str_format(aBuf, sizeof(aBuf), Localize("'%s' finished in: %s"), aLabel, aTime);
-				m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+				m_pClient->m_pChat->AddLine(aBuf);
 			}
 		}
 		else

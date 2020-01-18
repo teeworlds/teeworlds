@@ -16,6 +16,7 @@ class CChat : public CComponent
 	{
 		MAX_LINES = 250,
 		MAX_CHAT_PAGES = 10,
+		MAX_LINE_LENGTH = 512,
 	};
 
 	struct CLine
@@ -27,15 +28,8 @@ class CChat : public CComponent
 		int m_Mode;
 		int m_NameColor;
 		char m_aName[MAX_NAME_LENGTH];
-		char m_aText[512];
+		char m_aText[MAX_LINE_LENGTH];
 		bool m_Highlighted;
-	};
-
-	// client IDs for special messages
-	enum
-	{
-		CLIENT_MSG = -2,
-		SERVER_MSG = -1,
 	};
 
 	CLine m_aLines[MAX_LINES];
@@ -68,7 +62,7 @@ class CChat : public CComponent
 	float m_CurrentLineWidth;
 
 	int m_ChatBufferMode;
-	char m_ChatBuffer[512];
+	char m_ChatBuffer[MAX_LINE_LENGTH];
 	char m_ChatCmdBuffer[1024];
 
 	struct CHistoryEntry
@@ -143,22 +137,26 @@ class CChat : public CComponent
 
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
+	static void ConSaySelf(IConsole::IResult *pResult, void *pUserData);
 	static void ConWhisper(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
 
 public:
+	// client IDs for special messages
+	enum
+	{
+		CLIENT_MSG = -2,
+		SERVER_MSG = -1,
+	};
+	// Mode defined by the CHAT_* constants in protocol.h
+
 	bool IsActive() const { return m_Mode != CHAT_NONE; }
-
-	void AddLine(int ClientID, int Team, const char *pLine, int TargetID = -1);
-
-	void EnableMode(int Team, const char* pText = NULL);
-
-	void Say(int Team, const char *pLine);
-
+	void AddLine(const char *pLine, int ClientID = SERVER_MSG, int Mode = CHAT_NONE, int TargetID = -1);
+	void EnableMode(int Mode, const char* pText = NULL);
+	void Say(int Mode, const char *pLine);
 	void ClearChatBuffer();
-
-	const char* GetCommandName(int Mode);
+	const char* GetCommandName(int Mode) const;
 
 	virtual void OnInit();
 	virtual void OnReset();
