@@ -1534,6 +1534,7 @@ void CMenus::OnInit()
 	if(g_Config.m_ClSkipStartMenu)
 		SetMenuPage(g_Config.m_UiBrowserPage);
 
+	Console()->Chain("br_filter_string", ConchainServerbrowserUpdate, this);
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
 	Console()->Chain("remove_favorite", ConchainServerbrowserUpdate, this);
 	Console()->Chain("add_friend", ConchainFriendlistUpdate, this);

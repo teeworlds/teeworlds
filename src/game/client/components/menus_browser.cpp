@@ -1110,17 +1110,18 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		// update stored state based on updated state of UI
 		m_aSelectedFilters[BrowserType] = SelectedFilter;
-		UpdateServerBrowserAddress();
-		m_AddressSelection |= ADDR_SELECTION_REVEAL;
-		if(SelectedFilter == -1)
+		if(SelectedFilter != -1)
 		{
-			// reset address when all filters are closed
-			m_AddressSelection |= ADDR_SELECTION_RESET_ADDRESS_IF_NOT_FOUND;
-		}
-		else if(m_lFilters[SelectedFilter].m_aSelectedServers[BrowserType] == -1)
-		{
-			// restore selection based on address only if no stored selection index for this filter
-			m_AddressSelection |= ADDR_SELECTION_CHANGE;
+			m_AddressSelection |= ADDR_SELECTION_REVEAL;
+			if(m_lFilters[SelectedFilter].m_aSelectedServers[BrowserType] == -1)
+			{
+				// restore selection based on address only if no stored selection index for this filter
+				m_AddressSelection |= ADDR_SELECTION_CHANGE;
+			}
+			else
+			{
+				m_AddressSelection |= ADDR_SELECTION_UPDATE_ADDRESS;
+			}
 		}
 	}
 
@@ -1341,7 +1342,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	EditBox.VSplitRight(EditBox.h, &EditBox, &Button);
 	static float s_ClearOffset = 0.0f;
 	if(DoEditBox(&g_Config.m_BrFilterString, &EditBox, g_Config.m_BrFilterString, sizeof(g_Config.m_BrFilterString), FontSize, &s_ClearOffset, false, CUI::CORNER_ALL))
+	{
 		Client()->ServerBrowserUpdate();
+		ServerBrowserFilterOnUpdate();
+	}
 
 	// clear button
 	{
@@ -2413,4 +2417,6 @@ void CMenus::ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserDat
 void CMenus::ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
+	CMenus *pMenus = (CMenus*)pUserData;
+	pMenus->ServerBrowserFilterOnUpdate();
 }
