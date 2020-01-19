@@ -940,6 +940,15 @@ void CChat::OnRender()
 			TextRender()->TextEx(&Marker, "|", -1);
 			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
 
+			//Render command autocomplete option hint
+			if(IsTypingCommand() && m_Commands.CountActiveCommands())
+				if(const CChat::CChatCommand* pCommand = m_Commands.GetSelectedCommand())
+					if(str_length(pCommand->m_aName)+1 > str_length(m_Input.GetString()))
+					{
+						TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+						TextRender()->TextEx(&Cursor, pCommand->m_aName + str_length(m_Input.GetString())-1, -1);
+					}
+
 			if(ChatMode == CHAT_WHISPER)
 			{
 				//render helper annotation
