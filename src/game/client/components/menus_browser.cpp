@@ -43,8 +43,6 @@ CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBro
 {
 	m_Extended = false;
 	m_Custom = Custom;
-	for(int Type = 0; Type < IServerBrowser::NUM_TYPES; Type++)
-		m_aSelectedServers[Type] = -1;
 	str_copy(m_aName, pName, sizeof(m_aName));
 	m_pServerBrowser = pServerBrowser;
 	switch(m_Custom)
@@ -125,11 +123,6 @@ const CServerInfo* CMenus::CBrowserFilter::SortedGet(int Index) const
 	return m_pServerBrowser->SortedGet(m_Filter, Index);
 }
 
-const CServerInfo* CMenus::CBrowserFilter::SortedGetSelected() const
-{
-	return SortedGet(m_aSelectedServers[m_pServerBrowser->GetType()]);
-}
-
 void CMenus::CBrowserFilter::SetFilterNum(int Num)
 {
 	m_Filter = Num;
@@ -176,9 +169,16 @@ void CMenus::LoadFilters()
 		m_SidebarActive = rSettingsEntry["sidebar_active"].u.integer;
 	if(rSettingsEntry["sidebar_tab"].type == json_integer)
 		m_SidebarTab = clamp(int(rSettingsEntry["sidebar_tab"].u.integer), 0, 2);
+	if(rSettingsEntry["filters"].type == json_array)
+	{
+		for(unsigned i = 0; i < rSettingsEntry["filters"].u.array.length && i < IServerBrowser::NUM_TYPES; ++i)
+		{
+			if(rSettingsEntry["filters"][i].type == json_integer)
+				m_aSelectedFilters[i] = rSettingsEntry["filters"][i].u.integer;
+		}
+	}
 
 	// extract filter data
-	int Extended = 0;
 	const json_value &rFilterEntry = (*pJsonData)["filter"];
 	for(unsigned i = 0; i < rFilterEntry.u.array.length; ++i)
 	{
@@ -190,8 +190,6 @@ void CMenus::LoadFilters()
 		int Type = 0;
 		if(rStart["type"].type == json_integer)
 			Type = rStart["type"].u.integer;
-		if(rStart["extended"].type == json_integer && rStart["extended"].u.integer)
-			Extended = i;
 
 		// filter setting
 		CServerFilterInfo FilterInfo;
@@ -231,7 +229,9 @@ void CMenus::LoadFilters()
 	// clean up
 	json_value_free(pJsonData);
 
-	m_lFilters[Extended].Switch();
+	CBrowserFilter *pSelectedFilter = GetSelectedBrowserFilter();
+	if(pSelectedFilter)
+		pSelectedFilter->Switch();
 }
 
 void CMenus::SaveFilters()
@@ -250,9 +250,18 @@ void CMenus::SaveFilters()
 	io_write(File, aBuf, str_length(aBuf));
 	str_format(aBuf, sizeof(aBuf), "\t\"sidebar_tab\": %d,\n", m_SidebarTab);
 	io_write(File, aBuf, str_length(aBuf));
+	p = "\t\"filters\": [\n";
+	io_write(File, p, str_length(p));
+	for(int i = 0; i < IServerBrowser::NUM_TYPES; i++)
+	{
+		str_format(aBuf, sizeof(aBuf), "\t\t%d,\n", m_aSelectedFilters[i]);
+		io_write(File, aBuf, str_length(aBuf));
+	}
+	p = "\t],\n";
+	io_write(File, p, str_length(p));
 
 	// settings end
-	p = "\t},\n";
+	p = "},\n";
 	io_write(File, p, str_length(p));
 	
 	// filter
@@ -272,8 +281,6 @@ void CMenus::SaveFilters()
 		io_write(File, aBuf, str_length(aBuf));
 
 		str_format(aBuf, sizeof(aBuf), "\t\t\"type\": %d,\n", m_lFilters[i].Custom());
-		io_write(File, aBuf, str_length(aBuf));
-		str_format(aBuf, sizeof(aBuf), "\t\t\"extended\": %d,\n", m_lFilters[i].Extended()?1:0);
 		io_write(File, aBuf, str_length(aBuf));
 
 		// filter setting
@@ -1059,7 +1066,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	const int BrowserType = ServerBrowser()->GetType();
 	int ToBeSelectedFilter = -2; // -2 to not restore, -1 to restore all filters closed
-	int ToBeSelectedServer = -1;
 	// update selection based on address if it changed
 	if(!(m_AddressSelection&ADDR_SELECTION_CHANGE) && m_aLastServerAddress[0] && str_comp(m_aLastServerAddress, g_Config.m_UiServerAddress) != 0)
 		m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_REVEAL;
@@ -1075,11 +1081,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		ToBeSelectedFilter = m_aSelectedFilters[BrowserType];
 		if(ToBeSelectedFilter != -1)
 		{
-			ToBeSelectedServer = m_lFilters[ToBeSelectedFilter].m_aSelectedServers[BrowserType];
-			if(ToBeSelectedServer == -1)
-			{
-				m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_REVEAL;
-			}
+			if(m_aSelectedServers[BrowserType] == -1)
+				m_AddressSelection |= ADDR_SELECTION_CHANGE;
+			else
+				m_AddressSelection |= ADDR_SELECTION_REVEAL;
 		}
 		m_AddressSelection |= ADDR_SELECTION_UPDATE_ADDRESS;
 	}
@@ -1111,18 +1116,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		// update stored state based on updated state of UI
 		m_aSelectedFilters[BrowserType] = SelectedFilter;
+		m_aSelectedServers[BrowserType] = -1;
 		if(SelectedFilter != -1)
 		{
-			m_AddressSelection |= ADDR_SELECTION_REVEAL;
-			if(m_lFilters[SelectedFilter].m_aSelectedServers[BrowserType] == -1)
-			{
-				// restore selection based on address only if no stored selection index for this filter
-				m_AddressSelection |= ADDR_SELECTION_CHANGE;
-			}
-			else
-			{
-				m_AddressSelection |= ADDR_SELECTION_UPDATE_ADDRESS;
-			}
+			m_AddressSelection |= ADDR_SELECTION_CHANGE;
 		}
 	}
 
@@ -1131,14 +1128,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	// handle arrow hotkeys
 	if(SelectedFilter > -1)
 	{
-		int SelectedIndex = m_lFilters[SelectedFilter].m_aSelectedServers[BrowserType];
 		int NewFilter = SelectedFilter;
+		int ToBeSelectedServer = -1;
 
 		if(m_DownArrowPressed)
 		{
 			if(!CtrlPressed)
 			{
-				ToBeSelectedServer = SelectedIndex + 1;
+				ToBeSelectedServer = m_aSelectedServers[BrowserType] < 0 ? 0 : (m_aSelectedServers[BrowserType] + 1);
 				if(ToBeSelectedServer >= m_lFilters[SelectedFilter].NumSortedServers())
 					ToBeSelectedServer = m_lFilters[SelectedFilter].NumSortedServers() - 1;
 			}
@@ -1152,7 +1149,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		{
 			if(!CtrlPressed)
 			{
-				ToBeSelectedServer = SelectedIndex - 1;
+				ToBeSelectedServer = m_aSelectedServers[BrowserType] < 0 ? 0 : (m_aSelectedServers[BrowserType] - 1);
 				if(ToBeSelectedServer < 0)
 					ToBeSelectedServer = 0;
 			}
@@ -1167,16 +1164,16 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		{
 			m_lFilters[NewFilter].Switch();
 			m_lFilters[SelectedFilter].Switch();
-			// try to restore selected server
-			ToBeSelectedServer = clamp(m_lFilters[NewFilter].m_aSelectedServers[BrowserType], 0, m_lFilters[NewFilter].NumSortedServers()-1);
+			m_aSelectedServers[BrowserType] = -1;
+			m_AddressSelection |= ADDR_SELECTION_CHANGE;
 		}
 
 		if(ToBeSelectedServer > -1 && ToBeSelectedServer < m_lFilters[NewFilter].NumSortedServers())
 		{
 			m_aSelectedFilters[BrowserType] = NewFilter;
-			if(m_lFilters[NewFilter].m_aSelectedServers[BrowserType] != ToBeSelectedServer)
+			if(m_aSelectedServers[BrowserType] != ToBeSelectedServer)
 			{
-				m_lFilters[NewFilter].m_aSelectedServers[BrowserType] = ToBeSelectedServer;
+				m_aSelectedServers[BrowserType] = ToBeSelectedServer;
 				m_ShowServerDetails = true;
 				m_AddressSelection |= ADDR_SELECTION_REVEAL;
 			}
@@ -1238,14 +1235,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				const CServerInfo *pItem = pFilter->SortedGet(ServerIndex);
 
 				// select server if address changed and match found
-				bool IsSelected = m_aSelectedFilters[BrowserType] == FilterIndex && pFilter->m_aSelectedServers[BrowserType] == ServerIndex;
+				bool IsSelected = m_aSelectedFilters[BrowserType] == FilterIndex && m_aSelectedServers[BrowserType] == ServerIndex;
 				if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
 				{
 					if(!IsSelected)
 					{
 						m_ShowServerDetails = true;
 						m_aSelectedFilters[BrowserType] = FilterIndex;
-						pFilter->m_aSelectedServers[BrowserType] = ServerIndex;
+						m_aSelectedServers[BrowserType] = ServerIndex;
 						IsSelected = true;
 					}
 					m_AddressSelection &= ~(ADDR_SELECTION_CHANGE|ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND);
@@ -1286,9 +1283,9 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 				if(int ReturnValue = DoBrowserEntry(pFilter->ID(ServerIndex), Row, pItem, pFilter, IsSelected))
 				{
-					m_ShowServerDetails = !m_ShowServerDetails || ReturnValue == 2 || pFilter->m_aSelectedServers[BrowserType] != ServerIndex; // click twice on line => fold server details
+					m_ShowServerDetails = !m_ShowServerDetails || ReturnValue == 2 || m_aSelectedServers[BrowserType] != ServerIndex; // click twice on line => fold server details
 					m_aSelectedFilters[BrowserType] = FilterIndex;
-					pFilter->m_aSelectedServers[BrowserType] = ServerIndex;
+					m_aSelectedServers[BrowserType] = ServerIndex;
 					m_AddressSelection &= ~(ADDR_SELECTION_CHANGE|ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND);
 					if(g_Config.m_UiAutoswitchInfotab)
 						m_SidebarTab = 0;
@@ -1300,7 +1297,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 			if(m_AddressSelection&ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND)
 			{
-				pFilter->m_aSelectedServers[BrowserType] = -1;
+				m_aSelectedServers[BrowserType] = -1;
 				m_AddressSelection &= ~ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND;
 			}
 		}
@@ -1975,11 +1972,10 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 
 void CMenus::RenderServerbrowserInfoTab(CUIRect View)
 {
-	CBrowserFilter *pFilter = GetSelectedBrowserFilter();
-	if(pFilter)
+	const CServerInfo *pInfo = GetSelectedServerInfo();
+	if(pInfo)
 	{
-		const CServerInfo *pItem = pFilter->SortedGet(pFilter->m_aSelectedServers[ServerBrowser()->GetType()]);
-		RenderServerbrowserServerDetail(View, pItem);
+		RenderServerbrowserServerDetail(View, pInfo);
 	}
 }
 

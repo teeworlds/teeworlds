@@ -531,7 +531,6 @@ private:
 		// buttons var
 		int m_SwitchButton;
 		int m_aButtonID[3];
-		int m_aSelectedServers[IServerBrowser::NUM_TYPES];
 
 		CBrowserFilter() {}
 		CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser);
@@ -546,7 +545,6 @@ private:
 		int NumSortedServers() const;
 		int NumPlayers() const;
 		const CServerInfo* SortedGet(int Index) const;
-		const CServerInfo* SortedGetSelected() const;
 		const void* ID(int Index) const;
 
 		void Reset();
@@ -616,6 +614,7 @@ private:
 	bool m_ShowServerDetails;
 	int m_LastBrowserType; // -1 if not initialized
 	int m_aSelectedFilters[IServerBrowser::NUM_TYPES]; // -1 if none selected, -2 if not initialized
+	int m_aSelectedServers[IServerBrowser::NUM_TYPES]; // -1 if none selected
 	char m_aLastServerAddress[sizeof(g_Config.m_UiServerAddress)]; // a[0] == 0 if not initialized
 	int m_AddressSelection;
 	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
@@ -631,7 +630,12 @@ private:
 	const CServerInfo* GetSelectedServerInfo()
 	{
 		CBrowserFilter* pSelectedFilter = GetSelectedBrowserFilter();
-		return pSelectedFilter ? pSelectedFilter->SortedGetSelected() : 0;
+		if(!pSelectedFilter)
+			return 0;
+		const int Tab = ServerBrowser()->GetType();
+		if(m_aSelectedServers[Tab] < 0 || m_aSelectedServers[Tab] >= pSelectedFilter->NumSortedServers())
+			return 0;
+		return pSelectedFilter->SortedGet(m_aSelectedServers[Tab]);
 	}
 
 	void UpdateServerBrowserAddress();

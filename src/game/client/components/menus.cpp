@@ -52,7 +52,10 @@ CMenus::CMenus()
 	m_aLastServerAddress[0] = '\0';
 	m_AddressSelection = 0;
 	for(int Type = 0; Type < IServerBrowser::NUM_TYPES; Type++)
+	{
 		m_aSelectedFilters[Type] = -2;
+		m_aSelectedServers[Type] = -1;
+	}
 
 	m_NeedRestartGraphics = false;
 	m_NeedRestartSound = false;
