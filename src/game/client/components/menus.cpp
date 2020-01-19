@@ -1537,6 +1537,8 @@ void CMenus::OnInit()
 	Console()->Chain("br_filter_string", ConchainServerbrowserUpdate, this);
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
 	Console()->Chain("remove_favorite", ConchainServerbrowserUpdate, this);
+	Console()->Chain("br_sort", ConchainServerbrowserSortingUpdate, this);
+	Console()->Chain("br_sort_order", ConchainServerbrowserSortingUpdate, this);
 	Console()->Chain("add_friend", ConchainFriendlistUpdate, this);
 	Console()->Chain("remove_friend", ConchainFriendlistUpdate, this);
 	Console()->Chain("snd_enable_music", ConchainToggleMusic, this);

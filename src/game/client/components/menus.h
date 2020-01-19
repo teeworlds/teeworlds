@@ -608,9 +608,8 @@ private:
 
 		ADDR_SELECTION_CHANGE = 1,
 		ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND = 2,
-		ADDR_SELECTION_RESET_ADDRESS_IF_NOT_FOUND = 4,
-		ADDR_SELECTION_REVEAL = 8,
-		ADDR_SELECTION_UPDATE_ADDRESS = 16,
+		ADDR_SELECTION_REVEAL = 4,
+		ADDR_SELECTION_UPDATE_ADDRESS = 8,
 	};
 	int m_SidebarTab;
 	bool m_SidebarActive;
@@ -637,6 +636,7 @@ private:
 
 	void UpdateServerBrowserAddress();
 	void ServerBrowserFilterOnUpdate();
+	void ServerBrowserSortingOnUpdate();
 
 
 	// video settings
@@ -706,6 +706,7 @@ private:
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainServerbrowserSortingUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainToggleMusic(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	void DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const void *pID, const CContactInfo *pFriendInfo, const CServerInfo *pServerInfo, bool Checked, bool Clan = false);
 	void SetOverlay(int Type, float x, float y, const void *pData);
