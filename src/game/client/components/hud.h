@@ -33,6 +33,10 @@ class CHud : public CComponent
 	void RenderWarmupTimer();
 	void RenderRaceTime(const CNetObj_PlayerInfoRace *pRaceInfo);
 	void RenderCheckpoint();
+
+	// Time is in seconds, can include minutes and ms.
+	// FullFormat always shows all the timer components. Otherwise just shows what's relevant.
+	void FormatTimer(char *pStr, unsigned StrSize, float Time, bool FullFormat = false);
 public:
 	CHud();
 
