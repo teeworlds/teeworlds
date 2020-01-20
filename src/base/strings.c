@@ -4,8 +4,11 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <string.h>
-#include <strings.h>
 #include <ctype.h>
+
+#if defined(CONF_FAMILY_UNIX)
+	#include <strings.h>
+#endif
 
 #include "strings.h"
 
