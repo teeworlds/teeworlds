@@ -254,12 +254,20 @@ char *str_skip_whitespaces(char *str)
 /* case */
 int str_comp_nocase(const char *a, const char *b)
 {
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
+	return _stricmp(a,b);
+#else
 	return strcasecmp(a,b);
+#endif
 }
 
 int str_comp_nocase_num(const char *a, const char *b, const int num)
 {
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
+	return _strnicmp(a, b, num);
+#else
 	return strncasecmp(a, b, num);
+#endif
 }
 
 int str_comp(const char *a, const char *b)
