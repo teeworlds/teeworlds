@@ -8,6 +8,8 @@
 #ifndef BASE_STRINGS_H
 #define BASE_STRINGS_H
 
+#include "detect.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
