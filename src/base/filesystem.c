@@ -12,6 +12,7 @@
 #if defined(CONF_FAMILY_UNIX)
 	#include <unistd.h>
 	#include <dirent.h>
+	#include <sys/stat.h>
 #elif defined(CONF_FAMILY_WINDOWS)
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
