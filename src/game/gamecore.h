@@ -150,6 +150,8 @@ public:
 	vec2 m_Pos;
 	vec2 m_Vel;
 
+	vec2 m_InteractVel;
+
 	vec2 m_HookPos;
 	vec2 m_HookDir;
 	int m_HookTick;

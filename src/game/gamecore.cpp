@@ -65,6 +65,7 @@ void CCharacterCore::Reset()
 {
 	m_Pos = vec2(0,0);
 	m_Vel = vec2(0,0);
+	m_InteractVel = vec2(0,0);
 	m_HookPos = vec2(0,0);
 	m_HookDir = vec2(0,0);
 	m_HookTick = 0;
@@ -326,15 +327,12 @@ void CCharacterCore::Tick(bool UseInput)
 				if(Distance > PhysSize*1.50f) // TODO: fix tweakable variable
 				{
 					float Accel = m_pWorld->m_Tuning.m_HookDragAccel * (Distance/m_pWorld->m_Tuning.m_HookLength);
-					float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
 
 					// add force to the hooked player
-					pCharCore->m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.x, Accel*Dir.x*1.5f);
-					pCharCore->m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, pCharCore->m_Vel.y, Accel*Dir.y*1.5f);
+					pCharCore->m_InteractVel += Dir*Accel*1.5f;
 
 					// add a little bit force to the guy who has the grip
-					m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, -Accel*Dir.x*0.25f);
-					m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, -Accel*Dir.y*0.25f);
+					m_InteractVel -= Dir*Accel*0.25f;
 				}
 			}
 		}
@@ -352,6 +350,11 @@ void CCharacterCore::Move()
 
 	float PhysSize = 28.0f;
 	float RampValue = VelocityRamp(length(m_Vel)*50, m_pWorld->m_Tuning.m_VelrampStart, m_pWorld->m_Tuning.m_VelrampRange, m_pWorld->m_Tuning.m_VelrampCurvature);
+
+	float DragSpeed = m_pWorld->m_Tuning.m_HookDragSpeed;
+	m_Vel.x = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.x, m_InteractVel.x);
+	m_Vel.y = SaturatedAdd(-DragSpeed, DragSpeed, m_Vel.y, m_InteractVel.y);
+	m_InteractVel = vec2(0,0);
 
 	m_Vel.x = m_Vel.x*RampValue;
 
