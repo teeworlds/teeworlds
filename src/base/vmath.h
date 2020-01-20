@@ -74,10 +74,6 @@ inline vector2_base<T> closest_point_on_line(vector2_base<T> line_point0, vector
 	T d = length(line_point0-line_point1);
 	T t = dot(v, c)/d;
 	return mix(line_point0, line_point1, clamp(t, (T)0, (T)1));
-	/*
-	if (t < 0) t = 0;
-	if (t > 1.0f) return 1.0f;
-	return t;*/
 }
 
 //

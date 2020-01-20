@@ -1262,7 +1262,13 @@ generate_source("src/generated/server_data.h" "server_content_header")
 # Sources
 set_src(BASE GLOB_RECURSE src/base
   color.h
+  debug.c
+  debug.h
   detect.h
+  fileio.c
+  fileio.h
+  filesystem.c
+  filesystem.h
   hash.c
   hash.h
   hash_bundled.c
@@ -1270,8 +1276,18 @@ set_src(BASE GLOB_RECURSE src/base
   hash_libtomcrypt.c
   hash_openssl.c
   math.h
+  memory.c
+  memory.h
+  network.c
+  network.h
+  strings.c
+  strings.h
   system.c
   system.h
+  threading.c
+  threading.h
+  time.c
+  time.h
   tl/algorithm.h
   tl/allocator.h
   tl/array.h
