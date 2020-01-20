@@ -1,6 +1,10 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
+#include <errno.h>
 
 #include "filesystem.h"
 #include "strings.h"
@@ -12,7 +16,7 @@
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 	#include <fcntl.h>
-	#include <errno.h>
+	#include <direct.h>
 #else
 	#error NOT IMPLEMENTED
 #endif
