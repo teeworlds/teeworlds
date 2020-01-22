@@ -571,9 +571,10 @@ void CClient::Disconnect()
 }
 
 
-void CClient::GetServerInfo(CServerInfo *pServerInfo) const
+void CClient::GetServerInfo(CServerInfo *pServerInfo)
 {
 	mem_copy(pServerInfo, &m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
+	m_ServerBrowser.UpdateFavoriteState(pServerInfo);
 }
 
 int CClient::LoadData()

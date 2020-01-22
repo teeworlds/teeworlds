@@ -245,7 +245,7 @@ void CServerBrowser::Update(bool ForceResort)
 		{
 			CServerEntry *pEntry = Find(i, *pFavAddr);
 			if(pEntry)
-				pEntry->m_Info.m_Favorite = 1;
+				pEntry->m_Info.m_Favorite = true;
 
 			if(i == m_ActServerlistType)
 				ForceResort = true;
@@ -344,7 +344,7 @@ void CServerBrowser::AddFavorite(const CServerInfo *pInfo)
 			CServerEntry *pEntry = Find(i, pInfo->m_NetAddr);
 			if(pEntry)
 			{
- 				pEntry->m_Info.m_Favorite = 1;
+				pEntry->m_Info.m_Favorite = true;
 
 				// refresh servers in all filters where favorites are filtered
 				if(i == m_ActServerlistType)
@@ -363,7 +363,7 @@ void CServerBrowser::RemoveFavorite(const CServerInfo *pInfo)
 			CServerEntry *pEntry = Find(i, pInfo->m_NetAddr);
 			if(pEntry)
 			{
- 				pEntry->m_Info.m_Favorite = 0;
+				pEntry->m_Info.m_Favorite = false;
 
 				// refresh servers in all filters where favorites are filtered
 				if(i == m_ActServerlistType)
@@ -371,6 +371,46 @@ void CServerBrowser::RemoveFavorite(const CServerInfo *pInfo)
 			}
 		}
 	}
+}
+
+void CServerBrowser::UpdateFavoriteState(CServerInfo *pInfo)
+{
+	pInfo->m_Favorite = m_ServerBrowserFavorites.FindFavoriteByAddr(pInfo->m_NetAddr, 0) != 0;
+}
+
+void CServerBrowser::SetFavoritePassword(const char *pAddress, const char *pPassword)
+{
+	if(m_ServerBrowserFavorites.AddFavoriteEx(pAddress, 0, false, pPassword))
+	{
+		NETADDR Addr = {0};
+		if(net_addr_from_str(&Addr, pAddress))
+			return;
+		for(int i = 0; i < NUM_TYPES; ++i)
+		{
+			CServerEntry *pEntry = Find(i, Addr);
+			if(pEntry)
+			{
+				pEntry->m_Info.m_Favorite = true;
+
+				// refresh servers in all filters where favorites are filtered
+				if(i == m_ActServerlistType)
+					m_ServerBrowserFilter.Sort(m_aServerlist[m_ActServerlistType].m_ppServerlist, m_aServerlist[m_ActServerlistType].m_NumServers, CServerBrowserFilter::RESORT_FLAG_FAV);
+			}
+		}
+	}
+}
+
+const char *CServerBrowser::GetFavoritePassword(const char *pAddress)
+{
+	NETADDR Addr = {0};
+	if(net_addr_from_str(&Addr, pAddress))
+		return 0;
+	CServerBrowserFavorites::CFavoriteServer *pFavorite = m_ServerBrowserFavorites.FindFavoriteByAddr(Addr, 0);
+	if(!pFavorite)
+		return 0;
+	if(!pFavorite->m_aPassword[0])
+		return 0;
+	return pFavorite->m_aPassword;
 }
 
 // manipulate entries
@@ -391,9 +431,7 @@ CServerEntry *CServerBrowser::Add(int ServerlistType, const NETADDR &Addr)
 	str_copy(pEntry->m_Info.m_aName, pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aName));
 	str_copy(pEntry->m_Info.m_aHostname, pEntry->m_Info.m_aAddress, sizeof(pEntry->m_Info.m_aHostname));
 
-	// check if it's a favorite
-	if(m_ServerBrowserFavorites.FindFavoriteByAddr(Addr, 0))
-		pEntry->m_Info.m_Favorite = 1;
+	UpdateFavoriteState(&pEntry->m_Info);
 
 	// add to the hash list
 	int Hash = AddrHash(&Addr);
@@ -529,7 +567,7 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry)
 
 void CServerBrowser::SetInfo(int ServerlistType, CServerEntry *pEntry, const CServerInfo &Info)
 {
-	int Fav = pEntry->m_Info.m_Favorite;
+	bool Fav = pEntry->m_Info.m_Favorite;
 	pEntry->m_Info = Info;
 	pEntry->m_Info.m_Flags &= FLAG_PASSWORD|FLAG_TIMESCORE;
 	if(str_comp(pEntry->m_Info.m_aGameType, "DM") == 0 || str_comp(pEntry->m_Info.m_aGameType, "TDM") == 0 || str_comp(pEntry->m_Info.m_aGameType, "CTF") == 0 ||

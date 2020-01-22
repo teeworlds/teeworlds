@@ -240,7 +240,7 @@ public:
 	virtual void Disconnect();
 
 
-	virtual void GetServerInfo(CServerInfo *pServerInfo) const;
+	virtual void GetServerInfo(CServerInfo *pServerInfo);
 
 	int LoadData();
 
