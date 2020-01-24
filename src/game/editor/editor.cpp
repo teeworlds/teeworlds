@@ -3127,7 +3127,7 @@ void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 		else
 			m_aFileDialogFileName[0] = 0;
 		m_FilesSelectedIndex = Index;
-		m_FilePreviewImage = 0;
+		m_PreviewImageIsLoaded = false;
 
 		if(Input()->MouseDoubleClick())
 			m_aFileDialogActivate = true;
@@ -3257,11 +3257,11 @@ void CEditor::RenderFileDialog()
 				else
 					m_aFileDialogFileName[0] = 0;
 				m_FilesSelectedIndex = NewIndex;
-				m_FilePreviewImage = 0;
+				m_PreviewImageIsLoaded = false;
 			}
 		}
 
-		if (m_FileDialogFileType == CEditor::FILETYPE_IMG && m_FilePreviewImage == 0 && m_FilesSelectedIndex > -1)
+		if (m_FileDialogFileType == CEditor::FILETYPE_IMG && !m_PreviewImageIsLoaded && m_FilesSelectedIndex > -1)
 		{
 			int Length = str_length(m_FileList[m_FilesSelectedIndex].m_aFilename);
 			if (Length >= 4 && !str_comp(m_FileList[m_FilesSelectedIndex].m_aFilename+Length-4, ".png"))
@@ -3273,10 +3273,11 @@ void CEditor::RenderFileDialog()
 				{
 					m_FilePreviewImage = Graphics()->LoadTextureRaw(m_FilePreviewImageInfo.m_Width, m_FilePreviewImageInfo.m_Height, m_FilePreviewImageInfo.m_Format, m_FilePreviewImageInfo.m_pData, m_FilePreviewImageInfo.m_Format, IGraphics::TEXLOAD_NORESAMPLE);
 					mem_free(m_FilePreviewImageInfo.m_pData);
+					m_PreviewImageIsLoaded = true;
 				}
 			}
 		}
-		if (m_FilePreviewImage)
+		if (m_PreviewImageIsLoaded)
 		{
 			int w = m_FilePreviewImageInfo.m_Width;
 			int h = m_FilePreviewImageInfo.m_Height;
@@ -3442,7 +3443,7 @@ void CEditor::FilelistPopulate(int StorageType)
 	}
 	Storage()->ListDirectory(StorageType, m_pFileDialogPath, EditorListdirCallback, this);
 	m_FilesSelectedIndex = m_FileList.size() ? 0 : -1;
-	m_FilePreviewImage = 0;
+	m_PreviewImageIsLoaded = false;
 	m_aFileDialogActivate = false;
 }
 
@@ -3464,7 +3465,7 @@ void CEditor::InvokeFileDialog(int StorageType, int FileType, const char *pTitle
 	m_FileDialogScrollValue = 0.0f;
 	m_FilesSearchBoxID = 0;
 	UI()->SetActiveItem(&m_FilesSearchBoxID);
-	m_FilePreviewImage = 0;
+	m_PreviewImageIsLoaded = false;
 
 	if(pDefaultName)
 		str_copy(m_aFileDialogFileName, pDefaultName, sizeof(m_aFileDialogFileName));
