@@ -2726,10 +2726,7 @@ void CMenus::OnRender()
 	UI()->StartCheck();
 
 	// reset cursor
-	if(m_CursorActive)
-		m_PrevCursorActive = true;
-	else
-		m_PrevCursorActive = false;
+	m_PrevCursorActive = m_CursorActive;
 	m_CursorActive = false;
 
 	if(m_KeyReaderIsActive)
