@@ -375,7 +375,8 @@ void CServerBrowser::RemoveFavorite(const CServerInfo *pInfo)
 
 void CServerBrowser::UpdateFavoriteState(CServerInfo *pInfo)
 {
-	pInfo->m_Favorite = m_ServerBrowserFavorites.FindFavoriteByAddr(pInfo->m_NetAddr, 0) != 0;
+	pInfo->m_Favorite = m_ServerBrowserFavorites.FindFavoriteByAddr(pInfo->m_NetAddr, 0) != 0
+		|| m_ServerBrowserFavorites.FindFavoriteByHostname(pInfo->m_aHostname, 0) != 0;
 }
 
 void CServerBrowser::SetFavoritePassword(const char *pAddress, const char *pPassword)

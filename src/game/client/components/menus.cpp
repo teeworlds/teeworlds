@@ -2093,13 +2093,16 @@ int CMenus::Render()
 			UI()->DoLabel(&Label, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 
 			Box.HSplitTop(20.0f, &EditBox, &Box);
-
 			static float s_OffsetPassword = 0.0f;
 			DoEditBoxOption(g_Config.m_Password, g_Config.m_Password, sizeof(g_Config.m_Password), &EditBox, Localize("Password"), ButtonWidth, &s_OffsetPassword, true);
 
 			Box.HSplitTop(2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &Save, &Box);
-			if(DoButton_CheckBox(&g_Config.m_ClSaveServerPasswords, Localize("Save password and server as favorite"), g_Config.m_ClSaveServerPasswords, &Save))
+			CServerInfo ServerInfo = {0};
+			str_copy(ServerInfo.m_aHostname, g_Config.m_UiServerAddress, sizeof(ServerInfo.m_aHostname));
+			ServerBrowser()->UpdateFavoriteState(&ServerInfo);
+			const char *pSaveText = ServerInfo.m_Favorite ? Localize("Save password") : Localize("Save password and server as favorite");
+			if(DoButton_CheckBox(&g_Config.m_ClSaveServerPasswords, pSaveText, g_Config.m_ClSaveServerPasswords, &Save))
 				g_Config.m_ClSaveServerPasswords ^= 1;
 
 			// buttons
