@@ -82,6 +82,7 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	class CMapChecker m_MapChecker;
 
 	char m_aServerAddressStr[256];
+	char m_aServerPassword[128];
 
 	unsigned m_SnapshotParts;
 	int64 m_LocalStartTime;
@@ -234,6 +235,7 @@ public:
 	// called when the map is loaded and we should init for a new round
 	void OnEnterGame();
 	virtual void EnterGame();
+	void OnClientOnline();
 
 	virtual void Connect(const char *pAddress);
 	void DisconnectWithReason(const char *pReason);

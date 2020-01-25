@@ -2101,9 +2101,11 @@ int CMenus::Render()
 			CServerInfo ServerInfo = {0};
 			str_copy(ServerInfo.m_aHostname, g_Config.m_UiServerAddress, sizeof(ServerInfo.m_aHostname));
 			ServerBrowser()->UpdateFavoriteState(&ServerInfo);
-			const char *pSaveText = ServerInfo.m_Favorite ? Localize("Save password") : Localize("Save password and server as favorite");
-			if(DoButton_CheckBox(&g_Config.m_ClSaveServerPasswords, pSaveText, g_Config.m_ClSaveServerPasswords, &Save))
-				g_Config.m_ClSaveServerPasswords ^= 1;
+			const bool Favorite = ServerInfo.m_Favorite;
+			const int OnValue = Favorite ? 1 : 2;
+			const char *pSaveText = Favorite ? Localize("Save password") : Localize("Save password and server as favorite");
+			if(DoButton_CheckBox(&g_Config.m_ClSaveServerPasswords, pSaveText, g_Config.m_ClSaveServerPasswords == OnValue, &Save))
+				g_Config.m_ClSaveServerPasswords = g_Config.m_ClSaveServerPasswords == OnValue ? 0 : OnValue;
 
 			// buttons
 			BottomBar.VSplitMid(&Abort, &TryAgain);
@@ -2679,11 +2681,6 @@ void CMenus::OnStateChange(int NewState, int OldState)
 				m_Popup = POPUP_PASSWORD;
 				UI()->SetHotItem(&g_Config.m_Password);
 				UI()->SetActiveItem(&g_Config.m_Password);
-
-				// reset password stored in favorites if it's invalid
-				const char *pPassword = ServerBrowser()->GetFavoritePassword(g_Config.m_UiServerAddress);
-				if(pPassword && str_comp(pPassword, g_Config.m_Password) == 0)
-					ServerBrowser()->SetFavoritePassword(g_Config.m_UiServerAddress, 0);
 			}
 			else
 				m_Popup = POPUP_DISCONNECTED;
@@ -2695,25 +2692,11 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_DownloadLastCheckTime = time_get();
 		m_DownloadLastCheckSize = 0;
 		m_DownloadSpeed = 0.0f;
-
-		// restore password from favorites
-		const char *pPassword = ServerBrowser()->GetFavoritePassword(g_Config.m_UiServerAddress);
-		if(pPassword)
-			str_copy(g_Config.m_Password, pPassword, sizeof(g_Config.m_Password));
 	}
 	else if(NewState == IClient::STATE_CONNECTING)
 		m_Popup = POPUP_CONNECTING;
 	else if (NewState == IClient::STATE_ONLINE || NewState == IClient::STATE_DEMOPLAYBACK)
 	{
-		if(NewState == IClient::STATE_ONLINE && g_Config.m_ClSaveServerPasswords && g_Config.m_Password[0])
-		{
-			// store password and server as favorite, but only if the server was actually password protected
-			CServerInfo ServerInfo = {0};
-			Client()->GetServerInfo(&ServerInfo);
-			if(ServerInfo.m_Flags&IServerBrowser::FLAG_PASSWORD)
-				ServerBrowser()->SetFavoritePassword(g_Config.m_UiServerAddress, g_Config.m_Password);
-		}
-
 		m_Popup = POPUP_NONE;
 		SetActive(false);
 	}
