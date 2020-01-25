@@ -118,7 +118,7 @@ public:
 		BLEND_ADDITIVE,
 	};
 
-	struct SPoint { float x, y, z; };
+	struct SPoint { float x, y; };
 	struct STexCoord { float u, v, i; };
 	struct SColor { float r, g, b, a; };
 
