@@ -1892,7 +1892,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 	CLayer *pEditLayers[16];
 	int NumEditLayers = 0;
 
-	if(m_ShowTilePicker && GetSelectedLayer(0)->m_Type == LAYERTYPE_TILES)
+	if(m_ShowTilePicker && GetSelectedLayer(0) && GetSelectedLayer(0)->m_Type == LAYERTYPE_TILES)
 	{
 		pEditLayers[0] = &m_TilesetPicker;
 		NumEditLayers++;
