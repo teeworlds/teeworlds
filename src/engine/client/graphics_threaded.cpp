@@ -305,6 +305,9 @@ static int ImageFormatToPixelSize(int Format)
 
 int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
 {
+	if(!TextureID.IsValid())
+		return 0;
+
 	CCommandBuffer::SCommand_Texture_Update Cmd;
 	Cmd.m_Slot = TextureID.Id();
 	Cmd.m_X = x;
