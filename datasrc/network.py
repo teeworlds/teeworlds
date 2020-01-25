@@ -5,6 +5,7 @@ Emotes = Enum("EMOTE", ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"]
 Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"])
 Votes = Enum("VOTE", ["UNKNOWN", "START_OP", "START_KICK", "START_SPEC", "END_ABORT", "END_PASS", "END_FAIL"]) # todo 0.8: add RUN_OP, RUN_KICK, RUN_SPEC; rem UNKNOWN
 ChatModes = Enum("CHAT", ["NONE", "ALL", "TEAM", "WHISPER"])
+RaceRecordTypes = Enum("RECORDTYPE", ["NONE", "PLAYER", "MAP"])
 
 PlayerFlags = Flags("PLAYERFLAG", ["ADMIN", "CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING", "BOT"])
 GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL", "RACE"])
@@ -68,6 +69,7 @@ Enums = [
 	Emoticons,
 	Votes,
 	ChatModes,
+	RaceRecordTypes,
 	GameMsgIDs,
 ]
 
@@ -452,7 +454,7 @@ Messages = [
 		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
 		NetIntRange("m_Time", -1, 'max_int'),
 		NetIntAny("m_Diff"),
-		NetBool("m_NewRecord"),
+		NetEnum("m_RecordType", RaceRecordTypes)
 	]),
 
 	NetMessage("Sv_Checkpoint", [
