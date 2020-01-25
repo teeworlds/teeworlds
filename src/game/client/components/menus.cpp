@@ -1901,7 +1901,7 @@ int CMenus::Render()
 			Box.HSplitTop(2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &Save, &Box);
 			CServerInfo ServerInfo = {0};
-			str_copy(ServerInfo.m_aHostname, g_Config.m_UiServerAddress, sizeof(ServerInfo.m_aHostname));
+			str_copy(ServerInfo.m_aHostname, GetServerBrowserAddress(), sizeof(ServerInfo.m_aHostname));
 			ServerBrowser()->UpdateFavoriteState(&ServerInfo);
 			const bool Favorite = ServerInfo.m_Favorite;
 			const int OnValue = Favorite ? 1 : 2;
