@@ -171,11 +171,18 @@ void CMenus::LoadFilters()
 		m_SidebarTab = clamp(int(rSettingsEntry["sidebar_tab"].u.integer), 0, 2);
 	if(rSettingsEntry["filters"].type == json_array)
 	{
-		for(unsigned i = 0; i < rSettingsEntry["filters"].u.array.length && i < IServerBrowser::NUM_TYPES; ++i)
+		for(unsigned i = 0; i < IServerBrowser::NUM_TYPES; ++i)
 		{
-			if(rSettingsEntry["filters"][i].type == json_integer)
+			if(i < rSettingsEntry["filters"].u.array.length && rSettingsEntry["filters"][i].type == json_integer)
 				m_aSelectedFilters[i] = rSettingsEntry["filters"][i].u.integer;
+			else
+				m_aSelectedFilters[i] = 2; // default to "all" if not set for all filters
 		}
+	}
+	else
+	{
+		for(unsigned i = 0; i < IServerBrowser::NUM_TYPES; ++i)
+			m_aSelectedFilters[i] = 2; // default to "all" if not set
 	}
 
 	// extract filter data
