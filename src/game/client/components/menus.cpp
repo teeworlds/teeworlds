@@ -2085,16 +2085,27 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_PASSWORD)
 		{
-			CUIRect EditBox, TryAgain, Abort;
+			CUIRect Label, EditBox, Save, TryAgain, Abort;
 
-			Box.HSplitTop(12.0f, 0, &Box);
-			UI()->DoLabel(&Box, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+			Box.HMargin(4.0f, &Box);
 
-			Box.HSplitBottom(ButtonHeight*1.7f, 0, &Box);
+			Box.HSplitTop(20.0f, &Label, &Box);
+			UI()->DoLabel(&Label, pExtraText, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+
 			Box.HSplitTop(20.0f, &EditBox, &Box);
-
 			static float s_OffsetPassword = 0.0f;
 			DoEditBoxOption(g_Config.m_Password, g_Config.m_Password, sizeof(g_Config.m_Password), &EditBox, Localize("Password"), ButtonWidth, &s_OffsetPassword, true);
+
+			Box.HSplitTop(2.0f, 0, &Box);
+			Box.HSplitTop(20.0f, &Save, &Box);
+			CServerInfo ServerInfo = {0};
+			str_copy(ServerInfo.m_aHostname, g_Config.m_UiServerAddress, sizeof(ServerInfo.m_aHostname));
+			ServerBrowser()->UpdateFavoriteState(&ServerInfo);
+			const bool Favorite = ServerInfo.m_Favorite;
+			const int OnValue = Favorite ? 1 : 2;
+			const char *pSaveText = Favorite ? Localize("Save password") : Localize("Save password and server as favorite");
+			if(DoButton_CheckBox(&g_Config.m_ClSaveServerPasswords, pSaveText, g_Config.m_ClSaveServerPasswords == OnValue, &Save))
+				g_Config.m_ClSaveServerPasswords = g_Config.m_ClSaveServerPasswords == OnValue ? 0 : OnValue;
 
 			// buttons
 			BottomBar.VSplitMid(&Abort, &TryAgain);
@@ -2681,7 +2692,6 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_DownloadLastCheckTime = time_get();
 		m_DownloadLastCheckSize = 0;
 		m_DownloadSpeed = 0.0f;
-		//client_serverinfo_request();
 	}
 	else if(NewState == IClient::STATE_CONNECTING)
 		m_Popup = POPUP_CONNECTING;
@@ -2699,10 +2709,7 @@ void CMenus::OnRender()
 	UI()->StartCheck();
 
 	// reset cursor
-	if(m_CursorActive)
-		m_PrevCursorActive = true;
-	else
-		m_PrevCursorActive = false;
+	m_PrevCursorActive = m_CursorActive;
 	m_CursorActive = false;
 
 	if(m_KeyReaderIsActive)

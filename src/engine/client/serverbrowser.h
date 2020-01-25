@@ -41,9 +41,11 @@ public:
 	const CServerInfo *SortedGet(int FilterIndex, int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[m_ServerBrowserFilter.GetIndex(FilterIndex, Index)]->m_Info; };
 	const void *GetID(int FilterIndex, int Index) const { return m_ServerBrowserFilter.GetID(FilterIndex, Index); };
 
-	bool IsFavorite(const NETADDR &Addr) { return m_ServerBrowserFavorites.FindFavoriteByAddr(Addr, 0) != 0; }
-	void AddFavorite(const CServerInfo *pEntry);
-	void RemoveFavorite(const CServerInfo *pEntry);
+	void AddFavorite(const CServerInfo *pInfo);
+	void RemoveFavorite(const CServerInfo *pInfo);
+	void UpdateFavoriteState(CServerInfo *pInfo);
+	void SetFavoritePassword(const char *pAddress, const char *pPassword);
+	const char *GetFavoritePassword(const char *pAddress);
 
 	int AddFilter(const CServerFilterInfo *pFilterInfo) { return m_ServerBrowserFilter.AddFilter(pFilterInfo); };
 	void SetFilter(int Index, const CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.SetFilter(Index, pFilterInfo); };

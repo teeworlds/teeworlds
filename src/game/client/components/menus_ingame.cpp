@@ -398,7 +398,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Password"), CurrentServerInfo.m_Flags&IServerBrowser::FLAG_PASSWORD ? Localize("Yes", "With") : Localize("No", "Without/None"));
 	UI()->DoLabel(&Label, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 	
-	const bool IsFavorite = ServerBrowser()->IsFavorite(CurrentServerInfo.m_NetAddr);
+	const bool IsFavorite = CurrentServerInfo.m_Favorite;
 	ServerInfo.HSplitBottom(ButtonHeight, &ServerInfo, &Label);
 	static int s_AddFavButton = 0;
 	if(DoButton_CheckBox(&s_AddFavButton, Localize("Favorite"), IsFavorite, &Label))

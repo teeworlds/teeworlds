@@ -24,6 +24,7 @@ public:
 	struct CFavoriteServer
 	{
 		char m_aHostname[128];
+		char m_aPassword[sizeof(g_Config.m_Password)];
 		NETADDR m_Addr;
 		int m_State;
 	} m_aFavoriteServers[MAX_FAVORITES];
@@ -45,7 +46,7 @@ public:
 	CServerBrowserFavorites();
 	void Init(class CNetClient *pNetClient, class IConsole *pConsole, class IEngine *pEngine, class IConfig *pConfig);
 	
-	bool AddFavoriteEx(const char *pHostname, const NETADDR *pAddr, bool DoCheck);
+	bool AddFavoriteEx(const char *pHostname, const NETADDR *pAddr, bool DoCheck, const char *pPassword = 0);
 	CFavoriteServer *FindFavoriteByAddr(const NETADDR &Addr, int *Index);
 	CFavoriteServer *FindFavoriteByHostname(const char *pHostname, int *Index);
 	void RemoveFavoriteEntry(int Index);

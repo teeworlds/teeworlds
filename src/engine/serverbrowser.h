@@ -59,7 +59,7 @@ public:
 	int m_NumBotSpectators;
 	int m_Flags;
 	int m_ServerLevel;
-	int m_Favorite;
+	bool m_Favorite;
 	int m_Latency; // in ms
 	char m_aGameType[16];
 	char m_aName[64];
@@ -166,9 +166,11 @@ public:
 	virtual const CServerInfo *SortedGet(int FilterIndex, int Index) const = 0;
 	virtual const void *GetID(int FilterIndex, int Index) const = 0;
 
-	virtual bool IsFavorite(const NETADDR &Addr) = 0;	// todo: remove this
-	virtual void AddFavorite(const CServerInfo *pEntry) = 0;
-	virtual void RemoveFavorite(const CServerInfo *pEntry) = 0;
+	virtual void AddFavorite(const CServerInfo *pInfo) = 0;
+	virtual void RemoveFavorite(const CServerInfo *pInfo) = 0;
+	virtual void UpdateFavoriteState(CServerInfo *pInfo) = 0;
+	virtual void SetFavoritePassword(const char *pAddress, const char *pPassword) = 0;
+	virtual const char *GetFavoritePassword(const char *pAddress) = 0;
 
 	virtual int AddFilter(const CServerFilterInfo *pFilterInfo) = 0;
 	virtual void SetFilter(int Index, const CServerFilterInfo *pFilterInfo) = 0;
