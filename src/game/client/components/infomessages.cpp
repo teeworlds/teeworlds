@@ -289,8 +289,10 @@ void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) 
 	float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1, -1.0f);
 
 	x -= TimeW;
-	if(pInfoMsg->m_RecordType != RECORDTYPE_NONE)
+	if(pInfoMsg->m_RecordType == RECORDTYPE_PLAYER)
 		TextRender()->TextColor(0.2f, 0.6f, 1.0f, 1.0f);
+	else if(pInfoMsg->m_RecordType == RECORDTYPE_MAP)
+		TextRender()->TextColor(1.0f, 0.5f, 0.0f, 1.0f);
 	TextRender()->Text(0, x, y, FontSize, aTime, -1);
 
 	x -= 52.0f + 10.0f;
