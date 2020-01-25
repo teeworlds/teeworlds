@@ -2929,7 +2929,18 @@ void CMenus::BeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOu
 	if(pSr->m_Params.m_ClipBgColor.a > 0)
 		RenderTools()->DrawRoundRect(pClipRect, pSr->m_Params.m_ClipBgColor, 4.0f);
 
-	UI()->ClipEnable(pClipRect);
+	CUIRect ClipRect = *pClipRect;
+	if(pSr->m_WasClipped)
+	{
+		CUIRect Intersection;
+		Intersection.x = max(ClipRect.x, pSr->m_OldClipRect.x);
+		Intersection.y = max(ClipRect.y, pSr->m_OldClipRect.y);
+		Intersection.w = min(ClipRect.x+ClipRect.w, pSr->m_OldClipRect.x+pSr->m_OldClipRect.w) - ClipRect.x;
+		Intersection.h = min(ClipRect.y+ClipRect.h, pSr->m_OldClipRect.y+pSr->m_OldClipRect.h) - ClipRect.y;
+		ClipRect = Intersection;
+	}
+
+	UI()->ClipEnable(&ClipRect);
 
 	pSr->m_ClipRect = *pClipRect;
 	pSr->m_ContentH = 0;
