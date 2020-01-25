@@ -615,7 +615,6 @@ private:
 	int m_LastBrowserType; // -1 if not initialized
 	int m_aSelectedFilters[IServerBrowser::NUM_TYPES]; // -1 if none selected, -2 if not initialized
 	int m_aSelectedServers[IServerBrowser::NUM_TYPES]; // -1 if none selected
-	char m_aLastServerAddress[sizeof(g_Config.m_UiServerAddress)]; // a[0] == 0 if not initialized
 	int m_AddressSelection;
 	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
 
@@ -639,6 +638,8 @@ private:
 	}
 
 	void UpdateServerBrowserAddress();
+	const char *GetServerBrowserAddress();
+	void SetServerBrowserAddress(const char *pAddress);
 	void ServerBrowserFilterOnUpdate();
 	void ServerBrowserSortingOnUpdate();
 

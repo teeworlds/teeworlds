@@ -49,7 +49,6 @@ CMenus::CMenus()
 	m_SidebarActive = true;
 	m_ShowServerDetails = true;
 	m_LastBrowserType = -1;
-	m_aLastServerAddress[0] = '\0';
 	m_AddressSelection = 0;
 	for(int Type = 0; Type < IServerBrowser::NUM_TYPES; Type++)
 	{
@@ -1922,7 +1921,7 @@ int CMenus::Render()
 			static CButtonContainer s_ButtonTryAgain;
 			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Try again"), 0, &TryAgain) || m_EnterPressed)
 			{
-				Client()->Connect(g_Config.m_UiServerAddress);
+				Client()->Connect(GetServerBrowserAddress());
 			}
 		}
 		else if(m_Popup == POPUP_CONNECTING)
@@ -1988,7 +1987,7 @@ int CMenus::Render()
 			else
 			{
 				Box.HSplitTop(27.0f, 0, &Box);
-				UI()->DoLabel(&Box, g_Config.m_UiServerAddress, ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+				UI()->DoLabel(&Box, GetServerBrowserAddress(), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)

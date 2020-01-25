@@ -1071,14 +1071,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.05f), CUI::CORNER_ALL, 5.0f);
 	}
 
-	const int BrowserType = ServerBrowser()->GetType();
-	int ToBeSelectedFilter = -2; // -2 to not restore, -1 to restore all filters closed
 	// update selection based on address if it changed
-	if(!(m_AddressSelection&ADDR_SELECTION_CHANGE) && m_aLastServerAddress[0] && str_comp(m_aLastServerAddress, g_Config.m_UiServerAddress) != 0)
-		m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_REVEAL;
-	else if(ServerBrowser()->IsRefreshing())
+	if(ServerBrowser()->IsRefreshing())
 		m_AddressSelection |= ADDR_SELECTION_CHANGE;
 
+	const int BrowserType = ServerBrowser()->GetType();
+	int ToBeSelectedFilter = -2; // -2 to not restore, -1 to restore all filters closed
 	if(m_LastBrowserType == -1)
 		m_LastBrowserType = BrowserType;
 	else if(BrowserType != m_LastBrowserType)
@@ -1091,9 +1089,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			if(m_aSelectedServers[BrowserType] == -1)
 				m_AddressSelection |= ADDR_SELECTION_CHANGE;
 			else
-				m_AddressSelection |= ADDR_SELECTION_REVEAL;
+				m_AddressSelection |= ADDR_SELECTION_REVEAL | ADDR_SELECTION_UPDATE_ADDRESS;
 		}
-		m_AddressSelection |= ADDR_SELECTION_UPDATE_ADDRESS;
 	}
 
 	// count all the servers and update selected filter based on UI state
@@ -1223,6 +1220,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
+	const char *pAddress = GetServerBrowserAddress();
 	for(int FilterIndex = 0; FilterIndex < m_lFilters.size(); FilterIndex++)
 	{
 		CBrowserFilter *pFilter = &m_lFilters[FilterIndex];
@@ -1243,7 +1241,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 				// select server if address changed and match found
 				bool IsSelected = m_aSelectedFilters[BrowserType] == FilterIndex && m_aSelectedServers[BrowserType] == ServerIndex;
-				if(!str_comp(pItem->m_aAddress, g_Config.m_UiServerAddress))
+				if(!str_comp(pItem->m_aAddress, pAddress))
 				{
 					if(!IsSelected)
 					{
@@ -1298,7 +1296,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 						m_SidebarTab = 0;
 					UpdateServerBrowserAddress(); // update now instead of using flag because of connect
 					if(Input()->MouseDoubleClick())
-						Client()->Connect(g_Config.m_UiServerAddress);
+						Client()->Connect(GetServerBrowserAddress());
 				}
 			}
 
@@ -1319,7 +1317,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		UpdateServerBrowserAddress();
 		m_AddressSelection &= ~ADDR_SELECTION_UPDATE_ADDRESS;
 	}
-	str_copy(m_aLastServerAddress, g_Config.m_UiServerAddress, sizeof(m_aLastServerAddress));
 
 	s_ScrollRegion.End();
 
@@ -1364,10 +1361,22 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Label.VSplitRight(ButtonWidth*2.0f+SpacingH, &Label, &EditBox);
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Host address:"), FontSize, CUI::ALIGN_LEFT);
-	static float s_AddressOffset = 0.0f;
-	if(DoEditBox(&g_Config.m_UiServerAddress, &EditBox, g_Config.m_UiServerAddress, sizeof(g_Config.m_UiServerAddress), FontSize, &s_AddressOffset, false, CUI::CORNER_ALL))
+
+	if(BrowserType == IServerBrowser::TYPE_INTERNET)
 	{
-		m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
+		static float s_InternetAddressOffset = 0.0f;
+		if(DoEditBox(&g_Config.m_UiInternetServerAddress, &EditBox, g_Config.m_UiInternetServerAddress, sizeof(g_Config.m_UiInternetServerAddress), FontSize, &s_InternetAddressOffset, false, CUI::CORNER_ALL))
+		{
+			m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
+		}
+	}
+	else if(BrowserType == IServerBrowser::TYPE_LAN)
+	{
+		static float s_LanAddressOffset = 0.0f;
+		if(DoEditBox(&g_Config.m_UiLanServerAddress, &EditBox, g_Config.m_UiLanServerAddress, sizeof(g_Config.m_UiLanServerAddress), FontSize, &s_LanAddressOffset, false, CUI::CORNER_ALL))
+		{
+			m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
+		}
 	}
 
 	// render status
@@ -1609,8 +1618,8 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 					Button.Margin((Button.h - GetListHeaderHeight() + 2.0f) / 2, &Button);
 					if(DoButton_Menu(&(s_FriendJoinButtons[ButtonId%20]), Localize("Join", "Join a server"), 0, &Button) )
 					{
-						str_copy(g_Config.m_UiServerAddress, m_lFriendList[i][f].m_pServerInfo->m_aAddress, sizeof(g_Config.m_UiServerAddress));
-						Client()->Connect(g_Config.m_UiServerAddress);
+						SetServerBrowserAddress(m_lFriendList[i][f].m_pServerInfo->m_aAddress);
+						Client()->Connect(GetServerBrowserAddress());
 					}
 				}
 				if(f < m_lFriendList[i].size()-1)
@@ -2262,7 +2271,7 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 	static CButtonContainer s_JoinButton;
 	if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || m_EnterPressed)
 	{
-		Client()->Connect(g_Config.m_UiServerAddress);
+		Client()->Connect(GetServerBrowserAddress());
 		m_EnterPressed = false;
 	}
 }
@@ -2388,14 +2397,26 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 void CMenus::UpdateServerBrowserAddress()
 {
 	const CServerInfo *pItem = GetSelectedServerInfo();
-	if(pItem == NULL)
-	{
-		g_Config.m_UiServerAddress[0] = '\0';
-	}
-	else
-	{
-		str_copy(g_Config.m_UiServerAddress, pItem->m_aAddress, sizeof(g_Config.m_UiServerAddress));
-	}
+	SetServerBrowserAddress(pItem ? pItem->m_aAddress : "");
+}
+
+const char *CMenus::GetServerBrowserAddress()
+{
+	const int Type = ServerBrowser()->GetType();
+	if(Type == IServerBrowser::TYPE_INTERNET)
+		return g_Config.m_UiInternetServerAddress;
+	else if(Type == IServerBrowser::TYPE_LAN)
+		return g_Config.m_UiLanServerAddress;
+	return 0;
+}
+
+void CMenus::SetServerBrowserAddress(const char *pAddress)
+{
+	const int Type = ServerBrowser()->GetType();
+	if(Type == IServerBrowser::TYPE_INTERNET)
+		str_copy(g_Config.m_UiInternetServerAddress, pAddress, sizeof(g_Config.m_UiInternetServerAddress));
+	else if(Type == IServerBrowser::TYPE_LAN)
+		str_copy(g_Config.m_UiLanServerAddress, pAddress, sizeof(g_Config.m_UiLanServerAddress));
 }
 
 void CMenus::ServerBrowserFilterOnUpdate()
