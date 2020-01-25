@@ -675,6 +675,10 @@ public:
 	char m_FileDialogNewFolderName[64];
 	char m_FileDialogErrString[64];
 	float m_FilesSearchBoxID;
+	IGraphics::CTextureHandle m_FilePreviewImage;
+	bool m_PreviewImageIsLoaded;
+	CImageInfo m_FilePreviewImageInfo;
+
 
 	struct CFilelistItem
 	{
