@@ -114,9 +114,10 @@ void CMenus::CScrollRegion::End()
 	bool Hovered = false;
 	bool Grabbed = false;
 	const void* pID = &m_ScrollY;
-	int Inside = m_pUI->MouseInside(&Slider);
+	const bool InsideSlider = m_pUI->MouseInside(&Slider);
+	const bool InsideRail = m_pUI->MouseInside(&m_RailRect);
 
-	if(Inside)
+	if(InsideSlider)
 	{
 		m_pUI->SetHotItem(pID);
 
@@ -126,6 +127,12 @@ void CMenus::CScrollRegion::End()
 			m_MouseGrabStart.y = m_pUI->MouseY();
 		}
 
+		Hovered = true;
+	}
+	else if(InsideRail && m_pUI->MouseButton(0))
+	{
+		const float SliderDistance = m_pUI->MouseY() - (Slider.y+Slider.h/2);
+		m_ScrollY += sign(SliderDistance) * log(abs(SliderDistance)); // slow down to reasonable scroll speed; keep sign with logarithm
 		Hovered = true;
 	}
 
