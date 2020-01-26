@@ -1323,6 +1323,8 @@ set_src(ENGINE_SHARED GLOB src/engine/shared
   filecollection.h
   huffman.cpp
   huffman.h
+  jsonwriter.cpp
+  jsonwriter.h
   jobs.cpp
   jobs.h
   kernel.cpp
