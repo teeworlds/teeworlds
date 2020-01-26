@@ -261,10 +261,10 @@ void CMenus::SaveFilters()
 	io_write(File, p, str_length(p));
 	for(int i = 0; i < IServerBrowser::NUM_TYPES; i++)
 	{
-		str_format(aBuf, sizeof(aBuf), "\t\t%d,\n", m_aSelectedFilters[i]);
+		str_format(aBuf, sizeof(aBuf), "\t\t%d%s\n", m_aSelectedFilters[i], i < IServerBrowser::NUM_TYPES-1 ? "," : "");
 		io_write(File, aBuf, str_length(aBuf));
 	}
-	p = "\t],\n";
+	p = "\t]\n";
 	io_write(File, p, str_length(p));
 
 	// settings end
@@ -313,7 +313,7 @@ void CMenus::SaveFilters()
 		io_write(File, aBuf, str_length(aBuf));
 		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_address\": \"%s\",\n", FilterInfo.m_aAddress);
 		io_write(File, aBuf, str_length(aBuf));
-		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_country\": %d,\n\t\t\t}", FilterInfo.m_Country);
+		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_country\": %d\n\t\t\t}", FilterInfo.m_Country);
 		io_write(File, aBuf, str_length(aBuf));
 
 		// part end
