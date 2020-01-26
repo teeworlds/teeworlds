@@ -377,8 +377,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	MainView.HSplitTop(MainView.h - BackgroundHeight - 2 * HMargin, &ListBox, &MainView);
 
 	static CListBox s_ListBox(this);
-	s_ListBox.DoHeader(&ListBox, Localize("Recorded"), 20.0f, 2.0f);
-	s_ListBox.DoStart(20.0f, 0, m_lDemos.size(), 1, m_DemolistSelectedIndex);
+	s_ListBox.DoHeader(&ListBox, Localize("Recorded"), GetListHeaderHeight());
+	s_ListBox.DoStart(20.0f, m_lDemos.size(), 1, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = s_ListBox.DoNextItem((void*)(&r.front()));
