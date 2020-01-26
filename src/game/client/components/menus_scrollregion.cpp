@@ -14,7 +14,10 @@
 
 CMenus::CScrollRegion::CScrollRegion(CMenus *pMenus)
 {
-	m_pMenus = pMenus;
+	m_pRenderTools = pMenus->RenderTools();
+	m_pUI = pMenus->UI();
+	m_pInput = pMenus->Input();
+
 	m_ScrollY = 0;
 	m_ContentH = 0;
 	m_RequestScrollY = -1;
@@ -28,8 +31,8 @@ void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, const CS
 	if(pParams)
 		m_Params = *pParams;
 
-	m_WasClipped = m_pMenus->UI()->IsClipped();
-	m_OldClipRect = *m_pMenus->UI()->ClipArea();
+	m_WasClipped = m_pUI->IsClipped();
+	m_OldClipRect = *m_pUI->ClipArea();
 
 	const bool ContentOverflows = m_ContentH > pClipRect->h;
 	const bool ForceShowScrollbar = m_Params.m_Flags&CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
@@ -43,15 +46,15 @@ void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, const CS
 	if(ContentOverflows || ForceShowScrollbar)
 	{
 		if(m_Params.m_ScrollbarBgColor.a > 0)
-			m_pMenus->RenderTools()->DrawRoundRect(&ScrollBarBg, m_Params.m_ScrollbarBgColor, 4.0f);
+			m_pRenderTools->DrawRoundRect(&ScrollBarBg, m_Params.m_ScrollbarBgColor, 4.0f);
 		if(m_Params.m_RailBgColor.a > 0)
-			m_pMenus->RenderTools()->DrawRoundRect(&m_RailRect, m_Params.m_RailBgColor, m_RailRect.w/2.0f);
+			m_pRenderTools->DrawRoundRect(&m_RailRect, m_Params.m_RailBgColor, m_RailRect.w/2.0f);
 	}
 	if(!ContentOverflows)
 		m_ContentScrollOff.y = 0;
 
 	if(m_Params.m_ClipBgColor.a > 0)
-		m_pMenus->RenderTools()->DrawRoundRect(pClipRect, m_Params.m_ClipBgColor, 4.0f);
+		m_pRenderTools->DrawRoundRect(pClipRect, m_Params.m_ClipBgColor, 4.0f);
 
 	CUIRect ClipRect = *pClipRect;
 	if(m_WasClipped)
@@ -64,7 +67,7 @@ void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, const CS
 		ClipRect = Intersection;
 	}
 
-	m_pMenus->UI()->ClipEnable(&ClipRect);
+	m_pUI->ClipEnable(&ClipRect);
 
 	m_ClipRect = *pClipRect;
 	m_ContentH = 0;
@@ -73,9 +76,9 @@ void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, const CS
 
 void CMenus::CScrollRegion::End()
 {
-	m_pMenus->UI()->ClipDisable();
+	m_pUI->ClipDisable();
 	if(m_WasClipped)
-		m_pMenus->UI()->ClipEnable(&m_OldClipRect);
+		m_pUI->ClipEnable(&m_OldClipRect);
 
 	// only show scrollbar if content overflows
 	if(m_ContentH <= m_ClipRect.h)
@@ -84,11 +87,11 @@ void CMenus::CScrollRegion::End()
 	// scroll wheel
 	CUIRect RegionRect = m_ClipRect;
 	RegionRect.w += m_Params.m_ScrollbarWidth;
-	if(m_pMenus->UI()->MouseInside(&RegionRect))
+	if(m_pUI->MouseInside(&RegionRect))
 	{
-		if(m_pMenus->Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+		if(m_pInput->KeyPress(KEY_MOUSE_WHEEL_UP))
 			m_ScrollY -= m_Params.m_ScrollSpeed;
-		else if(m_pMenus->Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+		else if(m_pInput->KeyPress(KEY_MOUSE_WHEEL_DOWN))
 			m_ScrollY += m_Params.m_ScrollSpeed;
 	}
 
@@ -111,28 +114,28 @@ void CMenus::CScrollRegion::End()
 	bool Hovered = false;
 	bool Grabbed = false;
 	const void* pID = &m_ScrollY;
-	int Inside = m_pMenus->UI()->MouseInside(&Slider);
+	int Inside = m_pUI->MouseInside(&Slider);
 
 	if(Inside)
 	{
-		m_pMenus->UI()->SetHotItem(pID);
+		m_pUI->SetHotItem(pID);
 
-		if(!m_pMenus->UI()->CheckActiveItem(pID) && m_pMenus->UI()->MouseButtonClicked(0))
+		if(!m_pUI->CheckActiveItem(pID) && m_pUI->MouseButtonClicked(0))
 		{
-			m_pMenus->UI()->SetActiveItem(pID);
-			m_MouseGrabStart.y = m_pMenus->UI()->MouseY();
+			m_pUI->SetActiveItem(pID);
+			m_MouseGrabStart.y = m_pUI->MouseY();
 		}
 
 		Hovered = true;
 	}
 
-	if(m_pMenus->UI()->CheckActiveItem(pID) && !m_pMenus->UI()->MouseButton(0))
-		m_pMenus->UI()->SetActiveItem(0);
+	if(m_pUI->CheckActiveItem(pID) && !m_pUI->MouseButton(0))
+		m_pUI->SetActiveItem(0);
 
 	// move slider
-	if(m_pMenus->UI()->CheckActiveItem(pID) && m_pMenus->UI()->MouseButton(0))
+	if(m_pUI->CheckActiveItem(pID) && m_pUI->MouseButton(0))
 	{
-		float my = m_pMenus->UI()->MouseY();
+		float my = m_pUI->MouseY();
 		m_ScrollY += my - m_MouseGrabStart.y;
 		m_MouseGrabStart.y = my;
 
@@ -148,7 +151,7 @@ void CMenus::CScrollRegion::End()
 	else if(Hovered)
 		SliderColor = m_Params.m_SliderColorHover;
 
-	m_pMenus->RenderTools()->DrawRoundRect(&Slider, SliderColor, Slider.w/2.0f);
+	m_pRenderTools->DrawRoundRect(&Slider, SliderColor, Slider.w/2.0f);
 }
 
 void CMenus::CScrollRegion::AddRect(CUIRect Rect)

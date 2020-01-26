@@ -198,7 +198,10 @@ private:
 	class CScrollRegion
 	{
 	private:
-		CMenus *m_pMenus;
+		CRenderTools *m_pRenderTools;
+		CUI *m_pUI;
+		IInput *m_pInput;
+
 		float m_ScrollY;
 		float m_ContentH;
 		float m_RequestScrollY; // [0, ContentHeight]
