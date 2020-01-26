@@ -979,8 +979,10 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 {
 	CUIRect Headers, Status;
 
-	float SpacingH = 2.0f;
-	float ButtonHeight = 20.0f;
+	const float SpacingH = 2.0f;
+	const float ButtonHeight = 20.0f;
+	const float HeaderHeight = GetListHeaderHeight();
+	const float HeightFactor = GetListHeaderHeightFactor();
 
 	// background
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, g_Config.m_ClMenuAlpha/100.0f), (Client()->State() == IClient::STATE_OFFLINE) ? CUI::CORNER_ALL : CUI::CORNER_B|CUI::CORNER_TR, 5.0f);
@@ -991,7 +993,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		View.VSplitRight(20.0f, &View, &Scroll);
 	}
 
-	View.HSplitTop(GetListHeaderHeight(), &Headers, &View);
+	View.HSplitTop(HeaderHeight, &Headers, &View);
 	View.HSplitBottom(ButtonHeight*3.0f+SpacingH*2.0f, &View, &Status);
 
 	Headers.VSplitRight(2.f, &Headers, 0); // some margin on the right
@@ -1001,7 +1003,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		if(ms_aBrowserCols[i].m_Direction == -1)
 		{
-			Headers.VSplitLeft(ms_aBrowserCols[i].m_Width*GetListHeaderHeightFactor(), &ms_aBrowserCols[i].m_Rect, &Headers);
+			Headers.VSplitLeft(ms_aBrowserCols[i].m_Width*HeightFactor, &ms_aBrowserCols[i].m_Rect, &Headers);
 
 			if(i+1 < NUM_BROWSER_COLS)
 			{
@@ -1014,7 +1016,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		if(ms_aBrowserCols[i].m_Direction == 1)
 		{
-			Headers.VSplitRight(ms_aBrowserCols[i].m_Width*GetListHeaderHeightFactor(), &Headers, &ms_aBrowserCols[i].m_Rect);
+			Headers.VSplitRight(ms_aBrowserCols[i].m_Width*HeightFactor, &Headers, &ms_aBrowserCols[i].m_Rect);
 			Headers.VSplitRight(2, &Headers, &ms_aBrowserCols[i].m_Spacer);
 		}
 	}
@@ -1253,7 +1255,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					m_AddressSelection &= ~(ADDR_SELECTION_CHANGE|ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND);
 				}
 
-				float ItemHeight = GetListHeaderHeight();
+				float ItemHeight = HeaderHeight;
 				if(!m_SidebarActive && IsSelected && m_ShowServerDetails)
 				{
 					ItemHeight *= 6.0f;
@@ -1557,21 +1559,22 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	// show lists
 	// only ~10 buttons will be displayed at once, a sliding window of 20 buttons ought to be enough
 	static CButtonContainer s_FriendJoinButtons[20];
+	const float HeaderHeight = GetListHeaderHeight();
 	int ButtonId = 0;
 	for(int i = 0; i < NUM_FRIEND_TYPES; ++i)
 	{
 		CUIRect Header;
 		char aBuf[64] = { 0 };
-		View.HSplitTop(GetListHeaderHeight(), &Header, &View);
+		View.HSplitTop(HeaderHeight, &Header, &View);
 		if(s_ListExtended[i])
 		{
 			// entries
 			for(int f = 0; f < m_lFriendList[i].size(); ++f, ++ButtonId)
 			{
 				if(i == FRIEND_OFF)
-					View.HSplitTop(8.0f + GetListHeaderHeight(), &Rect, &View);
+					View.HSplitTop(8.0f + HeaderHeight, &Rect, &View);
 				else
-					View.HSplitTop(20.0f + GetListHeaderHeight(), &Rect, &View);
+					View.HSplitTop(20.0f + HeaderHeight, &Rect, &View);
 				s_ScrollRegion.AddRect(Rect);
 				if(i == FRIEND_PLAYER_ON)
 					RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 1.0f, 0.5f, 0.30f), CUI::CORNER_ALL, 5.0f);
@@ -1594,7 +1597,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 				// info
 				if(m_lFriendList[i][f].m_pServerInfo)
 				{
-					Rect.HSplitTop(GetListHeaderHeight(), &Button, &Rect);
+					Rect.HSplitTop(HeaderHeight, &Button, &Rect);
 					Button.VSplitLeft(2.0f, 0, &Button);
 					if(m_lFriendList[i][f].m_IsPlayer)
 						str_format(aBuf, sizeof(aBuf), Localize("Playing '%s' on '%s'", "Playing '(gametype)' on '(map)'"), m_lFriendList[i][f].m_pServerInfo->m_aGameType, m_lFriendList[i][f].m_pServerInfo->m_aMap);
@@ -1615,7 +1618,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 				Rect.VSplitRight(15.0f, &Button, 0);
 				if(m_lFriendList[i][f].m_pServerInfo)
 				{
-					Button.Margin((Button.h - GetListHeaderHeight() + 2.0f) / 2, &Button);
+					Button.Margin((Button.h - HeaderHeight + 2.0f) / 2, &Button);
 					if(DoButton_Menu(&(s_FriendJoinButtons[ButtonId%20]), Localize("Join", "Join a server"), 0, &Button) )
 					{
 						SetServerBrowserAddress(m_lFriendList[i][f].m_pServerInfo->m_aAddress);
@@ -1651,21 +1654,21 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	s_ScrollRegion.End();
 
 	// add friend
-	BottomArea.HSplitTop(GetListHeaderHeight(), &Button, &BottomArea);
+	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Name"), FontSize, CUI::ALIGN_LEFT);
 	static char s_aName[MAX_NAME_LENGTH] = { 0 };
 	static float s_OffsetName = 0.0f;
 	DoEditBox(&s_aName, &Button, s_aName, sizeof(s_aName), Button.h*ms_FontmodHeight*0.8f, &s_OffsetName);
 
-	BottomArea.HSplitTop(GetListHeaderHeight(), &Button, &BottomArea);
+	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Clan"), FontSize, CUI::ALIGN_LEFT);
 	static char s_aClan[MAX_CLAN_LENGTH] = { 0 };
 	static float s_OffsetClan = 0.0f;
 	DoEditBox(&s_aClan, &Button, s_aClan, sizeof(s_aClan), Button.h*ms_FontmodHeight*0.8f, &s_OffsetClan);
 
-	BottomArea.HSplitTop(GetListHeaderHeight(), &Button, &BottomArea);
+	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 	if(s_aName[0] || s_aClan[0])
 		Button.VSplitLeft(Button.h, &Icon, &Label);
