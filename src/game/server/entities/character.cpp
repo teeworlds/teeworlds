@@ -679,7 +679,7 @@ void CCharacter::Die(int Killer, int Weapon)
 	CNetMsg_Sv_KillMsg Msg;
 	Msg.m_Victim = m_pPlayer->GetCID();
 	Msg.m_ModeSpecial = ModeSpecial;
-	for(int i = 0 ; i < Server()->MaxClients(); i++)
+	for(int i = 0 ; i < MAX_CLIENTS; i++)
 	{
 		if(!Server()->ClientIngame(i))
 			continue;

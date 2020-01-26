@@ -88,7 +88,7 @@ void IGameController::DoActivityCheck()
 						for(int j = 0; j < MAX_CLIENTS; ++j)
 							if(GameServer()->m_apPlayers[j] && GameServer()->m_apPlayers[j]->GetTeam() == TEAM_SPECTATORS)
 								++Spectators;
-						if(Spectators >= Server()->MaxClients() - g_Config.m_SvPlayerSlots)
+						if(Spectators >= g_Config.m_SvMaxClients - g_Config.m_SvPlayerSlots)
 							Server()->Kick(i, "Kicked for inactivity");
 						else
 							DoTeamChange(GameServer()->m_apPlayers[i], TEAM_SPECTATORS);

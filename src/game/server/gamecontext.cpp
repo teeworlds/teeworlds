@@ -1458,8 +1458,8 @@ void CGameContext::ConchainSettingUpdate(IConsole::IResult *pResult, void *pUser
 	if(pResult->NumArguments())
 	{
 		CGameContext *pSelf = (CGameContext *)pUserData;
-		if(pSelf->Server()->MaxClients() < g_Config.m_SvPlayerSlots)
-			g_Config.m_SvPlayerSlots = pSelf->Server()->MaxClients();
+		if(g_Config.m_SvMaxClients < g_Config.m_SvPlayerSlots)
+			g_Config.m_SvPlayerSlots = g_Config.m_SvMaxClients;
 		pSelf->SendSettings(-1);
 	}
 }
@@ -1563,17 +1563,17 @@ void CGameContext::OnInit()
 	Console()->Chain("sv_matches_per_map", ConchainGameinfoUpdate, this);
 
 	// clamp sv_player_slots to 0..MaxClients
-	if(Server()->MaxClients() < g_Config.m_SvPlayerSlots)
-		g_Config.m_SvPlayerSlots = Server()->MaxClients();
+	if(g_Config.m_SvMaxClients < g_Config.m_SvPlayerSlots)
+		g_Config.m_SvPlayerSlots = g_Config.m_SvMaxClients;
 
 #ifdef CONF_DEBUG
-	// clamp dbg_dummies to 0..MaxClients-1
-	if(Server()->MaxClients() <= g_Config.m_DbgDummies)
-		g_Config.m_DbgDummies = Server()->MaxClients();
+	// clamp dbg_dummies to 0..MAX_CLIENTS-1
+	if(MAX_CLIENTS <= g_Config.m_DbgDummies)
+		g_Config.m_DbgDummies = MAX_CLIENTS;
 	if(g_Config.m_DbgDummies)
 	{
 		for(int i = 0; i < g_Config.m_DbgDummies ; i++)
-			OnClientConnected(Server()->MaxClients() -i-1, true, false);
+			OnClientConnected(MAX_CLIENTS -i-1, true, false);
 	}
 #endif
 }
