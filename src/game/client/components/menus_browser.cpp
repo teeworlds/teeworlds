@@ -11,6 +11,7 @@
 #include <engine/storage.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
+#include <engine/shared/jsonwriter.h>
 #include <engine/client/contacts.h>
 
 #include <generated/client_data.h>
@@ -247,85 +248,77 @@ void CMenus::SaveFilters()
 	if(!File)
 		return;
 
-	char aBuf[512];
+	CJsonWriter Writer(File);
+
+	Writer.BeginObject(); // root
 
 	// settings
-	const char *p = "{\"settings\": {\n";
-	io_write(File, p, str_length(p));
-
-	str_format(aBuf, sizeof(aBuf), "\t\"sidebar_active\": %d,\n", m_SidebarActive);
-	io_write(File, aBuf, str_length(aBuf));
-	str_format(aBuf, sizeof(aBuf), "\t\"sidebar_tab\": %d,\n", m_SidebarTab);
-	io_write(File, aBuf, str_length(aBuf));
-	p = "\t\"filters\": [\n";
-	io_write(File, p, str_length(p));
-	for(int i = 0; i < IServerBrowser::NUM_TYPES; i++)
+	Writer.BeginAttribute("settings");
+	Writer.BeginObject();
 	{
-		str_format(aBuf, sizeof(aBuf), "\t\t%d%s\n", m_aSelectedFilters[i], i < IServerBrowser::NUM_TYPES-1 ? "," : "");
-		io_write(File, aBuf, str_length(aBuf));
+		Writer.BeginAttribute("sidebar_active");
+		Writer.WriteIntValue(m_SidebarActive);
+
+		Writer.BeginAttribute("sidebar_tab");
+		Writer.WriteIntValue(m_SidebarTab);
+
+		Writer.BeginAttribute("filters");
+		Writer.BeginArray();
+		for(int i = 0; i < IServerBrowser::NUM_TYPES; i++)
+			Writer.WriteIntValue(m_aSelectedFilters[i]);
+		Writer.EndArray();
 	}
-	p = "\t]\n";
-	io_write(File, p, str_length(p));
+	Writer.EndObject();
 
-	// settings end
-	p = "},\n";
-	io_write(File, p, str_length(p));
-	
 	// filter
-	p = " \"filter\": [";
-	io_write(File, p, str_length(p));
-
+	Writer.BeginAttribute("filter");
+	Writer.BeginArray();
 	for(int i = 0; i < m_lFilters.size(); i++)
 	{
 		// part start
-		if(i == 0)
-			p = "\n";
-		else
-			p = ",\n";
-		io_write(File, p, str_length(p));
-
-		str_format(aBuf, sizeof(aBuf), "\t{\"%s\": {\n", m_lFilters[i].Name());
-		io_write(File, aBuf, str_length(aBuf));
-
-		str_format(aBuf, sizeof(aBuf), "\t\t\"type\": %d,\n", m_lFilters[i].Custom());
-		io_write(File, aBuf, str_length(aBuf));
-
-		// filter setting
-		CServerFilterInfo FilterInfo;
-		m_lFilters[i].GetFilter(&FilterInfo);
-
-		str_format(aBuf, sizeof(aBuf), "\t\t\"settings\": {\n");
-		io_write(File, aBuf, str_length(aBuf));
-		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_hash\": %d,\n", FilterInfo.m_SortHash);
-		io_write(File, aBuf, str_length(aBuf));
-		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_gametype\": [");
-		io_write(File, aBuf, str_length(aBuf));
-		for(unsigned j = 0; j < CServerFilterInfo::MAX_GAMETYPES && FilterInfo.m_aGametype[j][0]; ++j)
+		Writer.BeginObject();
+		Writer.BeginAttribute(m_lFilters[i].Name());
+		Writer.BeginObject();
 		{
-			str_format(aBuf, sizeof(aBuf), "\n\t\t\t\t\"%s\",", FilterInfo.m_aGametype[j]);
-			io_write(File, aBuf, str_length(aBuf));
+			Writer.BeginAttribute("type");
+			Writer.WriteIntValue(m_lFilters[i].Custom());
+
+			// filter setting
+			CServerFilterInfo FilterInfo;
+			m_lFilters[i].GetFilter(&FilterInfo);
+
+			Writer.BeginAttribute("settings");
+			Writer.BeginObject();
+			{
+				Writer.BeginAttribute("filter_hash");
+				Writer.WriteIntValue(FilterInfo.m_SortHash);
+
+				Writer.BeginAttribute("filter_gametype");
+				Writer.BeginArray();
+				for(unsigned j = 0; j < CServerFilterInfo::MAX_GAMETYPES && FilterInfo.m_aGametype[j][0]; ++j)
+					Writer.WriteStrValue(FilterInfo.m_aGametype[j]);
+				Writer.EndArray();
+
+				Writer.BeginAttribute("filter_ping");
+				Writer.WriteIntValue(FilterInfo.m_Ping);
+
+				Writer.BeginAttribute("filter_serverlevel");
+				Writer.WriteIntValue(FilterInfo.m_ServerLevel);
+
+				Writer.BeginAttribute("filter_address");
+				Writer.WriteStrValue(FilterInfo.m_aAddress);
+
+				Writer.BeginAttribute("filter_country");
+				Writer.WriteIntValue(FilterInfo.m_Country);
+			}
+			Writer.EndObject();
 		}
-		p = "\n\t\t\t],\n";
-		io_write(File, p, str_length(p));
-		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_ping\": %d,\n", FilterInfo.m_Ping);
-		io_write(File, aBuf, str_length(aBuf));
-		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_serverlevel\": %d,\n", FilterInfo.m_ServerLevel);
-		io_write(File, aBuf, str_length(aBuf));
-		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_address\": \"%s\",\n", FilterInfo.m_aAddress);
-		io_write(File, aBuf, str_length(aBuf));
-		str_format(aBuf, sizeof(aBuf), "\t\t\t\"filter_country\": %d\n\t\t\t}", FilterInfo.m_Country);
-		io_write(File, aBuf, str_length(aBuf));
-
-		// part end
-		p = "\n\t\t}\n\t}";
-		io_write(File, p, str_length(p));
+		Writer.EndObject();
+		Writer.EndObject();
 	}
+	Writer.EndArray();
 
-	// filter end
-	p = "]\n}";
-	io_write(File, p, str_length(p));
-
-	io_close(File);
+	Writer.EndObject(); // end root
 }
 
 void CMenus::RemoveFilter(int FilterIndex)
