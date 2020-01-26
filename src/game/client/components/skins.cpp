@@ -10,6 +10,7 @@
 #include <engine/storage.h>
 #include <engine/external/json-parser/json.h>
 #include <engine/shared/config.h>
+#include <engine/shared/jsonwriter.h>
 
 #include "skins.h"
 
@@ -165,9 +166,9 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 			bool UseCustomColors = false;
 			const json_value &rColour = rPart["custom_colors"];
 			if(rColour.type == json_string)
-			{
 				UseCustomColors = str_comp((const char *)rColour, "true") == 0;
-			}
+			else if(rColour.type == json_boolean)
+				UseCustomColors = rColour.u.boolean;
 			Skin.m_aUseCustomColors[PartIndex] = UseCustomColors;
 
 			// color components
@@ -499,4 +500,58 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 	}
 
 	return true;
+}
+
+void CSkins::SaveSkinfile(const char *pSaveSkinName)
+{
+	char aBuf[512];
+	str_format(aBuf, sizeof(aBuf), "skins/%s.json", pSaveSkinName);
+	IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(!File)
+		return;
+
+	CJsonWriter Writer(File);
+
+	Writer.BeginObject();
+	Writer.BeginAttribute("skin");
+	Writer.BeginObject();
+	for(int PartIndex = 0; PartIndex < NUM_SKINPARTS; PartIndex++)
+	{
+		if(!ms_apSkinVariables[PartIndex][0])
+			continue;
+
+		// part start
+		Writer.BeginAttribute(ms_apSkinPartNames[PartIndex]);
+		Writer.BeginObject();
+		{
+			Writer.BeginAttribute("filename");
+			Writer.WriteStrValue(ms_apSkinVariables[PartIndex]);
+
+			const bool CustomColors = *ms_apUCCVariables[PartIndex];
+			Writer.BeginAttribute("custom_colors");
+			Writer.WriteBoolValue(CustomColors);
+
+			if(CustomColors)
+			{
+				for(int c = 0; c < NUM_COLOR_COMPONENTS-1; c++)
+				{
+					int Val = (*ms_apColorVariables[PartIndex] >> (2-c)*8) & 0xff;
+					Writer.BeginAttribute(ms_apColorComponents[c]);
+					Writer.WriteIntValue(Val);
+				}
+				if(PartIndex == SKINPART_MARKING)
+				{
+					int Val = (*ms_apColorVariables[PartIndex] >> 24) & 0xff;
+					Writer.BeginAttribute(ms_apColorComponents[3]);
+					Writer.WriteIntValue(Val);
+				}
+			}
+		}
+		Writer.EndObject();
+	}
+	Writer.EndObject();
+	Writer.EndObject();
+
+	// add new skin to the skin list
+	AddSkin(pSaveSkinName);
 }

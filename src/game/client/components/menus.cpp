@@ -2247,7 +2247,7 @@ int CMenus::Render()
 				if(m_aSaveSkinName[0] && m_aSaveSkinName[0] != 'x' && m_aSaveSkinName[1] != '_')
 				{
 					m_Popup = POPUP_NONE;
-					SaveSkinfile();
+					m_pClient->m_pSkins->SaveSkinfile(m_aSaveSkinName);
 					m_aSaveSkinName[0] = 0;
 					m_RefreshSkinSelector = true;
 				}
