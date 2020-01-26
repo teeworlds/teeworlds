@@ -10,7 +10,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 150
 			},
@@ -20,7 +20,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 150
 			},
@@ -30,7 +30,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 450
 			},
@@ -40,7 +40,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 450
 			},
@@ -50,7 +50,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 450
 			},
@@ -60,104 +60,93 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 450
 			},
 			{
 				"index": 16,
 				"condition": [
-					{"x": 0, "y": -1, "value": "empty"},
-
-				],
+					{"x": 0, "y": -1, "value": "empty"}
+				]
 			},
 			{
 				"index": 17,
 				"condition": [
-					{"x": 1, "y": 0, "value": "empty"},
-
-				],
+					{"x": 1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 18,
 				"condition": [
-					{"x": 0, "y": 1, "value": "empty"},
-
-				],
+					{"x": 0, "y": 1, "value": "empty"}
+				]
 			},
 			{
 				"index": 19,
 				"condition": [
-					{"x": -1, "y": 0, "value": "empty"},
-
-				],
+					{"x": -1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 33,
 				"condition": [
 					{"x": 0, "y": -1, "value": "empty"},
-					{"x": 1, "y": 0, "value": "empty"},
-
-				],
+					{"x": 1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 32,
 				"condition": [
 					{"x": 0, "y": -1, "value": "empty"},
-					{"x": -1, "y": 0, "value": "empty"},
-
-				],
+					{"x": -1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 35,
 				"condition": [
 					{"x": 0, "y": 1, "value": "empty"},
-					{"x": -1, "y": 0, "value": "empty"},
-
-				],
+					{"x": -1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 34,
 				"condition": [
 					{"x": 0, "y": 1, "value": "empty"},
-					{"x": 1, "y": 0, "value": "empty"},
-
-				],
+					{"x": 1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 51,
 				"condition": [
 					{"x": -1, "y": 1, "value": "empty"},
 					{"x": -1, "y": 0, "value": "full"},
-					{"x": 0, "y": 1, "value": "full"},
-
-				],
+					{"x": 0, "y": 1, "value": "full"}
+				]
 			},
 			{
 				"index": 50,
 				"condition": [
 					{"x": 1, "y": 1, "value": "empty"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": 0, "y": 1, "value": "full"},
-
-				],
+					{"x": 0, "y": 1, "value": "full"}
+				]
 			},
 			{
 				"index": 49,
 				"condition": [
 					{"x": 1, "y": -1, "value": "empty"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": 0, "y": -1, "value": "full"},
-
-				],
+					{"x": 0, "y": -1, "value": "full"}
+				]
 			},
 			{
 				"index": 48,
 				"condition": [
 					{"x": -1, "y": -1, "value": "empty"},
 					{"x": -1, "y": 0, "value": "full"},
-					{"x": 0, "y": -1, "value": "full"},
-				],
+					{"x": 0, "y": -1, "value": "full"}
+				]
 			}]
 		}
 	},
@@ -172,7 +161,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -182,7 +171,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -192,7 +181,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -202,7 +191,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -212,7 +201,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -222,7 +211,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -232,7 +221,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -242,7 +231,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -252,7 +241,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -262,7 +251,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -272,7 +261,7 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
@@ -282,93 +271,93 @@
 					{"x": 0, "y": 1, "value": "full"},
 					{"x": 0, "y": -1, "value": "full"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": 0, "value": "full"}
 				],
 				"random": 500
 			},
 			{
 				"index": 96,
 				"condition": [
-					{"x": 0, "y": -1, "value": "empty"},
-				],
+					{"x": 0, "y": -1, "value": "empty"}
+				]
 			},
 			{
 				"index": 97,
 				"condition": [
-					{"x": 1, "y": 0, "value": "empty"},	
-				],
+					{"x": 1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 98,
 				"condition": [
-					{"x": 0, "y": 1, "value": "empty"},	
+					{"x": 0, "y": 1, "value": "empty"}
 				],
 			},
 			{
 				"index": 99,
 				"condition": [
-					{"x": -1, "y": 0, "value": "empty"},	
-				],
+					{"x": -1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 113,
 				"condition": [
 					{"x": 0, "y": -1, "value": "empty"},
-					{"x": 1, "y": 0, "value": "empty"},	
-				],
+					{"x": 1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 112,
 				"condition": [
 					{"x": 0, "y": -1, "value": "empty"},
-					{"x": -1, "y": 0, "value": "empty"},	
-				],
+					{"x": -1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 115,
 				"condition": [
 					{"x": 0, "y": 1, "value": "empty"},
-					{"x": -1, "y": 0, "value": "empty"},	
-				],
+					{"x": -1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 114,
 				"condition": [
 					{"x": 0, "y": 1, "value": "empty"},
-					{"x": 1, "y": 0, "value": "empty"},	
-				],
+					{"x": 1, "y": 0, "value": "empty"}
+				]
 			},
 			{
 				"index": 131,
 				"condition": [
 					{"x": -1, "y": 1, "value": "empty"},
 					{"x": -1, "y": 0, "value": "full"},
-					{"x": 0, "y": 1, "value": "full"},	
-				],
+					{"x": 0, "y": 1, "value": "full"}
+				]
 			},
 			{
 				"index": 130,
 				"condition": [
 					{"x": 1, "y": 1, "value": "empty"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": 0, "y": 1, "value": "full"},	
-				],
+					{"x": 0, "y": 1, "value": "full"}
+				]
 			},
 			{
 				"index": 129,
 				"condition": [
 					{"x": 1, "y": -1, "value": "empty"},
 					{"x": 1, "y": 0, "value": "full"},
-					{"x": 0, "y": -1, "value": "full"},	
-				],
+					{"x": 0, "y": -1, "value": "full"}
+				]
 			},
 			{
 				"index": 128,
 				"condition": [
 					{"x": -1, "y": -1, "value": "empty"},
 					{"x": -1, "y": 0, "value": "full"},
-					{"x": 0, "y": -1, "value": "full"},
-				],
+					{"x": 0, "y": -1, "value": "full"}
+				]
 			}]
 		}
 	}]
