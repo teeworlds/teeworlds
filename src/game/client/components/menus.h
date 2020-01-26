@@ -239,7 +239,11 @@ private:
 	class CListBox
 	{
 	private:
-		CMenus *m_pMenus;
+		CMenus *m_pMenus; // TODO: refactor to remove this
+		CRenderTools *m_pRenderTools;
+		CUI *m_pUI;
+		IInput *m_pInput;
+
 		CUIRect m_ListBoxView;
 		float m_ListBoxRowHeight;
 		int m_ListBoxItemIndex;

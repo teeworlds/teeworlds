@@ -13,7 +13,11 @@
 
 CMenus::CListBox::CListBox(CMenus *pMenus) : m_ScrollRegion(pMenus)
 {
-	m_pMenus = pMenus;
+	m_pMenus = pMenus; // TODO: Refactor in order to remove this reference to menus
+	m_pRenderTools = pMenus->RenderTools();
+	m_pUI = pMenus->UI();
+	m_pInput = pMenus->Input();
+
 	m_ScrollOffset = vec2(0,0);
 	m_ListBoxUpdateScroll = false;
 	m_aFilterString[0] = '\0';
@@ -28,12 +32,12 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 
 	// background
 	View.HSplitTop(HeaderHeight+Spacing, &Header, 0);
-	m_pMenus->RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
+	m_pRenderTools->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
 
 	// draw header
 	View.HSplitTop(HeaderHeight, &Header, &View);
 	Header.y += 2.0f;
-	m_pMenus->UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+	m_pUI->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 	View.HSplitTop(Spacing, &Header, &View);
 
@@ -48,7 +52,7 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 
 	// background
 	View.HSplitTop(FilterHeight+Spacing, &Filter, 0);
-	m_pMenus->RenderTools()->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 5.0f);
+	m_pRenderTools->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 5.0f);
 
 	// draw filter
 	View.HSplitTop(FilterHeight, &Filter, &View);
@@ -59,7 +63,7 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 	CUIRect Label, EditBox;
 	Filter.VSplitLeft(Filter.w/5.0f, &Label, &EditBox);
 	Label.y += Spacing;
-	m_pMenus->UI()->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_CENTER);
+	m_pUI->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_CENTER);
 	bool Changed = m_pMenus->DoEditBox(m_aFilterString, &EditBox, m_aFilterString, sizeof(m_aFilterString), FontSize, &m_OffsetFilter);
 
 	View.HSplitTop(Spacing, &Filter, &View);
@@ -86,7 +90,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 
 	// background
 	if(Background)
-		m_pMenus->RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+		m_pRenderTools->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
 	// draw footers
 	if(m_pBottomText)
@@ -95,7 +99,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 		View.HSplitBottom(m_FooterHeight, &View, &Footer);
 		Footer.VSplitLeft(10.0f, 0, &Footer);
 		Footer.y += 2.0f;
-		m_pMenus->UI()->DoLabel(&Footer, m_pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+		m_pUI->DoLabel(&Footer, m_pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	}
 
 	// setup the variables
@@ -163,7 +167,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 	CListboxItem Item = DoNextRow();
 	static bool s_ItemClicked = false;
 
-	if(Item.m_Visible && m_pMenus->UI()->DoButtonLogic(pId, "", m_ListBoxSelectedIndex == m_ListBoxItemIndex, &Item.m_Rect))
+	if(Item.m_Visible && m_pUI->DoButtonLogic(pId, "", m_ListBoxSelectedIndex == m_ListBoxItemIndex, &Item.m_Rect))
 	{
 		s_ItemClicked = true;
 		m_ListBoxNewSelected = ThisItemIndex;
@@ -182,20 +186,20 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 		{
 			m_ListBoxDoneEvents = 1;
 
-			if(m_pMenus->m_EnterPressed || (s_ItemClicked && m_pMenus->Input()->MouseDoubleClick()))
+			if(m_pMenus->m_EnterPressed || (s_ItemClicked && m_pInput->MouseDoubleClick()))
 			{
 				m_ListBoxItemActivated = true;
-				m_pMenus->UI()->SetActiveItem(0);
+				m_pUI->SetActiveItem(0);
 			}
 		}
 
 		CUIRect r = Item.m_Rect;
-		m_pMenus->RenderTools()->DrawUIRect(&r, vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f), CUI::CORNER_ALL, 5.0f);
+		m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f), CUI::CORNER_ALL, 5.0f);
 	}
-	/*else*/ if(m_pMenus->UI()->HotItem() == pId)
+	/*else*/ if(m_pUI->HotItem() == pId)
 	{
 		CUIRect r = Item.m_Rect;
-		m_pMenus->RenderTools()->DrawUIRect(&r, vec4(1, 1, 1, 0.33f), CUI::CORNER_ALL, 5.0f);
+		m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, 0.33f), CUI::CORNER_ALL, 5.0f);
 	}
 
 	return Item;
