@@ -812,7 +812,7 @@ void CCharacter::Snap(int SnappingClient)
 		return;
 
 	// write down the m_Core
-	if(!m_ReckoningTick || GameWorld()->m_Paused)
+	if(!m_ReckoningTick || GameServer()->m_pController->IsGamePaused())
 	{
 		// no dead reckoning when paused because the client doesn't know
 		// how far to perform the reckoning

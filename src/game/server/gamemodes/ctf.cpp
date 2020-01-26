@@ -159,7 +159,7 @@ void CGameControllerCTF::Tick()
 {
 	IGameController::Tick();
 
-	if(GameServer()->m_World.m_ResetRequested || GameServer()->m_World.m_Paused)
+	if(GameServer()->m_World.m_ResetRequested || IsGamePaused())
 		return;
 
 	for(int fi = 0; fi < 2; fi++)

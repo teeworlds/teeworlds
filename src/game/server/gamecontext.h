@@ -11,6 +11,7 @@
 
 #include "eventhandler.h"
 #include "gameworld.h"
+#include "gamecontroller.h"
 
 /*
 	Tick
@@ -82,7 +83,7 @@ public:
 	CEventHandler m_Events;
 	class CPlayer *m_apPlayers[MAX_CLIENTS];
 
-	class IGameController *m_pController;
+	IGameController *m_pController;
 	CGameWorld m_World;
 
 	// helper functions
