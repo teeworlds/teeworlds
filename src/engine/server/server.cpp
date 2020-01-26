@@ -1654,11 +1654,25 @@ void CServer::ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserD
 	}
 }
 
+void CServer::ConchainPlayerSlotsUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments())
+	{
+		if(g_Config.m_SvMaxClients < g_Config.m_SvPlayerSlots)
+			g_Config.m_SvPlayerSlots = g_Config.m_SvMaxClients;
+	}
+}
+
 void CServer::ConchainMaxclientsUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
 	if(pResult->NumArguments())
+	{
+		if(g_Config.m_SvMaxClients < g_Config.m_SvPlayerSlots)
+			g_Config.m_SvPlayerSlots = g_Config.m_SvMaxClients;
 		((CServer *)pUserData)->m_NetServer.SetMaxClients(pResult->GetInteger(0));
+	}
 }
 
 void CServer::ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
@@ -1737,6 +1751,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("sv_name", ConchainSpecialInfoupdate, this);
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
 
+	Console()->Chain("sv_player_slots", ConchainPlayerSlotsUpdate, this);
 	Console()->Chain("sv_max_clients", ConchainMaxclientsUpdate, this);
 	Console()->Chain("sv_max_clients", ConchainSpecialInfoupdate, this);
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
