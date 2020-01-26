@@ -1243,7 +1243,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 				// select server if address changed and match found
 				bool IsSelected = m_aSelectedFilters[BrowserType] == FilterIndex && m_aSelectedServers[BrowserType] == ServerIndex;
-				if(!str_comp(pItem->m_aAddress, pAddress))
+				if(!(m_AddressSelection&ADDR_SELECTION_UPDATE_ADDRESS) && !str_comp(pItem->m_aAddress, pAddress))
 				{
 					if(!IsSelected)
 					{
