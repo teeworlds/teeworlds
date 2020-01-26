@@ -8,7 +8,7 @@
 #include "network.h"
 
 
-bool CNetConsole::Open(NETADDR BindAddr, CNetBan *pNetBan, int Flags)
+bool CNetConsole::Open(NETADDR BindAddr, CNetBan *pNetBan, NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser)
 {
 	// zero out the whole structure
 	mem_zero(this, sizeof(*this));
@@ -28,34 +28,30 @@ bool CNetConsole::Open(NETADDR BindAddr, CNetBan *pNetBan, int Flags)
 	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Reset();
 
-	return true;
-}
-
-void CNetConsole::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser)
-{
 	m_pfnNewClient = pfnNewClient;
 	m_pfnDelClient = pfnDelClient;
 	m_UserPtr = pUser;
+
+	return true;
 }
 
-int CNetConsole::Close()
+void CNetConsole::Close()
 {
 	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
-		m_aSlots[i].m_Connection.Disconnect("closing console");
+		Drop(i, "Closing console");
 
 	net_tcp_close(m_Socket);
-
-	return 0;
 }
 
-int CNetConsole::Drop(int ClientID, const char *pReason)
+void CNetConsole::Drop(int ClientID, const char *pReason)
 {
+	if(ClientID < 0 || ClientID >= NET_MAX_CONSOLE_CLIENTS || m_aSlots[ClientID].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+		return;
+
 	if(m_pfnDelClient)
 		m_pfnDelClient(ClientID, pReason, m_UserPtr);
 
 	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
-
-	return 0;
 }
 
 int CNetConsole::AcceptClient(NETSOCKET Socket, const NETADDR *pAddr)

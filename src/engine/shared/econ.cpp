@@ -87,9 +87,8 @@ void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
 		BindAddr.port = g_Config.m_EcPort;
 	}
 
-	if(m_NetConsole.Open(BindAddr, pNetBan, 0))
+	if(m_NetConsole.Open(BindAddr, pNetBan, NewClientCallback, DelClientCallback, this))
 	{
-		m_NetConsole.SetCallbacks(NewClientCallback, DelClientCallback, this);
 		m_Ready = true;
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "bound to %s:%d", g_Config.m_EcBindaddr, g_Config.m_EcPort);

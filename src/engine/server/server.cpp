@@ -1318,13 +1318,11 @@ int CServer::Run()
 		BindAddr.port = g_Config.m_SvPort;
 	}
 
-	if(!m_NetServer.Open(BindAddr, &m_ServerBan, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, 0))
+	if(!m_NetServer.Open(BindAddr, &m_ServerBan, g_Config.m_SvMaxClients, g_Config.m_SvMaxClientsPerIP, NewClientCallback, DelClientCallback, this))
 	{
 		dbg_msg("server", "couldn't open socket. port %d might already be in use", g_Config.m_SvPort);
 		return -1;
 	}
-
-	m_NetServer.SetCallbacks(NewClientCallback, DelClientCallback, this);
 
 	m_Econ.Init(Console(), &m_ServerBan);
 
@@ -1470,13 +1468,8 @@ int CServer::Run()
 		}
 	}
 	// disconnect all clients on shutdown
-	for(int i = 0; i < MAX_CLIENTS; ++i)
-	{
-		if(m_aClients[i].m_State != CClient::STATE_EMPTY)
-			m_NetServer.Drop(i, "Server shutdown");
-
-		m_Econ.Shutdown();
-	}
+	m_NetServer.Close();
+	m_Econ.Shutdown();
 
 	GameServer()->OnShutdown();
 	m_pMap->Unload();

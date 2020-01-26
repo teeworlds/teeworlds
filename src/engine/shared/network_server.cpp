@@ -9,7 +9,7 @@
 #include "network.h"
 
 
-bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int MaxClientsPerIP, int Flags)
+bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int MaxClientsPerIP, NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser)
 {
 	// zero out the whole structure
 	mem_zero(this, sizeof(*this));
@@ -31,42 +31,31 @@ bool CNetServer::Open(NETADDR BindAddr, CNetBan *pNetBan, int MaxClients, int Ma
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 		m_aSlots[i].m_Connection.Init(m_Socket, true);
 
-	m_Flags = Flags;
+	m_pfnNewClient = pfnNewClient;
+	m_pfnDelClient = pfnDelClient;
+	m_UserPtr = pUser;
 
 	return true;
 }
 
-int CNetServer::SetCallbacks(NETFUNC_NEWCLIENT pfnNewClient, NETFUNC_DELCLIENT pfnDelClient, void *pUser)
+void CNetServer::Close()
 {
-	m_pfnNewClient = pfnNewClient;
-	m_pfnDelClient = pfnDelClient;
-	m_UserPtr = pUser;
-	return 0;
+	for(int i = 0; i < NET_MAX_CLIENTS; i++)
+		Drop(i, "Server shutdown");
+
+	net_udp_close(m_Socket);
 }
 
-int CNetServer::Close()
+void CNetServer::Drop(int ClientID, const char *pReason)
 {
-	// TODO: implement me
-	return 0;
-}
+	if(ClientID < 0 || ClientID >= NET_MAX_CLIENTS || m_aSlots[ClientID].m_Connection.State() == NET_CONNSTATE_OFFLINE)
+		return;
 
-int CNetServer::Drop(int ClientID, const char *pReason)
-{
-	// TODO: insert lots of checks here
-	/*NETADDR Addr = ClientAddr(ClientID);
-
-	dbg_msg("net_server", "client dropped. cid=%d ip=%d.%d.%d.%d reason=\"%s\"",
-		ClientID,
-		Addr.ip[0], Addr.ip[1], Addr.ip[2], Addr.ip[3],
-		pReason
-		);*/
 	if(m_pfnDelClient)
 		m_pfnDelClient(ClientID, pReason, m_UserPtr);
 
 	m_aSlots[ClientID].m_Connection.Disconnect(pReason);
 	m_NumClients--;
-
-	return 0;
 }
 
 int CNetServer::Update()
