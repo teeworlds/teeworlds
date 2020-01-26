@@ -27,12 +27,11 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 	CUIRect View = *pRect;
 
 	// background
-	const float Height = m_pMenus->GetListHeaderHeight();
-	View.HSplitTop(Height+Spacing, &Header, 0);
+	View.HSplitTop(HeaderHeight+Spacing, &Header, 0);
 	m_pMenus->RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
 
 	// draw header
-	View.HSplitTop(Height, &Header, &View);
+	View.HSplitTop(HeaderHeight, &Header, &View);
 	Header.y += 2.0f;
 	m_pMenus->UI()->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
@@ -70,8 +69,13 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 	return Changed;
 }
 
-void CMenus::CListBox::DoStart(float RowHeight,
-							  const char *pBottomText, int NumItems, int ItemsPerRow, int SelectedIndex,
+void CMenus::CListBox::DoFooter(const char *pBottomText, float FooterHeight)
+{
+	m_pBottomText = pBottomText;
+	m_FooterHeight = FooterHeight;
+}
+
+void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int SelectedIndex,
 							  const CUIRect *pRect, bool Background, bool *pActive)
 {
 	CUIRect View;
@@ -79,20 +83,19 @@ void CMenus::CListBox::DoStart(float RowHeight,
 		View = *pRect;
 	else
 		View = m_ListBoxView;
-	CUIRect Footer;
 
 	// background
 	if(Background)
 		m_pMenus->RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
 
 	// draw footers
-	if(pBottomText)
+	if(m_pBottomText)
 	{
-		const float Height = m_pMenus->GetListHeaderHeight();
-		View.HSplitBottom(Height, &View, &Footer);
+		CUIRect Footer;
+		View.HSplitBottom(m_FooterHeight, &View, &Footer);
 		Footer.VSplitLeft(10.0f, 0, &Footer);
 		Footer.y += 2.0f;
-		m_pMenus->UI()->DoLabel(&Footer, pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+		m_pMenus->UI()->DoLabel(&Footer, m_pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	}
 
 	// setup the variables

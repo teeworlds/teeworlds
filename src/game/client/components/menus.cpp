@@ -2010,7 +2010,7 @@ int CMenus::Render()
 				s_ActSelection = FilterInfo.m_Country;
 			static CListBox s_ListBox(this);
 			int OldSelected = -1;
-			s_ListBox.DoStart(40.0f, 0, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, &Box, false);
+			s_ListBox.DoStart(40.0f, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, &Box, false);
 
 			for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 			{
