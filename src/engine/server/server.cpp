@@ -1140,7 +1140,7 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	pPacker->AddInt(PlayerCount); // num players
 	pPacker->AddInt(g_Config.m_SvPlayerSlots); // max players
 	pPacker->AddInt(ClientCount); // num clients
-	pPacker->AddInt(g_Config.m_SvMaxClients); // max clients
+	pPacker->AddInt(max(ClientCount, g_Config.m_SvMaxClients)); // max clients
 
 	if(Token != -1)
 	{
@@ -1738,6 +1738,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("password", ConchainSpecialInfoupdate, this);
 
 	Console()->Chain("sv_max_clients", ConchainMaxclientsUpdate, this);
+	Console()->Chain("sv_max_clients", ConchainSpecialInfoupdate, this);
 	Console()->Chain("sv_max_clients_per_ip", ConchainMaxclientsperipUpdate, this);
 	Console()->Chain("mod_command", ConchainModCommandUpdate, this);
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
