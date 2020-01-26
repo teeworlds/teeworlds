@@ -208,7 +208,6 @@ function GenerateLinuxSettings(settings, conf, arch, compiler)
 	-- Client
 	settings.link.libs:Add("X11")
 	settings.link.libs:Add("GL")
-	settings.link.libs:Add("GLU")
 	BuildClient(settings)
 
 	-- Content
