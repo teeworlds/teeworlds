@@ -271,7 +271,6 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	settings.link.extrafiles:Add(icons.client)
 	settings.link.extrafiles:Add(manifests.client)
 	settings.link.libs:Add("opengl32")
-	settings.link.libs:Add("glu32")
 	settings.link.libs:Add("winmm")
 	BuildClient(settings)
 
