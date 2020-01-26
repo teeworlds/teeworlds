@@ -9,6 +9,7 @@
 #include <engine/shared/memheap.h>
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
+#include <engine/shared/jsonwriter.h>
 
 #include <engine/config.h>
 #include <engine/console.h>
@@ -638,22 +639,12 @@ void CServerBrowser::SaveServerlist()
 	if(!File)
 		return;
 
-	char aBuf[512];
-
-	// server list
-	const char *p = "{\"serverlist\": [\n";
-	io_write(File, p, str_length(p));
-
+	CJsonWriter Writer(File);
+	Writer.BeginObject(); // root
+	Writer.BeginAttribute("serverlist");
+	Writer.BeginArray();
 	for(int i = 0; i < m_aServerlist[IServerBrowser::TYPE_INTERNET].m_NumServers; ++i)
-	{
-		// entry
-		str_format(aBuf, sizeof(aBuf), "\t\"%s\",\n", m_aServerlist[IServerBrowser::TYPE_INTERNET].m_ppServerlist[i]->m_Info.m_aAddress);
-		io_write(File, aBuf, str_length(aBuf));
-	}
-
-	// server list end
-	p = "\t]\n}\n";
-	io_write(File, p, str_length(p));
-
-	io_close(File);
+		Writer.WriteStrValue(m_aServerlist[IServerBrowser::TYPE_INTERNET].m_ppServerlist[i]->m_Info.m_aAddress);
+	Writer.EndArray();
+	Writer.EndObject();
 }
