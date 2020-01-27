@@ -2100,7 +2100,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			static float s_ScrollValue = 0.0f;
 			if(Width > View.w)
 			{
-				View.HSplitBottom(8.0f, &View, &Scroll);
+				View.HSplitBottom(14.0f, &View, &Scroll);
 				Scroll.VMargin(5.0f, &Scroll);
 				s_ScrollValue = DoScrollbarH(&s_ScrollValue, &Scroll, s_ScrollValue);
 				View.x += (View.w - Width) * s_ScrollValue;
