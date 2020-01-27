@@ -1204,7 +1204,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	}
 
 	// scrollbar
-	static CScrollRegion s_ScrollRegion(this);
+	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
@@ -1538,7 +1538,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	}
 
 	// scrollbar
-	static CScrollRegion s_ScrollRegion(this);
+	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
@@ -2084,7 +2084,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		float RowWidth = (RowCount == 0) ? View.w : (View.w * 0.25f);
 		float LineHeight = 20.0f;
 
-		static CScrollRegion s_ScrollRegion(this);
+		static CScrollRegion s_ScrollRegion;
 		vec2 ScrollOffset(0, 0);
 		CScrollRegionParams ScrollParams;
 		ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
@@ -2100,7 +2100,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			static float s_ScrollValue = 0.0f;
 			if(Width > View.w)
 			{
-				View.HSplitBottom(14.0f, &View, &Scroll);
+				View.HSplitBottom(8.0f, &View, &Scroll);
 				Scroll.VMargin(5.0f, &Scroll);
 				s_ScrollValue = DoScrollbarH(&s_ScrollValue, &Scroll, s_ScrollValue);
 				View.x += (View.w - Width) * s_ScrollValue;

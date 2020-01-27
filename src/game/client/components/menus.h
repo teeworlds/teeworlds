@@ -134,6 +134,18 @@ private:
 	void UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spacing);
 
 
+	class CUIElementBase
+	{
+	protected:
+		static CMenus *m_pMenus;	// TODO: Refactor in order to remove this reference to menus
+		static CRenderTools *m_pRenderTools;
+		static CUI *m_pUI;
+		static IInput *m_pInput;
+
+	public:
+		static void Init(CMenus *pMenus) { m_pMenus = pMenus; m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); };
+	};
+
 	// Scroll region : found in menus_scrollregion.cpp
 	struct CScrollRegionParams
 	{
@@ -172,7 +184,7 @@ private:
 	/*
 	Usage:
 		-- Initialization --
-		static CScrollRegion s_ScrollRegion(this);
+		static CScrollRegion s_ScrollRegion;
 		vec2 ScrollOffset(0, 0);
 		s_ScrollRegion.Begin(&ScrollRegionRect, &ScrollOffset);
 		Content = ScrollRegionRect;
@@ -195,13 +207,9 @@ private:
 		s_ScrollRegion.End();
 	*/
 	// Instances of CScrollRegion must be static, as member addresses are used as UI item IDs
-	class CScrollRegion
+	class CScrollRegion : private CUIElementBase
 	{
 	private:
-		CRenderTools *m_pRenderTools;
-		CUI *m_pUI;
-		IInput *m_pInput;
-
 		float m_ScrollY;
 		float m_ContentH;
 		float m_RequestScrollY; // [0, ContentHeight]
@@ -221,7 +229,7 @@ private:
 			SCROLLHERE_BOTTOM,
 		};
 
-		CScrollRegion(CMenus *pMenus);
+		CScrollRegion();
 		void Begin(CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams = 0);
 		void End();
 		void AddRect(CUIRect Rect);
@@ -239,14 +247,9 @@ private:
 	};
 
 	// Instances of CListBox must be static, as member addresses are used as UI item IDs
-	class CListBox
+	class CListBox : private CUIElementBase
 	{
 	private:
-		CMenus *m_pMenus; // TODO: refactor to remove this
-		CRenderTools *m_pRenderTools;
-		CUI *m_pUI;
-		IInput *m_pInput;
-
 		CUIRect m_ListBoxView;
 		float m_ListBoxRowHeight;
 		int m_ListBoxItemIndex;
@@ -269,7 +272,7 @@ private:
 		CListboxItem DoNextRow();
 
 	public:
-		CListBox(CMenus *pMenus);
+		CListBox();
 
 		void DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight = 20.0f, float Spacing = 2.0f);
 		bool DoFilter(float FilterHeight = 20.0f, float Spacing = 2.0f);

@@ -11,13 +11,8 @@
 
 #include "menus.h"
 
-CMenus::CListBox::CListBox(CMenus *pMenus) : m_ScrollRegion(pMenus)
+CMenus::CListBox::CListBox()
 {
-	m_pMenus = pMenus; // TODO: Refactor in order to remove this reference to menus
-	m_pRenderTools = pMenus->RenderTools();
-	m_pUI = pMenus->UI();
-	m_pInput = pMenus->Input();
-
 	m_ScrollOffset = vec2(0,0);
 	m_ListBoxUpdateScroll = false;
 	m_aFilterString[0] = '\0';

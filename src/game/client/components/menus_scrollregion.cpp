@@ -12,12 +12,8 @@
 
 #include "menus.h"
 
-CMenus::CScrollRegion::CScrollRegion(CMenus *pMenus)
+CMenus::CScrollRegion::CScrollRegion()
 {
-	m_pRenderTools = pMenus->RenderTools();
-	m_pUI = pMenus->UI();
-	m_pInput = pMenus->Input();
-
 	m_ScrollY = 0;
 	m_ContentH = 0;
 	m_RequestScrollY = -1;

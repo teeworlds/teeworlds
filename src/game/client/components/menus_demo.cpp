@@ -376,7 +376,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	CUIRect ListBox, Button, FileIcon;
 	MainView.HSplitTop(MainView.h - BackgroundHeight - 2 * HMargin, &ListBox, &MainView);
 
-	static CListBox s_ListBox(this);
+	static CListBox s_ListBox;
 	s_ListBox.DoHeader(&ListBox, Localize("Recorded"), GetListHeaderHeight());
 	s_ListBox.DoStart(20.0f, m_lDemos.size(), 1, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())

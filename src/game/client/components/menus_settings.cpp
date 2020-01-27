@@ -337,7 +337,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 void CMenus::RenderSkinSelection(CUIRect MainView)
 {
 	static sorted_array<const CSkins::CSkin *> s_paSkinList;
-	static CListBox s_ListBox(this);
+	static CListBox s_ListBox;
 	if(m_RefreshSkinSelector)
 	{
 		s_paSkinList.clear();
@@ -414,7 +414,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 {
 	static bool s_InitSkinPartList = true;
 	static sorted_array<const CSkins::CSkinPart *> s_paList[6];
-	static CListBox s_ListBox(this);
+	static CListBox s_ListBox;
 	if(s_InitSkinPartList)
 	{
 		for(int p = 0; p < NUM_SKINPARTS; p++)
@@ -693,7 +693,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 {
 	static int s_SelectedLanguage = -1;
 	static sorted_array<CLanguage> s_Languages;
-	static CListBox s_ListBox(this);
+	static CListBox s_ListBox;
 
 	if(s_Languages.size() == 0)
 	{
@@ -757,7 +757,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 {
 	static int s_SelectedTheme = -1;
-	static CListBox s_ListBox(this);
+	static CListBox s_ListBox;
 
 	if(m_lThemes.size() == 0) // not loaded yet
 	{
@@ -1138,7 +1138,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	// country flag selector
 	MainView.HSplitTop(10.0f, 0, &MainView);
-	static CListBox s_ListBox(this);
+	static CListBox s_ListBox;
 	int OldSelected = -1;
 	s_ListBox.DoHeader(&MainView, Localize("Country"), GetListHeaderHeight());
 	s_ListBox.DoStart(40.0f, m_pClient->m_pCountryFlags->Num(), 18, OldSelected);
@@ -1467,7 +1467,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 	const float HeaderHeight = 20.0f;
 
-	static CScrollRegion s_ScrollRegion(this);
+	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
@@ -1875,8 +1875,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		ListRec.VSplitRight(1.5f, &ListRec, 0);
 		ListOth.VSplitLeft(1.5f, 0, &ListOth);
 
-		static CListBox s_RecListBox(this);
-		static CListBox s_OthListBox(this);
+		static CListBox s_RecListBox;
+		static CListBox s_OthListBox;
 		CheckSettings |= DoResolutionList(&ListRec, &s_RecListBox, m_lRecommendedVideoModes);
 		CheckSettings |= DoResolutionList(&ListOth, &s_OthListBox, m_lOtherVideoModes);
 	}

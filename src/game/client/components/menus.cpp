@@ -37,6 +37,11 @@ float CMenus::ms_ButtonHeight = 25.0f;
 float CMenus::ms_ListheaderHeight = 17.0f;
 float CMenus::ms_FontmodHeight = 0.8f;
 
+CMenus *CMenus::CUIElementBase::m_pMenus = 0;
+CRenderTools *CMenus::CUIElementBase::m_pRenderTools = 0;
+CUI *CMenus::CUIElementBase::m_pUI = 0;
+IInput *CMenus::CUIElementBase::m_pInput = 0;
+
 
 CMenus::CMenus()
 {
@@ -2008,7 +2013,7 @@ int CMenus::Render()
 			static int s_ActSelection = -2;
 			if(s_ActSelection == -2)
 				s_ActSelection = FilterInfo.m_Country;
-			static CListBox s_ListBox(this);
+			static CListBox s_ListBox;
 			int OldSelected = -1;
 			s_ListBox.DoStart(40.0f, m_pClient->m_pCountryFlags->Num(), 12, OldSelected, &Box, false);
 
@@ -2458,6 +2463,8 @@ void CMenus::OnConsoleInit()
 	// expand the all filter tab by default
 	if(UseDefaultFilters)
 		m_lFilters[m_lFilters.size()-1].Switch();
+
+	CUIElementBase::Init(this);
 }
 
 void CMenus::OnShutdown()
