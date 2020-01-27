@@ -306,7 +306,7 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	int ReturnValue = 0;
 	int Inside = MouseInside(pRect);
 	if(IsClipped())
-		Inside &= MouseInsideClip();
+		Inside &= (MouseInsideClip() ? 1 : 0);
 	static int ButtonUsed = 0;
 
 	if(CheckActiveItem(pID))
