@@ -1325,6 +1325,8 @@ set_src(ENGINE_SHARED GLOB src/engine/shared
   huffman.h
   jobs.cpp
   jobs.h
+  jsonwriter.cpp
+  jsonwriter.h
   kernel.cpp
   linereader.cpp
   linereader.h

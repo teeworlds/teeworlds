@@ -423,7 +423,6 @@ private:
 	int m_TeePartSelected;
 	char m_aSaveSkinName[24];
 
-	void SaveSkinfile();
 	bool m_RefreshSkinSelector;
 	const CSkins::CSkin *m_pSelectedSkin;
 
