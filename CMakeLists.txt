@@ -1721,6 +1721,7 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
     fs.cpp
     git_revision.cpp
     hash.cpp
+    jsonwriter.cpp
     storage.cpp
     str.cpp
     test.cpp
