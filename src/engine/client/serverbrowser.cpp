@@ -641,7 +641,7 @@ void CServerBrowser::SaveServerlist()
 
 	CJsonWriter Writer(File);
 	Writer.BeginObject(); // root
-	Writer.BeginAttribute("serverlist");
+	Writer.WriteAttribute("serverlist");
 	Writer.BeginArray();
 	for(int i = 0; i < m_aServerlist[IServerBrowser::TYPE_INTERNET].m_NumServers; ++i)
 		Writer.WriteStrValue(m_aServerlist[IServerBrowser::TYPE_INTERNET].m_ppServerlist[i]->m_Info.m_aAddress);

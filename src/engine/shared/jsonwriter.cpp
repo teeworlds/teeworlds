@@ -57,7 +57,7 @@ void CJsonWriter::EndArray()
 	WriteInternal("]");
 }
 
-void CJsonWriter::BeginAttribute(const char *pName)
+void CJsonWriter::WriteAttribute(const char *pName)
 {
 	dbg_assert(m_pState != 0 && m_pState->m_State == OBJECT, "Attribute can only be written inside of objects");
 	WriteIndent(false);

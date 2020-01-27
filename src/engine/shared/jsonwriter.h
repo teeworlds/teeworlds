@@ -61,11 +61,11 @@ public:
 	// End current array
 	void EndArray();
 
-	// Begin attribute with the given name inside the current object.
+	// Write attribute with the given name inside the current object.
 	// Names inside one object should be unique, but this is not checked here.
-	// Must be used to write anything inside objects and only there.
-	// Is automatically ended when the value is ended.
-	void BeginAttribute(const char *pName);
+	// Must be used to begin write anything inside objects and only there.
+	// Must be followed by a datatype for the attribute value.
+	void WriteAttribute(const char *pName);
 
 	// Methods for writing value literals
 	// - As array values in arrays

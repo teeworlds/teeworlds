@@ -513,7 +513,7 @@ void CSkins::SaveSkinfile(const char *pSaveSkinName)
 	CJsonWriter Writer(File);
 
 	Writer.BeginObject();
-	Writer.BeginAttribute("skin");
+	Writer.WriteAttribute("skin");
 	Writer.BeginObject();
 	for(int PartIndex = 0; PartIndex < NUM_SKINPARTS; PartIndex++)
 	{
@@ -521,14 +521,14 @@ void CSkins::SaveSkinfile(const char *pSaveSkinName)
 			continue;
 
 		// part start
-		Writer.BeginAttribute(ms_apSkinPartNames[PartIndex]);
+		Writer.WriteAttribute(ms_apSkinPartNames[PartIndex]);
 		Writer.BeginObject();
 		{
-			Writer.BeginAttribute("filename");
+			Writer.WriteAttribute("filename");
 			Writer.WriteStrValue(ms_apSkinVariables[PartIndex]);
 
 			const bool CustomColors = *ms_apUCCVariables[PartIndex];
-			Writer.BeginAttribute("custom_colors");
+			Writer.WriteAttribute("custom_colors");
 			Writer.WriteBoolValue(CustomColors);
 
 			if(CustomColors)
@@ -536,13 +536,13 @@ void CSkins::SaveSkinfile(const char *pSaveSkinName)
 				for(int c = 0; c < NUM_COLOR_COMPONENTS-1; c++)
 				{
 					int Val = (*ms_apColorVariables[PartIndex] >> (2-c)*8) & 0xff;
-					Writer.BeginAttribute(ms_apColorComponents[c]);
+					Writer.WriteAttribute(ms_apColorComponents[c]);
 					Writer.WriteIntValue(Val);
 				}
 				if(PartIndex == SKINPART_MARKING)
 				{
 					int Val = (*ms_apColorVariables[PartIndex] >> 24) & 0xff;
-					Writer.BeginAttribute(ms_apColorComponents[3]);
+					Writer.WriteAttribute(ms_apColorComponents[3]);
 					Writer.WriteIntValue(Val);
 				}
 			}

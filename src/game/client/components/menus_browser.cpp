@@ -253,16 +253,16 @@ void CMenus::SaveFilters()
 	Writer.BeginObject(); // root
 
 	// settings
-	Writer.BeginAttribute("settings");
+	Writer.WriteAttribute("settings");
 	Writer.BeginObject();
 	{
-		Writer.BeginAttribute("sidebar_active");
+		Writer.WriteAttribute("sidebar_active");
 		Writer.WriteIntValue(m_SidebarActive);
 
-		Writer.BeginAttribute("sidebar_tab");
+		Writer.WriteAttribute("sidebar_tab");
 		Writer.WriteIntValue(m_SidebarTab);
 
-		Writer.BeginAttribute("filters");
+		Writer.WriteAttribute("filters");
 		Writer.BeginArray();
 		for(int i = 0; i < IServerBrowser::NUM_TYPES; i++)
 			Writer.WriteIntValue(m_aSelectedFilters[i]);
@@ -271,44 +271,44 @@ void CMenus::SaveFilters()
 	Writer.EndObject();
 
 	// filter
-	Writer.BeginAttribute("filter");
+	Writer.WriteAttribute("filter");
 	Writer.BeginArray();
 	for(int i = 0; i < m_lFilters.size(); i++)
 	{
 		// part start
 		Writer.BeginObject();
-		Writer.BeginAttribute(m_lFilters[i].Name());
+		Writer.WriteAttribute(m_lFilters[i].Name());
 		Writer.BeginObject();
 		{
-			Writer.BeginAttribute("type");
+			Writer.WriteAttribute("type");
 			Writer.WriteIntValue(m_lFilters[i].Custom());
 
 			// filter setting
 			CServerFilterInfo FilterInfo;
 			m_lFilters[i].GetFilter(&FilterInfo);
 
-			Writer.BeginAttribute("settings");
+			Writer.WriteAttribute("settings");
 			Writer.BeginObject();
 			{
-				Writer.BeginAttribute("filter_hash");
+				Writer.WriteAttribute("filter_hash");
 				Writer.WriteIntValue(FilterInfo.m_SortHash);
 
-				Writer.BeginAttribute("filter_gametype");
+				Writer.WriteAttribute("filter_gametype");
 				Writer.BeginArray();
 				for(unsigned j = 0; j < CServerFilterInfo::MAX_GAMETYPES && FilterInfo.m_aGametype[j][0]; ++j)
 					Writer.WriteStrValue(FilterInfo.m_aGametype[j]);
 				Writer.EndArray();
 
-				Writer.BeginAttribute("filter_ping");
+				Writer.WriteAttribute("filter_ping");
 				Writer.WriteIntValue(FilterInfo.m_Ping);
 
-				Writer.BeginAttribute("filter_serverlevel");
+				Writer.WriteAttribute("filter_serverlevel");
 				Writer.WriteIntValue(FilterInfo.m_ServerLevel);
 
-				Writer.BeginAttribute("filter_address");
+				Writer.WriteAttribute("filter_address");
 				Writer.WriteStrValue(FilterInfo.m_aAddress);
 
-				Writer.BeginAttribute("filter_country");
+				Writer.WriteAttribute("filter_country");
 				Writer.WriteIntValue(FilterInfo.m_Country);
 			}
 			Writer.EndObject();
