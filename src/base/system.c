@@ -368,6 +368,49 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
 	return fread(buffer, 1, size, (FILE*)io);
 }
 
+void io_read_all(IOHANDLE io, void **result, unsigned *result_len)
+{
+	unsigned char *buffer = malloc(1024);
+	unsigned len = 0;
+	unsigned cap = 1024;
+	unsigned read;
+
+	*result = 0;
+	*result_len = 0;
+
+	while((read = io_read(io, buffer + len, cap - len)) != 0)
+	{
+		len += read;
+		if(len == cap)
+		{
+			cap *= 2;
+			buffer = realloc(buffer, cap);
+		}
+	}
+	if(len == cap)
+	{
+		buffer = realloc(buffer, cap + 1);
+	}
+	// ensure null termination
+	buffer[len] = 0;
+	*result = buffer;
+	*result_len = len;
+}
+
+char *io_read_all_str(IOHANDLE io)
+{
+	void *buffer;
+	unsigned len;
+
+	io_read_all(io, &buffer, &len);
+	if(mem_has_null(buffer, len))
+	{
+		free(buffer);
+		return 0;
+	}
+	return buffer;
+}
+
 unsigned io_unread_byte(IOHANDLE io, unsigned char byte)
 {
 	return ungetc(byte, (FILE*)io) == EOF;
@@ -1654,6 +1697,33 @@ int fs_rename(const char *oldname, const char *newname)
 	return 0;
 }
 
+int fs_read(const char *name, void **result, unsigned *result_len)
+{
+	IOHANDLE file = io_open(name, IOFLAG_READ);
+	*result = 0;
+	*result_len = 0;
+	if(!file)
+	{
+		return 1;
+	}
+	io_read_all(file, result, result_len);
+	io_close(file);
+	return 0;
+}
+
+char *fs_read_str(const char *name)
+{
+	IOHANDLE file = io_open(name, IOFLAG_READ);
+	char *result;
+	if(!file)
+	{
+		return 0;
+	}
+	result = io_read_all_str(file);
+	io_close(file);
+	return result;
+}
+
 void swap_endian(void *data, unsigned elem_size, unsigned num)
 {
 	char *src = (char*) data;
@@ -2224,6 +2294,19 @@ void str_timestamp(char *buffer, int buffer_size)
 int mem_comp(const void *a, const void *b, int size)
 {
 	return memcmp(a,b,size);
+}
+
+int mem_has_null(const void *block, unsigned size)
+{
+	const unsigned char *bytes = block;
+	for(unsigned i = 0; i < size; i++)
+	{
+		if(bytes[i] == 0)
+		{
+			return 1;
+		}
+	}
+	return 0;
 }
 
 void net_stats(NETSTATS *stats_inout)

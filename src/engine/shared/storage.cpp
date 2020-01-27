@@ -378,6 +378,32 @@ public:
 		return 0;
 	}
 
+	bool ReadFile(const char *pFilename, int Type, void **ppResult, unsigned *pResultLen)
+	{
+		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ, Type);
+		*ppResult = 0;
+		*pResultLen = 0;
+		if(!File)
+		{
+			return true;
+		}
+		io_read_all(File, ppResult, pResultLen);
+		io_close(File);
+		return false;
+	}
+
+	char *ReadFileStr(const char *pFilename, int Type)
+	{
+		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ, Type);
+		if(!File)
+		{
+			return 0;
+		}
+		char *pResult = io_read_all_str(File);
+		io_close(File);
+		return pResult;
+	}
+
 	struct CFindCBData
 	{
 		CStorage *m_pStorage;

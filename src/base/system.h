@@ -178,6 +178,20 @@ void mem_zero(void *block, unsigned size);
 */
 int mem_comp(const void *a, const void *b, int size);
 
+/*
+	Function: mem_has_null
+		Checks whether a block of memory contains null bytes.
+
+	Parameters:
+		block - Pointer to the block to check for nulls.
+		size - Size of the block.
+
+	Returns:
+		1 - The block has a null byte.
+		0 - The block does not have a null byte.
+*/
+int mem_has_null(const void *block, unsigned size);
+
 /* Group: File IO */
 enum {
 	IOFLAG_READ = 1,
@@ -219,6 +233,40 @@ IOHANDLE io_open(const char *filename, int flags);
 
 */
 unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
+
+/*
+	Function: io_read_all
+		Reads the rest of the file into a buffer.
+
+	Parameters:
+		io - Handle to the file to read data from.
+		result - Receives the file's remaining contents.
+		result_len - Receives the file's remaining length.
+
+	Remarks:
+		- Does NOT guarantee that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+void io_read_all(IOHANDLE io, void **result, unsigned *result_len);
+
+/*
+	Function: io_read_all_str
+		Reads the rest of the file into a zero-terminated buffer with
+		no internal null bytes.
+
+	Parameters:
+		io - Handle to the file to read data from.
+
+	Returns:
+		The file's remaining contents or null on failure.
+
+	Remarks:
+		- Guarantees that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+char *io_read_all_str(IOHANDLE io);
 
 /*
 	Function: io_unread_byte
@@ -1337,6 +1385,44 @@ int fs_remove(const char *filename);
 		- The strings are treated as zero-terminated strings.
 */
 int fs_rename(const char *oldname, const char *newname);
+
+/*
+	Function: fs_read
+		Reads a whole file into memory and returns its contents.
+
+	Parameters:
+		name - The filename to read.
+		result - Receives the file's contents.
+		result_len - Receives the file's length.
+
+	Returns:
+		Returns 0 on success, 1 on failure.
+
+	Remarks:
+		- Does NOT guarantee that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+int fs_read(const char *name, void **result, unsigned *result_len);
+
+/*
+	Function: fs_read
+		Reads a whole file into memory and returns its contents,
+		guaranteeing a null-terminated string with no internal null
+		bytes.
+
+	Parameters:
+		name - The filename to read.
+
+	Returns:
+		Returns the file's contents on success, null on failure.
+
+	Remarks:
+		- Guarantees that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+char *fs_read_str(const char *name);
 
 /*
 	Group: Undocumented
