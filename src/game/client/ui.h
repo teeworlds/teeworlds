@@ -28,7 +28,6 @@ class CUI
 	const void *m_pLastActiveItem;
 	const void *m_pBecommingHotItem;
 	bool m_ActiveItemValid;
-	bool m_Clipped;
 	float m_MouseX, m_MouseY; // in gui space
 	float m_MouseWorldX, m_MouseWorldY; // in world space
 	unsigned m_MouseButtons;
