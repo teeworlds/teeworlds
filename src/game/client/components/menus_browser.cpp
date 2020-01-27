@@ -1883,8 +1883,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		UpdateFilter = true;
 	}
 
-	if(!NeedScrollbar)
-		ServerFilter.HSplitTop(LineSize - 4.f, &Button, &ServerFilter);
+	ServerFilter.HSplitTop(LineSize - 4.f, &Button, &ServerFilter);
 
 	{
 		int Value = FilterInfo.m_Ping, Min = 20, Max = 999;
