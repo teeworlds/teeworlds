@@ -18,10 +18,10 @@ static char EscapeJsonChar(char c)
 	}
 }
 
-CJsonWriter::CJsonWriter(IOHANDLE io)
+CJsonWriter::CJsonWriter(IOHANDLE IO)
 {
-	m_IO = io;
-	m_pState = 0; // no root created yet
+	m_IO = IO;
+	m_NumStates = 0; // no root created yet
 	m_Indentation = 0;
 }
 
@@ -29,13 +29,6 @@ CJsonWriter::~CJsonWriter()
 {
 	WriteInternal("\n");
 	io_close(m_IO);
-
-	while(m_pState != 0)
-	{
-		CState *pState = m_pState;
-		m_pState = m_pState->m_pParent;
-		delete pState;
-	}
 }
 
 void CJsonWriter::BeginObject()
@@ -43,12 +36,12 @@ void CJsonWriter::BeginObject()
 	dbg_assert(CanWriteDatatype(), "Cannot write object at this position");
 	WriteIndent(false);
 	WriteInternal("{");
-	PushState(OBJECT);
+	PushState(STATE_OBJECT);
 }
 
 void CJsonWriter::EndObject()
 {
-	dbg_assert(m_pState != 0 && m_pState->m_State == OBJECT, "Cannot end object here");
+	dbg_assert(TopState()->m_Kind == STATE_OBJECT, "Cannot end object here");
 	PopState();
 	CompleteDataType();
 	WriteIndent(true);
@@ -61,12 +54,12 @@ void CJsonWriter::BeginArray()
 	dbg_assert(CanWriteDatatype(), "Cannot write array at this position");
 	WriteIndent(false);
 	WriteInternal("[");
-	PushState(ARRAY);
+	PushState(STATE_ARRAY);
 }
 
 void CJsonWriter::EndArray()
 {
-	dbg_assert(m_pState != 0 && m_pState->m_State == ARRAY, "Cannot end array here");
+	dbg_assert(TopState()->m_Kind == STATE_ARRAY, "Cannot end array here");
 	PopState();
 	CompleteDataType();
 	WriteIndent(true);
@@ -75,11 +68,11 @@ void CJsonWriter::EndArray()
 
 void CJsonWriter::WriteAttribute(const char *pName)
 {
-	dbg_assert(m_pState != 0 && m_pState->m_State == OBJECT, "Attribute can only be written inside of objects");
+	dbg_assert(TopState()->m_Kind == STATE_OBJECT, "Attribute can only be written inside of objects");
 	WriteIndent(false);
 	WriteInternalEscaped(pName);
 	WriteInternal(": ");
-	PushState(ATTRIBUTE);
+	PushState(STATE_ATTRIBUTE);
 }
 
 void CJsonWriter::WriteStrValue(const char *pValue)
@@ -118,9 +111,9 @@ void CJsonWriter::WriteNullValue()
 
 bool CJsonWriter::CanWriteDatatype()
 {
-	return m_pState == 0
-		|| m_pState->m_State == ARRAY
-		|| m_pState->m_State == ATTRIBUTE;
+	return m_NumStates == 0
+		|| TopState()->m_Kind == STATE_ARRAY
+		|| TopState()->m_Kind == STATE_ATTRIBUTE;
 }
 
 inline void CJsonWriter::WriteInternal(const char *pStr)
@@ -171,9 +164,10 @@ void CJsonWriter::WriteInternalEscaped(const char *pStr)
 
 void CJsonWriter::WriteIndent(bool EndElement)
 {
-	const bool NotRootOrAttribute = m_pState != 0 && m_pState->m_State != ATTRIBUTE;
+	const bool NotRootOrAttribute = m_NumStates != 0
+		&& TopState()->m_Kind != STATE_ATTRIBUTE;
 
-	if(NotRootOrAttribute && !m_pState->m_Empty && !EndElement)
+	if(NotRootOrAttribute && !TopState()->m_Empty && !EndElement)
 		WriteInternal(",");
 
 	if(NotRootOrAttribute || EndElement)
@@ -184,32 +178,43 @@ void CJsonWriter::WriteIndent(bool EndElement)
 			WriteInternal("\t");
 }
 
-void CJsonWriter::PushState(EState NewState)
+void CJsonWriter::PushState(unsigned char NewState)
 {
-	if(m_pState != 0)
-		m_pState->m_Empty = false;
-	m_pState = new CState(NewState, m_pState);
-	if(NewState != ATTRIBUTE)
+	dbg_assert(m_NumStates < MAX_DEPTH, "max json depth exceeded");
+	if(m_NumStates != 0)
+	{
+		m_aStates[m_NumStates - 1].m_Empty = false;
+	}
+	m_aStates[m_NumStates] = CState(NewState);
+	m_NumStates++;
+	if(NewState != STATE_ATTRIBUTE)
+	{
 		m_Indentation++;
+	}
 }
 
-CJsonWriter::EState CJsonWriter::PopState()
+CJsonWriter::CState *CJsonWriter::TopState()
 {
-	dbg_assert(m_pState != 0, "Stack is empty");
-	EState Result = m_pState->m_State;
-	CState *pToDelete = m_pState;
-	m_pState = m_pState->m_pParent;
-	delete pToDelete;
-	if(Result != ATTRIBUTE)
+	dbg_assert(m_NumStates != 0, "json stack is empty");
+	return &m_aStates[m_NumStates - 1];
+}
+
+unsigned char CJsonWriter::PopState()
+{
+	dbg_assert(m_NumStates != 0, "json stack is empty");
+	m_NumStates--;
+	if(m_aStates[m_NumStates].m_Kind != STATE_ATTRIBUTE)
+	{
 		m_Indentation--;
-	return Result;
+	}
+	return m_aStates[m_NumStates].m_Kind;
 }
 
 void CJsonWriter::CompleteDataType()
 {
-	if(m_pState != 0 && m_pState->m_State == ATTRIBUTE)
+	if(m_NumStates != 0 && m_aStates[m_NumStates - 1].m_Kind == STATE_ATTRIBUTE)
 		PopState(); // automatically complete the attribute
 
-	if(m_pState != 0)
-		m_pState->m_Empty = false;
+	if(m_NumStates != 0)
+		m_aStates[m_NumStates - 1].m_Empty = false;
 }
