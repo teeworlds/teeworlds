@@ -61,9 +61,7 @@ void CJsonWriter::BeginAttribute(const char *pName)
 {
 	dbg_assert(m_pState != 0 && m_pState->m_State == OBJECT, "Attribute can only be written inside of objects");
 	WriteIndent(false);
-	WriteInternal("\"");
-	WriteInternal(pName);
-	WriteInternal("\"");
+	WriteInternalEscaped(pName);
 	WriteInternal(" : ");
 	PushState(ATTRIBUTE);
 }
@@ -72,9 +70,7 @@ void CJsonWriter::WriteStrValue(const char *pValue)
 {
 	dbg_assert(CanWriteDatatype(), "Cannot write value at this position");
 	WriteIndent(false);
-	WriteInternal("\"");
-	WriteInternal(pValue);
-	WriteInternal("\"");
+	WriteInternalEscaped(pValue);
 	CompleteDataType();
 }
 
@@ -114,6 +110,35 @@ bool CJsonWriter::CanWriteDatatype()
 inline void CJsonWriter::WriteInternal(const char *pStr)
 {
 	io_write(m_IO, pStr, str_length(pStr));
+}
+
+void CJsonWriter::WriteInternalEscaped(const char *pStr)
+{
+	WriteInternal("\"");
+	for(int OldPosition = 0, Position = str_utf8_forward(pStr, OldPosition);
+		OldPosition != Position;
+		OldPosition = Position, Position = str_utf8_forward(pStr, OldPosition))
+	{
+		int Diff = Position - OldPosition;
+		if(Diff == 1)
+		{
+			switch(*(pStr+OldPosition)) // only single bytes have values that need to be escaped
+			{
+			case '\\': WriteInternal("\\\\"); break;
+			case '\"': WriteInternal("\\\""); break;
+			case '\n': WriteInternal("\\n"); break;
+			case '\r': WriteInternal("\\r"); break;
+			case '\b': WriteInternal("\\b"); break;
+			case '\f': WriteInternal("\\f"); break;
+			default: io_write(m_IO, pStr+OldPosition, 1); break;
+			}
+		}
+		else if(Diff > 1)
+		{
+			io_write(m_IO, pStr+OldPosition, Diff);
+		}
+	}
+	WriteInternal("\"");
 }
 
 void CJsonWriter::WriteIndent(bool EndElement)

@@ -36,6 +36,7 @@ class CJsonWriter
 
 	bool CanWriteDatatype();
 	inline void WriteInternal(const char *pStr);
+	void WriteInternalEscaped(const char *pStr);
 	void WriteIndent(bool EndElement);
 	void PushState(EState NewState);
 	EState PopState();
