@@ -18,7 +18,6 @@ CMenus::CScrollRegion::CScrollRegion()
 	m_ContentH = 0;
 	m_RequestScrollY = -1;
 	m_ContentScrollOff = vec2(0,0);
-	m_WasClipped = false;
 	m_Params = CScrollRegionParams();
 }
 
@@ -26,9 +25,6 @@ void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, const CS
 {
 	if(pParams)
 		m_Params = *pParams;
-
-	m_WasClipped = m_pUI->IsClipped();
-	m_OldClipRect = *m_pUI->ClipArea();
 
 	const bool ContentOverflows = m_ContentH > pClipRect->h;
 	const bool ForceShowScrollbar = m_Params.m_Flags&CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
@@ -52,18 +48,7 @@ void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, const CS
 	if(m_Params.m_ClipBgColor.a > 0)
 		m_pRenderTools->DrawRoundRect(pClipRect, m_Params.m_ClipBgColor, 4.0f);
 
-	CUIRect ClipRect = *pClipRect;
-	if(m_WasClipped)
-	{
-		CUIRect Intersection;
-		Intersection.x = max(ClipRect.x, m_OldClipRect.x);
-		Intersection.y = max(ClipRect.y, m_OldClipRect.y);
-		Intersection.w = min(ClipRect.x+ClipRect.w, m_OldClipRect.x+m_OldClipRect.w) - ClipRect.x;
-		Intersection.h = min(ClipRect.y+ClipRect.h, m_OldClipRect.y+m_OldClipRect.h) - ClipRect.y;
-		ClipRect = Intersection;
-	}
-
-	m_pUI->ClipEnable(&ClipRect);
+	m_pUI->ClipEnable(pClipRect);
 
 	m_ClipRect = *pClipRect;
 	m_ContentH = 0;
@@ -73,8 +58,6 @@ void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, const CS
 void CMenus::CScrollRegion::End()
 {
 	m_pUI->ClipDisable();
-	if(m_WasClipped)
-		m_pUI->ClipEnable(&m_OldClipRect);
 
 	// only show scrollbar if content overflows
 	if(m_ContentH <= m_ClipRect.h)

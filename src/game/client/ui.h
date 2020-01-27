@@ -35,7 +35,21 @@ class CUI
 	unsigned m_LastMouseButtons;
 
 	CUIRect m_Screen;
-	CUIRect m_ClipRect;
+
+	class CClip
+	{
+	public:
+		CUIRect m_Rect;
+		const CClip *m_pParent;
+		CClip(const CUIRect *pRect, const CClip *pParent)
+		{
+			m_Rect = *pRect;
+			m_pParent = pParent;
+		}
+	};
+	const CClip *m_pClip;
+	void UpdateClipping();
+
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
 
@@ -46,6 +60,7 @@ public:
 	class ITextRender *TextRender() const { return m_pTextRender; }
 
 	CUI();
+	~CUI();
 
 	enum
 	{
@@ -106,10 +121,11 @@ public:
 
 	CUIRect *Screen();
 	float PixelSize();
+
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
-	const CUIRect *ClipArea() const { return &m_ClipRect; };
-	inline bool IsClipped() const { return m_Clipped; };
+	const CUIRect *ClipArea() const;
+	inline bool IsClipped() const { return m_pClip != 0; };
 
 	int DoButtonLogic(const void *pID, const char *pText /* TODO: Refactor: Remove */, int Checked, const CUIRect *pRect);
 	int DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);

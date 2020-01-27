@@ -653,13 +653,9 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		View.VSplitLeft(160.0f, &Info, &View);
 		RenderDetailInfo(Info, pEntry);
 
-		CUIRect NewClipArea = *UI()->ClipArea();
-		CUIRect OldClipArea = NewClipArea;
-		NewClipArea.x = View.x;
-		NewClipArea.w = View.w;
-		UI()->ClipEnable(&NewClipArea);
+		UI()->ClipEnable(&View);
 		RenderDetailScoreboard(View, pEntry, 4, vec4(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha));
-		UI()->ClipEnable(&OldClipArea);
+		UI()->ClipDisable();
 	}
 
 	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);

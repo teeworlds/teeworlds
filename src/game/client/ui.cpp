@@ -17,7 +17,6 @@ CUI::CUI()
 	m_pActiveItem = 0;
 	m_pLastActiveItem = 0;
 	m_pBecommingHotItem = 0;
-	m_Clipped = false;
 
 	m_MouseX = 0;
 	m_MouseY = 0;
@@ -30,6 +29,16 @@ CUI::CUI()
 	m_Screen.y = 0;
 	m_Screen.w = 848.0f;
 	m_Screen.h = 480.0f;
+}
+
+CUI::~CUI()
+{
+	while(m_pClip)
+	{
+		const CClip *pToDelete = m_pClip;
+		m_pClip = m_pClip->m_pParent;
+		delete pToDelete;
+	}
 }
 
 int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
@@ -56,7 +65,7 @@ int CUI::MouseInside(const CUIRect *r) const
 
 bool CUI::MouseInsideClip() const
 {
-	return !m_Clipped || MouseInside(&m_ClipRect) == 1;
+	return !IsClipped() || MouseInside(ClipArea()) == 1;
 }
 
 void CUI::ConvertMouseMove(float *x, float *y) const
@@ -85,19 +94,51 @@ float CUI::PixelSize()
 	return Screen()->w/Graphics()->ScreenWidth();
 }
 
-void CUI::ClipEnable(const CUIRect *r)
+void CUI::ClipEnable(const CUIRect *pRect)
 {
-	m_ClipRect = *r;
-	m_Clipped = true;
-	float XScale = Graphics()->ScreenWidth()/Screen()->w;
-	float YScale = Graphics()->ScreenHeight()/Screen()->h;
-	Graphics()->ClipEnable((int)(r->x*XScale), (int)(r->y*YScale), (int)(r->w*XScale), (int)(r->h*YScale));
+	if(m_pClip == 0)
+		m_pClip = new CClip(pRect, 0);
+	else
+	{
+		const CUIRect *pOldRect = &m_pClip->m_Rect;
+		CUIRect Intersection;
+		Intersection.x = max(pRect->x, pOldRect->x);
+		Intersection.y = max(pRect->y, pOldRect->y);
+		Intersection.w = min(pRect->x+pRect->w, pOldRect->x+pOldRect->w) - pRect->x;
+		Intersection.h = min(pRect->y+pRect->h, pOldRect->y+pOldRect->h) - pRect->y;
+		m_pClip = new CClip(&Intersection, m_pClip);
+	}
+	UpdateClipping();
 }
 
 void CUI::ClipDisable()
 {
-	Graphics()->ClipDisable();
-	m_Clipped = false;
+	const CClip *pToDelete = m_pClip;
+	m_pClip = m_pClip->m_pParent;
+	delete pToDelete;
+	UpdateClipping();
+}
+
+const CUIRect *CUI::ClipArea() const
+{
+	if(m_pClip == 0)
+		return &m_Screen; // fallback
+	return &m_pClip->m_Rect;
+}
+
+void CUI::UpdateClipping()
+{
+	const CUIRect *pRect = ClipArea();
+	if(pRect)
+	{
+		const float XScale = Graphics()->ScreenWidth()/Screen()->w;
+		const float YScale = Graphics()->ScreenHeight()/Screen()->h;
+		Graphics()->ClipEnable((int)(pRect->x*XScale), (int)(pRect->y*YScale), (int)(pRect->w*XScale), (int)(pRect->h*YScale));
+	}
+	else
+	{
+		Graphics()->ClipDisable();
+	}
 }
 
 void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom) const
@@ -264,8 +305,8 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	// logic
 	int ReturnValue = 0;
 	int Inside = MouseInside(pRect);
-	if(m_Clipped)
-		Inside &= MouseInside(&m_ClipRect);
+	if(IsClipped())
+		Inside &= MouseInsideClip();
 	static int ButtonUsed = 0;
 
 	if(CheckActiveItem(pID))
