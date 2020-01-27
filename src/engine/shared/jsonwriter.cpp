@@ -3,6 +3,21 @@
 
 #include "jsonwriter.h"
 
+static char EscapeJsonChar(char c)
+{
+	switch(c)
+	{
+	case '\"': return '\"';
+	case '\\': return '\\';
+	case '\b': return 'b';
+	case '\n': return 'n';
+	case '\r': return 'r';
+	case '\t': return 't';
+	// Don't escape '\f', who uses that. :)
+	default: return 0;
+	}
+}
+
 CJsonWriter::CJsonWriter(IOHANDLE io)
 {
 	m_IO = io;
@@ -12,6 +27,7 @@ CJsonWriter::CJsonWriter(IOHANDLE io)
 
 CJsonWriter::~CJsonWriter()
 {
+	WriteInternal("\n");
 	io_close(m_IO);
 
 	while(m_pState != 0)
@@ -62,7 +78,7 @@ void CJsonWriter::WriteAttribute(const char *pName)
 	dbg_assert(m_pState != 0 && m_pState->m_State == OBJECT, "Attribute can only be written inside of objects");
 	WriteIndent(false);
 	WriteInternalEscaped(pName);
-	WriteInternal(" : ");
+	WriteInternal(": ");
 	PushState(ATTRIBUTE);
 }
 
@@ -115,28 +131,40 @@ inline void CJsonWriter::WriteInternal(const char *pStr)
 void CJsonWriter::WriteInternalEscaped(const char *pStr)
 {
 	WriteInternal("\"");
-	for(int OldPosition = 0, Position = str_utf8_forward(pStr, OldPosition);
-		OldPosition != Position;
-		OldPosition = Position, Position = str_utf8_forward(pStr, OldPosition))
+	int UnwrittenFrom = 0;
+	int Length = str_length(pStr);
+	for(int i = 0; i < Length; i++)
 	{
-		int Diff = Position - OldPosition;
-		if(Diff == 1)
+		char SimpleEscape = EscapeJsonChar(pStr[i]);
+		// Assuming ASCII/UTF-8, exactly everything below 0x20 is a
+		// control character.
+		bool NeedsEscape = SimpleEscape || pStr[i] < 0x20;
+		if(NeedsEscape)
 		{
-			switch(*(pStr+OldPosition)) // only single bytes have values that need to be escaped
+			if(i - UnwrittenFrom > 0)
 			{
-			case '\\': WriteInternal("\\\\"); break;
-			case '\"': WriteInternal("\\\""); break;
-			case '\n': WriteInternal("\\n"); break;
-			case '\r': WriteInternal("\\r"); break;
-			case '\b': WriteInternal("\\b"); break;
-			case '\f': WriteInternal("\\f"); break;
-			default: io_write(m_IO, pStr+OldPosition, 1); break;
+				io_write(m_IO, pStr + UnwrittenFrom, i - UnwrittenFrom);
 			}
+
+			if(SimpleEscape)
+			{
+				char aStr[2];
+				aStr[0] = '\\';
+				aStr[1] = SimpleEscape;
+				io_write(m_IO, aStr, sizeof(aStr));
+			}
+			else
+			{
+				char aStr[7];
+				str_format(aStr, sizeof(aStr), "\\u%04x", pStr[i]);
+				WriteInternal(aStr);
+			}
+			UnwrittenFrom = i + 1;
 		}
-		else if(Diff > 1)
-		{
-			io_write(m_IO, pStr+OldPosition, Diff);
-		}
+	}
+	if(Length - UnwrittenFrom > 0)
+	{
+		io_write(m_IO, pStr + UnwrittenFrom, Length - UnwrittenFrom);
 	}
 	WriteInternal("\"");
 }
