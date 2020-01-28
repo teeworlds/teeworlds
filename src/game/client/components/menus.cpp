@@ -267,18 +267,6 @@ int CMenus::DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, int Ch
 	return UI()->DoButtonLogic(pBC->GetID(), pText, Checked, pRect);
 }
 
-void CMenus::DoButton_MenuTabTop_Dummy(const char *pText, int Checked, const CUIRect *pRect, float Alpha)
-{
-	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f*Alpha), CUI::CORNER_ALL, 5.0f);
-	CUIRect Temp;
-	pRect->HMargin(pRect->h >= 20.0f ? 2.0f : 1.0f, &Temp);
-	TextRender()->TextColor(0.15f, 0.15f, 0.15f, Alpha);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.25f*Alpha);
-	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-}
-
 int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked, CUI::EAlignment Align, const CUIRect *pRect)
 {
 	if(Checked)
@@ -305,30 +293,6 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 
 	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
 }
-
-/*
-int CMenus::DoButton_GridHeaderIcon(CButtonContainer *pBC, int ImageID, int SpriteID, const CUIRect *pRect, int Corners)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float Fade = ButtonFade(pBC, Seconds);
-
-	RenderTools()->DrawUIRect(pRect, vec4(1.0f, 1.0f, 1.0f, 0.5f+(Fade/Seconds)*0.25f), Corners, 5.0f);
-
-	CUIRect Image;
-	pRect->HMargin(2.0f, &Image);
-	pRect->VMargin((Image.w-Image.h)/2.0f, &Image);
-
-	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.5f);
-	RenderTools()->SelectSprite(SpriteID);
-	IGraphics::CQuadItem QuadItem(Image.x, Image.y, Image.w, Image.h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	return UI()->DoButtonLogic(pBC->GetID(), "", false, pRect);
-}
-*/
 
 int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked, bool Locked)
 {

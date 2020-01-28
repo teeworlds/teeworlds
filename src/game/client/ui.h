@@ -122,7 +122,6 @@ public:
 
 	int DoButtonLogic(const void *pID, const char *pText /* TODO: Refactor: Remove */, int Checked, const CUIRect *pRect);
 	int DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
-	int DoColorSelectionLogic(const CUIRect *pRect, const CUIRect *pButton);
 
 	// TODO: Refactor: Remove this?
 	void DoLabel(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
