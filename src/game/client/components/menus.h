@@ -779,7 +779,7 @@ private:
 
 	void SetMenuPage(int NewPage);
 
-	bool CheckHotKey(int Key);
+	bool CheckHotKey(int Key) const;
 public:
 	struct CSwitchTeamInfo
 	{

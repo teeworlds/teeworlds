@@ -2608,10 +2608,10 @@ void CMenus::OnRender()
 	m_DownArrowPressed = false;
 }
 
-bool CMenus::CheckHotKey(int Key)
+bool CMenus::CheckHotKey(int Key) const
 {
 	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !m_PrevCursorActive && !m_PopupActive && 
-		!Input()->KeyIsPressed(KEY_LSHIFT) && !Input()->KeyIsPressed(KEY_RSHIFT) && !Input()->KeyIsPressed(KEY_LCTRL) && !Input()->KeyIsPressed(KEY_RCTRL)  && !Input()->KeyIsPressed(KEY_LALT) && // no modifier
+		!Input()->KeyIsPressed(KEY_LSHIFT) && !Input()->KeyIsPressed(KEY_RSHIFT) && !Input()->KeyIsPressed(KEY_LCTRL) && !Input()->KeyIsPressed(KEY_RCTRL) && !Input()->KeyIsPressed(KEY_LALT) && // no modifier
 		Input()->KeyIsPressed(Key) && !m_pClient->m_pGameConsole->IsConsoleActive();
 }
 
