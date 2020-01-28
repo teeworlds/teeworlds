@@ -461,9 +461,14 @@ private:
 		bool m_Valid;
 		CDemoHeader m_Info;
 
-		bool operator<(const CDemoItem &Other) const { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
-														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
-														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
+		bool operator<(const CDemoItem &Other) const
+		{
+			return !str_comp(m_aFilename, "..") ? true
+				: !str_comp(Other.m_aFilename, "..") ? false
+				: m_IsDir && !Other.m_IsDir ? true
+				: !m_IsDir && Other.m_IsDir ? false
+				: str_comp_filenames(m_aFilename, Other.m_aFilename) < 0;
+		}
 	};
 
 	sorted_array<CDemoItem> m_lDemos;
