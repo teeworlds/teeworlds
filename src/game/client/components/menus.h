@@ -214,12 +214,10 @@ private:
 		float m_ContentH;
 		float m_RequestScrollY; // [0, ContentHeight]
 		CUIRect m_ClipRect;
-		CUIRect m_OldClipRect;
 		CUIRect m_RailRect;
 		CUIRect m_LastAddedRect; // saved for ScrollHere()
 		vec2 m_MouseGrabStart;
 		vec2 m_ContentScrollOff;
-		bool m_WasClipped;
 		CScrollRegionParams m_Params;
 
 	public:
