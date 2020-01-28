@@ -29,16 +29,8 @@ CUI::CUI()
 	m_Screen.y = 0;
 	m_Screen.w = 848.0f;
 	m_Screen.h = 480.0f;
-}
 
-CUI::~CUI()
-{
-	while(m_pClip)
-	{
-		const CClip *pToDelete = m_pClip;
-		m_pClip = m_pClip->m_pParent;
-		delete pToDelete;
-	}
+	m_NumClips = 0;
 }
 
 int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
@@ -96,41 +88,43 @@ float CUI::PixelSize()
 
 void CUI::ClipEnable(const CUIRect *pRect)
 {
-	if(m_pClip == 0)
-		m_pClip = new CClip(pRect, 0);
-	else
+	if(IsClipped())
 	{
-		const CUIRect *pOldRect = &m_pClip->m_Rect;
+		dbg_assert(m_NumClips < MAX_CLIP_NESTING_DEPTH, "max clip nesting depth exceeded");
+		const CUIRect *pOldRect = ClipArea();
 		CUIRect Intersection;
 		Intersection.x = max(pRect->x, pOldRect->x);
 		Intersection.y = max(pRect->y, pOldRect->y);
 		Intersection.w = min(pRect->x+pRect->w, pOldRect->x+pOldRect->w) - pRect->x;
 		Intersection.h = min(pRect->y+pRect->h, pOldRect->y+pOldRect->h) - pRect->y;
-		m_pClip = new CClip(&Intersection, m_pClip);
+		m_aClips[m_NumClips] = Intersection;
 	}
+	else
+	{
+		m_aClips[m_NumClips] = *pRect;
+	}
+	m_NumClips++;
 	UpdateClipping();
 }
 
 void CUI::ClipDisable()
 {
-	const CClip *pToDelete = m_pClip;
-	m_pClip = m_pClip->m_pParent;
-	delete pToDelete;
+	dbg_assert(m_NumClips > 0, "no clip region");
+	m_NumClips--;
 	UpdateClipping();
 }
 
 const CUIRect *CUI::ClipArea() const
 {
-	if(m_pClip == 0)
-		return &m_Screen; // fallback
-	return &m_pClip->m_Rect;
+	dbg_assert(m_NumClips > 0, "no clip region");
+	return &m_aClips[m_NumClips - 1];
 }
 
 void CUI::UpdateClipping()
 {
-	const CUIRect *pRect = ClipArea();
-	if(pRect)
+	if(IsClipped())
 	{
+		const CUIRect *pRect = ClipArea();
 		const float XScale = Graphics()->ScreenWidth()/Screen()->w;
 		const float YScale = Graphics()->ScreenHeight()/Screen()->h;
 		Graphics()->ClipEnable((int)(pRect->x*XScale), (int)(pRect->y*YScale), (int)(pRect->w*XScale), (int)(pRect->h*YScale));

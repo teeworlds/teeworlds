@@ -23,6 +23,11 @@ public:
 
 class CUI
 {
+	enum
+	{
+		MAX_CLIP_NESTING_DEPTH = 16
+	};
+
 	const void *m_pHotItem;
 	const void *m_pActiveItem;
 	const void *m_pLastActiveItem;
@@ -35,18 +40,8 @@ class CUI
 
 	CUIRect m_Screen;
 
-	class CClip
-	{
-	public:
-		CUIRect m_Rect;
-		const CClip *m_pParent;
-		CClip(const CUIRect *pRect, const CClip *pParent)
-		{
-			m_Rect = *pRect;
-			m_pParent = pParent;
-		}
-	};
-	const CClip *m_pClip;
+	CUIRect m_aClips[MAX_CLIP_NESTING_DEPTH];
+	unsigned m_NumClips;
 	void UpdateClipping();
 
 	class IGraphics *m_pGraphics;
@@ -59,7 +54,6 @@ public:
 	class ITextRender *TextRender() const { return m_pTextRender; }
 
 	CUI();
-	~CUI();
 
 	enum
 	{
@@ -124,7 +118,7 @@ public:
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
 	const CUIRect *ClipArea() const;
-	inline bool IsClipped() const { return m_pClip != 0; };
+	inline bool IsClipped() const { return m_NumClips > 0; };
 
 	int DoButtonLogic(const void *pID, const char *pText /* TODO: Refactor: Remove */, int Checked, const CUIRect *pRect);
 	int DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
