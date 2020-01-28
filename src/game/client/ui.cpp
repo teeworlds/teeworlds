@@ -295,7 +295,7 @@ void CUIRect::HMargin(float Cut, CUIRect *pOtherRect) const
 	pOtherRect->h = r.h - 2*Cut;
 }
 
-int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+int CUI::DoButtonLogic(const void *pID, const CUIRect *pRect)
 {
 	// logic
 	int ReturnValue = 0;
@@ -306,7 +306,7 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	{
 		if(!MouseButton(ButtonUsed))
 		{
-			if(Inside && Checked >= 0)
+			if(Inside)
 				ReturnValue = 1+ButtonUsed;
 			SetActiveItem(0);
 		}

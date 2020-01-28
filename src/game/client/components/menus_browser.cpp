@@ -675,7 +675,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Button, EditButtons;
-	if(UI()->DoButtonLogic(pFilter, "", 0, &View))
+	if(UI()->DoButtonLogic(pFilter, &View))
 	{
 		Switch = true; // switch later, to make sure we haven't clicked one of the filter buttons (edit...)
 	}
@@ -716,7 +716,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	if(FilterIndex > 0 && (pFilter->Custom() > CBrowserFilter::FILTER_ALL || m_lFilters[FilterIndex-1].Custom() != CBrowserFilter::FILTER_STANDARD))
 	{
 		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_UP_A, &Button);
-		if(UI()->DoButtonLogic(&pFilter->m_aButtonID[0], "", 0, &Button))
+		if(UI()->DoButtonLogic(&pFilter->m_aButtonID[0], &Button))
 		{
 			Move(true, FilterIndex);
 			Switch = false;
@@ -731,7 +731,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	if(FilterIndex >= 0 && FilterIndex < m_lFilters.size()-1 && (pFilter->Custom() != CBrowserFilter::FILTER_STANDARD || m_lFilters[FilterIndex+1].Custom() > CBrowserFilter::FILTER_ALL))
 	{
 		DoIcon(IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_A, &Button);
-		if(UI()->DoButtonLogic(&pFilter->m_aButtonID[1], "", 0, &Button))
+		if(UI()->DoButtonLogic(&pFilter->m_aButtonID[1], &Button))
 		{
 			Move(false, FilterIndex);
 			Switch = false;
@@ -850,7 +850,7 @@ void CMenus::RenderServerbrowserOverlay()
 			{
 				CUIRect Name, Clan, Score, Flag;
 				ServerScoreBoard.HSplitTop(ButtonHeight, &Name, &ServerScoreBoard);
-				if(UI()->DoButtonLogic(&pInfo->m_aClients[i], "", 0, &Name))
+				if(UI()->DoButtonLogic(&pInfo->m_aClients[i], &Name))
 				{
 					if(pInfo->m_aClients[i].m_FriendState == CContactInfo::CONTACT_PLAYER)
 						m_pClient->Friends()->RemoveFriend(pInfo->m_aClients[i].m_aName, pInfo->m_aClients[i].m_aClan);
@@ -1635,7 +1635,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 		Label.HMargin(2.0f, &Label);
 		UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
 		static int s_HeaderButton[NUM_FRIEND_TYPES] = { 0 };
-		if(UI()->DoButtonLogic(&s_HeaderButton[i], "", 0, &Header))
+		if(UI()->DoButtonLogic(&s_HeaderButton[i], &Header))
 		{
 			s_ListExtended[i] ^= 1;
 		}
@@ -1669,7 +1669,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	if(s_aName[0] || s_aClan[0])
 		DoIcon(IMAGE_FRIENDICONS, UI()->MouseInside(&Button)?SPRITE_FRIEND_PLUS_A:SPRITE_FRIEND_PLUS_B, &Icon);
 	static CButtonContainer s_AddFriend;
-	if((s_aName[0] || s_aClan[0]) && UI()->DoButtonLogic(&s_AddFriend, "", 0, &Button))
+	if((s_aName[0] || s_aClan[0]) && UI()->DoButtonLogic(&s_AddFriend, &Button))
 	{
 		m_pClient->Friends()->AddFriend(s_aName, s_aClan);
 		FriendlistOnUpdate();
@@ -1705,7 +1705,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	if(s_aFilterName[0])
 		DoIcon(IMAGE_FRIENDICONS, UI()->MouseInside(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Icon);
 	static CButtonContainer s_AddFilter;
-	if(s_aFilterName[0] && UI()->DoButtonLogic(&s_AddFilter, "", 0, &Button))
+	if(s_aFilterName[0] && UI()->DoButtonLogic(&s_AddFilter, &Button))
 	{
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, ServerBrowser()));
 		s_aFilterName[0] = 0;
@@ -1847,7 +1847,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_R, 5.0f);
 	DoIcon(IMAGE_FRIENDICONS, UI()->MouseInside(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Button);
 	static CButtonContainer s_AddGametype;
-	if(s_aGametype[0] && UI()->DoButtonLogic(&s_AddGametype, "", 0, &Button))
+	if(s_aGametype[0] && UI()->DoButtonLogic(&s_AddGametype, &Button))
 	{
 		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 		{
@@ -1922,7 +1922,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		m_pClient->m_pCountryFlags->Render(FilterInfo.m_Country, &Color, Rect.x, Rect.y, Rect.w, Rect.h);
 
 		static int s_BrFilterCountryIndex = 0;
-		if((FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY) && UI()->DoButtonLogic(&s_BrFilterCountryIndex, "", 0, &Rect))
+		if((FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY) && UI()->DoButtonLogic(&s_BrFilterCountryIndex, &Rect))
 			m_Popup = POPUP_COUNTRY;
 	}
 
@@ -2124,7 +2124,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			RenderTools()->DrawUIRect(&Name, vec4(1.0f, 1.0f, 1.0f, (Count % 2 + 1)*0.05f), CUI::CORNER_ALL, 4.0f);
 
 			// friend
-			if(UI()->DoButtonLogic(&pInfo->m_aClients[i], "", 0, &Name))
+			if(UI()->DoButtonLogic(&pInfo->m_aClients[i], &Name))
 			{
 				if(pInfo->m_aClients[i].m_FriendState == CContactInfo::CONTACT_PLAYER)
 					m_pClient->Friends()->RemoveFriend(pInfo->m_aClients[i].m_aName, pInfo->m_aClients[i].m_aClan);

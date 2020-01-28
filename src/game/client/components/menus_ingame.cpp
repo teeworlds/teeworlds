@@ -784,7 +784,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Label = ClearButton;
 				Label.y += 2.0f;
 				UI()->DoLabel(&Label, "x", Label.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-				if(UI()->DoButtonLogic(s_ClearButton.GetID(), "x", 0, &ClearButton))
+				if(UI()->DoButtonLogic(s_ClearButton.GetID(), &ClearButton))
 					m_aCallvoteReason[0] = 0;
 			}
 		}

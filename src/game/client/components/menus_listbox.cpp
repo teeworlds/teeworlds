@@ -160,7 +160,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 	CListboxItem Item = DoNextRow();
 	static bool s_ItemClicked = false;
 
-	if(Item.m_Visible && m_pUI->DoButtonLogic(pId, "", m_ListBoxSelectedIndex == m_ListBoxItemIndex, &Item.m_Rect))
+	if(Item.m_Visible && m_pUI->DoButtonLogic(pId, &Item.m_Rect))
 	{
 		s_ItemClicked = true;
 		m_ListBoxNewSelected = ThisItemIndex;

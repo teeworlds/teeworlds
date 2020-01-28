@@ -27,7 +27,7 @@ int CMenus::DoButton_DemoPlayer(CButtonContainer *pBC, const char *pText, const 
 
 	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, 0.5f+(Fade/Seconds)*0.25f), CUI::CORNER_ALL, 5.0f);
 	UI()->DoLabel(pRect, pText, 14.0f, CUI::ALIGN_CENTER);
-	return UI()->DoButtonLogic(pBC->GetID(), pText, false, pRect);
+	return UI()->DoButtonLogic(pBC->GetID(), pRect);
 }
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)

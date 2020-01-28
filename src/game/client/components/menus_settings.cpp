@@ -77,7 +77,7 @@ int CMenus::DoButton_Customize(CButtonContainer *pBC, IGraphics::CTextureHandle 
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	return UI()->DoButtonLogic(pBC->GetID(), "", 0, pRect);
+	return UI()->DoButtonLogic(pBC->GetID(), pRect);
 }
 
 void CMenus::RenderHSLPicker(CUIRect MainView)
@@ -525,7 +525,7 @@ void CMenus::RenderSkinPartPalette(CUIRect MainView)
 			vec4 PartColor = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[p], p==SKINPART_MARKING);
 			
 			bool Hovered = UI()->HotItem() == &s_aColorPalettes[p];
-			bool Clicked = UI()->DoButtonLogic(&s_aColorPalettes[p], "", 0, &Button);
+			bool Clicked = UI()->DoButtonLogic(&s_aColorPalettes[p], &Button);
 			bool Selected = m_TeePartSelected == p;
 			if(Selected)
 			{
