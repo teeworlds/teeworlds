@@ -375,7 +375,7 @@ int CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, 
 
 int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
@@ -394,7 +394,7 @@ int CMenus::DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect
 
 int CMenus::DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
@@ -409,7 +409,7 @@ int CMenus::DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, c
 
 int CMenus::DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 
 	Graphics()->TextureSet(g_pData->m_aImages[ImageID].m_Id);
 	Graphics()->QuadsBegin();
@@ -424,7 +424,7 @@ int CMenus::DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect)
 
 bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 	bool Changed = false;
 	bool UpdateOffset = false;
 	static int s_AtIndex = 0;
@@ -922,7 +922,7 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 	static const void *pGrabbedID = 0;
 	static bool MouseReleased = true;
 	static int ButtonUsed = 0;
-	int Inside = UI()->MouseInside(pRect) && UI()->MouseInsideClip();
+	bool Inside = UI()->MouseInside(pRect) && UI()->MouseInsideClip();
 	int NewKey = Key;
 	*NewModifier = Modifier;
 

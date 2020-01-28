@@ -376,7 +376,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 {
 	// logic
 	int ReturnValue = 0;
-	int Inside = UI()->MouseInside(&View) && UI()->MouseInsideClip();
+	bool Inside = UI()->MouseInside(&View) && UI()->MouseInsideClip();
 
 	if(UI()->CheckActiveItem(pID))
 	{

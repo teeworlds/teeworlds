@@ -284,7 +284,7 @@ void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pU
 
 int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden, int Corners)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 	bool ReturnValue = false;
 	bool UpdateOffset = false;
 	static int s_AtIndex = 0;
@@ -459,7 +459,7 @@ float CEditor::UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Curre
 
 	// logic
 	float Ret = Current;
-	int Inside = UI()->MouseInside(&Handle);
+	bool Inside = UI()->MouseInside(&Handle);
 
 	if(UI()->CheckActiveItem(pID))
 	{
@@ -703,7 +703,7 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 {
 	// logic
 	static float s_Value;
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 
 	if(UI()->CheckActiveItem(pID))
 	{
@@ -1821,7 +1821,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 	}
 
 	static void *s_pEditorID = (void *)&s_pEditorID;
-	int Inside = UI()->MouseInside(&View);
+	bool Inside = UI()->MouseInside(&View);
 
 	// fetch mouse position
 	float wx = UI()->MouseWorldX();
