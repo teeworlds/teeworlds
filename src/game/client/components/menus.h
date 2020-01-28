@@ -110,7 +110,7 @@ private:
 
 	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false, bool Locked=false);
 	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect, bool Locked=false);
-	int DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect);
+	int DoButton_CheckBox_Number(const void *pID, const char *pText, int SelectedNumber, const CUIRect *pRect);
 
 	int DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect);
 

@@ -319,10 +319,7 @@ int CMenus::DoButton_CheckBox_Common(const void *pID, const char *pText, const c
 		IGraphics::CQuadItem QuadItem(c.x, c.y, c.w, c.h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	}
-	if(Checked)
-		RenderTools()->SelectSprite(SPRITE_MENU_CHECKBOX_ACTIVE);
-	else
-		RenderTools()->SelectSprite(SPRITE_MENU_CHECKBOX_INACTIVE);
+	RenderTools()->SelectSprite(Checked ? SPRITE_MENU_CHECKBOX_ACTIVE : SPRITE_MENU_CHECKBOX_INACTIVE);
 	IGraphics::CQuadItem QuadItem(c.x, c.y, c.w, c.h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
@@ -345,10 +342,10 @@ int CMenus::DoButton_CheckBox(const void *pID, const char *pText, int Checked, c
 	return DoButton_CheckBox_Common(pID, pText, "", pRect, Checked, Locked);
 }
 
-int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+int CMenus::DoButton_CheckBox_Number(const void *pID, const char *pText, int SelectedNumber, const CUIRect *pRect)
 {
 	char aBuf[16];
-	str_format(aBuf, sizeof(aBuf), "%d", Checked);
+	str_format(aBuf, sizeof(aBuf), "%d", SelectedNumber);
 	return DoButton_CheckBox_Common(pID, pText, aBuf, pRect);
 }
 
