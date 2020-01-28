@@ -140,9 +140,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextRow()
 
 	s_RowView.VSplitLeft(s_RowView.w/(m_ListBoxItemsPerRow-m_ListBoxItemIndex%m_ListBoxItemsPerRow), &Item.m_Rect, &s_RowView);
 
-	if(m_ListBoxSelectedIndex == m_ListBoxItemIndex)
-		Item.m_Selected = 1;
-
+	Item.m_Selected = m_ListBoxSelectedIndex == m_ListBoxItemIndex;
 	Item.m_Visible = !m_ScrollRegion.IsRectClipped(Item.m_Rect);
 
 	m_ListBoxItemIndex++;

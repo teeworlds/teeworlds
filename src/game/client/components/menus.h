@@ -239,8 +239,8 @@ private:
 	// Listbox : found in menus_listbox.cpp
 	struct CListboxItem
 	{
-		int m_Visible;
-		int m_Selected;
+		bool m_Visible;
+		bool m_Selected;
 		CUIRect m_Rect;
 	};
 
