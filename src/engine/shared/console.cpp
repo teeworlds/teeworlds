@@ -439,7 +439,13 @@ bool CConsole::ExecuteFile(const char *pFilename)
 	{
 		str_format(aBuf, sizeof(aBuf), "failed to open '%s'", pFilename);
 		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
-		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "Info: only relative paths starting from the ones you specify in 'storage.cfg' are allowed");
+		bool AbsHeur = false;
+		AbsHeur = AbsHeur || (pFilename[0] == '/' || pFilename[0] == '\\');
+		AbsHeur = AbsHeur || (pFilename[0] && pFilename[1] == ':' && (pFilename[2] == '/' || pFilename[2] == '\\'));
+		if(AbsHeur)
+		{
+			Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", "Info: only relative paths starting from the ones you specify in 'storage.cfg' are allowed");
+		}
 	}
 
 	m_pFirstExec = pPrev;

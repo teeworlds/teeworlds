@@ -1932,7 +1932,7 @@ void str_sanitize_cc(char *str_in)
 }
 
 /* check if the string contains '..' (parent directory) paths */
-int str_check_pathname(const char* str)
+int str_path_unsafe(const char *str)
 {
 	// State machine. 0 means that we're at the beginning
 	// of a new directory/filename, and a positive number represents the number of
