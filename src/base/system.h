@@ -1406,7 +1406,7 @@ int fs_rename(const char *oldname, const char *newname);
 int fs_read(const char *name, void **result, unsigned *result_len);
 
 /*
-	Function: fs_read
+	Function: fs_read_str
 		Reads a whole file into memory and returns its contents,
 		guaranteeing a null-terminated string with no internal null
 		bytes.
