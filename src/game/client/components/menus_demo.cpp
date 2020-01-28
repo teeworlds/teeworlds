@@ -427,7 +427,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	MainView.HSplitTop(HMargin, 0, &MainView);
 	static int s_DemoDetailsDropdown = 0;
 	if(!m_DemolistSelectedIsDir && m_DemolistSelectedIndex >= 0 && m_lDemos[m_DemolistSelectedIndex].m_Valid)
-		DoIndependentDropdownMenu(&s_DemoDetailsDropdown, &MainView, aFooterLabel, ButtonHeight, RenderDemoDetails, &s_DemoDetailsActive);
+		DoIndependentDropdownMenu(&s_DemoDetailsDropdown, &MainView, aFooterLabel, ButtonHeight, &CMenus::RenderDemoDetails, &s_DemoDetailsActive);
 	else
 	{
 		CUIRect Header;

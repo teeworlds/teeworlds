@@ -340,7 +340,7 @@ float CMenus::RenderSettingsControlsScoreboard(CUIRect View)
 	View.VSplitRight(View.w/2, &View, 0);
 	static int s_StatboardConfigDropdown = 0;
 	static bool s_StatboardConfigActive = false;
-	float Split = DoIndependentDropdownMenu(&s_StatboardConfigDropdown, &View, Localize("Configure statboard"), 20.0f, RenderSettingsControlsStats, &s_StatboardConfigActive);
+	float Split = DoIndependentDropdownMenu(&s_StatboardConfigDropdown, &View, Localize("Configure statboard"), 20.0f, &CMenus::RenderSettingsControlsStats, &s_StatboardConfigActive);
 
 	return BackgroundHeight+Split;
 }
