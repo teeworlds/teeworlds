@@ -1540,54 +1540,52 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		m_pClient->m_pBinds->SetDefaults();
 }
 
-float CMenus::RenderSettingsControlsStats(CUIRect View, void *pUser)
+float CMenus::RenderSettingsControlsStats(CUIRect View)
 {
-	CMenus *pSelf = (CMenus*)pUser;
-
 	CUIRect Button;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos, Localize("Frags"), g_Config.m_ClStatboardInfos & TC_STATS_FRAGS, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos, Localize("Frags"), g_Config.m_ClStatboardInfos & TC_STATS_FRAGS, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_FRAGS;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+1, Localize("Deaths"), g_Config.m_ClStatboardInfos & TC_STATS_DEATHS, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+1, Localize("Deaths"), g_Config.m_ClStatboardInfos & TC_STATS_DEATHS, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_DEATHS;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+2, Localize("Suicides"), g_Config.m_ClStatboardInfos & TC_STATS_SUICIDES, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+2, Localize("Suicides"), g_Config.m_ClStatboardInfos & TC_STATS_SUICIDES, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_SUICIDES;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+3, Localize("Ratio"), g_Config.m_ClStatboardInfos & TC_STATS_RATIO, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+3, Localize("Ratio"), g_Config.m_ClStatboardInfos & TC_STATS_RATIO, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_RATIO;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+4, Localize("Net score"), g_Config.m_ClStatboardInfos & TC_STATS_NET, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+4, Localize("Net score"), g_Config.m_ClStatboardInfos & TC_STATS_NET, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_NET;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+5, Localize("Frags per minute"), g_Config.m_ClStatboardInfos & TC_STATS_FPM, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+5, Localize("Frags per minute"), g_Config.m_ClStatboardInfos & TC_STATS_FPM, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_FPM;
 		
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+6, Localize("Current spree"), g_Config.m_ClStatboardInfos & TC_STATS_SPREE, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+6, Localize("Current spree"), g_Config.m_ClStatboardInfos & TC_STATS_SPREE, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_SPREE;
 		
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+7, Localize("Best spree"), g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+7, Localize("Best spree"), g_Config.m_ClStatboardInfos & TC_STATS_BESTSPREE, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_BESTSPREE;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+9, Localize("Weapons stats"), g_Config.m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+9, Localize("Weapons stats"), g_Config.m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_WEAPS;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+8, Localize("Flag grabs"), g_Config.m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+8, Localize("Flag grabs"), g_Config.m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_FLAGGRABS;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(pSelf->DoButton_CheckBox(&g_Config.m_ClStatboardInfos+10, Localize("Flag captures"), g_Config.m_ClStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
+	if(DoButton_CheckBox(&g_Config.m_ClStatboardInfos+10, Localize("Flag captures"), g_Config.m_ClStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
 		g_Config.m_ClStatboardInfos ^= TC_STATS_FLAGCAPTURES;
 
 	return 11*20.0f;

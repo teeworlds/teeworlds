@@ -730,7 +730,7 @@ float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, 
 
 	// render content of expanded menu
 	if(Active)
-		return HeaderHeight + pfnCallback(View, this);
+		return HeaderHeight + (this->*pfnCallback)(View);
 
 	return HeaderHeight;
 }
@@ -777,7 +777,7 @@ float CMenus::DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const c
 
 	// render content of expanded menu
 	if(Active)
-		return HeaderHeight + pfnCallback(View, this);
+		return HeaderHeight + (this->*pfnCallback)(View);
 
 	return HeaderHeight;
 }

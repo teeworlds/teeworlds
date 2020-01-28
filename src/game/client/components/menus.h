@@ -93,7 +93,7 @@ public:
 	};
 
 private:
-	typedef float (*FDropdownCallback)(CUIRect View, void *pUser);
+	typedef float (CMenus::*FDropdownCallback)(CUIRect View);
 
 	float ButtonFade(CButtonContainer *pBC, float Seconds, int Checked=0);
 
@@ -696,7 +696,7 @@ private:
 	// found in menus_demo.cpp
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoList(CUIRect MainView);
-	static float RenderDemoDetails(CUIRect View, void *pUser);
+	float RenderDemoDetails(CUIRect View);
 
 	// found in menus_start.cpp
 	void RenderStartMenu(CUIRect MainView);
@@ -756,15 +756,15 @@ private:
 						  const sorted_array<CVideoMode>& lModes);
 
 	// found in menu_callback.cpp
-	static float RenderSettingsControlsMouse(CUIRect View, void *pUser);
-	static float RenderSettingsControlsJoystick(CUIRect View, void *pUser);
-	static float RenderSettingsControlsMovement(CUIRect View, void *pUser);
-	static float RenderSettingsControlsWeapon(CUIRect View, void *pUser);
-	static float RenderSettingsControlsVoting(CUIRect View, void *pUser);
-	static float RenderSettingsControlsChat(CUIRect View, void *pUser);
-	static float RenderSettingsControlsScoreboard(CUIRect View, void *pUser);
-	static float RenderSettingsControlsStats(CUIRect View, void *pUser);
-	static float RenderSettingsControlsMisc(CUIRect View, void *pUser);
+	float RenderSettingsControlsMouse(CUIRect View);
+	float RenderSettingsControlsJoystick(CUIRect View);
+	float RenderSettingsControlsMovement(CUIRect View);
+	float RenderSettingsControlsWeapon(CUIRect View);
+	float RenderSettingsControlsVoting(CUIRect View);
+	float RenderSettingsControlsChat(CUIRect View);
+	float RenderSettingsControlsScoreboard(CUIRect View);
+	float RenderSettingsControlsStats(CUIRect View);
+	float RenderSettingsControlsMisc(CUIRect View);
 
 	void DoJoystickAxisPicker(CUIRect View);
 

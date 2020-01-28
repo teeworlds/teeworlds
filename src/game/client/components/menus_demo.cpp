@@ -523,12 +523,10 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	}
 }
 
-float CMenus::RenderDemoDetails(CUIRect View, void *pUser)
+float CMenus::RenderDemoDetails(CUIRect View)
 {
-	CMenus *pSelf = (CMenus*)pUser;
-
 	// render demo info
-	if(!pSelf->m_DemolistSelectedIsDir && pSelf->m_DemolistSelectedIndex >= 0 && pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Valid)
+	if(!m_DemolistSelectedIsDir && m_DemolistSelectedIndex >= 0 && m_lDemos[m_DemolistSelectedIndex].m_Valid)
 	{
 		CUIRect Button;
 		
@@ -537,41 +535,41 @@ float CMenus::RenderDemoDetails(CUIRect View, void *pUser)
 		
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		pSelf->DoInfoBox(&Button, Localize("Created"), pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aTimestamp);
+		DoInfoBox(&Button, Localize("Created"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aTimestamp);
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		pSelf->DoInfoBox(&Button, Localize("Type"), pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aType);
+		DoInfoBox(&Button, Localize("Type"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aType);
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		int Length = ((pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aLength[0]<<24)&0xFF000000) | ((pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aLength[1]<<16)&0xFF0000) |
-					((pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aLength[2]<<8)&0xFF00) | (pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aLength[3]&0xFF);
+		int Length = ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[0]<<24)&0xFF000000) | ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[1]<<16)&0xFF0000) |
+					((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[2]<<8)&0xFF00) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[3]&0xFF);
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%d:%02d", Length/60, Length%60);
-		pSelf->DoInfoBox(&Button, Localize("Length"), aBuf);
+		DoInfoBox(&Button, Localize("Length"), aBuf);
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		str_format(aBuf, sizeof(aBuf), "%d", pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_Version);
-		pSelf->DoInfoBox(&Button, Localize("Version"), aBuf);
+		str_format(aBuf, sizeof(aBuf), "%d", m_lDemos[m_DemolistSelectedIndex].m_Info.m_Version);
+		DoInfoBox(&Button, Localize("Version"), aBuf);
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		pSelf->DoInfoBox(&Button, Localize("Netversion"), pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aNetversion);
+		DoInfoBox(&Button, Localize("Netversion"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aNetversion);
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		const int MarkerCount = DemoGetMarkerCount(pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info);
+		const int MarkerCount = DemoGetMarkerCount(m_lDemos[m_DemolistSelectedIndex].m_Info);
 		str_format(aBuf, sizeof(aBuf), "%d", MarkerCount);
 		if(MarkerCount > 0)
-			pSelf->TextRender()->TextColor(0.5, 1, 0.5, 1);
-		pSelf->DoInfoBox(&Button, Localize("Markers"), aBuf);
-		pSelf->TextRender()->TextColor(1, 1, 1, 1);
+			TextRender()->TextColor(0.5, 1, 0.5, 1);
+		DoInfoBox(&Button, Localize("Markers"), aBuf);
+		TextRender()->TextColor(1, 1, 1, 1);
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		pSelf->DoInfoBox(&Button, Localize("Map"), pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aMapName);
+		DoInfoBox(&Button, Localize("Map"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapName);
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
@@ -579,15 +577,15 @@ float CMenus::RenderDemoDetails(CUIRect View, void *pUser)
 
 		CUIRect ButtonRight;
 		Button.VSplitMid(&Button, &ButtonRight);
-		float Size = float((pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
-							(pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aMapSize[2]<<8) | (pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aMapSize[3]))/1024.0f;
+		float Size = float((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[1]<<16) |
+							(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapSize[3]))/1024.0f;
 		str_format(aBuf, sizeof(aBuf), Localize("%.3f KiB"), Size);
-		pSelf->DoInfoBox(&Button, Localize("Size"), aBuf);
+		DoInfoBox(&Button, Localize("Size"), aBuf);
 
-		unsigned Crc = (pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aMapCrc[0]<<24) | (pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aMapCrc[1]<<16) |
-					(pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aMapCrc[2]<<8) | (pSelf->m_lDemos[pSelf->m_DemolistSelectedIndex].m_Info.m_aMapCrc[3]);
+		unsigned Crc = (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[0]<<24) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[1]<<16) |
+					(m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[2]<<8) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aMapCrc[3]);
 		str_format(aBuf, sizeof(aBuf), "%08x", Crc);
-		pSelf->DoInfoBox(&ButtonRight, Localize("Crc"), aBuf);
+		DoInfoBox(&ButtonRight, Localize("Crc"), aBuf);
 	}
 
 	//unused
