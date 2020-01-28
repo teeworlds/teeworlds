@@ -7,8 +7,14 @@ CTestInfo::CTestInfo()
 {
 	const ::testing::TestInfo *pTestInfo =
 		::testing::UnitTest::GetInstance()->current_test_info();
-	str_format(m_aFilename, sizeof(m_aFilename), "%s.%s-%d.tmp",
+	str_format(m_aFilenamePrefix, sizeof(m_aFilenamePrefix), "%s.%s-%d",
 		pTestInfo->test_case_name(), pTestInfo->name(), pid());
+	Filename(m_aFilename, sizeof(m_aFilename), ".tmp");
+}
+
+void CTestInfo::Filename(char *pBuffer, int BufferLength, const char *pSuffix)
+{
+	str_format(pBuffer, BufferLength, "%s%s", m_aFilenamePrefix, pSuffix);
 }
 
 int main(int argc, char **argv)

@@ -7,45 +7,48 @@
 
 class CJsonWriter
 {
-	enum EState
+	enum
 	{
-		OBJECT,
-		ARRAY,
-		ATTRIBUTE
+		STATE_INVALID,
+		STATE_OBJECT,
+		STATE_ARRAY,
+		STATE_ATTRIBUTE,
+
+		MAX_DEPTH=16,
 	};
 
 	class CState
 	{
 	public:
-		EState m_State;
-		CState *m_pParent;
+		unsigned char m_Kind;
 		bool m_Empty;
 
-		CState(EState State, CState *pParent)
+		CState(unsigned char Kind = STATE_INVALID)
 		{
-			m_State = State;
-			m_pParent = pParent;
+			m_Kind = Kind;
 			m_Empty = true;
 		};
 	};
 
 	IOHANDLE m_IO;
 
-	CState *m_pState;
+	CState m_aStates[MAX_DEPTH];
+	int m_NumStates;
 	int m_Indentation;
 
 	bool CanWriteDatatype();
 	inline void WriteInternal(const char *pStr);
 	void WriteInternalEscaped(const char *pStr);
 	void WriteIndent(bool EndElement);
-	void PushState(EState NewState);
-	EState PopState();
+	void PushState(unsigned char NewState);
+	CState *TopState();
+	unsigned char PopState();
 	void CompleteDataType();
 
 public:
 	// Create a new writer object without writing anything to the file yet.
 	// The file will automatically be closed by the destructor.
-	CJsonWriter(IOHANDLE io);
+	CJsonWriter(IOHANDLE IO);
 	~CJsonWriter();
 
 	// The root is created by beginning the first datatype (object, array, value).
