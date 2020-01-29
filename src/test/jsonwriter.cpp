@@ -87,6 +87,12 @@ TEST_F(JsonWriter, HelloWorld)
 	Expect("\"hello world\"\n");
 }
 
+TEST_F(JsonWriter, Unicode)
+{
+	m_pJson->WriteStrValue("Heizölrückstoßabdämpfung");
+	Expect("\"Heizölrückstoßabdämpfung\"\n");
+}
+
 TEST_F(JsonWriter, True) { m_pJson->WriteBoolValue(true); Expect("true\n"); }
 TEST_F(JsonWriter, False) { m_pJson->WriteBoolValue(false); Expect("false\n"); }
 TEST_F(JsonWriter, Null) { m_pJson->WriteNullValue(); Expect("null\n"); }
