@@ -163,7 +163,6 @@ class CConsole : public IConsole
 	};
 
 	CHeap *m_pTempMapListHeap;
-	int m_NumMapListEntries;
 	CMapListEntryTemp *m_pFirstMapEntry;
 	CMapListEntryTemp *m_pLastMapEntry;
 
