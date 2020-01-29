@@ -1986,7 +1986,7 @@ int CMenus::Render()
 				if(pEntry->m_CountryCode == s_ActSelection)
 					OldSelected = i;
 
-				CListboxItem Item = s_ListBox.DoNextItem(&pEntry->m_CountryCode, OldSelected == i);
+				CListboxItem Item = s_ListBox.DoNextItem(pEntry, OldSelected == i);
 				if(Item.m_Visible)
 				{
 					CUIRect Label;

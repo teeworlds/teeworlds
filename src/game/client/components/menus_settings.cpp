@@ -1148,7 +1148,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		if(pEntry->m_CountryCode == g_Config.m_PlayerCountry)
 			OldSelected = i;
 
-		CListboxItem Item = s_ListBox.DoNextItem(&pEntry->m_CountryCode, OldSelected == i);
+		CListboxItem Item = s_ListBox.DoNextItem(pEntry, OldSelected == i);
 		if(Item.m_Visible)
 		{
 			CUIRect Label;

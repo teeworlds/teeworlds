@@ -381,7 +381,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	s_ListBox.DoStart(20.0f, m_lDemos.size(), 1, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = s_ListBox.DoNextItem((void*)(&r.front()), (&r.front() - m_lDemos.base_ptr()) == m_DemolistSelectedIndex);
+		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), (&r.front() - m_lDemos.base_ptr()) == m_DemolistSelectedIndex);
 		// marker count
 		const CDemoItem& DemoItem = r.front();
 		int DemoMarkerCount = 0;
