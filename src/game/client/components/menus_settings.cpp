@@ -394,7 +394,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		}
 	}
 
-	const int NewSelected = s_ListBox.DoEnd(0);
+	const int NewSelected = s_ListBox.DoEnd();
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
 		m_pSelectedSkin = s_paSkinList[NewSelected];
@@ -483,7 +483,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		}
 	}
 
-	const int NewSelected = s_ListBox.DoEnd(0);
+	const int NewSelected = s_ListBox.DoEnd();
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
 		const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
@@ -741,7 +741,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 		}
 	}
 
-	s_SelectedLanguage = s_ListBox.DoEnd(0);
+	s_SelectedLanguage = s_ListBox.DoEnd();
 
 	if(OldSelected != s_SelectedLanguage)
 	{
@@ -832,7 +832,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 		}
 	}
 
-	s_SelectedTheme = s_ListBox.DoEnd(0);
+	s_SelectedTheme = s_ListBox.DoEnd();
 
 	if(OldSelected != s_SelectedTheme)
 	{
@@ -1176,7 +1176,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		}
 	}
 
-	const int NewSelected = s_ListBox.DoEnd(0);
+	const int NewSelected = s_ListBox.DoEnd();
 	if(OldSelected != NewSelected)
 		g_Config.m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
@@ -1634,7 +1634,7 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 		}
 	}
 
-	const int NewSelected = pListBox->DoEnd(0);
+	const int NewSelected = pListBox->DoEnd();
 	if(OldSelected != NewSelected)
 	{
 		g_Config.m_GfxScreenWidth = lModes[NewSelected].m_Width;

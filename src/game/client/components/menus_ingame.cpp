@@ -523,9 +523,8 @@ bool CMenus::RenderServerControlServer(CUIRect MainView)
 		}
 	}
 
-	bool doCallVote = false;
-	m_CallvoteSelectedOption = s_ListBox.DoEnd(&doCallVote);
-	return doCallVote;
+	m_CallvoteSelectedOption = s_ListBox.DoEnd();
+	return s_ListBox.WasItemActivated();
 }
 
 void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
@@ -597,7 +596,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 		}
 	}
 
-	Selected = s_ListBox.DoEnd(0);
+	Selected = s_ListBox.DoEnd();
 	m_CallvoteSelectedPlayer = Selected != -1 ? aPlayerIDs[Selected] : -1;
 }
 

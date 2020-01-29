@@ -420,8 +420,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			}
 		}
 	}
-	bool Activated = false;
-	m_DemolistSelectedIndex = s_ListBox.DoEnd(&Activated);
+	m_DemolistSelectedIndex = s_ListBox.DoEnd();
 	DemolistOnUpdate(false);
 
 	MainView.HSplitTop(HMargin, 0, &MainView);
@@ -488,7 +487,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	BottomView.VSplitLeft(Spacing, 0, &BottomView);
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 	static CButtonContainer s_PlayButton;
-	if(DoButton_Menu(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play", "DemoBrowser"), 0, &Button) || Activated)
+	if(DoButton_Menu(&s_PlayButton, m_DemolistSelectedIsDir?Localize("Open"):Localize("Play", "DemoBrowser"), 0, &Button) || s_ListBox.WasItemActivated())
 	{
 		if(m_DemolistSelectedIndex >= 0)
 		{

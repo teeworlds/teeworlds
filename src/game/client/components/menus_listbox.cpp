@@ -198,7 +198,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 	return Item;
 }
 
-int CMenus::CListBox::DoEnd(bool *pItemActivated)
+int CMenus::CListBox::DoEnd()
 {
 	m_ScrollRegion.End();
 	if(m_ListBoxNewSelOffset != 0 && m_ListBoxSelectedIndex != -1 && m_ListBoxSelectedIndex == m_ListBoxNewSelected)
@@ -206,12 +206,10 @@ int CMenus::CListBox::DoEnd(bool *pItemActivated)
 		m_ListBoxNewSelected = clamp(m_ListBoxNewSelected + m_ListBoxNewSelOffset, 0, m_ListBoxNumItems - 1);
 		m_ListBoxUpdateScroll = true;
 	}
-	if(pItemActivated)
-		*pItemActivated = m_ListBoxItemActivated;
 	return m_ListBoxNewSelected;
 }
 
-bool CMenus::CListBox::FilterMatches(const char *pNeedle)
+bool CMenus::CListBox::FilterMatches(const char *pNeedle) const
 {
 	return !m_aFilterString[0] || str_find_nocase(pNeedle, m_aFilterString);
 }

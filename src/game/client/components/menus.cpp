@@ -2014,7 +2014,7 @@ int CMenus::Render()
 				}
 			}
 
-			const int NewSelected = s_ListBox.DoEnd(0);
+			const int NewSelected = s_ListBox.DoEnd();
 			if(OldSelected != NewSelected)
 				s_ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
