@@ -722,6 +722,11 @@ CConsole::~CConsole()
 
 		pCommand = pNext;
 	}
+	if(m_pTempMapListHeap)
+	{
+		delete m_pTempMapListHeap;
+		m_pTempMapListHeap = 0;
+	}
 }
 
 void CConsole::ParseArguments(int NumArgs, const char **ppArguments)
@@ -900,14 +905,8 @@ void CConsole::RegisterTempMap(const char *pName)
 
 void CConsole::DeregisterTempMap(const char *pName)
 {
-	CMapListEntryTemp *pEntry = m_pFirstMapEntry;
-
-	while(pEntry)
-	{
-		if(str_comp_nocase(pName, pEntry->m_aName) == 0)
-			break;
-		pEntry = pEntry->m_pNext;
-	}
+	if(!m_pFirstMapEntry)
+		return;
 
 	CHeap *pNewTempMapListHeap = new CHeap();
 	CMapListEntryTemp *pNewFirstEntry = 0;
@@ -915,7 +914,7 @@ void CConsole::DeregisterTempMap(const char *pName)
 
 	for(CMapListEntryTemp *pSrc = m_pFirstMapEntry; pSrc; pSrc = pSrc->m_pNext)
 	{
-		if(pSrc == pEntry)
+		if(str_comp_nocase(pName, pSrc->m_aName) == 0)
 			continue;
 
 		CMapListEntryTemp *pDst = (CMapListEntryTemp *)pNewTempMapListHeap->Allocate(sizeof(CMapListEntryTemp));
