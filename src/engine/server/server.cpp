@@ -283,6 +283,7 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 	m_NumMapEntries = 0;
 	m_pFirstMapEntry = 0;
 	m_pLastMapEntry = 0;
+	m_pMapListHeap = 0;
 
 	m_MapReload = 0;
 
@@ -1475,7 +1476,15 @@ int CServer::Run()
 	m_pMap->Unload();
 
 	if(m_pCurrentMapData)
+	{
 		mem_free(m_pCurrentMapData);
+		m_pCurrentMapData = 0;
+	}
+	if(m_pMapListHeap)
+	{
+		delete m_pMapListHeap;
+		m_pMapListHeap = 0;
+	}
 	return 0;
 }
 
