@@ -140,9 +140,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextRow()
 
 	s_RowView.VSplitLeft(s_RowView.w/(m_ListBoxItemsPerRow-m_ListBoxItemIndex%m_ListBoxItemsPerRow), &Item.m_Rect, &s_RowView);
 
-	if(m_ListBoxSelectedIndex == m_ListBoxItemIndex)
-		Item.m_Selected = 1;
-
+	Item.m_Selected = m_ListBoxSelectedIndex == m_ListBoxItemIndex;
 	Item.m_Visible = !m_ScrollRegion.IsRectClipped(Item.m_Rect);
 
 	m_ListBoxItemIndex++;
@@ -162,7 +160,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 	CListboxItem Item = DoNextRow();
 	static bool s_ItemClicked = false;
 
-	if(Item.m_Visible && m_pUI->DoButtonLogic(pId, "", m_ListBoxSelectedIndex == m_ListBoxItemIndex, &Item.m_Rect))
+	if(Item.m_Visible && m_pUI->DoButtonLogic(pId, &Item.m_Rect))
 	{
 		s_ItemClicked = true;
 		m_ListBoxNewSelected = ThisItemIndex;
@@ -200,7 +198,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 	return Item;
 }
 
-int CMenus::CListBox::DoEnd(bool *pItemActivated)
+int CMenus::CListBox::DoEnd()
 {
 	m_ScrollRegion.End();
 	if(m_ListBoxNewSelOffset != 0 && m_ListBoxSelectedIndex != -1 && m_ListBoxSelectedIndex == m_ListBoxNewSelected)
@@ -208,12 +206,10 @@ int CMenus::CListBox::DoEnd(bool *pItemActivated)
 		m_ListBoxNewSelected = clamp(m_ListBoxNewSelected + m_ListBoxNewSelOffset, 0, m_ListBoxNumItems - 1);
 		m_ListBoxUpdateScroll = true;
 	}
-	if(pItemActivated)
-		*pItemActivated = m_ListBoxItemActivated;
 	return m_ListBoxNewSelected;
 }
 
-bool CMenus::CListBox::FilterMatches(const char *pNeedle)
+bool CMenus::CListBox::FilterMatches(const char *pNeedle) const
 {
 	return !m_aFilterString[0] || str_find_nocase(pNeedle, m_aFilterString);
 }

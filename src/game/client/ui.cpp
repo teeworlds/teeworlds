@@ -48,16 +48,17 @@ int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
 	return 0;
 }
 
-int CUI::MouseInside(const CUIRect *r) const
+bool CUI::MouseInside(const CUIRect *r) const
 {
-	if(m_MouseX >= r->x && m_MouseX < r->x+r->w && m_MouseY >= r->y && m_MouseY < r->y+r->h)
-		return 1;
-	return 0;
+	return m_MouseX >= r->x
+		&& m_MouseX < r->x+r->w
+		&& m_MouseY >= r->y
+		&& m_MouseY < r->y+r->h;
 }
 
 bool CUI::MouseInsideClip() const
 {
-	return !IsClipped() || MouseInside(ClipArea()) == 1;
+	return !IsClipped() || MouseInside(ClipArea());
 }
 
 void CUI::ConvertMouseMove(float *x, float *y) const
@@ -294,20 +295,18 @@ void CUIRect::HMargin(float Cut, CUIRect *pOtherRect) const
 	pOtherRect->h = r.h - 2*Cut;
 }
 
-int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+int CUI::DoButtonLogic(const void *pID, const CUIRect *pRect)
 {
 	// logic
 	int ReturnValue = 0;
-	int Inside = MouseInside(pRect);
-	if(IsClipped())
-		Inside &= (MouseInsideClip() ? 1 : 0);
+	bool Inside = MouseInside(pRect) && MouseInsideClip();
 	static int ButtonUsed = 0;
 
 	if(CheckActiveItem(pID))
 	{
 		if(!MouseButton(ButtonUsed))
 		{
-			if(Inside && Checked >= 0)
+			if(Inside)
 				ReturnValue = 1+ButtonUsed;
 			SetActiveItem(0);
 		}
@@ -333,9 +332,9 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	return ReturnValue;
 }
 
-int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY)
+bool CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY)
 {
-	int Inside = MouseInside(pRect);
+	bool Inside = MouseInside(pRect);
 
 	if(CheckActiveItem(pID))
 	{
@@ -352,63 +351,15 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 		SetHotItem(pID);
 
 	if(!CheckActiveItem(pID))
-		return 0;
+		return false;
 
 	if(pX)
 		*pX = clamp(m_MouseX - pRect->x, 0.0f, pRect->w);
 	if(pY)
 		*pY = clamp(m_MouseY - pRect->y, 0.0f, pRect->h);
 
-	return 1;
+	return true;
 }
-
-int CUI::DoColorSelectionLogic(const CUIRect *pRect, const CUIRect *pButton) // it's counter logic! FIXME
-{
-	if(MouseButtonClicked(0) && MouseInside(pRect) && !MouseInside(pButton))
-		return 1;
-	else
-		return 0;
-}
-
-/*
-int CUI::DoButton(const void *id, const char *text, int checked, const CUIRect *r, ui_draw_button_func draw_func, const void *extra)
-{
-	// logic
-	int ret = 0;
-	int inside = ui_MouseInside(r);
-	static int button_used = 0;
-
-	if(ui_ActiveItem() == id)
-	{
-		if(!ui_MouseButton(button_used))
-		{
-			if(inside && checked >= 0)
-				ret = 1+button_used;
-			ui_SetActiveItem(0);
-		}
-	}
-	else if(ui_HotItem() == id)
-	{
-		if(ui_MouseButton(0))
-		{
-			ui_SetActiveItem(id);
-			button_used = 0;
-		}
-
-		if(ui_MouseButton(1))
-		{
-			ui_SetActiveItem(id);
-			button_used = 1;
-		}
-	}
-
-	if(inside)
-		ui_SetHotItem(id);
-
-	if(draw_func)
-		draw_func(id, text, checked, r, extra);
-	return ret;
-}*/
 
 void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Align, float LineWidth, bool MultiLine)
 {
