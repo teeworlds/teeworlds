@@ -381,7 +381,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	s_ListBox.DoStart(20.0f, m_lDemos.size(), 1, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = s_ListBox.DoNextItem((void*)(&r.front()));
+		CListboxItem Item = s_ListBox.DoNextItem((void*)(&r.front()), (&r.front() - m_lDemos.base_ptr()) == m_DemolistSelectedIndex);
 		// marker count
 		const CDemoItem& DemoItem = r.front();
 		int DemoMarkerCount = 0;
@@ -403,20 +403,20 @@ void CMenus::RenderDemoList(CUIRect MainView)
 					IconColor = DemoMarkerCount > 0 ? vec4(0.5, 1, 0.5, 1) : vec4(1,1,1,1);
 			}
 
-			DoIconColor(IMAGE_FILEICONS, r.front().m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon, IconColor);
-			if((&r.front() - m_lDemos.base_ptr()) == m_DemolistSelectedIndex) // selected
+			DoIconColor(IMAGE_FILEICONS, DemoItem.m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon, IconColor);
+			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
 				Item.m_Rect.y += 2.0f;
-				UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+				UI()->DoLabel(&Item.m_Rect, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 			}
 			else
 			{
 				Item.m_Rect.y += 2.0f;
-				UI()->DoLabel(&Item.m_Rect, r.front().m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+				UI()->DoLabel(&Item.m_Rect, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 			}
 		}
 	}

@@ -484,15 +484,12 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	}
 
 	const int NewSelected = s_ListBox.DoEnd(0);
-	if(NewSelected != -1)
+	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
-		if(NewSelected != OldSelected)
-		{
-			const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
-			mem_copy(CSkins::ms_apSkinVariables[m_TeePartSelected], s->m_aName, 24);
-			g_Config.m_PlayerSkin[0] = 0;
-			m_SkinModified = true;
-		}
+		const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
+		mem_copy(CSkins::ms_apSkinVariables[m_TeePartSelected], s->m_aName, 24);
+		g_Config.m_PlayerSkin[0] = 0;
+		m_SkinModified = true;
 	}
 	OldSelected = NewSelected;
 }
@@ -718,7 +715,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), false, &IsActive);
+		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), s_SelectedLanguage != -1 && !str_comp(s_Languages[s_SelectedLanguage].m_Name, r.front().m_Name), &IsActive);
 		if(IsActive)
 			m_ActiveListBox = ACTLB_LANG;
 
@@ -731,7 +728,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
 			m_pClient->m_pCountryFlags->Render(r.front().m_CountryCode, &Color, Rect.x, Rect.y, Rect.w, Rect.h, true);
 			Item.m_Rect.y += 2.0f;
-			if(s_SelectedLanguage != -1 && !str_comp(s_Languages[s_SelectedLanguage].m_Name, r.front().m_Name))
+			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
@@ -783,7 +780,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 
 	for(sorted_array<CTheme>::range r = m_lThemes.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), false, &IsActive);
+		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), s_SelectedTheme != -1 && !str_comp(m_lThemes[s_SelectedTheme].m_Name, r.front().m_Name), &IsActive);
 		if(IsActive)
 			m_ActiveListBox = ACTLB_THEME;
 
@@ -822,7 +819,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 			else
 				str_copy(aName, "(none)", sizeof(aName));
 
-			if(s_SelectedTheme != -1 && !str_comp(m_lThemes[s_SelectedTheme].m_Name, r.front().m_Name))
+			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
@@ -1166,7 +1163,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
-			if(i == OldSelected)
+			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
@@ -1618,7 +1615,7 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 					   lModes[i].m_Width/G,
 					   lModes[i].m_Height/G);
 
-			if(i == OldSelected)
+			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
 				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
