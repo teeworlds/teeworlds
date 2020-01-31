@@ -24,7 +24,7 @@ public:
 	struct CFavoriteServer
 	{
 		char m_aHostname[128];
-		char m_aPassword[sizeof(CConfiguration::m_Password)];
+		char m_aPassword[32];
 		NETADDR m_Addr;
 		int m_State;
 	} m_aFavoriteServers[MAX_FAVORITES];
