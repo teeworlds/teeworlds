@@ -408,8 +408,6 @@ bool CConsole::ExecuteFile(const char *pFilename)
 			return false;
 
 	if(!m_pStorage)
-		m_pStorage = Kernel()->RequestInterface<IStorage>();
-	if(!m_pStorage)
 		return false;
 
 	// push this one to the stack
@@ -678,6 +676,7 @@ CConsole::CConsole(int FlagMask)
 	mem_zero(m_aPrintCB, sizeof(m_aPrintCB));
 	m_NumPrintCB = 0;
 
+	m_pConfig = 0;
 	m_pStorage = 0;
 
 	// register some basic commands
@@ -689,24 +688,6 @@ CConsole::CConsole(int FlagMask)
 
 	Register("mod_command", "s?i", CFGFLAG_SERVER, ConModCommandAccess, this, "Specify command accessibility for moderators");
 	Register("mod_status", "", CFGFLAG_SERVER, ConModCommandStatus, this, "List all commands which are accessible for moderators");
-
-	// TODO: this should disappear
-	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Flags,Desc) \
-	{ \
-		static CIntVariableData Data = { this, &g_Config.m_##Name, Min, Max }; \
-		Register(#ScriptName, "?i", Flags, IntVariableCommand, &Data, Desc); \
-	}
-
-	#define MACRO_CONFIG_STR(Name,ScriptName,Len,Def,Flags,Desc) \
-	{ \
-		static CStrVariableData Data = { this, g_Config.m_##Name, Len }; \
-		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc); \
-	}
-
-	#include "config_variables.h"
-
-	#undef MACRO_CONFIG_INT
-	#undef MACRO_CONFIG_STR
 }
 
 CConsole::~CConsole()
@@ -727,6 +708,30 @@ CConsole::~CConsole()
 		delete m_pTempMapListHeap;
 		m_pTempMapListHeap = 0;
 	}
+}
+
+void CConsole::Init()
+{
+	m_pConfig = Kernel()->RequestInterface<IConfig>();
+	m_pStorage = Kernel()->RequestInterface<IStorage>();
+
+	// TODO: this should disappear
+	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Flags,Desc) \
+	{ \
+		static CIntVariableData Data = { this, &m_pConfig->Values()->m_##Name, Min, Max }; \
+		Register(#ScriptName, "?i", Flags, IntVariableCommand, &Data, Desc); \
+	}
+
+	#define MACRO_CONFIG_STR(Name,ScriptName,Len,Def,Flags,Desc) \
+	{ \
+		static CStrVariableData Data = { this, m_pConfig->Values()->m_##Name, Len }; \
+		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc); \
+	}
+
+	#include "config_variables.h"
+
+	#undef MACRO_CONFIG_INT
+	#undef MACRO_CONFIG_STR
 }
 
 void CConsole::ParseArguments(int NumArgs, const char **ppArguments)

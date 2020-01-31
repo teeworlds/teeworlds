@@ -2,6 +2,11 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
 
+#include <engine/config.h>
+#include <engine/console.h>
+#include <engine/kernel.h>
+#include <engine/storage.h>
+
 #include <engine/shared/network.h>
 
 #include <game/version.h>
@@ -74,13 +79,29 @@ void SendVer(NETADDR *pAddr, TOKEN ResponseToken)
 	g_NetOp.Send(&p, ResponseToken);
 }
 
-int main(int argc, char **argv) // ignore_convention
+int main(int argc, const char **argv) // ignore_convention
 {
 	NETADDR BindAddr;
 
 	dbg_logger_stdout();
 	net_init();
-	CNetBase::Init();
+
+	int FlagMask = 0;
+	IKernel *pKernel = IKernel::Create();
+	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
+	IConfig *pConfig = CreateConfig();
+	IConsole *pConsole = CreateConsole(FlagMask);
+
+	CNetBase::Init(pConfig);
+
+	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
+	RegisterFail |= !pKernel->RegisterInterface(pConsole);
+	RegisterFail |= !pKernel->RegisterInterface(pConfig);
+
+	if(RegisterFail)
+		return -1;
+	pConfig->Init(FlagMask);
+	pConsole->Init();
 
 	mem_zero(&BindAddr, sizeof(BindAddr));
 	BindAddr.type = NETTYPE_ALL;

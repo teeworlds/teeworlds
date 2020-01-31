@@ -18,12 +18,9 @@
 const char * const CSkins::ms_apSkinPartNames[NUM_SKINPARTS] = {"body", "marking", "decoration", "hands", "feet", "eyes"}; /* Localize("body","skins");Localize("marking","skins");Localize("decoration","skins");Localize("hands","skins");Localize("feet","skins");Localize("eyes","skins"); */
 const char * const CSkins::ms_apColorComponents[NUM_COLOR_COMPONENTS] = {"hue", "sat", "lgt", "alp"};
 
-char *const CSkins::ms_apSkinVariables[NUM_SKINPARTS] = {g_Config.m_PlayerSkinBody, g_Config.m_PlayerSkinMarking, g_Config.m_PlayerSkinDecoration,
-													g_Config.m_PlayerSkinHands, g_Config.m_PlayerSkinFeet, g_Config.m_PlayerSkinEyes};
-int *const CSkins::ms_apUCCVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerUseCustomColorBody, &g_Config.m_PlayerUseCustomColorMarking, &g_Config.m_PlayerUseCustomColorDecoration,
-													&g_Config.m_PlayerUseCustomColorHands, &g_Config.m_PlayerUseCustomColorFeet, &g_Config.m_PlayerUseCustomColorEyes};
-int *const CSkins::ms_apColorVariables[NUM_SKINPARTS] = {&g_Config.m_PlayerColorBody, &g_Config.m_PlayerColorMarking, &g_Config.m_PlayerColorDecoration,
-													&g_Config.m_PlayerColorHands, &g_Config.m_PlayerColorFeet, &g_Config.m_PlayerColorEyes};
+char *CSkins::ms_apSkinVariables[NUM_SKINPARTS] = {0};
+int *CSkins::ms_apUCCVariables[NUM_SKINPARTS] = {0};
+int *CSkins::ms_apColorVariables[NUM_SKINPARTS] = {0};
 
 const float MIN_EYE_BODY_COLOR_DIST = 80.f; // between body and eyes (LAB color space)
 
@@ -95,7 +92,7 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	if(DirType != IStorage::TYPE_SAVE)
 		Part.m_Flags |= SKINFLAG_STANDARD;
 	str_truncate(Part.m_aName, sizeof(Part.m_aName), pName, str_length(pName) - 4);
-	if(g_Config.m_Debug)
+	if(pSelf->Config()->Values()->m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin part %s", Part.m_aName);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
@@ -202,7 +199,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	Skin.m_Flags = SpecialSkin ? SKINFLAG_SPECIAL : 0;
 	if(DirType != IStorage::TYPE_SAVE)
 		Skin.m_Flags |= SKINFLAG_STANDARD;
-	if(g_Config.m_Debug)
+	if(pSelf->Config()->Values()->m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin %s", Skin.m_aName);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
@@ -215,6 +212,25 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 void CSkins::OnInit()
 {
+	ms_apSkinVariables[SKINPART_BODY] = Config()->Values()->m_PlayerSkinBody;
+	ms_apSkinVariables[SKINPART_MARKING] = Config()->Values()->m_PlayerSkinMarking;
+	ms_apSkinVariables[SKINPART_DECORATION] = Config()->Values()->m_PlayerSkinDecoration;
+	ms_apSkinVariables[SKINPART_HANDS] = Config()->Values()->m_PlayerSkinHands;
+	ms_apSkinVariables[SKINPART_FEET] = Config()->Values()->m_PlayerSkinFeet;
+	ms_apSkinVariables[SKINPART_EYES] = Config()->Values()->m_PlayerSkinEyes;
+	ms_apUCCVariables[SKINPART_BODY] = &Config()->Values()->m_PlayerUseCustomColorBody;
+	ms_apUCCVariables[SKINPART_MARKING] = &Config()->Values()->m_PlayerUseCustomColorMarking;
+	ms_apUCCVariables[SKINPART_DECORATION] = &Config()->Values()->m_PlayerUseCustomColorDecoration;
+	ms_apUCCVariables[SKINPART_HANDS] = &Config()->Values()->m_PlayerUseCustomColorHands;
+	ms_apUCCVariables[SKINPART_FEET] = &Config()->Values()->m_PlayerUseCustomColorFeet;
+	ms_apUCCVariables[SKINPART_EYES] = &Config()->Values()->m_PlayerUseCustomColorEyes;
+	ms_apColorVariables[SKINPART_BODY] = &Config()->Values()->m_PlayerColorBody;
+	ms_apColorVariables[SKINPART_MARKING] = &Config()->Values()->m_PlayerColorMarking;
+	ms_apColorVariables[SKINPART_DECORATION] = &Config()->Values()->m_PlayerColorDecoration;
+	ms_apColorVariables[SKINPART_HANDS] = &Config()->Values()->m_PlayerColorHands;
+	ms_apColorVariables[SKINPART_FEET] = &Config()->Values()->m_PlayerColorFeet;
+	ms_apColorVariables[SKINPART_EYES] = &Config()->Values()->m_PlayerColorEyes;
+
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		m_aaSkinParts[p].clear();

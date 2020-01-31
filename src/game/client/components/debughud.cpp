@@ -19,7 +19,7 @@
 
 void CDebugHud::RenderNetCorrections()
 {
-	if(!g_Config.m_Debug || g_Config.m_DbgGraphs || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
+	if(!Config()->Values()->m_Debug || Config()->Values()->m_DbgGraphs || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
 		return;
 
 	float Width = 300*Graphics()->ScreenAspect();
@@ -76,7 +76,7 @@ void CDebugHud::RenderNetCorrections()
 void CDebugHud::RenderTuning()
 {
 	// render tuning debugging
-	if(!g_Config.m_DbgTuning)
+	if(!Config()->Values()->m_DbgTuning)
 		return;
 
 	CTuningParams StandardTuning;

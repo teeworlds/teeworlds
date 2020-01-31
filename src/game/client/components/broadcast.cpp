@@ -41,10 +41,10 @@ inline bool IsCharWhitespace(char c)
 
 void CBroadcast::RenderServerBroadcast()
 {
-	if(!g_Config.m_ClShowServerBroadcast || m_pClient->m_MuteServerBroadcast)
+	if(!Config()->Values()->m_ClShowServerBroadcast || m_pClient->m_MuteServerBroadcast)
 		return;
 
-	const bool ColoredBroadcastEnabled = g_Config.m_ClColoredBroadcast;
+	const bool ColoredBroadcastEnabled = Config()->Values()->m_ClColoredBroadcast;
 	const float Height = 300;
 	const float Width = Height*Graphics()->ScreenAspect();
 
@@ -259,7 +259,7 @@ void CBroadcast::OnReset()
 void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 {
 	// process server broadcast message
-	if(MsgType == NETMSGTYPE_SV_BROADCAST && g_Config.m_ClShowServerBroadcast &&
+	if(MsgType == NETMSGTYPE_SV_BROADCAST && Config()->Values()->m_ClShowServerBroadcast &&
 	   !m_pClient->m_MuteServerBroadcast)
 	{
 		CNetMsg_Sv_Broadcast *pMsg = (CNetMsg_Sv_Broadcast *)pRawMsg;

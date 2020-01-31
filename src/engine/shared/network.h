@@ -531,13 +531,15 @@ public:
 // TODO: both, fix these. This feels like a junk class for stuff that doesn't fit anywere
 class CNetBase
 {
+	static class IConfig *m_pConfig;
 	static IOHANDLE ms_DataLogSent;
 	static IOHANDLE ms_DataLogRecv;
 	static CHuffman ms_Huffman;
 public:
+	static IConfig *Config() { return m_pConfig; }
 	static void OpenLog(IOHANDLE DataLogSent, IOHANDLE DataLogRecv);
 	static void CloseLog();
-	static void Init();
+	static void Init(class IConfig *pConfig);
 	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
 

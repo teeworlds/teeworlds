@@ -216,7 +216,7 @@ void CLayerTiles::Clamp(RECTi *pRect)
 
 void CLayerTiles::BrushSelecting(CUIRect Rect)
 {
-	vec4 FillColor = HexToRgba(g_Config.m_EdColorSelectionTile);
+	vec4 FillColor = HexToRgba(m_pEditor->Config()->Values()->m_EdColorSelectionTile);
 
 	Graphics()->TextureClear();
 	m_pEditor->Graphics()->QuadsBegin();

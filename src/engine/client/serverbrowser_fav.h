@@ -24,7 +24,7 @@ public:
 	struct CFavoriteServer
 	{
 		char m_aHostname[128];
-		char m_aPassword[sizeof(g_Config.m_Password)];
+		char m_aPassword[sizeof(CConfiguration::m_Password)];
 		NETADDR m_Addr;
 		int m_State;
 	} m_aFavoriteServers[MAX_FAVORITES];
@@ -40,6 +40,7 @@ public:
 	} m_FavLookup;
 
 	class CNetClient *m_pNetClient;
+	class IConfig *m_pConfig;
 	class IConsole *m_pConsole;
 	class IEngine *m_pEngine;
 

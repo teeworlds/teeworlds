@@ -51,12 +51,16 @@ class CRenderTools
 	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
 	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
 
-public:
+
+	class IConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
 	class CUI *m_pUI;
+public:
 
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class CUI *UI() const { return m_pUI; }
+
+	void Init(class IConfig *pConfig, class IGraphics *pGraphics, class CUI *pUI);
 
 	void SelectSprite(struct CDataSprite *pSprite, int Flags=0, int sx=0, int sy=0);
 	void SelectSprite(int id, int Flags=0, int sx=0, int sy=0);

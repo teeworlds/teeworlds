@@ -22,17 +22,17 @@ void CNamePlates::RenderNameplate(
 	vec2 Position = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), IntraTick);
 
 
-	float FontSize = 18.0f + 20.0f * g_Config.m_ClNameplatesSize / 100.0f;
+	float FontSize = 18.0f + 20.0f * Config()->Values()->m_ClNameplatesSize / 100.0f;
 	// render name plate
 	if(m_pClient->m_LocalClientID != ClientID)
 	{
 		float a = 1;
-		if(g_Config.m_ClNameplatesAlways == 0)
+		if(Config()->Values()->m_ClNameplatesAlways == 0)
 			a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
 
 
 		char aName[64];
-		str_format(aName, sizeof(aName), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[ClientID].m_aName: "");
+		str_format(aName, sizeof(aName), "%s", Config()->Values()->m_ClShowsocial ? m_pClient->m_aClients[ClientID].m_aName: "");
 
 		CTextCursor Cursor;
 		float tw = TextRender()->TextWidth(0, FontSize, aName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(FontSize);
@@ -40,7 +40,7 @@ void CNamePlates::RenderNameplate(
 
 		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
-		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+		if(Config()->Values()->m_ClNameplatesTeamcolors && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 		{
 			if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
 				TextRender()->TextColor(1.0f, 0.5f, 0.5f, a);
@@ -50,7 +50,7 @@ void CNamePlates::RenderNameplate(
 
 		const vec4 IdTextColor(0.1f, 0.1f, 0.1f, a);
 		vec4 BgIdColor(1.0f, 1.0f, 1.0f, a * 0.5f);
-		if(g_Config.m_ClNameplatesTeamcolors && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
+		if(Config()->Values()->m_ClNameplatesTeamcolors && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 		{
 			if(m_pClient->m_aClients[ClientID].m_Team == TEAM_RED)
 				BgIdColor = vec4(1.0f, 0.5f, 0.5f, a * 0.5f);
@@ -71,7 +71,7 @@ void CNamePlates::RenderNameplate(
 
 void CNamePlates::OnRender()
 {
-	if (!g_Config.m_ClNameplates)
+	if (!Config()->Values()->m_ClNameplates)
 		return;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)

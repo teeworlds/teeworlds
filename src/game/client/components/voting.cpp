@@ -180,7 +180,7 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 			if(pMsg->m_ClientID != -1)
 			{
 				char aLabel[64];
-				CGameClient::GetPlayerLabel(aLabel, sizeof(aLabel), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName);
+				m_pClient->GetPlayerLabel(aLabel, sizeof(aLabel), pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName);
 				switch(pMsg->m_Type)
 				{
 				case VOTE_START_OP:
@@ -191,20 +191,20 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 				case VOTE_START_KICK:
 					{
 						char aName[4];
-						if(!g_Config.m_ClShowsocial)
+						if(!Config()->Values()->m_ClShowsocial)
 							str_copy(aName, pMsg->m_pDescription, sizeof(aName));
-						str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to kick '%s' (%s)"), aLabel, g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName, pMsg->m_pReason);
-						str_format(m_aDescription, sizeof(m_aDescription), "Kick '%s'", g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName);
+						str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to kick '%s' (%s)"), aLabel, Config()->Values()->m_ClShowsocial ? pMsg->m_pDescription : aName, pMsg->m_pReason);
+						str_format(m_aDescription, sizeof(m_aDescription), "Kick '%s'", Config()->Values()->m_ClShowsocial ? pMsg->m_pDescription : aName);
 						m_pClient->m_pChat->AddLine(aBuf);
 						break;
 					}
 				case VOTE_START_SPEC:
 					{
 						char aName[4];
-						if(!g_Config.m_ClShowsocial)
+						if(!Config()->Values()->m_ClShowsocial)
 							str_copy(aName, pMsg->m_pDescription, sizeof(aName));
-						str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to move '%s' to spectators (%s)"), aLabel, g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName, pMsg->m_pReason);
-						str_format(m_aDescription, sizeof(m_aDescription), "Move '%s' to spectators", g_Config.m_ClShowsocial ? pMsg->m_pDescription : aName);
+						str_format(aBuf, sizeof(aBuf), Localize("'%s' called for vote to move '%s' to spectators (%s)"), aLabel, Config()->Values()->m_ClShowsocial ? pMsg->m_pDescription : aName, pMsg->m_pReason);
+						str_format(m_aDescription, sizeof(m_aDescription), "Move '%s' to spectators", Config()->Values()->m_ClShowsocial ? pMsg->m_pDescription : aName);
 						m_pClient->m_pChat->AddLine(aBuf);
 					}
 				}

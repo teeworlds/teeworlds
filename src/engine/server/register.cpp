@@ -14,6 +14,7 @@ CRegister::CRegister()
 {
 	m_pNetServer = 0;
 	m_pMasterServer = 0;
+	m_pConfig = 0;
 	m_pConsole = 0;
 
 	m_RegisterState = REGISTERSTATE_START;
@@ -45,7 +46,7 @@ void CRegister::RegisterSendFwcheckresponse(NETADDR *pAddr, TOKEN Token)
 void CRegister::RegisterSendHeartbeat(NETADDR Addr)
 {
 	static unsigned char aData[sizeof(SERVERBROWSE_HEARTBEAT) + 2];
-	unsigned short Port = g_Config.m_SvPort;
+	unsigned short Port = m_pConfig->Values()->m_SvPort;
 	CNetChunk Packet;
 
 	mem_copy(aData, SERVERBROWSE_HEARTBEAT, sizeof(SERVERBROWSE_HEARTBEAT));
@@ -57,8 +58,8 @@ void CRegister::RegisterSendHeartbeat(NETADDR Addr)
 	Packet.m_pData = &aData;
 
 	// supply the set port that the master can use if it has problems
-	if(g_Config.m_SvExternalPort)
-		Port = g_Config.m_SvExternalPort;
+	if(m_pConfig->Values()->m_SvExternalPort)
+		Port = m_pConfig->Values()->m_SvExternalPort;
 	aData[sizeof(SERVERBROWSE_HEARTBEAT)] = Port >> 8;
 	aData[sizeof(SERVERBROWSE_HEARTBEAT)+1] = Port&0xff;
 	m_pNetServer->Send(&Packet);
@@ -90,10 +91,11 @@ void CRegister::RegisterGotCount(CNetChunk *pChunk)
 	}
 }
 
-void CRegister::Init(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole)
+void CRegister::Init(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConfig *pConfig, IConsole *pConsole)
 {
 	m_pNetServer = pNetServer;
 	m_pMasterServer = pMasterServer;
+	m_pConfig = pConfig;
 	m_pConsole = pConsole;
 }
 
@@ -102,7 +104,7 @@ void CRegister::RegisterUpdate(int Nettype)
 	int64 Now = time_get();
 	int64 Freq = time_freq();
 
-	if(!g_Config.m_SvRegister)
+	if(!m_pConfig->Values()->m_SvRegister)
 		return;
 
 	m_pMasterServer->Update();
@@ -274,7 +276,7 @@ int CRegister::RegisterProcessPacket(CNetChunk *pPacket, TOKEN Token)
 	{
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", "ERROR: the master server reports that clients can not connect to this server.");
 		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "ERROR: configure your firewall/nat to let through udp on port %d.", g_Config.m_SvPort);
+		str_format(aBuf, sizeof(aBuf), "ERROR: configure your firewall/nat to let through udp on port %d.", m_pConfig->Values()->m_SvPort);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "register", aBuf);
 		RegisterNewState(REGISTERSTATE_ERROR);
 		return 1;

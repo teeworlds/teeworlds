@@ -118,7 +118,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 
 		if(Multiple)
 			TextRender()->TextEx(&Cursor, ", ", -1);
-		if(g_Config.m_ClShowUserId && Cursor.m_LineCount <= Cursor.m_MaxLines)
+		if(Config()->Values()->m_ClShowUserId && Cursor.m_LineCount <= Cursor.m_MaxLines)
 		{
 			Cursor.m_X += Cursor.m_FontSize;
 		}
@@ -156,7 +156,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 
 		if(Multiple)
 			TextRender()->TextEx(&Cursor, ", ", -1);
-		if(g_Config.m_ClShowUserId && Cursor.m_LineCount <= Cursor.m_MaxLines)
+		if(Config()->Values()->m_ClShowUserId && Cursor.m_LineCount <= Cursor.m_MaxLines)
 		{
 			RenderTools()->DrawClientID(TextRender(), &Cursor, i);
 		}
@@ -194,7 +194,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float Spacing = 2.0f;
 	float PingOffset = x+Spacing, PingLength = 35.0f;
 	float CountryFlagOffset = PingOffset+PingLength, CountryFlagLength = 20.f;
-	float IdSize = g_Config.m_ClShowUserId ? LineHeight : 0.0f;
+	float IdSize = Config()->Values()->m_ClShowUserId ? LineHeight : 0.0f;
 	float ReadyLength = ReadyMode ? 10.f : 0.f;
 	float TeeOffset = CountryFlagOffset+CountryFlagLength+4.0f, TeeLength = 25*TeeSizeMod;
 	float NameOffset = CountryFlagOffset+CountryFlagLength+IdSize, NameLength = 128.0f-IdSize/2-ReadyLength;
@@ -569,7 +569,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				TextRender()->TextColor(1.0f, 1.0f, 0.0f, ColorAlpha);
 
 			// id
-			if(g_Config.m_ClShowUserId)
+			if(Config()->Values()->m_ClShowUserId)
 			{
 				TextRender()->SetCursor(&Cursor, NameOffset+TeeLength-IdSize+Spacing, y+Spacing, FontSize, TEXTFLAG_RENDER);
 				RenderTools()->DrawClientID(TextRender(), &Cursor, pInfo->m_ClientID);

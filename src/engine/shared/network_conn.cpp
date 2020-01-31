@@ -286,7 +286,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 					SetError(Str);
 				}
 
-				if(g_Config.m_Debug)
+				if(CNetBase::Config()->Values()->m_Debug)
 					dbg_msg("conn", "closed reason='%s'", Str);
 			}
 			return 0;
@@ -304,7 +304,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 					SendControlWithToken(NET_CTRLMSG_CONNECT);
 					dbg_msg("connection", "got token, replying, token=%x mytoken=%x", m_PeerToken, m_Token);
 				}
-				else if(g_Config.m_Debug)
+				else if(CNetBase::Config()->Values()->m_Debug)
 					dbg_msg("connection", "got token, token=%x", m_PeerToken);
 			}
 			else
@@ -325,7 +325,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 						m_LastRecvTime = Now;
 						m_LastUpdateTime = Now;
 						SendControl(NET_CTRLMSG_CONNECTACCEPT, 0, 0);
-						if(g_Config.m_Debug)
+						if(CNetBase::Config()->Values()->m_Debug)
 							dbg_msg("connection", "got connection, sending connect+accept");
 					}
 				}
@@ -337,7 +337,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 						m_LastRecvTime = Now;
 						SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
 						m_State = NET_CONNSTATE_ONLINE;
-						if(g_Config.m_Debug)
+						if(CNetBase::Config()->Values()->m_Debug)
 							dbg_msg("connection", "got connect+accept, sending accept. connection online");
 					}
 				}
@@ -350,7 +350,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 		{
 			m_LastRecvTime = Now;
 			m_State = NET_CONNSTATE_ONLINE;
-			if(g_Config.m_Debug)
+			if(CNetBase::Config()->Values()->m_Debug)
 				dbg_msg("connection", "connecting online");
 		}
 	}
@@ -410,7 +410,7 @@ int CNetConnection::Update()
 		if(time_get()-m_LastSendTime > time_freq()/2) // flush connection after 500ms if needed
 		{
 			int NumFlushedChunks = Flush();
-			if(NumFlushedChunks && g_Config.m_Debug)
+			if(NumFlushedChunks && CNetBase::Config()->Values()->m_Debug)
 				dbg_msg("connection", "flushed connection due to timeout. %d chunks.", NumFlushedChunks);
 		}
 

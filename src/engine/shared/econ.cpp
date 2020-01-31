@@ -60,8 +60,9 @@ void CEcon::ConLogout(IConsole::IResult *pResult, void *pUserData)
 		pThis->m_NetConsole.Drop(pThis->m_UserClientID, "Logout");
 }
 
-void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
+void CEcon::Init(IConfig *pConfig, IConsole *pConsole, CNetBan *pNetBan)
 {
+	m_pConfig = pConfig;
 	m_pConsole = pConsole;
 
 	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
@@ -70,32 +71,32 @@ void CEcon::Init(IConsole *pConsole, CNetBan *pNetBan)
 	m_Ready = false;
 	m_UserClientID = -1;
 
-	if(g_Config.m_EcPort == 0 || g_Config.m_EcPassword[0] == 0)
+	if(m_pConfig->Values()->m_EcPort == 0 || m_pConfig->Values()->m_EcPassword[0] == 0)
 		return;
 
 	NETADDR BindAddr;
-	if(g_Config.m_EcBindaddr[0] && net_host_lookup(g_Config.m_EcBindaddr, &BindAddr, NETTYPE_ALL) == 0)
+	if(m_pConfig->Values()->m_EcBindaddr[0] && net_host_lookup(m_pConfig->Values()->m_EcBindaddr, &BindAddr, NETTYPE_ALL) == 0)
 	{
 		// got bindaddr
 		BindAddr.type = NETTYPE_ALL;
-		BindAddr.port = g_Config.m_EcPort;
+		BindAddr.port = m_pConfig->Values()->m_EcPort;
 	}
 	else
 	{
 		mem_zero(&BindAddr, sizeof(BindAddr));
 		BindAddr.type = NETTYPE_ALL;
-		BindAddr.port = g_Config.m_EcPort;
+		BindAddr.port = m_pConfig->Values()->m_EcPort;
 	}
 
 	if(m_NetConsole.Open(BindAddr, pNetBan, NewClientCallback, DelClientCallback, this))
 	{
 		m_Ready = true;
 		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), "bound to %s:%d", g_Config.m_EcBindaddr, g_Config.m_EcPort);
+		str_format(aBuf, sizeof(aBuf), "bound to %s:%d", m_pConfig->Values()->m_EcBindaddr, m_pConfig->Values()->m_EcPort);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD,"econ", aBuf);
 
 		Console()->Chain("ec_output_level", ConchainEconOutputLevelUpdate, this);
-		m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_EcOutputLevel, SendLineCB, this);
+		m_PrintCBIndex = Console()->RegisterPrintCallback(m_pConfig->Values()->m_EcOutputLevel, SendLineCB, this);
 
 		Console()->Register("logout", "", CFGFLAG_ECON, ConLogout, this, "Logout of econ");
 	}
@@ -118,7 +119,7 @@ void CEcon::Update()
 		dbg_assert(m_aClients[ClientID].m_State != CClient::STATE_EMPTY, "got message from empty slot");
 		if(m_aClients[ClientID].m_State == CClient::STATE_CONNECTED)
 		{
-			if(str_comp(aBuf, g_Config.m_EcPassword) == 0)
+			if(str_comp(aBuf, m_pConfig->Values()->m_EcPassword) == 0)
 			{
 				m_aClients[ClientID].m_State = CClient::STATE_AUTHED;
 				m_NetConsole.Send(ClientID, "Authentication successful. External console access granted.");
@@ -134,8 +135,8 @@ void CEcon::Update()
 				m_NetConsole.Send(ClientID, aMsg);
 				if(m_aClients[ClientID].m_AuthTries >= MAX_AUTH_TRIES)
 				{
-					if(g_Config.m_EcBantime)
-						m_NetConsole.NetBan()->BanAddr(m_NetConsole.ClientAddr(ClientID), g_Config.m_EcBantime*60, "Too many authentication tries");
+					if(m_pConfig->Values()->m_EcBantime)
+						m_NetConsole.NetBan()->BanAddr(m_NetConsole.ClientAddr(ClientID), m_pConfig->Values()->m_EcBantime*60, "Too many authentication tries");
 					m_NetConsole.Drop(ClientID, "Too many authentication tries");
 				}
 			}
@@ -154,7 +155,7 @@ void CEcon::Update()
 	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; ++i)
 	{
 		if(m_aClients[i].m_State == CClient::STATE_CONNECTED &&
-			time_get() > m_aClients[i].m_TimeConnected + g_Config.m_EcAuthTimeout * time_freq())
+			time_get() > m_aClients[i].m_TimeConnected + m_pConfig->Values()->m_EcAuthTimeout * time_freq())
 			m_NetConsole.Drop(i, "authentication timeout");
 	}
 }

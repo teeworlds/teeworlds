@@ -70,7 +70,7 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 					continue;
 
 				// out of sequence, request resend
-				if(g_Config.m_Debug)
+				if(CNetBase::Config()->Values()->m_Debug)
 					dbg_msg("conn", "asking for resend %d %d", Header.m_Sequence, (m_pConnection->m_Ack+1)%NET_MAX_SEQUENCE);
 				m_pConnection->SignalResend();
 				continue; // take the next chunk in the packet
@@ -195,7 +195,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	// check the size
 	if(Size < NET_PACKETHEADERSIZE || Size > NET_MAX_PACKETSIZE)
 	{
-		if(g_Config.m_Debug)
+		if(m_pConfig->Values()->m_Debug)
 			dbg_msg("network", "packet too small, size=%d", Size);
 		return -1;
 	}
@@ -208,7 +208,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	{
 		if(Size < NET_PACKETHEADERSIZE_CONNLESS)
 		{
-			if(g_Config.m_Debug)
+			if(m_pConfig->Values()->m_Debug)
 				dbg_msg("net", "connless packet too small, size=%d", Size);
 			return -1;
 		}
@@ -233,7 +233,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	{
 		if(Size - NET_PACKETHEADERSIZE > NET_MAX_PAYLOAD)
 		{
-			if(g_Config.m_Debug)
+			if(m_pConfig->Values()->m_Debug)
 				dbg_msg("network", "packet payload too big, size=%d", Size);
 			return -1;
 		}
@@ -257,7 +257,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	// check for errors
 	if(pPacket->m_DataSize < 0)
 	{
-		if(g_Config.m_Debug)
+		if(m_pConfig->Values()->m_Debug)
 			dbg_msg("network", "error during packet decoding");
 		return -1;
 	}
@@ -369,7 +369,7 @@ int CNetBase::IsSeqInBackroom(int Seq, int Ack)
 IOHANDLE CNetBase::ms_DataLogSent = 0;
 IOHANDLE CNetBase::ms_DataLogRecv = 0;
 CHuffman CNetBase::ms_Huffman;
-
+IConfig *CNetBase::m_pConfig = 0;	// todo: fix me
 
 void CNetBase::OpenLog(IOHANDLE DataLogSent, IOHANDLE DataLogRecv)
 {
@@ -433,7 +433,8 @@ static const unsigned gs_aFreqTable[256+1] = {
 	12,18,18,27,20,18,15,19,11,17,33,12,18,15,19,18,16,26,17,18,
 	9,10,25,22,22,17,20,16,6,16,15,20,14,18,24,335,1517};
 
-void CNetBase::Init()
+void CNetBase::Init(IConfig *pConfig)
 {
+	m_pConfig = pConfig;
 	ms_Huffman.Init(gs_aFreqTable);
 }

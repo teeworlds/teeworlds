@@ -10,6 +10,7 @@ class CSound : public IEngineSound
 	int m_SoundEnabled;
 
 public:
+	IConfig *m_pConfig;
 	IEngineGraphics *m_pGraphics;
 	IStorage *m_pStorage;
 

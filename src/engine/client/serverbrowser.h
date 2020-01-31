@@ -59,6 +59,7 @@ public:
 
 private:
 	class CNetClient *m_pNetClient;
+	class IConfig *m_pConfig;
 	class IConsole *m_pConsole;
 	class IStorage *m_pStorage;
 	class IMasterServer *m_pMasterServer;
@@ -66,6 +67,7 @@ private:
 	class CServerBrowserFavorites m_ServerBrowserFavorites;
 	class CServerBrowserFilter m_ServerBrowserFilter;
 
+	class IConfig *Config() const { return m_pConfig; }
 	class IConsole *Console() const { return m_pConsole; }
 	class IStorage *Storage() const { return m_pStorage; }
 

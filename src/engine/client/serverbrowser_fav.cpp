@@ -29,6 +29,7 @@ CServerBrowserFavorites::CServerBrowserFavorites()
 void CServerBrowserFavorites::Init(CNetClient *pNetClient, IConsole *pConsole, IEngine *pEngine, IConfig *pConfig)
 {
 	m_pNetClient = pNetClient;
+	m_pConfig = pConfig;
 	m_pConsole = pConsole;
 	m_pEngine = pEngine;
 	if(pConfig)
@@ -91,7 +92,7 @@ bool CServerBrowserFavorites::AddFavoriteEx(const char *pHostname, const NETADDR
 
 	++m_NumFavoriteServers;
 
-	if(g_Config.m_Debug)
+	if(m_pConfig->Values()->m_Debug)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "added fav '%s'", pHostname);

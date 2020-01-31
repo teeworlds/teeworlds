@@ -44,12 +44,14 @@ class CUI
 	unsigned m_NumClips;
 	void UpdateClipping();
 
+	class IConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
 
 public:
 	// TODO: Refactor: Fill this in
-	void SetGraphics(class IGraphics *pGraphics, class ITextRender *pTextRender) { m_pGraphics = pGraphics; m_pTextRender = pTextRender;}
+	void Init(class IConfig *pConfig, class IGraphics *pGraphics, class ITextRender *pTextRender) { m_pConfig = pConfig; m_pGraphics = pGraphics; m_pTextRender = pTextRender; }
+	class IConfig *Config() const { return m_pConfig; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class ITextRender *TextRender() const { return m_pTextRender; }
 

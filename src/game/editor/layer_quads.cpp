@@ -81,7 +81,7 @@ CQuad *CLayerQuads::NewQuad()
 void CLayerQuads::BrushSelecting(CUIRect Rect)
 {
 	// draw selection rectangle
-	vec4 RectColor = HexToRgba(g_Config.m_EdColorSelectionQuad);
+	vec4 RectColor = HexToRgba(m_pEditor->Config()->Values()->m_EdColorSelectionQuad);
 	IGraphics::CLineItem Array[4] = {
 		IGraphics::CLineItem(Rect.x, Rect.y, Rect.x+Rect.w, Rect.y),
 		IGraphics::CLineItem(Rect.x+Rect.w, Rect.y, Rect.x+Rect.w, Rect.y+Rect.h),

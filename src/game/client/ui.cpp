@@ -63,7 +63,7 @@ bool CUI::MouseInsideClip() const
 
 void CUI::ConvertMouseMove(float *x, float *y) const
 {
-	float Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
+	float Fac = (float)(m_pConfig->Values()->m_UiMousesens)/m_pConfig->Values()->m_InpMousesens;
 	*x = *x*Fac;
 	*y = *y*Fac;
 }

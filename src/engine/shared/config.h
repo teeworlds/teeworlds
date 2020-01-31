@@ -14,8 +14,6 @@ struct CConfiguration
 	#undef MACRO_CONFIG_STR
 };
 
-extern CConfiguration g_Config;
-
 enum
 {
 	CFGFLAG_SAVE=1,
@@ -46,6 +44,7 @@ class CConfig : public IConfig
 	int m_FlagMask;
 	CCallback m_aCallbacks[MAX_CALLBACKS];
 	int m_NumCallbacks;
+	CConfiguration m_Values;
 
 public:
 	CConfig();
@@ -54,6 +53,7 @@ public:
 	virtual void Reset();
 	virtual void RestoreStrings();
 	virtual void Save(const char *pFilename);
+	virtual CConfiguration *Values() { return &m_Values; }
 
 	virtual void RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData);
 

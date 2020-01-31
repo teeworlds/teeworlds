@@ -49,9 +49,9 @@ public:
 	static const char * const ms_apSkinPartNames[NUM_SKINPARTS];
 	static const char * const ms_apColorComponents[NUM_COLOR_COMPONENTS];
 
-	static char * const ms_apSkinVariables[NUM_SKINPARTS];
-	static int * const ms_apUCCVariables[NUM_SKINPARTS]; // use custom color
-	static int * const ms_apColorVariables[NUM_SKINPARTS];
+	static char *ms_apSkinVariables[NUM_SKINPARTS];
+	static int *ms_apUCCVariables[NUM_SKINPARTS]; // use custom color
+	static int *ms_apColorVariables[NUM_SKINPARTS];
 	IGraphics::CTextureHandle m_XmasHatTexture;
 	IGraphics::CTextureHandle m_BotTexture;
 
