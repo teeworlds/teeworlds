@@ -535,10 +535,10 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 
 void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 {
-	if(*pLine == 0 || (ClientID >= 0 && (!Config()->Values()->m_ClShowsocial || !m_pClient->m_aClients[ClientID].m_Active || // unknown client
+	if(*pLine == 0 || (ClientID >= 0 && (!Config()->m_ClShowsocial || !m_pClient->m_aClients[ClientID].m_Active || // unknown client
 		m_pClient->m_aClients[ClientID].m_ChatIgnore ||
-		Config()->Values()->m_ClFilterchat == 2 ||
-		(m_pClient->m_LocalClientID != ClientID && Config()->Values()->m_ClFilterchat == 1 && !m_pClient->m_aClients[ClientID].m_Friend))))
+		Config()->m_ClFilterchat == 2 ||
+		(m_pClient->m_LocalClientID != ClientID && Config()->m_ClFilterchat == 1 && !m_pClient->m_aClients[ClientID].m_Friend))))
 		return;
 
 	if(Mode == CHAT_WHISPER)
@@ -550,8 +550,8 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 		if(ClientID != m_pClient->m_LocalClientID && TargetID != m_pClient->m_LocalClientID)
 			return;
 		// ignore and chat filter
-		if(m_pClient->m_aClients[TargetID].m_ChatIgnore || Config()->Values()->m_ClFilterchat == 2 ||
-			(m_pClient->m_LocalClientID != TargetID && Config()->Values()->m_ClFilterchat == 1 && !m_pClient->m_aClients[TargetID].m_Friend))
+		if(m_pClient->m_aClients[TargetID].m_ChatIgnore || Config()->m_ClFilterchat == 2 ||
+			(m_pClient->m_LocalClientID != TargetID && Config()->m_ClFilterchat == 1 && !m_pClient->m_aClients[TargetID].m_Friend))
 			return;
 	}
 

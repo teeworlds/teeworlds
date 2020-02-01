@@ -474,17 +474,17 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 
-			if(Config()->Values()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_SERVERNAME))
+			if(Config()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_SERVERNAME))
 			{
 				// highlight the part that matches
-				const char *pStr = str_find_nocase(pEntry->m_aName, Config()->Values()->m_BrFilterString);
+				const char *pStr = str_find_nocase(pEntry->m_aName, Config()->m_BrFilterString);
 				if(pStr)
 				{
 					TextRender()->TextEx(&Cursor, pEntry->m_aName, (int)(pStr-pEntry->m_aName));
 					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
-					TextRender()->TextEx(&Cursor, pStr, str_length(Config()->Values()->m_BrFilterString));
+					TextRender()->TextEx(&Cursor, pStr, str_length(Config()->m_BrFilterString));
 					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
-					TextRender()->TextEx(&Cursor, pStr+str_length(Config()->Values()->m_BrFilterString), -1);
+					TextRender()->TextEx(&Cursor, pStr+str_length(Config()->m_BrFilterString), -1);
 				}
 				else
 					TextRender()->TextEx(&Cursor, pEntry->m_aName, -1);
@@ -506,17 +506,17 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 
-			if(Config()->Values()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_MAPNAME))
+			if(Config()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_MAPNAME))
 			{
 				// highlight the part that matches
-				const char *pStr = str_find_nocase(pEntry->m_aMap, Config()->Values()->m_BrFilterString);
+				const char *pStr = str_find_nocase(pEntry->m_aMap, Config()->m_BrFilterString);
 				if(pStr)
 				{
 					TextRender()->TextEx(&Cursor, pEntry->m_aMap, (int)(pStr-pEntry->m_aMap));
 					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
-					TextRender()->TextEx(&Cursor, pStr, str_length(Config()->Values()->m_BrFilterString));
+					TextRender()->TextEx(&Cursor, pStr, str_length(Config()->m_BrFilterString));
 					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
-					TextRender()->TextEx(&Cursor, pStr+str_length(Config()->Values()->m_BrFilterString), -1);
+					TextRender()->TextEx(&Cursor, pStr+str_length(Config()->m_BrFilterString), -1);
 				}
 				else
 					TextRender()->TextEx(&Cursor, pEntry->m_aMap, -1);
@@ -557,7 +557,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			}
 
 			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
-			if(Config()->Values()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
+			if(Config()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
 				TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
 			Button.y += 2.0f;
 
@@ -621,17 +621,17 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			Cursor.m_LineWidth = Button.w;
 			TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
 
-			if(Config()->Values()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_GAMETYPE))
+			if(Config()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_GAMETYPE))
 			{
 				// highlight the part that matches
-				const char *pStr = str_find_nocase(pEntry->m_aGameType, Config()->Values()->m_BrFilterString);
+				const char *pStr = str_find_nocase(pEntry->m_aGameType, Config()->m_BrFilterString);
 				if(pStr)
 				{
 					TextRender()->TextEx(&Cursor, pEntry->m_aGameType, (int)(pStr-pEntry->m_aGameType));
 					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
-					TextRender()->TextEx(&Cursor, pStr, str_length(Config()->Values()->m_BrFilterString));
+					TextRender()->TextEx(&Cursor, pStr, str_length(Config()->m_BrFilterString));
 					TextRender()->TextColor(TextBaseColor.r, TextBaseColor.g, TextBaseColor.b, TextAlpha);
-					TextRender()->TextEx(&Cursor, pStr+str_length(Config()->Values()->m_BrFilterString), -1);
+					TextRender()->TextEx(&Cursor, pStr+str_length(Config()->m_BrFilterString), -1);
 				}
 				else
 					TextRender()->TextEx(&Cursor, pEntry->m_aGameType, -1);
@@ -883,17 +883,17 @@ void CMenus::RenderServerbrowserOverlay()
 				TextRender()->SetCursor(&Cursor, Name.x, Name.y+(Name.h-FontSize)/4.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Name.w;
 				const char *pName = pInfo->m_aClients[i].m_aName;
-				if(Config()->Values()->m_BrFilterString[0])
+				if(Config()->m_BrFilterString[0])
 				{
 					// highlight the part that matches
-					const char *s = str_find_nocase(pName, Config()->Values()->m_BrFilterString);
+					const char *s = str_find_nocase(pName, Config()->m_BrFilterString);
 					if(s)
 					{
 						TextRender()->TextEx(&Cursor, pName, (int)(s-pName));
 						TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
-						TextRender()->TextEx(&Cursor, s, str_length(Config()->Values()->m_BrFilterString));
+						TextRender()->TextEx(&Cursor, s, str_length(Config()->m_BrFilterString));
 						TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
-						TextRender()->TextEx(&Cursor, s+str_length(Config()->Values()->m_BrFilterString), -1);
+						TextRender()->TextEx(&Cursor, s+str_length(Config()->m_BrFilterString), -1);
 					}
 					else
 						TextRender()->TextEx(&Cursor, pName, -1);
@@ -905,17 +905,17 @@ void CMenus::RenderServerbrowserOverlay()
 				TextRender()->SetCursor(&Cursor, Clan.x, Clan.y+(Clan.h-FontSize)/4.0f, FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
 				Cursor.m_LineWidth = Clan.w;
 				const char *pClan = pInfo->m_aClients[i].m_aClan;
-				if(Config()->Values()->m_BrFilterString[0])
+				if(Config()->m_BrFilterString[0])
 				{
 					// highlight the part that matches
-					const char *s = str_find_nocase(pClan, Config()->Values()->m_BrFilterString);
+					const char *s = str_find_nocase(pClan, Config()->m_BrFilterString);
 					if(s)
 					{
 						TextRender()->TextEx(&Cursor, pClan, (int)(s-pClan));
 						TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
-						TextRender()->TextEx(&Cursor, s, str_length(Config()->Values()->m_BrFilterString));
+						TextRender()->TextEx(&Cursor, s, str_length(Config()->m_BrFilterString));
 						TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
-						TextRender()->TextEx(&Cursor, s+str_length(Config()->Values()->m_BrFilterString), -1);
+						TextRender()->TextEx(&Cursor, s+str_length(Config()->m_BrFilterString), -1);
 					}
 					else
 						TextRender()->TextEx(&Cursor, pClan, -1);
@@ -974,7 +974,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	const float HeightFactor = GetListHeaderHeightFactor();
 
 	// background
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), (Client()->State() == IClient::STATE_OFFLINE) ? CUI::CORNER_ALL : CUI::CORNER_B|CUI::CORNER_TR, 5.0f);
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), (Client()->State() == IClient::STATE_OFFLINE) ? CUI::CORNER_ALL : CUI::CORNER_B|CUI::CORNER_TR, 5.0f);
 
 	// make room for scrollbar
 	{
@@ -1022,15 +1022,15 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		if(i == COL_BROWSER_FLAG)
 			continue;
 
-		if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, Config()->Values()->m_BrSort == ms_aBrowserCols[i].m_Sort, ms_aBrowserCols[i].m_Align, &ms_aBrowserCols[i].m_Rect))
+		if(DoButton_GridHeader(ms_aBrowserCols[i].m_Caption, ms_aBrowserCols[i].m_Caption, Config()->m_BrSort == ms_aBrowserCols[i].m_Sort, ms_aBrowserCols[i].m_Align, &ms_aBrowserCols[i].m_Rect))
 		{
 			if(ms_aBrowserCols[i].m_Sort != -1)
 			{
-				if(Config()->Values()->m_BrSort == ms_aBrowserCols[i].m_Sort)
-					Config()->Values()->m_BrSortOrder ^= 1;
+				if(Config()->m_BrSort == ms_aBrowserCols[i].m_Sort)
+					Config()->m_BrSortOrder ^= 1;
 				else
-					Config()->Values()->m_BrSortOrder = 0;
-				Config()->Values()->m_BrSort = ms_aBrowserCols[i].m_Sort;
+					Config()->m_BrSortOrder = 0;
+				Config()->m_BrSort = ms_aBrowserCols[i].m_Sort;
 			}
 			ServerBrowserSortingOnUpdate();
 		}
@@ -1040,7 +1040,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 	{
 		int Column = COL_BROWSER_PING;
-		switch(Config()->Values()->m_BrSort)
+		switch(Config()->m_BrSort)
 		{
 			case IServerBrowser::SORT_NAME:
 				Column = COL_BROWSER_NAME;
@@ -1283,7 +1283,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 					m_aSelectedFilters[BrowserType] = FilterIndex;
 					m_aSelectedServers[BrowserType] = ServerIndex;
 					m_AddressSelection &= ~(ADDR_SELECTION_CHANGE|ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND);
-					if(Config()->Values()->m_UiAutoswitchInfotab)
+					if(Config()->m_UiAutoswitchInfotab)
 						m_SidebarTab = 0;
 					UpdateServerBrowserAddress(); // update now instead of using flag because of connect
 					if(Input()->MouseDoubleClick())
@@ -1329,7 +1329,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	UI()->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_LEFT);
 	EditBox.VSplitRight(EditBox.h, &EditBox, &Button);
 	static float s_ClearOffset = 0.0f;
-	if(DoEditBox(&Config()->Values()->m_BrFilterString, &EditBox, Config()->Values()->m_BrFilterString, sizeof(Config()->Values()->m_BrFilterString), FontSize, &s_ClearOffset, false, CUI::CORNER_ALL))
+	if(DoEditBox(&Config()->m_BrFilterString, &EditBox, Config()->m_BrFilterString, sizeof(Config()->m_BrFilterString), FontSize, &s_ClearOffset, false, CUI::CORNER_ALL))
 	{
 		Client()->ServerBrowserUpdate();
 		ServerBrowserFilterOnUpdate();
@@ -1340,8 +1340,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		static CButtonContainer s_ClearButton;
 		if(DoButton_SpriteID(&s_ClearButton, IMAGE_TOOLICONS, SPRITE_TOOL_X_A, false, &Button, CUI::CORNER_ALL, 5.0f, true))
 		{
-			Config()->Values()->m_BrFilterString[0] = 0;
-			UI()->SetActiveItem(&Config()->Values()->m_BrFilterString);
+			Config()->m_BrFilterString[0] = 0;
+			UI()->SetActiveItem(&Config()->m_BrFilterString);
 			Client()->ServerBrowserUpdate();
 		}
 	}
@@ -1356,7 +1356,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	if(BrowserType == IServerBrowser::TYPE_INTERNET)
 	{
 		static float s_InternetAddressOffset = 0.0f;
-		if(DoEditBox(&Config()->Values()->m_UiServerAddress, &EditBox, Config()->Values()->m_UiServerAddress, sizeof(Config()->Values()->m_UiServerAddress), FontSize, &s_InternetAddressOffset, false, CUI::CORNER_ALL))
+		if(DoEditBox(&Config()->m_UiServerAddress, &EditBox, Config()->m_UiServerAddress, sizeof(Config()->m_UiServerAddress), FontSize, &s_InternetAddressOffset, false, CUI::CORNER_ALL))
 		{
 			m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
 		}
@@ -1364,7 +1364,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	else if(BrowserType == IServerBrowser::TYPE_LAN)
 	{
 		static float s_LanAddressOffset = 0.0f;
-		if(DoEditBox(&Config()->Values()->m_UiServerAddressLan, &EditBox, Config()->Values()->m_UiServerAddressLan, sizeof(Config()->Values()->m_UiServerAddressLan), FontSize, &s_LanAddressOffset, false, CUI::CORNER_ALL))
+		if(DoEditBox(&Config()->m_UiServerAddressLan, &EditBox, Config()->m_UiServerAddressLan, sizeof(Config()->m_UiServerAddressLan), FontSize, &s_LanAddressOffset, false, CUI::CORNER_ALL))
 		{
 			m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
 		}
@@ -1426,7 +1426,7 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 	CUIRect Header, Button;
 
 	// background
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), CUI::CORNER_ALL, 5.0f);
+	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), CUI::CORNER_ALL, 5.0f);
 
 	// handle Tab key
 	if(m_TabPressed)
@@ -2158,17 +2158,17 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			TextRender()->SetCursor(&Cursor, Name.x, Name.y, FontSize - 2, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Name.w;
 			const char *pName = pInfo->m_aClients[i].m_aName;
-			if(Config()->Values()->m_BrFilterString[0])
+			if(Config()->m_BrFilterString[0])
 			{
 				// highlight the part that matches
-				const char *s = str_find_nocase(pName, Config()->Values()->m_BrFilterString);
+				const char *s = str_find_nocase(pName, Config()->m_BrFilterString);
 				if(s)
 				{
 					TextRender()->TextEx(&Cursor, pName, (int)(s - pName));
 					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
-					TextRender()->TextEx(&Cursor, s, str_length(Config()->Values()->m_BrFilterString));
+					TextRender()->TextEx(&Cursor, s, str_length(Config()->m_BrFilterString));
 					TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
-					TextRender()->TextEx(&Cursor, s + str_length(Config()->Values()->m_BrFilterString), -1);
+					TextRender()->TextEx(&Cursor, s + str_length(Config()->m_BrFilterString), -1);
 				}
 				else
 					TextRender()->TextEx(&Cursor, pName, -1);
@@ -2180,17 +2180,17 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			TextRender()->SetCursor(&Cursor, Clan.x, Clan.y, FontSize - 2, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
 			Cursor.m_LineWidth = Clan.w;
 			const char *pClan = pInfo->m_aClients[i].m_aClan;
-			if(Config()->Values()->m_BrFilterString[0])
+			if(Config()->m_BrFilterString[0])
 			{
 				// highlight the part that matches
-				const char *s = str_find_nocase(pClan, Config()->Values()->m_BrFilterString);
+				const char *s = str_find_nocase(pClan, Config()->m_BrFilterString);
 				if(s)
 				{
 					TextRender()->TextEx(&Cursor, pClan, (int)(s - pClan));
 					TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
-					TextRender()->TextEx(&Cursor, s, str_length(Config()->Values()->m_BrFilterString));
+					TextRender()->TextEx(&Cursor, s, str_length(Config()->m_BrFilterString));
 					TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
-					TextRender()->TextEx(&Cursor, s + str_length(Config()->Values()->m_BrFilterString), -1);
+					TextRender()->TextEx(&Cursor, s + str_length(Config()->m_BrFilterString), -1);
 				}
 				else
 					TextRender()->TextEx(&Cursor, pClan, -1);
@@ -2242,7 +2242,7 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 	float ButtonWidth = MainView.w/2.0f-Spacing/2.0f;
 
 	// render background
-	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
 
 	// back to main menu
 	CUIRect Button;
@@ -2395,9 +2395,9 @@ const char *CMenus::GetServerBrowserAddress()
 {
 	const int Type = ServerBrowser()->GetType();
 	if(Type == IServerBrowser::TYPE_INTERNET)
-		return Config()->Values()->m_UiServerAddress;
+		return Config()->m_UiServerAddress;
 	else if(Type == IServerBrowser::TYPE_LAN)
-		return Config()->Values()->m_UiServerAddressLan;
+		return Config()->m_UiServerAddressLan;
 	return 0;
 }
 
@@ -2405,9 +2405,9 @@ void CMenus::SetServerBrowserAddress(const char *pAddress)
 {
 	const int Type = ServerBrowser()->GetType();
 	if(Type == IServerBrowser::TYPE_INTERNET)
-		str_copy(Config()->Values()->m_UiServerAddress, pAddress, sizeof(Config()->Values()->m_UiServerAddress));
+		str_copy(Config()->m_UiServerAddress, pAddress, sizeof(Config()->m_UiServerAddress));
 	else if(Type == IServerBrowser::TYPE_LAN)
-		str_copy(Config()->Values()->m_UiServerAddressLan, pAddress, sizeof(Config()->Values()->m_UiServerAddressLan));
+		str_copy(Config()->m_UiServerAddressLan, pAddress, sizeof(Config()->m_UiServerAddressLan));
 }
 
 void CMenus::ServerBrowserFilterOnUpdate()

@@ -213,7 +213,7 @@ void CHud::RenderScoreHud()
 						// draw name of the flag holder
 						int ID = FlagCarrier[t]%MAX_CLIENTS;
 						char aName[64];
-						str_format(aName, sizeof(aName), "%s", Config()->Values()->m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
+						str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
 						float w = TextRender()->TextWidth(0, 8.0f, aName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(8.0f);
 
 						CTextCursor Cursor;
@@ -312,7 +312,7 @@ void CHud::RenderScoreHud()
 					// draw name
 					int ID = aPlayerInfo[t].m_ClientID;
 					char aName[64];
-					str_format(aName, sizeof(aName), "%s", Config()->Values()->m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
+					str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
 					float w = TextRender()->TextWidth(0, 8.0f, aName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(8.0f);
 
 					CTextCursor Cursor;
@@ -408,7 +408,7 @@ void CHud::RenderWarmupTimer()
 
 void CHud::RenderFps()
 {
-	if(Config()->Values()->m_ClShowfps)
+	if(Config()->m_ClShowfps)
 	{
 		// calculate avg. fps
 		float FPS = 1.0f / Client()->RenderFrameTime();
@@ -432,7 +432,7 @@ void CHud::RenderConnectionWarning()
 void CHud::RenderTeambalanceWarning()
 {
 	// render prompt about team-balance
-	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS && Config()->Values()->m_ClWarningTeambalance && m_pClient->m_ServerSettings.m_TeamBalance &&
+	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS && Config()->m_ClWarningTeambalance && m_pClient->m_ServerSettings.m_TeamBalance &&
 		absolute(m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED]-m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE]) >= NUM_TEAMS)
 	{
 		bool Flash = time_get()/(time_freq()/2)%2 == 0;
@@ -655,7 +655,7 @@ void CHud::RenderSpectatorHud()
 	char aName[64];
 	const int SpecID = m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
 	const int SpecMode = m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
-	str_format(aName, sizeof(aName), "%s", Config()->Values()->m_ClShowsocial ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : "");
+	str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : "");
 	char aBuf[128];
 
 	CTextCursor Cursor;
@@ -809,7 +809,7 @@ void CHud::OnRender()
 	m_Height = 300.0f;
 	Graphics()->MapScreen(0.0f, 0.0f, m_Width, m_Height);
 
-	if(Config()->Values()->m_ClShowhud)
+	if(Config()->m_ClShowhud)
 	{
 		if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 		{

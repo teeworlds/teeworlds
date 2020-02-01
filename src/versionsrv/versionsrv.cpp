@@ -89,18 +89,18 @@ int main(int argc, const char **argv) // ignore_convention
 	int FlagMask = 0;
 	IKernel *pKernel = IKernel::Create();
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
-	IConfig *pConfig = CreateConfig();
+	IConfigManager *pConfigManager = CreateConfigManager();
 	IConsole *pConsole = CreateConsole(FlagMask);
 
-	CNetBase::Init(pConfig);
+	CNetBase::Init(pConfigManager->Values());
 
 	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
 	RegisterFail |= !pKernel->RegisterInterface(pConsole);
-	RegisterFail |= !pKernel->RegisterInterface(pConfig);
+	RegisterFail |= !pKernel->RegisterInterface(pConfigManager);
 
 	if(RegisterFail)
 		return -1;
-	pConfig->Init(FlagMask);
+	pConfigManager->Init(FlagMask);
 	pConsole->Init();
 
 	mem_zero(&BindAddr, sizeof(BindAddr));

@@ -34,10 +34,12 @@ private:
 	CEntity *m_apFirstEntityTypes[NUM_ENTTYPES];
 
 	class CGameContext *m_pGameServer;
+	class CConfig *m_pConfig;
 	class IServer *m_pServer;
 
 public:
 	class CGameContext *GameServer() { return m_pGameServer; }
+	class CConfig *Config() { return m_pConfig; }
 	class IServer *Server() { return m_pServer; }
 
 	bool m_ResetRequested;

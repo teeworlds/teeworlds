@@ -16,6 +16,7 @@
 class IGameController
 {
 	class CGameContext *m_pGameServer;
+	class CConfig *m_pConfig;
 	class IServer *m_pServer;
 
 	// activity
@@ -95,6 +96,7 @@ class IGameController
 
 protected:
 	CGameContext *GameServer() const { return m_pGameServer; }
+	CConfig *Config() const { return m_pConfig; }
 	IServer *Server() const { return m_pServer; }
 
 	// game

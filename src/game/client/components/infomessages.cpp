@@ -43,13 +43,13 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 		// unpack messages
 		CInfoMsg Kill;
 		Kill.m_Player1ID = pMsg->m_Victim;
-		str_format(Kill.m_aPlayer1Name, sizeof(Kill.m_aPlayer1Name), "%s", Config()->Values()->m_ClShowsocial ? m_pClient->m_aClients[Kill.m_Player1ID].m_aName : "");
+		str_format(Kill.m_aPlayer1Name, sizeof(Kill.m_aPlayer1Name), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[Kill.m_Player1ID].m_aName : "");
 		Kill.m_Player1RenderInfo = m_pClient->m_aClients[Kill.m_Player1ID].m_RenderInfo;
 
 		Kill.m_Player2ID = pMsg->m_Killer;
 		if (Kill.m_Player2ID >= 0)
 		{
-			str_format(Kill.m_aPlayer2Name, sizeof(Kill.m_aPlayer2Name), "%s", Config()->Values()->m_ClShowsocial ? m_pClient->m_aClients[Kill.m_Player2ID].m_aName : "");
+			str_format(Kill.m_aPlayer2Name, sizeof(Kill.m_aPlayer2Name), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[Kill.m_Player2ID].m_aName : "");
 			Kill.m_Player2RenderInfo = m_pClient->m_aClients[Kill.m_Player2ID].m_RenderInfo;
 		}
 		else
@@ -127,7 +127,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 		{
 			CInfoMsg Finish;
 			Finish.m_Player1ID = pMsg->m_ClientID;
-			str_format(Finish.m_aPlayer1Name, sizeof(Finish.m_aPlayer1Name), "%s", Config()->Values()->m_ClShowsocial ? m_pClient->m_aClients[pMsg->m_ClientID].m_aName : "");
+			str_format(Finish.m_aPlayer1Name, sizeof(Finish.m_aPlayer1Name), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[pMsg->m_ClientID].m_aName : "");
 			Finish.m_Player1RenderInfo = m_pClient->m_aClients[Finish.m_Player1ID].m_RenderInfo;
 
 			Finish.m_Time = pMsg->m_Time;
@@ -141,7 +141,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 
 void CInfoMessages::OnRender()
 {
-	if(!Config()->Values()->m_ClShowhud)
+	if(!Config()->m_ClShowhud)
 		return;
 
 	float Width = 400*3.0f*Graphics()->ScreenAspect();

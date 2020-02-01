@@ -329,7 +329,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 				*CSkins::ms_apColorVariables[p] = NewVal;
 		}
 		if(UseAlpha)
-			Config()->Values()->m_PlayerColorMarking = (Alp << 24) + NewVal;
+			Config()->m_PlayerColorMarking = (Alp << 24) + NewVal;
 		m_SkinModified = true;
 	}
 }
@@ -364,7 +364,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		const CSkins::CSkin *s = s_paSkinList[i];
 		if(s == 0)
 			continue;
-		if(!str_comp(s->m_aName, Config()->Values()->m_PlayerSkin))
+		if(!str_comp(s->m_aName, Config()->m_PlayerSkin))
 		{
 			m_pSelectedSkin = s;
 			OldSelected = i;
@@ -398,7 +398,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
 		m_pSelectedSkin = s_paSkinList[NewSelected];
-		mem_copy(Config()->Values()->m_PlayerSkin, m_pSelectedSkin->m_aName, sizeof(Config()->Values()->m_PlayerSkin));
+		mem_copy(Config()->m_PlayerSkin, m_pSelectedSkin->m_aName, sizeof(Config()->m_PlayerSkin));
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			mem_copy(CSkins::ms_apSkinVariables[p], m_pSelectedSkin->m_apParts[p]->m_aName, 24);
@@ -488,7 +488,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	{
 		const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
 		mem_copy(CSkins::ms_apSkinVariables[m_TeePartSelected], s->m_aName, 24);
-		Config()->Values()->m_PlayerSkin[0] = 0;
+		Config()->m_PlayerSkin[0] = 0;
 		m_SkinModified = true;
 	}
 	OldSelected = NewSelected;
@@ -698,7 +698,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 		LoadLanguageIndexfile(Storage(), Console(), &s_Languages);
 		for(int i = 0; i < s_Languages.size(); i++)
 		{
-			if(str_comp(s_Languages[i].m_FileName, Config()->Values()->m_ClLanguagefile) == 0)
+			if(str_comp(s_Languages[i].m_FileName, Config()->m_ClLanguagefile) == 0)
 			{
 				s_SelectedLanguage = i;
 				break;
@@ -746,7 +746,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 	if(OldSelected != s_SelectedLanguage)
 	{
 		m_ActiveListBox = ACTLB_LANG;
-		str_copy(Config()->Values()->m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(Config()->Values()->m_ClLanguagefile));
+		str_copy(Config()->m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(Config()->m_ClLanguagefile));
 		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
 	}
 }
@@ -758,13 +758,13 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 
 	if(m_lThemes.size() == 0) // not loaded yet
 	{
-		if(!Config()->Values()->m_ClShowMenuMap)
-			str_copy(Config()->Values()->m_ClMenuMap, "", sizeof(Config()->Values()->m_ClMenuMap)); // cl_menu_map otherwise resets to default on loading
+		if(!Config()->m_ClShowMenuMap)
+			str_copy(Config()->m_ClMenuMap, "", sizeof(Config()->m_ClMenuMap)); // cl_menu_map otherwise resets to default on loading
 		m_lThemes.add(CTheme("", false, false)); // no theme
 		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/themes", ThemeScan, (CMenus*)this);
 		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/themes", ThemeIconScan, (CMenus*)this);
 		for(int i = 0; i < m_lThemes.size(); i++)
-			if(str_comp(m_lThemes[i].m_Name, Config()->Values()->m_ClMenuMap) == 0)
+			if(str_comp(m_lThemes[i].m_Name, Config()->m_ClMenuMap) == 0)
 			{
 				s_SelectedTheme = i;
 				break;
@@ -837,11 +837,11 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 	if(OldSelected != s_SelectedTheme)
 	{
 		m_ActiveListBox = ACTLB_THEME;
-		str_copy(Config()->Values()->m_ClMenuMap, m_lThemes[s_SelectedTheme].m_Name, sizeof(Config()->Values()->m_ClMenuMap));
+		str_copy(Config()->m_ClMenuMap, m_lThemes[s_SelectedTheme].m_Name, sizeof(Config()->m_ClMenuMap));
 		if(m_lThemes[s_SelectedTheme].m_Name[0])
-			Config()->Values()->m_ClShowMenuMap = 1;
+			Config()->m_ClShowMenuMap = 1;
 		else
-			Config()->Values()->m_ClShowMenuMap = 0;
+			Config()->m_ClShowMenuMap = 0;
 		m_pClient->m_pMapLayersBackGround->BackgroundMapUpdate();
 	}
 }
@@ -855,7 +855,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render game menu backgrounds
-	int NumOptions = max(Config()->Values()->m_ClNameplates ? 6 : 3, Config()->Values()->m_ClShowsocial ? 5 : 4);
+	int NumOptions = max(Config()->m_ClNameplates ? 6 : 3, Config()->m_ClShowsocial ? 5 : 4);
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -864,15 +864,15 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), this->Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), this->Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &Game, &MainView);
 	RenderTools()->DrawUIRect(&Game, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// render client menu background
 	NumOptions = 4;
-	if(Config()->Values()->m_ClAutoDemoRecord) NumOptions += 1;
-	if(Config()->Values()->m_ClAutoScreenshot) NumOptions += 1;
+	if(Config()->m_ClAutoDemoRecord) NumOptions += 1;
+	if(Config()->m_ClAutoScreenshot) NumOptions += 1;
 	BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
@@ -893,81 +893,81 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
 	GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
 	static int s_DynamicCameraButton = 0;
-	if(DoButton_CheckBox(&s_DynamicCameraButton, Localize("Dynamic Camera"), Config()->Values()->m_ClDynamicCamera, &Button))
+	if(DoButton_CheckBox(&s_DynamicCameraButton, Localize("Dynamic Camera"), Config()->m_ClDynamicCamera, &Button))
 	{
-		if(Config()->Values()->m_ClDynamicCamera)
+		if(Config()->m_ClDynamicCamera)
 		{
-			Config()->Values()->m_ClDynamicCamera = 0;
+			Config()->m_ClDynamicCamera = 0;
 			// force to defaults when using the GUI
-			Config()->Values()->m_ClMouseMaxDistanceStatic = 400;
-			// Config()->Values()->m_ClMouseFollowfactor = 0;
-			// Config()->Values()->m_ClMouseDeadzone = 0;
+			Config()->m_ClMouseMaxDistanceStatic = 400;
+			// Config()->m_ClMouseFollowfactor = 0;
+			// Config()->m_ClMouseDeadzone = 0;
 		}
 		else
 		{
-			Config()->Values()->m_ClDynamicCamera = 1;
+			Config()->m_ClDynamicCamera = 1;
 			// force to defaults when using the GUI
-			Config()->Values()->m_ClMouseMaxDistanceDynamic = 1000;
-			Config()->Values()->m_ClMouseFollowfactor = 60;
-			Config()->Values()->m_ClMouseDeadzone = 300;
+			Config()->m_ClMouseMaxDistanceDynamic = 1000;
+			Config()->m_ClMouseFollowfactor = 60;
+			Config()->m_ClMouseDeadzone = 300;
 		}
 	}
 
 	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
 	GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
 	static int s_AutoswitchWeapons = 0;
-	if(DoButton_CheckBox(&s_AutoswitchWeapons, Localize("Switch weapon on pickup"), Config()->Values()->m_ClAutoswitchWeapons, &Button))
-		Config()->Values()->m_ClAutoswitchWeapons ^= 1;
+	if(DoButton_CheckBox(&s_AutoswitchWeapons, Localize("Switch weapon on pickup"), Config()->m_ClAutoswitchWeapons, &Button))
+		Config()->m_ClAutoswitchWeapons ^= 1;
 
 	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
 	GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
 	static int s_Nameplates = 0;
-	if(DoButton_CheckBox(&s_Nameplates, Localize("Show name plates"), Config()->Values()->m_ClNameplates, &Button))
-		Config()->Values()->m_ClNameplates ^= 1;
+	if(DoButton_CheckBox(&s_Nameplates, Localize("Show name plates"), Config()->m_ClNameplates, &Button))
+		Config()->m_ClNameplates ^= 1;
 
-	if(Config()->Values()->m_ClNameplates)
+	if(Config()->m_ClNameplates)
 	{
 		GameLeft.HSplitTop(Spacing, 0, &GameLeft);
 		GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		static int s_NameplatesAlways = 0;
-		if(DoButton_CheckBox(&s_NameplatesAlways, Localize("Always show name plates"), Config()->Values()->m_ClNameplatesAlways, &Button))
-			Config()->Values()->m_ClNameplatesAlways ^= 1;
+		if(DoButton_CheckBox(&s_NameplatesAlways, Localize("Always show name plates"), Config()->m_ClNameplatesAlways, &Button))
+			Config()->m_ClNameplatesAlways ^= 1;
 
 		GameLeft.HSplitTop(Spacing, 0, &GameLeft);
 		GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		DoScrollbarOption(&Config()->Values()->m_ClNameplatesSize, &Config()->Values()->m_ClNameplatesSize, &Button, Localize("Size"), 0, 100);
+		DoScrollbarOption(&Config()->m_ClNameplatesSize, &Config()->m_ClNameplatesSize, &Button, Localize("Size"), 0, 100);
 
 		GameLeft.HSplitTop(Spacing, 0, &GameLeft);
 		GameLeft.HSplitTop(ButtonHeight, &Button, &GameLeft);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		static int s_NameplatesTeamcolors = 0;
-		if(DoButton_CheckBox(&s_NameplatesTeamcolors, Localize("Use team colors for name plates"), Config()->Values()->m_ClNameplatesTeamcolors, &Button))
-			Config()->Values()->m_ClNameplatesTeamcolors ^= 1;
+		if(DoButton_CheckBox(&s_NameplatesTeamcolors, Localize("Use team colors for name plates"), Config()->m_ClNameplatesTeamcolors, &Button))
+			Config()->m_ClNameplatesTeamcolors ^= 1;
 	}
 
 	// right side
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 	static int s_Showhud = 0;
-	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), Config()->Values()->m_ClShowhud, &Button))
-		Config()->Values()->m_ClShowhud ^= 1;
+	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), Config()->m_ClShowhud, &Button))
+		Config()->m_ClShowhud ^= 1;
 
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 	static int s_ShowUserId = 0;
-	if(DoButton_CheckBox(&s_ShowUserId, Localize("Show user IDs"), Config()->Values()->m_ClShowUserId, &Button))
-		Config()->Values()->m_ClShowUserId ^= 1;
+	if(DoButton_CheckBox(&s_ShowUserId, Localize("Show user IDs"), Config()->m_ClShowUserId, &Button))
+		Config()->m_ClShowUserId ^= 1;
 
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 	static int s_Showsocial = 0;
-	if(DoButton_CheckBox(&s_Showsocial, Localize("Show social"), Config()->Values()->m_ClShowsocial, &Button))
-		Config()->Values()->m_ClShowsocial ^= 1;
+	if(DoButton_CheckBox(&s_Showsocial, Localize("Show social"), Config()->m_ClShowsocial, &Button))
+		Config()->m_ClShowsocial ^= 1;
 
 	// show chat messages button
-	if(Config()->Values()->m_ClShowsocial)
+	if(Config()->m_ClShowsocial)
 	{
 		GameRight.HSplitTop(Spacing, 0, &GameRight);
 		GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
@@ -983,23 +983,23 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
 		Button.VSplitLeft(119.0f, &Button, 0);
-		if(Config()->Values()->m_ClFilterchat == 0)
+		if(Config()->m_ClFilterchat == 0)
 			str_format(aBuf, sizeof(aBuf), Localize("everyone", "Show chat messages from:"));
-		else if(Config()->Values()->m_ClFilterchat == 1)
+		else if(Config()->m_ClFilterchat == 1)
 			str_format(aBuf, sizeof(aBuf), Localize("friends only", "Show chat messages from:"));
-		else if(Config()->Values()->m_ClFilterchat == 2)
+		else if(Config()->m_ClFilterchat == 2)
 			str_format(aBuf, sizeof(aBuf), Localize("no one", "Show chat messages from:"));
 		static CButtonContainer s_ButtonFilterchat;
 		if(DoButton_Menu(&s_ButtonFilterchat, aBuf, 0, &Button))
-			Config()->Values()->m_ClFilterchat = (Config()->Values()->m_ClFilterchat + 1) % 3;
+			Config()->m_ClFilterchat = (Config()->m_ClFilterchat + 1) % 3;
 	}
 
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 	static int s_EnableColoredBroadcasts = 0;
 	if(DoButton_CheckBox(&s_EnableColoredBroadcasts, Localize("Enable colored server broadcasts"),
-						 Config()->Values()->m_ClColoredBroadcast, &Button))
-		Config()->Values()->m_ClColoredBroadcast ^= 1;
+						 Config()->m_ClColoredBroadcast, &Button))
+		Config()->m_ClColoredBroadcast ^= 1;
 
 	// render client menu
 	Client.HSplitTop(ButtonHeight, &Label, &Client);
@@ -1009,39 +1009,39 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	Client.HSplitTop(Spacing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
 	static int s_SkipMainMenu = 0;
-	if(DoButton_CheckBox(&s_SkipMainMenu, Localize("Skip the main menu"), Config()->Values()->m_ClSkipStartMenu, &Button))
-		Config()->Values()->m_ClSkipStartMenu ^= 1;
+	if(DoButton_CheckBox(&s_SkipMainMenu, Localize("Skip the main menu"), Config()->m_ClSkipStartMenu, &Button))
+		Config()->m_ClSkipStartMenu ^= 1;
 
 	Client.HSplitTop(Spacing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
-	DoScrollbarOption(&Config()->Values()->m_ClMenuAlpha, &Config()->Values()->m_ClMenuAlpha, &Button, Localize("Menu background transparency"), 0, 75);
+	DoScrollbarOption(&Config()->m_ClMenuAlpha, &Config()->m_ClMenuAlpha, &Button, Localize("Menu background transparency"), 0, 75);
 
 	Client.HSplitTop(Spacing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
 	static int s_AutoDemoRecord = 0;
-	if(DoButton_CheckBox(&s_AutoDemoRecord, Localize("Automatically record demos"), Config()->Values()->m_ClAutoDemoRecord, &Button))
-		Config()->Values()->m_ClAutoDemoRecord ^= 1;
+	if(DoButton_CheckBox(&s_AutoDemoRecord, Localize("Automatically record demos"), Config()->m_ClAutoDemoRecord, &Button))
+		Config()->m_ClAutoDemoRecord ^= 1;
 
-	if(Config()->Values()->m_ClAutoDemoRecord)
+	if(Config()->m_ClAutoDemoRecord)
 	{
 		Client.HSplitTop(Spacing, 0, &Client);
 		Client.HSplitTop(ButtonHeight, &Button, &Client);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		DoScrollbarOption(&Config()->Values()->m_ClAutoDemoMax, &Config()->Values()->m_ClAutoDemoMax, &Button, Localize("Max"), 0, 1000, &LogarithmicScrollbarScale, true);
+		DoScrollbarOption(&Config()->m_ClAutoDemoMax, &Config()->m_ClAutoDemoMax, &Button, Localize("Max"), 0, 1000, &LogarithmicScrollbarScale, true);
 	}
 
 	Client.HSplitTop(Spacing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
 	static int s_AutoScreenshot = 0;
-	if(DoButton_CheckBox(&s_AutoScreenshot, Localize("Automatically take game over screenshot"), Config()->Values()->m_ClAutoScreenshot, &Button))
-		Config()->Values()->m_ClAutoScreenshot ^= 1;
+	if(DoButton_CheckBox(&s_AutoScreenshot, Localize("Automatically take game over screenshot"), Config()->m_ClAutoScreenshot, &Button))
+		Config()->m_ClAutoScreenshot ^= 1;
 
-	if(Config()->Values()->m_ClAutoScreenshot)
+	if(Config()->m_ClAutoScreenshot)
 	{
 		Client.HSplitTop(Spacing, 0, &Client);
 		Client.HSplitTop(ButtonHeight, &Button, &Client);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		DoScrollbarOption(&Config()->Values()->m_ClAutoScreenshotMax, &Config()->Values()->m_ClAutoScreenshotMax, &Button, Localize("Max"), 0, 1000, &LogarithmicScrollbarScale, true);
+		DoScrollbarOption(&Config()->m_ClAutoScreenshotMax, &Config()->m_ClAutoScreenshotMax, &Button, Localize("Max"), 0, 1000, &LogarithmicScrollbarScale, true);
 	}
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
@@ -1059,41 +1059,41 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
 
 	BottomView.VSplitRight(ButtonWidth, 0, &BottomView);
-	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	Button = BottomView;
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		Config()->Values()->m_ClDynamicCamera = 0;
-		Config()->Values()->m_ClMouseMaxDistanceStatic = 400;
-		Config()->Values()->m_ClMouseMaxDistanceDynamic = 1000;
-		Config()->Values()->m_ClMouseFollowfactor = 60;
-		Config()->Values()->m_ClMouseDeadzone = 300;
-		Config()->Values()->m_ClAutoswitchWeapons = 1;
-		Config()->Values()->m_ClShowhud = 1;
-		Config()->Values()->m_ClFilterchat = 0;
-		Config()->Values()->m_ClNameplates = 1;
-		Config()->Values()->m_ClNameplatesAlways = 1;
-		Config()->Values()->m_ClNameplatesSize = 50;
-		Config()->Values()->m_ClNameplatesTeamcolors = 1;
-		Config()->Values()->m_ClAutoDemoRecord = 0;
-		Config()->Values()->m_ClAutoDemoMax = 10;
-		Config()->Values()->m_ClAutoScreenshot = 0;
-		Config()->Values()->m_ClAutoScreenshotMax = 10;
+		Config()->m_ClDynamicCamera = 0;
+		Config()->m_ClMouseMaxDistanceStatic = 400;
+		Config()->m_ClMouseMaxDistanceDynamic = 1000;
+		Config()->m_ClMouseFollowfactor = 60;
+		Config()->m_ClMouseDeadzone = 300;
+		Config()->m_ClAutoswitchWeapons = 1;
+		Config()->m_ClShowhud = 1;
+		Config()->m_ClFilterchat = 0;
+		Config()->m_ClNameplates = 1;
+		Config()->m_ClNameplatesAlways = 1;
+		Config()->m_ClNameplatesSize = 50;
+		Config()->m_ClNameplatesTeamcolors = 1;
+		Config()->m_ClAutoDemoRecord = 0;
+		Config()->m_ClAutoDemoMax = 10;
+		Config()->m_ClAutoScreenshot = 0;
+		Config()->m_ClAutoScreenshotMax = 10;
 	}
 }
 
 void CMenus::RenderSettingsPlayer(CUIRect MainView)
 {
-	static int s_PlayerCountry = Config()->Values()->m_PlayerCountry;
+	static int s_PlayerCountry = Config()->m_PlayerCountry;
 	static char s_aPlayerName[256] = {0};
 	static char s_aPlayerClan[256] = {0};
 	if(!s_aPlayerName[0])
-		str_copy(s_aPlayerName, Config()->Values()->m_PlayerName, sizeof(s_aPlayerName));
+		str_copy(s_aPlayerName, Config()->m_PlayerName, sizeof(s_aPlayerName));
 	if(!s_aPlayerClan[0])
-		str_copy(s_aPlayerClan, Config()->Values()->m_PlayerClan, sizeof(s_aPlayerClan));
+		str_copy(s_aPlayerClan, Config()->m_PlayerClan, sizeof(s_aPlayerClan));
 
 	CUIRect Button, Left, Right, TopView, Label, Background;
 
@@ -1107,7 +1107,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &TopView, &MainView);
 	RenderTools()->DrawUIRect(&TopView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
@@ -1126,12 +1126,12 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	// left menu
 	Left.HSplitTop(ButtonHeight, &Button, &Left);
 	static float s_OffsetName = 0.0f;
-	DoEditBoxOption(Config()->Values()->m_PlayerName, Config()->Values()->m_PlayerName, sizeof(Config()->Values()->m_PlayerName), &Button, Localize("Name"),  100.0f, &s_OffsetName);
+	DoEditBoxOption(Config()->m_PlayerName, Config()->m_PlayerName, sizeof(Config()->m_PlayerName), &Button, Localize("Name"),  100.0f, &s_OffsetName);
 
 	// right menu
 	Right.HSplitTop(ButtonHeight, &Button, &Right);
 	static float s_OffsetClan = 0.0f;
-	DoEditBoxOption(Config()->Values()->m_PlayerClan, Config()->Values()->m_PlayerClan, sizeof(Config()->Values()->m_PlayerClan), &Button, Localize("Clan"),  100.0f, &s_OffsetClan);
+	DoEditBoxOption(Config()->m_PlayerClan, Config()->m_PlayerClan, sizeof(Config()->m_PlayerClan), &Button, Localize("Clan"),  100.0f, &s_OffsetClan);
 
 	// country flag selector
 	MainView.HSplitTop(10.0f, 0, &MainView);
@@ -1145,7 +1145,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
 		if(pEntry->m_Blocked)
 			continue;
-		if(pEntry->m_CountryCode == Config()->Values()->m_PlayerCountry)
+		if(pEntry->m_CountryCode == Config()->m_PlayerCountry)
 			OldSelected = i;
 
 		CListboxItem Item = s_ListBox.DoNextItem(pEntry, OldSelected == i);
@@ -1178,14 +1178,14 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	const int NewSelected = s_ListBox.DoEnd();
 	if(OldSelected != NewSelected)
-		Config()->Values()->m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
+		Config()->m_PlayerCountry = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
 
 	// check if the new settings require a server reload
 	m_NeedRestartPlayer = !(
-		s_PlayerCountry == Config()->Values()->m_PlayerCountry &&
-		!str_comp(s_aPlayerClan, Config()->Values()->m_PlayerClan) &&
-		!str_comp(s_aPlayerName, Config()->Values()->m_PlayerName)
+		s_PlayerCountry == Config()->m_PlayerCountry &&
+		!str_comp(s_aPlayerClan, Config()->m_PlayerClan) &&
+		!str_comp(s_aPlayerName, Config()->m_PlayerName)
 		);
 }
 
@@ -1245,7 +1245,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	static bool s_CustomSkinMenu = false;
 	static char s_aPlayerSkin[256] = {0};
 	if(!s_aPlayerSkin[0])
-		str_copy(s_aPlayerSkin, Config()->Values()->m_PlayerSkin, sizeof(s_aPlayerSkin));
+		str_copy(s_aPlayerSkin, Config()->m_PlayerSkin, sizeof(s_aPlayerSkin));
 
 	CUIRect Button, Label, BottomView, Preview, Background;
 
@@ -1266,7 +1266,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &Preview, &MainView);
 	RenderTools()->DrawUIRect(&Preview, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
@@ -1401,7 +1401,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		RenderTools()->DrawUIRect(&Preview, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		Preview.y += 2.0f;
-		UI()->DoLabel(&Preview, Config()->Values()->m_PlayerSkin, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+		UI()->DoLabel(&Preview, Config()->m_PlayerSkin, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	}
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
@@ -1416,7 +1416,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	float BackgroundWidth = s_CustomSkinMenu||(m_pSelectedSkin && (m_pSelectedSkin->m_Flags&CSkins::SKINFLAG_STANDARD) == 0) ? ButtonWidth*2.0f+SpacingW : ButtonWidth;
 
 	BottomView.VSplitRight(BackgroundWidth, 0, &BottomView);
-	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	if(s_CustomSkinMenu)
@@ -1447,8 +1447,6 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	}
 }
 
-//typedef void (*pfnAssignFuncCallback)(CConfiguration *pConfig, int Value);
-
 void CMenus::RenderSettingsControls(CUIRect MainView)
 {
 	// cut view
@@ -1458,7 +1456,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
@@ -1528,7 +1526,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
 
 	BottomView.VSplitRight(ButtonWidth, 0, &BottomView);
-	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	Button = BottomView;
@@ -1542,48 +1540,48 @@ float CMenus::RenderSettingsControlsStats(CUIRect View)
 	CUIRect Button;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos, Localize("Frags"), Config()->Values()->m_ClStatboardInfos & TC_STATS_FRAGS, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_FRAGS;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos, Localize("Frags"), Config()->m_ClStatboardInfos & TC_STATS_FRAGS, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_FRAGS;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+1, Localize("Deaths"), Config()->Values()->m_ClStatboardInfos & TC_STATS_DEATHS, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_DEATHS;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+1, Localize("Deaths"), Config()->m_ClStatboardInfos & TC_STATS_DEATHS, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_DEATHS;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+2, Localize("Suicides"), Config()->Values()->m_ClStatboardInfos & TC_STATS_SUICIDES, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_SUICIDES;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+2, Localize("Suicides"), Config()->m_ClStatboardInfos & TC_STATS_SUICIDES, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_SUICIDES;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+3, Localize("Ratio"), Config()->Values()->m_ClStatboardInfos & TC_STATS_RATIO, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_RATIO;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+3, Localize("Ratio"), Config()->m_ClStatboardInfos & TC_STATS_RATIO, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_RATIO;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+4, Localize("Net score"), Config()->Values()->m_ClStatboardInfos & TC_STATS_NET, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_NET;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+4, Localize("Net score"), Config()->m_ClStatboardInfos & TC_STATS_NET, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_NET;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+5, Localize("Frags per minute"), Config()->Values()->m_ClStatboardInfos & TC_STATS_FPM, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_FPM;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+5, Localize("Frags per minute"), Config()->m_ClStatboardInfos & TC_STATS_FPM, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_FPM;
 		
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+6, Localize("Current spree"), Config()->Values()->m_ClStatboardInfos & TC_STATS_SPREE, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_SPREE;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+6, Localize("Current spree"), Config()->m_ClStatboardInfos & TC_STATS_SPREE, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_SPREE;
 		
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+7, Localize("Best spree"), Config()->Values()->m_ClStatboardInfos & TC_STATS_BESTSPREE, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_BESTSPREE;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+7, Localize("Best spree"), Config()->m_ClStatboardInfos & TC_STATS_BESTSPREE, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_BESTSPREE;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+9, Localize("Weapons stats"), Config()->Values()->m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_WEAPS;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+9, Localize("Weapons stats"), Config()->m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_WEAPS;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+8, Localize("Flag grabs"), Config()->Values()->m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_FLAGGRABS;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+8, Localize("Flag grabs"), Config()->m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_FLAGGRABS;
 
 	View.HSplitTop(20.0f, &Button, &View);
-	if(DoButton_CheckBox(&Config()->Values()->m_ClStatboardInfos+10, Localize("Flag captures"), Config()->Values()->m_ClStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
-		Config()->Values()->m_ClStatboardInfos ^= TC_STATS_FLAGCAPTURES;
+	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+10, Localize("Flag captures"), Config()->m_ClStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_FLAGCAPTURES;
 
 	return 11*20.0f;
 }
@@ -1598,8 +1596,8 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 
 	for(int i = 0; i < lModes.size(); ++i)
 	{
-		if(Config()->Values()->m_GfxScreenWidth == lModes[i].m_Width &&
-			Config()->Values()->m_GfxScreenHeight == lModes[i].m_Height)
+		if(Config()->m_GfxScreenWidth == lModes[i].m_Width &&
+			Config()->m_GfxScreenHeight == lModes[i].m_Height)
 		{
 			OldSelected = i;
 		}
@@ -1637,8 +1635,8 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 	const int NewSelected = pListBox->DoEnd();
 	if(OldSelected != NewSelected)
 	{
-		Config()->Values()->m_GfxScreenWidth = lModes[NewSelected].m_Width;
-		Config()->Values()->m_GfxScreenHeight = lModes[NewSelected].m_Height;
+		Config()->m_GfxScreenWidth = lModes[NewSelected].m_Width;
+		Config()->m_GfxScreenHeight = lModes[NewSelected].m_Height;
 		return true;
 	}
 	return false;
@@ -1648,11 +1646,11 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
 	bool CheckSettings = false;
 
-	static int s_GfxScreenWidth = Config()->Values()->m_GfxScreenWidth;
-	static int s_GfxScreenHeight = Config()->Values()->m_GfxScreenHeight;
-	static int s_GfxFsaaSamples = Config()->Values()->m_GfxFsaaSamples;
-	static int s_GfxTextureQuality = Config()->Values()->m_GfxTextureQuality;
-	static int s_GfxTextureCompression = Config()->Values()->m_GfxTextureCompression;
+	static int s_GfxScreenWidth = Config()->m_GfxScreenWidth;
+	static int s_GfxScreenHeight = Config()->m_GfxScreenHeight;
+	static int s_GfxFsaaSamples = Config()->m_GfxFsaaSamples;
+	static int s_GfxTextureQuality = Config()->m_GfxTextureQuality;
+	static int s_GfxTextureCompression = Config()->m_GfxTextureCompression;
 
 	CUIRect Label, Button, ScreenLeft, ScreenRight, Texture, BottomView, Background;
 
@@ -1662,7 +1660,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	// render screen menu background
 	int NumOptions = 3;
-	if(Graphics()->GetNumScreens() > 1 && !Config()->Values()->m_GfxFullscreen)
+	if(Graphics()->GetNumScreens() > 1 && !Config()->m_GfxFullscreen)
 		++NumOptions;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
@@ -1672,7 +1670,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &ScreenLeft, &MainView);
 	RenderTools()->DrawUIRect(&ScreenLeft, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
@@ -1697,16 +1695,16 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
 	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
 	static int s_ButtonGfxFullscreen = 0;
-	if(DoButton_CheckBox(&s_ButtonGfxFullscreen, Localize("Fullscreen"), Config()->Values()->m_GfxFullscreen, &Button))
+	if(DoButton_CheckBox(&s_ButtonGfxFullscreen, Localize("Fullscreen"), Config()->m_GfxFullscreen, &Button))
 		Client()->ToggleFullscreen();
 
-	if(!Config()->Values()->m_GfxFullscreen)
+	if(!Config()->m_GfxFullscreen)
 	{
 		ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
 		ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		static int s_ButtonGfxBorderless = 0;
-		if(DoButton_CheckBox(&s_ButtonGfxBorderless, Localize("Borderless window"), Config()->Values()->m_GfxBorderless, &Button))
+		if(DoButton_CheckBox(&s_ButtonGfxBorderless, Localize("Borderless window"), Config()->m_GfxBorderless, &Button))
 			Client()->ToggleWindowBordered();
 	}
 
@@ -1724,12 +1722,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
 		Button.VSplitLeft(120.0f, &Button, 0);
-		str_format(aBuf, sizeof(aBuf), "#%d  (%dx%d)", Config()->Values()->m_GfxScreen+1, Graphics()->DesktopWidth(), Graphics()->DesktopHeight());
+		str_format(aBuf, sizeof(aBuf), "#%d  (%dx%d)", Config()->m_GfxScreen+1, Graphics()->DesktopWidth(), Graphics()->DesktopHeight());
 		static CButtonContainer s_ButtonScreenId;
 		if(DoButton_Menu(&s_ButtonScreenId, aBuf, 0, &Button))
 		{
-			Config()->Values()->m_GfxScreen = (Config()->Values()->m_GfxScreen + 1) % Graphics()->GetNumScreens();
-			Client()->SwitchWindowScreen(Config()->Values()->m_GfxScreen);
+			Config()->m_GfxScreen = (Config()->m_GfxScreen + 1) % Graphics()->GetNumScreens();
+			Client()->SwitchWindowScreen(Config()->m_GfxScreen);
 		}
 	}
 
@@ -1748,16 +1746,16 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
 		Button.VSplitLeft(70.0f, &Button, 0);
-		str_format(aBuf, sizeof(aBuf), "%dx", Config()->Values()->m_GfxFsaaSamples);
+		str_format(aBuf, sizeof(aBuf), "%dx", Config()->m_GfxFsaaSamples);
 		static CButtonContainer s_ButtonGfxFsaaSamples;
 		if(DoButton_Menu(&s_ButtonGfxFsaaSamples, aBuf, 0, &Button))
 		{
-			if(!Config()->Values()->m_GfxFsaaSamples)
-				Config()->Values()->m_GfxFsaaSamples = 2;
-			else if(Config()->Values()->m_GfxFsaaSamples == 16)
-				Config()->Values()->m_GfxFsaaSamples = 0;
+			if(!Config()->m_GfxFsaaSamples)
+				Config()->m_GfxFsaaSamples = 2;
+			else if(Config()->m_GfxFsaaSamples == 16)
+				Config()->m_GfxFsaaSamples = 0;
 			else
-				Config()->Values()->m_GfxFsaaSamples *= 2;
+				Config()->m_GfxFsaaSamples *= 2;
 			CheckSettings = true;
 		}
 	}
@@ -1765,26 +1763,26 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
 	ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
 	static int s_ButtonGfxVsync = 0;
-	if(DoButton_CheckBox(&s_ButtonGfxVsync, Localize("V-Sync"), Config()->Values()->m_GfxVsync, &Button))
+	if(DoButton_CheckBox(&s_ButtonGfxVsync, Localize("V-Sync"), Config()->m_GfxVsync, &Button))
 		Client()->ToggleWindowVSync();
 
 	ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
 	ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
 
 	// TODO: greyed out checkbox (not clickable)
-	if(!Config()->Values()->m_GfxVsync)
+	if(!Config()->m_GfxVsync)
 	{
 		static int s_ButtonGfxCapFps = 0;
-		if(DoButton_CheckBox(&s_ButtonGfxCapFps, Localize("Limit Fps"), Config()->Values()->m_GfxLimitFps, &Button))
+		if(DoButton_CheckBox(&s_ButtonGfxCapFps, Localize("Limit Fps"), Config()->m_GfxLimitFps, &Button))
 		{
-			Config()->Values()->m_GfxLimitFps ^= 1;
+			Config()->m_GfxLimitFps ^= 1;
 		}
 
-		if(Config()->Values()->m_GfxLimitFps > 0)
+		if(Config()->m_GfxLimitFps > 0)
 		{
 			ScreenRight.HSplitTop(Spacing, 0, &ScreenRight);
 			ScreenRight.HSplitTop(ButtonHeight, &Button, &ScreenRight);
-			DoScrollbarOption(&Config()->Values()->m_GfxMaxFps, &Config()->Values()->m_GfxMaxFps,
+			DoScrollbarOption(&Config()->m_GfxMaxFps, &Config()->m_GfxMaxFps,
 							  &Button, Localize("Max fps"), 30, 300);
 		}
 	}
@@ -1797,26 +1795,26 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	Texture.HSplitTop(Spacing, 0, &Texture);
 	Texture.HSplitTop(ButtonHeight, &Button, &Texture);
 	static int s_ButtonGfxTextureQuality = 0;
-	if(DoButton_CheckBox(&s_ButtonGfxTextureQuality, Localize("Quality Textures"), Config()->Values()->m_GfxTextureQuality, &Button))
+	if(DoButton_CheckBox(&s_ButtonGfxTextureQuality, Localize("Quality Textures"), Config()->m_GfxTextureQuality, &Button))
 	{
-		Config()->Values()->m_GfxTextureQuality ^= 1;
+		Config()->m_GfxTextureQuality ^= 1;
 		CheckSettings = true;
 	}
 
 	Texture.HSplitTop(Spacing, 0, &Texture);
 	Texture.HSplitTop(ButtonHeight, &Button, &Texture);
 	static int s_ButtonGfxTextureCompression = 0;
-	if(DoButton_CheckBox(&s_ButtonGfxTextureCompression, Localize("Texture Compression"), Config()->Values()->m_GfxTextureCompression, &Button))
+	if(DoButton_CheckBox(&s_ButtonGfxTextureCompression, Localize("Texture Compression"), Config()->m_GfxTextureCompression, &Button))
 	{
-		Config()->Values()->m_GfxTextureCompression ^= 1;
+		Config()->m_GfxTextureCompression ^= 1;
 		CheckSettings = true;
 	}
 
 	Texture.HSplitTop(Spacing, 0, &Texture);
 	Texture.HSplitTop(ButtonHeight, &Button, &Texture);
 	static int s_ButtonGfxHighDetail = 0;
-	if(DoButton_CheckBox(&s_ButtonGfxHighDetail, Localize("High Detail"), Config()->Values()->m_GfxHighDetail, &Button))
-		Config()->Values()->m_GfxHighDetail ^= 1;
+	if(DoButton_CheckBox(&s_ButtonGfxHighDetail, Localize("High Detail"), Config()->m_GfxHighDetail, &Button))
+		Config()->m_GfxHighDetail ^= 1;
 
 	// render screen modes
 	MainView.HSplitTop(10.0f, 0, &MainView);
@@ -1881,26 +1879,26 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
 
 	BottomView.VSplitRight(ButtonWidth, 0, &BottomView);
-	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	Button = BottomView;
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		Config()->Values()->m_GfxScreenWidth = Graphics()->DesktopWidth();
-		Config()->Values()->m_GfxScreenHeight = Graphics()->DesktopHeight();
-		Config()->Values()->m_GfxBorderless = 0;
-		Config()->Values()->m_GfxFullscreen = 1;
-		Config()->Values()->m_GfxVsync = 1;
-		Config()->Values()->m_GfxFsaaSamples = 0;
-		Config()->Values()->m_GfxTextureQuality = 1;
-		Config()->Values()->m_GfxTextureCompression = 0;
-		Config()->Values()->m_GfxHighDetail = 1;
+		Config()->m_GfxScreenWidth = Graphics()->DesktopWidth();
+		Config()->m_GfxScreenHeight = Graphics()->DesktopHeight();
+		Config()->m_GfxBorderless = 0;
+		Config()->m_GfxFullscreen = 1;
+		Config()->m_GfxVsync = 1;
+		Config()->m_GfxFsaaSamples = 0;
+		Config()->m_GfxTextureQuality = 1;
+		Config()->m_GfxTextureCompression = 0;
+		Config()->m_GfxHighDetail = 1;
 
-		if(Config()->Values()->m_GfxDisplayAllModes)
+		if(Config()->m_GfxDisplayAllModes)
 		{
-			Config()->Values()->m_GfxDisplayAllModes = 0;
+			Config()->m_GfxDisplayAllModes = 0;
 			UpdateVideoModeSettings();
 		}
 
@@ -1910,11 +1908,11 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// check if the new settings require a restart
 	if(CheckSettings)
 	{
-		if(s_GfxScreenWidth == Config()->Values()->m_GfxScreenWidth &&
-			s_GfxScreenHeight == Config()->Values()->m_GfxScreenHeight &&
-			s_GfxFsaaSamples == Config()->Values()->m_GfxFsaaSamples &&
-			s_GfxTextureQuality == Config()->Values()->m_GfxTextureQuality &&
-			s_GfxTextureCompression == Config()->Values()->m_GfxTextureCompression)
+		if(s_GfxScreenWidth == Config()->m_GfxScreenWidth &&
+			s_GfxScreenHeight == Config()->m_GfxScreenHeight &&
+			s_GfxFsaaSamples == Config()->m_GfxFsaaSamples &&
+			s_GfxTextureQuality == Config()->m_GfxTextureQuality &&
+			s_GfxTextureCompression == Config()->m_GfxTextureCompression)
 			m_NeedRestartGraphics = false;
 		else
 			m_NeedRestartGraphics = true;
@@ -1926,12 +1924,12 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	CUIRect Label, Button, Sound, Detail, BottomView, Background;
 
 	// render sound menu background
-	int NumOptions = Config()->Values()->m_SndEnable ? 3 : 2;
+	int NumOptions = Config()->m_SndEnable ? 3 : 2;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
 	float TotalHeight = BackgroundHeight;
-	if(Config()->Values()->m_SndEnable)
+	if(Config()->m_SndEnable)
 		TotalHeight += 10.0f+2.0f*ButtonHeight+Spacing;
 
 	MainView.HSplitBottom(MainView.h-TotalHeight-20.0f, &MainView, &BottomView);
@@ -1939,13 +1937,13 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &Sound, &MainView);
 	RenderTools()->DrawUIRect(&Sound, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	// render detail menu background
-	if(Config()->Values()->m_SndEnable)
+	if(Config()->m_SndEnable)
 	{
 		BackgroundHeight = 2.0f*ButtonHeight+Spacing;
 
@@ -1954,8 +1952,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		RenderTools()->DrawUIRect(&Detail, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 	}
 
-	static int s_SndInit = Config()->Values()->m_SndInit;
-	static int s_SndRate = Config()->Values()->m_SndRate;
+	static int s_SndInit = Config()->m_SndInit;
+	static int s_SndRate = Config()->m_SndRate;
 
 	// render sound menu
 	Sound.HSplitTop(ButtonHeight, &Label, &Sound);
@@ -1966,15 +1964,15 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	CUIRect UseSoundButton;
 	Sound.HSplitTop(ButtonHeight, &UseSoundButton, &Sound);
 
-	if(Config()->Values()->m_SndEnable)
+	if(Config()->m_SndEnable)
 	{
 		Sound.HSplitTop(Spacing, 0, &Sound);
 		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		static int s_ButtonSndMusic = 0;
-		if(DoButton_CheckBox(&s_ButtonSndMusic, Localize("Play background music"), Config()->Values()->m_SndMusic, &Button))
+		if(DoButton_CheckBox(&s_ButtonSndMusic, Localize("Play background music"), Config()->m_SndMusic, &Button))
 		{
-			Config()->Values()->m_SndMusic ^= 1;
+			Config()->m_SndMusic ^= 1;
 			ToggleMusic();
 		}
 
@@ -1982,8 +1980,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		static int s_ButtonSndNonactiveMute = 0;
-		if(DoButton_CheckBox(&s_ButtonSndNonactiveMute, Localize("Mute when not active"), Config()->Values()->m_SndNonactiveMute, &Button))
-			Config()->Values()->m_SndNonactiveMute ^= 1;
+		if(DoButton_CheckBox(&s_ButtonSndNonactiveMute, Localize("Mute when not active"), Config()->m_SndNonactiveMute, &Button))
+			Config()->m_SndNonactiveMute ^= 1;
 
 		// render detail menu
 		Detail.HSplitTop(ButtonHeight, &Label, &Detail);
@@ -2014,26 +2012,26 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 			Unit.y += 2.0f;
 			UI()->DoLabel(&Unit, "kHz", Unit.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-			if(Config()->Values()->m_SndRate != 48000 && Config()->Values()->m_SndRate != 44100)
-				Config()->Values()->m_SndRate = 48000;
-			if(Config()->Values()->m_SndRate == 48000)
+			if(Config()->m_SndRate != 48000 && Config()->m_SndRate != 44100)
+				Config()->m_SndRate = 48000;
+			if(Config()->m_SndRate == 48000)
 				str_copy(aBuf, "48.0", sizeof(aBuf));
 			else
 				str_copy(aBuf, "44.1", sizeof(aBuf));
 			static CButtonContainer s_SampleRateButton;
 			if(DoButton_Menu(&s_SampleRateButton, aBuf, 0, &Value))
 			{
-				if(Config()->Values()->m_SndRate == 48000)
-					Config()->Values()->m_SndRate = 44100;
+				if(Config()->m_SndRate == 48000)
+					Config()->m_SndRate = 44100;
 				else
-					Config()->Values()->m_SndRate = 48000;
+					Config()->m_SndRate = 48000;
 			}
 
-			m_NeedRestartSound = Config()->Values()->m_SndInit && (!s_SndInit || s_SndRate != Config()->Values()->m_SndRate);
+			m_NeedRestartSound = Config()->m_SndInit && (!s_SndInit || s_SndRate != Config()->m_SndRate);
 		}
 
 		Right.HSplitTop(ButtonHeight, &Button, &Right);
-		DoScrollbarOption(&Config()->Values()->m_SndVolume, &Config()->Values()->m_SndVolume, &Button, Localize("Volume"), 0, 100, &LogarithmicScrollbarScale);
+		DoScrollbarOption(&Config()->m_SndVolume, &Config()->m_SndVolume, &Button, Localize("Volume"), 0, 100, &LogarithmicScrollbarScale);
 	}
 	else
 	{
@@ -2041,21 +2039,21 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
 		static int s_ButtonInitSounds = 0;
-		if(DoButton_CheckBox(&s_ButtonInitSounds, Localize("Load the sound system"), Config()->Values()->m_SndInit, &Button))
+		if(DoButton_CheckBox(&s_ButtonInitSounds, Localize("Load the sound system"), Config()->m_SndInit, &Button))
 		{
-			Config()->Values()->m_SndInit ^= 1;
-			m_NeedRestartSound = Config()->Values()->m_SndInit && (!s_SndInit || s_SndRate != Config()->Values()->m_SndRate);
+			Config()->m_SndInit ^= 1;
+			m_NeedRestartSound = Config()->m_SndInit && (!s_SndInit || s_SndRate != Config()->m_SndRate);
 		}
 	}
 
 	static int s_ButtonSndEnable = 0;
-	if(DoButton_CheckBox(&s_ButtonSndEnable, Localize("Use sounds"), Config()->Values()->m_SndEnable, &UseSoundButton))
+	if(DoButton_CheckBox(&s_ButtonSndEnable, Localize("Use sounds"), Config()->m_SndEnable, &UseSoundButton))
 	{
-		Config()->Values()->m_SndEnable ^= 1;
-		if(Config()->Values()->m_SndEnable)
+		Config()->m_SndEnable ^= 1;
+		if(Config()->m_SndEnable)
 		{
-			Config()->Values()->m_SndInit = 1;
-			if(Config()->Values()->m_SndMusic)
+			Config()->m_SndInit = 1;
+			if(Config()->m_SndMusic)
 				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
 		}
 		else
@@ -2069,40 +2067,40 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
 
 	BottomView.VSplitRight(ButtonWidth, 0, &BottomView);
-	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+	RenderTools()->DrawUIRect4(&BottomView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	Button = BottomView;
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		Config()->Values()->m_SndEnable = 1;
-		Config()->Values()->m_SndInit = 1;
-		if(!Config()->Values()->m_SndMusic)
+		Config()->m_SndEnable = 1;
+		Config()->m_SndInit = 1;
+		if(!Config()->m_SndMusic)
 		{
-			Config()->Values()->m_SndMusic = 1;
+			Config()->m_SndMusic = 1;
 			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
 		}
-		Config()->Values()->m_SndNonactiveMute = 0;
-		Config()->Values()->m_SndRate = 48000;
-		Config()->Values()->m_SndVolume = 100;
+		Config()->m_SndNonactiveMute = 0;
+		Config()->m_SndRate = 48000;
+		Config()->m_SndVolume = 100;
 	}
 }
 
 void CMenus::RenderSettings(CUIRect MainView)
 {
 	// handle which page should be rendered
-	if(Config()->Values()->m_UiSettingsPage == SETTINGS_GENERAL)
+	if(Config()->m_UiSettingsPage == SETTINGS_GENERAL)
 		RenderSettingsGeneral(MainView);
-	else if(Config()->Values()->m_UiSettingsPage == SETTINGS_PLAYER)
+	else if(Config()->m_UiSettingsPage == SETTINGS_PLAYER)
 		RenderSettingsPlayer(MainView);
-	else if(Config()->Values()->m_UiSettingsPage == SETTINGS_TEE)
+	else if(Config()->m_UiSettingsPage == SETTINGS_TEE)
 		RenderSettingsTee(MainView);
-	else if(Config()->Values()->m_UiSettingsPage == SETTINGS_CONTROLS)
+	else if(Config()->m_UiSettingsPage == SETTINGS_CONTROLS)
 		RenderSettingsControls(MainView);
-	else if(Config()->Values()->m_UiSettingsPage == SETTINGS_GRAPHICS)
+	else if(Config()->m_UiSettingsPage == SETTINGS_GRAPHICS)
 		RenderSettingsGraphics(MainView);
-	else if(Config()->Values()->m_UiSettingsPage == SETTINGS_SOUND)
+	else if(Config()->m_UiSettingsPage == SETTINGS_SOUND)
 		RenderSettingsSound(MainView);
 
 	MainView.HSplitBottom(32.0f, 0, &MainView);
@@ -2120,7 +2118,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		// background
 		CUIRect RestartWarning;
 		MainView.HSplitTop(25.0f, &RestartWarning, 0);
-		RestartWarning.VMargin(Config()->Values()->m_UiWideview ? 210.0f : 140.0f, &RestartWarning);
+		RestartWarning.VMargin(Config()->m_UiWideview ? 210.0f : 140.0f, &RestartWarning);
 		RenderTools()->DrawUIRect(&RestartWarning, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 		// text

@@ -795,7 +795,7 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 	if(pEditor->DoButton_Editor(&s_OkButton, "Ok", 0, &Label, 0, 0))
 	{
 		if(pEditor->m_PopupEventType == POPEVENT_EXIT)
-			pEditor->Config()->Values()->m_ClEditor = 0;
+			pEditor->Config()->m_ClEditor = 0;
 		else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
 			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)

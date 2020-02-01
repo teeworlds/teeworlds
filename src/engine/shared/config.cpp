@@ -29,10 +29,10 @@ static void Con_SaveConfig(IConsole::IResult *pResult, void *pUserData)
 		str_timestamp(aDate, sizeof(aDate));
 		str_format(aFilename, sizeof(aFilename), "configs/config_%s.cfg", aDate);
 	}
-	((CConfig*)pUserData)->Save(aFilename);
+	((CConfigManager *)pUserData)->Save(aFilename);
 }
 
-CConfig::CConfig()
+CConfigManager::CConfigManager()
 {
 	m_pStorage = 0;
 	m_pConsole = 0;
@@ -41,7 +41,7 @@ CConfig::CConfig()
 	m_NumCallbacks = 0;
 }
 
-void CConfig::Init(int FlagMask)
+void CConfigManager::Init(int FlagMask)
 {
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
@@ -52,7 +52,7 @@ void CConfig::Init(int FlagMask)
 		m_pConsole->Register("save_config", "?s", CFGFLAG_SERVER|CFGFLAG_CLIENT|CFGFLAG_STORE, Con_SaveConfig, this, "Save config to file");
 }
 
-void CConfig::Reset()
+void CConfigManager::Reset()
 {
 	#define MACRO_CONFIG_INT(Name,ScriptName,def,min,max,flags,desc) m_Values.m_##Name = def;
 	#define MACRO_CONFIG_STR(Name,ScriptName,len,def,flags,desc) str_copy(m_Values.m_##Name, def, len);
@@ -63,7 +63,7 @@ void CConfig::Reset()
 	#undef MACRO_CONFIG_STR
 }
 
-void CConfig::RestoreStrings()
+void CConfigManager::RestoreStrings()
 {
 	#define MACRO_CONFIG_INT(Name,ScriptName,def,min,max,flags,desc)	// nop
 	#define MACRO_CONFIG_STR(Name,ScriptName,len,def,flags,desc) if(!m_Values.m_##Name[0] && def[0]) str_copy(m_Values.m_##Name, def, len);
@@ -74,7 +74,7 @@ void CConfig::RestoreStrings()
 	#undef MACRO_CONFIG_STR
 }
 
-void CConfig::Save(const char *pFilename)
+void CConfigManager::Save(const char *pFilename)
 {
 	if(!m_pStorage)
 		return;
@@ -112,7 +112,7 @@ void CConfig::Save(const char *pFilename)
 	}
 }
 
-void CConfig::RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData)
+void CConfigManager::RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData)
 {
 	dbg_assert(m_NumCallbacks < MAX_CALLBACKS, "too many config callbacks");
 	m_aCallbacks[m_NumCallbacks].m_pfnFunc = pfnFunc;
@@ -120,7 +120,7 @@ void CConfig::RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData)
 	m_NumCallbacks++;
 }
 
-void CConfig::WriteLine(const char *pLine)
+void CConfigManager::WriteLine(const char *pLine)
 {
 	if(!m_ConfigFile)
 		return;
@@ -129,4 +129,4 @@ void CConfig::WriteLine(const char *pLine)
 	io_write_newline(m_ConfigFile);
 }
 
-IConfig *CreateConfig() { return new CConfig; }
+IConfigManager *CreateConfigManager() { return new CConfigManager; }

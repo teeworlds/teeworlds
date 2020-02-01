@@ -253,7 +253,7 @@ void CEditorImage::LoadAutoMapper()
 
 	// clean up
 	json_value_free(pJsonData);
-	if(m_pAutoMapper && m_pEditor->Config()->Values()->m_Debug)
+	if(m_pAutoMapper && m_pEditor->Config()->m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf),"loaded %s.json (%s)", m_aName, IAutoMapper::GetTypeName(m_pAutoMapper->GetType()));
 		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
@@ -666,18 +666,18 @@ void CEditor::RenderGrid(CLayerGroup *pGroup)
 	for(int i = 0; i < (int)w; i++)
 	{
 		if((i+YGridOffset) % m_GridFactor == 0)
-			GridColor = HexToRgba(Config()->Values()->m_EdColorGridOuter);
+			GridColor = HexToRgba(Config()->m_EdColorGridOuter);
 		else
-			GridColor = HexToRgba(Config()->Values()->m_EdColorGridInner);
+			GridColor = HexToRgba(Config()->m_EdColorGridInner);
 
 		Graphics()->SetColor(GridColor.r, GridColor.g, GridColor.b, GridColor.a);
 		IGraphics::CLineItem Line = IGraphics::CLineItem(LineDistance*XOffset, LineDistance*i+LineDistance*YOffset, w+aGroupPoints[2], LineDistance*i+LineDistance*YOffset);
 		Graphics()->LinesDraw(&Line, 1);
 
 		if((i+XGridOffset) % m_GridFactor == 0)
-			GridColor = HexToRgba(Config()->Values()->m_EdColorGridOuter);
+			GridColor = HexToRgba(Config()->m_EdColorGridOuter);
 		else
-			GridColor = HexToRgba(Config()->Values()->m_EdColorGridInner);
+			GridColor = HexToRgba(Config()->m_EdColorGridInner);
 
 		Graphics()->SetColor(GridColor.r, GridColor.g, GridColor.b, GridColor.a);
 		Line = IGraphics::CLineItem(LineDistance*i+LineDistance*XOffset, LineDistance*YOffset, LineDistance*i+LineDistance*XOffset, h+aGroupPoints[3]);
@@ -1301,13 +1301,13 @@ void CEditor::DoQuad(CQuad *q, int Index)
 			}
 		}
 
-		PivotColor = HexToRgba(Config()->Values()->m_EdColorQuadPivotActive);
+		PivotColor = HexToRgba(Config()->m_EdColorQuadPivotActive);
 	}
 	else if(UI()->HotItem() == pID)
 	{
 		ms_pUiGotContext = pID;
 
-		PivotColor = HexToRgba(Config()->Values()->m_EdColorQuadPivotHover);
+		PivotColor = HexToRgba(Config()->m_EdColorQuadPivotHover);
 		m_pTooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
@@ -1345,7 +1345,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		}
 	}
 	else
-		PivotColor = HexToRgba(Config()->Values()->m_EdColorQuadPivot);
+		PivotColor = HexToRgba(Config()->m_EdColorQuadPivot);
 
 	Graphics()->SetColor(PivotColor.r, PivotColor.g, PivotColor.b, PivotColor.a);
 	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
@@ -1482,13 +1482,13 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 			}
 		}
 
-		pointColor = HexToRgba(Config()->Values()->m_EdColorQuadPointActive);
+		pointColor = HexToRgba(Config()->m_EdColorQuadPointActive);
 	}
 	else if(UI()->HotItem() == pID)
 	{
 		ms_pUiGotContext = pID;
 
-		pointColor = HexToRgba(Config()->Values()->m_EdColorQuadPointHover);
+		pointColor = HexToRgba(Config()->m_EdColorQuadPointHover);
 		m_pTooltip = "Left mouse button to move. Hold shift to move the texture. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
@@ -1530,7 +1530,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 		}
 	}
 	else
-		pointColor = HexToRgba(Config()->Values()->m_EdColorQuadPoint);
+		pointColor = HexToRgba(Config()->m_EdColorQuadPoint);
 
 	Graphics()->SetColor(pointColor.r, pointColor.g, pointColor.b, pointColor.a);
 	IGraphics::CQuadItem QuadItem(px, py, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
@@ -4260,7 +4260,7 @@ int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
 			pEditor->m_PopupEventActivated = true;
 		}
 		else
-			pEditor->Config()->Values()->m_ClEditor = 0;
+			pEditor->Config()->m_ClEditor = 0;
 		return 1;
 	}
 
@@ -4294,7 +4294,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	ExitButton.VSplitRight(13.f, 0, &ExitButton);
 	if(DoButton_Editor(&s_ExitButton, "\xE2\x9C\x95", 1, &ExitButton, 0, "[ctrl+shift+e] Exit"))
 	{
-		Config()->Values()->m_ClEditor ^= 1;
+		Config()->m_ClEditor ^= 1;
 		Input()->MouseModeRelative();
 	}
 }
@@ -4368,7 +4368,7 @@ void CEditor::Render()
 		{
 			float OldLevel = m_ZoomLevel;
 			m_ZoomLevel = clamp(m_ZoomLevel + Zoom * 20, 50, 2000);
-			if(Config()->Values()->m_EdZoomTarget)
+			if(Config()->m_EdZoomTarget)
 				ZoomMouseTarget((float)m_ZoomLevel / OldLevel);
 		}
 	}
@@ -4441,7 +4441,7 @@ void CEditor::Render()
 		RenderStatusbar(StatusBar);
 
 	// todo: fix this
-	if(Config()->Values()->m_EdShowkeys)
+	if(Config()->m_EdShowkeys)
 	{
 		Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 		CTextCursor Cursor;
@@ -4663,7 +4663,7 @@ void CEditor::Init()
 {
 	m_pInput = Kernel()->RequestInterface<IInput>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
-	m_pConfig = Kernel()->RequestInterface<IConfig>();
+	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();

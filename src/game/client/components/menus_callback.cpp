@@ -139,16 +139,16 @@ float CMenus::RenderSettingsControlsMouse(CUIRect View)
 	View.HSplitTop(Spacing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
 	static int s_ButtonInpGrab = 0;
-	if(DoButton_CheckBox(&s_ButtonInpGrab, Localize("Use OS mouse acceleration"), !Config()->Values()->m_InpGrab, &Button))
+	if(DoButton_CheckBox(&s_ButtonInpGrab, Localize("Use OS mouse acceleration"), !Config()->m_InpGrab, &Button))
 	{
-		Config()->Values()->m_InpGrab ^= 1;
+		Config()->m_InpGrab ^= 1;
 	}
 	View.HSplitTop(Spacing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
-	DoScrollbarOption(&Config()->Values()->m_InpMousesens, &Config()->Values()->m_InpMousesens, &Button, Localize("Ingame mouse sens."), 1, 500, &LogarithmicScrollbarScale);
+	DoScrollbarOption(&Config()->m_InpMousesens, &Config()->m_InpMousesens, &Button, Localize("Ingame mouse sens."), 1, 500, &LogarithmicScrollbarScale);
 	View.HSplitTop(Spacing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
-	DoScrollbarOption(&Config()->Values()->m_UiMousesens, &Config()->Values()->m_UiMousesens, &Button, Localize("Menu mouse sens."), 1, 500, &LogarithmicScrollbarScale);
+	DoScrollbarOption(&Config()->m_UiMousesens, &Config()->m_UiMousesens, &Button, Localize("Menu mouse sens."), 1, 500, &LogarithmicScrollbarScale);
 
 	return BackgroundHeight;
 }
@@ -157,7 +157,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 {
 	UpdateBindKeys(m_pClient->m_pBinds);
 
-	bool JoystickEnabled = Config()->Values()->m_JoystickEnable;
+	bool JoystickEnabled = Config()->m_JoystickEnable;
 	int NumJoysticks = m_pClient->Input()->NumJoysticks();
 	int NumOptions = 2; // expandable header & message
 	if(JoystickEnabled && NumJoysticks > 0)
@@ -180,9 +180,9 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 	View.HSplitTop(Spacing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
 	static int s_ButtonJoystickEnable = 0;
-	if(DoButton_CheckBox(&s_ButtonJoystickEnable, Localize("Enable joystick"), Config()->Values()->m_JoystickEnable, &Button))
+	if(DoButton_CheckBox(&s_ButtonJoystickEnable, Localize("Enable joystick"), Config()->m_JoystickEnable, &Button))
 	{
-		Config()->Values()->m_JoystickEnable ^= 1;
+		Config()->m_JoystickEnable ^= 1;
 	}
 	if(JoystickEnabled)
 	{
@@ -204,11 +204,11 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 
 			View.HSplitTop(Spacing, 0, &View);
 			View.HSplitTop(ButtonHeight, &Button, &View);
-			DoScrollbarOption(&Config()->Values()->m_JoystickSens, &Config()->Values()->m_JoystickSens, &Button, Localize("Joystick sens."), 1, 500, &LogarithmicScrollbarScale);
+			DoScrollbarOption(&Config()->m_JoystickSens, &Config()->m_JoystickSens, &Button, Localize("Joystick sens."), 1, 500, &LogarithmicScrollbarScale);
 
 			View.HSplitTop(Spacing, 0, &View);
 			View.HSplitTop(ButtonHeight, &Button, &View);
-			DoScrollbarOption(&Config()->Values()->m_JoystickTolerance, &Config()->Values()->m_JoystickTolerance, &Button, Localize("Joystick jitter tolerance"), 0, 50);
+			DoScrollbarOption(&Config()->m_JoystickTolerance, &Config()->m_JoystickTolerance, &Button, Localize("Joystick jitter tolerance"), 0, 50);
 
 			// shrink view and draw background
 			View.HSplitTop(Spacing, 0, &View);
@@ -387,7 +387,7 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 	static int s_aActive[g_MaxJoystickAxes][2];
 	for(int i = 0; i < min(m_pClient->Input()->GetJoystickNumAxes(), g_MaxJoystickAxes); i++)
 	{
-		bool Active = Config()->Values()->m_JoystickX == i || Config()->Values()->m_JoystickY == i;
+		bool Active = Config()->m_JoystickX == i || Config()->m_JoystickY == i;
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Row, &View);
@@ -407,16 +407,16 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 		Row.VSplitLeft(StatusWidth, &Button, &Row);
 		Button.HMargin((ButtonHeight-14.0f)/2.0f, &Button);
-		DoJoystickBar(&Button, (m_pClient->Input()->GetJoystickAxisValue(i)+1.0f)/2.0f, Config()->Values()->m_JoystickTolerance/50.0f, Active);
+		DoJoystickBar(&Button, (m_pClient->Input()->GetJoystickAxisValue(i)+1.0f)/2.0f, Config()->m_JoystickTolerance/50.0f, Active);
 
 		// Bind to X,Y
 		Row.VSplitLeft(2*StatusMargin, 0, &Row);
 		Row.VSplitLeft(BindWidth, &Button, &Row);
-		if(DoButton_CheckBox(&s_aActive[i][0], "X", Config()->Values()->m_JoystickX == i, &Button, Config()->Values()->m_JoystickY == i))
-			Config()->Values()->m_JoystickX = i;
+		if(DoButton_CheckBox(&s_aActive[i][0], "X", Config()->m_JoystickX == i, &Button, Config()->m_JoystickY == i))
+			Config()->m_JoystickX = i;
 		Row.VSplitLeft(BindWidth, &Button, &Row);
-		if(DoButton_CheckBox(&s_aActive[i][1], "Y", Config()->Values()->m_JoystickY == i, &Button, Config()->Values()->m_JoystickX == i))
-			Config()->Values()->m_JoystickY = i;
+		if(DoButton_CheckBox(&s_aActive[i][1], "Y", Config()->m_JoystickY == i, &Button, Config()->m_JoystickX == i))
+			Config()->m_JoystickY = i;
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 	}
 }
