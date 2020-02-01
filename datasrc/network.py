@@ -14,11 +14,11 @@ CoreEventFlags = Flags("COREEVENTFLAG", ["GROUND_JUMP", "AIR_JUMP", "HOOK_ATTACH
 RaceFlags = Flags("RACEFLAG", ["HIDE_KILLMSG", "FINISHMSG_AS_CHAT", "KEEP_WANTED_WEAPON"])
 
 GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "SPEC_INVALIDID", "TEAM_SHUFFLE", "TEAM_BALANCE", "CTF_DROP", "CTF_RETURN",
-							
+
 							"TEAM_ALL", "TEAM_BALANCE_VICTIM", "CTF_GRAB",
-							
+
 							"CTF_CAPTURE",
-							
+
 							"GAME_PAUSED"]) # todo 0.8: sort (1 para)
 
 
@@ -212,7 +212,7 @@ Objects = [
 
 	NetObject("De_GameInfo", [
 		NetFlag("m_GameFlags", GameFlags),
-		
+
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
 
@@ -362,7 +362,7 @@ Messages = [
 
 	NetMessage("Sv_GameInfo", [
 		NetFlag("m_GameFlags", GameFlags),
-		
+
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
 
@@ -460,20 +460,20 @@ Messages = [
 	NetMessage("Sv_Checkpoint", [
 		NetIntAny("m_Diff"),
 	]),
-  
-        NetMessage("Sv_CommandInfo", [
-                NetStringStrict("m_pName"),
-                NetStringStrict("m_ArgsFormat"),
-                NetStringStrict("m_HelpText")
-        ]),
 
-        NetMessage("Sv_CommandInfoRemove", [
-                NetStringStrict("m_pName")
-        ]),
+	NetMessage("Sv_CommandInfo", [
+			NetStringStrict("m_Name"),
+			NetStringStrict("m_ArgsFormat"),
+			NetStringStrict("m_HelpText")
+	]),
 
-        NetMessage("Cl_Command", [
-                NetStringStrict("m_Name"),
-                NetStringStrict("m_Arguments")
-        ]),
-  
+	NetMessage("Sv_CommandInfoRemove", [
+			NetStringStrict("m_Name")
+	]),
+
+	NetMessage("Cl_Command", [
+			NetStringStrict("m_Name"),
+			NetStringStrict("m_Arguments")
+	]),
+
 ]

@@ -318,6 +318,32 @@ void CGameContext::SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ParaI3
 	Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
+void CGameContext::SendChatCommand(const CCommandManager::CCommand *pCommand, int ClientID)
+{
+	CNetMsg_Sv_CommandInfo Msg;
+	Msg.m_Name = pCommand->m_aName;
+	Msg.m_HelpText = pCommand->m_aHelpText;
+	Msg.m_ArgsFormat = pCommand->m_aArgsFormat;
+
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+}
+
+void CGameContext::SendChatCommands(int ClientID)
+{
+	for(int i = 0; i < CommandManager()->CommandCount(); i++)
+	{
+		SendChatCommand(CommandManager()->GetCommand(i), ClientID);
+	}
+}
+
+void CGameContext::SendRemoveChatCommand(const CCommandManager::CCommand *pCommand, int ClientID)
+{
+	CNetMsg_Sv_CommandInfoRemove Msg;
+	Msg.m_Name = pCommand->m_aName;
+
+	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+}
+
 //
 void CGameContext::StartVote(const char *pDesc, const char *pCommand, const char *pReason)
 {
@@ -603,6 +629,9 @@ void CGameContext::OnClientPredictedInput(int ClientID, void *pInput)
 
 void CGameContext::OnClientEnter(int ClientID)
 {
+	// send chat commands
+	SendChatCommands(ClientID);
+
 	m_pController->OnPlayerConnect(m_apPlayers[ClientID]);
 
 	m_VoteUpdate = true;
@@ -1063,7 +1092,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 		else if (MsgID == NETMSGTYPE_CL_COMMAND)
 		{
 			CNetMsg_Cl_Command *pMsg = (CNetMsg_Cl_Command*)pRawMsg;
-			m_pController->OnPlayerCommand(pPlayer, pMsg->m_Name, pMsg->m_Arguments);
+			CommandManager()->OnCommand(pMsg->m_Name, pMsg->m_Arguments, ClientID);
 		}
 	}
 	else
@@ -1501,6 +1530,18 @@ void CGameContext::OnConsoleInit()
 	Console()->Register("vote", "r", CFGFLAG_SERVER, ConVote, this, "Force a vote to yes/no");
 }
 
+void CGameContext::NewCommandHook(const CCommandManager::CCommand *pCommand, void *pContext)
+{
+	CGameContext *pSelf = (CGameContext *)pContext;
+	pSelf->SendChatCommand(pCommand, -1);
+}
+
+void CGameContext::RemoveCommandHook(const CCommandManager::CCommand *pCommand, void *pContext)
+{
+	CGameContext *pSelf = (CGameContext *)pContext;
+	pSelf->SendRemoveChatCommand(pCommand, -1);
+}
+
 void CGameContext::OnInit()
 {
 	// init everything
@@ -1509,6 +1550,7 @@ void CGameContext::OnInit()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_World.SetGameServer(this);
 	m_Events.SetGameServer(this);
+	m_CommandManager.Init(m_pConsole, this, NewCommandHook, RemoveCommandHook);
 
 	// HACK: only set static size for items, which were available in the first 0.7 release
 	// so new items don't break the snapshot delta
@@ -1532,6 +1574,8 @@ void CGameContext::OnInit()
 		m_pController = new CGameControllerTDM(this);
 	else
 		m_pController = new CGameControllerDM(this);
+
+	m_pController->RegisterChatCommands(CommandManager());
 
 	// create all entities from the game layer
 	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();

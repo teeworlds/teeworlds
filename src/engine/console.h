@@ -93,6 +93,8 @@ public:
 	virtual void SetPrintOutputLevel(int Index, int OutputLevel) = 0;
 	virtual void Print(int Level, const char *pFrom, const char *pStr, bool Highlighted=false) = 0;
 
+	virtual int ParseCommandArgs(const char *pArgs, const char *pFormat, FCommandCallback pfnCallback, void *pContext) = 0;
+
 	virtual void SetAccessLevel(int AccessLevel) = 0;
 };
 
