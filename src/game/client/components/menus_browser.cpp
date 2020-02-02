@@ -2243,7 +2243,7 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 	float ButtonWidth = MainView.w/2.0f-Spacing/2.0f;
 
 	// render background
-	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+	RenderBackgroundShadow(&MainView, true);
 
 	// back to main menu
 	CUIRect Button;
