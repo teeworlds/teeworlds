@@ -136,25 +136,26 @@ void CUI::UpdateClipping()
 	}
 }
 
-void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom) const
+void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing) const
 {
 	CUIRect r = *this;
-	float Cut = r.h/2;
+	const float Cut = r.h/2;
+	const float HalfSpacing = Spacing/2;
 
 	if(pTop)
 	{
 		pTop->x = r.x;
 		pTop->y = r.y;
 		pTop->w = r.w;
-		pTop->h = Cut;
+		pTop->h = Cut - HalfSpacing;
 	}
 
 	if(pBottom)
 	{
 		pBottom->x = r.x;
-		pBottom->y = r.y + Cut;
+		pBottom->y = r.y + Cut + HalfSpacing;
 		pBottom->w = r.w;
-		pBottom->h = r.h - Cut;
+		pBottom->h = r.h - Cut - HalfSpacing;
 	}
 }
 
@@ -201,24 +202,25 @@ void CUIRect::HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 }
 
 
-void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight) const
+void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight, float Spacing) const
 {
 	CUIRect r = *this;
-	float Cut = r.w/2;
+	const float Cut = r.w/2;
+	const float HalfSpacing = Spacing/2;
 
 	if (pLeft)
 	{
 		pLeft->x = r.x;
 		pLeft->y = r.y;
-		pLeft->w = Cut;
+		pLeft->w = Cut - HalfSpacing;
 		pLeft->h = r.h;
 	}
 
 	if (pRight)
 	{
-		pRight->x = r.x + Cut;
+		pRight->x = r.x + Cut + HalfSpacing;
 		pRight->y = r.y;
-		pRight->w = r.w - Cut;
+		pRight->w = r.w - Cut - HalfSpacing;
 		pRight->h = r.h;
 	}
 }

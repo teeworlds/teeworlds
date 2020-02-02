@@ -885,9 +885,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Game"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-	Game.VSplitMid(&GameLeft, &GameRight);
-	GameLeft.VSplitRight(Spacing * 0.5f, &GameLeft, 0);
-	GameRight.VSplitLeft(Spacing * 0.5f, 0, &GameRight);
+	Game.VSplitMid(&GameLeft, &GameRight, Spacing);
 
 	// left side
 	GameLeft.HSplitTop(Spacing, 0, &GameLeft);
@@ -1048,9 +1046,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	// render language and theme selection
 	CUIRect LanguageView, ThemeView;
-	MainView.VSplitMid(&LanguageView, &ThemeView);
-	LanguageView.VSplitRight(1, &LanguageView, 0);
-	ThemeView.VSplitLeft(1, 0, &ThemeView);
+	MainView.VSplitMid(&LanguageView, &ThemeView, 2.0f);
 	RenderLanguageSelection(LanguageView);
 	RenderThemeSelection(ThemeView);
 
@@ -1119,9 +1115,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	// split menu
 	TopView.HSplitTop(Spacing, 0, &TopView);
-	TopView.VSplitMid(&Left, &Right);
-	Left.VSplitRight(1.5f, &Left, 0);
-	Right.VSplitLeft(1.5f, 0, &Right);
+	TopView.VSplitMid(&Left, &Right, 3.0f);
 
 	// left menu
 	Left.HSplitTop(ButtonHeight, &Button, &Left);
@@ -1228,9 +1222,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	}
 
 	MainView.HSplitTop(SpacingH, 0, &MainView);
-	MainView.VSplitMid(&Left, &Right);
-	Left.VSplitRight(SpacingW/2.0f, &Left, 0);
-	Right.VSplitLeft(SpacingW/2.0f, 0, &Right);
+	MainView.VSplitMid(&Left, &Right, SpacingW);
 
 	// part selection
 	RenderSkinPartSelection(Left);
@@ -1282,9 +1274,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		Preview.HSplitTop(SkinHeight, &Left, &Preview);
 
 		// split the menu in 2 parts
-		Left.VSplitMid(&Left, &Right);
-		Left.VSplitRight(SpacingW/2.0f, &Left, 0);
-		Right.VSplitLeft(SpacingW/2.0f, 0, &Right);
+		Left.VSplitMid(&Left, &Right, SpacingW);
 
 		// handle left
 
@@ -1372,9 +1362,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		Label.y += 17.0f;
 		UI()->DoLabel(&Label, Localize("Team:"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-		Right.VSplitMid(&Left, &Right);
-		Left.VSplitRight(SpacingW/2.0f, &Left, 0);
-		Right.VSplitLeft(SpacingW/2.0f, 0, &Right);
+		Right.VSplitMid(&Left, &Right, SpacingW);
 
 		RenderTools()->DrawUIRect(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -1688,9 +1676,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Screen"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-	ScreenLeft.VSplitMid(&ScreenLeft, &ScreenRight);
-	ScreenLeft.VSplitRight(Spacing * 0.5f, &ScreenLeft, 0);
-	ScreenRight.VSplitLeft(Spacing * 0.5f, 0, &ScreenRight);
+	ScreenLeft.VSplitMid(&ScreenLeft, &ScreenRight, Spacing);
 
 	ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
 	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
@@ -1836,9 +1822,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
 		CUIRect HeaderLeft, HeaderRight;
-		Button.VSplitMid(&HeaderLeft, &HeaderRight);
-		HeaderLeft.VSplitRight(1.5f, &HeaderLeft, 0);
-		HeaderRight.VSplitLeft(1.5f, 0, &HeaderRight);
+		Button.VSplitMid(&HeaderLeft, &HeaderRight, 3.0f);
 
 		RenderTools()->DrawUIRect(&HeaderLeft, vec4(0.30f, 0.4f, 1.0f, 0.5f), CUI::CORNER_T, 5.0f);
 		RenderTools()->DrawUIRect(&HeaderRight, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_T, 5.0f);
@@ -1855,7 +1839,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		CUIRect ListRec, ListOth;
-		MainView.VSplitMid(&ListRec, &ListOth);
+		MainView.VSplitMid(&ListRec, &ListOth, 3.0f);
 
 		ListRec.HSplitBottom(ButtonHeight, &ListRec, &Button);
 		ListRec.HSplitBottom(Spacing, &ListRec, 0);
@@ -1864,9 +1848,6 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		str_format(aBuf, sizeof(aBuf), Localize("Current: %dx%d (%d:%d)"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxScreenWidth/g, s_GfxScreenHeight/g);
 		Button.y += 2;
 		UI()->DoLabel(&Button, aBuf, Button.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-		ListRec.VSplitRight(1.5f, &ListRec, 0);
-		ListOth.VSplitLeft(1.5f, 0, &ListOth);
 
 		static CListBox s_RecListBox;
 		static CListBox s_OthListBox;
@@ -1991,9 +1972,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		// split menu
 		CUIRect Left, Right;
 		Detail.HSplitTop(Spacing, 0, &Detail);
-		Detail.VSplitMid(&Left, &Right);
-		Left.VSplitRight(1.5f, &Left, 0);
-		Right.VSplitLeft(1.5f, 0, &Right);
+		Detail.VSplitMid(&Left, &Right, 3.0f);
 
 		// sample rate thingy
 		{
