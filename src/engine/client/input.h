@@ -8,7 +8,7 @@
 class CInput : public IEngineInput
 {
 	IEngineGraphics *m_pGraphics;
-	IConfig *m_pConfig;
+	CConfig *m_pConfig;
 	IConsole *m_pConsole;
 
 	sorted_array<SDL_Joystick*> m_apJoysticks;

@@ -49,7 +49,7 @@ void CStats::OnReset()
 bool CStats::IsActive() const
 {
 	// force statboard after three seconds of game over if autostatscreenshot is on
-	if(Config()->Values()->m_ClAutoStatScreenshot && m_ScreenshotTime > -1 && m_ScreenshotTime < time_get())
+	if(Config()->m_ClAutoStatScreenshot && m_ScreenshotTime > -1 && m_ScreenshotTime < time_get())
 		return true;
 
 	return m_Active;
@@ -113,7 +113,7 @@ void CStats::OnMessage(int MsgType, void *pRawMsg)
 void CStats::OnRender()
 {
 	// auto stat screenshot stuff
-	if(Config()->Values()->m_ClAutoStatScreenshot)
+	if(Config()->m_ClAutoStatScreenshot)
 	{
 		// on game over, wait three seconds
 		if(m_ScreenshotTime < 0 && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
@@ -161,16 +161,16 @@ void CStats::OnRender()
 	}
 
 	for(int i=0; i<9; i++)
-		if(Config()->Values()->m_ClStatboardInfos & (1<<i))
+		if(Config()->m_ClStatboardInfos & (1<<i))
 		{
-			if((1<<i) == (TC_STATS_DEATHS) && Config()->Values()->m_ClStatboardInfos & TC_STATS_FRAGS)
+			if((1<<i) == (TC_STATS_DEATHS) && Config()->m_ClStatboardInfos & TC_STATS_FRAGS)
 			{
 				w += 60; // some extra for the merge
 				continue;
 			}
 			else if((1<<i) == (TC_STATS_BESTSPREE))
 			{
-				if(!(Config()->Values()->m_ClStatboardInfos & TC_STATS_SPREE))
+				if(!(Config()->m_ClStatboardInfos & TC_STATS_SPREE))
 					w += 140; // Best spree is a long column name, add a bit more
 				else
 					w += 40; // The combined colunms are a bit long, add some extra
@@ -181,12 +181,12 @@ void CStats::OnRender()
 			w += 100;
 		}
 
-	if((m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS) && (Config()->Values()->m_ClStatboardInfos&TC_STATS_FLAGCAPTURES))
+	if((m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS) && (Config()->m_ClStatboardInfos&TC_STATS_FLAGCAPTURES))
 		w += 100;
 
 	bool aDisplayWeapon[NUM_WEAPONS] = {false};
 	bool NoDisplayedWeapon = true;
-	if(Config()->Values()->m_ClStatboardInfos & TC_STATS_WEAPS)
+	if(Config()->m_ClStatboardInfos & TC_STATS_WEAPS)
 	{
 		for(i=0; i<NumPlayers; i++)
 		{
@@ -221,25 +221,25 @@ void CStats::OnRender()
 	TextRender()->Text(0, x+10, y-5, 20.0f, Localize("Name"), -1.0f);
 	const char *apHeaders[] = { "K", "D", Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
 	for(i=0; i<9; i++)
-		if(Config()->Values()->m_ClStatboardInfos & (1<<i))
+		if(Config()->m_ClStatboardInfos & (1<<i))
 		{
 			const char* pText = apHeaders[i];
 			// handle K:D merge (in the frags column)
-			if(1<<i == TC_STATS_FRAGS && Config()->Values()->m_ClStatboardInfos & TC_STATS_DEATHS)
+			if(1<<i == TC_STATS_FRAGS && Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
 			{
 				pText = "K:D";
 				px += 60.0f; // some extra for the merge
 			}
-			else if(1<<i == TC_STATS_DEATHS && Config()->Values()->m_ClStatboardInfos & TC_STATS_FRAGS)
+			else if(1<<i == TC_STATS_DEATHS && Config()->m_ClStatboardInfos & TC_STATS_FRAGS)
 				continue;
 			// handle spree columns merge
 			if(1<<i == TC_STATS_BESTSPREE)
 			{
-				if(Config()->Values()->m_ClStatboardInfos & TC_STATS_SPREE)
+				if(Config()->m_ClStatboardInfos & TC_STATS_SPREE)
 					continue;
 				px += 40.0f; // some extra for the long name
 			}
-			else if(1<<i == TC_STATS_SPREE && Config()->Values()->m_ClStatboardInfos & TC_STATS_BESTSPREE)
+			else if(1<<i == TC_STATS_SPREE && Config()->m_ClStatboardInfos & TC_STATS_BESTSPREE)
 				px += 40.0f; // some extra for the merge
 			if(1<<i == TC_STATS_FLAGGRABS && !(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS))
 				continue;
@@ -249,7 +249,7 @@ void CStats::OnRender()
 		}
 
 	// sprite headers now
-	if(Config()->Values()->m_ClStatboardInfos & TC_STATS_WEAPS)
+	if(Config()->m_ClStatboardInfos & TC_STATS_WEAPS)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
@@ -270,7 +270,7 @@ void CStats::OnRender()
 			px += 10;
 	}
 
-	if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && Config()->Values()->m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
+	if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && Config()->m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
 	{
 		px -= 40;
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
@@ -334,9 +334,9 @@ void CStats::OnRender()
 		TextRender()->TextEx(&Cursor, m_pClient->m_aClients[apPlayers[j]].m_aName, -1);
 
 		px = 325;
-		if(Config()->Values()->m_ClStatboardInfos & TC_STATS_FRAGS)
+		if(Config()->m_ClStatboardInfos & TC_STATS_FRAGS)
 		{
-			if(Config()->Values()->m_ClStatboardInfos & TC_STATS_DEATHS)
+			if(Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
 			{
 				px += 60;
 				str_format(aBuf, sizeof(aBuf), "%d:%d", pStats->m_Frags, pStats->m_Deaths);
@@ -347,21 +347,21 @@ void CStats::OnRender()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		else if(Config()->Values()->m_ClStatboardInfos & TC_STATS_DEATHS)
+		else if(Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Deaths);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		if(Config()->Values()->m_ClStatboardInfos & TC_STATS_SUICIDES)
+		if(Config()->m_ClStatboardInfos & TC_STATS_SUICIDES)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Suicides);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		if(Config()->Values()->m_ClStatboardInfos & TC_STATS_RATIO)
+		if(Config()->m_ClStatboardInfos & TC_STATS_RATIO)
 		{
 			if(pStats->m_Deaths == 0)
 				str_format(aBuf, sizeof(aBuf), "--");
@@ -371,14 +371,14 @@ void CStats::OnRender()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		if(Config()->Values()->m_ClStatboardInfos & TC_STATS_NET)
+		if(Config()->m_ClStatboardInfos & TC_STATS_NET)
 		{
 			str_format(aBuf, sizeof(aBuf), "%+d", pStats->m_Frags-pStats->m_Deaths);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		if(Config()->Values()->m_ClStatboardInfos & TC_STATS_FPM)
+		if(Config()->m_ClStatboardInfos & TC_STATS_FPM)
 		{
 			float Fpm = pStats->m_IngameTicks > 0 ? (float)(pStats->m_Frags * Client()->GameTickSpeed() * 60) / pStats->m_IngameTicks : 0.f;
 			str_format(aBuf, sizeof(aBuf), "%.1f", Fpm);
@@ -386,9 +386,9 @@ void CStats::OnRender()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		if(Config()->Values()->m_ClStatboardInfos & TC_STATS_SPREE)
+		if(Config()->m_ClStatboardInfos & TC_STATS_SPREE)
 		{
-			if(Config()->Values()->m_ClStatboardInfos & TC_STATS_BESTSPREE)
+			if(Config()->m_ClStatboardInfos & TC_STATS_BESTSPREE)
 			{
 				px += 40; // extra space
 				str_format(aBuf, sizeof(aBuf), "%d (%d)", pStats->m_CurrentSpree, pStats->m_BestSpree);
@@ -399,7 +399,7 @@ void CStats::OnRender()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		else if(Config()->Values()->m_ClStatboardInfos & TC_STATS_BESTSPREE)
+		else if(Config()->m_ClStatboardInfos & TC_STATS_BESTSPREE)
 		{
 			px += 40;
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_BestSpree);
@@ -407,7 +407,7 @@ void CStats::OnRender()
 			TextRender()->Text(0, x-tw+px, y, FontSize, aBuf, -1.0f);
 			px += 100;
 		}
-		if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && Config()->Values()->m_ClStatboardInfos&TC_STATS_FLAGGRABS)
+		if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && Config()->m_ClStatboardInfos&TC_STATS_FLAGGRABS)
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_FlagGrabs);
 			tw = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
@@ -415,7 +415,7 @@ void CStats::OnRender()
 			px += 100;
 		}
 		px -= 40;
-		if(Config()->Values()->m_ClStatboardInfos & TC_STATS_WEAPS)
+		if(Config()->m_ClStatboardInfos & TC_STATS_WEAPS)
 		{
 			const float BarHeight = 0.3f*LineHeight;
 			const float Offset = 40.0f;
@@ -462,7 +462,7 @@ void CStats::OnRender()
 				px += 10;
 		}
 
-		if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && Config()->Values()->m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
+		if(m_pClient->m_Snap.m_pGameData && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS && Config()->m_ClStatboardInfos&TC_STATS_FLAGCAPTURES)
 		{
 			if(pStats->m_FlagCaptures <= 0)
 			{

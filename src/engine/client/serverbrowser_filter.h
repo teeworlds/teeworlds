@@ -18,7 +18,7 @@ public:
 	{
 	public:
 		CServerBrowserFilter *m_pServerBrowserFilter;
-		IConfig *Config() const { return m_pServerBrowserFilter->m_pConfig; }
+		CConfig *Config() const { return m_pServerBrowserFilter->m_pConfig; }
 
 		// filter settings
 		CServerFilterInfo m_FilterInfo;
@@ -47,10 +47,10 @@ public:
 		bool SortCompareNumClients(int Index1, int Index2) const;
 		bool SortCompareNumRealClients(int Index1, int Index2) const;
 	};
-	IConfig *Config() { return m_pConfig; }
+	CConfig *Config() { return m_pConfig; }
 
 	//
-	void Init(class IConfig *pConfig, class IFriends *pFriends, const char *pNetVersion);
+	void Init(class CConfig *pConfig, class IFriends *pFriends, const char *pNetVersion);
 	void Clear();
 	void Sort(class CServerEntry **ppServerlist, int NumServers, int ResortFlags);
 
@@ -67,7 +67,7 @@ public:
 	int GetNumSortedPlayers(int FilterIndex) const { return m_lFilters[FilterIndex].m_NumSortedPlayers; }
 
 private:
-	class IConfig *m_pConfig;
+	class CConfig *m_pConfig;
 	class IFriends *m_pFriends;
 	char m_aNetVersion[128];
 	array<CServerFilter> m_lFilters;

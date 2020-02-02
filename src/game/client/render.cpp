@@ -16,7 +16,7 @@
 static float gs_SpriteWScale;
 static float gs_SpriteHScale;
 
-void CRenderTools::Init(IConfig *pConfig, IGraphics *pGraphics, CUI *pUI)
+void CRenderTools::Init(CConfig *pConfig, IGraphics *pGraphics, CUI *pUI)
 {
 	m_pConfig = pConfig;
 	m_pGraphics = pGraphics;
@@ -531,7 +531,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 			}
 			else
 			{
-				bool Indicate = !pInfo->m_GotAirJump && m_pConfig->Values()->m_ClAirjumpindicator;
+				bool Indicate = !pInfo->m_GotAirJump && m_pConfig->m_ClAirjumpindicator;
 				float cs = 1.0f; // color scale
 				if(Indicate)
 					cs = 0.5f;
@@ -667,7 +667,7 @@ void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
 void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
 								const vec4& BgColor, const vec4& TextColor)
 {
-	if(!m_pConfig->Values()->m_ClShowUserId) return;
+	if(!m_pConfig->m_ClShowUserId) return;
 
 	char aBuff[4];
 	str_format(aBuff, sizeof(aBuff), "%2d ", ID);
@@ -712,6 +712,6 @@ void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, 
 
 float CRenderTools::GetClientIdRectSize(float FontSize)
 {
-	if(!m_pConfig->Values()->m_ClShowUserId) return 0;
+	if(!m_pConfig->m_ClShowUserId) return 0;
 	return 1.4f * FontSize + 0.2f * FontSize;
 }

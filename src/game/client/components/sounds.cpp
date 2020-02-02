@@ -37,7 +37,7 @@ static int LoadSoundsThread(void *pUser)
 
 ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 {
-	if(!Config()->Values()->m_SndEnable || !Sound()->IsSoundEnabled() || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
+	if(!Config()->m_SndEnable || !Sound()->IsSoundEnabled() || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return ISound::CSampleHandle();
 	
 	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
@@ -71,7 +71,7 @@ void CSounds::OnInit()
 	ClearQueue();
 
 	// load sounds
-	if(Config()->Values()->m_SndAsyncLoading)
+	if(Config()->m_SndAsyncLoading)
 	{
 		g_UserData.m_pGameClient = m_pClient;
 		g_UserData.m_Render = false;
@@ -143,7 +143,7 @@ void CSounds::Enqueue(int Channel, int SetId)
 	// add sound to the queue
 	if(m_QueuePos < QUEUE_SIZE)
 	{
-		if(Channel == CHN_MUSIC || !Config()->Values()->m_ClEditor)
+		if(Channel == CHN_MUSIC || !Config()->m_ClEditor)
 		{
 			m_aQueue[m_QueuePos].m_Channel = Channel;
 			m_aQueue[m_QueuePos++].m_SetId = SetId;
@@ -153,7 +153,7 @@ void CSounds::Enqueue(int Channel, int SetId)
 
 void CSounds::Play(int Chn, int SetId, float Vol)
 {
-	if(Chn == CHN_MUSIC && !Config()->Values()->m_SndMusic)
+	if(Chn == CHN_MUSIC && !Config()->m_SndMusic)
 		return;
 
 	ISound::CSampleHandle SampleId = GetSampleId(SetId);
@@ -169,7 +169,7 @@ void CSounds::Play(int Chn, int SetId, float Vol)
 
 void CSounds::PlayAt(int Chn, int SetId, float Vol, vec2 Pos)
 {
-	if(Chn == CHN_MUSIC && !Config()->Values()->m_SndMusic)
+	if(Chn == CHN_MUSIC && !Config()->m_SndMusic)
 		return;
 	
 	ISound::CSampleHandle SampleId = GetSampleId(SetId);

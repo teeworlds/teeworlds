@@ -264,9 +264,9 @@ void CBinds::SetDefaults()
 void CBinds::OnConsoleInit()
 {
 	// bindings
-	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
-	if(pConfig)
-		pConfig->RegisterCallback(ConfigSaveCallback, this);
+	IConfigManager *pConfigManager = Kernel()->RequestInterface<IConfigManager>();
+	if(pConfigManager)
+		pConfigManager->RegisterCallback(ConfigSaveCallback, this);
 
 	Console()->Register("bind", "sr", CFGFLAG_CLIENT, ConBind, this, "Bind key to execute the command");
 	Console()->Register("unbind", "s", CFGFLAG_CLIENT, ConUnbind, this, "Unbind key");
@@ -398,7 +398,7 @@ const char *CBinds::GetModifierName(int m)
 	}
 }
 
-void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
+void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
 	CBinds *pSelf = (CBinds *)pUserData;
 
@@ -426,7 +426,7 @@ void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 			*pDst++ = '"';
 			*pDst++ = 0;
 
-			pConfig->WriteLine(aBuffer);
+			pConfigManager->WriteLine(aBuffer);
 		}
 	}
 
@@ -438,7 +438,7 @@ void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 		{
 			// explicitly unbind keys that were unbound by the user
 			str_format(aBuffer, sizeof(aBuffer), "unbind %s%s ", GetModifierName(Modifier), pSelf->Input()->KeyName(Key));
-			pConfig->WriteLine(aBuffer);
+			pConfigManager->WriteLine(aBuffer);
 		}
 	}
 }

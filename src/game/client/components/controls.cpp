@@ -102,7 +102,7 @@ void CControls::OnMessage(int Msg, void *pRawMsg)
 	if(Msg == NETMSGTYPE_SV_WEAPONPICKUP)
 	{
 		CNetMsg_Sv_WeaponPickup *pMsg = (CNetMsg_Sv_WeaponPickup *)pRawMsg;
-		if(Config()->Values()->m_ClAutoswitchWeapons)
+		if(Config()->m_ClAutoswitchWeapons)
 			m_InputData.m_WantedWeapon = pMsg->m_Weapon+1;
 	}
 }
@@ -155,7 +155,7 @@ int CControls::SnapInput(int *pData)
 			m_InputData.m_Direction = 1;
 
 		// stress testing
-		if(Config()->Values()->m_DbgStress)
+		if(Config()->m_DbgStress)
 		{
 			float t = Client()->LocalTime();
 			mem_zero(&m_InputData, sizeof(m_InputData));
@@ -228,14 +228,14 @@ void CControls::ClampMousePos()
 	else
 	{
 		float MouseMax;
-		if(Config()->Values()->m_ClDynamicCamera)
+		if(Config()->m_ClDynamicCamera)
 		{
 			float CameraMaxDistance = 200.0f;
-			float FollowFactor = Config()->Values()->m_ClMouseFollowfactor/100.0f;
-			MouseMax = min(CameraMaxDistance/FollowFactor + Config()->Values()->m_ClMouseDeadzone, (float)Config()->Values()->m_ClMouseMaxDistanceDynamic);
+			float FollowFactor = Config()->m_ClMouseFollowfactor/100.0f;
+			MouseMax = min(CameraMaxDistance/FollowFactor + Config()->m_ClMouseDeadzone, (float)Config()->m_ClMouseMaxDistanceDynamic);
 		}
 		else
-			MouseMax = (float)Config()->Values()->m_ClMouseMaxDistanceStatic;
+			MouseMax = (float)Config()->m_ClMouseMaxDistanceStatic;
 
 		if(length(m_MousePos) > MouseMax)
 			m_MousePos = normalize(m_MousePos)*MouseMax;

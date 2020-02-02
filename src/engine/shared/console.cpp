@@ -718,19 +718,19 @@ CConsole::~CConsole()
 
 void CConsole::Init()
 {
-	m_pConfig = Kernel()->RequestInterface<IConfig>();
+	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	// TODO: this should disappear
 	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Flags,Desc) \
 	{ \
-		static CIntVariableData Data = { this, &m_pConfig->Values()->m_##Name, Min, Max }; \
+		static CIntVariableData Data = { this, &m_pConfig->m_##Name, Min, Max }; \
 		Register(#ScriptName, "?i", Flags, IntVariableCommand, &Data, Desc); \
 	}
 
 	#define MACRO_CONFIG_STR(Name,ScriptName,Len,Def,Flags,Desc) \
 	{ \
-		static CStrVariableData Data = { this, m_pConfig->Values()->m_##Name, Len }; \
+		static CStrVariableData Data = { this, m_pConfig->m_##Name, Len }; \
 		Register(#ScriptName, "?r", Flags, StrVariableCommand, &Data, Desc); \
 	}
 

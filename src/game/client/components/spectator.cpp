@@ -308,7 +308,7 @@ void CSpectator::OnRender()
 		}
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, Selected?1.0f:0.5f);
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%s", Config()->Values()->m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
+		str_format(aBuf, sizeof(aBuf), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
 
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, Width/2.0f+x+50.0f, Height/2.0f+y+5.0f, FontSize, TEXTFLAG_RENDER);

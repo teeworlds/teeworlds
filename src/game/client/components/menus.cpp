@@ -255,7 +255,7 @@ int CMenus::DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, int Ch
 	float Fade = ButtonFade(pBC, Seconds, Checked);
 	float FadeVal = (Fade/Seconds)*FontAlpha;
 
-	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, Config()->Values()->m_ClMenuAlpha/100.0f*Alpha+FadeVal*0.5f), Corners, r);
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, Config()->m_ClMenuAlpha/100.0f*Alpha+FadeVal*0.5f), Corners, r);
 	CUIRect Temp;
 	pRect->HMargin(pRect->h>=20.0f?2.0f:1.0f, &Temp);
 	Temp.HMargin((Temp.h*FontFactor)/2.0f, &Temp);
@@ -1020,8 +1020,8 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		CUIRect Left, Right;
 		Box.VSplitLeft(ButtonWidth*4.0f + Spacing*3.0f, &Left, 0);
 		Box.VSplitRight(ButtonWidth*1.5f + Spacing, 0, &Right);
-		RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
-		RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
+		RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
+		RenderTools()->DrawUIRect4(&Right, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
 
 		Left.HSplitBottom(25.0f, 0, &Left);
 		Right.HSplitBottom(25.0f, 0, &Right);
@@ -1074,28 +1074,28 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 		// render header background
 		if(Client()->State() == IClient::STATE_OFFLINE)
-			RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
+			RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
 
 		Box.HSplitBottom(25.0f, 0, &Box);
 
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static CButtonContainer s_GeneralButton;
-		if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), Client()->State() == IClient::STATE_OFFLINE && Config()->Values()->m_UiSettingsPage==SETTINGS_GENERAL, &Button,
-			Config()->Values()->m_UiSettingsPage == SETTINGS_GENERAL ? 1.0f : NotActiveAlpha, 1.0f, Corners))
+		if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage==SETTINGS_GENERAL, &Button,
+			Config()->m_UiSettingsPage == SETTINGS_GENERAL ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 		{
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GENERAL);
-			Config()->Values()->m_UiSettingsPage = SETTINGS_GENERAL;
+			Config()->m_UiSettingsPage = SETTINGS_GENERAL;
 		}
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		{
 			static CButtonContainer s_PlayerButton;
-			if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), Client()->State() == IClient::STATE_OFFLINE && Config()->Values()->m_UiSettingsPage == SETTINGS_PLAYER, &Button,
-				Config()->Values()->m_UiSettingsPage == SETTINGS_PLAYER ? 1.0f : NotActiveAlpha, 1.0f, Corners))
+			if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage == SETTINGS_PLAYER, &Button,
+				Config()->m_UiSettingsPage == SETTINGS_PLAYER ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_PLAYER);
-				Config()->Values()->m_UiSettingsPage = SETTINGS_PLAYER;
+				Config()->m_UiSettingsPage = SETTINGS_PLAYER;
 			}
 		}
 
@@ -1103,11 +1103,11 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		{
 			static CButtonContainer s_TeeButton;
-			if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), Client()->State() == IClient::STATE_OFFLINE && Config()->Values()->m_UiSettingsPage == SETTINGS_TEE, &Button,
-				Config()->Values()->m_UiSettingsPage == SETTINGS_TEE ? 1.0f : NotActiveAlpha, 1.0f, Corners))
+			if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage == SETTINGS_TEE, &Button,
+				Config()->m_UiSettingsPage == SETTINGS_TEE ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 			{
 				m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_TEE);
-				Config()->Values()->m_UiSettingsPage = SETTINGS_TEE;
+				Config()->m_UiSettingsPage = SETTINGS_TEE;
 			}
 		}
 
@@ -1115,31 +1115,31 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static CButtonContainer s_ControlsButton;
-		if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), Client()->State() == IClient::STATE_OFFLINE && Config()->Values()->m_UiSettingsPage==SETTINGS_CONTROLS, &Button,
-			Config()->Values()->m_UiSettingsPage == SETTINGS_CONTROLS ? 1.0f : NotActiveAlpha, 1.0f, Corners))
+		if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage==SETTINGS_CONTROLS, &Button,
+			Config()->m_UiSettingsPage == SETTINGS_CONTROLS ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 		{
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_CONTROLS);
-			Config()->Values()->m_UiSettingsPage = SETTINGS_CONTROLS;
+			Config()->m_UiSettingsPage = SETTINGS_CONTROLS;
 		}
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static CButtonContainer s_GraphicsButton;
-		if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), Client()->State() == IClient::STATE_OFFLINE && Config()->Values()->m_UiSettingsPage==SETTINGS_GRAPHICS, &Button,
-			Config()->Values()->m_UiSettingsPage == SETTINGS_GRAPHICS ? 1.0f : NotActiveAlpha, 1.0f, Corners))
+		if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage==SETTINGS_GRAPHICS, &Button,
+			Config()->m_UiSettingsPage == SETTINGS_GRAPHICS ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 		{
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GRAPHICS);
-			Config()->Values()->m_UiSettingsPage = SETTINGS_GRAPHICS;
+			Config()->m_UiSettingsPage = SETTINGS_GRAPHICS;
 		}
 
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		static CButtonContainer s_SoundButton;
-		if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), Client()->State() == IClient::STATE_OFFLINE && Config()->Values()->m_UiSettingsPage==SETTINGS_SOUND, &Button,
-			Config()->Values()->m_UiSettingsPage == SETTINGS_SOUND ? 1.0f : NotActiveAlpha, 1.0f, Corners))
+		if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage==SETTINGS_SOUND, &Button,
+			Config()->m_UiSettingsPage == SETTINGS_SOUND ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 		{
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_SOUND);
-			Config()->Values()->m_UiSettingsPage = SETTINGS_SOUND;
+			Config()->m_UiSettingsPage = SETTINGS_SOUND;
 		}
 	}
 	else if((Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_INTERNET && m_MenuPage <= PAGE_LAN) || (Client()->State() == IClient::STATE_ONLINE && m_GamePage >= PAGE_INTERNET && m_GamePage <= PAGE_LAN))
@@ -1154,7 +1154,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 		// render header backgrounds
 		if(Client()->State() == IClient::STATE_OFFLINE)
-			RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
+			RenderTools()->DrawUIRect4(&Left, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
 
 		Left.HSplitBottom(25.0f, 0, &Left);
 
@@ -1166,7 +1166,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
 			ServerBrowser()->SetType(IServerBrowser::TYPE_INTERNET);
 			NewPage = PAGE_INTERNET;
-			Config()->Values()->m_UiBrowserPage = PAGE_INTERNET;
+			Config()->m_UiBrowserPage = PAGE_INTERNET;
 		}
 
 		Left.VSplitLeft(Spacing, 0, &Left); // little space
@@ -1178,7 +1178,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
 			ServerBrowser()->SetType(IServerBrowser::TYPE_LAN);
 			NewPage = PAGE_LAN;
-			Config()->Values()->m_UiBrowserPage = PAGE_LAN;
+			Config()->m_UiBrowserPage = PAGE_LAN;
 		}
 
 		if(Client()->State() == IClient::STATE_OFFLINE)
@@ -1194,7 +1194,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		if(m_MenuPage == PAGE_DEMOS)
 		{
 			// render header background
-			RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
+			RenderTools()->DrawUIRect4(&Box, vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
 
 			Box.HSplitBottom(25.0f, 0, &Box);
 
@@ -1286,7 +1286,7 @@ void CMenus::RenderBackButton(CUIRect MainView)
 	// render background
 	MainView.HSplitBottom(60.0f, 0, &MainView);
 	MainView.VSplitLeft(ButtonWidth, &MainView, 0);
-	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->Values()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
 
 	// back to main menu
 	CUIRect Button;
@@ -1462,14 +1462,14 @@ void CMenus::UpdatedFilteredVideoModes()
 
 void CMenus::UpdateVideoModeSettings()
 {
-	m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, Config()->Values()->m_GfxScreen);
+	m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, Config()->m_GfxScreen);
 	UpdateVideoFormats();
 
 	bool Found = false;
 	for(int i = 0; i < m_NumVideoFormats; i++)
 	{
-		int G = gcd(Config()->Values()->m_GfxScreenWidth, Config()->Values()->m_GfxScreenHeight);
-		if(m_aVideoFormats[i].m_WidthValue == Config()->Values()->m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == Config()->Values()->m_GfxScreenHeight/G)
+		int G = gcd(Config()->m_GfxScreenWidth, Config()->m_GfxScreenHeight);
+		if(m_aVideoFormats[i].m_WidthValue == Config()->m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == Config()->m_GfxScreenHeight/G)
 		{
 			m_CurrentVideoFormat = i;
 			Found = true;
@@ -1498,11 +1498,11 @@ void CMenus::OnInit()
 	// clear filter lists
 	//m_lFilters.clear();
 
-	if(Config()->Values()->m_ClShowWelcome)
+	if(Config()->m_ClShowWelcome)
 		m_Popup = POPUP_LANGUAGE;
-	Config()->Values()->m_ClShowWelcome = 0;
-	if(Config()->Values()->m_ClSkipStartMenu)
-		SetMenuPage(Config()->Values()->m_UiBrowserPage);
+	Config()->m_ClShowWelcome = 0;
+	if(Config()->m_ClSkipStartMenu)
+		SetMenuPage(Config()->m_UiBrowserPage);
 
 	Console()->Chain("br_filter_string", ConchainServerbrowserUpdate, this);
 	Console()->Chain("add_favorite", ConchainServerbrowserUpdate, this);
@@ -1518,7 +1518,7 @@ void CMenus::OnInit()
 	// setup load amount
 	m_LoadCurrent = 0;
 	m_LoadTotal = g_pData->m_NumImages;
-	if(!Config()->Values()->m_SndAsyncLoading)
+	if(!Config()->m_SndAsyncLoading)
 		m_LoadTotal += g_pData->m_NumSounds;
 }
 
@@ -1546,7 +1546,7 @@ int CMenus::Render()
 		// refresh server browser before we are in browser menu to save time
 		m_pClient->m_pCamera->ChangePosition(CCamera::POS_START);
 		ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET|IServerBrowser::REFRESHFLAG_LAN);
-		ServerBrowser()->SetType(Config()->Values()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
+		ServerBrowser()->SetType(Config()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
 
 		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
 		s_First = false;
@@ -1582,7 +1582,7 @@ int CMenus::Render()
 			else if(Client()->State() == IClient::STATE_ONLINE && m_GamePage >= PAGE_INTERNET && m_GamePage <= PAGE_LAN)
 				BarHeight += 3.0f + 25.0f;
 			float VMargin = Screen.w/2-365.0f;
-			if(Config()->Values()->m_UiWideview)
+			if(Config()->m_UiWideview)
 				VMargin = min(VMargin, 60.0f);
 
 			Screen.VMargin(VMargin, &MainView);
@@ -1632,8 +1632,8 @@ int CMenus::Render()
 				Row.VSplitRight(5.0f, &Row, 0);
 				Row.VSplitRight(TopOffset, &Row, &Button);
 				static CButtonContainer s_WideButton;
-				if((m_MenuPage == PAGE_INTERNET || m_MenuPage == PAGE_LAN || m_MenuPage == PAGE_DEMOS) && DoButton_MenuTabTop(&s_WideButton, Config()->Values()->m_UiWideview ? "\xe2\x96\xaa" : "\xe2\x96\xac", false, &Button, 1.0f, 1.0f, CUI::CORNER_B))
-					Config()->Values()->m_UiWideview ^= 1;
+				if((m_MenuPage == PAGE_INTERNET || m_MenuPage == PAGE_LAN || m_MenuPage == PAGE_DEMOS) && DoButton_MenuTabTop(&s_WideButton, Config()->m_UiWideview ? "\xe2\x96\xaa" : "\xe2\x96\xac", false, &Button, 1.0f, 1.0f, CUI::CORNER_B))
+					Config()->m_UiWideview ^= 1;
 			}
 
 			// render current page
@@ -1862,7 +1862,7 @@ int CMenus::Render()
 
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 			static float s_OffsetPassword = 0.0f;
-			DoEditBoxOption(Config()->Values()->m_Password, Config()->Values()->m_Password, sizeof(Config()->Values()->m_Password), &EditBox, Localize("Password"), ButtonWidth, &s_OffsetPassword, true);
+			DoEditBoxOption(Config()->m_Password, Config()->m_Password, sizeof(Config()->m_Password), &EditBox, Localize("Password"), ButtonWidth, &s_OffsetPassword, true);
 
 			Box.HSplitTop(2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &Save, &Box);
@@ -1872,8 +1872,8 @@ int CMenus::Render()
 			const bool Favorite = ServerInfo.m_Favorite;
 			const int OnValue = Favorite ? 1 : 2;
 			const char *pSaveText = Favorite ? Localize("Save password") : Localize("Save password and server as favorite");
-			if(DoButton_CheckBox(&Config()->Values()->m_ClSaveServerPasswords, pSaveText, Config()->Values()->m_ClSaveServerPasswords == OnValue, &Save))
-				Config()->Values()->m_ClSaveServerPasswords = Config()->Values()->m_ClSaveServerPasswords == OnValue ? 0 : OnValue;
+			if(DoButton_CheckBox(&Config()->m_ClSaveServerPasswords, pSaveText, Config()->m_ClSaveServerPasswords == OnValue, &Save))
+				Config()->m_ClSaveServerPasswords = Config()->m_ClSaveServerPasswords == OnValue ? 0 : OnValue;
 
 			// buttons
 			BottomBar.VSplitMid(&Abort, &TryAgain);
@@ -2267,13 +2267,13 @@ int CMenus::Render()
 			Box.HSplitTop(ButtonHeight, &EditBox, &Box);
 
 			static float s_OffsetName = 0.0f;
-			DoEditBoxOption(Config()->Values()->m_PlayerName, Config()->Values()->m_PlayerName, sizeof(Config()->Values()->m_PlayerName), &EditBox, Localize("Nickname"), ButtonWidth, &s_OffsetName);
+			DoEditBoxOption(Config()->m_PlayerName, Config()->m_PlayerName, sizeof(Config()->m_PlayerName), &EditBox, Localize("Nickname"), ButtonWidth, &s_OffsetName);
 
 			// button
 			static CButtonContainer s_EnterButton;
 			if(DoButton_Menu(&s_EnterButton, pButtonText, 0, &BottomBar) || m_EnterPressed)
 			{
-				if(Config()->Values()->m_PlayerName[0])
+				if(Config()->m_PlayerName[0])
 					m_Popup = POPUP_NONE;
 				else
 					PopupMessage(Localize("Error"), Localize("Nickname is empty."), Localize("Ok"), POPUP_FIRST_LAUNCH);
@@ -2449,8 +2449,8 @@ void CMenus::OnStateChange(int NewState, int OldState)
 			if(str_find(Client()->ErrorString(), "password"))
 			{
 				m_Popup = POPUP_PASSWORD;
-				UI()->SetHotItem(&Config()->Values()->m_Password);
-				UI()->SetActiveItem(&Config()->Values()->m_Password);
+				UI()->SetHotItem(&Config()->m_Password);
+				UI()->SetActiveItem(&Config()->m_Password);
 			}
 			else
 				m_Popup = POPUP_DISCONNECTED;
@@ -2548,7 +2548,7 @@ void CMenus::OnRender()
 	Graphics()->WrapNormal();
 
 	// render debug information
-	if(Config()->Values()->m_Debug)
+	if(Config()->m_Debug)
 	{
 		CUIRect Screen = *UI()->Screen();
 		Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
@@ -2643,9 +2643,9 @@ void CMenus::ToggleMusic()
 {
 	if(Client()->State() == IClient::STATE_OFFLINE)
 	{
-		if(Config()->Values()->m_SndMusic && !m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
+		if(Config()->m_SndMusic && !m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
 			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
-		else if(!Config()->Values()->m_SndMusic && m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
+		else if(!Config()->m_SndMusic && m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
 			m_pClient->m_pSounds->Stop(SOUND_MENU);
 	}
 }
@@ -2665,7 +2665,7 @@ void CMenus::SetMenuPage(int NewPage)
 		{
 		case PAGE_START: CameraPos = CCamera::POS_START; break;
 		case PAGE_DEMOS: CameraPos = CCamera::POS_DEMOS; break;
-		case PAGE_SETTINGS: CameraPos = CCamera::POS_SETTINGS_GENERAL+Config()->Values()->m_UiSettingsPage; break;
+		case PAGE_SETTINGS: CameraPos = CCamera::POS_SETTINGS_GENERAL+Config()->m_UiSettingsPage; break;
 		case PAGE_INTERNET: CameraPos = CCamera::POS_INTERNET; break;
 		case PAGE_LAN: CameraPos = CCamera::POS_LAN;
 		}

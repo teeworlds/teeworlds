@@ -374,7 +374,7 @@ void CGameConsole::OnRender()
 		Progress = 1.0f;
 	}
 
-	if (m_ConsoleState == CONSOLE_OPEN && Config()->Values()->m_ClEditor)
+	if (m_ConsoleState == CONSOLE_OPEN && Config()->m_ClEditor)
 		Toggle(CONSOLETYPE_LOCAL);
 
 	if (m_ConsoleState == CONSOLE_CLOSED)
@@ -743,7 +743,7 @@ void CGameConsole::OnConsoleInit()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 
 	//
-	m_PrintCBIndex = Console()->RegisterPrintCallback(Config()->Values()->m_ConsoleOutputLevel, ClientConsolePrintCallback, this);
+	m_PrintCBIndex = Console()->RegisterPrintCallback(Config()->m_ConsoleOutputLevel, ClientConsolePrintCallback, this);
 
 	Console()->Register("toggle_local_console", "", CFGFLAG_CLIENT, ConToggleLocalConsole, this, "Toggle local console");
 	Console()->Register("toggle_remote_console", "", CFGFLAG_CLIENT, ConToggleRemoteConsole, this, "Toggle remote console");

@@ -5,7 +5,7 @@
 
 #include <engine/config.h>
 
-class CConfiguration
+class CConfig
 {
 public:
 	#define MACRO_CONFIG_INT(Name,ScriptName,Def,Min,Max,Save,Desc) int m_##Name;
@@ -26,7 +26,7 @@ enum
 	CFGFLAG_BASICACCESS=64,
 };
 
-class CConfig : public IConfig
+class CConfigManager : public IConfigManager
 {
 	enum
 	{
@@ -45,16 +45,16 @@ class CConfig : public IConfig
 	int m_FlagMask;
 	CCallback m_aCallbacks[MAX_CALLBACKS];
 	int m_NumCallbacks;
-	CConfiguration m_Values;
+	CConfig m_Values;
 
 public:
-	CConfig();
+	CConfigManager();
 
 	virtual void Init(int FlagMask);
 	virtual void Reset();
 	virtual void RestoreStrings();
 	virtual void Save(const char *pFilename);
-	virtual CConfiguration *Values() { return &m_Values; }
+	virtual CConfig *Values() { return &m_Values; }
 
 	virtual void RegisterCallback(SAVECALLBACKFUNC pfnFunc, void *pUserData);
 

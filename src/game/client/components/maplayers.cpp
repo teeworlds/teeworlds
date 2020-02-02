@@ -39,31 +39,31 @@ void CMapLayers::OnStateChange(int NewState, int OldState)
 
 void CMapLayers::LoadBackgroundMap()
 {
-	if(!Config()->Values()->m_ClShowMenuMap)
+	if(!Config()->m_ClShowMenuMap)
 		return;
 
 	int HourOfTheDay = time_houroftheday();
 	char aBuf[128];
 	// check for the appropriate day/night map
-	str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", Config()->Values()->m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
+	str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", Config()->m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "day" : "night");
 	if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 	{
 		// fall back on generic map
-		str_format(aBuf, sizeof(aBuf), "ui/themes/%s.map", Config()->Values()->m_ClMenuMap);
+		str_format(aBuf, sizeof(aBuf), "ui/themes/%s.map", Config()->m_ClMenuMap);
 		if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 		{
 			// fall back on day/night alternative map
-			str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", Config()->Values()->m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "night" : "day");
+			str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", Config()->m_ClMenuMap, (HourOfTheDay >= 6 && HourOfTheDay < 18) ? "night" : "day");
 			if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 			{
-				str_format(aBuf, sizeof(aBuf), "map '%s' not found", Config()->Values()->m_ClMenuMap);
+				str_format(aBuf, sizeof(aBuf), "map '%s' not found", Config()->m_ClMenuMap);
 				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 				return;
 			}
 		}
 	}
 
-	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", Config()->Values()->m_ClMenuMap);
+	str_format(aBuf, sizeof(aBuf), "loaded map '%s'", Config()->m_ClMenuMap);
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 
 	m_pMenuLayers->Init(Kernel(), m_pMenuMap);
@@ -373,7 +373,7 @@ void CMapLayers::OnRender()
 	{
 		CMapItemGroup *pGroup = pLayers->GetGroup(g);
 
-		if(!Config()->Values()->m_GfxNoclip && pGroup->m_Version >= 2 && pGroup->m_UseClipping)
+		if(!Config()->m_GfxNoclip && pGroup->m_Version >= 2 && pGroup->m_UseClipping)
 		{
 			// set clipping
 			float Points[4];
@@ -423,7 +423,7 @@ void CMapLayers::OnRender()
 				continue;
 
 			// skip rendering if detail layers is not wanted
-			if(!(pLayer->m_Flags&LAYERFLAG_DETAIL && !Config()->Values()->m_GfxHighDetail && !IsGameLayer && (Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)))
+			if(!(pLayer->m_Flags&LAYERFLAG_DETAIL && !Config()->m_GfxHighDetail && !IsGameLayer && (Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)))
 			{
 				if(pLayer->m_Type == LAYERTYPE_TILES && Input()->KeyIsPressed(KEY_LCTRL) && Input()->KeyIsPressed(KEY_LSHIFT) && Input()->KeyPress(KEY_KP_0))
 				{
@@ -495,11 +495,11 @@ void CMapLayers::OnRender()
 				}
 			}
 		}
-		if(!Config()->Values()->m_GfxNoclip)
+		if(!Config()->m_GfxNoclip)
 			Graphics()->ClipDisable();
 	}
 
-	if(!Config()->Values()->m_GfxNoclip)
+	if(!Config()->m_GfxNoclip)
 		Graphics()->ClipDisable();
 
 	// reset the screen like it was before

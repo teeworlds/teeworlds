@@ -26,7 +26,7 @@ void CNotifications::Con_SndToggle(IConsole::IResult *pResult, void *pUserData)
 {
 	CNotifications *pSelf = (CNotifications *)pUserData;
 
-	pSelf->Config()->Values()->m_SndEnable ^= 1;
+	pSelf->Config()->m_SndEnable ^= 1;
 	pSelf->m_SoundToggleTime = pSelf->Client()->LocalTime();
 }
 
@@ -53,14 +53,14 @@ void CNotifications::RenderSoundNotification()
 
 	const float Fade = min(1.0f, RemainingDisplayTime / FadeTime); // 0.0 ≤ Fade ≤ 1.0
 
-	vec4 Color = (Config()->Values()->m_SndEnable == 0) ? vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.55f) : vec4(1.f/0xff*0x2b, 1.f/0xff*0xf9, 1.f/0xff*0x2b, 0.55f);
+	vec4 Color = (Config()->m_SndEnable == 0) ? vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.55f) : vec4(1.f/0xff*0x2b, 1.f/0xff*0xf9, 1.f/0xff*0x2b, 0.55f);
 	Color = mix(vec4(Color.r, Color.g, Color.b, 0.0f), Color, 0.8*Fade);
 	RenderTools()->DrawUIRect(&Area, Color, CUI::CORNER_ALL, 3.0f);
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_SOUNDICONS].m_Id);
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1.0f*Fade, 1.0f*Fade, 1.0f*Fade, 1.0f*Fade);
-	RenderTools()->SelectSprite(Config()->Values()->m_SndEnable ? SPRITE_SOUNDICON_ON : SPRITE_SOUNDICON_MUTE);
+	RenderTools()->SelectSprite(Config()->m_SndEnable ? SPRITE_SOUNDICON_ON : SPRITE_SOUNDICON_MUTE);
 	IGraphics::CQuadItem QuadItem(Area.x, Area.y, Area.w, Area.h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();

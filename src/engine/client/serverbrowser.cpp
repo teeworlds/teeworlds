@@ -79,13 +79,14 @@ CServerBrowser::CServerBrowser()
 
 void CServerBrowser::Init(class CNetClient *pNetClient, const char *pNetVersion)
 {
-	m_pConfig = Kernel()->RequestInterface<IConfig>();
+	IConfigManager *pConfigManager = Kernel()->RequestInterface<IConfigManager>();
+	m_pConfig = pConfigManager->Values();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pMasterServer = Kernel()->RequestInterface<IMasterServer>();
 	m_pNetClient = pNetClient;
 
-	m_ServerBrowserFavorites.Init(pNetClient, m_pConsole, Kernel()->RequestInterface<IEngine>(), Config());
+	m_ServerBrowserFavorites.Init(pNetClient, m_pConsole, Kernel()->RequestInterface<IEngine>(), pConfigManager);
 	m_ServerBrowserFilter.Init(Config(), Kernel()->RequestInterface<IFriends>(), pNetVersion);
 }
 
@@ -188,7 +189,7 @@ void CServerBrowser::Update(bool ForceResort)
 
 		m_MasterRefreshTime = Now;
 
-		if(Config()->Values()->m_Debug)
+		if(Config()->m_Debug)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", "requesting server list");
 	}
 
@@ -198,7 +199,7 @@ void CServerBrowser::Update(bool ForceResort)
 		LoadServerlist();
 		m_MasterRefreshTime = 0;
 
-		if(Config()->Values()->m_Debug)
+		if(Config()->m_Debug)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", "using backup server list");
 	}
 
@@ -229,7 +230,7 @@ void CServerBrowser::Update(bool ForceResort)
 			break;
 
 		// no more then 10 concurrent requests
-		if(Count == Config()->Values()->m_BrMaxRequests)
+		if(Count == Config()->m_BrMaxRequests)
 			break;
 
 		if(pEntry->m_RequestTime == 0)
@@ -302,7 +303,7 @@ void CServerBrowser::Refresh(int RefreshFlags)
 			m_pNetClient->Send(&Packet);
 		}
 
-		if(Config()->Values()->m_Debug)
+		if(Config()->m_Debug)
 			m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client_srvbrowse", "broadcasting for servers");
 	}
 
@@ -535,7 +536,7 @@ void CServerBrowser::CBFTrackPacket(int TrackID, void *pCallbackUser)
 
 void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry)
 {
-	if(Config()->Values()->m_Debug)
+	if(Config()->m_Debug)
 	{
 		char aAddrStr[NETADDR_MAXSTRSIZE];
 		net_addr_str(&Addr, aAddrStr, sizeof(aAddrStr), true);

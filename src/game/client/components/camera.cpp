@@ -63,10 +63,10 @@ void CCamera::OnRender()
 			vec2 CameraOffset(0, 0);
 
 			float l = length(m_pClient->m_pControls->m_MousePos);
-			if(Config()->Values()->m_ClDynamicCamera && l > 0.0001f) // make sure that this isn't 0
+			if(Config()->m_ClDynamicCamera && l > 0.0001f) // make sure that this isn't 0
 			{
-				float DeadZone = Config()->Values()->m_ClMouseDeadzone;
-				float FollowFactor = Config()->Values()->m_ClMouseFollowfactor/100.0f;
+				float DeadZone = Config()->m_ClMouseDeadzone;
+				float FollowFactor = Config()->m_ClMouseFollowfactor/100.0f;
 				float OffsetAmount = max(l-DeadZone, 0.0f) * FollowFactor;
 
 				CameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;
@@ -83,22 +83,22 @@ void CCamera::OnRender()
 		m_Zoom = 0.7f;
 		static vec2 Dir = vec2(1.0f, 0.0f);
 
-		if(distance(m_Center, m_RotationCenter) <= (float)Config()->Values()->m_ClRotationRadius+0.5f)
+		if(distance(m_Center, m_RotationCenter) <= (float)Config()->m_ClRotationRadius+0.5f)
 		{
 			// do little rotation
-			float RotPerTick = 360.0f/(float)Config()->Values()->m_ClRotationSpeed * Client()->RenderFrameTime();
+			float RotPerTick = 360.0f/(float)Config()->m_ClRotationSpeed * Client()->RenderFrameTime();
 			Dir = rotate(Dir, RotPerTick);
-			m_Center = m_RotationCenter+Dir*(float)Config()->Values()->m_ClRotationRadius;
+			m_Center = m_RotationCenter+Dir*(float)Config()->m_ClRotationRadius;
 		}
 		else
 		{
 			// positions for the animation
 			Dir = normalize(m_AnimationStartPos - m_RotationCenter);
-			vec2 TargetPos = m_RotationCenter + Dir * (float)Config()->Values()->m_ClRotationRadius;
+			vec2 TargetPos = m_RotationCenter + Dir * (float)Config()->m_ClRotationRadius;
 			float Distance = distance(m_AnimationStartPos, TargetPos);
 
 			// move time
-			m_MoveTime += Client()->RenderFrameTime()*Config()->Values()->m_ClCameraSpeed / 10.0f;
+			m_MoveTime += Client()->RenderFrameTime()*Config()->m_ClCameraSpeed / 10.0f;
 			float XVal = 1 - m_MoveTime;
 			XVal = pow(XVal, 7.0f);
 

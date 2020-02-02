@@ -40,12 +40,12 @@ public:
 	} m_FavLookup;
 
 	class CNetClient *m_pNetClient;
-	class IConfig *m_pConfig;
+	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
 	class IEngine *m_pEngine;
 
 	CServerBrowserFavorites();
-	void Init(class CNetClient *pNetClient, class IConsole *pConsole, class IEngine *pEngine, class IConfig *pConfig);
+	void Init(class CNetClient *pNetClient, class IConsole *pConsole, class IEngine *pEngine, class IConfigManager *pConfigManager);
 	
 	bool AddFavoriteEx(const char *pHostname, const NETADDR *pAddr, bool DoCheck, const char *pPassword = 0);
 	CFavoriteServer *FindFavoriteByAddr(const NETADDR &Addr, int *Index);
@@ -56,7 +56,7 @@ public:
 
 	static void ConAddFavorite(IConsole::IResult *pResult, void *pUserData);
 	static void ConRemoveFavorite(IConsole::IResult *pResult, void *pUserData);
-	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
+	static void ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData);
 };
 
 #endif

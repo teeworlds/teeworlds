@@ -73,7 +73,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 					CCountryFlag CountryFlag;
 					CountryFlag.m_CountryCode = CountryCode;
 					str_copy(CountryFlag.m_aCountryCodeString, pCountryName, sizeof(CountryFlag.m_aCountryCodeString));
-					if(Config()->Values()->m_ClLoadCountryFlags)
+					if(Config()->m_ClLoadCountryFlags)
 					{
 						// load the graphic file
 						CImageInfo Info;
@@ -96,7 +96,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 					m_aCountryFlags.add_unsorted(CountryFlag);
 
 					// print message
-					if(Config()->Values()->m_Debug)
+					if(Config()->m_Debug)
 					{
 						str_format(aBuf, sizeof(aBuf), "loaded country flag '%s'", pCountryName);
 						Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);

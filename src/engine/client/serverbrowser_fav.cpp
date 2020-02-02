@@ -26,14 +26,14 @@ CServerBrowserFavorites::CServerBrowserFavorites()
 	m_FavLookup.m_Active = false;
 }
 
-void CServerBrowserFavorites::Init(CNetClient *pNetClient, IConsole *pConsole, IEngine *pEngine, IConfig *pConfig)
+void CServerBrowserFavorites::Init(CNetClient *pNetClient, IConsole *pConsole, IEngine *pEngine, IConfigManager *pConfigManager)
 {
 	m_pNetClient = pNetClient;
-	m_pConfig = pConfig;
+	m_pConfig = pConfigManager->Values();
 	m_pConsole = pConsole;
 	m_pEngine = pEngine;
-	if(pConfig)
-		pConfig->RegisterCallback(ConfigSaveCallback, this);
+	if(pConfigManager)
+		pConfigManager->RegisterCallback(ConfigSaveCallback, this);
 
 	m_pConsole->Register("add_favorite", "s?s", CFGFLAG_CLIENT, ConAddFavorite, this, "Add a server (optionally with password) as a favorite. Also updates password of existing favorite.");
 	m_pConsole->Register("remove_favorite", "s", CFGFLAG_CLIENT, ConRemoveFavorite, this, "Remove a server from favorites");
@@ -92,7 +92,7 @@ bool CServerBrowserFavorites::AddFavoriteEx(const char *pHostname, const NETADDR
 
 	++m_NumFavoriteServers;
 
-	if(m_pConfig->Values()->m_Debug)
+	if(m_pConfig->m_Debug)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "added fav '%s'", pHostname);
@@ -255,7 +255,7 @@ void CServerBrowserFavorites::ConRemoveFavorite(IConsole::IResult *pResult, void
 	pSelf->RemoveFavoriteEx(pResult->GetString(0), 0);
 }
 
-void CServerBrowserFavorites::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
+void CServerBrowserFavorites::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
 	CServerBrowserFavorites *pSelf = (CServerBrowserFavorites *)pUserData;
 
@@ -266,6 +266,6 @@ void CServerBrowserFavorites::ConfigSaveCallback(IConfig *pConfig, void *pUserDa
 			str_format(aBuffer, sizeof(aBuffer), "add_favorite \"%s\" \"%s\"", pSelf->m_aFavoriteServers[i].m_aHostname, pSelf->m_aFavoriteServers[i].m_aPassword);
 		else
 			str_format(aBuffer, sizeof(aBuffer), "add_favorite \"%s\"", pSelf->m_aFavoriteServers[i].m_aHostname);
-		pConfig->WriteLine(aBuffer);
+		pConfigManager->WriteLine(aBuffer);
 	}
 }

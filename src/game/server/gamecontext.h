@@ -36,7 +36,7 @@
 class CGameContext : public IGameServer
 {
 	IServer *m_pServer;
-	class IConfig *m_pConfig;
+	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
 	CLayers m_Layers;
 	CCollision m_Collision;
@@ -71,7 +71,7 @@ class CGameContext : public IGameServer
 	bool m_Resetting;
 public:
 	IServer *Server() const { return m_pServer; }
-	class IConfig *Config() { return m_pConfig; }
+	class CConfig *Config() { return m_pConfig; }
 	class IConsole *Console() { return m_pConsole; }
 	CCollision *Collision() { return &m_Collision; }
 	CTuningParams *Tuning() { return &m_Tuning; }

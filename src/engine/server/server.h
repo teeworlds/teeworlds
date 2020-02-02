@@ -62,12 +62,12 @@ public:
 class CServer : public IServer
 {
 	class IGameServer *m_pGameServer;
-	class IConfig *m_pConfig;
+	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
 	class IStorage *m_pStorage;
 public:
 	class IGameServer *GameServer() { return m_pGameServer; }
-	class IConfig *Config() { return m_pConfig; }
+	class CConfig *Config() { return m_pConfig; }
 	class IConsole *Console() { return m_pConsole; }
 	class IStorage *Storage() { return m_pStorage; }
 
@@ -256,7 +256,7 @@ public:
 	const char *GetMapName();
 	int LoadMap(const char *pMapName);
 
-	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConfig *pConfig, IConsole *pConsole);
+	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, CConfig *pConfig, IConsole *pConsole);
 	int Run();
 
 	static int MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser);
