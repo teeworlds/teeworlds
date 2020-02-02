@@ -90,6 +90,7 @@ class CChat : public CComponent
 	int GetFirstActiveCommand();
 	int NextActiveCommand(int *Index);
 	int PreviousActiveCommand(int *Index);
+	int GetActiveCountRange(int i, int j);
 
 	CCommandManager m_CommandManager;
 	bool IsTypingCommand() const;

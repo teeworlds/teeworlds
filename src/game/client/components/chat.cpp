@@ -1331,16 +1331,17 @@ bool CChat::IsTypingCommand() const
 // chat commands handlers
 void CChat::HandleCommands(float x, float y, float w)
 {
-	//dbg_msg("DEBUG", "%d", m_SelectedCommand);
 	// render commands menu
 	if(m_Mode != CHAT_NONE && IsTypingCommand())
 	{
 		const float Alpha = 0.90f;
-		const float LineWidth = w;
+		const float ScrollBarW = 6.0f;
+		const float LineWidth = w - ScrollBarW;
 		const float LineHeight = 8.0f;
 
 		FilterChatCommands(m_Input.GetString()); // flag active commands, update selected command
-		const int DisplayCount = min(m_CommandManager.CommandCount() - m_FilteredCount, 16);
+		const int ActiveCount = m_CommandManager.CommandCount() - m_FilteredCount;
+		const int DisplayCount = min(ActiveCount, 16);
 
 		if(DisplayCount && m_aFilter[m_SelectedCommand])
 		{
@@ -1352,10 +1353,9 @@ void CChat::HandleCommands(float x, float y, float w)
 			NextActiveCommand(&m_CommandStart);
 		}
 
-		//dbg_msg("DEBUG", "as%d c%d", m_CommandStart, m_SelectedCommand);
 		if(DisplayCount > 0) // at least one command to display
 		{
-			CUIRect Rect = {x, y-(DisplayCount+1)*LineHeight, LineWidth, (DisplayCount+1)*LineHeight};
+			CUIRect Rect = {x, y-(DisplayCount+1)*LineHeight, LineWidth + ScrollBarW, (DisplayCount+1)*LineHeight};
 			RenderTools()->DrawUIRect(&Rect,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_ALL, 3.0f);
 
 			int End = m_CommandStart;
@@ -1368,17 +1368,25 @@ void CChat::HandleCommands(float x, float y, float w)
 
 			if(m_SelectedCommand < m_CommandStart)
 			{
-				//dbg_msg("DEBUG", "Decrementing Start");
 				PreviousActiveCommand(&m_CommandStart);
 			}
 			else if(m_SelectedCommand > End)
 			{
-				//dbg_msg("DEBUG", "Incrementing Start");
 				NextActiveCommand(&m_CommandStart);
 				NextActiveCommand(&End);
 			}
 
-			//dbg_msg("DEBUG", "bs%d c%d", m_CommandStart, m_SelectedCommand);
+			// render worlds most inefficient "scrollbar"
+			{
+				CUIRect K = {x + LineWidth, y - (DisplayCount + 1) * LineHeight, ScrollBarW, (DisplayCount+1)*LineHeight};
+				RenderTools()->DrawUIRect(&K,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_R, 3.0f);
+
+				float h = K.h;
+				K.h *= (float)DisplayCount/ActiveCount;
+				K.y += h * (float)(GetActiveCountRange(GetFirstActiveCommand(), m_CommandStart))/ActiveCount;
+				RenderTools()->DrawUIRect(&K,  vec4(0.5f, 0.5f, 0.5f, Alpha), CUI::CORNER_R, 3.0f);
+			}
+
 			y -= (DisplayCount+2)*LineHeight;
 			for(int i = m_CommandStart, j = 0; j < DisplayCount && i < m_CommandManager.CommandCount(); i++)
 			{
@@ -1629,4 +1637,17 @@ int CChat::PreviousActiveCommand(int *Index)
 		(*Index)--;
 
 	return *Index;
+}
+
+int CChat::GetActiveCountRange(int i, int j)
+{
+	int Count = 0;
+
+	while(i < j)
+	{
+		if(!m_aFilter[i++])
+			Count++;
+	}
+
+	return Count;
 }
