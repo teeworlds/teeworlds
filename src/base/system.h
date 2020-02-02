@@ -942,22 +942,22 @@ void str_sanitize(char *str);
 	Remarks:
 		- The strings are treated as zero-terminated strings.
 */
-char* str_sanitize_filename(char* aName);
+char *str_sanitize_filename(char *name);
 
 /*
-	Function: str_check_pathname
+	Function: str_path_unsafe
 		Check if the string contains '..' (parent directory) paths.
 
 	Parameters:
 		str - String to check.
 
 	Returns:
-		Returns 0 if the path is valid, -1 otherwise.
+		Returns 0 if the path is safe, -1 otherwise.
 
 	Remarks:
 		- The strings are treated as zero-terminated strings.
 */
-int str_check_pathname(const char* str);
+int str_path_unsafe(const char *str);
 
 /*
 	Function: str_clean_whitespaces
