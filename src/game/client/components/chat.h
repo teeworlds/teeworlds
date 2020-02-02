@@ -82,13 +82,14 @@ class CChat : public CComponent
 	// chat commands
 	bool m_IgnoreCommand;
 	int m_SelectedCommand;
+	int m_CommandStart;
 
 	array<bool> m_aFilter;
 	int m_FilteredCount;
 	int FilterChatCommands(const char *pLine);
 	int GetFirstActiveCommand();
-	void NextActiveCommand(int *Index);
-	void PreviousActiveCommand(int *Index);
+	int NextActiveCommand(int *Index);
+	int PreviousActiveCommand(int *Index);
 
 	CCommandManager m_CommandManager;
 	bool IsTypingCommand() const;

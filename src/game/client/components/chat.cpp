@@ -53,6 +53,7 @@ void CChat::OnReset()
 
 		m_IgnoreCommand = false;
 		m_SelectedCommand = 0;
+		m_CommandStart = 0;
 
 		m_aFilter.set_size(8); //Should help decrease allocations
 		for(int i = 0; i < m_aFilter.size(); i++)
@@ -429,6 +430,8 @@ bool CChat::OnInput(IInput::CEvent Event)
 		if(IsTypingCommand())
 		{
 			PreviousActiveCommand(&m_SelectedCommand);
+			if(m_SelectedCommand < 0)
+				m_SelectedCommand = 0;
 		}
 		else
 		{
@@ -451,6 +454,8 @@ bool CChat::OnInput(IInput::CEvent Event)
 		if(IsTypingCommand())
 		{
 			NextActiveCommand(&m_SelectedCommand);
+			if(m_SelectedCommand >= m_CommandManager.CommandCount())
+				m_SelectedCommand = m_CommandManager.CommandCount() - 1;
 		}
 		else
 		{
@@ -1335,33 +1340,47 @@ void CChat::HandleCommands(float x, float y, float w)
 		const float LineHeight = 8.0f;
 
 		FilterChatCommands(m_Input.GetString()); // flag active commands, update selected command
-		const int ActiveCount = m_CommandManager.CommandCount() - m_FilteredCount;
+		const int DisplayCount = min(m_CommandManager.CommandCount() - m_FilteredCount, 16);
 
-		if(ActiveCount && m_aFilter[m_SelectedCommand])
+		if(DisplayCount && m_aFilter[m_SelectedCommand])
 		{
 			m_SelectedCommand = -1;
 			NextActiveCommand(&m_SelectedCommand);
 		}
-
-		if(ActiveCount > 0) // at least one command to display
+		if(DisplayCount && m_aFilter[m_CommandStart])
 		{
-			CUIRect Rect = {x, y-(ActiveCount+1)*LineHeight, LineWidth, (ActiveCount+1)*LineHeight};
+			NextActiveCommand(&m_CommandStart);
+		}
+
+		//dbg_msg("DEBUG", "as%d c%d", m_CommandStart, m_SelectedCommand);
+		if(DisplayCount > 0) // at least one command to display
+		{
+			CUIRect Rect = {x, y-(DisplayCount+1)*LineHeight, LineWidth, (DisplayCount+1)*LineHeight};
 			RenderTools()->DrawUIRect(&Rect,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_ALL, 3.0f);
 
-			// render notification
+			int End = m_CommandStart;
+			for(int i = 0; i < DisplayCount - 1; i++)
+				NextActiveCommand(&End);
+
+			if(End >= m_CommandManager.CommandCount())
+				for(int i = End - m_CommandManager.CommandCount(); i >= 0; i--)
+					PreviousActiveCommand(&m_CommandStart);
+
+			if(m_SelectedCommand < m_CommandStart)
 			{
-				y -= LineHeight;
-				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, Rect.x + 5.0f, y, 5.0f, TEXTFLAG_RENDER);
-				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
-				if(m_SelectedCommand >= 0 && str_startswith(m_Input.GetString() + 1, m_CommandManager.GetCommand(m_SelectedCommand)->m_aName))
-					TextRender()->TextEx(&Cursor, Localize("Press Enter to confirm or Esc to cancel"), -1);
-				else
-					TextRender()->TextEx(&Cursor, Localize("Press Tab to select or Esc to cancel"), -1);
+				//dbg_msg("DEBUG", "Decrementing Start");
+				PreviousActiveCommand(&m_CommandStart);
+			}
+			else if(m_SelectedCommand > End)
+			{
+				//dbg_msg("DEBUG", "Incrementing Start");
+				NextActiveCommand(&m_CommandStart);
+				NextActiveCommand(&End);
 			}
 
-			// render commands
-			for(int i = m_CommandManager.CommandCount() - 1; i >= 0; i--)
+			//dbg_msg("DEBUG", "bs%d c%d", m_CommandStart, m_SelectedCommand);
+			y -= (DisplayCount+2)*LineHeight;
+			for(int i = m_CommandStart, j = 0; j < DisplayCount && i < m_CommandManager.CommandCount(); i++)
 			{
 				if(m_aFilter[i])
 					continue;
@@ -1370,12 +1389,13 @@ void CChat::HandleCommands(float x, float y, float w)
 				if(!pCommand)
 					continue;
 
-				y -= LineHeight;
+				j++;
+
+				y += LineHeight;
 				CUIRect HighlightRect = {Rect.x, y, LineWidth, LineHeight-1};
 
-				//TODO: Fix this
-				//if(!pCommand->m_pfnCallback)
-					//RenderTools()->DrawUIRect(&HighlightRect,  vec4(0.0f, 0.6f, 0.6f, 0.2f), CUI::CORNER_ALL, 0);
+				if(pCommand->m_pfnCallback == ServerCommandCallback)
+					RenderTools()->DrawUIRect(&HighlightRect,  vec4(0.0f, 0.6f, 0.6f, 0.2f), CUI::CORNER_ALL, 0);
 
 				// draw selection box
 				if(i == m_SelectedCommand)
@@ -1415,6 +1435,18 @@ void CChat::HandleCommands(float x, float y, float w)
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
 				TextRender()->TextEx(&Cursor, pCommand->m_aHelpText, -1);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			}
+
+			// render notification
+			{
+				y += LineHeight;
+				CTextCursor Cursor;
+				TextRender()->SetCursor(&Cursor, Rect.x + 5.0f, y, 5.0f, TEXTFLAG_RENDER);
+				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
+				if(m_SelectedCommand >= 0 && str_startswith(m_Input.GetString() + 1, m_CommandManager.GetCommand(m_SelectedCommand)->m_aName))
+					TextRender()->TextEx(&Cursor, Localize("Press Enter to confirm or Esc to cancel"), -1);
+				else
+					TextRender()->TextEx(&Cursor, Localize("Press Tab to select or Esc to cancel"), -1);
 			}
 		}
 	}
@@ -1581,27 +1613,20 @@ int CChat::GetFirstActiveCommand()
 	return -1;
 }
 
-void CChat::NextActiveCommand(int *Index)
+int CChat::NextActiveCommand(int *Index)
 {
-	int StartIndex = (*Index)++;
-	while(*Index % m_CommandManager.CommandCount() != StartIndex &&
-		m_aFilter[*Index % m_CommandManager.CommandCount()])
-	{
+	(*Index)++;
+	while(*Index < m_aFilter.size() && m_aFilter[*Index])
 		(*Index)++;
-	}
 
-	*Index %= m_CommandManager.CommandCount();
+	return *Index;
 }
 
-void CChat::PreviousActiveCommand(int *Index)
+int CChat::PreviousActiveCommand(int *Index)
 {
-	int StartIndex = (*Index)--;
-	while((*Index + m_CommandManager.CommandCount()) % m_CommandManager.CommandCount() != StartIndex &&
-		m_aFilter[(*Index + m_CommandManager.CommandCount()) % m_CommandManager.CommandCount()])
-		{
-			(*Index)--;
-		}
+	(*Index)--;
+	while(*Index >= 0 && m_aFilter[*Index])
+		(*Index)--;
 
-	*Index += m_CommandManager.CommandCount();
-	*Index %= m_CommandManager.CommandCount();
+	return *Index;
 }
