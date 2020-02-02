@@ -1210,44 +1210,15 @@ int IGameController::GetStartTeam()
 	return TEAM_SPECTATORS;
 }
 
-void IGameController::Com_Example(IConsole::IResult *pResult, void *pContext)
+/*void IGameController::Com_Example(IConsole::IResult *pResult, void *pContext)
 {
 	CCommandManager::SCommandContext *pComContext = (CCommandManager::SCommandContext *)pContext;
 	IGameController *pSelf = (IGameController *)pComContext->m_pContext;
 
 	pSelf->GameServer()->SendBroadcast(pResult->GetString(0), -1);
-}
+}*/
 
 void IGameController::RegisterChatCommands(CCommandManager *pManager)
 {
-	pManager->AddCommand("test", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test2", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("call", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test4", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test5", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("call2", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test7", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test8", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("toast", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test10", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test11", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test12", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("toast2", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test14", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("sock", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("sock2", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("sock3", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("sock4", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test19", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("toast3", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test21", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test22", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("sock5", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test24", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test25", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test26", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("sock6", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test28", "Test the command system", "r", Com_Example, this);
-	pManager->AddCommand("test29", "Test the command system", "r", Com_Example, this);
-	/*pManager->AddCommand("test30", "Test the command system", "r", Com_Example, this);*/
+	//pManager->AddCommand("test", "Test the command system", "r", Com_Example, this);
 }
