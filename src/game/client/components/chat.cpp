@@ -1336,7 +1336,7 @@ void CChat::HandleCommands(float x, float y, float w)
 	{
 		const float Alpha = 0.90f;
 		const float ScrollBarW = 6.0f;
-		const float LineWidth = w - ScrollBarW;
+		float LineWidth = w;
 		const float LineHeight = 8.0f;
 
 		FilterChatCommands(m_Input.GetString()); // flag active commands, update selected command
@@ -1355,7 +1355,7 @@ void CChat::HandleCommands(float x, float y, float w)
 
 		if(DisplayCount > 0) // at least one command to display
 		{
-			CUIRect Rect = {x, y-(DisplayCount+1)*LineHeight, LineWidth + ScrollBarW, (DisplayCount+1)*LineHeight};
+			CUIRect Rect = {x, y-(DisplayCount+1)*LineHeight, LineWidth, (DisplayCount+1)*LineHeight};
 			RenderTools()->DrawUIRect(&Rect,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_ALL, 3.0f);
 
 			int End = m_CommandStart;
@@ -1377,14 +1377,17 @@ void CChat::HandleCommands(float x, float y, float w)
 			}
 
 			// render worlds most inefficient "scrollbar"
+			if(ActiveCount > DisplayCount)
 			{
-				CUIRect K = {x + LineWidth, y - (DisplayCount + 1) * LineHeight, ScrollBarW, (DisplayCount+1)*LineHeight};
-				RenderTools()->DrawUIRect(&K,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_R, 3.0f);
+				LineWidth -= ScrollBarW;
 
-				float h = K.h;
-				K.h *= (float)DisplayCount/ActiveCount;
-				K.y += h * (float)(GetActiveCountRange(GetFirstActiveCommand(), m_CommandStart))/ActiveCount;
-				RenderTools()->DrawUIRect(&K,  vec4(0.5f, 0.5f, 0.5f, Alpha), CUI::CORNER_R, 3.0f);
+				CUIRect Rect = {x + LineWidth, y - (DisplayCount + 1) * LineHeight, ScrollBarW, (DisplayCount+1)*LineHeight};
+				RenderTools()->DrawUIRect(&Rect,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_R, 3.0f);
+
+				float h = Rect.h;
+				Rect.h *= (float)DisplayCount/ActiveCount;
+				Rect.y += h * (float)(GetActiveCountRange(GetFirstActiveCommand(), m_CommandStart))/ActiveCount;
+				RenderTools()->DrawUIRect(&Rect,  vec4(0.5f, 0.5f, 0.5f, Alpha), CUI::CORNER_R, 3.0f);
 			}
 
 			y -= (DisplayCount+2)*LineHeight;
