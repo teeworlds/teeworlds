@@ -140,20 +140,20 @@ public:
         return m_pConsole->ParseCommandArgs(pArgs, pCom->m_aArgsFormat, pCom->m_pfnCallback, &Context);
     }
 
-    int Filter(array<bool> *paFilter, const char *pStr)
+    int Filter(array<bool> &aFilter, const char *pStr)
     {
-        dbg_assert((*paFilter).size() == m_aCommands.size(), "filter size must match command count");
+        dbg_assert(aFilter.size() == m_aCommands.size(), "filter size must match command count");
         if(!*pStr)
         {
-            for(int i = 0; i < (*paFilter).size(); i++)
-                (*paFilter)[i] = false;
+            for(int i = 0; i < aFilter.size(); i++)
+                aFilter[i] = false;
             return 0;
         }
 
         int Filtered = 0;
         for(int i = 0; i < m_aCommands.size(); i++)
         {
-            Filtered += ((*paFilter)[i] = str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName);
+            Filtered += (aFilter[i] = str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName);
         }
 
         return Filtered;

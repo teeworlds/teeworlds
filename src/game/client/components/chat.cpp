@@ -1568,7 +1568,7 @@ int CChat::FilterChatCommands(const char *pLine)
 {
 	m_aFilter.set_size(m_CommandManager.CommandCount());
 
-	m_FilteredCount = m_CommandManager.Filter(&m_aFilter, pLine + 1);
+	m_FilteredCount = m_CommandManager.Filter(m_aFilter, pLine + 1);
 	return m_FilteredCount;
 }
 
