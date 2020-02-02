@@ -24,6 +24,7 @@ CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 	m_File = 0;
 	m_LastTickMarker = -1;
 	m_pSnapshotDelta = pSnapshotDelta;
+	m_Huffman.Init();
 }
 
 // Record
@@ -203,7 +204,7 @@ void CDemoRecorder::Write(int Type, const void *pData, int Size)
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "demo_recorder", "error during intpack compression");
 		return;
 	}
-	Size = CNetBase::Compress(aBuffer, Size, aBuffer2, sizeof(aBuffer2)); // buffer -> buffer2
+	Size = m_Huffman.Compress(aBuffer, Size, aBuffer2, sizeof(aBuffer2)); // buffer -> buffer2
 	if(Size < 0)
 	{
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "demo_recorder", "error during network compression");
@@ -336,6 +337,7 @@ void CDemoRecorder::AddDemoMarker()
 
 CDemoPlayer::CDemoPlayer(class CSnapshotDelta *pSnapshotDelta)
 {
+	m_Huffman.Init();
 	m_File = 0;
 	m_aErrorMsg[0] = 0;
 	m_pKeyFrames = 0;
@@ -506,7 +508,7 @@ void CDemoPlayer::DoTick()
 				break;
 			}
 
-			DataSize = CNetBase::Decompress(aCompresseddata, ChunkSize, aDecompressed, sizeof(aDecompressed));
+			DataSize = m_Huffman.Decompress(aCompresseddata, ChunkSize, aDecompressed, sizeof(aDecompressed));
 			if(DataSize < 0)
 			{
 				// stop on error or eof

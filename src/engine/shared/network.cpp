@@ -133,7 +133,7 @@ void CNetBase::SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketCons
 
 	// compress if not ctrl msg
 	if(!(pPacket->m_Flags&NET_PACKETFLAG_CONTROL))
-		CompressedSize = Compress(pPacket->m_aChunkData, pPacket->m_DataSize, &aBuffer[NET_PACKETHEADERSIZE], NET_MAX_PAYLOAD);
+		CompressedSize = ms_Huffman.Compress(pPacket->m_aChunkData, pPacket->m_DataSize, &aBuffer[NET_PACKETHEADERSIZE], NET_MAX_PAYLOAD);
 
 	// check if the compression was enabled, successful and good enough
 	if(CompressedSize > 0 && CompressedSize < pPacket->m_DataSize)
@@ -249,7 +249,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		pPacket->m_ResponseToken = NET_TOKEN_NONE;
 		
 		if(pPacket->m_Flags&NET_PACKETFLAG_COMPRESSION)
-			pPacket->m_DataSize = Decompress(&pBuffer[NET_PACKETHEADERSIZE], pPacket->m_DataSize, pPacket->m_aChunkData, sizeof(pPacket->m_aChunkData));
+			pPacket->m_DataSize = ms_Huffman.Decompress(&pBuffer[NET_PACKETHEADERSIZE], pPacket->m_DataSize, pPacket->m_aChunkData, sizeof(pPacket->m_aChunkData));
 		else
 			mem_copy(pPacket->m_aChunkData, &pBuffer[NET_PACKETHEADERSIZE], pPacket->m_DataSize);
 	}
@@ -407,34 +407,8 @@ void CNetBase::CloseLog()
 	}
 }
 
-int CNetBase::Compress(const void *pData, int DataSize, void *pOutput, int OutputSize)
-{
-	return ms_Huffman.Compress(pData, DataSize, pOutput, OutputSize);
-}
-
-int CNetBase::Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize)
-{
-	return ms_Huffman.Decompress(pData, DataSize, pOutput, OutputSize);
-}
-
-
-static const unsigned gs_aFreqTable[256+1] = {
-	1<<30,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,
-	283,131,146,166,543,164,167,136,179,859,363,113,157,154,204,108,137,180,202,176,
-	872,404,168,134,151,111,113,109,120,126,129,100,41,20,16,22,18,18,17,19,
-	16,37,13,21,362,166,99,78,95,88,81,70,83,284,91,187,77,68,52,68,
-	59,66,61,638,71,157,50,46,69,43,11,24,13,19,10,12,12,20,14,9,
-	20,20,10,10,15,15,12,12,7,19,15,14,13,18,35,19,17,14,8,5,
-	15,17,9,15,14,18,8,10,2173,134,157,68,188,60,170,60,194,62,175,71,
-	148,67,167,78,211,67,156,69,1674,90,174,53,147,89,181,51,174,63,163,80,
-	167,94,128,122,223,153,218,77,200,110,190,73,174,69,145,66,277,143,141,60,
-	136,53,180,57,142,57,158,61,166,112,152,92,26,22,21,28,20,26,30,21,
-	32,27,20,17,23,21,30,22,22,21,27,25,17,27,23,18,39,26,15,21,
-	12,18,18,27,20,18,15,19,11,17,33,12,18,15,19,18,16,26,17,18,
-	9,10,25,22,22,17,20,16,6,16,15,20,14,18,24,335,1517};
-
 void CNetBase::Init(CConfig *pConfig)
 {
 	m_pConfig = pConfig;
-	ms_Huffman.Init(gs_aFreqTable);
+	ms_Huffman.Init();
 }

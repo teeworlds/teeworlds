@@ -540,9 +540,7 @@ public:
 	static void OpenLog(IOHANDLE DataLogSent, IOHANDLE DataLogRecv);
 	static void CloseLog();
 	static void Init(class CConfig *pConfig);
-	static int Compress(const void *pData, int DataSize, void *pOutput, int OutputSize);
-	static int Decompress(const void *pData, int DataSize, void *pOutput, int OutputSize);
-
+	
 	static void SendControlMsg(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize);
 	static void SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken, bool Extended);
 	static void SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);

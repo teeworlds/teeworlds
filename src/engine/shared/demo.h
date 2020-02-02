@@ -6,11 +6,13 @@
 #include <engine/demo.h>
 #include <engine/shared/protocol.h>
 
+#include "huffman.h"
 #include "snapshot.h"
 
 class CDemoRecorder : public IDemoRecorder
 {
 	class IConsole *m_pConsole;
+	CHuffman m_Huffman;
 	IOHANDLE m_File;
 	int m_LastTickMarker;
 	int m_LastKeyFrame;
@@ -84,6 +86,7 @@ private:
 	};
 
 	class IConsole *m_pConsole;
+	CHuffman m_Huffman;
 	IOHANDLE m_File;
 	char m_aFilename[256];
 	char m_aErrorMsg[256];
