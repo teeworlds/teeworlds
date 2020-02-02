@@ -131,7 +131,7 @@ public:
 
     int OnCommand(const char *pCommand, const char *pArgs, int ClientID)
     {
-        dbg_msg("DEBUG", "calling '%s' with args '%s'", pCommand, pArgs);
+        dbg_msg("chat-command", "calling '%s' with args '%s'", pCommand, pArgs);
         const CCommand *pCom = GetCommand(pCommand);
         if(!pCom)
             return 1;
@@ -140,33 +140,21 @@ public:
         return m_pConsole->ParseCommandArgs(pArgs, pCom->m_aArgsFormat, pCom->m_pfnCallback, &Context);
     }
 
-    int Filter(bool *pFilter, const char *pStr)
+    int Filter(array<bool> *paFilter, const char *pStr)
     {
+        dbg_assert((*paFilter).size() == m_aCommands.size(), "filter size must match command count");
         if(!*pStr)
         {
-            mem_zero(pFilter, m_aCommands.size() * sizeof(*pFilter));
+            for(int i = 0; i < (*paFilter).size(); i++)
+                (*paFilter)[i] = false;
             return 0;
         }
 
         int Filtered = 0;
         for(int i = 0; i < m_aCommands.size(); i++)
         {
-            /*if(str_find_nocase(m_aCommands[i].m_aName, pStr))
-                dbg_msg("DEBUG", "'%s' found in '%s' '%p' '%p' '%s'", pStr, m_aCommands[i].m_aName, str_find_nocase(m_aCommands[i].m_aName, pStr), m_aCommands[i].m_aName, str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName ? "true" : "false");
-            else
-                dbg_msg("DEBUJG", "'%s' not found in '%s' '%s'", pStr, m_aCommands[i].m_aName, str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName ? "true" : "false");*/
-
-            Filtered += (pFilter[i] = str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName);
+            Filtered += ((*paFilter)[i] = str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName);
         }
-
-        /*char aBuf[64] = "";
-        for(int i = 0; i < m_aCommands.size(); i++)
-        {
-            char test[5];
-            str_format(test, sizeof(test), "%d ", pFilter[i]);
-            str_append(aBuf, test, sizeof(aBuf));
-        }
-        dbg_msg("DEBUG", "%s", aBuf);*/
 
         return Filtered;
     }

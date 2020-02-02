@@ -83,7 +83,7 @@ class CChat : public CComponent
 	bool m_IgnoreCommand;
 	int m_SelectedCommand;
 
-	bool *m_pFilter;
+	array<bool> m_aFilter;
 	int m_FilteredCount;
 	int FilterChatCommands(const char *pLine);
 	int GetFirstActiveCommand();

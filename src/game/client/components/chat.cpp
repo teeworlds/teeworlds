@@ -53,9 +53,11 @@ void CChat::OnReset()
 
 		m_IgnoreCommand = false;
 		m_SelectedCommand = 0;
-		if(m_pFilter)
-			free(m_pFilter);
-		m_pFilter = 0;
+
+		m_aFilter.set_size(8); //Should help decrease allocations
+		for(int i = 0; i < m_aFilter.size(); i++)
+			m_aFilter[i] = false;
+
 		m_FilteredCount = 0;
 
 		for(int i = 0; i < CHAT_NUM; ++i)
@@ -77,8 +79,8 @@ void CChat::OnReset()
 	m_CommandManager.AddCommand("friend", "Add player as friend", "p", &Com_Befriend, this);
 	m_CommandManager.AddCommand("m", "Mute a player", "p", &Com_Mute, this);
 	m_CommandManager.AddCommand("mute", "Mute a player", "p", &Com_Mute, this);
-	m_CommandManager.AddCommand("r", "Reply to a whisper", "", &Com_Reply, this);
-	m_CommandManager.AddCommand("team", "Switch to team chat", "", &Com_Team, this);
+	m_CommandManager.AddCommand("r", "Reply to a whisper", "?r", &Com_Reply, this);
+	m_CommandManager.AddCommand("team", "Switch to team chat", "?r", &Com_Team, this);
 	m_CommandManager.AddCommand("w", "Whisper another player", "p", &Com_Whisper, this);
 	m_CommandManager.AddCommand("whisper", "Whisper another player", "p", &Com_Whisper, this);
 }
@@ -507,11 +509,6 @@ void CChat::ClearInput()
 
 	m_IgnoreCommand = false;
 	m_SelectedCommand = 0;
-
-	if(m_pFilter)
-		free(m_pFilter);
-	m_pFilter = 0;
-	m_FilteredCount = 0;
 }
 
 void CChat::ServerCommandCallback(IConsole::IResult *pResult, void *pContext)
@@ -1340,7 +1337,7 @@ void CChat::HandleCommands(float x, float y, float w)
 		FilterChatCommands(m_Input.GetString()); // flag active commands, update selected command
 		const int ActiveCount = m_CommandManager.CommandCount() - m_FilteredCount;
 
-		if(ActiveCount && m_pFilter[m_SelectedCommand])
+		if(ActiveCount && m_aFilter[m_SelectedCommand])
 		{
 			m_SelectedCommand = -1;
 			NextActiveCommand(&m_SelectedCommand);
@@ -1366,7 +1363,7 @@ void CChat::HandleCommands(float x, float y, float w)
 			// render commands
 			for(int i = m_CommandManager.CommandCount() - 1; i >= 0; i--)
 			{
-				if(m_pFilter[i])
+				if(m_aFilter[i])
 					continue;
 
 				const CCommandManager::CCommand *pCommand = m_CommandManager.GetCommand(i);
@@ -1569,24 +1566,16 @@ void CChat::Com_Befriend(IConsole::IResult *pResult, void *pContext)
 
 int CChat::FilterChatCommands(const char *pLine)
 {
-	if(m_pFilter)
-		free(m_pFilter);
+	m_aFilter.set_size(m_CommandManager.CommandCount());
 
-	m_pFilter = (bool *)malloc(m_CommandManager.CommandCount() * sizeof(*m_pFilter));
-	if(!m_pFilter)
-		return -1;
-
-	m_FilteredCount = m_CommandManager.Filter(m_pFilter, pLine + 1);
+	m_FilteredCount = m_CommandManager.Filter(&m_aFilter, pLine + 1);
 	return m_FilteredCount;
 }
 
 int CChat::GetFirstActiveCommand()
 {
-	if(!m_pFilter)
-		return 0;
-
 	for(int i = 0; i < m_CommandManager.CommandCount(); i++)
-		if(!m_pFilter[i])
+		if(!m_aFilter[i])
 			return i;
 
 	return -1;
@@ -1595,13 +1584,10 @@ int CChat::GetFirstActiveCommand()
 void CChat::NextActiveCommand(int *Index)
 {
 	int StartIndex = (*Index)++;
-	if(m_pFilter)
+	while(*Index % m_CommandManager.CommandCount() != StartIndex &&
+		m_aFilter[*Index % m_CommandManager.CommandCount()])
 	{
-		while(*Index % m_CommandManager.CommandCount() != StartIndex &&
-			m_pFilter[*Index % m_CommandManager.CommandCount()])
-		{
-			(*Index)++;
-		}
+		(*Index)++;
 	}
 
 	*Index %= m_CommandManager.CommandCount();
@@ -1610,14 +1596,11 @@ void CChat::NextActiveCommand(int *Index)
 void CChat::PreviousActiveCommand(int *Index)
 {
 	int StartIndex = (*Index)--;
-	if(m_pFilter)
-	{
-		while((*Index + m_CommandManager.CommandCount()) % m_CommandManager.CommandCount() != StartIndex &&
-			m_pFilter[(*Index + m_CommandManager.CommandCount()) % m_CommandManager.CommandCount()])
-			{
-				(*Index)--;
-			}
-	}
+	while((*Index + m_CommandManager.CommandCount()) % m_CommandManager.CommandCount() != StartIndex &&
+		m_aFilter[(*Index + m_CommandManager.CommandCount()) % m_CommandManager.CommandCount()])
+		{
+			(*Index)--;
+		}
 
 	*Index += m_CommandManager.CommandCount();
 	*Index %= m_CommandManager.CommandCount();
