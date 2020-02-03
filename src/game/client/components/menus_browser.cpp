@@ -788,14 +788,15 @@ void CMenus::RenderServerbrowserOverlay()
 		RenderTools()->DrawUIRect(&View, vec4(0.25f, 0.25f, 0.25f, 1.0f), CUI::CORNER_ALL, 6.0f);
 
 		View.Margin(2.0f, &View);
+		CUIRect NumServers, NumPlayers;
+		View.HSplitMid(&NumServers, &NumPlayers);
 
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Servers"), pFilter->NumSortedServers());
-		UI()->DoLabel(&View, aBuf, 12.0f, CUI::ALIGN_CENTER);
+		UI()->DoLabel(&NumServers, aBuf, 12.0f, CUI::ALIGN_CENTER);
 
-		View.HSplitMid(0, &View);
 		str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Players"), pFilter->NumPlayers());
-		UI()->DoLabel(&View, aBuf, 12.0f, CUI::ALIGN_CENTER);
+		UI()->DoLabel(&NumPlayers, aBuf, 12.0f, CUI::ALIGN_CENTER);
 	}
 	else if(Type == CInfoOverlay::OVERLAY_SERVERINFO)
 	{
@@ -2242,7 +2243,7 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 	float ButtonWidth = MainView.w/2.0f-Spacing/2.0f;
 
 	// render background
-	RenderTools()->DrawUIRect4(&MainView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f), CUI::CORNER_T, 5.0f);
+	RenderBackgroundShadow(&MainView, true);
 
 	// back to main menu
 	CUIRect Button;

@@ -780,6 +780,9 @@ private:
 	void SetMenuPage(int NewPage);
 
 	bool CheckHotKey(int Key) const;
+
+	void RenderBackground();
+	void RenderBackgroundShadow(const CUIRect *pRect, bool TopToBottom);
 public:
 	struct CSwitchTeamInfo
 	{
@@ -788,7 +791,6 @@ public:
 		int m_TimeLeft;
 	};
 	void GetSwitchTeamInfo(CSwitchTeamInfo *pInfo);
-	void RenderBackground();
 
 	void UseMouseButtons(bool Use) { m_UseMouseButtons = Use; }
 
