@@ -13,11 +13,12 @@
 #include <game/client/render.h>
 #include "editor.h"
 
+const char *pDefaultLayerName = "Tiles";
 
 CLayerTiles::CLayerTiles(int w, int h)
 {
 	m_Type = LAYERTYPE_TILES;
-	str_copy(m_aName, "Tiles", sizeof(m_aName));
+	str_copy(m_aName, pDefaultLayerName, sizeof(m_aName));
 	m_Width = w;
 	m_Height = h;
 	m_Image = -1;
@@ -504,8 +505,9 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 {
 	CUIRect Button;
 
+	bool IsGameLayer = m_pEditor->m_Map.m_pGameLayer == this;
 	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
-	if(m_pEditor->m_Map.m_pGameLayer != this)
+	if(!IsGameLayer)
 	{
 		if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size() && m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper)
 		{
@@ -583,7 +585,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{0},
 	};
 
-	if(m_pEditor->m_Map.m_pGameLayer == this) // remove the image and color properties if this is the game layer
+	if(IsGameLayer) // remove the image and color properties if this is the game layer
 	{
 		aProps[3].m_pName = 0;
 		aProps[4].m_pName = 0;
@@ -610,9 +612,12 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		}
 		else
 		{
+			bool HasNameOfOldImage = m_Image != -1 && str_comp(m_aName, m_pEditor->m_Map.m_lImages[m_Image]->m_aName) == 0;
 			m_Image = NewVal%m_pEditor->m_Map.m_lImages.size();
 			m_SelectedRuleSet = 0;
 			m_LiveAutoMap = false;
+			if(str_comp(m_aName, pDefaultLayerName) == 0 || HasNameOfOldImage)
+				str_copy(m_aName, m_pEditor->m_Map.m_lImages[m_Image]->m_aName, sizeof(m_aName));
 		}
 	}
 	else if(Prop == PROP_COLOR)
