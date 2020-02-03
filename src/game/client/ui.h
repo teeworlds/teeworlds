@@ -8,17 +8,16 @@ class CUIRect
 public:
 	float x, y, w, h;
 
-	void HSplitMid(CUIRect *pTop, CUIRect *pBottom) const;
+	void HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing = 0.0f) const;
 	void HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
 	void HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
-	void VSplitMid(CUIRect *pLeft, CUIRect *pRight) const;
+	void VSplitMid(CUIRect *pLeft, CUIRect *pRight, float Spacing = 0.0f) const;
 	void VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const;
 	void VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const;
 
 	void Margin(float Cut, CUIRect *pOtherRect) const;
 	void VMargin(float Cut, CUIRect *pOtherRect) const;
 	void HMargin(float Cut, CUIRect *pOtherRect) const;
-
 };
 
 class CUI

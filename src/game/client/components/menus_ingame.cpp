@@ -364,8 +364,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	// serverinfo
 	MainView.HSplitBottom(250.0f, &ServerInfo, &Motd);
-	ServerInfo.VSplitMid(&ServerInfo, &GameInfo);
-	ServerInfo.VSplitRight(1.0f, &ServerInfo, 0);
+	ServerInfo.VSplitMid(&ServerInfo, &GameInfo, 2.0f);
 	RenderTools()->DrawUIRect(&ServerInfo, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	ServerInfo.HSplitTop(ButtonHeight, &Label, &ServerInfo);
@@ -421,7 +420,6 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	}
 
 	// gameinfo
-	GameInfo.VSplitLeft(1.0f, 0, &GameInfo);
 	RenderTools()->DrawUIRect(&GameInfo, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	GameInfo.HSplitTop(ButtonHeight, &Label, &GameInfo);

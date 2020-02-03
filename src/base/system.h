@@ -1022,6 +1022,12 @@ const char *str_skip_to_whitespace_const(const char *str);
 char *str_skip_whitespaces(char *str);
 
 /*
+	Function: str_skip_whitespaces_const
+		See str_skip_whitespaces.
+*/
+const char *str_skip_whitespaces_const(const char *str);
+
+/*
 	Function: str_comp_nocase
 		Compares to strings case insensitive.
 

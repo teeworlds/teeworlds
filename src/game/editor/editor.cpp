@@ -2520,9 +2520,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 		else if(pProps[i].m_Type == PROPTYPE_SHIFT)
 		{
 			CUIRect Left, Right, Up, Down;
-			Shifter.VSplitMid(&Left, &Up);
-			Left.VSplitRight(1.0f, &Left, 0);
-			Up.VSplitLeft(1.0f, 0, &Up);
+			Shifter.VSplitMid(&Left, &Up, 2.0f);
 			Left.VSplitLeft(10.0f, &Left, &Shifter);
 			Shifter.VSplitRight(10.0f, &Shifter, &Right);
 			RenderTools()->DrawUIRect(&Shifter, vec4(1,1,1,0.5f), 0, 0.0f);
@@ -2811,66 +2809,6 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 			}
 	}
 	pEditor->m_Dialog = DIALOG_NONE;
-}
-
-
-static int gs_ModifyIndexDeletedIndex;
-static void ModifyIndexDeleted(int *pIndex)
-{
-	if(*pIndex == gs_ModifyIndexDeletedIndex)
-		*pIndex = -1;
-	else if(*pIndex > gs_ModifyIndexDeletedIndex)
-		*pIndex = *pIndex - 1;
-}
-
-int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
-{
-	static int s_ReplaceButton = 0;
-	static int s_RemoveButton = 0;
-
-	CUIRect Slot;
-	View.HSplitTop(2.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	CEditorImage *pImg = pEditor->m_Map.m_lImages[pEditor->m_SelectedImage];
-
-	static int s_ExternalButton = 0;
-	if(pImg->m_External)
-	{
-		if(pEditor->DoButton_MenuItem(&s_ExternalButton, "Embed", 0, &Slot, 0, "Embeds the image into the map file."))
-		{
-			pImg->m_External = 0;
-			return 1;
-		}
-	}
-	else
-	{
-		if(pEditor->DoButton_MenuItem(&s_ExternalButton, "Make external", 0, &Slot, 0, "Removes the image from the map file."))
-		{
-			pImg->m_External = 1;
-			return 1;
-		}
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_ReplaceButton, "Replace", 0, &Slot, 0, "Replaces the image with a new one"))
-	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_IMG, "Replace Image", "Replace", "mapres", "", ReplaceImage, pEditor);
-		return 1;
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_RemoveButton, "Remove", 0, &Slot, 0, "Removes the image from the map"))
-	{
-		delete pImg;
-		pEditor->m_Map.m_lImages.remove_index(pEditor->m_SelectedImage);
-		gs_ModifyIndexDeletedIndex = pEditor->m_SelectedImage;
-		pEditor->m_Map.ModifyImageIndex(ModifyIndexDeleted);
-		return 1;
-	}
-
-	return 0;
 }
 
 static int *gs_pSortedIndex = 0;
@@ -4158,113 +4096,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			UI()->DoLabel(&ToolBar, aBuf, 10.0f, CUI::ALIGN_CENTER);
 		}
 	}
-}
-
-int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
-{
-	static int s_NewMapButton = 0;
-	static int s_SaveButton = 0;
-	static int s_SaveAsButton = 0;
-	static int s_OpenButton = 0;
-	static int s_OpenCurrentButton = 0;
-	static int s_AppendButton = 0;
-	static int s_ExitButton = 0;
-
-	CUIRect Slot;
-	View.HSplitTop(2.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_NewMapButton, "New", 0, &Slot, 0, "Creates a new map"))
-	{
-		if(pEditor->HasUnsavedData())
-		{
-			pEditor->m_PopupEventType = POPEVENT_NEW;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-		{
-			pEditor->Reset();
-			pEditor->m_aFileName[0] = 0;
-		}
-		return 1;
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_OpenButton, "Load", 0, &Slot, 0, "Opens a map for editing"))
-	{
-		if(pEditor->HasUnsavedData())
-		{
-			pEditor->m_PopupEventType = POPEVENT_LOAD;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
-		return 1;
-	}
-
-	if(pEditor->Client()->State() == IClient::STATE_ONLINE)
-	{
-		View.HSplitTop(2.0f, &Slot, &View);
-		View.HSplitTop(12.0f, &Slot, &View);
-		if(pEditor->DoButton_MenuItem(&s_OpenCurrentButton, "Load Current Map", 0, &Slot, 0, "Opens the current in game map for editing"))
-		{
-			if(pEditor->HasUnsavedData())
-			{
-				pEditor->m_PopupEventType = POPEVENT_LOAD_CURRENT;
-				pEditor->m_PopupEventActivated = true;
-			}
-			else
-				pEditor->LoadCurrentMap();
-			return 1;
-		}
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_AppendButton, "Append", 0, &Slot, 0, "Opens a map and adds everything from that map to the current one"))
-	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Append map", "Append", "maps", "", pEditor->CallbackAppendMap, pEditor);
-		return 1;
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_SaveButton, "Save", 0, &Slot, 0, "Saves the current map"))
-	{
-		if(pEditor->m_aFileName[0] && pEditor->m_ValidSaveFilename)
-		{
-			str_copy(pEditor->m_aFileSaveName, pEditor->m_aFileName, sizeof(pEditor->m_aFileSaveName));
-			pEditor->m_PopupEventType = POPEVENT_SAVE;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", pEditor->CallbackSaveMap, pEditor);
-		return 1;
-	}
-
-	View.HSplitTop(2.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_SaveAsButton, "Save As", 0, &Slot, 0, "Saves the current map under a new name"))
-	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", pEditor->CallbackSaveMap, pEditor);
-		return 1;
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_ExitButton, "Exit", 0, &Slot, 0, "Exits from the editor"))
-	{
-		if(pEditor->HasUnsavedData())
-		{
-			pEditor->m_PopupEventType = POPEVENT_EXIT;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-			pEditor->Config()->m_ClEditor = 0;
-		return 1;
-	}
-
-	return 0;
 }
 
 void CEditor::RenderMenubar(CUIRect MenuBar)

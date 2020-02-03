@@ -629,41 +629,6 @@ void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup 
 	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 }
 
-void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
-{
-
-	for(int g = 0; g < pLayers->NumGroups(); g++)
-	{
-		CMapItemGroup *pGroup = pLayers->GetGroup(g);
-
-		for(int l = 0; l < pGroup->m_NumLayers; l++)
-		{
-			CMapItemLayer *pLayer = pLayers->GetLayer(pGroup->m_StartLayer+l);
-
-			if(pLayer->m_Type == LAYERTYPE_TILES)
-			{
-				CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pLayer;
-				CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTmap->m_Data);
-				for(int y = 0; y < pTmap->m_Height; y++)
-				{
-					for(int x = 1; x < pTmap->m_Width;)
-					{
-						int sx;
-						for(sx = 1; x+sx < pTmap->m_Width && sx < 255; sx++)
-						{
-							if(pTiles[y*pTmap->m_Width+x+sx].m_Index)
-								break;
-						}
-
-						pTiles[y*pTmap->m_Width+x].m_Skip = sx-1;
-						x += sx;
-					}
-				}
-			}
-		}
-	}
-}
-
 void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
 								const vec4& BgColor, const vec4& TextColor)
 {
