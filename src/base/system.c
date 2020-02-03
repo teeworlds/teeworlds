@@ -2084,6 +2084,13 @@ char *str_skip_whitespaces(char *str)
 	return str;
 }
 
+const char *str_skip_whitespaces_const(const char *str)
+{
+	while(*str && (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r'))
+		str++;
+	return str;
+}
+
 /* case */
 int str_comp_nocase(const char *a, const char *b)
 {

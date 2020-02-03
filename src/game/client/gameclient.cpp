@@ -1779,6 +1779,20 @@ void CGameClient::SendSkinChange()
 	m_LastSkinChangeTime = Client()->LocalTime();
 }
 
+int CGameClient::GetClientID(const char *pName)
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		if(!m_aClients[i].m_Active || i == m_LocalClientID) // skip local user
+			continue;
+
+		if(!str_comp(m_aClients[i].m_aName, pName))
+			return i;
+	}
+
+	return -1;
+}
+
 void CGameClient::ConTeam(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameClient *pClient = static_cast<CGameClient *>(pUserData);
