@@ -42,10 +42,10 @@ public:
 class CDemoPlayer : public IDemoPlayer
 {
 public:
-	class IListner
+	class IListener
 	{
 	public:
-		virtual ~IListner() {}
+		virtual ~IListener() {}
 		virtual void OnDemoPlayerSnapshot(void *pData, int Size) = 0;
 		virtual void OnDemoPlayerMessage(void *pData, int Size) = 0;
 	};
@@ -69,7 +69,7 @@ public:
 	};
 
 private:
-	IListner *m_pListner;
+	IListener *m_pListener;
 
 
 	// Playback
@@ -107,7 +107,7 @@ public:
 
 	CDemoPlayer(class CSnapshotDelta *m_pSnapshotDelta);
 
-	void SetListner(IListner *pListner);
+	void SetListener(IListener *pListner);
 
 	const char *Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion);
 	int Play();

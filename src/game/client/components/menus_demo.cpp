@@ -90,7 +90,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	if(m_SeekBarActive || m_MenuActive)
 	{
 		static int s_SeekBarID = 0;
-		void *id = &s_SeekBarID;
+		static bool s_PausedBeforeSeeking = false;
+		static float s_PrevAmount = -1.0f;
 		char aBuffer[128];
 		const float Rounding = 5.0f;
 
@@ -100,7 +101,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		// draw filled bar
 		float Amount = CurrentTick/(float)TotalTicks;
 		CUIRect FilledBar = SeekBar;
-		FilledBar.w = max(2*Rounding, FilledBar.w*Amount);
+		FilledBar.w = (FilledBar.w-2*Rounding)*Amount + 2*Rounding;
 		RenderTools()->DrawUIRect(&FilledBar, vec4(1,1,1,0.5f), CUI::CORNER_ALL, Rounding);
 
 		// draw markers
@@ -124,17 +125,21 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		// do the logic
 		bool Inside = UI()->MouseInside(&SeekBar);
 
-		if(UI()->CheckActiveItem(id))
+		if(UI()->CheckActiveItem(&s_SeekBarID))
 		{
 			if(!UI()->MouseButton(0))
+			{
 				UI()->SetActiveItem(0);
+				if(!s_PausedBeforeSeeking)
+					DemoPlayer()->Unpause();
+				s_PrevAmount = -1.0f; // so that the same position can be seeked again after releasing the mouse
+			}
 			else
 			{
-				static float PrevAmount = 0.0f;
-				float Amount = (UI()->MouseX()-SeekBar.x)/(float)SeekBar.w;
-				if(Amount > 0.0f && Amount < 1.0f && absolute(PrevAmount-Amount) >= (1.0f/UI()->Screen()->w))
+				float Amount = clamp((UI()->MouseX()-SeekBar.x-Rounding)/(float)(SeekBar.w-2*Rounding), 0.0f, 1.0f);
+				if(absolute(s_PrevAmount-Amount) >= (0.1f/UI()->Screen()->w))
 				{
-					PrevAmount = Amount;
+					s_PrevAmount = Amount;
 					m_pClient->OnReset();
 					m_pClient->m_SuppressEvents = true;
 					DemoPlayer()->SetPos(Amount);
@@ -144,14 +149,19 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 				}
 			}
 		}
-		else if(UI()->HotItem() == id)
+		else if(UI()->HotItem() == &s_SeekBarID)
 		{
 			if(UI()->MouseButton(0))
-				UI()->SetActiveItem(id);
+			{
+				UI()->SetActiveItem(&s_SeekBarID);
+				s_PausedBeforeSeeking = pInfo->m_Paused;
+				if(!pInfo->m_Paused)
+					DemoPlayer()->Pause();
+			}
 		}
 
 		if(Inside)
-			UI()->SetHotItem(id);
+			UI()->SetHotItem(&s_SeekBarID);
 	}
 
 	if(CurrentTick == TotalTicks)
