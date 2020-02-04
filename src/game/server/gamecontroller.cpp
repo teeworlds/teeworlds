@@ -540,6 +540,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 						if(GameServer()->m_apPlayers[i])
 							GameServer()->m_apPlayers[i]->m_RespawnDisabled = false;
 				}
+				GameServer()->m_World.m_Paused = false;
 			}
 			else
 			{
