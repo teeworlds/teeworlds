@@ -89,8 +89,6 @@ class CClient : public IClient, public CDemoPlayer::IListner
 	unsigned m_SnapshotParts;
 	int64 m_LocalStartTime;
 
-	IGraphics::CTextureHandle m_DebugFont;
-
 	int64 m_LastRenderTime;
 	int64 m_LastCpuTime;
 	float m_LastAvgCpuFrameTime;
@@ -223,8 +221,6 @@ public:
 
 	virtual bool SoundInitFailed() const { return m_SoundInitFailed; }
 
-	virtual IGraphics::CTextureHandle GetDebugFont() const { return m_DebugFont; }
-
 	void SendInput();
 
 	// TODO: OPT: do this alot smarter!
@@ -247,8 +243,6 @@ public:
 
 
 	virtual void GetServerInfo(CServerInfo *pServerInfo);
-
-	int LoadData();
 
 	// ---
 

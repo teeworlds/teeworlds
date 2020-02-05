@@ -614,12 +614,6 @@ void CClient::GetServerInfo(CServerInfo *pServerInfo)
 	m_ServerBrowser.UpdateFavoriteState(pServerInfo);
 }
 
-int CClient::LoadData()
-{
-	m_DebugFont = Graphics()->LoadTexture("ui/debug_font.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE);
-	return 1;
-}
-
 // ---
 
 const void *CClient::SnapGetItem(int SnapID, int Index, CSnapItem *pItem) const
@@ -683,17 +677,18 @@ void CClient::SnapSetStaticsize(int ItemType, int Size)
 
 void CClient::DebugRender()
 {
-	static NETSTATS Prev, Current;
-	static int64 LastSnap = 0;
-	static float FrameTimeAvg = 0;
-	int64 Now = time_get();
-	char aBuffer[512];
-
 	if(!Config()->m_Debug)
 		return;
 
+	static NETSTATS Prev, Current;
+	static int64 LastSnap = 0;
+	static float FrameTimeAvg = 0;
+	static IGraphics::CTextureHandle Font = Graphics()->LoadTexture("ui/debug_font.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE);
+	char aBuffer[256];
+	int64 Now = time_get();
+
 	//m_pGraphics->BlendNormal();
-	Graphics()->TextureSet(m_DebugFont);
+	Graphics()->TextureSet(Font);
 	Graphics()->MapScreen(0,0,Graphics()->ScreenWidth(),Graphics()->ScreenHeight());
 	Graphics()->QuadsBegin();
 
@@ -737,8 +732,7 @@ void CClient::DebugRender()
 	// render rates
 	{
 		int y = 0;
-		int i;
-		for(i = 0; i < 256; i++)
+		for(int i = 0; i < 256; i++)
 		{
 			if(m_SnapshotDelta.GetDataRate(i))
 			{
@@ -766,13 +760,13 @@ void CClient::DebugRender()
 
 		m_FpsGraph.ScaleMax();
 		m_FpsGraph.ScaleMin();
-		m_FpsGraph.Render(Graphics(), m_DebugFont, x, sp*5, w, h, "FPS");
+		m_FpsGraph.Render(Graphics(), Font, x, sp*5, w, h, "FPS");
 		m_InputtimeMarginGraph.ScaleMin();
 		m_InputtimeMarginGraph.ScaleMax();
-		m_InputtimeMarginGraph.Render(Graphics(), m_DebugFont, x, sp*5+h+sp, w, h, "Prediction Margin");
+		m_InputtimeMarginGraph.Render(Graphics(), Font, x, sp*5+h+sp, w, h, "Prediction Margin");
 		m_GametimeMarginGraph.ScaleMin();
 		m_GametimeMarginGraph.ScaleMax();
-		m_GametimeMarginGraph.Render(Graphics(), m_DebugFont, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
+		m_GametimeMarginGraph.Render(Graphics(), Font, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
 	}
 }
 
@@ -1974,11 +1968,6 @@ void CClient::Run()
 
 	// init the editor
 	m_pEditor->Init();
-
-
-	// load data
-	if(!LoadData())
-		return;
 
 	GameClient()->OnInit();
 
