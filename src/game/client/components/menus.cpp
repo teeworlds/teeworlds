@@ -1263,20 +1263,16 @@ void CMenus::RenderLoading(int WorkedAmount)
 	Graphics()->BlendNormal();
 	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
 
-	Rect.x = x;
-	Rect.y = y+20;
-	Rect.w = w;
-	Rect.h = h;
+	Rect.y += 20;
 	UI()->DoLabel(&Rect, Localize("Loading"), 48.0f, CUI::ALIGN_CENTER);
 
 	float Percent = m_LoadCurrent/(float)m_LoadTotal;
 	float Spacing = 40.0f;
 	float Rounding = 5.0f;
-	Rect.x = x+Spacing;
-	Rect.y = y+h-75.0f;
-	Rect.w = (w-2*Spacing-2*Rounding)*Percent+2*Rounding;
-	Rect.h = 25.0f;
-	RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f), Rounding);
+	CUIRect Bar = {x+Spacing, y+h-75.0f, w-2*Spacing, 25.0f};
+	RenderTools()->DrawRoundRect(&Bar, vec4(1.0f, 1.0f, 1.0f, 0.10f), Rounding);
+	Bar.w = (Bar.w-2*Rounding)*Percent+2*Rounding;
+	RenderTools()->DrawRoundRect(&Bar, vec4(1.0f, 1.0f, 1.0f, 0.75f), Rounding);
 
 	Graphics()->Swap();
 }
