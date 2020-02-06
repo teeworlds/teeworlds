@@ -782,10 +782,16 @@ const char *CClient::ErrorString() const
 
 void CClient::Render()
 {
-	if(Config()->m_GfxClear)
-		Graphics()->Clear(1,1,0);
-
-	GameClient()->OnRender();
+	if(m_EditorActive)
+	{
+		m_pEditor->UpdateAndRender();
+	}
+	else
+	{
+		if(Config()->m_GfxClear)
+			Graphics()->Clear(1,1,0);
+		GameClient()->OnRender();
+	}
 	DebugRender();
 }
 
@@ -1966,9 +1972,6 @@ void CClient::Run()
 	// start refreshing addresses while we load
 	MasterServer()->RefreshAddresses(m_ContactClient.NetType());
 
-	// init the editor
-	m_pEditor->Init();
-
 	GameClient()->OnInit();
 
 	char aBuf[256];
@@ -2099,13 +2102,7 @@ void CClient::Run()
 				// when we are stress testing only render every 10th frame
 				if(!Config()->m_DbgStress || (m_RenderFrames%10) == 0 )
 				{
-					if(!m_EditorActive)
-						Render();
-					else
-					{
-						m_pEditor->UpdateAndRender();
-						DebugRender();
-					}
+					Render();
 					m_pGraphics->Swap();
 				}
 			}

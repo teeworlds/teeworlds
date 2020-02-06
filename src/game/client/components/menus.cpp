@@ -1224,19 +1224,30 @@ void CMenus::RenderMenubar(CUIRect Rect)
 	}
 }
 
-void CMenus::RenderLoading()
+void CMenus::InitLoading(int TotalWorkAmount)
 {
-	// TODO: not supported right now due to separate render thread
+	m_LoadCurrent = 0;
+	m_LoadTotal = TotalWorkAmount;
+}
 
-	static int64 LastLoadRender = 0;
-	float Percent = m_LoadCurrent++/(float)m_LoadTotal;
+void CMenus::RenderLoading(int WorkedAmount)
+{
+	static int64 s_LastLoadRender = 0;
+	m_LoadCurrent += WorkedAmount;
+
+	if(Config()->m_Debug)
+	{
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "progress: %03d/%03d (+%02d) %dms", m_LoadCurrent, m_LoadTotal, WorkedAmount, s_LastLoadRender == 0 ? 0 : int((time_get()-s_LastLoadRender)*1000.0f/time_freq()));
+		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "loading", aBuf);
+	}
 
 	// make sure that we don't render for each little thing we load
 	// because that will slow down loading if we have vsync
-	if(time_get()-LastLoadRender < time_freq()/60)
+	if(s_LastLoadRender > 0 && time_get()-s_LastLoadRender < time_freq()/60)
 		return;
 
-	LastLoadRender = time_get();
+	s_LastLoadRender = time_get();
 
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
@@ -1252,19 +1263,20 @@ void CMenus::RenderLoading()
 	Graphics()->BlendNormal();
 	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
 
-	const char *pCaption = Localize("Loading");
-
 	Rect.x = x;
 	Rect.y = y+20;
 	Rect.w = w;
 	Rect.h = h;
-	UI()->DoLabel(&Rect, pCaption, 48.0f, CUI::ALIGN_CENTER);
+	UI()->DoLabel(&Rect, Localize("Loading"), 48.0f, CUI::ALIGN_CENTER);
 
-	Rect.x = x+40.0f;
+	float Percent = m_LoadCurrent/(float)m_LoadTotal;
+	float Spacing = 40.0f;
+	float Rounding = 5.0f;
+	Rect.x = x+Spacing;
 	Rect.y = y+h-75.0f;
-	Rect.w = (w-80.0f)*Percent;
+	Rect.w = (w-2*Spacing-2*Rounding)*Percent+2*Rounding;
 	Rect.h = 25.0f;
-	RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f), 5.0f);
+	RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f), Rounding);
 
 	Graphics()->Swap();
 }
@@ -1392,64 +1404,21 @@ const CMenus::CMenuImage *CMenus::FindMenuImage(const char *pName)
 	return 0;
 }
 
-void CMenus::UpdateVideoFormats()
-{
-	m_NumVideoFormats = 0;
-	for(int i = 0; i < m_NumModes; i++)
-	{
-		int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
-		int Width = m_aModes[i].m_Width/G;
-		int Height = m_aModes[i].m_Height/G;
-
-		// check if we already have the format
-		bool Found = false;
-		for(int j = 0; j < m_NumVideoFormats; j++)
-		{
-			if(Width == m_aVideoFormats[j].m_WidthValue && Height == m_aVideoFormats[j].m_HeightValue)
-			{
-				Found = true;
-				break;
-			}
-		}
-
-		if(!Found)
-		{
-			m_aVideoFormats[m_NumVideoFormats].m_WidthValue = Width;
-			m_aVideoFormats[m_NumVideoFormats].m_HeightValue = Height;
-			m_NumVideoFormats++;
-
-			// sort the array
-			for(int k = 0; k < m_NumVideoFormats-1; k++) // ffs, bubblesort
-			{
-				for(int j = 0; j < m_NumVideoFormats-k-1; j++)
-				{
-					if((float)m_aVideoFormats[j].m_WidthValue/(float)m_aVideoFormats[j].m_HeightValue > (float)m_aVideoFormats[j+1].m_WidthValue/(float)m_aVideoFormats[j+1].m_HeightValue)
-					{
-						CVideoFormat Tmp = m_aVideoFormats[j];
-						m_aVideoFormats[j] = m_aVideoFormats[j+1];
-						m_aVideoFormats[j+1] = Tmp;
-					}
-				}
-			}
-		}
-	}
-}
-
 void CMenus::UpdatedFilteredVideoModes()
 {
 	// same format as desktop goes to recommended list
 	m_lRecommendedVideoModes.clear();
 	m_lOtherVideoModes.clear();
 
-	const int DeskTopG = gcd(Graphics()->DesktopWidth(), Graphics()->DesktopHeight());
-	const int DeskTopWidthG = Graphics()->DesktopWidth() / DeskTopG;
-	const int DeskTopHeightG = Graphics()->DesktopHeight() / DeskTopG;
+	const int DesktopG = gcd(Graphics()->DesktopWidth(), Graphics()->DesktopHeight());
+	const int DesktopWidthG = Graphics()->DesktopWidth() / DesktopG;
+	const int DesktopHeightG = Graphics()->DesktopHeight() / DesktopG;
 
 	for(int i = 0; i < m_NumModes; i++)
 	{
 		const int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
-		if(m_aModes[i].m_Width/G == DeskTopWidthG &&
-		   m_aModes[i].m_Height/G == DeskTopHeightG)
+		if(m_aModes[i].m_Width/G == DesktopWidthG &&
+		   m_aModes[i].m_Height/G == DesktopHeightG)
 		{
 			m_lRecommendedVideoModes.add(m_aModes[i]);
 		}
@@ -1463,30 +1432,18 @@ void CMenus::UpdatedFilteredVideoModes()
 void CMenus::UpdateVideoModeSettings()
 {
 	m_NumModes = Graphics()->GetVideoModes(m_aModes, MAX_RESOLUTIONS, Config()->m_GfxScreen);
-	UpdateVideoFormats();
-
-	bool Found = false;
-	for(int i = 0; i < m_NumVideoFormats; i++)
-	{
-		int G = gcd(Config()->m_GfxScreenWidth, Config()->m_GfxScreenHeight);
-		if(m_aVideoFormats[i].m_WidthValue == Config()->m_GfxScreenWidth/G && m_aVideoFormats[i].m_HeightValue == Config()->m_GfxScreenHeight/G)
-		{
-			m_CurrentVideoFormat = i;
-			Found = true;
-			break;
-		}
-
-	}
-
-	if(!Found)
-		m_CurrentVideoFormat = 0;
-
 	UpdatedFilteredVideoModes();
+}
+
+int CMenus::GetInitAmount() const
+{
+	return 10;
 }
 
 void CMenus::OnInit()
 {
 	UpdateVideoModeSettings();
+	RenderLoading(5);
 
 	m_MousePos.x = Graphics()->ScreenWidth()/2;
 	m_MousePos.y = Graphics()->ScreenHeight()/2;
@@ -1494,10 +1451,19 @@ void CMenus::OnInit()
 	// load menu images
 	m_lMenuImages.clear();
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/menuimages", MenuImageScan, this);
+	RenderLoading(2);
 
-	// clear filter lists
-	//m_lFilters.clear();
+	// load filters
+	LoadFilters();
+	// add standard filters in case they are missing
+	InitDefaultFilters();
+	RenderLoading(1);
 
+	// load game type icons
+	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/gametypes", GameIconScan, this);
+	RenderLoading(1);
+
+	// initial launch preparations
 	if(Config()->m_ClShowWelcome)
 		m_Popup = POPUP_LANGUAGE;
 	Config()->m_ClShowWelcome = 0;
@@ -1513,13 +1479,7 @@ void CMenus::OnInit()
 	Console()->Chain("remove_friend", ConchainFriendlistUpdate, this);
 	Console()->Chain("snd_enable_music", ConchainToggleMusic, this);
 
-	m_TextureBlob = Graphics()->LoadTexture("ui/blob.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-
-	// setup load amount
-	m_LoadCurrent = 0;
-	m_LoadTotal = g_pData->m_NumImages;
-	if(!Config()->m_SndAsyncLoading)
-		m_LoadTotal += g_pData->m_NumSounds;
+	RenderLoading(1);
 }
 
 void CMenus::PopupMessage(const char *pTopic, const char *pBody, const char *pButton, int Next)
@@ -2371,44 +2331,6 @@ bool CMenus::OnInput(IInput::CEvent e)
 
 void CMenus::OnConsoleInit()
 {
-	// load filters
-	LoadFilters();
-
-	// add standard filters in case they are missing
-	bool UseDefaultFilters = !m_lFilters.size();
-	bool FilterStandard = false;
-	bool FilterFav = false;
-	bool FilterAll = false;
-	for(int i = 0; i < m_lFilters.size(); i++)
-	{
-		switch(m_lFilters[i].Custom())
-		{
-		case CBrowserFilter::FILTER_STANDARD:
-			FilterStandard = true;
-			break;
-		case CBrowserFilter::FILTER_FAVORITES:
-			FilterFav = true;
-			break;
-		case CBrowserFilter::FILTER_ALL:
-			FilterAll = true;
-		}
-	}
-	if(!FilterStandard)
-	{
-		// put it on top
-		int Pos = m_lFilters.size();
-		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, "Teeworlds", ServerBrowser()));
-		for(; Pos > 0; --Pos)
-			Move(true, Pos);
-	}
-	if(!FilterFav)
-		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser()));
-	if(!FilterAll)
-		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser()));
-	// expand the all filter tab by default
-	if(UseDefaultFilters)
-		m_lFilters[m_lFilters.size()-1].Switch();
-
 	CUIElementBase::Init(this);
 }
 
@@ -2562,29 +2484,12 @@ bool CMenus::CheckHotKey(int Key) const
 
 void CMenus::RenderBackground()
 {
-	//Graphics()->Clear(1,1,1);
-	//render_sunrays(0,0);
+	// render background color
+	Graphics()->Clear(0.45f, 0.45f, 0.45f);
 
 	float sw = 300*Graphics()->ScreenAspect();
 	float sh = 300;
 	Graphics()->MapScreen(0, 0, sw, sh);
-
-	// render background color
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-		//vec4 bottom(gui_color.r*0.3f, gui_color.g*0.3f, gui_color.b*0.3f, 1.0f);
-		//vec4 bottom(0, 0, 0, 1.0f);
-		vec4 Bottom(0.45f, 0.45f, 0.45f, 1.0f);
-		vec4 Top(0.45f, 0.45f, 0.45f, 1.0f);
-		IGraphics::CColorVertex Array[4] = {
-			IGraphics::CColorVertex(0, Top.r, Top.g, Top.b, Top.a),
-			IGraphics::CColorVertex(1, Top.r, Top.g, Top.b, Top.a),
-			IGraphics::CColorVertex(2, Bottom.r, Bottom.g, Bottom.b, Bottom.a),
-			IGraphics::CColorVertex(3, Bottom.r, Bottom.g, Bottom.b, Bottom.a)};
-		Graphics()->SetColorVertex(Array, 4);
-		IGraphics::CQuadItem QuadItem(0, 0, sw, sh);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
 
 	// render the tiles
 	Graphics()->TextureClear();
@@ -2601,10 +2506,11 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsEnd();
 
 	// render border fade
+	static IGraphics::CTextureHandle m_TextureBlob = Graphics()->LoadTexture("ui/blob.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	Graphics()->TextureSet(m_TextureBlob);
 	Graphics()->QuadsBegin();
 		Graphics()->SetColor(0,0,0,0.5f);
-		QuadItem = IGraphics::CQuadItem(-100, -100, sw+200, sh+200);
+		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(-100, -100, sw+200, sh+200);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 

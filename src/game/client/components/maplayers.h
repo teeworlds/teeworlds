@@ -37,6 +37,7 @@ public:
 
 	CMapLayers(int Type);
 	virtual void OnStateChange(int NewState, int OldState);
+	virtual int GetInitAmount() const;
 	virtual void OnInit();
 	virtual void OnShutdown();
 	virtual void OnRender();

@@ -400,10 +400,6 @@ private:
 
 	int64 m_LastInput;
 
-	// loading
-	int m_LoadCurrent;
-	int m_LoadTotal;
-
 	//
 	char m_aMessageTopic[512];
 	char m_aMessageBody[512];
@@ -577,6 +573,7 @@ private:
 	void SaveFilters();
 	void RemoveFilter(int FilterIndex);
 	void Move(bool Up, int Filter);
+	void InitDefaultFilters();
 
 	class CInfoOverlay
 	{
@@ -666,22 +663,15 @@ private:
 	{
 		MAX_RESOLUTIONS=256,
 	};
-
 	CVideoMode m_aModes[MAX_RESOLUTIONS];
 	int m_NumModes;
-
 	struct CVideoFormat
 	{
 		int m_WidthValue;
 		int m_HeightValue;
 	};
-
-	CVideoFormat m_aVideoFormats[MAX_RESOLUTIONS];
 	sorted_array<CVideoMode> m_lRecommendedVideoModes;
 	sorted_array<CVideoMode> m_lOtherVideoModes;
-	int m_NumVideoFormats;
-	int m_CurrentVideoFormat;
-	void UpdateVideoFormats();
 	void UpdatedFilteredVideoModes();
 	void UpdateVideoModeSettings();
 
@@ -773,7 +763,9 @@ private:
 	void InvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CMenus *pMenu, CUIRect Rect), void *pExtra=0);
 	void DoPopupMenu();
 
-	IGraphics::CTextureHandle m_TextureBlob;
+	// loading
+	int m_LoadCurrent;
+	int m_LoadTotal;
 
 	void ToggleMusic();
 
@@ -784,6 +776,9 @@ private:
 	void RenderBackground();
 	void RenderBackgroundShadow(const CUIRect *pRect, bool TopToBottom);
 public:
+	void InitLoading(int TotalWorkAmount);
+	void RenderLoading(int WorkedAmount = 0);
+
 	struct CSwitchTeamInfo
 	{
 		char m_aNotification[128];
@@ -798,10 +793,9 @@ public:
 
 	CMenus();
 
-	void RenderLoading();
-
 	bool IsActive() const { return m_MenuActive; }
 
+	virtual int GetInitAmount() const;
 	virtual void OnInit();
 
 	virtual void OnConsoleInit();
