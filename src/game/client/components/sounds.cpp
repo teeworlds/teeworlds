@@ -58,7 +58,7 @@ ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 	return pSet->m_aSounds[Id].m_Id;
 }
 
-int CSounds::GetInitAmount()
+int CSounds::GetInitAmount() const
 {
 	if(Config()->m_SndAsyncLoading)
 		return 0;
