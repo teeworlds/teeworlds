@@ -683,12 +683,12 @@ void CClient::DebugRender()
 	static NETSTATS Prev, Current;
 	static int64 LastSnap = 0;
 	static float FrameTimeAvg = 0;
-	static IGraphics::CTextureHandle Font = Graphics()->LoadTexture("ui/debug_font.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE);
+	static IGraphics::CTextureHandle s_Font = Graphics()->LoadTexture("ui/debug_font.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE);
 	char aBuffer[256];
 	int64 Now = time_get();
 
 	//m_pGraphics->BlendNormal();
-	Graphics()->TextureSet(Font);
+	Graphics()->TextureSet(s_Font);
 	Graphics()->MapScreen(0,0,Graphics()->ScreenWidth(),Graphics()->ScreenHeight());
 	Graphics()->QuadsBegin();
 
@@ -760,13 +760,13 @@ void CClient::DebugRender()
 
 		m_FpsGraph.ScaleMax();
 		m_FpsGraph.ScaleMin();
-		m_FpsGraph.Render(Graphics(), Font, x, sp*5, w, h, "FPS");
+		m_FpsGraph.Render(Graphics(), s_Font, x, sp*5, w, h, "FPS");
 		m_InputtimeMarginGraph.ScaleMin();
 		m_InputtimeMarginGraph.ScaleMax();
-		m_InputtimeMarginGraph.Render(Graphics(), Font, x, sp*5+h+sp, w, h, "Prediction Margin");
+		m_InputtimeMarginGraph.Render(Graphics(), s_Font, x, sp*5+h+sp, w, h, "Prediction Margin");
 		m_GametimeMarginGraph.ScaleMin();
 		m_GametimeMarginGraph.ScaleMax();
-		m_GametimeMarginGraph.Render(Graphics(), Font, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
+		m_GametimeMarginGraph.Render(Graphics(), s_Font, x, sp*5+h+sp+h+sp, w, h, "Gametime Margin");
 	}
 }
 
