@@ -7,6 +7,7 @@
 #include <engine/console.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <engine/storage.h>
 
 #include <generated/client_data.h>
 #include <game/client/localization.h>
@@ -470,6 +471,9 @@ void CLayerTiles::ShowInfo()
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	static IGraphics::CTextureHandle s_Font = Graphics()->LoadTexture("ui/debug_font.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_NORESAMPLE);
+	Graphics()->TextureSet(s_Font);
+	Graphics()->QuadsBegin();
 
 	int StartY = max(0, (int)(ScreenY0/32.0f)-1);
 	int StartX = max(0, (int)(ScreenX0/32.0f)-1);
@@ -484,17 +488,26 @@ void CLayerTiles::ShowInfo()
 			{
 				char aBuf[32];
 				str_format(aBuf, sizeof(aBuf), "%i", m_pTiles[c].m_Index);
-				TextRender()->Text(0, x*32+4, y*32+4, 10.0f, aBuf, 32.0f);
+				m_pEditor->Graphics()->QuadsText(x*32, y*32, 16.0f, aBuf);
 
 				char aFlags[4] = {	m_pTiles[c].m_Flags&TILEFLAG_VFLIP ? 'V' : ' ',
 									m_pTiles[c].m_Flags&TILEFLAG_HFLIP ? 'H' : ' ',
 									m_pTiles[c].m_Flags&TILEFLAG_ROTATE? 'R' : ' ',
 									0};
-				TextRender()->Text(0, x*32+4, y*32+18, 10.0f, aFlags, 32.0f);
+				m_pEditor->Graphics()->QuadsText(x*32, y*32+16, 16.0f, aFlags);
+
+				// TODO: Use text render instead, once it's optimized enough for this much text at once, and remove usage of debug font here
+				/*str_format(aBuf, sizeof(aBuf),
+					"%i\n%c%c%c", m_pTiles[c].m_Index,
+						m_pTiles[c].m_Flags&TILEFLAG_VFLIP ? 'V' : ' ',
+						m_pTiles[c].m_Flags&TILEFLAG_HFLIP ? 'H' : ' ',
+						m_pTiles[c].m_Flags&TILEFLAG_ROTATE? 'R' : ' ');
+				TextRender()->Text(0, x*32+4, y*32+4, 10.0f, aBuf, 32.0f);*/
 			}
 			x += m_pTiles[c].m_Skip;
 		}
 
+	Graphics()->QuadsEnd();
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
