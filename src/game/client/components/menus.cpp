@@ -1264,15 +1264,25 @@ void CMenus::RenderLoading(int WorkedAmount)
 	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
 
 	Rect.y += 20;
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 	UI()->DoLabel(&Rect, Localize("Loading"), 48.0f, CUI::ALIGN_CENTER);
 
 	float Percent = m_LoadCurrent/(float)m_LoadTotal;
 	float Spacing = 40.0f;
 	float Rounding = 5.0f;
-	CUIRect Bar = {x+Spacing, y+h-75.0f, w-2*Spacing, 25.0f};
-	RenderTools()->DrawRoundRect(&Bar, vec4(1.0f, 1.0f, 1.0f, 0.10f), Rounding);
-	Bar.w = (Bar.w-2*Rounding)*Percent+2*Rounding;
-	RenderTools()->DrawRoundRect(&Bar, vec4(1.0f, 1.0f, 1.0f, 0.75f), Rounding);
+	CUIRect FullBar = {x+Spacing, y+h-75.0f, w-2*Spacing, 25.0f};
+	RenderTools()->DrawRoundRect(&FullBar, vec4(1.0f, 1.0f, 1.0f, 0.10f), Rounding);
+	CUIRect FillingBar = FullBar;
+	FillingBar.w = (FullBar.w-2*Rounding)*Percent+2*Rounding;
+	RenderTools()->DrawRoundRect(&FillingBar, vec4(1.0f, 1.0f, 1.0f, 0.75f), Rounding);
+
+	if(Percent > 0.5)
+		TextRender()->TextColor(0.2f, 0.2f, 0.2f, 1.0f);
+	else
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	char aBuf[8];
+	str_format(aBuf, sizeof(aBuf), "%d%%", (int)(100*Percent));
+	UI()->DoLabel(&FullBar, aBuf, 20.0f, CUI::ALIGN_CENTER);
 
 	Graphics()->Swap();
 }
