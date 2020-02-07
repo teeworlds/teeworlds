@@ -2502,8 +2502,8 @@ void CMenus::RenderBackground()
 	Graphics()->QuadsEnd();
 
 	// render border fade
-	static IGraphics::CTextureHandle m_TextureBlob = Graphics()->LoadTexture("ui/blob.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
-	Graphics()->TextureSet(m_TextureBlob);
+	static IGraphics::CTextureHandle s_TextureBlob = Graphics()->LoadTexture("ui/blob.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
+	Graphics()->TextureSet(s_TextureBlob);
 	Graphics()->QuadsBegin();
 		Graphics()->SetColor(0,0,0,0.5f);
 		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(-100, -100, sw+200, sh+200);
