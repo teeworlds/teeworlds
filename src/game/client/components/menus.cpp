@@ -1265,7 +1265,7 @@ void CMenus::RenderLoading(int WorkedAmount)
 
 	Rect.y += 20;
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	UI()->DoLabel(&Rect, Localize("Loading"), 48.0f, CUI::ALIGN_CENTER);
+	UI()->DoLabel(&Rect, "Teeworlds", 48.0f, CUI::ALIGN_CENTER);
 
 	float Percent = m_LoadCurrent/(float)m_LoadTotal;
 	float Spacing = 40.0f;
