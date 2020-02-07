@@ -171,7 +171,7 @@ class CTextRender : public IEngineTextRender
 		pSizeData->m_TextureHeight = Height;
 		pSizeData->m_CurrentCharacter = 0;
 
-		dbg_msg("", "pFont memory usage: %d", FontMemoryUsage);
+		dbg_msg("pFont", "memory usage: %d", FontMemoryUsage);
 
 		mem_free(pMem);
 	}
