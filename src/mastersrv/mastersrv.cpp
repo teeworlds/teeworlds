@@ -287,7 +287,6 @@ int main(int argc, const char **argv) // ignore_convention
 	NETADDR BindAddr;
 
 	dbg_logger_stdout();
-	net_init();
 	
 	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
 
@@ -298,8 +297,6 @@ int main(int argc, const char **argv) // ignore_convention
 	CConfig *pConfig = pConfigManager->Values();
 	m_pConsole = CreateConsole(FlagMask);
 
-	CNetBase::Init(pConfig);
-	
 	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
 	RegisterFail |= !pKernel->RegisterInterface(m_pConsole);
 	RegisterFail |= !pKernel->RegisterInterface(pConfigManager);
@@ -331,13 +328,13 @@ int main(int argc, const char **argv) // ignore_convention
 		dbg_msg("mastersrv", "could not initialize secure RNG");
 		return -1;
 	}
-	if(!m_NetOp.Open(BindAddr, 0))
+	if(!m_NetOp.Open(BindAddr, pConfig, m_pConsole, 0, 0))
 	{
 		dbg_msg("mastersrv", "couldn't start network (op)");
 		return -1;
 	}
 	BindAddr.port = MASTERSERVER_PORT+1;
-	if(!m_NetChecker.Open(BindAddr, 0))
+	if(!m_NetChecker.Open(BindAddr, pConfig, m_pConsole, 0, 0))
 	{
 		dbg_msg("mastersrv", "couldn't start network (checker)");
 		return -1;

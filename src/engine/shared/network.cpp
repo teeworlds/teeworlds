@@ -1,11 +1,21 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/math.h>
 #include <base/system.h>
 
+#include <engine/engine.h>
 
 #include "config.h"
+#include "console.h"
 #include "network.h"
 #include "huffman.h"
+
+
+static void ConchainDbgLognetwork(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	((CNetBase *)pUserData)->UpdateLogHandles();
+}
 
 void CNetRecvUnpacker::Clear()
 {
@@ -66,11 +76,11 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 			else
 			{
 				// old packet that we already got
-				if(CNetBase::IsSeqInBackroom(Header.m_Sequence, m_pConnection->m_Ack))
+				if(m_pConnection->IsSeqInBackroom(Header.m_Sequence, m_pConnection->m_Ack))
 					continue;
 
 				// out of sequence, request resend
-				if(CNetBase::Config()->m_Debug)
+				if(m_pConnection->Config()->m_Debug)
 					dbg_msg("conn", "asking for resend %d %d", Header.m_Sequence, (m_pConnection->m_Ack+1)%NET_MAX_SEQUENCE);
 				m_pConnection->SignalResend();
 				continue; // take the next chunk in the packet
@@ -86,9 +96,46 @@ int CNetRecvUnpacker::FetchChunk(CNetChunk *pChunk)
 		return 1;
 	}
 }
+CNetBase::CNetInitializer CNetBase::m_NetInitializer;
+
+CNetBase::CNetBase()
+{
+	m_Socket = { NETTYPE_INVALID, -1, -1 };
+	m_pConfig = 0;
+	m_pEngine = 0;
+	m_DataLogSent = 0;
+	m_DataLogRecv = 0;
+}
+
+CNetBase::~CNetBase()
+{
+	if(m_Socket.type != NETTYPE_INVALID)
+		Shutdown();
+}
+
+void CNetBase::Init(NETSOCKET Socket, CConfig *pConfig, IConsole *pConsole, IEngine *pEngine)
+{
+	m_Socket = Socket;
+	m_pConfig = pConfig;
+	m_pEngine = pEngine;
+	m_Huffman.Init();
+	if(pEngine)
+		pConsole->Chain("dbg_lognetwork", ConchainDbgLognetwork, this);
+}
+
+void CNetBase::Shutdown()
+{
+	net_udp_close(m_Socket);
+	m_Socket = { NETTYPE_INVALID, -1, -1 };
+}
+
+void CNetBase::Wait(int Time)
+{
+	net_socket_read_wait(m_Socket, Time);
+}
 
 // packs the data tight and sends it
-void CNetBase::SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize)
+void CNetBase::SendPacketConnless(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize)
 {
 	unsigned char aBuffer[NET_MAX_PACKETSIZE];
 
@@ -110,30 +157,30 @@ void CNetBase::SendPacketConnless(NETSOCKET Socket, const NETADDR *pAddr, TOKEN 
 	dbg_assert(i == NET_PACKETHEADERSIZE_CONNLESS, "inconsistency");
 
 	mem_copy(&aBuffer[i], pData, DataSize);
-	net_udp_send(Socket, pAddr, aBuffer, i+DataSize);
+	net_udp_send(m_Socket, pAddr, aBuffer, i+DataSize);
 }
 
-void CNetBase::SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketConstruct *pPacket)
+void CNetBase::SendPacket(const NETADDR *pAddr, CNetPacketConstruct *pPacket)
 {
 	unsigned char aBuffer[NET_MAX_PACKETSIZE];
 	int CompressedSize = -1;
 	int FinalSize = -1;
 
 	// log the data
-	if(ms_DataLogSent)
+	if(m_DataLogSent)
 	{
 		int Type = 1;
-		io_write(ms_DataLogSent, &Type, sizeof(Type));
-		io_write(ms_DataLogSent, &pPacket->m_DataSize, sizeof(pPacket->m_DataSize));
-		io_write(ms_DataLogSent, &pPacket->m_aChunkData, pPacket->m_DataSize);
-		io_flush(ms_DataLogSent);
+		io_write(m_DataLogSent, &Type, sizeof(Type));
+		io_write(m_DataLogSent, &pPacket->m_DataSize, sizeof(pPacket->m_DataSize));
+		io_write(m_DataLogSent, &pPacket->m_aChunkData, pPacket->m_DataSize);
+		io_flush(m_DataLogSent);
 	}
 
 	dbg_assert((pPacket->m_Token&~NET_TOKEN_MASK) == 0, "token out of range");
 
 	// compress if not ctrl msg
 	if(!(pPacket->m_Flags&NET_PACKETFLAG_CONTROL))
-		CompressedSize = ms_Huffman.Compress(pPacket->m_aChunkData, pPacket->m_DataSize, &aBuffer[NET_PACKETHEADERSIZE], NET_MAX_PAYLOAD);
+		CompressedSize = m_Huffman.Compress(pPacket->m_aChunkData, pPacket->m_DataSize, &aBuffer[NET_PACKETHEADERSIZE], NET_MAX_PAYLOAD);
 
 	// check if the compression was enabled, successful and good enough
 	if(CompressedSize > 0 && CompressedSize < pPacket->m_DataSize)
@@ -165,31 +212,36 @@ void CNetBase::SendPacket(NETSOCKET Socket, const NETADDR *pAddr, CNetPacketCons
 
 		dbg_assert(i == NET_PACKETHEADERSIZE, "inconsistency");
 
-		net_udp_send(Socket, pAddr, aBuffer, FinalSize);
+		net_udp_send(m_Socket, pAddr, aBuffer, FinalSize);
 
 		// log raw socket data
-		if(ms_DataLogSent)
+		if(m_DataLogSent)
 		{
 			int Type = 0;
-			io_write(ms_DataLogSent, &Type, sizeof(Type));
-			io_write(ms_DataLogSent, &FinalSize, sizeof(FinalSize));
-			io_write(ms_DataLogSent, aBuffer, FinalSize);
-			io_flush(ms_DataLogSent);
+			io_write(m_DataLogSent, &Type, sizeof(Type));
+			io_write(m_DataLogSent, &FinalSize, sizeof(FinalSize));
+			io_write(m_DataLogSent, aBuffer, FinalSize);
+			io_flush(m_DataLogSent);
 		}
 	}
 }
 
 // TODO: rename this function
-int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct *pPacket)
+int CNetBase::UnpackPacket(NETADDR *pAddr, unsigned char *pBuffer, CNetPacketConstruct *pPacket)
 {
+	int Size = net_udp_recv(m_Socket, pAddr, pBuffer, NET_MAX_PACKETSIZE);
+	// no more packets for now
+	if(Size <= 0)
+		return 1;
+
 	// log the data
-	if(ms_DataLogRecv)
+	if(m_DataLogRecv)
 	{
 		int Type = 0;
-		io_write(ms_DataLogRecv, &Type, sizeof(Type));
-		io_write(ms_DataLogRecv, &Size, sizeof(Size));
-		io_write(ms_DataLogRecv, pBuffer, Size);
-		io_flush(ms_DataLogRecv);
+		io_write(m_DataLogRecv, &Type, sizeof(Type));
+		io_write(m_DataLogRecv, &Size, sizeof(Size));
+		io_write(m_DataLogRecv, pBuffer, Size);
+		io_flush(m_DataLogRecv);
 	}
 
 	// check the size
@@ -249,7 +301,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 		pPacket->m_ResponseToken = NET_TOKEN_NONE;
 		
 		if(pPacket->m_Flags&NET_PACKETFLAG_COMPRESSION)
-			pPacket->m_DataSize = ms_Huffman.Decompress(&pBuffer[NET_PACKETHEADERSIZE], pPacket->m_DataSize, pPacket->m_aChunkData, sizeof(pPacket->m_aChunkData));
+			pPacket->m_DataSize = m_Huffman.Decompress(&pBuffer[NET_PACKETHEADERSIZE], pPacket->m_DataSize, pPacket->m_aChunkData, sizeof(pPacket->m_aChunkData));
 		else
 			mem_copy(pPacket->m_aChunkData, &pBuffer[NET_PACKETHEADERSIZE], pPacket->m_DataSize);
 	}
@@ -277,13 +329,13 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 	}
 
 	// log the data
-	if(ms_DataLogRecv)
+	if(m_DataLogRecv)
 	{
 		int Type = 1;
-		io_write(ms_DataLogRecv, &Type, sizeof(Type));
-		io_write(ms_DataLogRecv, &pPacket->m_DataSize, sizeof(pPacket->m_DataSize));
-		io_write(ms_DataLogRecv, pPacket->m_aChunkData, pPacket->m_DataSize);
-		io_flush(ms_DataLogRecv);
+		io_write(m_DataLogRecv, &Type, sizeof(Type));
+		io_write(m_DataLogRecv, &pPacket->m_DataSize, sizeof(pPacket->m_DataSize));
+		io_write(m_DataLogRecv, pPacket->m_aChunkData, pPacket->m_DataSize);
+		io_flush(m_DataLogRecv);
 	}
 
 	// return success
@@ -291,7 +343,7 @@ int CNetBase::UnpackPacket(unsigned char *pBuffer, int Size, CNetPacketConstruct
 }
 
 
-void CNetBase::SendControlMsg(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize)
+void CNetBase::SendControlMsg(const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, const void *pExtra, int ExtraSize)
 {
 	CNetPacketConstruct Construct;
 	Construct.m_Token = Token;
@@ -303,11 +355,11 @@ void CNetBase::SendControlMsg(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Toke
 	mem_copy(&Construct.m_aChunkData[1], pExtra, ExtraSize);
 
 	// send the control message
-	CNetBase::SendPacket(Socket, pAddr, &Construct);
+	SendPacket(pAddr, &Construct);
 }
 
 
-void CNetBase::SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken, bool Extended)
+void CNetBase::SendControlMsgWithToken(const NETADDR *pAddr, TOKEN Token, int Ack, int ControlMsg, TOKEN MyToken, bool Extended)
 {
 	dbg_assert((Token&~NET_TOKEN_MASK) == 0, "token out of range");
 	dbg_assert((MyToken&~NET_TOKEN_MASK) == 0, "resp token out of range");
@@ -317,7 +369,7 @@ void CNetBase::SendControlMsgWithToken(NETSOCKET Socket, const NETADDR *pAddr, T
 	aBuf[1] = (MyToken>>16)&0xff;
 	aBuf[2] = (MyToken>>8)&0xff;
 	aBuf[3] = (MyToken)&0xff;
-	SendControlMsg(Socket, pAddr, Token, 0, ControlMsg, aBuf, Extended ? sizeof(aBuf) : 4);
+	SendControlMsg(pAddr, Token, 0, ControlMsg, aBuf, Extended ? sizeof(aBuf) : 4);
 }
 
 unsigned char *CNetChunkHeader::Pack(unsigned char *pData)
@@ -346,69 +398,8 @@ unsigned char *CNetChunkHeader::Unpack(unsigned char *pData)
 	return pData + 2;
 }
 
-
-int CNetBase::IsSeqInBackroom(int Seq, int Ack)
+void CNetBase::UpdateLogHandles()
 {
-	int Bottom = (Ack-NET_MAX_SEQUENCE/2);
-	if(Bottom < 0)
-	{
-		if(Seq <= Ack)
-			return 1;
-		if(Seq >= (Bottom + NET_MAX_SEQUENCE))
-			return 1;
-	}
-	else
-	{
-		if(Seq <= Ack && Seq >= Bottom)
-			return 1;
-	}
-
-	return 0;
-}
-
-IOHANDLE CNetBase::ms_DataLogSent = 0;
-IOHANDLE CNetBase::ms_DataLogRecv = 0;
-CHuffman CNetBase::ms_Huffman;
-CConfig *CNetBase::m_pConfig = 0; // todo: fix me
-
-void CNetBase::OpenLog(IOHANDLE DataLogSent, IOHANDLE DataLogRecv)
-{
-	if(DataLogSent)
-	{
-		ms_DataLogSent = DataLogSent;
-		dbg_msg("network", "logging sent packages");
-	}
-	else
-		dbg_msg("network", "failed to start logging sent packages");
-
-	if(DataLogRecv)
-	{
-		ms_DataLogRecv = DataLogRecv;
-		dbg_msg("network", "logging recv packages");
-	}
-	else
-		dbg_msg("network", "failed to start logging recv packages");
-}
-
-void CNetBase::CloseLog()
-{
-	if(ms_DataLogSent)
-	{
-		dbg_msg("network", "stopped logging sent packages");
-		io_close(ms_DataLogSent);
-		ms_DataLogSent = 0;
-	}
-
-	if(ms_DataLogRecv)
-	{
-		dbg_msg("network", "stopped logging recv packages");
-		io_close(ms_DataLogRecv);
-		ms_DataLogRecv = 0;
-	}
-}
-
-void CNetBase::Init(CConfig *pConfig)
-{
-	m_pConfig = pConfig;
-	ms_Huffman.Init();
+	if(Engine())
+		Engine()->QueryNetLogHandles(&m_DataLogSent, &m_DataLogRecv);
 }

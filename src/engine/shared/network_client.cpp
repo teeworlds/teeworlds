@@ -1,9 +1,11 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
+
 #include "network.h"
 
-bool CNetClient::Open(NETADDR BindAddr, int Flags)
+
+bool CNetClient::Open(NETADDR BindAddr, CConfig *pConfig, IConsole *pConsole, IEngine *pEngine, int Flags)
 {
 	// open socket
 	NETSOCKET Socket;
@@ -15,27 +17,27 @@ bool CNetClient::Open(NETADDR BindAddr, int Flags)
 	mem_zero(this, sizeof(*this));
 
 	// init
-	m_Socket = Socket;
-	m_Connection.Init(m_Socket, false);
+	Init(Socket, pConfig, pConsole, pEngine);
+	m_Connection.Init(this, false);
 
-	m_TokenManager.Init(Socket);
-	m_TokenCache.Init(Socket, &m_TokenManager);
+	m_TokenManager.Init(this);
+	m_TokenCache.Init(this, &m_TokenManager);
 
 	m_Flags = Flags;
 
 	return true;
 }
 
-int CNetClient::Close()
+void CNetClient::Close()
 {
-	// TODO: implement me
-	return 0;
+	if(m_Connection.State() != NET_CONNSTATE_OFFLINE)
+		m_Connection.Disconnect("Client shutdown");
+	Shutdown();
 }
 
 
 int CNetClient::Disconnect(const char *pReason)
 {
-	//dbg_msg("netclient", "disconnected. reason=\"%s\"", pReason);
 	m_Connection.Disconnect(pReason);
 	return 0;
 }
@@ -72,13 +74,12 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 
 		// TODO: empty the recvinfo
 		NETADDR Addr;
-		int Bytes = net_udp_recv(m_Socket, &Addr, m_RecvUnpacker.m_aBuffer, NET_MAX_PACKETSIZE);
-
+		int Result = UnpackPacket(&Addr, m_RecvUnpacker.m_aBuffer, &m_RecvUnpacker.m_Data);
 		// no more packets for now
-		if(Bytes <= 0)
+		if(Result > 0)
 			break;
 
-		if(CNetBase::UnpackPacket(m_RecvUnpacker.m_aBuffer, Bytes, &m_RecvUnpacker.m_Data) == 0)
+		if(!Result)
 		{
 			if(m_Connection.State() != NET_CONNSTATE_OFFLINE && m_Connection.State() != NET_CONNSTATE_ERROR && net_addr_comp(m_Connection.PeerAddress(), &Addr) == 0)
 			{
@@ -136,7 +137,7 @@ int CNetClient::Send(CNetChunk *pChunk, TOKEN Token, CSendCBData *pCallbackData)
 
 		if(Token != NET_TOKEN_NONE)
 		{
-			CNetBase::SendPacketConnless(m_Socket, &pChunk->m_Address, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
+			SendPacketConnless(&pChunk->m_Address, Token, m_TokenManager.GenerateToken(&pChunk->m_Address), pChunk->m_pData, pChunk->m_DataSize);
 		}
 		else
 		{

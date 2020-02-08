@@ -203,6 +203,7 @@ public:
 	IEngineMasterServer *MasterServer() { return m_pMasterServer; }
 	IConfigManager *ConfigManager() { return m_pConfigManager; }
 	CConfig *Config() { return m_pConfig; }
+	IConsole *Console() { return m_pConsole; }
 	IStorage *Storage() { return m_pStorage; }
 
 	CClient();

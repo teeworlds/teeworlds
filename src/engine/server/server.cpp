@@ -1319,7 +1319,8 @@ int CServer::Run()
 		BindAddr.port = Config()->m_SvPort;
 	}
 
-	if(!m_NetServer.Open(BindAddr, &m_ServerBan, Config()->m_SvMaxClients, Config()->m_SvMaxClientsPerIP, NewClientCallback, DelClientCallback, this))
+	if(!m_NetServer.Open(BindAddr, Config(), Console(), Kernel()->RequestInterface<IEngine>(), &m_ServerBan,
+		Config()->m_SvMaxClients, Config()->m_SvMaxClientsPerIP, NewClientCallback, DelClientCallback, this))
 	{
 		dbg_msg("server", "couldn't open socket. port %d might already be in use", Config()->m_SvPort);
 		return -1;
@@ -1465,7 +1466,7 @@ int CServer::Run()
 			}
 
 			// wait for incomming data
-			net_socket_read_wait(m_NetServer.Socket(), 5);
+			m_NetServer.Wait(5);
 		}
 	}
 	// disconnect all clients on shutdown

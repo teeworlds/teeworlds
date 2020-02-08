@@ -84,15 +84,12 @@ int main(int argc, const char **argv) // ignore_convention
 	NETADDR BindAddr;
 
 	dbg_logger_stdout();
-	net_init();
 
 	int FlagMask = 0;
 	IKernel *pKernel = IKernel::Create();
 	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
 	IConfigManager *pConfigManager = CreateConfigManager();
 	IConsole *pConsole = CreateConsole(FlagMask);
-
-	CNetBase::Init(pConfigManager->Values());
 
 	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
 	RegisterFail |= !pKernel->RegisterInterface(pConsole);
@@ -111,7 +108,7 @@ int main(int argc, const char **argv) // ignore_convention
 		dbg_msg("versionsrv", "could not initialize secure RNG");
 		return -1;
 	}
-	if(!g_NetOp.Open(BindAddr, 0))
+	if(!g_NetOp.Open(BindAddr, pConfigManager->Values(), pConsole, 0, 0))
 	{
 		dbg_msg("mastersrv", "couldn't start network");
 		return -1;
