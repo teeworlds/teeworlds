@@ -9,7 +9,6 @@ class CGraph
 {
 	enum
 	{
-		// restrictions: Must be power of two
 		MAX_VALUES=128,
 	};
 
