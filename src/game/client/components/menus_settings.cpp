@@ -1954,7 +1954,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		if(DoButton_CheckBox(&s_ButtonSndMusic, Localize("Play background music"), Config()->m_SndMusic, &Button))
 		{
 			Config()->m_SndMusic ^= 1;
-			ToggleMusic();
+			UpdateMusicState();
 		}
 
 		Sound.HSplitTop(Spacing, 0, &Sound);
@@ -2032,11 +2032,8 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		if(Config()->m_SndEnable)
 		{
 			Config()->m_SndInit = 1;
-			if(Config()->m_SndMusic)
-				m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
 		}
-		else
-			m_pClient->m_pSounds->Stop(SOUND_MENU);
+		UpdateMusicState();
 	}
 
 	// reset button
@@ -2055,14 +2052,11 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	{
 		Config()->m_SndEnable = 1;
 		Config()->m_SndInit = 1;
-		if(!Config()->m_SndMusic)
-		{
-			Config()->m_SndMusic = 1;
-			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
-		}
+		Config()->m_SndMusic = 1;
 		Config()->m_SndNonactiveMute = 0;
 		Config()->m_SndRate = 48000;
 		Config()->m_SndVolume = 100;
+		UpdateMusicState();
 	}
 }
 

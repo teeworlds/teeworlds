@@ -1485,7 +1485,8 @@ void CMenus::OnInit()
 	Console()->Chain("br_sort_order", ConchainServerbrowserSortingUpdate, this);
 	Console()->Chain("add_friend", ConchainFriendlistUpdate, this);
 	Console()->Chain("remove_friend", ConchainFriendlistUpdate, this);
-	Console()->Chain("snd_enable_music", ConchainToggleMusic, this);
+	Console()->Chain("snd_enable", ConchainUpdateMusicState, this);
+	Console()->Chain("snd_enable_music", ConchainUpdateMusicState, this);
 
 	RenderLoading(1);
 }
@@ -1516,7 +1517,7 @@ int CMenus::Render()
 		ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET|IServerBrowser::REFRESHFLAG_LAN);
 		ServerBrowser()->SetType(Config()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
 
-		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
+		UpdateMusicState();
 		s_First = false;
 	}
 
@@ -2356,7 +2357,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 	if(NewState == IClient::STATE_OFFLINE)
 	{
 		if(OldState >= IClient::STATE_ONLINE && NewState < IClient::STATE_QUITING)
-			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
+			UpdateMusicState();
 		m_Popup = POPUP_NONE;
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)
 		{
@@ -2537,25 +2538,23 @@ void CMenus::RenderBackgroundShadow(const CUIRect *pRect, bool TopToBottom)
 		RenderTools()->DrawUIRect4(pRect, Transparent, Transparent, Background, Background, CUI::CORNER_B, 5.0f);
 }
 
-void CMenus::ConchainToggleMusic(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+void CMenus::ConchainUpdateMusicState(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
 	CMenus *pSelf = (CMenus *)pUserData;
 	if(pResult->NumArguments())
 	{
-		pSelf->ToggleMusic();
+		pSelf->UpdateMusicState();
 	}
 }
 
-void CMenus::ToggleMusic()
+void CMenus::UpdateMusicState()
 {
-	if(Client()->State() == IClient::STATE_OFFLINE)
-	{
-		if(Config()->m_SndMusic && !m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
-			m_pClient->m_pSounds->Play(CSounds::CHN_MUSIC, SOUND_MENU, 1.0f);
-		else if(!Config()->m_SndMusic && m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
-			m_pClient->m_pSounds->Stop(SOUND_MENU);
-	}
+	bool ShouldPlay = Client()->State() == IClient::STATE_OFFLINE && Config()->m_SndEnable && Config()->m_SndMusic;
+	if(ShouldPlay && !m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
+		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
+	else if(!ShouldPlay && m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
+		m_pClient->m_pSounds->Stop(SOUND_MENU);
 }
 
 void CMenus::SetMenuPage(int NewPage)
