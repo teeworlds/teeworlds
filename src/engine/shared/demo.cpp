@@ -18,19 +18,6 @@ static const unsigned char gs_ActVersion = 4;
 static const int gs_LengthOffset = 152;
 static const int gs_NumMarkersOffset = 176;
 
-static inline void EncodeUnsigned(unsigned char *pOut, unsigned Value)
-{
-	pOut[0] = (Value>>24)&0xff;
-	pOut[1] = (Value>>16)&0xff;
-	pOut[2] = (Value>>8)&0xff;
-	pOut[3] = Value&0xff;
-}
-
-static inline unsigned DecodeUnsigned(const unsigned char *pIn)
-{
-	return ((pIn[0]<<24)&0xFF000000) | ((pIn[1]<<16)&0xFF0000) | ((pIn[2]<<8)&0xFF00) | (pIn[3]&0xFF);
-}
-
 CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 {
 	m_File = 0;
@@ -101,8 +88,8 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 	str_copy(Header.m_aNetversion, pNetVersion, sizeof(Header.m_aNetversion));
 	str_copy(Header.m_aMapName, pMap, sizeof(Header.m_aMapName));
 	unsigned MapSize = io_length(MapFile);
-	EncodeUnsigned(Header.m_aMapSize, MapSize);
-	EncodeUnsigned(Header.m_aMapCrc, Crc);
+	uint_to_bytes_be(Header.m_aMapSize, MapSize);
+	uint_to_bytes_be(Header.m_aMapCrc, Crc);
 	str_copy(Header.m_aType, pType, sizeof(Header.m_aType));
 	// Header.m_Length - add this on stop
 	str_timestamp(Header.m_aTimestamp, sizeof(Header.m_aTimestamp));
@@ -168,7 +155,7 @@ void CDemoRecorder::WriteTickMarker(int Tick, int Keyframe)
 	{
 		unsigned char aChunk[5];
 		aChunk[0] = CHUNKTYPEFLAG_TICKMARKER;
-		EncodeUnsigned(aChunk+1, Tick);
+		uint_to_bytes_be(aChunk+1, Tick);
 
 		if(Keyframe)
 			aChunk[0] |= CHUNKTICKFLAG_KEYFRAME;
@@ -285,18 +272,18 @@ int CDemoRecorder::Stop()
 	// add the demo length to the header
 	io_seek(m_File, gs_LengthOffset, IOSEEK_START);
 	unsigned char aLength[4];
-	EncodeUnsigned(aLength, Length());
+	uint_to_bytes_be(aLength, Length());
 	io_write(m_File, aLength, sizeof(aLength));
 
 	// add the timeline markers to the header
 	io_seek(m_File, gs_NumMarkersOffset, IOSEEK_START);
 	unsigned char aNumMarkers[4];
-	EncodeUnsigned(aNumMarkers, m_NumTimelineMarkers);
+	uint_to_bytes_be(aNumMarkers, m_NumTimelineMarkers);
 	io_write(m_File, aNumMarkers, sizeof(aNumMarkers));
 	for(int i = 0; i < m_NumTimelineMarkers; i++)
 	{
 		unsigned char aMarker[4];
-		EncodeUnsigned(aMarker, m_aTimelineMarkers[i]);
+		uint_to_bytes_be(aMarker, m_aTimelineMarkers[i]);
 		io_write(m_File, aMarker, sizeof(aMarker));
 	}
 
@@ -365,7 +352,7 @@ int CDemoPlayer::ReadChunkHeader(int *pType, int *pSize, int *pTick)
 			unsigned char aTickData[4];
 			if(io_read(m_File, aTickData, sizeof(aTickData)) != sizeof(aTickData))
 				return -1;
-			*pTick = DecodeUnsigned(aTickData);
+			*pTick = bytes_be_to_uint(aTickData);
 		}
 		else
 		{
@@ -659,11 +646,11 @@ const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole
 		m_DemoType = DEMOTYPE_INVALID;
 
 	// read map
-	unsigned MapSize = DecodeUnsigned(m_Info.m_Header.m_aMapSize);
+	unsigned MapSize = bytes_be_to_uint(m_Info.m_Header.m_aMapSize);
 
 	// check if we already have the map
 	// TODO: improve map checking (maps folder, check crc)
-	unsigned Crc = DecodeUnsigned(m_Info.m_Header.m_aMapCrc);
+	unsigned Crc = bytes_be_to_uint(m_Info.m_Header.m_aMapCrc);
 	char aMapFilename[128];
 	str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", m_Info.m_Header.m_aMapName, Crc);
 	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
@@ -689,10 +676,10 @@ const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole
 	}
 
 	// get timeline markers
-	m_Info.m_Info.m_NumTimelineMarkers = min(DecodeUnsigned(m_Info.m_Header.m_aNumTimelineMarkers), unsigned(MAX_TIMELINE_MARKERS));
+	m_Info.m_Info.m_NumTimelineMarkers = min(bytes_be_to_uint(m_Info.m_Header.m_aNumTimelineMarkers), unsigned(MAX_TIMELINE_MARKERS));
 	for(int i = 0; i < m_Info.m_Info.m_NumTimelineMarkers; i++)
 	{
-		m_Info.m_Info.m_aTimelineMarkers[i] = DecodeUnsigned(m_Info.m_Header.m_aTimelineMarkers[i]);
+		m_Info.m_Info.m_aTimelineMarkers[i] = bytes_be_to_uint(m_Info.m_Header.m_aTimelineMarkers[i]);
 	}
 
 	// scan the file for interesting points

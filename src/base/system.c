@@ -2617,6 +2617,14 @@ unsigned bytes_be_to_uint(const unsigned char *bytes)
 	return (bytes[0]<<24) | (bytes[1]<<16) | (bytes[2]<<8) | bytes[3];
 }
 
+void uint_to_bytes_be(unsigned char *bytes, unsigned value)
+{
+	bytes[0] = (value>>24)&0xff;
+	bytes[1] = (value>>16)&0xff;
+	bytes[2] = (value>>8)&0xff;
+	bytes[3] = value&0xff;
+}
+
 #if defined(__cplusplus)
 }
 #endif

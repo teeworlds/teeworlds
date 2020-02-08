@@ -1666,6 +1666,16 @@ int pid();
 */
 unsigned bytes_be_to_uint(const unsigned char *bytes);
 
+/*
+	Function: uint_to_bytes_be
+		Packs an unsigned into 4 big endian bytes
+
+	Remarks:
+		- Assumes the passed array is 4 bytes
+		- Assumes unsigned is 4 bytes
+*/
+void uint_to_bytes_be(unsigned char *bytes, unsigned value);
+
 #ifdef __cplusplus
 }
 #endif
