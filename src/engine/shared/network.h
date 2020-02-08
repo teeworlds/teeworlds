@@ -450,7 +450,6 @@ class CNetServer : public CNetBase
 		CNetConnection m_Connection;
 	};
 
-	int m_NetType;
 	class CNetBan *m_pNetBan;
 	CSlot m_aSlots[NET_MAX_CLIENTS];
 	int m_NumClients;
@@ -476,7 +475,6 @@ public:
 	int Recv(CNetChunk *pChunk, TOKEN *pResponseToken = 0);
 	int Send(CNetChunk *pChunk, TOKEN Token = NET_TOKEN_NONE);
 	int Update();
-	//void Wait(int Time) { m_pNetBase->Wait(Time); }
 	void AddToken(const NETADDR *pAddr, TOKEN Token) { m_TokenCache.AddToken(pAddr, Token, 0); };
 
 	//
