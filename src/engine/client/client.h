@@ -7,7 +7,6 @@
 
 class CGraph
 {
-public:
 	enum
 	{
 		// restrictions: Must be power of two
@@ -20,11 +19,10 @@ public:
 	float m_aColors[MAX_VALUES][3];
 	int m_Index;
 
+public:
 	void Init(float Min, float Max);
 
-	void ScaleMax();
-	void ScaleMin();
-
+	void Scale();
 	void Add(float v, float r, float g, float b);
 	void Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture, float x, float y, float w, float h, const char *pDescription);
 };
