@@ -591,6 +591,14 @@ typedef struct
 } NETADDR;
 
 /*
+	Function: net_invalidate_socket
+		Invalidates a socket.
+
+	Remarks:
+		You should close the socket before invalidating it.
+*/
+void net_invalidate_socket(NETSOCKET *socket);
+/*
 	Function: net_init
 		Initiates network functionallity.
 

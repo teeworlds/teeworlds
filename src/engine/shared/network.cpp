@@ -100,7 +100,7 @@ CNetBase::CNetInitializer CNetBase::m_NetInitializer;
 
 CNetBase::CNetBase()
 {
-	m_Socket = { NETTYPE_INVALID, -1, -1 };
+	net_invalidate_socket(&m_Socket);
 	m_pConfig = 0;
 	m_pEngine = 0;
 	m_DataLogSent = 0;
@@ -126,7 +126,7 @@ void CNetBase::Init(NETSOCKET Socket, CConfig *pConfig, IConsole *pConsole, IEng
 void CNetBase::Shutdown()
 {
 	net_udp_close(m_Socket);
-	m_Socket = { NETTYPE_INVALID, -1, -1 };
+	net_invalidate_socket(&m_Socket);
 }
 
 void CNetBase::Wait(int Time)

@@ -1454,6 +1454,11 @@ int net_would_block()
 #endif
 }
 
+void net_invalidate_socket(NETSOCKET *socket)
+{
+	*socket = invalid_socket;
+}
+
 int net_init()
 {
 #if defined(CONF_FAMILY_WINDOWS)
