@@ -52,7 +52,7 @@ public:
 };
 
 
-class CClient : public IClient, public CDemoPlayer::IListner
+class CClient : public IClient, public CDemoPlayer::IListener
 {
 	// needed interfaces
 	IEngine *m_pEngine;

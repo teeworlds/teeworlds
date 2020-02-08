@@ -2289,7 +2289,7 @@ const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 	m_NetClient.ResetErrorString();
 
 	// try to start playback
-	m_DemoPlayer.SetListner(this);
+	m_DemoPlayer.SetListener(this);
 
 	const char *pError = m_DemoPlayer.Load(Storage(), m_pConsole, pFilename, StorageType, GameClient()->NetVersion());
 	if(pError)
