@@ -2502,7 +2502,8 @@ void CMenus::RenderBackground()
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 		float Size = 15.0f;
-		float OffsetTime = fmod(Client()->LocalTime()*0.15f, 2.0f);
+		static int64 s_MenuBackgroundStart = time_get();
+		float OffsetTime = fmod((time_get()-s_MenuBackgroundStart)*0.15f/time_freq(), 2.0f);
 		for(int y = -2; y < (int)(sw/Size); y++)
 			for(int x = -2; x < (int)(sh/Size); x++)
 			{
