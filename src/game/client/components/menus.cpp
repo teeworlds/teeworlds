@@ -1249,11 +1249,9 @@ void CMenus::RenderLoading(int WorkedAmount)
 
 	s_LastLoadRender = time_get();
 
-	CUIRect Screen = *UI()->Screen();
-	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
-
 	RenderBackground();
 
+	CUIRect Screen = *UI()->Screen();
 	float w = 700;
 	float h = 200;
 	float x = Screen.w/2-w/2;
