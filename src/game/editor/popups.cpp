@@ -1159,14 +1159,19 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 	{
 		hsv.x = 1.0f - Y/HuePicker.h;	
 	}
-	
+
 	// palette
-	static int s_Palette = 0;
-	pEditor->RenderTools()->DrawUIRect(&Palette, pEditor->m_SelectedColor, 0, 0.0f);
-	if(pEditor->DoButton_Editor_Common(&s_Palette, 0x0, 0, &Palette, 0, 0x0))
+	if(pEditor->m_SelectedColor.a > 0.0f)
 	{
-		if(pEditor->m_SelectedColor.a > 0.0f)
+		CUIRect ApplyPaletteButton;
+		Palette.VSplitRight(50.0f, &ApplyPaletteButton, &Palette);
+		Palette.VSplitLeft(5.0f, 0, &Palette);
+		static int s_Palette = 0;
+		pEditor->RenderTools()->DrawUIRect(&Palette, pEditor->m_SelectedColor, 0, 0.0f);
+		if(pEditor->DoButton_Editor(&s_Palette, "Apply Pipette:", 0, &ApplyPaletteButton, 0, "Apply the color selected with the Pipette to this color picker"))
+		{
 			hsv = RgbToHsv(vec3(pEditor->m_SelectedColor.r, pEditor->m_SelectedColor.g, pEditor->m_SelectedColor.b));
+		}
 	}
 
 	pEditor->m_SelectedPickerColor = hsv;
