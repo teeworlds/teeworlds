@@ -1458,6 +1458,7 @@ void CChat::HandleCommands(float x, float y, float w)
 					TextRender()->TextEx(&Cursor, Localize("Press Enter to confirm or Esc to cancel"), -1);
 				else
 					TextRender()->TextEx(&Cursor, Localize("Press Tab to select or Esc to cancel"), -1);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 			}
 		}
 	}
