@@ -852,8 +852,10 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	TB_Top.HSplitBottom(2.5f, &TB_Top, 0);
 	TB_Bottom.HSplitTop(2.5f, 0, &TB_Bottom);
 
+	const bool CtrlPressed = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
+
 	// ctrl+o to open
-	if(Input()->KeyPress(KEY_O) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL)) && m_Dialog == DIALOG_NONE)
+	if(Input()->KeyPress(KEY_O) && CtrlPressed && m_Dialog == DIALOG_NONE)
 	{
 		if(HasUnsavedData())
 		{
@@ -868,7 +870,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	}
 
 	// ctrl+s to save
-	if(Input()->KeyPress(KEY_S) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL)) && m_Dialog == DIALOG_NONE)
+	if(Input()->KeyPress(KEY_S) && CtrlPressed && m_Dialog == DIALOG_NONE)
 	{
 		if(m_aFileName[0] && m_ValidSaveFilename)
 		{
@@ -887,7 +889,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 	static int s_HqButton = 0;
 	if(DoButton_Editor(&s_HqButton, "HD", m_ShowDetail, &Button, 0, "[ctrl+h] Toggle High Detail") ||
-		(Input()->KeyPress(KEY_H) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
+		(Input()->KeyPress(KEY_H) && CtrlPressed))
 	{
 		m_ShowDetail = !m_ShowDetail;
 	}
@@ -898,7 +900,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
 	static int s_AnimateButton = 0;
 	if(DoButton_Editor(&s_AnimateButton, "Anim", m_Animate, &Button, 0, "[ctrl+m] Toggle animation") ||
-		(Input()->KeyPress(KEY_M) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
+		(Input()->KeyPress(KEY_M) && CtrlPressed))
 	{
 		m_AnimateStart = time_get();
 		m_Animate = !m_Animate;
@@ -910,7 +912,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
 	static int s_ProofButton = 0;
 	if(DoButton_Editor(&s_ProofButton, "Proof", m_ProofBorders, &Button, 0, "[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.") ||
-		(Input()->KeyPress(KEY_P) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
+		(Input()->KeyPress(KEY_P) && CtrlPressed))
 	{
 		m_ProofBorders = !m_ProofBorders;
 	}
@@ -921,7 +923,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
 	static int s_TileInfoButton = 0;
 	if(DoButton_Editor(&s_TileInfoButton, "Info", m_ShowTileInfo, &Button, 0, "[ctrl+i] Show tile informations") ||
-		(Input()->KeyPress(KEY_I) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
+		(Input()->KeyPress(KEY_I) && CtrlPressed))
 	{
 		m_ShowTileInfo = !m_ShowTileInfo;
 		m_ShowEnvelopePreview = SHOWENV_NONE;
@@ -1008,7 +1010,8 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 				s_RotationAmount = max(90, (s_RotationAmount/90)*90);
 				break;
 			}
-		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 359, TileLayer?90:1, TileLayer?10.0f:2.0f, "Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.");
+		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 359, TileLayer?90:1, TileLayer?10.0f:2.0f,
+			"Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.");
 
 		TB_Top.VSplitLeft(5.0f, &Button, &TB_Top);
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
@@ -1036,22 +1039,29 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 		static int s_NewButton = 0;
 
 		CLayerQuads *pQLayer = (CLayerQuads *)GetSelectedLayerType(0, LAYERTYPE_QUADS);
-		//CLayerTiles *tlayer = (CLayerTiles *)get_selected_layer_type(0, LAYERTYPE_TILES);
-		if(DoButton_Editor(&s_NewButton, "Add Quad", pQLayer?0:-1, &Button, 0, "Adds a new quad"))
+		const bool AddQuadOnMousePos = CtrlPressed && Input()->KeyPress(KEY_Q);
+		if(DoButton_Editor(&s_NewButton, "Add Quad", pQLayer?0:-1, &Button, 0, "[ctrl+q] Adds a new quad") || AddQuadOnMousePos)
 		{
 			if(pQLayer)
 			{
-				float Mapping[4];
-				CLayerGroup *g = GetSelectedGroup();
-				g->Mapping(Mapping);
-				int AddX = f2fx(Mapping[0] + (Mapping[2]-Mapping[0])/2);
-				int AddY = f2fx(Mapping[1] + (Mapping[3]-Mapping[1])/2);
-
-				CQuad *q = pQLayer->NewQuad();
-				for(int i = 0; i < 5; i++)
+				if(AddQuadOnMousePos)
 				{
-					q->m_aPoints[i].x += AddX;
-					q->m_aPoints[i].y += AddY;
+					static vec2 s_LastMouseQuadAdd;
+					vec2 MousePos(UI()->MouseWorldX(), UI()->MouseWorldY());
+					if(distance(s_LastMouseQuadAdd, MousePos) >= 16.0f)
+					{
+						s_LastMouseQuadAdd = MousePos;
+						pQLayer->NewQuad(MousePos.x, MousePos.y);
+					}
+				}
+				else
+				{
+					float Mapping[4];
+					CLayerGroup *g = GetSelectedGroup();
+					g->Mapping(Mapping);
+					int AddX = f2fx(Mapping[0] + (Mapping[2]-Mapping[0])/2);
+					int AddY = f2fx(Mapping[1] + (Mapping[3]-Mapping[1])/2);
+					pQLayer->NewQuad(AddX, AddY);
 				}
 			}
 		}

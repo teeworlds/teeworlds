@@ -469,7 +469,7 @@ public:
 	~CLayerQuads();
 
 	virtual void Render();
-	CQuad *NewQuad();
+	CQuad *NewQuad(int x = 0, int y = 0, int w = 64, int h = 64);
 
 	virtual void BrushSelecting(CUIRect Rect);
 	virtual int BrushGrab(CLayerGroup *pBrush, CUIRect Rect);

@@ -35,7 +35,7 @@ void CLayerQuads::Render()
 	m_pEditor->RenderTools()->RenderQuads(m_lQuads.base_ptr(), m_lQuads.size(), LAYERRENDERFLAG_TRANSPARENT, m_pEditor->EnvelopeEval, m_pEditor);
 }
 
-CQuad *CLayerQuads::NewQuad()
+CQuad *CLayerQuads::NewQuad(int x, int y, int w, int h)
 {
 	m_pEditor->m_Map.m_Modified = true;
 
@@ -45,18 +45,17 @@ CQuad *CLayerQuads::NewQuad()
 	q->m_ColorEnv = -1;
 	q->m_PosEnvOffset = 0;
 	q->m_ColorEnvOffset = 0;
-	int x = 0, y = 0;
-	q->m_aPoints[0].x = i2fx(x);
-	q->m_aPoints[0].y = i2fx(y);
-	q->m_aPoints[1].x = i2fx(x+64);
-	q->m_aPoints[1].y = i2fx(y);
-	q->m_aPoints[2].x = i2fx(x);
-	q->m_aPoints[2].y = i2fx(y+64);
-	q->m_aPoints[3].x = i2fx(x+64);
-	q->m_aPoints[3].y = i2fx(y+64);
+	q->m_aPoints[0].x = i2fx(x-w/2);
+	q->m_aPoints[0].y = i2fx(y-h/2);
+	q->m_aPoints[1].x = i2fx(x+w/2);
+	q->m_aPoints[1].y = i2fx(y-h/2);
+	q->m_aPoints[2].x = i2fx(x-w/2);
+	q->m_aPoints[2].y = i2fx(y+h/2);
+	q->m_aPoints[3].x = i2fx(x+w/2);
+	q->m_aPoints[3].y = i2fx(y+h/2);
 
-	q->m_aPoints[4].x = i2fx(x+32); // pivot
-	q->m_aPoints[4].y = i2fx(y+32);
+	q->m_aPoints[4].x = i2fx(x); // pivot
+	q->m_aPoints[4].y = i2fx(y);
 
 	q->m_aTexcoords[0].x = i2fx(0);
 	q->m_aTexcoords[0].y = i2fx(0);
