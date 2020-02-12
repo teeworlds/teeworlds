@@ -7,18 +7,6 @@
 #include "netban.h"
 
 
-bool CNetBan::StrAllnum(const char *pStr)
-{
-	while(*pStr)
-	{
-		if(!(*pStr >= '0' && *pStr <= '9'))
-			return false;
-		pStr++;
-	}
-	return true;
-}
-
-
 CNetBan::CNetHash::CNetHash(const NETADDR *pAddr)
 {
 	if(pAddr->type==NETTYPE_IPV4)
@@ -535,7 +523,7 @@ void CNetBan::ConUnban(IConsole::IResult *pResult, void *pUser)
 	str_copy(aBuf, pResult->GetString(0), sizeof(aBuf));
 	const char *pSeparator = str_find(aBuf, "-");
 
-	if(StrAllnum(aBuf))
+	if(!str_is_number(aBuf))
 	{
 		pThis->UnbanByIndex(str_toint(aBuf));
 	}

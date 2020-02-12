@@ -2275,6 +2275,16 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size)
 	}
 }
 
+int str_is_number(const char *str)
+{
+	while(*str)
+	{
+		if(!(*str >= '0' && *str <= '9'))
+			return -1;
+		str++;
+	}
+	return 0;
+}
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"

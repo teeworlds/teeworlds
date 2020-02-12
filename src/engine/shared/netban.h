@@ -60,9 +60,6 @@ protected:
 		return pBuffer;
 	}
 
-	// todo: move?
-	static bool StrAllnum(const char *pStr);
-
 	class CNetHash
 	{
 	public:

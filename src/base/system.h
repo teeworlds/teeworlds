@@ -1249,6 +1249,21 @@ const char *str_find(const char *haystack, const char *needle);
 void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
 /*
+	Function: str_is_number
+		Check if the string contains only digits.
+
+	Parameters:
+		str - String to check.
+
+	Returns:
+		Returns 0 if it's a number, -1 otherwise.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int str_is_number(const char *pstr);
+
+/*
 	Function: str_timestamp
 		Copies a time stamp in the format year-month-day_hour-minute-second to the string.
 
