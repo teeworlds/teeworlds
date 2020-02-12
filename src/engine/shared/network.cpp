@@ -119,6 +119,7 @@ void CNetBase::Init(NETSOCKET Socket, CConfig *pConfig, IConsole *pConsole, IEng
 	m_pConfig = pConfig;
 	m_pEngine = pEngine;
 	m_Huffman.Init();
+	mem_zero(m_aRequestTokenBuf, sizeof(m_aRequestTokenBuf));
 	if(pEngine)
 		pConsole->Chain("dbg_lognetwork", ConchainDbgLognetwork, this);
 }
@@ -364,12 +365,11 @@ void CNetBase::SendControlMsgWithToken(const NETADDR *pAddr, TOKEN Token, int Ac
 	dbg_assert((Token&~NET_TOKEN_MASK) == 0, "token out of range");
 	dbg_assert((MyToken&~NET_TOKEN_MASK) == 0, "resp token out of range");
 
-	static unsigned char aBuf[NET_TOKENREQUEST_DATASIZE] = { 0 };
-	aBuf[0] = (MyToken>>24)&0xff;
-	aBuf[1] = (MyToken>>16)&0xff;
-	aBuf[2] = (MyToken>>8)&0xff;
-	aBuf[3] = (MyToken)&0xff;
-	SendControlMsg(pAddr, Token, 0, ControlMsg, aBuf, Extended ? sizeof(aBuf) : 4);
+	m_aRequestTokenBuf[0] = (MyToken>>24)&0xff;
+	m_aRequestTokenBuf[1] = (MyToken>>16)&0xff;
+	m_aRequestTokenBuf[2] = (MyToken>>8)&0xff;
+	m_aRequestTokenBuf[3] = (MyToken)&0xff;
+	SendControlMsg(pAddr, Token, 0, ControlMsg, m_aRequestTokenBuf, Extended ? sizeof(m_aRequestTokenBuf) : 4);
 }
 
 unsigned char *CNetChunkHeader::Pack(unsigned char *pData)
