@@ -8,6 +8,7 @@
 #include <base/tl/array.h>
 
 #include <engine/editor.h>
+#include <engine/config.h>
 #include <engine/shared/datafile.h>
 
 #include <game/mapitems.h>
@@ -320,6 +321,8 @@ class CEditor2: public IEditor
 	IConsole *m_pConsole;
 	ITextRender *m_pTextRender;
 	IStorage *m_pStorage;
+	IConfigManager *m_pConfigManager;
+	CConfig *m_pConfig;
 	CRenderTools m_RenderTools;
 	CUI m_UI;
 
@@ -690,6 +693,7 @@ class CEditor2: public IEditor
 	inline IStorage *Storage() { return m_pStorage; };
 	inline CUI *UI() { return &m_UI; }
 	inline CRenderTools *RenderTools() { return &m_RenderTools; }
+	inline CConfig *Config() { return m_pConfig; }
 
 public:
 

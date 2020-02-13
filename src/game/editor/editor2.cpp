@@ -1449,9 +1449,10 @@ void CEditor2::Init()
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
-	m_RenderTools.m_pGraphics = m_pGraphics;
-	m_RenderTools.m_pUI = &m_UI;
-	m_UI.SetGraphics(m_pGraphics, m_pTextRender);
+	m_pConfigManager = Kernel()->RequestInterface<IConfigManager>();
+	m_pConfig = m_pConfigManager->Values();
+	m_RenderTools.Init(m_pConfig, m_pGraphics, &m_UI);
+	m_UI.Init(m_pConfig, m_pGraphics, m_pTextRender);
 
 	m_MousePos = vec2(Graphics()->ScreenWidth() * 0.5f, Graphics()->ScreenHeight() * 0.5f);
 	m_UiMousePos = vec2(0, 0);
@@ -3811,7 +3812,7 @@ void CEditor2::RenderPopupMenuFile()
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Exit", &s_ExitButton))
 	{
-		g_Config.m_ClEditor = 0;
+		Config()->m_ClEditor = 0;
 	}
 
 	// close popup
@@ -4790,9 +4791,6 @@ void CEditor2::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2*
 	if(pParams)
 		pSr->m_Params = *pParams;
 
-	pSr->m_WasClipped = UI()->IsClipped();
-	pSr->m_OldClipRect = *UI()->ClipArea();
-
 	// only show scrollbar if content overflows
 	const bool ShowScrollbar = pSr->m_ContentH > pClipRect->h;
 
@@ -4824,8 +4822,6 @@ void CEditor2::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2*
 void CEditor2::UiEndScrollRegion(CScrollRegion* pSr)
 {
 	UI()->ClipDisable();
-	if(pSr->m_WasClipped)
-		UI()->ClipEnable(&pSr->m_OldClipRect);
 
 	dbg_assert(pSr->m_ContentH > 0, "Add some rects with ScrollRegionAddRect()");
 
