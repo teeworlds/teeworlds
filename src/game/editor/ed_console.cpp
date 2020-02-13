@@ -55,7 +55,6 @@ void CEditorConsoleUI::Render()
 	const float ConsoleHeight = ScreenRect.h / 3;
 
 	const float FontSize = 10.0f;
-	const float Spacing = 2.0f;
 	const float InputMargin = 5.0f;
 	const float ConsoleMargin = 3.0f;
 

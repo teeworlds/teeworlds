@@ -63,11 +63,6 @@ inline float fract(float f)
 	return f - (int)f;
 }
 
-inline int floor(float f)
-{
-	return f < 0 ? (int)f-1 : (int)f;
-}
-
 inline bool IsInsideRect(vec2 Pos, CUIRect Rect)
 {
 	return (Pos.x >= Rect.x && Pos.x < (Rect.x+Rect.w) &&
@@ -5234,7 +5229,6 @@ void CEditor2::CenterViewOnQuad(const CQuad &Quad)
 {
 	// FIXME: does not work at all
 	dbg_assert(m_UiSelectedGroupID >= 0, "No group selected");
-	const CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];
 
 	CUIRect Rect;
 	Rect.x = fx2f(Quad.m_aPoints[0].x);

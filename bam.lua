@@ -84,7 +84,7 @@ end
 
 function GenerateCommonSettings(settings, conf, arch, compiler)
 	if compiler == "gcc" or compiler == "clang" then
-		settings.cc.flags:Add("-Wall", "-fno-exceptions", "-std=c++11")
+		settings.cc.flags:Add("-Wall", "-fno-exceptions")
 	end
 
 	-- Compile zlib if needed
