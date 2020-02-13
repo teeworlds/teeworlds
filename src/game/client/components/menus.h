@@ -772,7 +772,7 @@ private:
 
 	bool CheckHotKey(int Key) const;
 
-	void RenderBackground();
+	void RenderBackground(float Time);
 	void RenderBackgroundShadow(const CUIRect *pRect, bool TopToBottom);
 public:
 	void InitLoading(int TotalWorkAmount);

@@ -1234,22 +1234,28 @@ void CMenus::RenderLoading(int WorkedAmount)
 {
 	static int64 s_LastLoadRender = 0;
 	m_LoadCurrent += WorkedAmount;
+	const int64 Now = time_get();
+	const float Freq = time_freq();
 
 	if(Config()->m_Debug)
 	{
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "progress: %03d/%03d (+%02d) %dms", m_LoadCurrent, m_LoadTotal, WorkedAmount, s_LastLoadRender == 0 ? 0 : int((time_get()-s_LastLoadRender)*1000.0f/time_freq()));
+		str_format(aBuf, sizeof(aBuf), "progress: %03d/%03d (+%02d) %dms", m_LoadCurrent, m_LoadTotal, WorkedAmount, s_LastLoadRender == 0 ? 0 : int((Now-s_LastLoadRender)*1000.0f/Freq));
 		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "loading", aBuf);
 	}
 
 	// make sure that we don't render for each little thing we load
 	// because that will slow down loading if we have vsync
-	if(s_LastLoadRender > 0 && time_get()-s_LastLoadRender < time_freq()/60)
+	if(s_LastLoadRender > 0 && Now-s_LastLoadRender < Freq/60)
+		return;
+	if(!Graphics()->IsIdle())
 		return;
 
-	s_LastLoadRender = time_get();
+	s_LastLoadRender = Now;
+	static int64 s_LoadingStart = Now;
 
-	RenderBackground();
+	Graphics()->Clear(0.45f, 0.45f, 0.45f);
+	RenderBackground((Now-s_LoadingStart)/Freq);
 
 	CUIRect Screen = *UI()->Screen();
 	float w = 700;
@@ -1521,7 +1527,7 @@ int CMenus::Render()
 
 	// render background only if needed
 	if(Client()->State() != IClient::STATE_ONLINE && !m_pClient->m_pMapLayersBackGround->MenuMapLoaded())
-		RenderBackground();
+		RenderBackground(Client()->LocalTime());
 
 	CUIRect TabBar, MainView;
 
@@ -2466,7 +2472,7 @@ void CMenus::OnRender()
 		CUIRect Screen = *UI()->Screen();
 		Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 
-		char aBuf[512];
+		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%p %p %p", UI()->HotItem(), UI()->GetActiveItem(), UI()->LastActiveItem());
 		CTextCursor Cursor;
 		TextRender()->SetCursor(&Cursor, 10, 10, 10, TEXTFLAG_RENDER);
@@ -2489,11 +2495,8 @@ bool CMenus::CheckHotKey(int Key) const
 		Input()->KeyIsPressed(Key) && !m_pClient->m_pGameConsole->IsConsoleActive();
 }
 
-void CMenus::RenderBackground()
+void CMenus::RenderBackground(float Time)
 {
-	// render background color
-	Graphics()->Clear(0.45f, 0.45f, 0.45f);
-
 	float sw = 300*Graphics()->ScreenAspect();
 	float sh = 300;
 	Graphics()->MapScreen(0, 0, sw, sh);
@@ -2502,8 +2505,7 @@ void CMenus::RenderBackground()
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 		float Size = 15.0f;
-		static int64 s_MenuBackgroundStart = time_get();
-		float OffsetTime = fmod((time_get()-s_MenuBackgroundStart)*0.15f/time_freq(), 2.0f);
+		float OffsetTime = fmod(Time*0.15f, 2.0f);
 		for(int y = -2; y < (int)(sw/Size); y++)
 			for(int x = -2; x < (int)(sh/Size); x++)
 			{
