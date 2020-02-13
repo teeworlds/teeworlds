@@ -107,90 +107,16 @@ void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pCons
 	m_pStorage = pStorage;
 	m_pConsole = pConsole;
 
+	m_MapMaxWidth = 0;
+	m_MapMaxHeight = 0;
+	m_GameLayerID = -1;
+	m_GameGroupID = -1;
+	m_Assets.m_ImageCount = 0;
+
 	m_aEnvPoints.hint_size(1024);
 	m_aLayers.hint_size(32);
 	m_aGroups.hint_size(16);
 	m_aEnvelopes.hint_size(32);
-
-	// speedtest
-#if 0
-	CChainAllocator<CTile> TestDispenser;
-	TestDispenser.Init(1000000, 10);
-
-	const int TestLoopCount = 1000000;
-	uint64_t StartCycles = __rdtsc();
-	uint64_t MallocCycles, ChainCycles;
-
-	int DummyVar = 0;
-	for(int i = 0; i < TestLoopCount; i++)
-	{
-		CTile* pBuff = (CTile*)malloc(sizeof(CTile) * ((i%1000)+1));
-		mem_zero(pBuff, sizeof(CTile) * ((i%1000)+1));
-		DummyVar += pBuff[0].m_Index;
-		free(pBuff);
-	}
-
-	MallocCycles = __rdtsc() - StartCycles;
-	StartCycles = __rdtsc();
-
-	for(int i = 0; i < TestLoopCount; i++)
-	{
-		CMemBlock<CTile> Block = TestDispenser.Alloc((i%1000)+1);
-		DummyVar += Block.Get()[0].m_Index;
-		TestDispenser.Dealloc(&Block);
-	}
-
-	ChainCycles = __rdtsc() - StartCycles;
-
-	ed_log("DummyVar=%d MallocAvgCycles=%llu ChainAvgCycles=%llu", DummyVar, MallocCycles/TestLoopCount,
-		   ChainCycles/TestLoopCount);
-
-	const int TestLoopCount2 = 1000;
-	array<CTile> BaseTileArray;
-	CArray<CTile> OurTileArray;
-	OurTileArray.Init(&TestDispenser, 2);
-	StartCycles = __rdtsc();
-
-	for(int i = 0; i < TestLoopCount2; i++)
-	{
-		CTile t;
-		t.m_Index = i;
-		BaseTileArray.add(t);
-		DummyVar += BaseTileArray.size();
-	}
-
-	MallocCycles = __rdtsc() - StartCycles;
-	StartCycles = __rdtsc();
-
-	for(int i = 0; i < TestLoopCount2; i++)
-	{
-		CTile t;
-		t.m_Index = i;
-		OurTileArray.Add(t);
-		DummyVar += OurTileArray.Count();
-	}
-
-	ChainCycles = __rdtsc() - StartCycles;
-
-	ed_log("ARRAYS DummyVar=%d MallocAvgCycles=%llu ChainAvgCycles=%llu", DummyVar,
-		   MallocCycles/TestLoopCount2,
-		   ChainCycles/TestLoopCount2);
-
-#endif
-
-	// test
-#if 0
-	CChainAllocator<CTile, 100, 8> TestDispenser;
-	TestDispenser.Init();
-	CMemBlock<CTile> Block = TestDispenser.Alloc(57);
-	TestDispenser.Dealloc(Block);
-
-	Block = TestDispenser.Alloc(57);
-	CMemBlock<CTile> Block2 = TestDispenser.Alloc(18);
-	TestDispenser.Dealloc(Block);
-	Block = TestDispenser.Alloc(57);
-	TestDispenser.Dealloc(Block2);
-#endif
 }
 
 bool CEditorMap2::Save(const char* pFileName)
@@ -1473,6 +1399,23 @@ void CEditor2::Init()
 	m_pConsole->Register("delete_image", "i", CFGFLAG_EDITOR, ConDeleteImage, this, "Delete image");
 	m_InputConsole.Init(m_pConsole, m_pGraphics, &m_UI, m_pTextRender, m_pInput);
 
+	m_ConfigShowGrid = true;
+	m_ConfigShowGridMajor = false;
+	m_ConfigShowGameEntities = false;
+	m_ConfigShowExtendedTilemaps = false;
+	m_Zoom = 1.0f;
+	m_UiSelectedLayerID = -1;
+	m_UiSelectedGroupID = -1;
+	m_UiSelectedImageID = -1;
+	m_BrushAutomapRuleID = -1;
+	m_pHistoryEntryCurrent = 0x0;
+	m_Page = PAGE_MAP_EDITOR;
+	m_Tool = TOOL_SELECT;
+	m_UiCurrentPopupID = POPUP_NONE;
+	m_UiTextInputConsumeKeyboardEvents = false; // TODO: remork/remove
+	m_UiDetailPanelIsOpen = false;
+	m_WasMouseOnUiElement = false;
+
 	// grenade pickup
 	{
 		const float SpriteW = g_pData->m_aSprites[SPRITE_PICKUP_GRENADE].m_W;
@@ -1697,6 +1640,14 @@ void CEditor2::RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer)
 		int m_SpriteID;
 		vec2 m_Pos;
 		vec2 m_Size;
+
+		CEntitySprite() {}
+		CEntitySprite(int SpriteID_, vec2 Pos_, vec2 Size_)
+		{
+			m_SpriteID = SpriteID_;
+			m_Pos = Pos_;
+			m_Size = Size_;
+		}
 	};
 
 	CEntitySprite aEntitySprites[2048];
@@ -1726,70 +1677,70 @@ void CEditor2::RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer)
 
 			if(Index == ENTITY_HEALTH_1)
 			{
-				aEntitySprites[EntitySpriteCount++] = {
+				aEntitySprites[EntitySpriteCount++] = CEntitySprite(
 					SPRITE_PICKUP_HEALTH,
 					PickupPos - vec2((HealthArmorSize-TileSize)*0.5f,(HealthArmorSize-TileSize)*0.5f),
 					vec2(HealthArmorSize, HealthArmorSize)
-				};
+				);
 			}
 			else if(Index == ENTITY_ARMOR_1)
 			{
-				aEntitySprites[EntitySpriteCount++] = {
+				aEntitySprites[EntitySpriteCount++] = CEntitySprite(
 					SPRITE_PICKUP_ARMOR,
 					PickupPos - vec2((HealthArmorSize-TileSize)*0.5f,(HealthArmorSize-TileSize)*0.5f),
 					vec2(HealthArmorSize, HealthArmorSize)
-				};
+				);
 			}
 			else if(Index == ENTITY_WEAPON_GRENADE)
 			{
-				aEntitySprites[EntitySpriteCount++] = {
+				aEntitySprites[EntitySpriteCount++] = CEntitySprite(
 					SPRITE_PICKUP_GRENADE,
 					PickupPos - vec2((m_RenderGrenadePickupSize.x-TileSize)*0.5f,
 						(m_RenderGrenadePickupSize.y-TileSize)*0.5f),
 					m_RenderGrenadePickupSize
-				};
+				);
 			}
 			else if(Index == ENTITY_WEAPON_SHOTGUN)
 			{
-				aEntitySprites[EntitySpriteCount++] = {
+				aEntitySprites[EntitySpriteCount++] = CEntitySprite(
 					SPRITE_PICKUP_SHOTGUN,
 					PickupPos - vec2((m_RenderShotgunPickupSize.x-TileSize)*0.5f,
 						(m_RenderShotgunPickupSize.y-TileSize)*0.5f),
 					m_RenderShotgunPickupSize
-				};
+				);
 			}
 			else if(Index == ENTITY_WEAPON_LASER)
 			{
-				aEntitySprites[EntitySpriteCount++] = {
+				aEntitySprites[EntitySpriteCount++] = CEntitySprite(
 					SPRITE_PICKUP_LASER,
 					PickupPos - vec2((m_RenderLaserPickupSize.x-TileSize)*0.5f,
 						(m_RenderLaserPickupSize.y-TileSize)*0.5f),
 					m_RenderLaserPickupSize
-				};
+				);
 			}
 			else if(Index == ENTITY_POWERUP_NINJA)
 			{
-				aEntitySprites[EntitySpriteCount++] = {
+				aEntitySprites[EntitySpriteCount++] = CEntitySprite(
 					SPRITE_PICKUP_NINJA,
 					PickupPos - vec2((NinjaSize.x-TileSize)*0.5f, (NinjaSize.y-TileSize)*0.5f),
 					NinjaSize
-				};
+				);
 			}
 			else if(Index == ENTITY_FLAGSTAND_RED)
 			{
-				aEntitySprites[EntitySpriteCount++] = {
+				aEntitySprites[EntitySpriteCount++] = CEntitySprite(
 					SPRITE_FLAG_RED,
 					BasePos - vec2(0, 54),
 					vec2(42, 84)
-				};
+				);
 			}
 			else if(Index == ENTITY_FLAGSTAND_BLUE)
 			{
-				aEntitySprites[EntitySpriteCount++] = {
+				aEntitySprites[EntitySpriteCount++] = CEntitySprite(
 					SPRITE_FLAG_BLUE,
 					BasePos - vec2(0, 54),
 					vec2(42, 84)
-				};
+				);
 			}
 		}
 	}
@@ -2188,7 +2139,7 @@ void CEditor2::RenderMapOverlay()
 
 	// TODO: kinda weird?
 	if(!CanClick)
-		s_MapViewDrag = {};
+		s_MapViewDrag = CUIMouseDrag();
 
 	const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
 	const CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups[m_UiSelectedGroupID];

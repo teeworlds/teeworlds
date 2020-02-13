@@ -100,16 +100,14 @@ struct CEditorMap2
 		MAX_EMBEDDED_FILES=64,
 	};
 
+	// TODO: split this into CTileLayer and CQuadLayer (make one array of each to allocate them)
 	struct CLayer
 	{
 		char m_aName[12];
-		int m_Type = 0;
-		int m_ImageID = 0;
+		int m_Type;
+		int m_ImageID;
 		bool m_HighDetail; // TODO: turn into m_Flags ?
 		vec4 m_Color;
-
-		// NOTE: we have to split the union because gcc doesn't like non-POD anonymous structs...
-		// TODO: enable c++11, please?
 
 		//union
 		//{
@@ -135,22 +133,43 @@ struct CEditorMap2
 
 		inline bool IsTileLayer() const { return m_Type == LAYERTYPE_TILES; }
 		inline bool IsQuadLayer() const { return m_Type == LAYERTYPE_QUADS; }
+
+		CLayer()
+		{
+			m_Type = 0;
+			m_ImageID = 0;
+		}
 	};
 
 	struct CGroup
 	{
-		char m_aName[12] = {0};
+		char m_aName[12];
 		int m_apLayerIDs[MAX_GROUP_LAYERS];
-		int m_LayerCount = 0;
-		int m_ParallaxX = 0;
-		int m_ParallaxY = 0;
-		int m_OffsetX = 0;
-		int m_OffsetY = 0;
-		int m_ClipX = 0;
-		int m_ClipY = 0;
-		int m_ClipWidth = 0;
-		int m_ClipHeight = 0;
-		bool m_UseClipping = false;
+		int m_LayerCount;
+		int m_ParallaxX;
+		int m_ParallaxY;
+		int m_OffsetX;
+		int m_OffsetY;
+		int m_ClipX;
+		int m_ClipY;
+		int m_ClipWidth;
+		int m_ClipHeight;
+		bool m_UseClipping ;
+
+		CGroup()
+		{
+			m_aName[0] = 0;
+			m_LayerCount = 0;
+			m_ParallaxX = 0;
+			m_ParallaxY = 0;
+			m_OffsetX = 0;
+			m_OffsetY = 0;
+			m_ClipX = 0;
+			m_ClipY = 0;
+			m_ClipWidth = 0;
+			m_ClipHeight = 0;
+			m_UseClipping = false;
+		}
 	};
 
 	struct CEnvelope
@@ -183,7 +202,7 @@ struct CEditorMap2
 		u32 m_aImageEmbeddedCrc[MAX_IMAGES];
 		IGraphics::CTextureHandle m_aTextureHandle[MAX_IMAGES];
 		CImageInfo m_aTextureInfos[MAX_IMAGES];
-		int m_ImageCount = 0;
+		int m_ImageCount;
 
 		CEmbeddedFile m_aEmbeddedFile[MAX_EMBEDDED_FILES];
 		int m_EmbeddedFileCount;
@@ -214,10 +233,10 @@ struct CEditorMap2
 		u8 m_Data[1];
 	};
 
-	int m_MapMaxWidth = 0;
-	int m_MapMaxHeight = 0;
-	int m_GameLayerID = -1;
-	int m_GameGroupID = -1;
+	int m_MapMaxWidth;
+	int m_MapMaxHeight;
+	int m_GameLayerID;
+	int m_GameGroupID;
 
 	char m_aPath[256];
 
@@ -264,17 +283,29 @@ struct CEditorMap2
 
 struct CUIButton
 {
-	u8 m_Hovered = false;
-	u8 m_Pressed = false;
-	u8 m_Clicked = false;
+	u8 m_Hovered;
+	u8 m_Pressed;
+	u8 m_Clicked;
+
+	CUIButton()
+	{
+		m_Hovered = false;
+		m_Pressed = false;
+		m_Clicked = false;
+	}
 };
 
 struct CUITextInput
 {
 	CUIButton m_Button;
-	u8 m_Selected = false;
+	u8 m_Selected;
 	CLineInput m_LineInput;
 	int m_CursorPos;
+
+	CUITextInput()
+	{
+		m_Selected = false;
+	}
 };
 
 struct CUIIntegerInput
@@ -294,7 +325,12 @@ struct CUIMouseDrag
 {
 	vec2 m_StartDragPos;
 	vec2 m_EndDragPos;
-	bool m_IsDragging = false;
+	bool m_IsDragging;
+
+	CUIMouseDrag()
+	{
+		m_IsDragging = false;
+	}
 };
 
 struct CUICheckboxYesNo
@@ -334,7 +370,7 @@ class CEditor2: public IEditor
 	vec2 m_UiMousePos;
 	vec2 m_UiMouseDelta;
 	vec2 m_MapUiPosOffset;
-	float m_Zoom = 1.0f;
+	float m_Zoom;
 
 	IGraphics::CTextureHandle m_CheckerTexture;
 	IGraphics::CTextureHandle m_CursorTexture;
@@ -344,10 +380,10 @@ class CEditor2: public IEditor
 	CEditorMap2 m_Map;
 	CEditorConsoleUI m_InputConsole;
 
-	bool m_ConfigShowGrid = true;
-	bool m_ConfigShowGridMajor = false;
-	bool m_ConfigShowGameEntities = false;
-	bool m_ConfigShowExtendedTilemaps = false;
+	bool m_ConfigShowGrid;
+	bool m_ConfigShowGridMajor;
+	bool m_ConfigShowGameEntities;
+	bool m_ConfigShowExtendedTilemaps;
 
 	float m_GfxScreenWidth;
 	float m_GfxScreenHeight;
@@ -362,9 +398,9 @@ class CEditor2: public IEditor
 	array<u8> m_UiGroupHovered;
 	array<u8> m_UiLayerHovered;
 	array<u8> m_UiLayerHidden;
-	int m_UiSelectedLayerID = -1;
-	int m_UiSelectedGroupID = -1;
-	int m_UiSelectedImageID = -1;
+	int m_UiSelectedLayerID;
+	int m_UiSelectedGroupID;
+	int m_UiSelectedImageID;
 
 	enum
 	{
@@ -373,33 +409,45 @@ class CEditor2: public IEditor
 		POPUP_MENU_FILE,
 	};
 
-	int m_UiCurrentPopupID = POPUP_NONE;
+	int m_UiCurrentPopupID;
 	CUIRect m_UiCurrentPopupRect;
 
 	struct CUIBrushPaletteState
 	{
-		u8 m_aTileSelected[256] = {0};
-		int m_ImageID = -1;
+		u8 m_aTileSelected[256];
+		int m_ImageID;
+
+		CUIBrushPaletteState()
+		{
+			memset(m_aTileSelected, 0, sizeof(m_aTileSelected));
+			m_ImageID = -1;
+		}
 	};
 	CUIBrushPaletteState m_UiBrushPaletteState;
-	CUIRect m_UiPopupBrushPaletteRect = {};
-	CUIRect m_UiPopupBrushPaletteImageRect = {};
+	CUIRect m_UiPopupBrushPaletteRect;
+	CUIRect m_UiPopupBrushPaletteImageRect;
 
-	bool m_UiTextInputConsumeKeyboardEvents = false; // TODO: remork/remove
-	bool m_UiDetailPanelIsOpen = false;
-	bool m_WasMouseOnUiElement = false;
+	bool m_UiTextInputConsumeKeyboardEvents;
+	bool m_UiDetailPanelIsOpen;
+	bool m_WasMouseOnUiElement;
 
 	struct CBrush
 	{
 		array2<CTile> m_aTiles;
-		int m_Width = 0;
-		int m_Height = 0;
+		int m_Width;
+		int m_Height;
 
 		inline bool IsEmpty() const { return m_Width <= 0;}
+
+		CBrush()
+		{
+			m_Width = 0;
+			m_Height = 0;
+		}
 	};
 
 	CBrush m_Brush;
-	int m_BrushAutomapRuleID = -1;
+	int m_BrushAutomapRuleID;
 
 	struct CUISnapshot
 	{
@@ -434,7 +482,7 @@ class CEditor2: public IEditor
 
 	CHistoryEntry m_aHistoryEntries[MAX_HISTORY];
 	u8 m_aHistoryEntryUsed[MAX_HISTORY];
-	CHistoryEntry* m_pHistoryEntryCurrent = 0x0;
+	CHistoryEntry* m_pHistoryEntryCurrent;
 
 	enum
 	{
@@ -448,16 +496,21 @@ class CEditor2: public IEditor
 		TOOL_COUNT_
 	};
 
-	int m_Page = PAGE_MAP_EDITOR;
-	int m_Tool = TOOL_SELECT;
+	int m_Page;
+	int m_Tool;
 
 	// TODO: here functions are member functions, but not for CBrush. Choose one or the other
 	struct CTileSelection
 	{
-		int m_StartTX = -1;
+		int m_StartTX;
 		int m_StartTY;
 		int m_EndTX;
 		int m_EndTY;
+
+		CTileSelection()
+		{
+			m_StartTX = -1;
+		}
 
 		inline void Select(int StartTX, int StartTY, int EndTX, int EndTY)
 		{

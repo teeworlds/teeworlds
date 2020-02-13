@@ -17,7 +17,7 @@ class CEditorConsoleUI
 	IGraphics* m_pGraphics;
 	ITextRender* m_pTextRender;
 	CUI* m_pUI;
-	bool m_IsOpen = false;
+	bool m_IsOpen;
 
 	struct CBacklogEntry
 	{

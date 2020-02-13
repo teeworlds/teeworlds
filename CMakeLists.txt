@@ -1503,8 +1503,14 @@ if(CLIENT)
   set_src(GAME_EDITOR GLOB src/game/editor
     auto_map.cpp
     auto_map.h
+    auto_map2.cpp
+    auto_map2.h
+    ed_console.cpp
+    ed_console.h
     editor.cpp
     editor.h
+    editor2.cpp
+    editor2.h
     io.cpp
     layer_game.cpp
     layer_quads.cpp

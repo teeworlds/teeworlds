@@ -40,6 +40,8 @@ void CEditorConsoleUI::Init(IConsole* pConsole, IGraphics* pGraphics, CUI* pUI, 
 #else
 	m_pConsole->RegisterPrintCallback(IConsole::OUTPUT_LEVEL_STANDARD, StaticConsolePrintCallback, this);
 #endif
+
+	m_IsOpen = false;
 }
 
 void CEditorConsoleUI::Render()
