@@ -543,7 +543,7 @@ bool CEditorMap2::Load(const char* pFileName)
 		mem_zero(&aImageName[i], sizeof(aImageName[i]));
 		CMapItemImage *pImg = (CMapItemImage *)File.GetItem(ImagesStart+i, 0, 0);
 		const char *pImgName = (char *)File.GetData(pImg->m_ImageName);
-		mem_copy(&aImageName[i], pImgName, min((u64)str_length(pImgName), sizeof(aImageName[i].m_Buff)-1));
+		mem_copy(&aImageName[i], pImgName, min((u64)str_length(pImgName), (u64)sizeof(aImageName[i].m_Buff)-1));
 		aImageInfo[i].m_pData = 0x0;
 		aImageInfo[i].m_Width = pImg->m_Width;
 		aImageInfo[i].m_Height = pImg->m_Height;
@@ -988,11 +988,11 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 	}
 
 	const int ImageCount = m_Assets.m_ImageCount;
-	SnapSize += sizeof(CSnapshot::m_aImageNames[0]) * ImageCount; // m_aImageNames
-	SnapSize += sizeof(CSnapshot::m_aImageInfos[0]) * ImageCount; // m_aImageInfos
-	SnapSize += sizeof(CSnapshot::m_aImageEmbeddedCrc[0]) * ImageCount; // m_aImageEmbeddedCrc
+	SnapSize += sizeof(*CSnapshot::m_aImageNames) * ImageCount; // m_aImageNames
+	SnapSize += sizeof(*CSnapshot::m_aImageInfos) * ImageCount; // m_aImageInfos
+	SnapSize += sizeof(*CSnapshot::m_aImageEmbeddedCrc) * ImageCount; // m_aImageEmbeddedCrc
 
-	ed_dbg("Map snapshot size = %luKo", SnapSize/1024);
+	ed_dbg("Map snapshot size = %uKo", (u32)(SnapSize/1024));
 
 	CSnapshot& Snap = *(CSnapshot*)mem_alloc(SnapSize, 0);
 	mem_zero(&Snap, SnapSize);
