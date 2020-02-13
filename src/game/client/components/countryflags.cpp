@@ -10,6 +10,7 @@
 #include <engine/external/json-parser/json.h>
 #include <engine/shared/config.h>
 
+#include "menus.h"
 #include "countryflags.h"
 
 
@@ -129,11 +130,17 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 		m_CodeIndexLUT[max(0, (m_aCountryFlags[i].m_CountryCode-CODE_LB)%CODE_RANGE)] = i;
 }
 
+int CCountryFlags::GetInitAmount() const
+{
+	return 15;
+}
+
 void CCountryFlags::OnInit()
 {
 	// load country flags
 	m_aCountryFlags.clear();
 	LoadCountryflagsIndexfile();
+	m_pClient->m_pMenus->RenderLoading(5);
 	if(!m_aCountryFlags.size())
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "countryflags", "failed to load country flags. folder='countryflags/'");
@@ -143,6 +150,7 @@ void CCountryFlags::OnInit()
 		mem_zero(DummyEntry.m_aCountryCodeString, sizeof(DummyEntry.m_aCountryCodeString));
 		m_aCountryFlags.add(DummyEntry);
 	}
+	m_pClient->m_pMenus->RenderLoading(10);
 }
 
 int CCountryFlags::Num() const

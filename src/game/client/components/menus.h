@@ -400,10 +400,6 @@ private:
 
 	int64 m_LastInput;
 
-	// loading
-	int m_LoadCurrent;
-	int m_LoadTotal;
-
 	//
 	char m_aMessageTopic[512];
 	char m_aMessageBody[512];
@@ -577,6 +573,7 @@ private:
 	void SaveFilters();
 	void RemoveFilter(int FilterIndex);
 	void Move(bool Up, int Filter);
+	void InitDefaultFilters();
 
 	class CInfoOverlay
 	{
@@ -666,22 +663,15 @@ private:
 	{
 		MAX_RESOLUTIONS=256,
 	};
-
 	CVideoMode m_aModes[MAX_RESOLUTIONS];
 	int m_NumModes;
-
 	struct CVideoFormat
 	{
 		int m_WidthValue;
 		int m_HeightValue;
 	};
-
-	CVideoFormat m_aVideoFormats[MAX_RESOLUTIONS];
 	sorted_array<CVideoMode> m_lRecommendedVideoModes;
 	sorted_array<CVideoMode> m_lOtherVideoModes;
-	int m_NumVideoFormats;
-	int m_CurrentVideoFormat;
-	void UpdateVideoFormats();
 	void UpdatedFilteredVideoModes();
 	void UpdateVideoModeSettings();
 
@@ -692,6 +682,8 @@ private:
 	void RenderBackButton(CUIRect MainView);
 	inline float GetListHeaderHeight() const { return ms_ListheaderHeight + (Config()->m_UiWideview ? 3.0f : 0.0f); }
 	inline float GetListHeaderHeightFactor() const { return 1.0f + (Config()->m_UiWideview ? (3.0f/ms_ListheaderHeight) : 0.0f); }
+	static void ConchainUpdateMusicState(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	void UpdateMusicState();
 
 	// found in menus_demo.cpp
 	void RenderDemoPlayer(CUIRect MainView);
@@ -729,7 +721,6 @@ private:
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserSortingUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
-	static void ConchainToggleMusic(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	void DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const void *pID, const CContactInfo *pFriendInfo, const CServerInfo *pServerInfo, bool Checked, bool Clan = false);
 	void SetOverlay(int Type, float x, float y, const void *pData);
 	void UpdateFriendCounter(const CServerInfo *pEntry);
@@ -773,17 +764,20 @@ private:
 	void InvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CMenus *pMenu, CUIRect Rect), void *pExtra=0);
 	void DoPopupMenu();
 
-	IGraphics::CTextureHandle m_TextureBlob;
-
-	void ToggleMusic();
+	// loading
+	int m_LoadCurrent;
+	int m_LoadTotal;
 
 	void SetMenuPage(int NewPage);
 
 	bool CheckHotKey(int Key) const;
 
-	void RenderBackground();
+	void RenderBackground(float Time);
 	void RenderBackgroundShadow(const CUIRect *pRect, bool TopToBottom);
 public:
+	void InitLoading(int TotalWorkAmount);
+	void RenderLoading(int WorkedAmount = 0);
+
 	struct CSwitchTeamInfo
 	{
 		char m_aNotification[128];
@@ -798,10 +792,9 @@ public:
 
 	CMenus();
 
-	void RenderLoading();
-
 	bool IsActive() const { return m_MenuActive; }
 
+	virtual int GetInitAmount() const;
 	virtual void OnInit();
 
 	virtual void OnConsoleInit();

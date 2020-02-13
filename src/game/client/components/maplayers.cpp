@@ -14,10 +14,9 @@
 #include <game/client/component.h>
 #include <game/client/render.h>
 
-#include <game/client/components/camera.h>
-#include <game/client/components/mapimages.h>
-
-
+#include "camera.h"
+#include "mapimages.h"
+#include "menus.h"
 #include "maplayers.h"
 
 CMapLayers::CMapLayers(int t)
@@ -71,14 +70,22 @@ void CMapLayers::LoadBackgroundMap()
 	LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
 }
 
+int CMapLayers::GetInitAmount() const
+{
+	if(m_Type == TYPE_BACKGROUND)
+		return 15;
+	return 0;
+}
+
 void CMapLayers::OnInit()
 {
 	if(m_Type == TYPE_BACKGROUND)
 	{
 		m_pMenuLayers = new CLayers;
 		m_pMenuMap = CreateEngineMap();
-
+		m_pClient->m_pMenus->RenderLoading(1);
 		LoadBackgroundMap();
+		m_pClient->m_pMenus->RenderLoading(14);
 	}
 
 	m_pEggTiles = 0;

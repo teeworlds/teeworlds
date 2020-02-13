@@ -35,6 +35,7 @@ public:
 
 	virtual void OnStateChange(int NewState, int OldState) {};
 	virtual void OnConsoleInit() {};
+	virtual int GetInitAmount() const { return 0; }; // Amount of progress reported by this component during OnInit
 	virtual void OnInit() {};
 	virtual void OnShutdown() {};
 	virtual void OnReset() {};

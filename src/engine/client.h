@@ -152,8 +152,6 @@ public:
 	virtual bool ConnectionProblems() const = 0;
 
 	virtual bool SoundInitFailed() const = 0;
-
-	virtual IGraphics::CTextureHandle GetDebugFont() const = 0; // TODO: remove this function
 };
 
 class IGameClient : public IInterface
