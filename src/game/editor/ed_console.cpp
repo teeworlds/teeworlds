@@ -68,7 +68,7 @@ void CEditorConsoleUI::Render()
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BG].m_Id);
 	Graphics()->QuadsBegin();
 
-	Graphics()->SetColor(0.1, 0.1, 0.8, 0.95f);
+	Graphics()->SetColor(0.1f, 0.1f, 0.8f, 0.95f);
 	Graphics()->QuadsSetSubset(0,-ConsoleHeight*0.075f,ConsoleWidth*0.075f*0.5f,0);
 	IGraphics::CQuadItem QuadBg(0, 0, ConsoleWidth, ConsoleHeight);
 	Graphics()->QuadsDrawTL(&QuadBg, 1);
@@ -78,7 +78,7 @@ void CEditorConsoleUI::Render()
 	// input line
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0, 0, 0.2, 0.5f);
+	Graphics()->SetColor(0, 0, 0.2f, 0.5f);
 	IGraphics::CQuadItem QuadInput(InputRect.x, InputRect.y, InputRect.w, InputRect.h);
 	Graphics()->QuadsDrawTL(&QuadInput, 1);
 	Graphics()->QuadsEnd();
@@ -133,7 +133,7 @@ void CEditorConsoleUI::Render()
 		TextRender()->SetCursor(&Cursor, ConsoleMargin, y-OffsetY, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = ConsoleRect.w - ConsoleMargin*2;
 
-		vec4 TextColor(0.8, 0.8, 1, 1);
+		vec4 TextColor(0.8f, 0.8f, 1, 1);
 		if(pEntry->m_Highlighted)
 			TextColor = vec4(1,0.75,0.75,1);
 

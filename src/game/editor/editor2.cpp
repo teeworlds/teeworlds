@@ -48,15 +48,15 @@ static char s_aEdMsg[256];
 // TODO: move this elsewhere
 #define ARR_COUNT(arr) (sizeof(arr)/sizeof(arr[0]))
 
-const vec4 StyleColorBg(0.03, 0, 0.085, 1);
-const vec4 StyleColorButton(0.062, 0, 0.19, 1);
-const vec4 StyleColorButtonBorder(0.18, 0.00, 0.56, 1);
-const vec4 StyleColorButtonHover(0.28, 0.10, 0.64, 1);
-const vec4 StyleColorButtonPressed(0.13, 0, 0.40, 1);
-const vec4 StyleColorInputSelected(0,0.2,1,1);
-const vec4 StyleColorTileSelection(0.0, 0.31, 1, 0.4);
-const vec4 StyleColorTileHover(1, 1, 1, 0.25);
-const vec4 StyleColorTileHoverBorder(0.0, 0.31, 1, 1);
+const vec4 StyleColorBg(0.03f, 0, 0.085f, 1);
+const vec4 StyleColorButton(0.062f, 0, 0.19f, 1);
+const vec4 StyleColorButtonBorder(0.18f, 0.00f, 0.56f, 1);
+const vec4 StyleColorButtonHover(0.28f, 0.10f, 0.64f, 1);
+const vec4 StyleColorButtonPressed(0.13f, 0, 0.40f, 1);
+const vec4 StyleColorInputSelected(0,0.2f,1,1);
+const vec4 StyleColorTileSelection(0.0, 0.31f, 1, 0.4f);
+const vec4 StyleColorTileHover(1, 1, 1, 0.25f);
+const vec4 StyleColorTileHoverBorder(0.0, 0.31f, 1, 1);
 
 inline float fract(float f)
 {
@@ -1607,9 +1607,9 @@ void CEditor2::Render()
 		Graphics()->QuadsBegin();
 
 		const vec3 aToolColors[] = {
-			vec3(1, 0.2, 1),
-			vec3(1, 0.5, 0.2),
-			vec3(0.2, 0.7, 1),
+			vec3(1, 0.2f, 1),
+			vec3(1, 0.5f, 0.2f),
+			vec3(0.2f, 0.7f, 1),
 		};
 		const vec3& ToolColor = aToolColors[m_Tool];
 		Graphics()->SetColor(ToolColor.r, ToolColor.g, ToolColor.b, 1);
@@ -1653,9 +1653,9 @@ void CEditor2::RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer)
 	CEntitySprite aEntitySprites[2048];
 	int EntitySpriteCount = 0;
 
-	const float HealthArmorSize = 64*0.7071067811865475244;
-	const vec2 NinjaSize(128*(256/263.87876003953027518857),
-						 128*(64/263.87876003953027518857));
+	const float HealthArmorSize = 64*0.7071067811865475244f;
+	const vec2 NinjaSize(128*(256/263.87876003953027518857f),
+						 128*(64/263.87876003953027518857f));
 
 	const float TileSize = 32.f;
 	const float Time = Client()->LocalTime();
@@ -2595,8 +2595,8 @@ void CEditor2::RenderMapEditorUI()
 			CUIRect ClipUiRect = CalcUiRectFromGroupWorldRect(m_Map.m_GameGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, ClipRect);
 
 			const float HandleSize = 10.0f;
-			const vec4 ColNormal(0.85, 0.0, 0.0, 1);
-			const vec4 ColActive(1.0, 0.0, 0.0, 1);
+			const vec4 ColNormal(0.85f, 0.0f, 0.0f, 1);
+			const vec4 ColActive(1.0f, 0.0f, 0.0f, 1);
 
 			// handles
 			CUIRect HandleTop = {
@@ -2704,7 +2704,7 @@ void CEditor2::RenderMapEditorUI()
 					ToolTipPos.y,
 					30, 48
 				};
-				DrawRectBorder(ToolTipRect, vec4(0.6, 0.0, 0.0, 1.0), 1, vec4(1.0, 1.0, 1.0, 1));
+				DrawRectBorder(ToolTipRect, vec4(0.6f, 0.0f, 0.0f, 1.0f), 1, vec4(1.0f, 1.0f, 1.0f, 1));
 
 				ToolTipRect.x += 2;
 				CUIRect TopPart;
@@ -2745,8 +2745,8 @@ void CEditor2::RenderMapEditorUI()
 			};
 
 			const float HandleSize = 10.0f;
-			const vec4 ColNormal(0.85, 0.85, 0.85, 1);
-			const vec4 ColActive(1.0, 1.0, 1.0, 1);
+			const vec4 ColNormal(0.85f, 0.85f, 0.85f, 1);
+			const vec4 ColActive(1.0f, 1.0f, 1.0f, 1);
 
 			static CUIGrabHandle s_GrabHandleBot, s_GrabHandleRight, s_GrabHandleBotRight;
 			bool WasGrabbingBot = s_GrabHandleBot.m_IsGrabbed;
@@ -2784,7 +2784,7 @@ void CEditor2::RenderMapEditorUI()
 			};
 
 			if(IsAnyHandleGrabbed)
-				DrawRectBorder(LayerUiRect, vec4(1,1,1,0.2), 1, vec4(1, 1, 1, 1));
+				DrawRectBorder(LayerUiRect, vec4(1,1,1,0.2f), 1, vec4(1, 1, 1, 1));
 
 			const vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
 
@@ -2822,7 +2822,7 @@ void CEditor2::RenderMapEditorUI()
 					ToolTipPos.y,
 					30, 25
 				};
-				DrawRectBorder(ToolTipRect, vec4(0.6, 0.6, 0.6, 1.0), 1, vec4(1.0, 0.5, 0, 1));
+				DrawRectBorder(ToolTipRect, vec4(0.6f, 0.6f, 0.6f, 1.0), 1, vec4(1.0f, 0.5f, 0, 1));
 
 				ToolTipRect.x += 2;
 				CUIRect TopPart, BotPart;
@@ -3152,8 +3152,8 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	static CUIButton s_LayerDeleteButton;
 	if(UiButtonEx(ButtonRect, Localize("Delete layer"), &s_LayerDeleteButton,
-		vec4(0.4, 0.04, 0.04, 1), vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1),
-		vec4(0.63, 0.035, 0.035, 1), 10) && !IsGameLayer)
+		vec4(0.4f, 0.04f, 0.04f, 1), vec4(0.96f, 0.16f, 0.16f, 1), vec4(0.31f, 0, 0, 1),
+		vec4(0.63f, 0.035f, 0.035f, 1), 10) && !IsGameLayer)
 	{
 		int SelectedLayerID = m_UiSelectedLayerID;
 		int SelectedGroupID = m_UiSelectedGroupID;
@@ -3173,8 +3173,8 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	// delete button
 	static CUIButton s_GroupDeleteButton;
-	if(UiButtonEx(ButtonRect, Localize("Delete group"), &s_GroupDeleteButton, vec4(0.4, 0.04, 0.04, 1),
-		vec4(0.96, 0.16, 0.16, 1), vec4(0.31, 0, 0, 1), vec4(0.63, 0.035, 0.035, 1), 10) && !IsGameGroup)
+	if(UiButtonEx(ButtonRect, Localize("Delete group"), &s_GroupDeleteButton, vec4(0.4f, 0.04f, 0.04f, 1),
+		vec4(0.96f, 0.16f, 0.16f, 1), vec4(0.31f, 0, 0, 1), vec4(0.63f, 0.035f, 0.035f, 1), 10) && !IsGameGroup)
 	{
 		EditDeleteGroup(m_UiSelectedGroupID);
 		// TODO: select group below
@@ -3513,7 +3513,7 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 					ColorBeforePreview = SelectedLayer.m_Color;
 				AnySliderSelected = false;
 
-				vec4 SliderColor(0.7, 0.1, 0.1, 1);
+				vec4 SliderColor(0.7f, 0.1f, 0.1f, 1);
 				SliderModified |= UiSliderFloat(ButtonRect, &NewColor.r, 0.0f, 1.0f, &s_SliderColorR, &SliderColor);
 				AnySliderSelected |= UI()->CheckActiveItem(&s_SliderColorR);
 
@@ -3521,7 +3521,7 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-				SliderColor = vec4(0.1, 0.7, 0.1, 1);
+				SliderColor = vec4(0.1f, 0.7f, 0.1f, 1);
 				SliderModified |= UiSliderFloat(ButtonRect, &NewColor.g, 0.0f, 1.0f, &s_SliderColorG, &SliderColor);
 				AnySliderSelected |= UI()->CheckActiveItem(&s_SliderColorG);
 
@@ -3529,7 +3529,7 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-				SliderColor = vec4(0.1, 0.1, 0.7, 1);
+				SliderColor = vec4(0.1f, 0.1f, 0.7f, 1);
 				SliderModified |= UiSliderFloat(ButtonRect, &NewColor.b, 0.0f, 1.0f, &s_SliderColorB, &SliderColor);
 				AnySliderSelected |= UI()->CheckActiveItem(&s_SliderColorB);
 
@@ -3537,7 +3537,7 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 				ButtonRect.VMargin(2, &ButtonRect);
 				DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-				SliderColor = vec4(0.5, 0.5, 0.5, 1);
+				SliderColor = vec4(0.5f, 0.5f, 0.5f, 1);
 				SliderModified |= UiSliderFloat(ButtonRect, &NewColor.a, 0.0f, 1.0f, &s_SliderColorA, &SliderColor);
 				AnySliderSelected |= UI()->CheckActiveItem(&s_SliderColorA);
 
@@ -4067,7 +4067,7 @@ void CEditor2::RenderBrush(vec2 Pos)
 
 	const float TileSize = 32;
 	const CUIRect BrushRect = {0, 0, m_Brush.m_Width * TileSize, m_Brush.m_Height * TileSize};
-	DrawRect(BrushRect, vec4(1, 1, 1, 0.1));
+	DrawRect(BrushRect, vec4(1, 1, 1, 0.1f));
 
 	IGraphics::CTextureHandle LayerTexture;
 	if(m_UiSelectedLayerID == m_Map.m_GameLayerID)
@@ -4664,7 +4664,7 @@ bool CEditor2::UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float 
 		Color = *pColor;
 
 	if(pInputState->m_Hovered)
-		Color += vec4(0.1, 0.1, 0.1, 0.0);
+		Color += vec4(0.1f, 0.1f, 0.1f, 0.0f);
 
 	DrawRect(ProgressRect, Color);
 
