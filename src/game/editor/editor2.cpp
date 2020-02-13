@@ -2642,7 +2642,7 @@ void CEditor2::RenderMapEditorUI()
 				BeforeGrabbingClipWidth = SelectedGroup.m_ClipWidth;
 			}
 
-			vec2 ToolTipPos;
+			vec2 ToolTipPos(0,0);
 
 			if(UiGrabHandle(HandleTop, &s_GrabHandleTop, ColNormal, ColActive))
 			{
@@ -2788,7 +2788,7 @@ void CEditor2::RenderMapEditorUI()
 
 			const vec2 WorldMousePos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID, m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, m_UiMousePos);
 
-			vec2 ToolTipPos;
+			vec2 ToolTipPos(0, 0);
 			if(UiGrabHandle(HandleBottom, &s_GrabHandleBot, ColNormal, ColActive))
 			{
 				PreviewRect.h = (int)round(WorldMousePos.y / TileSize) * TileSize;
