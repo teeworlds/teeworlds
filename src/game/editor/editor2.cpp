@@ -988,9 +988,9 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 	}
 
 	const int ImageCount = m_Assets.m_ImageCount;
-	SnapSize += sizeof(*CSnapshot::m_aImageNames) * ImageCount; // m_aImageNames
-	SnapSize += sizeof(*CSnapshot::m_aImageInfos) * ImageCount; // m_aImageInfos
-	SnapSize += sizeof(*CSnapshot::m_aImageEmbeddedCrc) * ImageCount; // m_aImageEmbeddedCrc
+	SnapSize += sizeof(CImageName) * ImageCount; // m_aImageNames
+	SnapSize += sizeof(CImageInfo) * ImageCount; // m_aImageInfos
+	SnapSize += sizeof(u32) * ImageCount; // m_aImageEmbeddedCrc
 
 	ed_dbg("Map snapshot size = %uKo", (u32)(SnapSize/1024));
 
