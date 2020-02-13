@@ -17,7 +17,6 @@ CUI::CUI()
 	m_pActiveItem = 0;
 	m_pLastActiveItem = 0;
 	m_pBecommingHotItem = 0;
-	m_Clipped = false;
 
 	m_MouseX = 0;
 	m_MouseY = 0;
@@ -30,6 +29,8 @@ CUI::CUI()
 	m_Screen.y = 0;
 	m_Screen.w = 848.0f;
 	m_Screen.h = 480.0f;
+
+	m_NumClips = 0;
 }
 
 int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
@@ -47,21 +48,22 @@ int CUI::Update(float Mx, float My, float Mwx, float Mwy, int Buttons)
 	return 0;
 }
 
-int CUI::MouseInside(const CUIRect *r) const
+bool CUI::MouseInside(const CUIRect *r) const
 {
-	if(m_MouseX >= r->x && m_MouseX < r->x+r->w && m_MouseY >= r->y && m_MouseY < r->y+r->h)
-		return 1;
-	return 0;
+	return m_MouseX >= r->x
+		&& m_MouseX < r->x+r->w
+		&& m_MouseY >= r->y
+		&& m_MouseY < r->y+r->h;
 }
 
 bool CUI::MouseInsideClip() const
 {
-	return !m_Clipped || MouseInside(&m_ClipRect) == 1;
+	return !IsClipped() || MouseInside(ClipArea());
 }
 
 void CUI::ConvertMouseMove(float *x, float *y) const
 {
-	float Fac = (float)(g_Config.m_UiMousesens)/g_Config.m_InpMousesens;
+	float Fac = (float)(m_pConfig->m_UiMousesens)/m_pConfig->m_InpMousesens;
 	*x = *x*Fac;
 	*y = *y*Fac;
 }
@@ -85,40 +87,75 @@ float CUI::PixelSize()
 	return Screen()->w/Graphics()->ScreenWidth();
 }
 
-void CUI::ClipEnable(const CUIRect *r)
+void CUI::ClipEnable(const CUIRect *pRect)
 {
-	m_ClipRect = *r;
-	m_Clipped = true;
-	float XScale = Graphics()->ScreenWidth()/Screen()->w;
-	float YScale = Graphics()->ScreenHeight()/Screen()->h;
-	Graphics()->ClipEnable((int)(r->x*XScale), (int)(r->y*YScale), (int)(r->w*XScale), (int)(r->h*YScale));
+	if(IsClipped())
+	{
+		dbg_assert(m_NumClips < MAX_CLIP_NESTING_DEPTH, "max clip nesting depth exceeded");
+		const CUIRect *pOldRect = ClipArea();
+		CUIRect Intersection;
+		Intersection.x = max(pRect->x, pOldRect->x);
+		Intersection.y = max(pRect->y, pOldRect->y);
+		Intersection.w = min(pRect->x+pRect->w, pOldRect->x+pOldRect->w) - pRect->x;
+		Intersection.h = min(pRect->y+pRect->h, pOldRect->y+pOldRect->h) - pRect->y;
+		m_aClips[m_NumClips] = Intersection;
+	}
+	else
+	{
+		m_aClips[m_NumClips] = *pRect;
+	}
+	m_NumClips++;
+	UpdateClipping();
 }
 
 void CUI::ClipDisable()
 {
-	Graphics()->ClipDisable();
-	m_Clipped = false;
+	dbg_assert(m_NumClips > 0, "no clip region");
+	m_NumClips--;
+	UpdateClipping();
 }
 
-void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom) const
+const CUIRect *CUI::ClipArea() const
+{
+	dbg_assert(m_NumClips > 0, "no clip region");
+	return &m_aClips[m_NumClips - 1];
+}
+
+void CUI::UpdateClipping()
+{
+	if(IsClipped())
+	{
+		const CUIRect *pRect = ClipArea();
+		const float XScale = Graphics()->ScreenWidth()/Screen()->w;
+		const float YScale = Graphics()->ScreenHeight()/Screen()->h;
+		Graphics()->ClipEnable((int)(pRect->x*XScale), (int)(pRect->y*YScale), (int)(pRect->w*XScale), (int)(pRect->h*YScale));
+	}
+	else
+	{
+		Graphics()->ClipDisable();
+	}
+}
+
+void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing) const
 {
 	CUIRect r = *this;
-	float Cut = r.h/2;
+	const float Cut = r.h/2;
+	const float HalfSpacing = Spacing/2;
 
 	if(pTop)
 	{
 		pTop->x = r.x;
 		pTop->y = r.y;
 		pTop->w = r.w;
-		pTop->h = Cut;
+		pTop->h = Cut - HalfSpacing;
 	}
 
 	if(pBottom)
 	{
 		pBottom->x = r.x;
-		pBottom->y = r.y + Cut;
+		pBottom->y = r.y + Cut + HalfSpacing;
 		pBottom->w = r.w;
-		pBottom->h = r.h - Cut;
+		pBottom->h = r.h - Cut - HalfSpacing;
 	}
 }
 
@@ -165,24 +202,25 @@ void CUIRect::HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const
 }
 
 
-void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight) const
+void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight, float Spacing) const
 {
 	CUIRect r = *this;
-	float Cut = r.w/2;
+	const float Cut = r.w/2;
+	const float HalfSpacing = Spacing/2;
 
 	if (pLeft)
 	{
 		pLeft->x = r.x;
 		pLeft->y = r.y;
-		pLeft->w = Cut;
+		pLeft->w = Cut - HalfSpacing;
 		pLeft->h = r.h;
 	}
 
 	if (pRight)
 	{
-		pRight->x = r.x + Cut;
+		pRight->x = r.x + Cut + HalfSpacing;
 		pRight->y = r.y;
-		pRight->w = r.w - Cut;
+		pRight->w = r.w - Cut - HalfSpacing;
 		pRight->h = r.h;
 	}
 }
@@ -259,20 +297,18 @@ void CUIRect::HMargin(float Cut, CUIRect *pOtherRect) const
 	pOtherRect->h = r.h - 2*Cut;
 }
 
-int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CUIRect *pRect)
+int CUI::DoButtonLogic(const void *pID, const CUIRect *pRect)
 {
 	// logic
 	int ReturnValue = 0;
-	int Inside = MouseInside(pRect);
-	if(m_Clipped)
-		Inside &= MouseInside(&m_ClipRect);
+	bool Inside = MouseInside(pRect) && MouseInsideClip();
 	static int ButtonUsed = 0;
 
 	if(CheckActiveItem(pID))
 	{
 		if(!MouseButton(ButtonUsed))
 		{
-			if(Inside && Checked >= 0)
+			if(Inside)
 				ReturnValue = 1+ButtonUsed;
 			SetActiveItem(0);
 		}
@@ -298,9 +334,9 @@ int CUI::DoButtonLogic(const void *pID, const char *pText, int Checked, const CU
 	return ReturnValue;
 }
 
-int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY)
+bool CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY)
 {
-	int Inside = MouseInside(pRect);
+	bool Inside = MouseInside(pRect);
 
 	if(CheckActiveItem(pID))
 	{
@@ -317,63 +353,15 @@ int CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *
 		SetHotItem(pID);
 
 	if(!CheckActiveItem(pID))
-		return 0;
+		return false;
 
 	if(pX)
 		*pX = clamp(m_MouseX - pRect->x, 0.0f, pRect->w);
 	if(pY)
 		*pY = clamp(m_MouseY - pRect->y, 0.0f, pRect->h);
 
-	return 1;
+	return true;
 }
-
-int CUI::DoColorSelectionLogic(const CUIRect *pRect, const CUIRect *pButton) // it's counter logic! FIXME
-{
-	if(MouseButtonClicked(0) && MouseInside(pRect) && !MouseInside(pButton))
-		return 1;
-	else
-		return 0;
-}
-
-/*
-int CUI::DoButton(const void *id, const char *text, int checked, const CUIRect *r, ui_draw_button_func draw_func, const void *extra)
-{
-	// logic
-	int ret = 0;
-	int inside = ui_MouseInside(r);
-	static int button_used = 0;
-
-	if(ui_ActiveItem() == id)
-	{
-		if(!ui_MouseButton(button_used))
-		{
-			if(inside && checked >= 0)
-				ret = 1+button_used;
-			ui_SetActiveItem(0);
-		}
-	}
-	else if(ui_HotItem() == id)
-	{
-		if(ui_MouseButton(0))
-		{
-			ui_SetActiveItem(id);
-			button_used = 0;
-		}
-
-		if(ui_MouseButton(1))
-		{
-			ui_SetActiveItem(id);
-			button_used = 1;
-		}
-	}
-
-	if(inside)
-		ui_SetHotItem(id);
-
-	if(draw_func)
-		draw_func(id, text, checked, r, extra);
-	return ret;
-}*/
 
 void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Align, float LineWidth, bool MultiLine)
 {

@@ -25,7 +25,6 @@ public:
 	int Tick() const { return m_CurrentGameTick; }
 	int TickSpeed() const { return m_TickSpeed; }
 
-	virtual int MaxClients() const = 0;
 	virtual const char *ClientName(int ClientID) const = 0;
 	virtual const char *ClientClan(int ClientID) const = 0;
 	virtual int ClientCountry(int ClientID) const = 0;

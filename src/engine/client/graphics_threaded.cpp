@@ -305,6 +305,9 @@ static int ImageFormatToPixelSize(int Format)
 
 int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
 {
+	if(!TextureID.IsValid())
+		return 0;
+
 	CCommandBuffer::SCommand_Texture_Update Cmd;
 	Cmd.m_Slot = TextureID.Id();
 	Cmd.m_X = x;
@@ -329,7 +332,7 @@ int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y
 IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
 {
 	// don't waste memory on texture if we are stress testing
-	if(g_Config.m_DbgStress)
+	if(m_pConfig->m_DbgStress)
 		return m_InvalidTexture;
 
 	// grab texture
@@ -350,9 +353,9 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	Cmd.m_Flags = CCommandBuffer::TEXFLAG_TEXTURE2D;
 	if(Flags&IGraphics::TEXLOAD_NOMIPMAPS)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_NOMIPMAPS;
-	if(g_Config.m_GfxTextureCompression)
+	if(m_pConfig->m_GfxTextureCompression)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_COMPRESSED;
-	if(g_Config.m_GfxTextureQuality || Flags&TEXLOAD_NORESAMPLE)
+	if(m_pConfig->m_GfxTextureQuality || Flags&TEXLOAD_NORESAMPLE)
 		Cmd.m_Flags |= CCommandBuffer::TEXFLAG_QUALITY;
 	if(Flags&IGraphics::TEXLOAD_ARRAY_256)
 	{
@@ -394,7 +397,7 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTexture(const char *pFilename,
 
 		ID = LoadTextureRaw(Img.m_Width, Img.m_Height, Img.m_Format, Img.m_pData, StoreFormat, Flags);
 		mem_free(Img.m_pData);
-		if(ID.Id() != m_InvalidTexture.Id() && g_Config.m_Debug)
+		if(ID.Id() != m_InvalidTexture.Id() && m_pConfig->m_Debug)
 			dbg_msg("graphics/texture", "loaded %s", pFilename);
 		return ID;
 	}
@@ -640,7 +643,6 @@ void CGraphics_Threaded::QuadsDraw(CQuadItem *pArray, int Num)
 void CGraphics_Threaded::QuadsDrawTL(const CQuadItem *pArray, int Num)
 {
 	CCommandBuffer::SPoint Center;
-	Center.z = 0;
 
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawTL without begin");
 
@@ -740,15 +742,15 @@ void CGraphics_Threaded::QuadsText(float x, float y, float Size, const char *pTe
 int CGraphics_Threaded::IssueInit()
 {
 	int Flags = 0;
-	if(g_Config.m_GfxBorderless) Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;
-	if(g_Config.m_GfxFullscreen) Flags |= IGraphicsBackend::INITFLAG_FULLSCREEN;
-	if(g_Config.m_GfxVsync) Flags |= IGraphicsBackend::INITFLAG_VSYNC;
-	if(g_Config.m_GfxHighdpi) Flags |= IGraphicsBackend::INITFLAG_HIGHDPI;
-	if(g_Config.m_DbgResizable) Flags |= IGraphicsBackend::INITFLAG_RESIZABLE;
-	if(g_Config.m_GfxUseX11XRandRWM) Flags |= IGraphicsBackend::INITFLAG_X11XRANDR;
+	if(m_pConfig->m_GfxBorderless) Flags |= IGraphicsBackend::INITFLAG_BORDERLESS;
+	if(m_pConfig->m_GfxFullscreen) Flags |= IGraphicsBackend::INITFLAG_FULLSCREEN;
+	if(m_pConfig->m_GfxVsync) Flags |= IGraphicsBackend::INITFLAG_VSYNC;
+	if(m_pConfig->m_GfxHighdpi) Flags |= IGraphicsBackend::INITFLAG_HIGHDPI;
+	if(m_pConfig->m_DbgResizable) Flags |= IGraphicsBackend::INITFLAG_RESIZABLE;
+	if(m_pConfig->m_GfxUseX11XRandRWM) Flags |= IGraphicsBackend::INITFLAG_X11XRANDR;
 
-	return m_pBackend->Init("Teeworlds", &g_Config.m_GfxScreen, &g_Config.m_GfxScreenWidth,
-			&g_Config.m_GfxScreenHeight, &m_ScreenWidth, &m_ScreenHeight, g_Config.m_GfxFsaaSamples,
+	return m_pBackend->Init("Teeworlds", &m_pConfig->m_GfxScreen, &m_pConfig->m_GfxScreenWidth,
+			&m_pConfig->m_GfxScreenHeight, &m_ScreenWidth, &m_ScreenHeight, m_pConfig->m_GfxFsaaSamples,
 			Flags, &m_DesktopScreenWidth, &m_DesktopScreenHeight);
 }
 
@@ -758,12 +760,12 @@ int CGraphics_Threaded::InitWindow()
 		return 0;
 
 	// try disabling fsaa
-	while(g_Config.m_GfxFsaaSamples)
+	while(m_pConfig->m_GfxFsaaSamples)
 	{
-		g_Config.m_GfxFsaaSamples--;
+		m_pConfig->m_GfxFsaaSamples--;
 
-		if(g_Config.m_GfxFsaaSamples)
-			dbg_msg("gfx", "lowering FSAA to %d and trying again", g_Config.m_GfxFsaaSamples);
+		if(m_pConfig->m_GfxFsaaSamples)
+			dbg_msg("gfx", "lowering FSAA to %d and trying again", m_pConfig->m_GfxFsaaSamples);
 		else
 			dbg_msg("gfx", "disabling FSAA and trying again");
 
@@ -772,11 +774,11 @@ int CGraphics_Threaded::InitWindow()
 	}
 
 	// try lowering the resolution
-	if(g_Config.m_GfxScreenWidth != 640 || g_Config.m_GfxScreenHeight != 480)
+	if(m_pConfig->m_GfxScreenWidth != 640 || m_pConfig->m_GfxScreenHeight != 480)
 	{
 		dbg_msg("gfx", "setting resolution to 640x480 and trying again");
-		g_Config.m_GfxScreenWidth = 640;
-		g_Config.m_GfxScreenHeight = 480;
+		m_pConfig->m_GfxScreenWidth = 640;
+		m_pConfig->m_GfxScreenHeight = 480;
 
 		if(IssueInit() == 0)
 			return 0;
@@ -791,11 +793,8 @@ int CGraphics_Threaded::Init()
 {
 	// fetch pointers
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
+	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-
-	// Set all z to -5.0f
-	for(int i = 0; i < MAX_VERTICES; i++)
-		m_aVertices[i].m_Pos.z = -5.0f;
 
 	// init textures
 	m_FirstFreeTexture = 0;
@@ -961,7 +960,7 @@ void CGraphics_Threaded::Swap()
 
 	// add swap command
 	CCommandBuffer::SCommand_Swap Cmd;
-	Cmd.m_Finish = g_Config.m_GfxFinish;
+	Cmd.m_Finish = m_pConfig->m_GfxFinish;
 	m_pCommandBuffer->AddCommand(Cmd);
 
 	// kick the command buffer
@@ -1003,7 +1002,7 @@ void CGraphics_Threaded::WaitForIdle()
 
 int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen)
 {
-	if(g_Config.m_GfxDisplayAllModes)
+	if(m_pConfig->m_GfxDisplayAllModes)
 	{
 		int Count = sizeof(g_aFakeModes)/sizeof(CVideoMode);
 		mem_copy(pModes, g_aFakeModes, sizeof(g_aFakeModes));

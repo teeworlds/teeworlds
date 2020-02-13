@@ -47,6 +47,7 @@ class CConsole : public IConsole
 	};
 
 	CExecFile *m_pFirstExec;
+	class CConfig *m_pConfig;
 	class IStorage *m_pStorage;
 	int m_AccessLevel;
 
@@ -163,7 +164,6 @@ class CConsole : public IConsole
 	};
 
 	CHeap *m_pTempMapListHeap;
-	int m_NumMapListEntries;
 	CMapListEntryTemp *m_pFirstMapEntry;
 	CMapListEntryTemp *m_pLastMapEntry;
 
@@ -171,6 +171,7 @@ public:
 	CConsole(int FlagMask);
 	~CConsole();
 
+	virtual void Init();
 	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int FlagMask) const;
 	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp);
 	virtual void PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser);
@@ -195,6 +196,8 @@ public:
 	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData);
 	virtual void SetPrintOutputLevel(int Index, int OutputLevel);
 	virtual void Print(int Level, const char *pFrom, const char *pStr, bool Highlighted=false);
+
+	virtual int ParseCommandArgs(const char *pArgs, const char *pFormat, FCommandCallback pfnCallback, void *pContext);
 
 	void SetAccessLevel(int AccessLevel) { m_AccessLevel = clamp(AccessLevel, (int)(ACCESS_LEVEL_ADMIN), (int)(ACCESS_LEVEL_MOD)); }
 };

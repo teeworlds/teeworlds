@@ -62,10 +62,12 @@ public:
 class CServer : public IServer
 {
 	class IGameServer *m_pGameServer;
+	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
 	class IStorage *m_pStorage;
 public:
 	class IGameServer *GameServer() { return m_pGameServer; }
+	class CConfig *Config() { return m_pConfig; }
 	class IConsole *Console() { return m_pConsole; }
 	class IStorage *Storage() { return m_pStorage; }
 
@@ -224,7 +226,6 @@ public:
 	const char *ClientClan(int ClientID) const;
 	int ClientCountry(int ClientID) const;
 	bool ClientIngame(int ClientID) const;
-	int MaxClients() const;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID);
 
@@ -252,10 +253,10 @@ public:
 
 	void PumpNetwork();
 
-	const char *GetMapName() const;
+	const char *GetMapName();
 	int LoadMap(const char *pMapName);
 
-	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, IConsole *pConsole);
+	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, CConfig *pConfig, IConsole *pConsole);
 	int Run();
 
 	static int MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser);
@@ -269,6 +270,8 @@ public:
 	static void ConSaveConfig(IConsole::IResult *pResult, void *pUser);
 	static void ConLogout(IConsole::IResult *pResult, void *pUser);
 	static void ConchainSpecialInfoupdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainPlayerSlotsUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainMaxclientsUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainMaxclientsperipUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);

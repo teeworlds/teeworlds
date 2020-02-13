@@ -41,6 +41,8 @@ versionsrv*
 .settings
 .vs
 .vscode
+*.vcxproj
+*.vcxproj.filters
 compile_commands.json
 cscope.files
 cscope.out

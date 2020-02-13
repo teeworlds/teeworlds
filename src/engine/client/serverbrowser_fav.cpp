@@ -26,22 +26,33 @@ CServerBrowserFavorites::CServerBrowserFavorites()
 	m_FavLookup.m_Active = false;
 }
 
-void CServerBrowserFavorites::Init(CNetClient *pNetClient, IConsole *pConsole, IEngine *pEngine, IConfig *pConfig)
+void CServerBrowserFavorites::Init(CNetClient *pNetClient, IConsole *pConsole, IEngine *pEngine, IConfigManager *pConfigManager)
 {
 	m_pNetClient = pNetClient;
+	m_pConfig = pConfigManager->Values();
 	m_pConsole = pConsole;
 	m_pEngine = pEngine;
-	if(pConfig)
-		pConfig->RegisterCallback(ConfigSaveCallback, this);
+	if(pConfigManager)
+		pConfigManager->RegisterCallback(ConfigSaveCallback, this);
 
-	m_pConsole->Register("add_favorite", "s", CFGFLAG_CLIENT, ConAddFavorite, this, "Add a server as a favorite");
+	m_pConsole->Register("add_favorite", "s?s", CFGFLAG_CLIENT, ConAddFavorite, this, "Add a server (optionally with password) as a favorite. Also updates password of existing favorite.");
 	m_pConsole->Register("remove_favorite", "s", CFGFLAG_CLIENT, ConRemoveFavorite, this, "Remove a server from favorites");
 }
 
-bool CServerBrowserFavorites::AddFavoriteEx(const char *pHostname, const NETADDR *pAddr, bool DoCheck)
+bool CServerBrowserFavorites::AddFavoriteEx(const char *pHostname, const NETADDR *pAddr, bool DoCheck, const char *pPassword)
 {
-	if(m_NumFavoriteServers == MAX_FAVORITES || FindFavoriteByHostname(pHostname, 0))
+	if(m_NumFavoriteServers == MAX_FAVORITES)
 		return false;
+
+	CFavoriteServer *pExistingFavorite = FindFavoriteByHostname(pHostname, 0);
+	if(pExistingFavorite)
+	{
+		if(pPassword)
+			str_copy(pExistingFavorite->m_aPassword, pPassword, sizeof(pExistingFavorite->m_aPassword));
+		else
+			pExistingFavorite->m_aPassword[0] = '\0';
+		return false;
+	}
 
 	bool Result = false;
 	// check if hostname is a net address string
@@ -73,9 +84,15 @@ bool CServerBrowserFavorites::AddFavoriteEx(const char *pHostname, const NETADDR
 	}
 
 	str_copy(m_aFavoriteServers[m_NumFavoriteServers].m_aHostname, pHostname, sizeof(m_aFavoriteServers[m_NumFavoriteServers].m_aHostname));
+
+	if(pPassword)
+		str_copy(m_aFavoriteServers[m_NumFavoriteServers].m_aPassword, pPassword, sizeof(m_aFavoriteServers[m_NumFavoriteServers].m_aPassword));
+	else
+		m_aFavoriteServers[m_NumFavoriteServers].m_aPassword[0] = '\0';
+
 	++m_NumFavoriteServers;
 
-	if(g_Config.m_Debug)
+	if(m_pConfig->m_Debug)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "added fav '%s'", pHostname);
@@ -172,10 +189,8 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 					{
 						str_copy(pEntry->m_aHostname, m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_aHostname, sizeof(pEntry->m_aHostname));
 						pEntry->m_State = FAVSTATE_HOST;
-						dbg_msg("test", "fav aquired hostname, %s", m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_aHostname);
 					}
 					RemoveFavoriteEntry(m_FavLookup.m_FavoriteIndex);
-					dbg_msg("test", "fav removed multiple entry");
 				}
 				else
 				{
@@ -186,12 +201,10 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 						m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_Addr = m_FavLookup.m_HostLookup.m_Addr;
 						m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_State = FAVSTATE_HOST;
 						pResult = &m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_Addr;
-						dbg_msg("test", "fav added, %s", m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_aHostname);
 					}
 					else
 					{
 						RemoveFavoriteEntry(m_FavLookup.m_FavoriteIndex);
-						dbg_msg("test", "fav removed entry that failed hostname-address check");
 					}
 				}
 			}
@@ -201,12 +214,10 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 				if(m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_State == FAVSTATE_LOOKUP)
 				{
 					m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_State = FAVSTATE_INVALID;
-					dbg_msg("test", "fav invalid, %s", m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_aHostname);
 				}
 				else
 				{
 					RemoveFavoriteEntry(m_FavLookup.m_FavoriteIndex);
-					dbg_msg("test", "fav removed invalid check-based entry");
 				}
 			}
 		}
@@ -235,7 +246,7 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 void CServerBrowserFavorites::ConAddFavorite(IConsole::IResult *pResult, void *pUserData)
 {
 	CServerBrowserFavorites *pSelf = static_cast<CServerBrowserFavorites *>(pUserData);
-	pSelf->AddFavoriteEx(pResult->GetString(0), 0, false);
+	pSelf->AddFavoriteEx(pResult->GetString(0), 0, false, pResult->NumArguments() > 1 ? pResult->GetString(1) : 0);
 }
 
 void CServerBrowserFavorites::ConRemoveFavorite(IConsole::IResult *pResult, void *pUserData)
@@ -244,14 +255,17 @@ void CServerBrowserFavorites::ConRemoveFavorite(IConsole::IResult *pResult, void
 	pSelf->RemoveFavoriteEx(pResult->GetString(0), 0);
 }
 
-void CServerBrowserFavorites::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
+void CServerBrowserFavorites::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
 	CServerBrowserFavorites *pSelf = (CServerBrowserFavorites *)pUserData;
 
-	char aBuffer[256];
+	char aBuffer[320];
 	for(int i = 0; i < pSelf->m_NumFavoriteServers; i++)
 	{
-		str_format(aBuffer, sizeof(aBuffer), "add_favorite %s", pSelf->m_aFavoriteServers[i].m_aHostname);
-		pConfig->WriteLine(aBuffer);
+		if(pSelf->m_aFavoriteServers[i].m_aPassword[0])
+			str_format(aBuffer, sizeof(aBuffer), "add_favorite \"%s\" \"%s\"", pSelf->m_aFavoriteServers[i].m_aHostname, pSelf->m_aFavoriteServers[i].m_aPassword);
+		else
+			str_format(aBuffer, sizeof(aBuffer), "add_favorite \"%s\"", pSelf->m_aFavoriteServers[i].m_aHostname);
+		pConfigManager->WriteLine(aBuffer);
 	}
 }

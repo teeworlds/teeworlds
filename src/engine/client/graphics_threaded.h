@@ -118,7 +118,7 @@ public:
 		BLEND_ADDITIVE,
 	};
 
-	struct SPoint { float x, y, z; };
+	struct SPoint { float x, y; };
 	struct STexCoord { float u, v, i; };
 	struct SColor { float r, g, b, a; };
 
@@ -360,6 +360,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	//
 	class IStorage *m_pStorage;
+	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
 
 	CCommandBuffer::SVertex m_aVertices[MAX_VERTICES];

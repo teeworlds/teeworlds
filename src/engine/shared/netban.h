@@ -60,9 +60,6 @@ protected:
 		return pBuffer;
 	}
 
-	// todo: move?
-	static bool StrAllnum(const char *pStr);
-
 	class CNetHash
 	{
 	public:
@@ -180,12 +177,11 @@ public:
 	int UnbanByRange(const CNetRange *pRange);
 	int UnbanByIndex(int Index);
 	void UnbanAll();
+	template<class T> bool IsBannable(const T *pData);
 	bool IsBanned(const NETADDR *pAddr, char *pBuf, unsigned BufferSize, int *pLastInfoQuery);
 
 	static void ConBan(class IConsole::IResult *pResult, void *pUser);
-	static void ConBanRange(class IConsole::IResult *pResult, void *pUser);
 	static void ConUnban(class IConsole::IResult *pResult, void *pUser);
-	static void ConUnbanRange(class IConsole::IResult *pResult, void *pUser);
 	static void ConUnbanAll(class IConsole::IResult *pResult, void *pUser);
 	static void ConBans(class IConsole::IResult *pResult, void *pUser);
 	static void ConBansSave(class IConsole::IResult *pResult, void *pUser);

@@ -6,6 +6,7 @@
 #include <engine/console.h>
 #include <engine/server.h>
 
+#include <game/commands.h>
 #include <game/layers.h>
 #include <game/voting.h>
 
@@ -36,6 +37,7 @@
 class CGameContext : public IGameServer
 {
 	IServer *m_pServer;
+	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
 	CLayers m_Layers;
 	CCollision m_Collision;
@@ -44,7 +46,7 @@ class CGameContext : public IGameServer
 
 	static void ConTuneParam(IConsole::IResult *pResult, void *pUserData);
 	static void ConTuneReset(IConsole::IResult *pResult, void *pUserData);
-	static void ConTuneDump(IConsole::IResult *pResult, void *pUserData);
+	static void ConTunes(IConsole::IResult *pResult, void *pUserData);
 	static void ConPause(IConsole::IResult *pResult, void *pUserData);
 	static void ConChangeMap(IConsole::IResult *pResult, void *pUserData);
 	static void ConRestart(IConsole::IResult *pResult, void *pUserData);
@@ -64,12 +66,16 @@ class CGameContext : public IGameServer
 	static void ConchainSettingUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainGameinfoUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
+	static void NewCommandHook(const CCommandManager::CCommand *pCommand, void *pContext);
+	static void RemoveCommandHook(const CCommandManager::CCommand *pCommand, void *pContext);
+
 	CGameContext(int Resetting);
 	void Construct(int Resetting);
 
 	bool m_Resetting;
 public:
 	IServer *Server() const { return m_pServer; }
+	class CConfig *Config() { return m_pConfig; }
 	class IConsole *Console() { return m_pConsole; }
 	CCollision *Collision() { return &m_Collision; }
 	CTuningParams *Tuning() { return &m_Tuning; }
@@ -84,6 +90,9 @@ public:
 
 	class IGameController *m_pController;
 	CGameWorld m_World;
+	CCommandManager m_CommandManager;
+
+	CCommandManager *CommandManager() { return &m_CommandManager; }
 
 	// helper functions
 	class CCharacter *GetPlayerChar(int ClientID);
@@ -147,6 +156,10 @@ public:
 	void SendGameMsg(int GameMsgID, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ParaI2, int ParaI3, int ClientID);
+
+	void SendChatCommand(const CCommandManager::CCommand *pCommand, int ClientID);
+	void SendChatCommands(int ClientID);
+	void SendRemoveChatCommand(const CCommandManager::CCommand *pCommand, int ClientID);
 
 	//
 	void CheckPureTuning();

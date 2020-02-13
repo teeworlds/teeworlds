@@ -7,6 +7,7 @@
 
 const int g_MaxKeys = 512;
 extern const char g_aaKeyStrings[g_MaxKeys][20];
+const int g_MaxJoystickAxes = 12;
 
 class IInput : public IInterface
 {
@@ -58,10 +59,14 @@ public:
 	virtual bool KeyPress(int Key, bool CheckCounter=false) const = 0;
 	const char *KeyName(int Key) const { return (Key >= 0 && Key < g_MaxKeys) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
 	virtual void Clear() = 0;
-	
+
 	// joystick
-	virtual bool HasJoystick() const = 0;
-	virtual float GetJoystickAxisValue(int Axis) const = 0;
+	virtual int NumJoysticks() const = 0;
+	virtual int GetJoystickIndex() const = 0;
+	virtual void SelectNextJoystick() = 0;
+	virtual const char* GetJoystickName() = 0;
+	virtual int GetJoystickNumAxes() = 0;
+	virtual float GetJoystickAxisValue(int Axis) = 0;
 
 	// mouse
 	virtual void MouseModeRelative() = 0;

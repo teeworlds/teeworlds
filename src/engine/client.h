@@ -115,7 +115,7 @@ public:
 	virtual void Rcon(const char *pLine) = 0;
 
 	// server info
-	virtual void GetServerInfo(class CServerInfo *pServerInfo) const = 0;
+	virtual void GetServerInfo(class CServerInfo *pServerInfo) = 0;
 
 	// snapshot interface
 

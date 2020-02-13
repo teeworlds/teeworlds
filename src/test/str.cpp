@@ -100,3 +100,27 @@ TEST(StrFormat, Positional)
 	str_format(aBuf, sizeof(aBuf), "%1$s %1$s %2$d %1$s %2$d", "str", 1);
 	EXPECT_STREQ(aBuf, "str str 1 str 1");
 }
+
+TEST(Str, PathUnsafe)
+{
+	EXPECT_TRUE(str_path_unsafe(".."));
+	EXPECT_TRUE(str_path_unsafe("/.."));
+	EXPECT_TRUE(str_path_unsafe("/../"));
+	EXPECT_TRUE(str_path_unsafe("../"));
+
+	EXPECT_TRUE(str_path_unsafe("/../foobar"));
+	EXPECT_TRUE(str_path_unsafe("../foobar"));
+	EXPECT_TRUE(str_path_unsafe("foobar/../foobar"));
+	EXPECT_TRUE(str_path_unsafe("foobar/.."));
+	EXPECT_TRUE(str_path_unsafe("foobar/../"));
+
+	EXPECT_FALSE(str_path_unsafe("abc"));
+	EXPECT_FALSE(str_path_unsafe("abc/"));
+	EXPECT_FALSE(str_path_unsafe("abc/def"));
+	EXPECT_FALSE(str_path_unsafe("abc/def.txt"));
+	EXPECT_FALSE(str_path_unsafe("abc\\"));
+	EXPECT_FALSE(str_path_unsafe("abc\\def"));
+	EXPECT_FALSE(str_path_unsafe("abc\\def.txt"));
+	EXPECT_FALSE(str_path_unsafe("abc/def\\ghi.txt"));
+	EXPECT_FALSE(str_path_unsafe("любовь"));
+}

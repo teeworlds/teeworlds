@@ -178,6 +178,20 @@ void mem_zero(void *block, unsigned size);
 */
 int mem_comp(const void *a, const void *b, int size);
 
+/*
+	Function: mem_has_null
+		Checks whether a block of memory contains null bytes.
+
+	Parameters:
+		block - Pointer to the block to check for nulls.
+		size - Size of the block.
+
+	Returns:
+		1 - The block has a null byte.
+		0 - The block does not have a null byte.
+*/
+int mem_has_null(const void *block, unsigned size);
+
 /* Group: File IO */
 enum {
 	IOFLAG_READ = 1,
@@ -219,6 +233,40 @@ IOHANDLE io_open(const char *filename, int flags);
 
 */
 unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
+
+/*
+	Function: io_read_all
+		Reads the rest of the file into a buffer.
+
+	Parameters:
+		io - Handle to the file to read data from.
+		result - Receives the file's remaining contents.
+		result_len - Receives the file's remaining length.
+
+	Remarks:
+		- Does NOT guarantee that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+void io_read_all(IOHANDLE io, void **result, unsigned *result_len);
+
+/*
+	Function: io_read_all_str
+		Reads the rest of the file into a zero-terminated buffer with
+		no internal null bytes.
+
+	Parameters:
+		io - Handle to the file to read data from.
+
+	Returns:
+		The file's remaining contents or null on failure.
+
+	Remarks:
+		- Guarantees that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+char *io_read_all_str(IOHANDLE io);
 
 /*
 	Function: io_unread_byte
@@ -542,6 +590,14 @@ typedef struct
 	unsigned short port;
 } NETADDR;
 
+/*
+	Function: net_invalidate_socket
+		Invalidates a socket.
+
+	Remarks:
+		You should close the socket before invalidating it.
+*/
+void net_invalidate_socket(NETSOCKET *socket);
 /*
 	Function: net_init
 		Initiates network functionallity.
@@ -894,22 +950,22 @@ void str_sanitize(char *str);
 	Remarks:
 		- The strings are treated as zero-terminated strings.
 */
-char* str_sanitize_filename(char* aName);
+char *str_sanitize_filename(char *name);
 
 /*
-	Function: str_check_pathname
+	Function: str_path_unsafe
 		Check if the string contains '..' (parent directory) paths.
 
 	Parameters:
 		str - String to check.
 
 	Returns:
-		Returns 0 if the path is valid, -1 otherwise.
+		Returns 0 if the path is safe, -1 otherwise.
 
 	Remarks:
 		- The strings are treated as zero-terminated strings.
 */
-int str_check_pathname(const char* str);
+int str_path_unsafe(const char *str);
 
 /*
 	Function: str_clean_whitespaces
@@ -972,6 +1028,12 @@ const char *str_skip_to_whitespace_const(const char *str);
 		- The strings are treated as zero-terminated strings.
 */
 char *str_skip_whitespaces(char *str);
+
+/*
+	Function: str_skip_whitespaces_const
+		See str_skip_whitespaces.
+*/
+const char *str_skip_whitespaces_const(const char *str);
 
 /*
 	Function: str_comp_nocase
@@ -1187,6 +1249,21 @@ const char *str_find(const char *haystack, const char *needle);
 void str_hex(char *dst, int dst_size, const void *data, int data_size);
 
 /*
+	Function: str_is_number
+		Check if the string contains only digits.
+
+	Parameters:
+		str - String to check.
+
+	Returns:
+		Returns 0 if it's a number, -1 otherwise.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int str_is_number(const char *pstr);
+
+/*
 	Function: str_timestamp
 		Copies a time stamp in the format year-month-day_hour-minute-second to the string.
 
@@ -1337,6 +1414,44 @@ int fs_remove(const char *filename);
 		- The strings are treated as zero-terminated strings.
 */
 int fs_rename(const char *oldname, const char *newname);
+
+/*
+	Function: fs_read
+		Reads a whole file into memory and returns its contents.
+
+	Parameters:
+		name - The filename to read.
+		result - Receives the file's contents.
+		result_len - Receives the file's length.
+
+	Returns:
+		Returns 0 on success, 1 on failure.
+
+	Remarks:
+		- Does NOT guarantee that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+int fs_read(const char *name, void **result, unsigned *result_len);
+
+/*
+	Function: fs_read_str
+		Reads a whole file into memory and returns its contents,
+		guaranteeing a null-terminated string with no internal null
+		bytes.
+
+	Parameters:
+		name - The filename to read.
+
+	Returns:
+		Returns the file's contents on success, null on failure.
+
+	Remarks:
+		- Guarantees that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+char *fs_read_str(const char *name);
 
 /*
 	Group: Undocumented
@@ -1573,6 +1688,16 @@ int pid();
 		- Assumes unsigned is 4 bytes
 */
 unsigned bytes_be_to_uint(const unsigned char *bytes);
+
+/*
+	Function: uint_to_bytes_be
+		Packs an unsigned into 4 big endian bytes
+
+	Remarks:
+		- Assumes the passed array is 4 bytes
+		- Assumes unsigned is 4 bytes
+*/
+void uint_to_bytes_be(unsigned char *bytes, unsigned value);
 
 #ifdef __cplusplus
 }

@@ -19,7 +19,7 @@ class SortWrap
 	CServerBrowserFilter::CServerFilter *m_pThis;
 public:
 	SortWrap(CServerBrowserFilter::CServerFilter *t, SortFunc f) : m_pfnSort(f), m_pThis(t) {}
-	bool operator()(int a, int b) { return (g_Config.m_BrSortOrder ? (m_pThis->*m_pfnSort)(b, a) : (m_pThis->*m_pfnSort)(a, b)); }
+	bool operator()(int a, int b) { return (m_pThis->Config()->m_BrSortOrder ? (m_pThis->*m_pfnSort)(b, a) : (m_pThis->*m_pfnSort)(a, b)); }
 };
 
 //	CServerFilter
@@ -124,7 +124,7 @@ void CServerBrowserFilter::CServerFilter::Filter()
 			Filtered = 1;
 		else if(m_FilterInfo.m_aAddress[0] && !str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aAddress, m_FilterInfo.m_aAddress))
 			Filtered = 1;
-		else if(m_FilterInfo.m_ServerLevel & (1 << m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_ServerLevel))
+		else if(m_FilterInfo.IsLevelFiltered(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_ServerLevel))
 			Filtered = 1;
 		else
 		{
@@ -157,14 +157,14 @@ void CServerBrowserFilter::CServerFilter::Filter()
 				}
 			}
 
-			if(!Filtered && g_Config.m_BrFilterString[0] != 0)
+			if(!Filtered && Config()->m_BrFilterString[0] != 0)
 			{
 				int MatchFound = 0;
 
 				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit = 0;
 
 				// match against server name
-				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aName, g_Config.m_BrFilterString))
+				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aName, Config()->m_BrFilterString))
 				{
 					MatchFound = 1;
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
@@ -173,8 +173,8 @@ void CServerBrowserFilter::CServerFilter::Filter()
 				// match against players
 				for(int p = 0; p < m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients; p++)
 				{
-					if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, g_Config.m_BrFilterString) ||
-						str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, g_Config.m_BrFilterString))
+					if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, Config()->m_BrFilterString) ||
+						str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, Config()->m_BrFilterString))
 					{
 						MatchFound = 1;
 						m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
@@ -183,10 +183,17 @@ void CServerBrowserFilter::CServerFilter::Filter()
 				}
 
 				// match against map
-				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aMap, g_Config.m_BrFilterString))
+				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aMap, Config()->m_BrFilterString))
 				{
 					MatchFound = 1;
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
+				}
+
+				// match against game type
+				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, Config()->m_BrFilterString))
+				{
+					MatchFound = 1;
+					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_GAMETYPE;
 				}
 
 				if(!MatchFound)
@@ -216,8 +223,8 @@ void CServerBrowserFilter::CServerFilter::Filter()
 
 int CServerBrowserFilter::CServerFilter::GetSortHash() const
 {
-	int i = g_Config.m_BrSort&0x7;
-	i |= g_Config.m_BrSortOrder<<3;
+	int i = Config()->m_BrSort&0x7;
+	i |= Config()->m_BrSortOrder<<3;
 	if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS) i |= 1<<4;
 	if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_EMPTY) i |= 1<<5;
 	if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_FULL) i |= 1<<6;
@@ -238,7 +245,7 @@ void CServerBrowserFilter::CServerFilter::Sort()
 	Filter();
 
 	// sort
-	switch(g_Config.m_BrSort)
+	switch(Config()->m_BrSort)
 	{
 	case IServerBrowser::SORT_NAME:
 		std::stable_sort(m_pSortedServerlist, m_pSortedServerlist+m_NumSortedServers, SortWrap(this, &CServerBrowserFilter::CServerFilter::SortCompareName));
@@ -329,8 +336,9 @@ bool CServerBrowserFilter::CServerFilter::SortCompareNumRealClients(int Index1, 
 }
 
 //	CServerBrowserFilter
-void CServerBrowserFilter::Init(IFriends *pFriends, const char *pNetVersion)
+void CServerBrowserFilter::Init(CConfig *pConfig, IFriends *pFriends, const char *pNetVersion)
 {
+	m_pConfig = pConfig;
 	m_pFriends = pFriends;
 	str_copy(m_aNetVersion, pNetVersion, sizeof(m_aNetVersion));
 }

@@ -333,9 +333,9 @@ public:
 		//
 		// E. g. "/etc/passwd" => "/path/to/storage//etc/passwd", which
 		// is safe.
-		if(str_check_pathname(pFilename) != 0)
+		if(str_path_unsafe(pFilename) != 0)
 		{
-			pBuffer[0] = 0;
+			dbg_msg("storage", "refusing to open path which looks like it could escape those specified in 'storage.cfg': %s", pFilename);
 			return 0;
 		}
 
@@ -376,6 +376,32 @@ public:
 
 		pBuffer[0] = 0;
 		return 0;
+	}
+
+	bool ReadFile(const char *pFilename, int Type, void **ppResult, unsigned *pResultLen)
+	{
+		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ, Type);
+		*ppResult = 0;
+		*pResultLen = 0;
+		if(!File)
+		{
+			return true;
+		}
+		io_read_all(File, ppResult, pResultLen);
+		io_close(File);
+		return false;
+	}
+
+	char *ReadFileStr(const char *pFilename, int Type)
+	{
+		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ, Type);
+		if(!File)
+		{
+			return 0;
+		}
+		char *pResult = io_read_all_str(File);
+		io_close(File);
+		return pResult;
 	}
 
 	struct CFindCBData

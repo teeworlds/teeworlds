@@ -3,11 +3,20 @@
 #ifndef ENGINE_CLIENT_INPUT_H
 #define ENGINE_CLIENT_INPUT_H
 
+#include <base/tl/sorted_array.h>
+
 class CInput : public IEngineInput
 {
 	IEngineGraphics *m_pGraphics;
+	CConfig *m_pConfig;
 	IConsole *m_pConsole;
-	SDL_Joystick *m_pJoystick;
+
+	sorted_array<SDL_Joystick*> m_apJoysticks;
+	int m_SelectedJoystickIndex;
+	char m_aSelectedJoystickGUID[34];
+	SDL_Joystick* GetActiveJoystick();
+	void InitJoysticks();
+	void CloseJoysticks();
 
 	int m_InputGrabbed;
 	char *m_pClipboardText;
@@ -38,9 +47,13 @@ public:
 
 	bool KeyIsPressed(int Key) const { return KeyState(Key); }
 	bool KeyPress(int Key, bool CheckCounter) const { return CheckCounter ? (m_aInputCount[Key] == m_InputCounter) : m_aInputCount[Key]; }
-	
-	bool HasJoystick() const { return m_pJoystick; }
-	float GetJoystickAxisValue(int Axis) const;
+
+	int NumJoysticks() const { return m_apJoysticks.size(); }
+	int GetJoystickIndex() const { return m_SelectedJoystickIndex; };
+	void SelectNextJoystick();
+	const char* GetJoystickName();
+	int GetJoystickNumAxes();
+	float GetJoystickAxisValue(int Axis);
 
 	virtual void MouseRelative(float *x, float *y);
 	virtual void MouseModeAbsolute();

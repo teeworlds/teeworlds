@@ -49,6 +49,8 @@ private:
 	CPlayerStats m_aStats[MAX_CLIENTS];
 
 	bool m_Active;
+	bool m_Activate;
+
 	bool m_ScreenshotTaken;
 	int64 m_ScreenshotTime;
 	static void ConKeyStats(IConsole::IResult *pResult, void *pUserData);
@@ -61,6 +63,7 @@ public:
 	void OnStartGame();
 	virtual void OnConsoleInit();
 	virtual void OnRender();
+	virtual void OnRelease();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
 
 	void UpdatePlayTime(int Ticks);

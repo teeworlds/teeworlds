@@ -8,40 +8,49 @@ class CUIRect
 public:
 	float x, y, w, h;
 
-	void HSplitMid(CUIRect *pTop, CUIRect *pBottom) const;
+	void HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing = 0.0f) const;
 	void HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
 	void HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
-	void VSplitMid(CUIRect *pLeft, CUIRect *pRight) const;
+	void VSplitMid(CUIRect *pLeft, CUIRect *pRight, float Spacing = 0.0f) const;
 	void VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const;
 	void VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const;
 
 	void Margin(float Cut, CUIRect *pOtherRect) const;
 	void VMargin(float Cut, CUIRect *pOtherRect) const;
 	void HMargin(float Cut, CUIRect *pOtherRect) const;
-
 };
 
 class CUI
 {
+	enum
+	{
+		MAX_CLIP_NESTING_DEPTH = 16
+	};
+
 	const void *m_pHotItem;
 	const void *m_pActiveItem;
 	const void *m_pLastActiveItem;
 	const void *m_pBecommingHotItem;
 	bool m_ActiveItemValid;
-	bool m_Clipped;
 	float m_MouseX, m_MouseY; // in gui space
 	float m_MouseWorldX, m_MouseWorldY; // in world space
 	unsigned m_MouseButtons;
 	unsigned m_LastMouseButtons;
 
 	CUIRect m_Screen;
-	CUIRect m_ClipRect;
+
+	CUIRect m_aClips[MAX_CLIP_NESTING_DEPTH];
+	unsigned m_NumClips;
+	void UpdateClipping();
+
+	class CConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
 
 public:
 	// TODO: Refactor: Fill this in
-	void SetGraphics(class IGraphics *pGraphics, class ITextRender *pTextRender) { m_pGraphics = pGraphics; m_pTextRender = pTextRender;}
+	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class ITextRender *pTextRender) { m_pConfig = pConfig; m_pGraphics = pGraphics; m_pTextRender = pTextRender; }
+	class CConfig *Config() const { return m_pConfig; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class ITextRender *TextRender() const { return m_pTextRender; }
 
@@ -100,20 +109,20 @@ public:
 	void StartCheck() { m_ActiveItemValid = false; };
 	void FinishCheck() { if(!m_ActiveItemValid) SetActiveItem(0); };
 
-	int MouseInside(const CUIRect *pRect) const;
+	bool MouseInside(const CUIRect *pRect) const;
 	bool MouseInsideClip() const;
 	void ConvertMouseMove(float *x, float *y) const;
 
 	CUIRect *Screen();
 	float PixelSize();
+
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
-	const CUIRect *ClipArea() const { return &m_ClipRect; };
-	inline bool IsClipped() const { return m_Clipped; };
+	const CUIRect *ClipArea() const;
+	inline bool IsClipped() const { return m_NumClips > 0; };
 
-	int DoButtonLogic(const void *pID, const char *pText /* TODO: Refactor: Remove */, int Checked, const CUIRect *pRect);
-	int DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
-	int DoColorSelectionLogic(const CUIRect *pRect, const CUIRect *pButton);
+	int DoButtonLogic(const void *pID, const CUIRect *pRect);
+	bool DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
 
 	// TODO: Refactor: Remove this?
 	void DoLabel(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);

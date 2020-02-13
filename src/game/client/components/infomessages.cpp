@@ -43,13 +43,13 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 		// unpack messages
 		CInfoMsg Kill;
 		Kill.m_Player1ID = pMsg->m_Victim;
-		str_format(Kill.m_aPlayer1Name, sizeof(Kill.m_aPlayer1Name), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[Kill.m_Player1ID].m_aName : "");
+		str_format(Kill.m_aPlayer1Name, sizeof(Kill.m_aPlayer1Name), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[Kill.m_Player1ID].m_aName : "");
 		Kill.m_Player1RenderInfo = m_pClient->m_aClients[Kill.m_Player1ID].m_RenderInfo;
 
 		Kill.m_Player2ID = pMsg->m_Killer;
 		if (Kill.m_Player2ID >= 0)
 		{
-			str_format(Kill.m_aPlayer2Name, sizeof(Kill.m_aPlayer2Name), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[Kill.m_Player2ID].m_aName : "");
+			str_format(Kill.m_aPlayer2Name, sizeof(Kill.m_aPlayer2Name), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[Kill.m_Player2ID].m_aName : "");
 			Kill.m_Player2RenderInfo = m_pClient->m_aClients[Kill.m_Player2ID].m_RenderInfo;
 		}
 		else
@@ -97,9 +97,13 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 		str_format(aBuf, sizeof(aBuf), "%2d: %s: finished in %s", pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName, aTime);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "race", aBuf);
 
-		if(pMsg->m_NewRecord)
+		if(pMsg->m_RecordType != RECORDTYPE_NONE)
 		{
-			str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new record: %s"), aLabel, aTime);
+			if(pMsg->m_RecordType == RECORDTYPE_MAP)
+				str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new map record: %s"), aLabel, aTime);
+			else // RECORDTYPE_PLAYER
+				str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new personal record: %s"), aLabel, aTime);
+			
 			if(pMsg->m_Diff < 0)
 			{
 				char aImprovement[64];
@@ -108,27 +112,27 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 				str_append(aBuf, aImprovement, sizeof(aBuf));
 			}
 
-			m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+			m_pClient->m_pChat->AddLine(aBuf);
 		}
 
 		if(m_pClient->m_Snap.m_pGameDataRace && m_pClient->m_Snap.m_pGameDataRace->m_RaceFlags&RACEFLAG_FINISHMSG_AS_CHAT)
 		{
-			if(!pMsg->m_NewRecord) // don't print the time twice
+			if(pMsg->m_RecordType == RECORDTYPE_NONE) // don't print the time twice
 			{
 				str_format(aBuf, sizeof(aBuf), Localize("'%s' finished in: %s"), aLabel, aTime);
-				m_pClient->m_pChat->AddLine(-1, 0, aBuf);
+				m_pClient->m_pChat->AddLine(aBuf);
 			}
 		}
 		else
 		{
 			CInfoMsg Finish;
 			Finish.m_Player1ID = pMsg->m_ClientID;
-			str_format(Finish.m_aPlayer1Name, sizeof(Finish.m_aPlayer1Name), "%s", g_Config.m_ClShowsocial ? m_pClient->m_aClients[pMsg->m_ClientID].m_aName : "");
+			str_format(Finish.m_aPlayer1Name, sizeof(Finish.m_aPlayer1Name), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[pMsg->m_ClientID].m_aName : "");
 			Finish.m_Player1RenderInfo = m_pClient->m_aClients[Finish.m_Player1ID].m_RenderInfo;
 
 			Finish.m_Time = pMsg->m_Time;
 			Finish.m_Diff = pMsg->m_Diff;
-			Finish.m_NewRecord = pMsg->m_NewRecord;
+			Finish.m_RecordType = pMsg->m_RecordType;
 
 			AddInfoMsg(INFOMSG_FINISH, Finish);
 		}
@@ -137,6 +141,9 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 
 void CInfoMessages::OnRender()
 {
+	if(!Config()->m_ClShowhud)
+		return;
+
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
 
@@ -282,8 +289,10 @@ void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) 
 	float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1, -1.0f);
 
 	x -= TimeW;
-	if(pInfoMsg->m_NewRecord)
-		TextRender()->TextColor(0.0f, 0.5f, 1.0f, 1.0f);
+	if(pInfoMsg->m_RecordType == RECORDTYPE_PLAYER)
+		TextRender()->TextColor(0.2f, 0.6f, 1.0f, 1.0f);
+	else if(pInfoMsg->m_RecordType == RECORDTYPE_MAP)
+		TextRender()->TextColor(1.0f, 0.5f, 0.0f, 1.0f);
 	TextRender()->Text(0, x, y, FontSize, aTime, -1);
 
 	x -= 52.0f + 10.0f;
@@ -309,6 +318,6 @@ void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) 
 	x -= 28.0f;
 
 	// render player tee
-	int Emote = pInfoMsg->m_NewRecord ? EMOTE_HAPPY : EMOTE_NORMAL;
+	int Emote = pInfoMsg->m_RecordType != RECORDTYPE_NONE ? EMOTE_HAPPY : EMOTE_NORMAL;
 	RenderTools()->RenderTee(CAnimState::GetIdle(), &pInfoMsg->m_Player1RenderInfo, Emote, vec2(-1,0), vec2(x, y+28));
 }
