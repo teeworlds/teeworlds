@@ -33,7 +33,6 @@
 #include "components/debughud.h"
 #include "components/effects.h"
 #include "components/emoticon.h"
-#include "components/flow.h"
 #include "components/hud.h"
 #include "components/items.h"
 #include "components/infomessages.h"
@@ -100,7 +99,6 @@ static CParticles gs_Particles;
 static CMenus gs_Menus;
 static CSkins gs_Skins;
 static CCountryFlags gs_CountryFlags;
-static CFlow gs_Flow;
 static CHud gs_Hud;
 static CDebugHud gs_DebugHud;
 static CNotifications gs_Notifications;
@@ -229,7 +227,6 @@ void CGameClient::OnConsoleInit()
 	m_pSkins = &::gs_Skins;
 	m_pCountryFlags = &::gs_CountryFlags;
 	m_pChat = &::gs_Chat;
-	m_pFlow = &::gs_Flow;
 	m_pCamera = &::gs_Camera;
 	m_pControls = &::gs_Controls;
 	m_pEffects = &::gs_Effects;

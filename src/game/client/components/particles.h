@@ -18,7 +18,6 @@ struct CParticle
 		m_Rotspeed = 0;
 		m_Gravity = 0;
 		m_Friction = 0;
-		m_FlowAffected = 1.0f;
 		m_Color = vec4(1,1,1,1);
 	}
 
@@ -26,8 +25,6 @@ struct CParticle
 	vec2 m_Vel;
 
 	int m_Spr;
-
-	float m_FlowAffected;
 
 	float m_LifeSpan;
 

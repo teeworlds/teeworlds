@@ -9,7 +9,6 @@
 #include <game/client/ui.h>
 #include <game/client/render.h>
 
-#include <game/client/components/flow.h>
 #include <game/client/components/effects.h>
 
 #include "items.h"

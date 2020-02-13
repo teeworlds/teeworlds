@@ -9,7 +9,6 @@
 
 #include <game/client/components/particles.h>
 #include <game/client/components/skins.h>
-#include <game/client/components/flow.h>
 #include <game/client/components/damageind.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
@@ -40,7 +39,6 @@ void CEffects::AirJump(vec2 Pos)
 	p.m_Rotspeed = pi*2;
 	p.m_Gravity = 500;
 	p.m_Friction = 0.7f;
-	p.m_FlowAffected = 0.0f;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 
 	p.m_Pos = Pos + vec2(6.0f, 16.0f);
@@ -98,7 +96,6 @@ void CEffects::PowerupShine(vec2 Pos, vec2 size)
 	p.m_Rotspeed = pi*2;
 	p.m_Gravity = 500;
 	p.m_Friction = 0.9f;
-	p.m_FlowAffected = 0.0f;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_GENERAL, &p);
 }
 
@@ -227,17 +224,6 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 
 void CEffects::Explosion(vec2 Pos)
 {
-	// add to flow
-	for(int y = -8; y <= 8; y++)
-		for(int x = -8; x <= 8; x++)
-		{
-			if(x == 0 && y == 0)
-				continue;
-
-			float a = 1 - (length(vec2(x,y)) / length(vec2(8,8)));
-			m_pClient->m_pFlow->Add(Pos+vec2(x,y)*16, normalize(vec2(x,y))*5000.0f*a, 10.0f);
-		}
-
 	// add the explosion
 	CParticle p;
 	p.SetDefault();
@@ -287,49 +273,25 @@ void CEffects::OnRender()
 {
 	static int64 LastUpdate100hz = 0;
 	static int64 LastUpdate50hz = 0;
+	const int64 Now = time_get();
 
+	float Speed = 1.0f;
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-	{
-		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+		Speed = DemoPlayer()->BaseInfo()->m_Speed;
 
-		if(time_get()-LastUpdate100hz > time_freq()/(100*pInfo->m_Speed))
-		{
-			m_Add100hz = true;
-			LastUpdate100hz = time_get();
-		}
-		else
-			m_Add100hz = false;
-
-		if(time_get()-LastUpdate50hz > time_freq()/(100*pInfo->m_Speed))
-		{
-			m_Add50hz = true;
-			LastUpdate50hz = time_get();
-		}
-		else
-			m_Add50hz = false;
-
-		if(m_Add50hz)
-			m_pClient->m_pFlow->Update();
-
-		return;
-	}
-
-	if(time_get()-LastUpdate100hz > time_freq()/100)
+	if(Now-LastUpdate100hz > time_freq()/(100*Speed))
 	{
 		m_Add100hz = true;
-		LastUpdate100hz = time_get();
+		LastUpdate100hz = Now;
 	}
 	else
 		m_Add100hz = false;
 
-	if(time_get()-LastUpdate50hz > time_freq()/100)
+	if(Now-LastUpdate50hz > time_freq()/(50*Speed))
 	{
 		m_Add50hz = true;
-		LastUpdate50hz = time_get();
+		LastUpdate50hz = Now;
 	}
 	else
 		m_Add50hz = false;
-
-	if(m_Add50hz)
-		m_pClient->m_pFlow->Update();
 }

@@ -1443,8 +1443,6 @@ if(CLIENT)
     components/effects.h
     components/emoticon.cpp
     components/emoticon.h
-    components/flow.cpp
-    components/flow.h
     components/hud.cpp
     components/hud.h
     components/infomessages.cpp
