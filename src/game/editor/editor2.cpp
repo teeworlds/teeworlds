@@ -41,8 +41,6 @@ static char s_aEdMsg[256];
 		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg);
 #else
 	#define ed_dbg(...)
-	#undef dbg_assert
-	#define dbg_assert(test,msg)
 #endif
 
 // TODO: move this elsewhere
@@ -3762,7 +3760,7 @@ void CEditor2::RenderPopupMenuFile()
 	}
 
 	// close popup
-	if(Input()->KeyPress(KEY_ESCAPE) || UI()->MouseButtonClicked(0))
+	if(Input()->KeyPress(KEY_ESCAPE) || (UI()->MouseButtonClicked(0) && !UI()->MouseInside(&m_UiCurrentPopupRect)))
 	{
 		m_UiCurrentPopupID = POPUP_NONE;
 		UI()->SetActiveItem(0);
@@ -4896,7 +4894,8 @@ bool CEditor2::UiScrollRegionIsRectClipped(CScrollRegion* pSr, const CUIRect& Re
 
 void CEditor2::Reset()
 {
-
+	m_Map.LoadDefault();
+	OnMapLoaded();
 }
 
 void CEditor2::ResetCamera()
