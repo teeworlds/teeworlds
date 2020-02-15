@@ -44,7 +44,7 @@ public:
 	static IKernel *Create();
 	virtual ~IKernel() {}
 
-	// templated access to handle pointer convertions and interface names
+	// templated access to handle pointer conversions and interface names
 	template<class TINTERFACE>
 	bool RegisterInterface(TINTERFACE *pInterface)
 	{

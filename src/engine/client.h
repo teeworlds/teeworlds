@@ -46,7 +46,7 @@ public:
 		STATE_LOADING - The client has connected to a server and is loading resources.
 		STATE_ONLINE - The client is connected to a server and running the game.
 		STATE_DEMOPLAYBACK - The client is playing a demo
-		STATE_QUITING - The client is quiting.
+		STATE_QUITING - The client is quitting.
 	*/
 
 	enum

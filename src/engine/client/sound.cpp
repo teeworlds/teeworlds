@@ -312,7 +312,7 @@ void CSound::RateConvert(int SampleID)
 
 	for(int i = 0; i < NumFrames; i++)
 	{
-		// resample TODO: this should be done better, like linear atleast
+		// resample TODO: this should be done better, like linear at least
 		float a = i/(float)NumFrames;
 		int f = (int)(a*pSample->m_NumFrames);
 		if(f >= pSample->m_NumFrames)

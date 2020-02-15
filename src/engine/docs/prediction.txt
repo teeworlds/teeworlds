@@ -2,7 +2,7 @@ Title: Prediction
 
 The engine calls <modc_predict> when reprediction is required. This happens usally when new data has arrived from the server. <modc_predict> should to prediction from the current snapshot and current snapshot tick (<client_tick> + 1) upto and including the tick returned by <client_predtick>.
 
-Predicted input sent to the server can be retrived by calling <client_get_input> with the corresponding tick that you want the input for. Here is a simple example of how it might look.
+Predicted input sent to the server can be retrieved by calling <client_get_input> with the corresponding tick that you want the input for. Here is a simple example of how it might look.
 
 > void modc_predict()
 > {

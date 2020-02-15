@@ -4,7 +4,7 @@ Section: Overview
 
 Topic: Definitions
 
-- *Snapshot*. A is a serialized game state from which a client can render the game from. They are sent from the server at a regular interval and is created specificly for each client in order to reduce bandwidth.
+- *Snapshot*. A is a serialized game state from which a client can render the game from. They are sent from the server at a regular interval and is created specifically for each client in order to reduce bandwidth.
 - *Delta Snapshot*. A set of data that can be applied to a snapshot in order to create a new snapshot with the updated game state.
 
 Topic: Structure
