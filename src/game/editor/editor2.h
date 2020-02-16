@@ -90,6 +90,152 @@ struct array2: public array<T>
 	}
 };
 
+// Sparse array
+// - Provides indirection between ID and data pointer so IDs are not invalidated
+// - Data is packed
+template<typename T, u32 MAX_ELEMENTS>
+struct CSparseArray
+{
+	enum
+	{
+		MAX_ELEMENTS = MAX_ELEMENTS,
+		INVALID_ID = 0xFFFF
+	};
+
+	u16 m_ID[MAX_ELEMENTS];
+	u16 m_ReverseID[MAX_ELEMENTS];
+	T m_Data[MAX_ELEMENTS];
+	int count;
+
+	CSparseArray()
+	{
+		Clear();
+	}
+
+	u32 Push(const T& elt)
+	{
+		dbg_assert(count < MAX_ELEMENTS, "Array is full");
+
+		for(int i = 0; i < MAX_ELEMENTS; i++)
+		{
+			if(m_ID[i] == INVALID_ID)
+			{
+				const u16 dataID = count++;
+				m_ID[i] = dataID;
+				m_ReverseID[dataID] = i;
+				m_Data[dataID] = elt;
+				return i;
+			}
+		}
+
+		dbg_assert(0, "Failed to push element");
+		return -1;
+	}
+
+	T& Set(u32 SlotID, const T& elt)
+	{
+		dbg_assert(SlotID < MAX_ELEMENTS, "ID out of bounds");
+
+		if(m_ID[SlotID] == INVALID_ID) {
+			dbg_assert(count < MAX_ELEMENTS, "Array is full"); // should never happen
+			const u16 dataID = count++;
+			m_ID[SlotID] = dataID;
+			m_ReverseID[SlotID] = SlotID;
+		}
+		return m_Data[m_ID[SlotID]] = elt;
+	}
+
+	T& Get(u32 SlotID)
+	{
+		dbg_assert(SlotID < MAX_ELEMENTS, "ID out of bounds");
+		dbg_assert(m_ID[SlotID] != INVALID_ID, "Slot is empty");
+		return m_Data[m_ID[SlotID]];
+	}
+
+	bool IsValid(u32 SlotID) const
+	{
+		if(SlotID > MAX_ELEMENTS) return false;
+		if(m_ID[SlotID] == INVALID_ID) return false;
+#ifdef CONF_DEBUG
+		const u16 dataID = m_ID[SlotID];
+		return m_ReverseID[dataID] == SlotID;
+#endif
+		return true;
+	}
+
+	u32 GetIDFromData(const T& elt) const
+	{
+		int64 dataID = &elt - m_Data;
+		dbg_assert(dataID >= 0 && dataID < MAX_ELEMENTS, "Element out of bounds");
+		return m_ReverseID[dataID];
+	}
+
+	void RemoveByID(u32 SlotID)
+	{
+		dbg_assert(SlotID < MAX_ELEMENTS, "ID out of bounds");
+
+		if(m_ID[SlotID] != INVALID_ID) {
+			dbg_assert(count > 0, "Array is empty"); // should never happen
+			const u16 dataID = m_ID[SlotID];
+
+			const int lastDataID = count-1;
+			const u16 lastID = m_ReverseID[lastDataID];
+			m_ID[lastID] = dataID;
+			tl_swap(m_ReverseID[dataID], m_ReverseID[lastDataID]);
+			tl_swap(m_Data[dataID], m_Data[lastDataID]);
+			count--;
+
+			m_ID[SlotID] = INVALID_ID;
+		}
+	}
+
+	void RemoveKeepOrderByID(u32 SlotID)
+	{
+		dbg_assert(SlotID < MAX_ELEMENTS, "ID out of bounds");
+
+		if(m_ID[SlotID] != INVALID_ID) {
+			dbg_assert(count > 0, "Array is empty"); // should never happen
+
+
+			dbg_assert(0, "Implement me");
+		}
+	}
+
+	void SwapTwoDataElements(const T& elt1, const T& elt2)
+	{
+		int64 dataID1 = &elt1 - m_Data;
+		dbg_assert(dataID1 >= 0 && dataID1 < MAX_ELEMENTS, "Element out of bounds");
+		int64 dataID2 = &elt2 - m_Data;
+		dbg_assert(dataID2 >= 0 && dataID2 < MAX_ELEMENTS, "Element out of bounds");
+
+		tl_swap(m_ReverseID[dataID1], m_ReverseID[dataID2]);
+		tl_swap(m_Data[dataID1], m_Data[dataID2]);
+	}
+
+	void Clear()
+	{
+		memset(m_ID, 0xFF, sizeof(m_ID));
+		count = 0;
+	}
+
+	int Count() const
+	{
+		return count;
+	}
+
+	/*
+	inline T& operator [] (u32 ID) const
+	{
+		return Get(ID);
+	}
+	*/
+
+	T* Data()
+	{
+		return m_Data;
+	}
+};
+
 struct CEditorMap2
 {
 	enum
@@ -241,8 +387,8 @@ struct CEditorMap2
 	char m_aPath[256];
 
 	array2<CEnvPoint> m_aEnvPoints;
-	array2<CLayer> m_aLayers;
-	array2<CGroup> m_aGroups;
+	CSparseArray<CLayer,1024> m_aLayers;
+	CSparseArray<CGroup,256> m_aGroups;
 	array2<CMapItemEnvelope> m_aEnvelopes;
 
 	CAssets m_Assets;
@@ -277,8 +423,8 @@ struct CEditorMap2
 	void CompareSnapshot(const CSnapshot* pSnapshot);
 #endif
 
-	CLayer& NewTileLayer(int Width, int Height);
-	CLayer& NewQuadLayer();
+	CLayer& NewTileLayer(int Width, int Height, u32* pOutID = 0x0);
+	CLayer& NewQuadLayer(u32* pOutID = 0x0);
 };
 
 struct CUIButton
