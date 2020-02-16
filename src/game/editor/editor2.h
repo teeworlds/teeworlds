@@ -170,6 +170,13 @@ struct CSparseArray
 		return m_ReverseID[dataID];
 	}
 
+	u32 GetDataID(u32 SlotID) const
+	{
+		dbg_assert(SlotID < MAX_ELEMENTS, "ID out of bounds");
+		dbg_assert(m_ID[SlotID] != INVALID_ID, "Slot is empty");
+		return m_ID[SlotID];
+	}
+
 	void RemoveByID(u32 SlotID)
 	{
 		dbg_assert(SlotID < MAX_ELEMENTS, "ID out of bounds");
@@ -300,7 +307,7 @@ struct CEditorMap2
 		int m_ClipY;
 		int m_ClipWidth;
 		int m_ClipHeight;
-		bool m_UseClipping ;
+		bool m_UseClipping;
 
 		CGroup()
 		{
