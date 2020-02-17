@@ -2391,8 +2391,6 @@ void CMenus::OnStateChange(int NewState, int OldState)
 	}
 }
 
-extern "C" void font_debug_render();
-
 void CMenus::OnRender()
 {
 	UI()->StartCheck();
