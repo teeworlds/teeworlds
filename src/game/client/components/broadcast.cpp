@@ -422,6 +422,9 @@ void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
 
 void CBroadcast::OnRender()
 {
+	if(Client()->State() < IClient::STATE_ONLINE)
+		return;
+
 	// server broadcast
 	RenderServerBroadcast();
 
