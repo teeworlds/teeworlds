@@ -93,12 +93,12 @@ struct array2: public array<T>
 // Sparse array
 // - Provides indirection between ID and data pointer so IDs are not invalidated
 // - Data is packed
-template<typename T, u32 MAX_ELEMENTS>
+template<typename T, u32 MAX_ELEMENTS_>
 struct CSparseArray
 {
 	enum
 	{
-		MAX_ELEMENTS = MAX_ELEMENTS,
+		MAX_ELEMENTS = MAX_ELEMENTS_,
 		INVALID_ID = 0xFFFF
 	};
 

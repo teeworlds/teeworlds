@@ -189,12 +189,13 @@ bool CEditorMap2::Save(const char* pFileName)
 	}
 
 	// save layers
-	const int GroupCount = m_aGroups.Count();
-	const CGroup* aGroups = m_aGroups.Data();
 
 	// FIXME: fix group and layer saving
 	dbg_assert(0, "Implement me");
 #if 0
+	const int GroupCount = m_aGroups.Count();
+	const CGroup* aGroups = m_aGroups.Data();
+
 	for(int li = 0, gi = 0; gi < GroupCount; gi++)
 	{
 		const CGroup& Group = aGroups[gi];
@@ -3143,7 +3144,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 					DrawRect(ButtonRect, ButColor);
 
 				char aLayerName[64];
-				const int ImageID = m_Map.m_aLayers.Get(LyID).m_ImageID;
+				const int ImageID = Layer.m_ImageID;
 				if(m_Map.m_GameLayerID == LyID)
 					str_format(aLayerName, sizeof(aLayerName), "Game Layer");
 				else
