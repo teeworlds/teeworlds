@@ -972,11 +972,13 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 	const int GroupCount = m_aGroups.Count();
 	const CGroup* aGroups = m_aGroups.Data();
 	SnapSize += sizeof(CGroup) * GroupCount;
+	SnapSize += sizeof(u32) * GroupCount; // m_aGroupIDs
 
 	const int LayerCount = m_aLayers.Count();
 	const CLayer* aLayers = m_aLayers.Data();
 
 	SnapSize += sizeof(CMapItemLayer*) * LayerCount;
+	SnapSize += sizeof(u32) * LayerCount; // m_aLayerIDs
 	for(int li = 0; li < LayerCount; li++)
 	{
 		const CLayer& Layer = aLayers[li];
@@ -1013,13 +1015,15 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 	Snap.m_LayerCount = LayerCount;
 	Snap.m_EnvelopeCount = EnvelopeCount;
 	Snap.m_ImageCount = ImageCount;
-	Snap.m_GameGroupID = m_aGroups.GetDataID(m_GameGroupID);
-	Snap.m_GameLayerID = m_aLayers.GetDataID(m_GameLayerID);
+	Snap.m_GameGroupID = m_GameGroupID;
+	Snap.m_GameLayerID = m_GameLayerID;
 	Snap.m_aImageNames = (CImageName*)(Snap.m_Data);
 	Snap.m_aImageEmbeddedCrc = (u32*)(Snap.m_aImageNames + ImageCount);
 	Snap.m_aImageInfos = (CImageInfo*)(Snap.m_aImageEmbeddedCrc + ImageCount);
 	Snap.m_aGroups = (CGroup*)(Snap.m_aImageInfos + ImageCount);
 	Snap.m_apLayers = (CMapItemLayer**)(Snap.m_aGroups + GroupCount);
+	Snap.m_aGroupIDs = (u32*)(Snap.m_apLayers + LayerCount);
+	Snap.m_aLayerIDs = (u32*)(Snap.m_aGroupIDs + GroupCount);
 
 	for(int i = 0; i < ImageCount; i++)
 	{
@@ -1036,24 +1040,18 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
+		Snap.m_aGroupIDs[gi] = m_aGroups.GetIDFromData(aGroups[gi]);
 		mem_copy(&Snap.m_aGroups[gi], &aGroups[gi], sizeof(aGroups[gi]));
-
-		CGroup& Group = Snap.m_aGroups[gi];
-		const int GroupLayerCount = Group.m_LayerCount;
-
-		for(int li = 0; li < GroupLayerCount; li++)
-		{
-			Group.m_apLayerIDs[li] = m_aLayers.GetDataID(Group.m_apLayerIDs[li]);
-		}
 	}
 
-	CMapItemLayer* pCurrentLayerData = (CMapItemLayer*)(Snap.m_apLayers + Snap.m_LayerCount);
+	CMapItemLayer* pCurrentLayerData = (CMapItemLayer*)(Snap.m_aLayerIDs + Snap.m_LayerCount);
 	int TileStartID = 0;
 	int QuadStartID = 0;
 
 	for(int li = 0; li < LayerCount; li++)
 	{
 		const CLayer& Layer = aLayers[li];
+		Snap.m_aLayerIDs[li] = m_aLayers.GetIDFromData(Layer);
 		Snap.m_apLayers[li] = pCurrentLayerData;
 
 		int aNameInt[3];
@@ -1157,7 +1155,7 @@ void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 
 	for(int gi = 0; gi < Snap.m_GroupCount; gi++)
 	{
-		m_aGroups.Push(Snap.m_aGroups[gi]);
+		m_aGroups.Set(Snap.m_aGroupIDs[gi], Snap.m_aGroups[gi]);
 	}
 
 	const CTile* pSnapTiles = Snap.m_aTiles;
@@ -1166,7 +1164,8 @@ void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 	for(int li = 0; li < Snap.m_LayerCount; li++)
 	{
 		const CMapItemLayer& SnapLayer = *Snap.m_apLayers[li];
-		u32 LayerID = m_aLayers.Push(CLayer());
+		const u32 LayerID = Snap.m_aLayerIDs[li];
+		m_aLayers.Set(LayerID, CLayer());
 		CLayer& Layer = m_aLayers.Get(LayerID);
 
 		if(SnapLayer.m_Type == LAYERTYPE_GAME || SnapLayer.m_Type == LAYERTYPE_TILES)
@@ -1224,10 +1223,8 @@ void CEditorMap2::CompareSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 	dbg_assert(Snap.m_LayerCount == m_aLayers.Count(), "");
 	dbg_assert(Snap.m_EnvelopeCount == m_aEnvelopes.size(), "");
 	dbg_assert(Snap.m_ImageCount == m_Assets.m_ImageCount, "");
-
-	// FIXME: restore this
-	//dbg_assert(Snap.m_GameGroupID == m_GameGroupID, "");
-	//dbg_assert(Snap.m_GameLayerID == m_GameLayerID, "");
+	dbg_assert(Snap.m_GameGroupID == m_GameGroupID, "");
+	dbg_assert(Snap.m_GameLayerID == m_GameLayerID, "");
 
 	for(int i = 0; i < Snap.m_ImageCount; i++)
 	{
@@ -1240,29 +1237,12 @@ void CEditorMap2::CompareSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 	}
 
 	const CGroup* aGroups = m_aGroups.Data();
-	dbg_assert(m_aGroups.Count() == Snap.m_GroupCount, "Group count unmatched");
 	for(int gi = 0; gi < Snap.m_GroupCount; gi++)
 	{
 		const CGroup& SnapGroup = Snap.m_aGroups[gi];
 		const CGroup& Group = aGroups[gi];
 
-		dbg_assert(mem_comp(&SnapGroup.m_aName, &Group.m_aName, sizeof(Group.m_aName)) == 0, "Groups don't match");
-		dbg_assert(SnapGroup.m_LayerCount == Group.m_LayerCount, "Groups don't match");
-		dbg_assert(SnapGroup.m_ParallaxX == Group.m_ParallaxX, "Groups don't match");
-		dbg_assert(SnapGroup.m_ParallaxY == Group.m_ParallaxY, "Groups don't match");
-		dbg_assert(SnapGroup.m_OffsetX == Group.m_OffsetX, "Groups don't match");
-		dbg_assert(SnapGroup.m_OffsetY == Group.m_OffsetY, "Groups don't match");
-		dbg_assert(SnapGroup.m_ClipX == Group.m_ClipX, "Groups don't match");
-		dbg_assert(SnapGroup.m_ClipY == Group.m_ClipY, "Groups don't match");
-		dbg_assert(SnapGroup.m_ClipWidth == Group.m_ClipWidth, "Groups don't match");
-		dbg_assert(SnapGroup.m_ClipHeight == Group.m_ClipHeight, "Groups don't match");
-		dbg_assert(SnapGroup.m_UseClipping == Group.m_UseClipping, "Groups don't match");
-
-		const int GroupLayerCount = Group.m_LayerCount;
-		for(int li = 0; li < GroupLayerCount; li++)
-		{
-			// FIXME: restore layer validation
-		}
+		dbg_assert(mem_comp(&SnapGroup, &Group, sizeof(Group)) == 0, "Groups don't match");
 	}
 
 	const CTile* pSnapTiles = Snap.m_aTiles;
@@ -6259,14 +6239,10 @@ CEditor2::CUISnapshot* CEditor2::SaveUiSnapshot()
 
 void CEditor2::RestoreUiSnapshot(CUISnapshot* pUiSnap)
 {
-	m_UiSelectedGroupID = m_Map.m_GameGroupID;
-	m_UiSelectedLayerID = m_Map.m_GameLayerID;
-	/*
 	m_UiSelectedLayerID = pUiSnap->m_SelectedLayerID;
 	m_UiSelectedGroupID = pUiSnap->m_SelectedGroupID;
 	dbg_assert(m_Map.m_aLayers.IsValid(m_UiSelectedLayerID), "Selected layer is invalid");
 	dbg_assert(m_Map.m_aGroups.IsValid(m_UiSelectedGroupID), "Selected group is invalid");
-	*/
 	m_Tool = pUiSnap->m_ToolID;
 	BrushClear(); // TODO: save brush?
 	m_TileSelection.Deselect(); // TODO: save selection?

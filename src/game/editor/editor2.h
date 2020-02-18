@@ -140,7 +140,7 @@ struct CSparseArray
 			dbg_assert(count < MAX_ELEMENTS, "Array is full"); // should never happen
 			const u16 dataID = count++;
 			m_ID[SlotID] = dataID;
-			m_ReverseID[SlotID] = SlotID;
+			m_ReverseID[dataID] = SlotID;
 		}
 		return m_Data[m_ID[SlotID]] = elt;
 	}
@@ -154,7 +154,7 @@ struct CSparseArray
 
 	bool IsValid(u32 SlotID) const
 	{
-		if(SlotID > MAX_ELEMENTS) return false;
+		if(SlotID >= MAX_ELEMENTS) return false;
 		if(m_ID[SlotID] == INVALID_ID) return false;
 #ifdef CONF_DEBUG
 		const u16 dataID = m_ID[SlotID];
@@ -379,6 +379,8 @@ struct CEditorMap2
 		CImageInfo* m_aImageInfos;
 		CGroup* m_aGroups;
 		CMapItemLayer** m_apLayers;
+		u32* m_aGroupIDs;
+		u32* m_aLayerIDs;
 		CMapItemEnvelope* m_aEnvelopes;
 		CTile* m_aTiles;
 		CQuad* m_aQuads;
