@@ -1947,7 +1947,7 @@ void CEditor2::RenderMap()
 		const u32 GroupID = GroupIDList[gi];
 		const CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(GroupID);
 
-		if(m_UiGroupListHidden[GroupID])
+		if(m_UiGroupHidden[GroupID])
 			continue;
 
 		// group clip
@@ -2010,7 +2010,7 @@ void CEditor2::RenderMap()
 					continue;
 				}
 
-				if(m_UiGroupListHovered[GroupID] || m_UiLayerHovered[LyID])
+				if(m_UiGroupHovered[GroupID] || m_UiLayerHovered[LyID])
 					LyColor = vec4(1, 0, 1, 1);
 
 				/*if(SelectedLayerID >= 0 && SelectedLayerID != LyID)
@@ -2041,7 +2041,7 @@ void CEditor2::RenderMap()
 					Graphics()->TextureSet(m_Map.m_Assets.m_aTextureHandle[Layer.m_ImageID]);
 
 				Graphics()->BlendNormal();
-				if(m_UiGroupListHovered[gi] || m_UiLayerHovered[LyID])
+				if(m_UiGroupHovered[gi] || m_UiLayerHovered[LyID])
 					Graphics()->BlendAdditive();
 
 				RenderTools()->RenderQuads(Layer.m_aQuads.base_ptr(), Layer.m_aQuads.size(),
@@ -2055,7 +2055,7 @@ void CEditor2::RenderMap()
 
 	// game layer
 	const int LyID = m_Map.m_GameLayerID;
-	if(!m_ConfigShowGameEntities && !m_UiLayerHidden[LyID] && !m_UiGroupListHidden[m_Map.m_GameGroupID])
+	if(!m_ConfigShowGameEntities && !m_UiLayerHidden[LyID] && !m_UiGroupHidden[m_Map.m_GameGroupID])
 	{
 		const vec2 MapOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight, 0, 0, 1, 1);
 		CUIRect ScreenRect = { MapOff.x, MapOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
@@ -2923,22 +2923,24 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	CUIRect ActionLineRect, ButtonRect;
 	NavRect.HSplitBottom((ButtonHeight + Spacing) * 3.0f, &NavRect, &ActionLineRect);
 
-	const int GroupCount = m_Map.m_GroupIDListCount;
+	// TODO: keeping track of Layer/Group UI state is not great for now, make something better
+
+	const int TotalGroupCount = m_Map.m_aGroups.Count();
 	const int TotalLayerCount = m_Map.m_aLayers.Count();
 
-	static array2<CUIButton> s_UiGroupListButState;
-	static array2<CUIButton> s_UiGroupListShowButState;
+	static array2<CUIButton> s_UiGroupButState;
+	static array2<CUIButton> s_UiGroupShowButState;
 	static array2<CUIButton> s_UiLayerButState;
 	static array2<CUIButton> s_UiLayerShowButState;
 
-	ArraySetSizeAndZero(&s_UiGroupListButState, GroupCount);
-	ArraySetSizeAndZero(&s_UiGroupListShowButState, GroupCount);
+	ArraySetSizeAndZero(&s_UiGroupButState, TotalGroupCount);
+	ArraySetSizeAndZero(&s_UiGroupShowButState, TotalGroupCount);
 	ArraySetSizeAndZero(&s_UiLayerButState, TotalLayerCount); // FIXME: can LayerID (m_aLayers.Get(LayerId)) be >= TotalLayerCount? This is probably a bad way of tracking button/other state.
 	ArraySetSizeAndZero(&s_UiLayerShowButState, TotalLayerCount);
 
-	ArraySetSizeAndZero(&m_UiGroupListOpen, GroupCount);
-	ArraySetSizeAndZero(&m_UiGroupListHidden, GroupCount);
-	ArraySetSizeAndZero(&m_UiGroupListHovered, GroupCount);
+	ArraySetSizeAndZero(&m_UiGroupOpen, TotalGroupCount);
+	ArraySetSizeAndZero(&m_UiGroupHidden, TotalGroupCount);
+	ArraySetSizeAndZero(&m_UiGroupHovered, TotalGroupCount);
 	ArraySetSizeAndZero(&m_UiLayerHovered, TotalLayerCount);
 	ArraySetSizeAndZero(&m_UiLayerHidden, TotalLayerCount);
 
@@ -2968,6 +2970,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	int DragMoveDir = 0;
 	// -----------------------
 
+	const int GroupCount = m_Map.m_GroupIDListCount;
 	const u32* aGroupIDList = m_Map.m_aGroupIDList;
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
@@ -2982,7 +2985,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		// check whole line for hover
 		CUIButton WholeLineState;
 		UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
-		m_UiGroupListHovered[gi] = WholeLineState.m_Hovered;
+		m_UiGroupHovered[GroupID] = WholeLineState.m_Hovered;
 
 		// drag started on this item
 		if(StartedMouseDragging && WholeLineState.m_Hovered)
@@ -2999,13 +3002,13 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 		// show button
 		ButtonRect.VSplitRight(ShowButtonWidth, &ButtonRect, &ShowButton);
-		CUIButton& ShowButState = s_UiGroupListShowButState[gi];
+		CUIButton& ShowButState = s_UiGroupShowButState[GroupID];
 		UiDoButtonBehavior(&ShowButState, ShowButton, &ShowButState);
 
 		if(ShowButState.m_Clicked)
-			m_UiGroupListHidden[gi] ^= 1;
+			m_UiGroupHidden[GroupID] ^= 1;
 
-		const bool IsShown = !m_UiGroupListHidden[gi];
+		const bool IsShown = !m_UiGroupHidden[GroupID];
 
 		vec4 ShowButColor = StyleColorButton;
 		if(ShowButState.m_Hovered)
@@ -3017,13 +3020,13 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		DrawText(ShowButton, IsShown ? "o" : "x", FontSize);
 
 		// group button
-		CUIButton& ButState = s_UiGroupListButState[gi];
+		CUIButton& ButState = s_UiGroupButState[GroupID];
 		UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
 		if(ButState.m_Clicked)
 		{
 			if(m_UiSelectedGroupID == GroupID)
-				m_UiGroupListOpen[gi] ^= 1;
+				m_UiGroupOpen[GroupID] ^= 1;
 
 			m_UiSelectedGroupID = GroupID;
 			if(Group.m_LayerCount > 0)
@@ -3033,7 +3036,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		}
 
 		const bool IsSelected = m_UiSelectedGroupID == GroupID;
-		const bool IsOpen = m_UiGroupListOpen[gi];
+		const bool IsOpen = m_UiGroupOpen[GroupID];
 
 		vec4 ButColor = StyleColorButton;
 		if(ButState.m_Hovered)
@@ -3057,7 +3060,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			str_format(aGroupName, sizeof(aGroupName), "Group #%d", gi);
 		DrawText(ButtonRect, aGroupName, FontSize);
 
-		if(m_UiGroupListOpen[gi])
+		if(m_UiGroupOpen[GroupID])
 		{
 			const int LayerCount = Group.m_LayerCount;
 
@@ -3273,7 +3276,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			if(DragMoveGroupListIndex != -1)
 			{
 				int NewGroupListIndex = EditGroupOrderMove(DragMoveGroupListIndex,  DragMoveDir < 0 ? -1 : 1);
-				m_UiGroupListOpen[NewGroupListIndex] = true;
+				m_UiGroupOpen[m_Map.m_aGroupIDList[NewGroupListIndex]] = true;
 
 				if((int)m_Map.m_aGroupIDList[DragMoveGroupListIndex] == m_UiSelectedGroupID && NewGroupListIndex != DragMoveGroupListIndex)
 				{
@@ -3284,7 +3287,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			else if(DragMoveLayerListIndex != -1)
 			{
 				int NewGroupListIndex = EditLayerOrderMove(DragMoveParentGroupListIndex, DragMoveLayerListIndex, DragMoveDir < 0 ? -1 : 1);
-				m_UiGroupListOpen[NewGroupListIndex] = true;
+				m_UiGroupOpen[m_Map.m_aGroupIDList[NewGroupListIndex]] = true;
 			}
 		}
 	}
@@ -5279,10 +5282,10 @@ void CEditor2::OnMapLoaded()
 {
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
-	mem_zero(m_UiGroupListHidden.base_ptr(), sizeof(m_UiGroupListHidden[0]) * m_UiGroupListHidden.size());
-	m_UiGroupListOpen.set_size(m_Map.m_aGroups.Count());
-	mem_zero(m_UiGroupListOpen.base_ptr(), sizeof(m_UiGroupListOpen[0]) * m_UiGroupListOpen.size());
-	m_UiGroupListOpen[m_Map.m_GameGroupID] = true;
+	mem_zero(m_UiGroupHidden.base_ptr(), sizeof(m_UiGroupHidden[0]) * m_UiGroupHidden.size());
+	m_UiGroupOpen.set_size(m_Map.m_aGroups.Count());
+	mem_zero(m_UiGroupOpen.base_ptr(), sizeof(m_UiGroupOpen[0]) * m_UiGroupOpen.size());
+	m_UiGroupOpen[m_Map.m_GameGroupID] = true;
 	mem_zero(m_UiLayerHidden.base_ptr(), sizeof(m_UiLayerHidden[0]) * m_UiLayerHidden.size());
 	mem_zero(m_UiLayerHovered.base_ptr(), sizeof(m_UiLayerHovered[0]) * m_UiLayerHovered.size());
 	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
@@ -5317,6 +5320,14 @@ void CEditor2::OnMapLoaded()
 	m_pHistoryEntryCurrent->m_pUiSnap = SaveUiSnapshot();
 	m_pHistoryEntryCurrent->SetAction("Map loaded");
 	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
+
+	const int TotalGroupCount = m_Map.m_aGroups.Count();
+	const int TotalLayerCount = m_Map.m_aLayers.Count();
+	ArraySetSizeAndZero(&m_UiGroupOpen, TotalGroupCount);
+	ArraySetSizeAndZero(&m_UiGroupHidden, TotalGroupCount);
+	ArraySetSizeAndZero(&m_UiGroupHovered, TotalGroupCount);
+	ArraySetSizeAndZero(&m_UiLayerHovered, TotalLayerCount);
+	ArraySetSizeAndZero(&m_UiLayerHidden, TotalLayerCount);
 }
 
 void CEditor2::EditDeleteLayer(int LyID, int ParentGroupID)

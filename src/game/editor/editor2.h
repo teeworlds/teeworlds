@@ -533,11 +533,11 @@ class CEditor2: public IEditor
 
 	CUIRect m_UiScreenRect;
 	CUIRect m_UiMainViewRect;
-	array<u8> m_UiGroupListOpen;
-	array<u8> m_UiGroupListHidden;
-	array<u8> m_UiGroupListHovered;
-	array<u8> m_UiLayerHovered;
-	array<u8> m_UiLayerHidden;
+	array2<u8> m_UiGroupOpen;
+	array2<u8> m_UiGroupHidden;
+	array2<u8> m_UiGroupHovered;
+	array2<u8> m_UiLayerHovered;
+	array2<u8> m_UiLayerHidden;
 	int m_UiSelectedLayerID;
 	int m_UiSelectedGroupID;
 	int m_UiSelectedImageID;
