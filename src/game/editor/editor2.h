@@ -105,7 +105,7 @@ struct CSparseArray
 	u16 m_ID[MAX_ELEMENTS];
 	u16 m_ReverseID[MAX_ELEMENTS];
 	T m_Data[MAX_ELEMENTS];
-	int count;
+	int m_Count;
 
 	CSparseArray()
 	{
@@ -114,13 +114,13 @@ struct CSparseArray
 
 	u32 Push(const T& elt)
 	{
-		dbg_assert(count < MAX_ELEMENTS, "Array is full");
+		dbg_assert(m_Count < MAX_ELEMENTS, "Array is full");
 
 		for(int i = 0; i < MAX_ELEMENTS; i++)
 		{
 			if(m_ID[i] == INVALID_ID)
 			{
-				const u16 dataID = count++;
+				const u16 dataID = m_Count++;
 				m_ID[i] = dataID;
 				m_ReverseID[dataID] = i;
 				m_Data[dataID] = elt;
@@ -137,8 +137,8 @@ struct CSparseArray
 		dbg_assert(SlotID < MAX_ELEMENTS, "ID out of bounds");
 
 		if(m_ID[SlotID] == INVALID_ID) {
-			dbg_assert(count < MAX_ELEMENTS, "Array is full"); // should never happen
-			const u16 dataID = count++;
+			dbg_assert(m_Count < MAX_ELEMENTS, "Array is full"); // should never happen
+			const u16 dataID = m_Count++;
 			m_ID[SlotID] = dataID;
 			m_ReverseID[dataID] = SlotID;
 		}
@@ -182,15 +182,15 @@ struct CSparseArray
 		dbg_assert(SlotID < MAX_ELEMENTS, "ID out of bounds");
 
 		if(m_ID[SlotID] != INVALID_ID) {
-			dbg_assert(count > 0, "Array is empty"); // should never happen
+			dbg_assert(m_Count > 0, "Array is empty"); // should never happen
 			const u16 dataID = m_ID[SlotID];
 
-			const int lastDataID = count-1;
+			const int lastDataID = m_Count-1;
 			const u16 lastID = m_ReverseID[lastDataID];
 			m_ID[lastID] = dataID;
 			tl_swap(m_ReverseID[dataID], m_ReverseID[lastDataID]);
 			tl_swap(m_Data[dataID], m_Data[lastDataID]);
-			count--;
+			m_Count--;
 
 			m_ID[SlotID] = INVALID_ID;
 		}
@@ -201,33 +201,22 @@ struct CSparseArray
 		dbg_assert(SlotID < MAX_ELEMENTS, "ID out of bounds");
 
 		if(m_ID[SlotID] != INVALID_ID) {
-			dbg_assert(count > 0, "Array is empty"); // should never happen
+			dbg_assert(m_Count > 0, "Array is empty"); // should never happen
 
 
 			dbg_assert(0, "Implement me");
 		}
 	}
 
-	void SwapTwoDataElements(const T& elt1, const T& elt2)
-	{
-		int64 dataID1 = &elt1 - m_Data;
-		dbg_assert(dataID1 >= 0 && dataID1 < MAX_ELEMENTS, "Element out of bounds");
-		int64 dataID2 = &elt2 - m_Data;
-		dbg_assert(dataID2 >= 0 && dataID2 < MAX_ELEMENTS, "Element out of bounds");
-
-		tl_swap(m_ReverseID[dataID1], m_ReverseID[dataID2]);
-		tl_swap(m_Data[dataID1], m_Data[dataID2]);
-	}
-
 	void Clear()
 	{
 		memset(m_ID, 0xFF, sizeof(m_ID));
-		count = 0;
+		m_Count = 0;
 	}
 
 	int Count() const
 	{
-		return count;
+		return m_Count;
 	}
 
 	/*
@@ -249,6 +238,7 @@ struct CEditorMap2
 	{
 		MAX_IMAGES=128,
 		MAX_GROUP_LAYERS=64,
+		MAX_GROUPS=128,
 		MAX_IMAGE_NAME_LEN=64,
 		MAX_EMBEDDED_FILES=64,
 	};
@@ -262,34 +252,24 @@ struct CEditorMap2
 		bool m_HighDetail; // TODO: turn into m_Flags ?
 		vec4 m_Color;
 
-		//union
-		//{
-			array2<CTile> m_aTiles;
-			array2<CQuad> m_aQuads;
-		//};
 
-		union
-		{
-			// tile
-			struct {
-				int m_Width;
-				int m_Height;
-				int m_ColorEnvelopeID;
-				int m_ColorEnvOffset;
-			};
+		// tile
+		array2<CTile> m_aTiles;
+		int m_Width;
+		int m_Height;
+		int m_ColorEnvelopeID;
+		int m_ColorEnvOffset;
 
-			// quad
-			struct {
 
-			};
-		};
+		// quad
+		array2<CQuad> m_aQuads;
 
 		inline bool IsTileLayer() const { return m_Type == LAYERTYPE_TILES; }
 		inline bool IsQuadLayer() const { return m_Type == LAYERTYPE_QUADS; }
 
 		CLayer()
 		{
-			m_Type = 0;
+			m_Type = LAYERTYPE_INVALID;
 			m_ImageID = 0;
 		}
 	};
@@ -381,6 +361,8 @@ struct CEditorMap2
 		CMapItemLayer** m_apLayers;
 		u32* m_aGroupIDs;
 		u32* m_aLayerIDs;
+		u32 m_aGroupIDList[MAX_GROUPS];
+		int m_GroupIDListCount;
 		CMapItemEnvelope* m_aEnvelopes;
 		CTile* m_aTiles;
 		CQuad* m_aQuads;
@@ -399,6 +381,9 @@ struct CEditorMap2
 	CSparseArray<CLayer,1024> m_aLayers;
 	CSparseArray<CGroup,256> m_aGroups;
 	array2<CMapItemEnvelope> m_aEnvelopes;
+
+	u32 m_aGroupIDList[MAX_GROUPS];
+	int m_GroupIDListCount;
 
 	CAssets m_Assets;
 
@@ -548,9 +533,9 @@ class CEditor2: public IEditor
 
 	CUIRect m_UiScreenRect;
 	CUIRect m_UiMainViewRect;
-	array<u8> m_UiGroupOpen;
-	array<u8> m_UiGroupHidden;
-	array<u8> m_UiGroupHovered;
+	array<u8> m_UiGroupListOpen;
+	array<u8> m_UiGroupListHidden;
+	array<u8> m_UiGroupListHovered;
 	array<u8> m_UiLayerHovered;
 	array<u8> m_UiLayerHidden;
 	int m_UiSelectedLayerID;
@@ -839,7 +824,7 @@ class CEditor2: public IEditor
 	void OnMapLoaded();
 
 	void EditDeleteLayer(int LyID, int ParentGroupID);
-	void EditDeleteGroup(int GroupID);
+	void EditDeleteGroup(u32 GroupID);
 	void EditDeleteImage(int ImageID);
 	void EditAddImage(const char* pFilename);
 	void EditCreateAndAddGroup();
@@ -848,8 +833,8 @@ class CEditor2: public IEditor
 	void EditLayerChangeImage(int LayerID, int NewImageID);
 	void EditLayerHighDetail(int LayerID, bool NewHighDetail);
 	void EditGroupUseClipping(int GroupID, bool NewUseClipping);
-	int EditGroupOrderMove(int GroupID, int RelativePos);
-	int EditLayerOrderMove(int LayerID, int RelativePos);
+	int EditGroupOrderMove(int GroupListIndex, int RelativePos);
+	int EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, int RelativePos);
 	void EditTileSelectionFlipX(int LayerID);
 	void EditTileSelectionFlipY(int LayerID);
 	void EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID);

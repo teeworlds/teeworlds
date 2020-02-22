@@ -33,12 +33,12 @@
 static char s_aEdMsg[256];
 #define ed_log(...)\
 	str_format(s_aEdMsg, sizeof(s_aEdMsg), __VA_ARGS__);\
-	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", s_aEdMsg);
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", s_aEdMsg)
 
 #ifdef CONF_DEBUG
 	#define ed_dbg(...)\
 		str_format(s_aEdMsg, sizeof(s_aEdMsg), __VA_ARGS__);\
-		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg);
+		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg)
 #else
 	#define ed_dbg(...)
 #endif
@@ -93,6 +93,9 @@ template<typename T>
 inline void ArraySetSizeAndZero(array<T>* pArray, int NewSize)
 {
 	const int OldElementCount = pArray->size();
+	if(OldElementCount >= NewSize)
+		return;
+
 	pArray->set_size(NewSize);
 	const int Diff = pArray->size() - OldElementCount;
 	for(int i = 0; i < Diff; i++)
@@ -109,6 +112,7 @@ void CEditorMap2::Init(IStorage* pStorage, IGraphics* pGraphics, IConsole* pCons
 	m_MapMaxHeight = 0;
 	m_GameLayerID = -1;
 	m_GameGroupID = -1;
+	m_GroupIDListCount = 0;
 	m_Assets.m_ImageCount = 0;
 
 	m_aEnvPoints.hint_size(1024);
@@ -385,14 +389,14 @@ bool CEditorMap2::Load(const char* pFileName)
 	File.GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
 	File.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
 
-	ed_dbg("GroupsStart=%d GroupsNum=%d LayersStart=%d LayersNum=%d",
-			GroupsStart, GroupsNum, LayersStart, LayersNum);
+	ed_dbg("GroupsStart=%d GroupsNum=%d LayersStart=%d LayersNum=%d", GroupsStart, GroupsNum, LayersStart, LayersNum);
+	dbg_assert(GroupsNum <= CEditorMap2::MAX_GROUPS, "Too many groups");
 
 	for(int gi = 0; gi < GroupsNum; gi++)
 	{
 		CMapItemGroup* pGroup = (CMapItemGroup*)File.GetItem(GroupsStart+gi, 0, 0);
-		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", gi, pGroup->m_NumLayers,
-				pGroup->m_OffsetX, pGroup->m_OffsetY);
+		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", gi, pGroup->m_NumLayers, pGroup->m_OffsetX, pGroup->m_OffsetY);
+
 		const int GroupLayerCount = pGroup->m_NumLayers;
 		const int GroupLayerStart = pGroup->m_StartLayer;
 		CEditorMap2::CGroup Group;
@@ -417,8 +421,7 @@ bool CEditorMap2::Load(const char* pFileName)
 			if(pLayer->m_Type == LAYERTYPE_TILES)
 			{
 				const CMapItemLayerTilemap& Tilemap = *(CMapItemLayerTilemap*)pLayer;
-				ed_dbg("Group#%d Layer=%d (w=%d, h=%d)", gi, li,
-						Tilemap.m_Width, Tilemap.m_Height);
+				ed_dbg("Group#%d Layer=%d (w=%d, h=%d)", gi, li, Tilemap.m_Width, Tilemap.m_Height);
 
 				m_MapMaxWidth = max(m_MapMaxWidth, Tilemap.m_Width);
 				m_MapMaxHeight = max(m_MapMaxHeight, Tilemap.m_Height);
@@ -493,6 +496,8 @@ bool CEditorMap2::Load(const char* pFileName)
 		}
 
 		u32 GroupID = m_aGroups.Push(Group);
+		m_aGroupIDList[m_GroupIDListCount++] = GroupID;
+
 		if(IsGameGroup)
 		{
 			dbg_assert(m_GameGroupID == -1, "Only one game group is allowed");
@@ -590,7 +595,8 @@ void CEditorMap2::LoadDefault()
 	BgGroup.m_ParallaxX = 0;
 	BgGroup.m_ParallaxY = 0;
 
-	CLayer& BgQuadLayer = NewQuadLayer();
+	u32 BgQuadlayerID;
+	CLayer& BgQuadLayer = NewQuadLayer(&BgQuadlayerID);
 
 	CQuad SkyQuad;
 	SkyQuad.m_ColorEnv = -1;
@@ -612,7 +618,8 @@ void CEditorMap2::LoadDefault()
 	SkyQuad.m_aColors[2].a = SkyQuad.m_aColors[3].a = 255;
 	BgQuadLayer.m_aQuads.add(SkyQuad);
 
-	BgGroup.m_apLayerIDs[BgGroup.m_LayerCount++] = m_aGroups.Push(BgGroup);
+	BgGroup.m_apLayerIDs[BgGroup.m_LayerCount++] = BgQuadlayerID;
+	m_aGroups.Push(BgGroup);
 
 	CGroup GameGroup;
 	GameGroup.m_OffsetX = 0;
@@ -620,12 +627,13 @@ void CEditorMap2::LoadDefault()
 	GameGroup.m_ParallaxX = 100;
 	GameGroup.m_ParallaxY = 100;
 
-	/*CLayer& Gamelayer =*/ NewTileLayer(50, 50);
+	u32 GameLayerID;
+	NewTileLayer(50, 50, &GameLayerID);
 
-	GameGroup.m_apLayerIDs[GameGroup.m_LayerCount++] = m_aGroups.Push(GameGroup);
+	GameGroup.m_apLayerIDs[GameGroup.m_LayerCount++] = GameLayerID;
 
-	m_GameGroupID = 0;
-	m_GameLayerID = GameGroup.m_apLayerIDs[0];
+	m_GameGroupID = m_aGroups.Push(GameGroup);
+	m_GameLayerID = GameLayerID;
 }
 
 void CEditorMap2::Clear()
@@ -650,6 +658,8 @@ void CEditorMap2::Clear()
 	m_aGroups.Clear();
 	m_aEnvelopes.clear();
 	m_aEnvPoints.clear();
+
+	m_GroupIDListCount = 0;
 }
 
 void CEditorMap2::AssetsClearAndSetImages(CEditorMap2::CImageName* aName, CImageInfo* aInfo,
@@ -1045,6 +1055,9 @@ CEditorMap2::CSnapshot* CEditorMap2::SaveSnapshot()
 		mem_copy(&Snap.m_aGroups[gi], &aGroups[gi], sizeof(aGroups[gi]));
 	}
 
+	mem_copy(Snap.m_aGroupIDList, m_aGroupIDList, m_GroupIDListCount * sizeof(m_aGroupIDList[0]));
+	Snap.m_GroupIDListCount = m_GroupIDListCount;
+
 	CMapItemLayer* pCurrentLayerData = (CMapItemLayer*)(Snap.m_aLayerIDs + Snap.m_LayerCount);
 	int TileStartID = 0;
 	int QuadStartID = 0;
@@ -1159,6 +1172,9 @@ void CEditorMap2::RestoreSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 		m_aGroups.Set(Snap.m_aGroupIDs[gi], Snap.m_aGroups[gi]);
 	}
 
+	mem_copy(m_aGroupIDList, Snap.m_aGroupIDList, Snap.m_GroupIDListCount * sizeof(Snap.m_aGroupIDList[0]));
+	m_GroupIDListCount = Snap.m_GroupIDListCount;
+
 	const CTile* pSnapTiles = Snap.m_aTiles;
 	const CQuad* pSnapQuads = Snap.m_aQuads;
 
@@ -1245,6 +1261,9 @@ void CEditorMap2::CompareSnapshot(const CEditorMap2::CSnapshot* pSnapshot)
 
 		dbg_assert(mem_comp(&SnapGroup, &Group, sizeof(Group)) == 0, "Groups don't match");
 	}
+
+	dbg_assert(Snap.m_GroupIDListCount == m_GroupIDListCount, "Group list count don't match");
+	dbg_assert(mem_comp(Snap.m_aGroupIDList, m_aGroupIDList, m_GroupIDListCount * sizeof(m_aGroupIDList[0])) == 0, "Group lists don't match");
 
 	const CTile* pSnapTiles = Snap.m_aTiles;
 	const CQuad* pSnapQuads = Snap.m_aQuads;
@@ -1919,16 +1938,16 @@ void CEditor2::RenderMap()
 	}
 
 	// render map
-	const int GroupCount = m_Map.m_aGroups.Count();
-	const CEditorMap2::CGroup* aGroups = m_Map.m_aGroups.Data();
+	const int GroupCount = m_Map.m_GroupIDListCount;
+	const u32* GroupIDList = m_Map.m_aGroupIDList;
 	const int BaseTilemapFlags = m_ConfigShowExtendedTilemaps ? TILERENDERFLAG_EXTEND:0;
 
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
-		const CEditorMap2::CGroup& Group = aGroups[gi];
-		const u32 GroupID = m_Map.m_aGroups.GetIDFromData(Group);
+		const u32 GroupID = GroupIDList[gi];
+		const CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(GroupID);
 
-		if(m_UiGroupHidden[GroupID])
+		if(m_UiGroupListHidden[GroupID])
 			continue;
 
 		// group clip
@@ -1991,7 +2010,7 @@ void CEditor2::RenderMap()
 					continue;
 				}
 
-				if(m_UiGroupHovered[GroupID] || m_UiLayerHovered[LyID])
+				if(m_UiGroupListHovered[GroupID] || m_UiLayerHovered[LyID])
 					LyColor = vec4(1, 0, 1, 1);
 
 				/*if(SelectedLayerID >= 0 && SelectedLayerID != LyID)
@@ -2022,7 +2041,7 @@ void CEditor2::RenderMap()
 					Graphics()->TextureSet(m_Map.m_Assets.m_aTextureHandle[Layer.m_ImageID]);
 
 				Graphics()->BlendNormal();
-				if(m_UiGroupHovered[gi] || m_UiLayerHovered[LyID])
+				if(m_UiGroupListHovered[gi] || m_UiLayerHovered[LyID])
 					Graphics()->BlendAdditive();
 
 				RenderTools()->RenderQuads(Layer.m_aQuads.base_ptr(), Layer.m_aQuads.size(),
@@ -2036,7 +2055,7 @@ void CEditor2::RenderMap()
 
 	// game layer
 	const int LyID = m_Map.m_GameLayerID;
-	if(!m_ConfigShowGameEntities && !m_UiLayerHidden[LyID] && !m_UiGroupHidden[m_Map.m_GameGroupID])
+	if(!m_ConfigShowGameEntities && !m_UiLayerHidden[LyID] && !m_UiGroupListHidden[m_Map.m_GameGroupID])
 	{
 		const vec2 MapOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight, 0, 0, 1, 1);
 		CUIRect ScreenRect = { MapOff.x, MapOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
@@ -2904,23 +2923,22 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	CUIRect ActionLineRect, ButtonRect;
 	NavRect.HSplitBottom((ButtonHeight + Spacing) * 3.0f, &NavRect, &ActionLineRect);
 
-	const int GroupCount = m_Map.m_aGroups.Count();
+	const int GroupCount = m_Map.m_GroupIDListCount;
 	const int TotalLayerCount = m_Map.m_aLayers.Count();
 
-	static array<CUIButton> s_UiGroupButState;
-	static array<CUIButton> s_UiGroupShowButState;
-	static array<CUIButton> s_UiLayerButState;
-	static array<CUIButton> s_UiLayerShowButState;
+	static array2<CUIButton> s_UiGroupListButState;
+	static array2<CUIButton> s_UiGroupListShowButState;
+	static array2<CUIButton> s_UiLayerButState;
+	static array2<CUIButton> s_UiLayerShowButState;
 
-	ArraySetSizeAndZero(&s_UiGroupButState, GroupCount);
-	ArraySetSizeAndZero(&s_UiGroupButState, GroupCount);
-	ArraySetSizeAndZero(&s_UiGroupShowButState, GroupCount);
-	ArraySetSizeAndZero(&s_UiLayerButState, TotalLayerCount);
+	ArraySetSizeAndZero(&s_UiGroupListButState, GroupCount);
+	ArraySetSizeAndZero(&s_UiGroupListShowButState, GroupCount);
+	ArraySetSizeAndZero(&s_UiLayerButState, TotalLayerCount); // FIXME: can LayerID (m_aLayers.Get(LayerId)) be >= TotalLayerCount? This is probably a bad way of tracking button/other state.
 	ArraySetSizeAndZero(&s_UiLayerShowButState, TotalLayerCount);
 
-	ArraySetSizeAndZero(&m_UiGroupOpen, GroupCount);
-	ArraySetSizeAndZero(&m_UiGroupHidden, GroupCount);
-	ArraySetSizeAndZero(&m_UiGroupHovered, GroupCount);
+	ArraySetSizeAndZero(&m_UiGroupListOpen, GroupCount);
+	ArraySetSizeAndZero(&m_UiGroupListHidden, GroupCount);
+	ArraySetSizeAndZero(&m_UiGroupListHovered, GroupCount);
 	ArraySetSizeAndZero(&m_UiLayerHovered, TotalLayerCount);
 	ArraySetSizeAndZero(&m_UiLayerHidden, TotalLayerCount);
 
@@ -2931,28 +2949,30 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	// drag to reorder items
 	static CUIMouseDrag s_DragMove;
-	static int DragMoveGroupID = -1;
-	static int DragMoveLayerID = -1;
+	static int DragMoveGroupListIndex = -1;
+	static int DragMoveLayerListIndex = -1;
+	static int DragMoveParentGroupListIndex = -1;
 	if(!s_DragMove.m_IsDragging)
 	{
-		DragMoveGroupID = -1;
-		DragMoveLayerID = -1;
+		DragMoveGroupListIndex = -1;
+		DragMoveLayerListIndex = -1;
+		DragMoveParentGroupListIndex = -1;
 	}
 
 	bool OldIsMouseDragging = s_DragMove.m_IsDragging;
 	bool FinishedMouseDragging = UiDoMouseDragging(0, NavRect, &s_DragMove);
 	bool StartedMouseDragging = s_DragMove.m_IsDragging && OldIsMouseDragging == false;
 
-	bool DisplayDragMoveOverlay = s_DragMove.m_IsDragging && (DragMoveGroupID >= 0 || DragMoveLayerID >= 0);
+	bool DisplayDragMoveOverlay = s_DragMove.m_IsDragging && (DragMoveGroupListIndex >= 0 || DragMoveLayerListIndex >= 0);
 	CUIRect DragMoveOverlayRect;
 	int DragMoveDir = 0;
 	// -----------------------
 
-	const CEditorMap2::CGroup* aGroups = m_Map.m_aGroups.Data();
+	const u32* aGroupIDList = m_Map.m_aGroupIDList;
 	for(int gi = 0; gi < GroupCount; gi++)
 	{
-		const CEditorMap2::CGroup& Group = aGroups[gi];
-		const int GroupID = m_Map.m_aGroups.GetIDFromData(Group);
+		const int GroupID = aGroupIDList[gi];
+		const CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(GroupID);
 
 		if(gi != 0)
 			NavRect.HSplitTop(Spacing, 0, &NavRect);
@@ -2962,14 +2982,14 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		// check whole line for hover
 		CUIButton WholeLineState;
 		UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
-		m_UiGroupHovered[GroupID] = WholeLineState.m_Hovered;
+		m_UiGroupListHovered[gi] = WholeLineState.m_Hovered;
 
 		// drag started on this item
 		if(StartedMouseDragging && WholeLineState.m_Hovered)
 		{
-			DragMoveGroupID = GroupID;
+			DragMoveGroupListIndex = gi;
 		}
-		if(DragMoveGroupID == GroupID)
+		if(DragMoveGroupListIndex == gi)
 		{
 			DragMoveOverlayRect = ButtonRect;
 			DragMoveDir = (int)sign(m_UiMousePos.y - ButtonRect.y);
@@ -2979,13 +2999,13 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 		// show button
 		ButtonRect.VSplitRight(ShowButtonWidth, &ButtonRect, &ShowButton);
-		CUIButton& ShowButState = s_UiGroupShowButState[gi];
+		CUIButton& ShowButState = s_UiGroupListShowButState[gi];
 		UiDoButtonBehavior(&ShowButState, ShowButton, &ShowButState);
 
 		if(ShowButState.m_Clicked)
-			m_UiGroupHidden[GroupID] ^= 1;
+			m_UiGroupListHidden[gi] ^= 1;
 
-		const bool IsShown = !m_UiGroupHidden[GroupID];
+		const bool IsShown = !m_UiGroupListHidden[gi];
 
 		vec4 ShowButColor = StyleColorButton;
 		if(ShowButState.m_Hovered)
@@ -2997,13 +3017,13 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		DrawText(ShowButton, IsShown ? "o" : "x", FontSize);
 
 		// group button
-		CUIButton& ButState = s_UiGroupButState[gi];
+		CUIButton& ButState = s_UiGroupListButState[gi];
 		UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
 		if(ButState.m_Clicked)
 		{
 			if(m_UiSelectedGroupID == GroupID)
-				m_UiGroupOpen[GroupID] ^= 1;
+				m_UiGroupListOpen[gi] ^= 1;
 
 			m_UiSelectedGroupID = GroupID;
 			if(Group.m_LayerCount > 0)
@@ -3013,7 +3033,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		}
 
 		const bool IsSelected = m_UiSelectedGroupID == GroupID;
-		const bool IsOpen = m_UiGroupOpen[GroupID];
+		const bool IsOpen = m_UiGroupListOpen[gi];
 
 		vec4 ButColor = StyleColorButton;
 		if(ButState.m_Hovered)
@@ -3037,7 +3057,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			str_format(aGroupName, sizeof(aGroupName), "Group #%d", gi);
 		DrawText(ButtonRect, aGroupName, FontSize);
 
-		if(m_UiGroupOpen[GroupID])
+		if(m_UiGroupListOpen[gi])
 		{
 			const int LayerCount = Group.m_LayerCount;
 
@@ -3060,9 +3080,10 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				// drag started on this item
 				if(StartedMouseDragging && WholeLineState.m_Hovered)
 				{
-					DragMoveLayerID = LyID;
+					DragMoveLayerListIndex = li;
+					DragMoveParentGroupListIndex = gi;
 				}
-				if(DragMoveLayerID == LyID)
+				if(DragMoveLayerListIndex == li && DragMoveParentGroupListIndex == gi)
 				{
 					DragMoveOverlayRect = ButtonRect;
 					DragMoveDir = (int)sign(m_UiMousePos.y - ButtonRect.y);
@@ -3212,10 +3233,11 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	if(UiButtonEx(ButtonRect, Localize("Delete group"), &s_GroupDeleteButton, vec4(0.4f, 0.04f, 0.04f, 1),
 		vec4(0.96f, 0.16f, 0.16f, 1), vec4(0.31f, 0, 0, 1), vec4(0.63f, 0.035f, 0.035f, 1), 10) && !IsGameGroup)
 	{
-		EditDeleteGroup(m_UiSelectedGroupID);
+		int ToDeleteID = m_UiSelectedGroupID;
 		// TODO: select group below
 		m_UiSelectedGroupID = m_Map.m_GameGroupID;
 		m_UiSelectedLayerID = m_Map.m_GameLayerID;
+		EditDeleteGroup(ToDeleteID);
 	}
 
 	// drag overlay (arrows for now)
@@ -3248,21 +3270,21 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	{
 		if(!IsInsideRect(s_DragMove.m_EndDragPos, DragMoveOverlayRect))
 		{
-			if(DragMoveGroupID != -1)
+			if(DragMoveGroupListIndex != -1)
 			{
-				int NewGroupID = EditGroupOrderMove(DragMoveGroupID,  DragMoveDir < 0 ? -1 : 1);
-				m_UiGroupOpen[NewGroupID] = true;
+				int NewGroupListIndex = EditGroupOrderMove(DragMoveGroupListIndex,  DragMoveDir < 0 ? -1 : 1);
+				m_UiGroupListOpen[NewGroupListIndex] = true;
 
-				if(DragMoveGroupID == m_UiSelectedGroupID && NewGroupID != DragMoveGroupID)
+				if((int)m_Map.m_aGroupIDList[DragMoveGroupListIndex] == m_UiSelectedGroupID && NewGroupListIndex != DragMoveGroupListIndex)
 				{
-					m_UiSelectedGroupID = NewGroupID;
+					m_UiSelectedGroupID = m_Map.m_aGroupIDList[NewGroupListIndex];
 					m_UiSelectedLayerID = -1;
 				}
 			}
-			else if(DragMoveLayerID != -1)
+			else if(DragMoveLayerListIndex != -1)
 			{
-				int NewGroupID = EditLayerOrderMove(DragMoveLayerID, DragMoveDir < 0 ? -1 : 1);
-				m_UiGroupOpen[NewGroupID] = true;
+				int NewGroupListIndex = EditLayerOrderMove(DragMoveParentGroupListIndex, DragMoveLayerListIndex, DragMoveDir < 0 ? -1 : 1);
+				m_UiGroupListOpen[NewGroupListIndex] = true;
 			}
 		}
 	}
@@ -5257,10 +5279,10 @@ void CEditor2::OnMapLoaded()
 {
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
-	mem_zero(m_UiGroupHidden.base_ptr(), sizeof(m_UiGroupHidden[0]) * m_UiGroupHidden.size());
-	m_UiGroupOpen.set_size(m_Map.m_aGroups.Count());
-	mem_zero(m_UiGroupOpen.base_ptr(), sizeof(m_UiGroupOpen[0]) * m_UiGroupOpen.size());
-	m_UiGroupOpen[m_Map.m_GameGroupID] = true;
+	mem_zero(m_UiGroupListHidden.base_ptr(), sizeof(m_UiGroupListHidden[0]) * m_UiGroupListHidden.size());
+	m_UiGroupListOpen.set_size(m_Map.m_aGroups.Count());
+	mem_zero(m_UiGroupListOpen.base_ptr(), sizeof(m_UiGroupListOpen[0]) * m_UiGroupListOpen.size());
+	m_UiGroupListOpen[m_Map.m_GameGroupID] = true;
 	mem_zero(m_UiLayerHidden.base_ptr(), sizeof(m_UiLayerHidden[0]) * m_UiLayerHidden.size());
 	mem_zero(m_UiLayerHovered.base_ptr(), sizeof(m_UiLayerHovered[0]) * m_UiLayerHovered.size());
 	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
@@ -5349,10 +5371,10 @@ void CEditor2::EditDeleteLayer(int LyID, int ParentGroupID)
 	HistoryNewEntry("Deleted layer", aHistoryDesc);
 }
 
-void CEditor2::EditDeleteGroup(int GroupID)
+void CEditor2::EditDeleteGroup(u32 GroupID)
 {
 	dbg_assert(m_Map.m_aGroups.IsValid(GroupID), "GroupID out of bounds");
-	dbg_assert(GroupID != m_Map.m_GameGroupID, "Can't delete game group");
+	dbg_assert(GroupID != (u32)m_Map.m_GameGroupID, "Can't delete game group");
 
 	CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(GroupID);
 	while(Group.m_LayerCount > 0)
@@ -5360,6 +5382,27 @@ void CEditor2::EditDeleteGroup(int GroupID)
 		EditDeleteLayer(Group.m_apLayerIDs[0], GroupID);
 	}
 
+	// find list index
+	const int Count = m_Map.m_GroupIDListCount;
+	int GroupListIndex = -1;
+	for(int i = 0; i < Count; i++)
+	{
+		if(m_Map.m_aGroupIDList[i] == GroupID)
+		{
+			GroupListIndex = i;
+			break;
+		}
+	}
+
+	dbg_assert(GroupListIndex != -1, "Group not found");
+
+	// remove from list
+	if(GroupListIndex < Count-1)
+		mem_move(&m_Map.m_aGroupIDList[GroupListIndex], &m_Map.m_aGroupIDList[GroupListIndex+1], (Count - GroupListIndex -1) * sizeof(m_Map.m_aGroupIDList[0]));
+
+	m_Map.m_GroupIDListCount--;
+
+	// remove group
 	m_Map.m_aGroups.RemoveByID(GroupID);
 
 	// history entry
@@ -5396,6 +5439,8 @@ void CEditor2::EditAddImage(const char* pFilename)
 
 void CEditor2::EditCreateAndAddGroup()
 {
+	dbg_assert(m_Map.m_GroupIDListCount < CEditorMap2::MAX_GROUPS, "Group list is full");
+
 	CEditorMap2::CGroup Group;
 	Group.m_OffsetX = 0;
 	Group.m_OffsetY = 0;
@@ -5403,6 +5448,7 @@ void CEditor2::EditCreateAndAddGroup()
 	Group.m_ParallaxY = 100;
 	Group.m_LayerCount = 0;
 	u32 GroupID = m_Map.m_aGroups.Push(Group);
+	m_Map.m_aGroupIDList[m_Map.m_GroupIDListCount++] = GroupID;
 
 	char aHistoryEntryDesc[64];
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Group %d", GroupID);
@@ -5563,64 +5609,46 @@ void CEditor2::EditGroupUseClipping(int GroupID, bool NewUseClipping)
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-int CEditor2::EditGroupOrderMove(int GroupID, int RelativePos)
+int CEditor2::EditGroupOrderMove(int GroupListIndex, int RelativePos)
 {
-	dbg_assert(m_Map.m_aGroups.IsValid(GroupID), "GroupID out of bounds");
+	// returns new List Index
 
-	const int NewGroupID = clamp(GroupID + RelativePos, 0, m_Map.m_aGroups.Count()-1);
-	if(NewGroupID == GroupID)
-		return GroupID;
+	dbg_assert(GroupListIndex >= 0 && GroupListIndex < m_Map.m_GroupIDListCount, "GroupListIndex out of bounds");
 
-	// TODO: this is kinda weird
-	m_Map.m_aGroups.SwapTwoDataElements(m_Map.m_aGroups.Get(GroupID), m_Map.m_aGroups.Get(NewGroupID));
+	const int NewGroupListIndex = clamp(GroupListIndex + RelativePos, 0, m_Map.m_GroupIDListCount-1);
+	if(NewGroupListIndex == GroupListIndex)
+		return GroupListIndex;
+
+	tl_swap(m_Map.m_aGroupIDList[GroupListIndex], m_Map.m_aGroupIDList[NewGroupListIndex]);
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
 	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: change order"),
-		GroupID);
+		GroupListIndex);
 	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
-		GroupID,
-		NewGroupID);
+		GroupListIndex,
+		NewGroupListIndex);
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
-	return NewGroupID;
+	return NewGroupListIndex;
 }
 
-int CEditor2::EditLayerOrderMove(int LayerID, int RelativePos)
+int CEditor2::EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, int RelativePos)
 {
-	// Returns new parent group ID (or the same if it does not change)
+	// Returns new parent group list index (or the same if it does not change)
 
-	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
+	dbg_assert(ParentGroupListIndex >= 0 && ParentGroupListIndex < m_Map.m_GroupIDListCount, "GroupListIndex out of bounds");
 
-	int ParentGroupID = -1;
-	int LayerPos = -1;
-	const int GroupCount = m_Map.m_aGroups.Count();
-	CEditorMap2::CGroup* aGroups = m_Map.m_aGroups.Data();
-	for(int gi = 0; gi < GroupCount && ParentGroupID == -1; gi++)
-	{
-		const CEditorMap2::CGroup& Group = aGroups[gi];
-
-		for(int l = 0; l < Group.m_LayerCount; l++)
-		{
-			if(Group.m_apLayerIDs[l] == LayerID)
-			{
-				ParentGroupID = gi;
-				LayerPos = l;
-				break;
-			}
-		}
-	}
-
-	dbg_assert(ParentGroupID != -1 && LayerPos != -1,
-		"Parent group or layer position not found for this LayerID");
+	CEditorMap2::CGroup& ParentGroup = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex]);
+	dbg_assert(LayerListIndex >= 0 && LayerListIndex < ParentGroup.m_LayerCount, "LayerID out of bounds");
 
 	// this assume a relative change of 1
 	RelativePos = clamp(RelativePos, -1, 1);
 	if(RelativePos == 0)
-		return m_Map.m_aGroups.GetIDFromData(aGroups[ParentGroupID]);
+		return ParentGroupListIndex;
 
-	const int NewPos = LayerPos + RelativePos;
-	CEditorMap2::CGroup& ParentGroup = aGroups[ParentGroupID];
-	const bool IsGameLayer = LayerID == m_Map.m_GameLayerID;
+	const u32 LayerID = ParentGroup.m_apLayerIDs[LayerListIndex];
+	const int NewPos = LayerListIndex + RelativePos;
+	const bool IsGameLayer = LayerID == (u32)m_Map.m_GameLayerID;
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
@@ -5628,9 +5656,9 @@ int CEditor2::EditLayerOrderMove(int LayerID, int RelativePos)
 	// go up one group
 	if(NewPos < 0)
 	{
-		if(ParentGroupID > 0 && !IsGameLayer)
+		if(ParentGroupListIndex > 0 && !IsGameLayer)
 		{
-			CEditorMap2::CGroup& Group = aGroups[ParentGroupID-1];
+			CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex-1]);
 
 			// TODO: make a function GroupAddLayer?
 			if(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS)
@@ -5638,30 +5666,25 @@ int CEditor2::EditLayerOrderMove(int LayerID, int RelativePos)
 
 			// squash layer from previous group
 			ParentGroup.m_LayerCount--;
-			memmove(&ParentGroup.m_apLayerIDs[0], &ParentGroup.m_apLayerIDs[1],
-				sizeof(ParentGroup.m_apLayerIDs[0]) * ParentGroup.m_LayerCount);
+			memmove(&ParentGroup.m_apLayerIDs[0], &ParentGroup.m_apLayerIDs[1], sizeof(ParentGroup.m_apLayerIDs[0]) * ParentGroup.m_LayerCount);
 
-			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"),
-				LayerID);
-			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
-				ParentGroupID,
-				ParentGroupID-1);
+			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"), LayerID);
+			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", ParentGroupListIndex, ParentGroupListIndex-1);
 			HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
-			return m_Map.m_aGroups.GetIDFromData(Group);
+			return ParentGroupListIndex-1;
 		}
 	}
 	// go down one group
 	else if(NewPos >= ParentGroup.m_LayerCount)
 	{
-		if(ParentGroupID < GroupCount-1 && !IsGameLayer)
+		if(ParentGroupListIndex < m_Map.m_GroupIDListCount-1 && !IsGameLayer)
 		{
-			CEditorMap2::CGroup& Group = aGroups[ParentGroupID+1];
+			CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex+1]);
 
 			// move other layers down, put this one first
 			if(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS)
 			{
-				memmove(&Group.m_apLayerIDs[1], &Group.m_apLayerIDs[0],
-					sizeof(Group.m_apLayerIDs[0]) * Group.m_LayerCount);
+				memmove(&Group.m_apLayerIDs[1], &Group.m_apLayerIDs[0], sizeof(Group.m_apLayerIDs[0]) * Group.m_LayerCount);
 				Group.m_LayerCount++;
 				Group.m_apLayerIDs[0] = LayerID;
 			}
@@ -5669,30 +5692,24 @@ int CEditor2::EditLayerOrderMove(int LayerID, int RelativePos)
 			// "remove" layer from previous group
 			ParentGroup.m_LayerCount--;
 
-			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"),
-				LayerID);
-			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
-				ParentGroupID,
-				ParentGroupID+1);
+			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"), LayerID);
+			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", ParentGroupListIndex, ParentGroupListIndex+1);
 			HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
-			return m_Map.m_aGroups.GetIDFromData(Group);
+			return ParentGroupListIndex+1;
 		}
 	}
 	else
 	{
-		tl_swap(ParentGroup.m_apLayerIDs[LayerPos], ParentGroup.m_apLayerIDs[NewPos]);
+		tl_swap(ParentGroup.m_apLayerIDs[LayerListIndex], ParentGroup.m_apLayerIDs[NewPos]);
 
-		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change order"),
-			LayerID);
-		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
-			LayerPos,
-			NewPos);
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change order"), LayerID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", LayerListIndex, NewPos);
 		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
-		return m_Map.m_aGroups.GetIDFromData(aGroups[ParentGroupID]);
+		return ParentGroupListIndex;
 	}
 
 	// never reached
-	return m_Map.m_aGroups.GetIDFromData(aGroups[ParentGroupID]);
+	return ParentGroupListIndex;
 }
 
 void CEditor2::EditTileSelectionFlipX(int LayerID)
@@ -6229,12 +6246,12 @@ void CEditor2::HistoryRedo()
 
 CEditor2::CUISnapshot* CEditor2::SaveUiSnapshot()
 {
-	CUISnapshot* pUiSnap = (CUISnapshot*)mem_alloc(sizeof(CUISnapshot), 1); // TODO: alloc this smarter (make a growable array to act like a pool)
+	CUISnapshot* pUiSnap = (CUISnapshot*)mem_alloc(sizeof(CUISnapshot), 1); // TODO: alloc this smarter. Does this even need to be heap allocated?
 	pUiSnap->m_SelectedLayerID = m_UiSelectedLayerID;
 	pUiSnap->m_SelectedGroupID = m_UiSelectedGroupID;
 	pUiSnap->m_ToolID = m_Tool;
 
-	ed_dbg("NewUiSnapshot :: m_SelectedLayerID=%d m_SelectedGroupID=%d m_ToolID=%d", pUiSnap->m_SelectedLayerID, pUiSnap->m_SelectedLayerID, pUiSnap->m_SelectedGroupID)
+	ed_dbg("NewUiSnapshot :: m_SelectedLayerID=%d m_SelectedGroupID=%d m_ToolID=%d", pUiSnap->m_SelectedLayerID, pUiSnap->m_SelectedGroupID, pUiSnap->m_ToolID);
 	return pUiSnap;
 }
 
