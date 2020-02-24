@@ -271,6 +271,12 @@ struct CEditorMap2
 		{
 			m_Type = LAYERTYPE_INVALID;
 			m_ImageID = 0;
+			m_HighDetail = false;
+			m_Color = vec4(1,1,1,1);
+			m_Width = 0;
+			m_Height = 0;
+			m_ColorEnvelopeID = -1;
+			m_ColorEnvOffset = 0;
 		}
 	};
 
