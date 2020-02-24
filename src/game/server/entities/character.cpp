@@ -154,9 +154,6 @@ void CCharacter::HandleNinja()
 		// reset velocity so the client doesn't predict stuff
 		m_Core.m_Vel = vec2(0.f, 0.f);
 
-		// ignore other player hook
-		m_Core.m_IgnoreInteractVel = true;
-
 		// check if we Hit anything along the way
 		{
 			CCharacter *aEnts[MAX_CLIENTS];
@@ -558,6 +555,10 @@ void CCharacter::TickDefered()
 		m_ReckoningCore.Move();
 		m_ReckoningCore.Quantize();
 	}
+
+	if(m_ActiveWeapon != WEAPON_NINJA || m_Ninja.m_CurrentMoveTime < 0)
+		m_Core.AddDragVelocity();
+	m_Core.ResetDragVelocity();
 
 	//lastsentcore
 	vec2 StartPos = m_Core.m_Pos;

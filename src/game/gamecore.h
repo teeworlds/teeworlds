@@ -150,8 +150,7 @@ public:
 	vec2 m_Pos;
 	vec2 m_Vel;
 
-	bool m_IgnoreInteractVel;
-	vec2 m_InteractVel;
+	vec2 m_HookDragVel;
 
 	vec2 m_HookPos;
 	vec2 m_HookDir;
@@ -174,6 +173,9 @@ public:
 	void Reset();
 	void Tick(bool UseInput);
 	void Move();
+
+	void AddDragVelocity();
+	void ResetDragVelocity();
 
 	void Read(const CNetObj_CharacterCore *pObjCore);
 	void Write(CNetObj_CharacterCore *pObjCore);
