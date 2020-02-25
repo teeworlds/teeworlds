@@ -1529,6 +1529,8 @@ void CGameClient::OnPredict()
 			if(!World.m_apCharacters[c])
 				continue;
 
+			World.m_apCharacters[c]->AddDragVelocity();
+			World.m_apCharacters[c]->ResetDragVelocity();
 			World.m_apCharacters[c]->Move();
 			World.m_apCharacters[c]->Quantize();
 		}
