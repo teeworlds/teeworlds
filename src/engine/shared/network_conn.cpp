@@ -398,7 +398,7 @@ int CNetConnection::Update()
 		}
 		else
 		{
-			// resend packet if we havn't got it acked in 1 second
+			// resend packet if we haven't got it acked in 1 second
 			if(Now-pResend->m_LastSendTime > time_freq())
 				ResendChunk(pResend);
 		}

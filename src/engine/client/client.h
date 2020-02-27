@@ -7,10 +7,8 @@
 
 class CGraph
 {
-public:
 	enum
 	{
-		// restrictions: Must be power of two
 		MAX_VALUES=128,
 	};
 
@@ -20,11 +18,10 @@ public:
 	float m_aColors[MAX_VALUES][3];
 	int m_Index;
 
+public:
 	void Init(float Min, float Max);
 
-	void ScaleMax();
-	void ScaleMin();
-
+	void Scale();
 	void Add(float v, float r, float g, float b);
 	void Render(IGraphics *pGraphics, IGraphics::CTextureHandle FontTexture, float x, float y, float w, float h, const char *pDescription);
 };
@@ -88,8 +85,6 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	unsigned m_SnapshotParts;
 	int64 m_LocalStartTime;
-
-	IGraphics::CTextureHandle m_DebugFont;
 
 	int64 m_LastRenderTime;
 	int64 m_LastCpuTime;
@@ -224,8 +219,6 @@ public:
 
 	virtual bool SoundInitFailed() const { return m_SoundInitFailed; }
 
-	virtual IGraphics::CTextureHandle GetDebugFont() const { return m_DebugFont; }
-
 	void SendInput();
 
 	// TODO: OPT: do this alot smarter!
@@ -248,8 +241,6 @@ public:
 
 
 	virtual void GetServerInfo(CServerInfo *pServerInfo);
-
-	int LoadData();
 
 	// ---
 

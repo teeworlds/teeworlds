@@ -19,6 +19,7 @@ public:
 		bool operator<(const CCountryFlag &Other) const { return str_comp(m_aCountryCodeString, Other.m_aCountryCodeString) < 0; }
 	};
 
+	int GetInitAmount() const;
 	void OnInit();
 
 	int Num() const;

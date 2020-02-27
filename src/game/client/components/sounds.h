@@ -35,6 +35,7 @@ public:
 		CHN_GLOBAL,
 	};
 
+	virtual int GetInitAmount() const;
 	virtual void OnInit();
 	virtual void OnReset();
 	virtual void OnStateChange(int NewState, int OldState);

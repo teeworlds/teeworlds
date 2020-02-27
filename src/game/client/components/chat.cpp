@@ -607,7 +607,7 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 	while(*p)
 	{
 		pLine = p;
-		// find line seperator and strip multiline
+		// find line separator and strip multiline
 		while(*p)
 		{
 			if(*p++ == '\n')

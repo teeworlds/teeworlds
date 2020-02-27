@@ -145,7 +145,7 @@ int CRingBufferBase::PopFirst()
 		m_pConsume = NextBlock(m_pConsume);
 	}
 
-	// in the case that we have catched up with the produce pointer
+	// in the case that we have caught up with the produce pointer
 	// we might stand on a free block so merge em
 	MergeBack(m_pConsume);
 	return 1;

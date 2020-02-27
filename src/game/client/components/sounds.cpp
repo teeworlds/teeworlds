@@ -29,7 +29,7 @@ static int LoadSoundsThread(void *pUser)
 		}
 
 		if(pData->m_Render)
-			pData->m_pGameClient->m_pMenus->RenderLoading();
+			pData->m_pGameClient->m_pMenus->RenderLoading(1);
 	}
 
 	return 0;
@@ -56,6 +56,13 @@ ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 	while(Id == pSet->m_Last);
 	pSet->m_Last = Id;
 	return pSet->m_aSounds[Id].m_Id;
+}
+
+int CSounds::GetInitAmount() const
+{
+	if(Config()->m_SndAsyncLoading)
+		return 0;
+	return g_pData->m_NumSounds;
 }
 
 void CSounds::OnInit()
@@ -113,7 +120,7 @@ void CSounds::OnRender()
 			return;
 	}
 
-	// set listner pos
+	// set listener pos
 	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
 	Sound()->SetListenerPos(Pos.x, Pos.y);
 

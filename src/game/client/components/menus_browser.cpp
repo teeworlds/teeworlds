@@ -358,6 +358,43 @@ void CMenus::Move(bool Up, int Filter)
 	}
 }
 
+void CMenus::InitDefaultFilters()
+{
+	bool UseDefaultFilters = !m_lFilters.size();
+	bool FilterStandard = false;
+	bool FilterFav = false;
+	bool FilterAll = false;
+	for(int i = 0; i < m_lFilters.size(); i++)
+	{
+		switch(m_lFilters[i].Custom())
+		{
+		case CBrowserFilter::FILTER_STANDARD:
+			FilterStandard = true;
+			break;
+		case CBrowserFilter::FILTER_FAVORITES:
+			FilterFav = true;
+			break;
+		case CBrowserFilter::FILTER_ALL:
+			FilterAll = true;
+		}
+	}
+	if(!FilterStandard)
+	{
+		// put it on top
+		int Pos = m_lFilters.size();
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, "Teeworlds", ServerBrowser()));
+		for(; Pos > 0; --Pos)
+			Move(true, Pos);
+	}
+	if(!FilterFav)
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser()));
+	if(!FilterAll)
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser()));
+	// expand the all filter tab by default
+	if(UseDefaultFilters)
+		m_lFilters[m_lFilters.size()-1].Switch();
+}
+
 void CMenus::SetOverlay(int Type, float x, float y, const void *pData)
 {
 	if(!m_PopupActive && m_InfoOverlay.m_Reset)
@@ -1697,8 +1734,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	Button.VSplitLeft(60.0f, &Icon, &Button);
 	static char s_aFilterName[32] = { 0 };
 	static float s_FilterOffset = 0.0f;
-	static int s_EditFilter = 0;
-	DoEditBox(&s_EditFilter, &Icon, s_aFilterName, sizeof(s_aFilterName), FontSize, &s_FilterOffset, false, CUI::CORNER_L);
+	DoEditBox(&s_FilterOffset, &Icon, s_aFilterName, sizeof(s_aFilterName), FontSize, &s_FilterOffset, false, CUI::CORNER_L);
 	RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_R, 5.0f);
 	Button.VSplitLeft(Button.h, &Icon, &Label);
 	Label.HMargin(2.0f, &Label);
@@ -1841,10 +1877,9 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	Button.VSplitLeft(60.0f, &Button, &Icon);
 	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
 	static char s_aGametype[16] = { 0 };
-	static float s_Offset = 0.0f;
-	static int s_EditGametype = 0;
+	static float s_OffsetGametype = 0.0f;
 	Button.VSplitRight(Button.h, &Label, &Button);
-	DoEditBox(&s_EditGametype, &Label, s_aGametype, sizeof(s_aGametype), FontSize, &s_Offset);
+	DoEditBox(&s_OffsetGametype, &Label, s_aGametype, sizeof(s_aGametype), FontSize, &s_OffsetGametype);
 	RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_R, 5.0f);
 	DoIcon(IMAGE_FRIENDICONS, UI()->MouseInside(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Button);
 	static CButtonContainer s_AddGametype;
@@ -1899,9 +1934,8 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	UI()->DoLabel(&Button, Localize("Server address:"), FontSize, CUI::ALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
-	static float OffsetAddr = 0.0f;
-	static int s_BrFilterServerAddress = 0;
-	if(DoEditBox(&s_BrFilterServerAddress, &Button, FilterInfo.m_aAddress, sizeof(FilterInfo.m_aAddress), FontSize, &OffsetAddr))
+	static float s_OffsetAddr = 0.0f;
+	if(DoEditBox(&s_OffsetAddr, &Button, FilterInfo.m_aAddress, sizeof(FilterInfo.m_aAddress), FontSize, &s_OffsetAddr))
 		UpdateFilter = true;
 
 	// player country
@@ -1929,7 +1963,6 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 
 	// level
 	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
-
 	ServerFilter.HSplitTop(LineSize + 2, &Button, &ServerFilter);
 	UI()->DoLabel(&Button, Localize("Difficulty:"), FontSize, CUI::ALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
@@ -2337,12 +2370,6 @@ void CMenus::RenderServerbrowser(CUIRect MainView)
 		| back |	   | bottom box |
 		+------+       +------------+
 	*/
-	static bool s_Init = true;
-	if(s_Init)
-	{
-		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/gametypes", GameIconScan, this);
-		s_Init = false;
-	}
 
 	CUIRect ServerList, Sidebar, BottomBox, SidebarButton;
 

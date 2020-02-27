@@ -88,7 +88,7 @@ void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision, bool ForceSig
 	AppendDecimals(pBuf, Size, Time, Precision);
 }
 
-// instanciate all systems
+// instantiate all systems
 static CInfoMessages gs_InfoMessages;
 static CCamera gs_Camera;
 static CChat gs_Chat;
@@ -371,16 +371,27 @@ void CGameClient::OnInit()
 		}
 	}
 
+	// determine total work for loading all components
+	int TotalWorkAmount = g_pData->m_NumImages + 2; // +2=editor
+	for(int i = m_All.m_Num-1; i >= 0; --i)
+		TotalWorkAmount += m_All.m_paComponents[i]->GetInitAmount();
+
+	m_pMenus->InitLoading(TotalWorkAmount);
+	m_pMenus->RenderLoading(); // render initial loading screen
 	// init all components
 	for(int i = m_All.m_Num-1; i >= 0; --i)
 		m_All.m_paComponents[i]->OnInit();
 
-	// setup load amount// load textures
+	// load textures
 	for(int i = 0; i < g_pData->m_NumImages; i++)
 	{
 		g_pData->m_aImages[i].m_Id = Graphics()->LoadTexture(g_pData->m_aImages[i].m_pFilename, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, g_pData->m_aImages[i].m_Flag ? IGraphics::TEXLOAD_LINEARMIPMAPS : 0);
-		m_pMenus->RenderLoading();
+		m_pMenus->RenderLoading(1);
 	}
+
+	// init the editor
+	m_pEditor->Init();
+	m_pMenus->RenderLoading(2);
 
 	OnReset();
 
@@ -393,6 +404,7 @@ void CGameClient::OnInit()
 
 	m_IsXmasDay = time_isxmasday();
 	m_IsEasterDay = time_iseasterday();
+	m_pMenus->RenderLoading();
 }
 
 void CGameClient::OnUpdate()
