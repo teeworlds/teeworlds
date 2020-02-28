@@ -2312,6 +2312,10 @@ void str_timestamp(char *buffer, int buffer_size)
 #pragma GCC diagnostic pop
 #endif
 
+int str_span(const char *str, const char *set)
+{
+	return strcspn(str, set);
+}
 
 int mem_comp(const void *a, const void *b, int size)
 {

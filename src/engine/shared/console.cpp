@@ -163,8 +163,6 @@ int CConsole::ParseArgs(CResult *pResult, const char *pFormat)
 					pStr = str_skip_to_whitespace(pStr);
 				else if(Command == 's') // validate string
 					pStr = str_skip_to_whitespace(pStr);
-				else if(Command == 'p')
-					pStr = str_skip_to_whitespace(pStr);
 
 				if(pStr[0] != 0) // check for end of string
 				{
