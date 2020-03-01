@@ -1415,6 +1415,10 @@ void CChat::HandleCommands(float x, float y, float w)
 				// print command
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Rect.x + 5.0f, y, 5.0f, TEXTFLAG_RENDER);
+				// Janky way to truncate
+				Cursor.m_LineWidth = LineWidth;
+				Cursor.m_MaxLines = 1;
+
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 				TextRender()->TextEx(&Cursor, pCommand->m_aName, -1);
 				TextRender()->TextEx(&Cursor, " ", -1);
@@ -1464,8 +1468,6 @@ void CChat::HandleCommands(float x, float y, float w)
 				}
 			illformed:
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
-
-				// TODO: Truncate HelpText
 				TextRender()->TextEx(&Cursor, pCommand->m_aHelpText, -1);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 			}
