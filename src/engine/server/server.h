@@ -228,6 +228,7 @@ public:
 	bool ClientIngame(int ClientID) const;
 
 	virtual int SendMsg(CMsgPacker *pMsg, int Flags, int ClientID);
+	int SendStoredChunks(CNetChunkStore *pStore, int Flags, int ClientID);
 
 	void DoSnapshot();
 
@@ -249,7 +250,7 @@ public:
 	void ProcessClientPacket(CNetChunk *pPacket);
 
 	void SendServerInfo(int ClientID);
-	void GenerateServerInfo(CPacker *pPacker, int Token);
+	void GenerateServerInfo(CNetChunkStore *pStore, int Token);
 
 	void PumpNetwork();
 
