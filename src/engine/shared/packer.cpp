@@ -116,8 +116,14 @@ int CUnpacker::GetInt()
 
 const char *CUnpacker::GetString(int SanitizeType)
 {
-	if(m_Error || m_pCurrent >= m_pEnd)
+	if(m_Error)
 		return "";
+
+	if(m_pCurrent >= m_pEnd)
+	{
+		m_Error = 1;
+		return "";
+	}
 
 	char *pPtr = (char *)m_pCurrent;
 	while(*m_pCurrent) // skip the string

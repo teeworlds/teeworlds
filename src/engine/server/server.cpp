@@ -1136,13 +1136,8 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 
 void CServer::GenerateServerInfo(CNetChunkStore *pStore, int Token)
 {
-	const char *Test = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA \
-						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA \
-						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA \
-						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA \
-						AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA \
-						AAAAAAAAAAAAAAAAAA";
 	CMsgPacker First(NETMSG_SERVERINFO, true);
+
 	// count the players
 	int PlayerCount = 0, ClientCount = 0;
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1163,13 +1158,13 @@ void CServer::GenerateServerInfo(CNetChunkStore *pStore, int Token)
 		First.AddInt(Token);
 	}
 
-	First.AddString(Test, 32);
-	First.AddString(Test, 64);
-	First.AddString(Test, 128);
-	First.AddString(Test, 32);
+	First.AddString(GameServer()->Version(), 32);
+	First.AddString(Config()->m_SvName, 64);
+	First.AddString(Config()->m_SvHostname, 128);
+	First.AddString(GetMapName(), 32);
 
 	// gametype
-	First.AddString(Test, 16);
+	First.AddString(GameServer()->GameType(), 16);
 
 	// flags
 	int Flags = 0;
@@ -1180,9 +1175,9 @@ void CServer::GenerateServerInfo(CNetChunkStore *pStore, int Token)
 	First.AddInt(Flags);
 
 	First.AddInt(Config()->m_SvSkillLevel);	// server skill level
-	First.AddInt(0); // num players
+	First.AddInt(PlayerCount); // num players
 	First.AddInt(Config()->m_SvPlayerSlots); // max players
-	First.AddInt(64); // num clients
+	First.AddInt(ClientCount); // num clients
 	First.AddInt(max(ClientCount, Config()->m_SvMaxClients)); // max clients
 	First.AddString("", 0); // extra info, reserved
 
@@ -1221,8 +1216,8 @@ void CServer::GenerateServerInfo(CNetChunkStore *pStore, int Token)
 			{
 				int PreviousSize = Packer.Size();
 
-				Packer.AddString(Test, MAX_NAME_LENGTH); // client name
-				Packer.AddString(Test, MAX_CLAN_LENGTH); // client clan
+				Packer.AddString(ClientName(i), MAX_NAME_LENGTH); // client name
+				Packer.AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
 
 				Packer.AddInt(m_aClients[i].m_Country); // client country
 				Packer.AddInt(m_aClients[i].m_Score); // client score

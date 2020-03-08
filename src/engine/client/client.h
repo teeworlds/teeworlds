@@ -261,7 +261,7 @@ public:
 	const char *LoadMap(const char *pName, const char *pFilename, const SHA256_DIGEST *pWantedSha256, unsigned WantedCrc);
 	const char *LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pWantedSha256, int WantedCrc);
 
-	int UnpackServerInfo(NETADDR *pFrom, CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken, bool More);
+	int UnpackServerInfo(NETADDR *pFrom, CUnpacker *pUnpacker, CServerInfo **ppInfo, int *pToken, bool More);
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
 

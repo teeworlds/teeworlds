@@ -892,8 +892,9 @@ const char *CClient::LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pW
 	return pError;
 }
 
-int CClient::UnpackServerInfo(NETADDR *pFrom, CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken, bool More)
+int CClient::UnpackServerInfo(NETADDR *pFrom, CUnpacker *pUnpacker, CServerInfo **ppInfo, int *pToken, bool More)
 {
+	CServerInfo *pInfo = *ppInfo;
 	if(!More)
 	{
 		if(pToken)
@@ -938,14 +939,19 @@ int CClient::UnpackServerInfo(NETADDR *pFrom, CUnpacker *pUnpacker, CServerInfo 
 	}
 	else // More packets only have clients
 	{
-		pInfo = &m_ServerBrowser.FindAll(*pFrom)->m_Info;
-		if(!pInfo)
+		CServerEntry *pEntry = m_ServerBrowser.FindAll(*pFrom);
+		if(!pEntry)
 		{
 			return 0; // We didn't receive the main packet yet
 		}
+		pInfo = &pEntry->m_Info;
+		*ppInfo = pInfo;
+
 		if(pToken)
 			*pToken = pUnpacker->GetInt();
 		int PacketNo = pUnpacker->GetInt();
+
+		pUnpacker->GetString(); // extra info, reserved
 
 		// 0 needs to be excluded because that's reserved for the main packet.
 		if(PacketNo <= 0 || PacketNo >= 64)
@@ -986,7 +992,7 @@ int CClient::UnpackServerInfo(NETADDR *pFrom, CUnpacker *pUnpacker, CServerInfo 
 			NumPlayers++;
 	}
 	pInfo->m_NumPlayers = NumPlayers;
-	pInfo->m_NumReceivedClients = NumClients;
+	pInfo->m_NumReceivedClients += NumClients;
 
 	if(IgnoreError)
 		return 0;
@@ -1017,7 +1023,7 @@ bool CompareTime(const CServerInfo::CClient &C1, const CServerInfo::CClient &C2)
 
 inline void SortClients(CServerInfo *pInfo)
 {
-	std::stable_sort(pInfo->m_aClients, pInfo->m_aClients + pInfo->m_NumReceivedClients - (pInfo->m_NumReceivedClients ? 1 : 0),
+	std::stable_sort(pInfo->m_aClients, pInfo->m_aClients + pInfo->m_NumReceivedClients,
 		(pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE) ? CompareTime : CompareScore);
 }
 
@@ -1127,11 +1133,10 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		bool More = false;
 		if(mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
 		{
-
+			More = false;
 		}
 		else if(mem_comp(pPacket->m_pData, SERVERBROWSE_INFO_MORE, sizeof(SERVERBROWSE_INFO_MORE)) == 0)
 		{
-			return;
 			More = true;
 		}
 		else
@@ -1140,17 +1145,15 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		}
 
 		CUnpacker Up;
-		CServerInfo Info = {0};
+		CServerInfo Info = {0}, *pInfo = &Info;
 		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
 		net_addr_str(&pPacket->m_Address, Info.m_aAddress, sizeof(Info.m_aAddress), true);
 		int Token;
-		if(!UnpackServerInfo(&pPacket->m_Address, &Up, &Info, &Token, More))
+		if(!UnpackServerInfo(&pPacket->m_Address, &Up, &pInfo, &Token, More))
 		{
-			SortClients(&Info);
+			SortClients(pInfo);
 			if(!More)
-				m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, &Info);
-
-			// TODO: If More we need to sort the rest
+				m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, pInfo);
 		}
 	}
 }
@@ -1286,12 +1289,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 		}
 		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_SERVERINFO)
 		{
-			CServerInfo Info = {0};
+			CServerInfo Info = {0}, *pInfo = &Info;
 			net_addr_str(&pPacket->m_Address, Info.m_aAddress, sizeof(Info.m_aAddress), true);
-			if(!UnpackServerInfo(&pPacket->m_Address, &Unpacker, &Info, 0, false) && !Unpacker.Error())
+			if(!UnpackServerInfo(&pPacket->m_Address, &Unpacker, &pInfo, 0, false) && !Unpacker.Error())
 			{
-				SortClients(&Info);
-				mem_copy(&m_CurrentServerInfo, &Info, sizeof(m_CurrentServerInfo));
+				SortClients(pInfo);
+				mem_copy(&m_CurrentServerInfo, &pInfo, sizeof(m_CurrentServerInfo));
 				m_CurrentServerInfo.m_NetAddr = m_ServerAddress;
 			}
 		}
