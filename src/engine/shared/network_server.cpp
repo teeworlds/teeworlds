@@ -19,7 +19,7 @@ bool CNetServer::Open(NETADDR BindAddr, CConfig *pConfig, IConsole *pConsole, IE
 	NETSOCKET Socket = net_udp_create(BindAddr, 0);
 	if(!Socket.type)
 		return false;
-	
+
 	// init
 	m_pNetBan = pNetBan;
 	Init(Socket, pConfig, pConsole, pEngine);
@@ -207,7 +207,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 								m_pfnNewClient(i, m_UserPtr);
 							break;
 						}
-					}					
+					}
 				}
 				else if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
 					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, NET_TOKENFLAG_RESPONSEONLY);
@@ -285,7 +285,7 @@ int CNetServer::Send(CNetChunk *pChunk, TOKEN Token)
 		int Flags = 0;
 		dbg_assert(pChunk->m_ClientID >= 0, "errornous client id");
 		dbg_assert(pChunk->m_ClientID < NET_MAX_CLIENTS, "errornous client id");
-		dbg_assert(m_aSlots[pChunk->m_ClientID].m_Connection.State() != NET_CONNSTATE_OFFLINE, "errornous client id");
+		//dbg_assert(m_aSlots[pChunk->m_ClientID].m_Connection.State() != NET_CONNSTATE_OFFLINE, "errornous client id");
 
 		if(pChunk->m_Flags&NETSENDFLAG_VITAL)
 			Flags = NET_CHUNKFLAG_VITAL;

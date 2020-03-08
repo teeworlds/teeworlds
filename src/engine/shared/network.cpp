@@ -448,5 +448,5 @@ CNetChunk *CNetChunkStore::Next()
 	if(m_Chunk == m_aChunks.size())
 		return 0;
 
-	return &m_aChunks[++m_Chunk];
+	return &m_aChunks[m_Chunk++];
 }

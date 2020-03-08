@@ -479,6 +479,19 @@ CServerEntry *CServerBrowser::Find(int ServerlistType, const NETADDR &Addr)
 	return (CServerEntry*)0;
 }
 
+CServerEntry *CServerBrowser::FindAll(const NETADDR &Addr)
+{
+	for(int i = 0; i < NUM_TYPES; i++)
+	{
+		for(CServerEntry *pEntry = m_aServerlist[i].m_aServerlistIp[AddrHash(&Addr)]; pEntry; pEntry = pEntry->m_pNextIp)
+		{
+			if(net_addr_comp(&pEntry->m_Addr, &Addr) == 0)
+				return pEntry;
+		}
+	}
+	return (CServerEntry *)0;
+}
+
 void CServerBrowser::QueueRequest(CServerEntry *pEntry)
 {
 	// add it to the list of servers that we should request info from

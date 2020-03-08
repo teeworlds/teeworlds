@@ -892,54 +892,86 @@ const char *CClient::LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pW
 	return pError;
 }
 
-int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken)
+int CClient::UnpackServerInfo(NETADDR *pFrom, CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken, bool More)
 {
-	if(pToken)
-		*pToken = pUnpacker->GetInt();
-	str_copy(pInfo->m_aVersion, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aVersion));
-	str_copy(pInfo->m_aName, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aName));
-	str_clean_whitespaces(pInfo->m_aName);
-	str_copy(pInfo->m_aHostname, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aHostname));
-	if(pInfo->m_aHostname[0] == 0)
-		str_copy(pInfo->m_aHostname, pInfo->m_aAddress, sizeof(pInfo->m_aHostname));
-	str_copy(pInfo->m_aMap, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aMap));
-	str_copy(pInfo->m_aGameType, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aGameType));
-	int Flags = pUnpacker->GetInt();
-	pInfo->m_Flags = 0;
-	if(Flags&SERVERINFO_FLAG_PASSWORD)
-		pInfo->m_Flags |= IServerBrowser::FLAG_PASSWORD;
-	if(Flags&SERVERINFO_FLAG_TIMESCORE)
-		pInfo->m_Flags |= IServerBrowser::FLAG_TIMESCORE;
-	pInfo->m_ServerLevel = clamp<int>(pUnpacker->GetInt(), SERVERINFO_LEVEL_MIN, SERVERINFO_LEVEL_MAX);
-	pInfo->m_NumPlayers = pUnpacker->GetInt();
-	pInfo->m_MaxPlayers = pUnpacker->GetInt();
-	pInfo->m_NumClients = pUnpacker->GetInt();
-	pInfo->m_MaxClients = pUnpacker->GetInt();
-	pInfo->m_NumBotPlayers = 0;
-	pInfo->m_NumBotSpectators = 0;
+	if(!More)
+	{
+		if(pToken)
+			*pToken = pUnpacker->GetInt();
+		str_copy(pInfo->m_aVersion, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aVersion));
+		str_copy(pInfo->m_aName, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aName));
+		str_clean_whitespaces(pInfo->m_aName);
+		str_copy(pInfo->m_aHostname, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aHostname));
+		if(pInfo->m_aHostname[0] == 0)
+			str_copy(pInfo->m_aHostname, pInfo->m_aAddress, sizeof(pInfo->m_aHostname));
+		str_copy(pInfo->m_aMap, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aMap));
+		str_copy(pInfo->m_aGameType, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aGameType));
+		int Flags = pUnpacker->GetInt();
+		pInfo->m_Flags = 0;
+		if(Flags&SERVERINFO_FLAG_PASSWORD)
+			pInfo->m_Flags |= IServerBrowser::FLAG_PASSWORD;
+		if(Flags&SERVERINFO_FLAG_TIMESCORE)
+			pInfo->m_Flags |= IServerBrowser::FLAG_TIMESCORE;
+		pInfo->m_ServerLevel = clamp<int>(pUnpacker->GetInt(), SERVERINFO_LEVEL_MIN, SERVERINFO_LEVEL_MAX);
+		pInfo->m_NumPlayers = pUnpacker->GetInt();
+		pInfo->m_MaxPlayers = pUnpacker->GetInt();
+		pInfo->m_NumClients = pUnpacker->GetInt();
+		pInfo->m_MaxClients = pUnpacker->GetInt();
+		pInfo->m_NumBotPlayers = 0;
+		pInfo->m_NumBotSpectators = 0;
+		pInfo->m_NumReceivedClients = 0;
 
-	// don't add invalid info to the server browser list
-	if(pInfo->m_NumClients < 0 || pInfo->m_NumClients > pInfo->m_MaxClients || pInfo->m_MaxClients < 0 || pInfo->m_MaxClients > MAX_CLIENTS || pInfo->m_MaxPlayers < pInfo->m_NumPlayers ||
-		pInfo->m_NumPlayers < 0 || pInfo->m_NumPlayers > pInfo->m_NumClients || pInfo->m_MaxPlayers < 0 || pInfo->m_MaxPlayers > pInfo->m_MaxClients)
-		return -1;
-	// drop standard gametype with more than MAX_PLAYERS
-	if(pInfo->m_MaxPlayers > MAX_PLAYERS && (str_comp(pInfo->m_aGameType, "DM") == 0 || str_comp(pInfo->m_aGameType, "TDM") == 0 || str_comp(pInfo->m_aGameType, "CTF") == 0 ||
-		str_comp(pInfo->m_aGameType, "LTS") == 0 || str_comp(pInfo->m_aGameType, "LMS") == 0))
-		return -1;
+		// don't add invalid info to the server browser list
+		if(pInfo->m_NumClients < 0 || pInfo->m_NumClients > pInfo->m_MaxClients || pInfo->m_MaxClients < 0 || pInfo->m_MaxClients > MAX_CLIENTS || pInfo->m_MaxPlayers < pInfo->m_NumPlayers ||
+			pInfo->m_NumPlayers < 0 || pInfo->m_NumPlayers > pInfo->m_NumClients || pInfo->m_MaxPlayers < 0 || pInfo->m_MaxPlayers > pInfo->m_MaxClients)
+			return -1;
+		// drop standard gametype with more than MAX_PLAYERS
+		if(pInfo->m_MaxPlayers > MAX_PLAYERS && (str_comp(pInfo->m_aGameType, "DM") == 0 || str_comp(pInfo->m_aGameType, "TDM") == 0 || str_comp(pInfo->m_aGameType, "CTF") == 0 ||
+			str_comp(pInfo->m_aGameType, "LTS") == 0 || str_comp(pInfo->m_aGameType, "LMS") == 0))
+			return -1;
 
-	// use short version
-	if(!pToken)
-		return 0;
+		pUnpacker->GetString(); // extra info, reserved
+
+		// use short version
+		if(!pToken)
+			return 0;
+	}
+	else // More packets only have clients
+	{
+		pInfo = &m_ServerBrowser.FindAll(*pFrom)->m_Info;
+		if(!pInfo)
+		{
+			return 0; // We didn't receive the main packet yet
+		}
+		if(pToken)
+			*pToken = pUnpacker->GetInt();
+		int PacketNo = pUnpacker->GetInt();
+
+		// 0 needs to be excluded because that's reserved for the main packet.
+		if(PacketNo <= 0 || PacketNo >= 64)
+			return 0;
+	}
+
+	if(pUnpacker->Error())
+		return 1;
 
 	int NumPlayers = 0;
 	int NumClients = 0;
-	for(int i = 0; i < pInfo->m_NumClients; i++)
+	bool IgnoreError = false;
+	for(int i = pInfo->m_NumReceivedClients; i < pInfo->m_NumClients; i++)
 	{
 		str_copy(pInfo->m_aClients[i].m_aName, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[i].m_aName));
+		if(pUnpacker->Error())
+		{
+			// packet end
+			IgnoreError = true;
+			break;
+		}
 		str_copy(pInfo->m_aClients[i].m_aClan, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[i].m_aClan));
 		pInfo->m_aClients[i].m_Country = pUnpacker->GetInt();
 		pInfo->m_aClients[i].m_Score = pUnpacker->GetInt();
 		pInfo->m_aClients[i].m_PlayerType = pUnpacker->GetInt()&CServerInfo::CClient::PLAYERFLAG_MASK;
+		pUnpacker->GetString(); // extra info, reserved
 
 		if(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_BOT)
 		{
@@ -954,9 +986,11 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 			NumPlayers++;
 	}
 	pInfo->m_NumPlayers = NumPlayers;
-	pInfo->m_NumClients = NumClients;
+	pInfo->m_NumReceivedClients = NumClients;
 
-	return 0;
+	if(IgnoreError)
+		return 0;
+	return pUnpacker->Error();
 }
 
 bool CompareScore(const CServerInfo::CClient &C1, const CServerInfo::CClient &C2)
@@ -983,7 +1017,7 @@ bool CompareTime(const CServerInfo::CClient &C1, const CServerInfo::CClient &C2)
 
 inline void SortClients(CServerInfo *pInfo)
 {
-	std::stable_sort(pInfo->m_aClients, pInfo->m_aClients + pInfo->m_NumClients,
+	std::stable_sort(pInfo->m_aClients, pInfo->m_aClients + pInfo->m_NumReceivedClients - (pInfo->m_NumReceivedClients ? 1 : 0),
 		(pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE) ? CompareTime : CompareScore);
 }
 
@@ -1088,17 +1122,35 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 	}
 
 	// server info
-	if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_INFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
+	if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_INFO))
 	{
+		bool More = false;
+		if(mem_comp(pPacket->m_pData, SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO)) == 0)
+		{
+
+		}
+		else if(mem_comp(pPacket->m_pData, SERVERBROWSE_INFO_MORE, sizeof(SERVERBROWSE_INFO_MORE)) == 0)
+		{
+			return;
+			More = true;
+		}
+		else
+		{
+			return;
+		}
+
 		CUnpacker Up;
 		CServerInfo Info = {0};
 		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
 		net_addr_str(&pPacket->m_Address, Info.m_aAddress, sizeof(Info.m_aAddress), true);
 		int Token;
-		if(!UnpackServerInfo(&Up, &Info, &Token) && !Up.Error())
+		if(!UnpackServerInfo(&pPacket->m_Address, &Up, &Info, &Token, More))
 		{
 			SortClients(&Info);
-			m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, &Info);
+			if(!More)
+				m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, &Info);
+
+			// TODO: If More we need to sort the rest
 		}
 	}
 }
@@ -1236,7 +1288,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 		{
 			CServerInfo Info = {0};
 			net_addr_str(&pPacket->m_Address, Info.m_aAddress, sizeof(Info.m_aAddress), true);
-			if(!UnpackServerInfo(&Unpacker, &Info, 0) && !Unpacker.Error())
+			if(!UnpackServerInfo(&pPacket->m_Address, &Unpacker, &Info, 0, false) && !Unpacker.Error())
 			{
 				SortClients(&Info);
 				mem_copy(&m_CurrentServerInfo, &Info, sizeof(m_CurrentServerInfo));

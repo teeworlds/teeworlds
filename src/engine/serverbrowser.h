@@ -57,6 +57,7 @@ public:
 	int m_NumPlayers;
 	int m_NumBotPlayers;
 	int m_NumBotSpectators;
+	int m_NumReceivedClients;
 	int m_Flags;
 	int m_ServerLevel;
 	bool m_Favorite;

@@ -17,11 +17,11 @@ public:
 		SET_FAV_ADD,
 		SET_TOKEN,
 	};
-		
+
 	CServerBrowser();
 	void Init(class CNetClient *pClient, const char *pNetVersion);
 	void Set(const NETADDR &Addr, int SetType, int Token, const CServerInfo *pInfo);
-	void Update(bool ForceResort);	
+	void Update(bool ForceResort);
 
 	// interface functions
 	int GetType() { return m_ActServerlistType; };
@@ -53,9 +53,10 @@ public:
 	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); };
 
 	static void CBFTrackPacket(int TrackID, void *pUser);
-	
+
 	void LoadServerlist();
 	void SaveServerlist();
+
 
 private:
 	class CNetClient *m_pNetClient;
@@ -63,7 +64,7 @@ private:
 	class IConsole *m_pConsole;
 	class IStorage *m_pStorage;
 	class IMasterServer *m_pMasterServer;
-		
+
 	class CServerBrowserFavorites m_ServerBrowserFavorites;
 	class CServerBrowserFilter m_ServerBrowserFilter;
 
@@ -82,7 +83,7 @@ private:
 		int m_NumPlayers;
 		int m_NumServers;
 		int m_NumServerCapacity;
-	
+
 		CServerEntry *m_aServerlistIp[256]; // ip hash list
 		CServerEntry **m_ppServerlist;
 
@@ -108,6 +109,9 @@ private:
 	void RemoveRequest(CServerEntry *pEntry);
 	void RequestImpl(const NETADDR &Addr, CServerEntry *pEntry);
 	void SetInfo(int ServerlistType, CServerEntry *pEntry, const CServerInfo &Info);
+
+public:
+	CServerEntry *FindAll(const NETADDR &Addr);
 };
 
 #endif
