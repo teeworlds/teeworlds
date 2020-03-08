@@ -1,11 +1,6 @@
 #include <base/detect.h>
 #include "SDL.h"
 #include "SDL_opengl.h"
-#if defined(CONF_PLATFORM_MACOSX)
-#include "OpenGL/glu.h"
-#else
-#include "GL/glu.h"
-#endif
 
 #include <base/tl/threading.h>
 
@@ -246,12 +241,13 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::SState &St
 	// screen mapping
 	glMatrixMode(GL_PROJECTION);
 	glLoadIdentity();
-	glOrtho(State.m_ScreenTL.x, State.m_ScreenBR.x, State.m_ScreenBR.y, State.m_ScreenTL.y, 1.0f, 10.f);
+	glOrtho(State.m_ScreenTL.x, State.m_ScreenBR.x, State.m_ScreenBR.y, State.m_ScreenTL.y, -1.0f, 1.0f);
 }
 
 void CCommandProcessorFragment_OpenGL::Cmd_Init(const SCommand_Init *pCommand)
 {
 	m_pTextureMemoryUsage = pCommand->m_pTextureMemoryUsage;
+	*m_pTextureMemoryUsage = 0;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_MaxTexSize);
 	glGetIntegerv(GL_MAX_3D_TEXTURE_SIZE, &m_Max3DTexSize);
 	dbg_msg("render", "opengl max texture sizes: %d, %d(3D)", m_MaxTexSize, m_Max3DTexSize);
@@ -357,10 +353,11 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	// 2D texture
 	if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE2D)
 	{
+		bool Mipmaps = !(pCommand->m_Flags&CCommandBuffer::TEXFLAG_NOMIPMAPS);
 		glGenTextures(1, &m_aTextures[pCommand->m_Slot].m_Tex2D);
 		m_aTextures[pCommand->m_Slot].m_State |= CTexture::STATE_TEX2D;
 		glBindTexture(GL_TEXTURE_2D, m_aTextures[pCommand->m_Slot].m_Tex2D);
-		if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_NOMIPMAPS)
+		if(!Mipmaps)
 		{
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -373,18 +370,22 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			else
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-			gluBuild2DMipmaps(GL_TEXTURE_2D, StoreOglformat, Width, Height, Oglformat, GL_UNSIGNED_BYTE, pTexData);
+			glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+			glTexImage2D(GL_TEXTURE_2D, 0, StoreOglformat, Width, Height, 0, Oglformat, GL_UNSIGNED_BYTE, pTexData);
 		}
 
 		// calculate memory usage
 		m_aTextures[pCommand->m_Slot].m_MemSize = Width*Height*pCommand->m_PixelSize;
-		int TexWidth = Width;
-		int TexHeight = Height;
-		while(TexWidth > 2 && TexHeight > 2)
+		if(Mipmaps)
 		{
-			TexWidth>>=1;
-			TexHeight>>=1;
-			m_aTextures[pCommand->m_Slot].m_MemSize += TexWidth*TexHeight*pCommand->m_PixelSize;
+			int TexWidth = Width;
+			int TexHeight = Height;
+			while(TexWidth > 2 && TexHeight > 2)
+			{
+				TexWidth>>=1;
+				TexHeight>>=1;
+				m_aTextures[pCommand->m_Slot].m_MemSize += TexWidth*TexHeight*pCommand->m_PixelSize;
+			}
 		}
 	}
 
@@ -445,9 +446,9 @@ void CCommandProcessorFragment_OpenGL::Cmd_Render(const CCommandBuffer::SCommand
 {
 	SetState(pCommand->m_State);
 
-	glVertexPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices);
-	glTexCoordPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*3);
-	glColorPointer(4, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*6);
+	glVertexPointer(2, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices);
+	glTexCoordPointer(3, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*2);
+	glColorPointer(4, GL_FLOAT, sizeof(CCommandBuffer::SVertex), (char*)pCommand->m_pVertices + sizeof(float)*5);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_COLOR_ARRAY);
@@ -645,7 +646,7 @@ void CCommandProcessor_SDL_OpenGL::RunBuffer(CCommandBuffer *pBuffer)
 
 // ------------ CGraphicsBackend_SDL_OpenGL
 
-int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWindowWidth, int *pWindowHeight, int* pScreenWidth, int* pScreenHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
+int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWindowWidth, int *pWindowHeight, int* pScreenWidth, int* pScreenHeight, int FsaaSamples, int Flags, int *pDesktopWidth, int *pDesktopHeight)
 {
 	if(!SDL_WasInit(SDL_INIT_VIDEO))
 	{
@@ -661,13 +662,12 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWind
 	m_NumScreens = SDL_GetNumVideoDisplays();
 	if(m_NumScreens > 0)
 	{
-		*Screen = clamp(*Screen, 0, m_NumScreens-1);
-		if(SDL_GetDisplayBounds(*Screen, &ScreenPos) != 0)
+		*pScreen = clamp(*pScreen, 0, m_NumScreens-1);
+		if(SDL_GetDisplayBounds(*pScreen, &ScreenPos) != 0)
 		{
 			dbg_msg("gfx", "unable to retrieve screen information: %s", SDL_GetError());
 			return -1;
 		}
-
 	}
 	else
 	{
@@ -676,7 +676,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWind
 	}
 
 	// store desktop resolution for settings reset button
-	if(!GetDesktopResolution(*Screen, pDesktopWidth, pDesktopHeight))
+	if(!GetDesktopResolution(*pScreen, pDesktopWidth, pDesktopHeight))
 	{
 		dbg_msg("gfx", "unable to get desktop resolution: %s", SDL_GetError());
 		return -1;
@@ -762,6 +762,14 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *Screen, int *pWind
 	SDL_GL_SetSwapInterval(Flags&IGraphicsBackend::INITFLAG_VSYNC ? 1 : 0);
 
 	SDL_GL_MakeCurrent(NULL, NULL);
+
+	// print sdl version
+	SDL_version Compiled;
+	SDL_version Linked;
+
+	SDL_VERSION(&Compiled);
+	SDL_GetVersion(&Linked);
+	dbg_msg("sdl", "SDL version %d.%d.%d (dll = %d.%d.%d)", Compiled.major, Compiled.minor, Compiled.patch, Linked.major, Linked.minor, Linked.patch);
 
 	// start the command processor
 	m_pProcessor = new CCommandProcessor_SDL_OpenGL;

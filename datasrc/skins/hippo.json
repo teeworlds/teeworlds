@@ -1,0 +1,42 @@
+{"skin": {
+	"body": {
+		"filename": "hippo",
+		"custom_colors": "true",
+		"hue": 174,
+		"sat": 176,
+		"lgt": 183
+	},
+	"marking": {
+		"filename": "hipbel",
+		"custom_colors": "true",
+		"hue": 191,
+		"sat": 0,
+		"lgt": 255,
+		"alp": 178
+	},
+	"decoration": {
+		"filename": "hair",
+		"custom_colors": "false"
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 189,
+		"sat": 72,
+		"lgt": 160
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 209,
+		"sat": 50,
+		"lgt": 36
+	},
+	"eyes": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 198,
+		"sat": 196,
+		"lgt": 45
+	}}
+}

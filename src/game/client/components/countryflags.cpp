@@ -10,6 +10,7 @@
 #include <engine/external/json-parser/json.h>
 #include <engine/shared/config.h>
 
+#include "menus.h"
 #include "countryflags.h"
 
 
@@ -73,7 +74,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 					CCountryFlag CountryFlag;
 					CountryFlag.m_CountryCode = CountryCode;
 					str_copy(CountryFlag.m_aCountryCodeString, pCountryName, sizeof(CountryFlag.m_aCountryCodeString));
-					if(g_Config.m_ClLoadCountryFlags)
+					if(Config()->m_ClLoadCountryFlags)
 					{
 						// load the graphic file
 						CImageInfo Info;
@@ -96,7 +97,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 					m_aCountryFlags.add_unsorted(CountryFlag);
 
 					// print message
-					if(g_Config.m_Debug)
+					if(Config()->m_Debug)
 					{
 						str_format(aBuf, sizeof(aBuf), "loaded country flag '%s'", pCountryName);
 						Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", aBuf);
@@ -129,11 +130,17 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 		m_CodeIndexLUT[max(0, (m_aCountryFlags[i].m_CountryCode-CODE_LB)%CODE_RANGE)] = i;
 }
 
+int CCountryFlags::GetInitAmount() const
+{
+	return 15;
+}
+
 void CCountryFlags::OnInit()
 {
 	// load country flags
 	m_aCountryFlags.clear();
 	LoadCountryflagsIndexfile();
+	m_pClient->m_pMenus->RenderLoading(5);
 	if(!m_aCountryFlags.size())
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "countryflags", "failed to load country flags. folder='countryflags/'");
@@ -143,6 +150,7 @@ void CCountryFlags::OnInit()
 		mem_zero(DummyEntry.m_aCountryCodeString, sizeof(DummyEntry.m_aCountryCodeString));
 		m_aCountryFlags.add(DummyEntry);
 	}
+	m_pClient->m_pMenus->RenderLoading(10);
 }
 
 int CCountryFlags::Num() const

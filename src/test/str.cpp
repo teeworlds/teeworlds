@@ -21,6 +21,25 @@ TEST(Str, Startswith)
 	EXPECT_EQ(str_startswith(ABCDEFG, ABC) - ABCDEFG, str_length(ABC));
 }
 
+TEST(Str, StartswithNocase)
+{
+	EXPECT_TRUE(str_startswith_nocase("Abcdef", "abc"));
+	EXPECT_FALSE(str_startswith_nocase("aBc", "abcdef"));
+
+	EXPECT_TRUE(str_startswith_nocase("xYz", ""));
+	EXPECT_FALSE(str_startswith_nocase("", "xYz"));
+
+	EXPECT_FALSE(str_startswith_nocase("house", "home"));
+	EXPECT_FALSE(str_startswith_nocase("Blackboard", "board"));
+
+	EXPECT_TRUE(str_startswith_nocase("поплавать", "по"));
+	EXPECT_FALSE(str_startswith_nocase("плавать", "по"));
+
+	static const char ABCDEFG[] = "aBcdefg";
+	static const char ABC[] = "abc";
+	EXPECT_EQ(str_startswith_nocase(ABCDEFG, ABC) - ABCDEFG, str_length(ABC));
+}
+
 TEST(Str, Endswith)
 {
 	EXPECT_TRUE(str_endswith("abcdef", "def"));
@@ -38,6 +57,26 @@ TEST(Str, Endswith)
 	static const char ABCDEFG[] = "abcdefg";
 	static const char DEFG[] = "defg";
 	EXPECT_EQ(str_endswith(ABCDEFG, DEFG) - ABCDEFG,
+		str_length(ABCDEFG) - str_length(DEFG));
+}
+
+TEST(Str, EndswithNocase)
+{
+	EXPECT_TRUE(str_endswith_nocase("abcdef", "deF"));
+	EXPECT_FALSE(str_endswith_nocase("def", "abcdef"));
+
+	EXPECT_TRUE(str_endswith_nocase("xyz", ""));
+	EXPECT_FALSE(str_endswith_nocase("", "xyz"));
+
+	EXPECT_FALSE(str_endswith_nocase("rhyme", "minE"));
+	EXPECT_FALSE(str_endswith_nocase("blackboard", "black"));
+
+	EXPECT_TRUE(str_endswith_nocase("люди", "юди"));
+	EXPECT_FALSE(str_endswith_nocase("люди", "любовь"));
+
+	static const char ABCDEFG[] = "abcdefG";
+	static const char DEFG[] = "defg";
+	EXPECT_EQ(str_endswith_nocase(ABCDEFG, DEFG) - ABCDEFG,
 		str_length(ABCDEFG) - str_length(DEFG));
 }
 
@@ -60,4 +99,28 @@ TEST(StrFormat, Positional)
 	// duplicate
 	str_format(aBuf, sizeof(aBuf), "%1$s %1$s %2$d %1$s %2$d", "str", 1);
 	EXPECT_STREQ(aBuf, "str str 1 str 1");
+}
+
+TEST(Str, PathUnsafe)
+{
+	EXPECT_TRUE(str_path_unsafe(".."));
+	EXPECT_TRUE(str_path_unsafe("/.."));
+	EXPECT_TRUE(str_path_unsafe("/../"));
+	EXPECT_TRUE(str_path_unsafe("../"));
+
+	EXPECT_TRUE(str_path_unsafe("/../foobar"));
+	EXPECT_TRUE(str_path_unsafe("../foobar"));
+	EXPECT_TRUE(str_path_unsafe("foobar/../foobar"));
+	EXPECT_TRUE(str_path_unsafe("foobar/.."));
+	EXPECT_TRUE(str_path_unsafe("foobar/../"));
+
+	EXPECT_FALSE(str_path_unsafe("abc"));
+	EXPECT_FALSE(str_path_unsafe("abc/"));
+	EXPECT_FALSE(str_path_unsafe("abc/def"));
+	EXPECT_FALSE(str_path_unsafe("abc/def.txt"));
+	EXPECT_FALSE(str_path_unsafe("abc\\"));
+	EXPECT_FALSE(str_path_unsafe("abc\\def"));
+	EXPECT_FALSE(str_path_unsafe("abc\\def.txt"));
+	EXPECT_FALSE(str_path_unsafe("abc/def\\ghi.txt"));
+	EXPECT_FALSE(str_path_unsafe("любовь"));
 }

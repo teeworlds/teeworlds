@@ -66,6 +66,7 @@ public:
 	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData);
 	typedef void (*FChainCommandCallback)(IResult *pResult, void *pUserData, FCommandCallback pfnCallback, void *pCallbackUserData);
 
+	virtual void Init() = 0;
 	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int Flagmask) const = 0;
 	virtual const CCommandInfo *GetCommandInfo(const char *pName, int FlagMask, bool Temp) = 0;
 	virtual void PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser) = 0;
@@ -86,11 +87,13 @@ public:
 	virtual void ExecuteLine(const char *pStr) = 0;
 	virtual void ExecuteLineFlag(const char *pStr, int FlagMask) = 0;
 	virtual void ExecuteLineStroked(int Stroke, const char *pStr) = 0;
-	virtual void ExecuteFile(const char *pFilename) = 0;
+	virtual bool ExecuteFile(const char *pFilename) = 0;
 
 	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData) = 0;
 	virtual void SetPrintOutputLevel(int Index, int OutputLevel) = 0;
 	virtual void Print(int Level, const char *pFrom, const char *pStr, bool Highlighted=false) = 0;
+
+	virtual int ParseCommandArgs(const char *pArgs, const char *pFormat, FCommandCallback pfnCallback, void *pContext) = 0;
 
 	virtual void SetAccessLevel(int AccessLevel) = 0;
 };

@@ -33,14 +33,14 @@ public:
 			PLAYERFLAG_BOT=2,
 			PLAYERFLAG_MASK=3,
 		};
+	};
 
-		bool operator<(const CClient &Other) const
-		{
-			if(!(m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC) && ((Other.m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC) ||
-				(!(Other.m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC) && m_Score > Other.m_Score)))
-				return true;
-			return false;
-		}
+	enum
+	{
+		LEVEL_CASUAL = 0,
+		LEVEL_NORMAL = 1,
+		LEVEL_COMPETITIVE = 2,
+		NUM_SERVER_LEVELS = 3
 	};
 
 	//int m_SortedIndex;
@@ -59,7 +59,7 @@ public:
 	int m_NumBotSpectators;
 	int m_Flags;
 	int m_ServerLevel;
-	int m_Favorite;
+	bool m_Favorite;
 	int m_Latency; // in ms
 	char m_aGameType[16];
 	char m_aName[64];
@@ -83,6 +83,21 @@ public:
 	int m_ServerLevel;
 	char m_aGametype[MAX_GAMETYPES][16];
 	char m_aAddress[NETADDR_MAXSTRSIZE];
+
+	void ToggleLevel(int Level)
+	{
+		m_ServerLevel ^= 1 << Level;
+		if(m_ServerLevel == (1 << CServerInfo::NUM_SERVER_LEVELS)-1)
+		{
+			// Prevent filter that excludes everything
+			m_ServerLevel = 0;
+		}
+	}
+
+	int IsLevelFiltered(int Level)
+	{
+		return m_ServerLevel & (1 << Level);
+	}
 };
 
 class IServerBrowser : public IInterface
@@ -107,6 +122,7 @@ public:
 		QUICK_SERVERNAME=1,
 		QUICK_PLAYER=2,
 		QUICK_MAPNAME=4,
+		QUICK_GAMETYPE=8,
 
 		TYPE_INTERNET=0,
 		TYPE_LAN,
@@ -118,6 +134,7 @@ public:
 		FLAG_PASSWORD=1,
 		FLAG_PURE=2,
 		FLAG_PUREMAP=4,
+		FLAG_TIMESCORE=8,
 
 		FILTER_BOTS=16,
 		FILTER_EMPTY=32,
@@ -132,6 +149,7 @@ public:
 		FILTER_COUNTRY= 16384,
 	};
 
+	virtual int GetType() = 0;
 	virtual void SetType(int Type) = 0;
 	virtual void Refresh(int RefreshFlags) = 0;
 	virtual bool IsRefreshing() const = 0;
@@ -148,9 +166,11 @@ public:
 	virtual const CServerInfo *SortedGet(int FilterIndex, int Index) const = 0;
 	virtual const void *GetID(int FilterIndex, int Index) const = 0;
 
-	virtual bool IsFavorite(const NETADDR &Addr) = 0;	// todo: remove this
-	virtual void AddFavorite(const CServerInfo *pEntry) = 0;
-	virtual void RemoveFavorite(const CServerInfo *pEntry) = 0;
+	virtual void AddFavorite(const CServerInfo *pInfo) = 0;
+	virtual void RemoveFavorite(const CServerInfo *pInfo) = 0;
+	virtual void UpdateFavoriteState(CServerInfo *pInfo) = 0;
+	virtual void SetFavoritePassword(const char *pAddress, const char *pPassword) = 0;
+	virtual const char *GetFavoritePassword(const char *pAddress) = 0;
 
 	virtual int AddFilter(const CServerFilterInfo *pFilterInfo) = 0;
 	virtual void SetFilter(int Index, const CServerFilterInfo *pFilterInfo) = 0;

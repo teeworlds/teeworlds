@@ -205,25 +205,50 @@ const char *CBinds::Get(int KeyID, int Modifier)
 	return "";
 }
 
-void CBinds::GetKey(const char *pBindStr, char aKey[64], unsigned BufSize)
+void CBinds::GetKeyID(const char *pBindStr, int& KeyID, int& Modifier)
 {
-	aKey[0] = 0;
-	for(int KeyID = 0; KeyID < KEY_LAST; KeyID++)
+	KeyID = KEY_LAST;
+	Modifier = MODIFIER_COUNT;
+
+	for(int LocalKeyID = 0; LocalKeyID < KEY_LAST; LocalKeyID++)
 	{
-		for(int m = 0; m < MODIFIER_COUNT; m++)
+		for(int LocalModifier = 0; LocalModifier < MODIFIER_COUNT; LocalModifier++)
 		{
-			const char *pBind = Get(KeyID, m);
+			const char *pBind = Get(LocalKeyID, LocalModifier);
 			if(!pBind[0])
 				continue;
 
 			if(str_comp(pBind, pBindStr) == 0)
 			{
-				str_format(aKey, BufSize, "%s%s", GetModifierName(m), Input()->KeyName(KeyID));
+				KeyID = LocalKeyID;
+				Modifier = LocalModifier;
 				return;
+			}
+			if(str_find(pBind, pBindStr) != 0)
+			{
+				KeyID = LocalKeyID;
+				Modifier = LocalModifier;
 			}
 		}
 	}
-	str_copy(aKey, "key not found", BufSize);
+}
+
+void CBinds::GetKey(const char *pBindStr, char aKey[64], unsigned BufSize, int KeyID, int Modifier)
+{
+	aKey[0] = 0;
+	if(KeyID < KEY_LAST)
+	{
+		str_format(aKey, BufSize, "%s%s", GetModifierName(Modifier), Input()->KeyName(KeyID));
+		return;
+	}
+	str_copy(aKey, Localize("key not found"), BufSize);
+}
+
+void CBinds::GetKey(const char *pBindStr, char aKey[64], unsigned BufSize)
+{
+	int KeyID, Modifier;
+	GetKeyID(pBindStr, KeyID, Modifier);
+	GetKey(pBindStr, aKey, BufSize, KeyID, Modifier);
 }
 
 void CBinds::SetDefaults()
@@ -239,14 +264,14 @@ void CBinds::SetDefaults()
 void CBinds::OnConsoleInit()
 {
 	// bindings
-	IConfig *pConfig = Kernel()->RequestInterface<IConfig>();
-	if(pConfig)
-		pConfig->RegisterCallback(ConfigSaveCallback, this);
+	IConfigManager *pConfigManager = Kernel()->RequestInterface<IConfigManager>();
+	if(pConfigManager)
+		pConfigManager->RegisterCallback(ConfigSaveCallback, this);
 
 	Console()->Register("bind", "sr", CFGFLAG_CLIENT, ConBind, this, "Bind key to execute the command");
 	Console()->Register("unbind", "s", CFGFLAG_CLIENT, ConUnbind, this, "Unbind key");
 	Console()->Register("unbindall", "", CFGFLAG_CLIENT, ConUnbindAll, this, "Unbind all keys");
-	Console()->Register("dump_binds", "", CFGFLAG_CLIENT, ConDumpBinds, this, "Dump binds");
+	Console()->Register("binds", "", CFGFLAG_CLIENT, ConBinds, this, "Show list of key bindings");
 
 	// default bindings
 	SetDefaults();
@@ -257,9 +282,9 @@ void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
 	int Modifier;
-	int id = pBinds->DecodeBindString(pKeyName, &Modifier);
+	int KeyID = pBinds->DecodeBindString(pKeyName, &Modifier);
 
-	if(!id)
+	if(!KeyID)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "key %s not found", pKeyName);
@@ -267,7 +292,7 @@ void CBinds::ConBind(IConsole::IResult *pResult, void *pUserData)
 		return;
 	}
 
-	pBinds->Bind(id, Modifier, pResult->GetString(1));
+	pBinds->Bind(KeyID, Modifier, pResult->GetString(1));
 }
 
 
@@ -276,9 +301,9 @@ void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 	CBinds *pBinds = (CBinds *)pUserData;
 	const char *pKeyName = pResult->GetString(0);
 	int Modifier;
-	int id = pBinds->DecodeBindString(pKeyName, &Modifier);
+	int KeyID = pBinds->DecodeBindString(pKeyName, &Modifier);
 
-	if(!id)
+	if(!KeyID)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "key %s not found", pKeyName);
@@ -286,7 +311,7 @@ void CBinds::ConUnbind(IConsole::IResult *pResult, void *pUserData)
 		return;
 	}
 
-	pBinds->Bind(id, Modifier, "");
+	pBinds->Bind(KeyID, Modifier, "");
 }
 
 
@@ -297,7 +322,7 @@ void CBinds::ConUnbindAll(IConsole::IResult *pResult, void *pUserData)
 }
 
 
-void CBinds::ConDumpBinds(IConsole::IResult *pResult, void *pUserData)
+void CBinds::ConBinds(IConsole::IResult *pResult, void *pUserData)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	char aBuf[1024];
@@ -373,7 +398,7 @@ const char *CBinds::GetModifierName(int m)
 	}
 }
 
-void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
+void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
 	CBinds *pSelf = (CBinds *)pUserData;
 
@@ -401,7 +426,7 @@ void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 			*pDst++ = '"';
 			*pDst++ = 0;
 
-			pConfig->WriteLine(aBuffer);
+			pConfigManager->WriteLine(aBuffer);
 		}
 	}
 
@@ -413,7 +438,7 @@ void CBinds::ConfigSaveCallback(IConfig *pConfig, void *pUserData)
 		{
 			// explicitly unbind keys that were unbound by the user
 			str_format(aBuffer, sizeof(aBuffer), "unbind %s%s ", GetModifierName(Modifier), pSelf->Input()->KeyName(Key));
-			pConfig->WriteLine(aBuffer);
+			pConfigManager->WriteLine(aBuffer);
 		}
 	}
 }

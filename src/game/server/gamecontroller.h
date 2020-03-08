@@ -4,6 +4,9 @@
 #define GAME_SERVER_GAMECONTROLLER_H
 
 #include <base/vmath.h>
+#include <base/tl/array.h>
+
+#include <game/commands.h>
 
 #include <generated/protocol.h>
 
@@ -15,6 +18,7 @@
 class IGameController
 {
 	class CGameContext *m_pGameServer;
+	class CConfig *m_pConfig;
 	class IServer *m_pServer;
 
 	// activity
@@ -47,7 +51,7 @@ class IGameController
 
 		IGS_GAME_PAUSED,		// game paused (infinite or tick timer)
 		IGS_GAME_RUNNING,		// game running (infinite)
-		
+
 		IGS_END_MATCH,			// match is over (tick timer)
 		IGS_END_ROUND,			// round is over (tick timer)
  	};
@@ -64,7 +68,7 @@ class IGameController
 
 	// map
 	char m_aMapWish[128];
-	
+
 	void CycleMap();
 
 	// spawn
@@ -85,7 +89,7 @@ class IGameController
 	};
 	vec2 m_aaSpawnPoints[3][64];
 	int m_aNumSpawnPoints[3];
-	
+
 	float EvaluateSpawnPos(CSpawnEval *pEval, vec2 Pos) const;
 	void EvaluateSpawnType(CSpawnEval *pEval, int Type) const;
 
@@ -94,6 +98,7 @@ class IGameController
 
 protected:
 	CGameContext *GameServer() const { return m_pGameServer; }
+	CConfig *Config() const { return m_pConfig; }
 	IServer *Server() const { return m_pServer; }
 
 	// game
@@ -164,6 +169,7 @@ public:
 	void OnPlayerDisconnect(class CPlayer *pPlayer);
 	void OnPlayerInfoChange(class CPlayer *pPlayer);
 	void OnPlayerReadyChange(class CPlayer *pPlayer);
+	void OnPlayerCommand(class CPlayer *pPlayer, const char *pCommandName, const char *pCommandArgs);
 
 	void OnReset();
 
@@ -214,9 +220,12 @@ public:
 
 	void DoTeamChange(class CPlayer *pPlayer, int Team, bool DoChatMsg=true);
 	void ForceTeamBalance() { if(!(m_GameFlags&GAMEFLAG_SURVIVAL)) DoTeamBalance(); }
-	
+
 	int GetRealPlayerNum() const { return m_aTeamSize[TEAM_RED]+m_aTeamSize[TEAM_BLUE]; }
 	int GetStartTeam();
+
+	//static void Com_Example(IConsole::IResult *pResult, void *pContext);
+	virtual void RegisterChatCommands(CCommandManager *pManager);
 };
 
 #endif

@@ -51,12 +51,16 @@ class CRenderTools
 	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
 	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
 
-public:
+
+	class CConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
 	class CUI *m_pUI;
+public:
 
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class CUI *UI() const { return m_pUI; }
+
+	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class CUI *pUI);
 
 	void SelectSprite(struct CDataSprite *pSprite, int Flags=0, int sx=0, int sy=0);
 	void SelectSprite(int id, int Flags=0, int sx=0, int sy=0);
@@ -69,12 +73,9 @@ public:
 	void DrawUIRect(const CUIRect *pRect, vec4 Color, int Corners, float Rounding);
 	void DrawUIRect4(const CUIRect *pRect, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, int Corners, float Rounding);
 
-	// larger rendering methods
-	void RenderTilemapGenerateSkip(class CLayers *pLayers);
-
 	// object render methods (gc_render_obj.cpp)
-	void RenderTee(class CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
-	void RenderTeeHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
+	void RenderTee(class CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
+	void RenderTeeHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
 					   vec2 PostRotOffset);
 
 	// map render methods (gc_render_map.cpp)

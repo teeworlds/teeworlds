@@ -16,6 +16,13 @@
 static float gs_SpriteWScale;
 static float gs_SpriteHScale;
 
+void CRenderTools::Init(CConfig *pConfig, IGraphics *pGraphics, CUI *pUI)
+{
+	m_pConfig = pConfig;
+	m_pGraphics = pGraphics;
+	m_pUI = pUI;
+}
+
 void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 {
 	int x = pSpr->m_X+sx;
@@ -327,7 +334,7 @@ void CRenderTools::DrawUIRect4(const CUIRect *r, vec4 ColorTopLeft, vec4 ColorTo
 	Graphics()->QuadsEnd();
 }
 
-void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos)
+void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos)
 {
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
@@ -524,7 +531,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 			}
 			else
 			{
-				bool Indicate = !pInfo->m_GotAirJump && g_Config.m_ClAirjumpindicator;
+				bool Indicate = !pInfo->m_GotAirJump && m_pConfig->m_ClAirjumpindicator;
 				float cs = 1.0f; // color scale
 				if(Indicate)
 					cs = 0.5f;
@@ -539,7 +546,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, CTeeRenderInfo *pInfo, int Emote
 	}
 }
 
-void CRenderTools::RenderTeeHand(CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
+void CRenderTools::RenderTeeHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
 								 vec2 PostRotOffset)
 {
 	// in-game hand size is 15 when tee size is 64
@@ -622,45 +629,10 @@ void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup 
 	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 }
 
-void CRenderTools::RenderTilemapGenerateSkip(class CLayers *pLayers)
-{
-
-	for(int g = 0; g < pLayers->NumGroups(); g++)
-	{
-		CMapItemGroup *pGroup = pLayers->GetGroup(g);
-
-		for(int l = 0; l < pGroup->m_NumLayers; l++)
-		{
-			CMapItemLayer *pLayer = pLayers->GetLayer(pGroup->m_StartLayer+l);
-
-			if(pLayer->m_Type == LAYERTYPE_TILES)
-			{
-				CMapItemLayerTilemap *pTmap = (CMapItemLayerTilemap *)pLayer;
-				CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTmap->m_Data);
-				for(int y = 0; y < pTmap->m_Height; y++)
-				{
-					for(int x = 1; x < pTmap->m_Width;)
-					{
-						int sx;
-						for(sx = 1; x+sx < pTmap->m_Width && sx < 255; sx++)
-						{
-							if(pTiles[y*pTmap->m_Width+x+sx].m_Index)
-								break;
-						}
-
-						pTiles[y*pTmap->m_Width+x].m_Skip = sx-1;
-						x += sx;
-					}
-				}
-			}
-		}
-	}
-}
-
 void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
 								const vec4& BgColor, const vec4& TextColor)
 {
-	if(!g_Config.m_ClShowUserId) return;
+	if(!m_pConfig->m_ClShowUserId) return;
 
 	char aBuff[4];
 	str_format(aBuff, sizeof(aBuff), "%2d ", ID);
@@ -705,6 +677,6 @@ void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, 
 
 float CRenderTools::GetClientIdRectSize(float FontSize)
 {
-	if(!g_Config.m_ClShowUserId) return 0;
+	if(!m_pConfig->m_ClShowUserId) return 0;
 	return 1.4f * FontSize + 0.2f * FontSize;
 }

@@ -37,6 +37,7 @@ class CGameClient : public IGameClient
 	class ITextRender *m_pTextRender;
 	class IClient *m_pClient;
 	class ISound *m_pSound;
+	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
 	class IStorage *m_pStorage;
 	class IDemoPlayer *m_pDemoPlayer;
@@ -80,6 +81,7 @@ public:
 	class ISound *Sound() const { return m_pSound; }
 	class IInput *Input() const { return m_pInput; }
 	class IStorage *Storage() const { return m_pStorage; }
+	class CConfig *Config() const { return m_pConfig; }
 	class IConsole *Console() { return m_pConsole; }
 	class ITextRender *TextRender() const { return m_pTextRender; }
 	class IDemoPlayer *DemoPlayer() const { return m_pDemoPlayer; }
@@ -136,12 +138,14 @@ public:
 		const CNetObj_GameData *m_pGameData;
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
+		const CNetObj_GameDataRace *m_pGameDataRace;
 		int m_GameDataFlagSnapID;
 
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];
 
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
+		const CNetObj_PlayerInfoRace *m_paPlayerInfosRace[MAX_CLIENTS];
 		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
 
 		// spectate data
@@ -263,14 +267,18 @@ public:
 	virtual const char *NetVersionHashUsed() const;
 	virtual const char *NetVersionHashReal() const;
 	virtual int ClientVersion() const;
-	static void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
+	void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
 	bool IsXmas() const;
 	bool IsEaster() const;
+
+	int RacePrecision() const { return m_Snap.m_pGameDataRace ? m_Snap.m_pGameDataRace->m_Precision : 3; }
 
 	//
 	void DoEnterMessage(const char *pName, int ClientID, int Team);
 	void DoLeaveMessage(const char *pName, int ClientID, const char *pReason);
 	void DoTeamChangeMessage(const char *pName, int ClientID, int Team);
+
+	int GetClientID(const char *pName);
 
 	// actions
 	// TODO: move these
@@ -304,6 +312,10 @@ public:
 	class CMapLayers *m_pMapLayersBackGround;
 	class CMapLayers *m_pMapLayersForeGround;
 };
+
+
+void FormatTime(char *pBuf, int Size, int Time, int Precision);
+void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision, bool ForceSign = true);
 
 const char *Localize(const char *pStr, const char *pContext="")
 GNUC_ATTRIBUTE((format_arg(1)));

@@ -16,7 +16,7 @@ private:
 public:
 	IContactList();
 
-	void ConfigSave(IConfig *pConfig, const char* pCmdStr);
+	void ConfigSave(IConfigManager *pConfigManager, const char* pCmdStr);
 
 	virtual void Init() = 0;
 
@@ -33,7 +33,7 @@ public:
 class CFriends: public IFriends, public IContactList
 {
 public:
-	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
+	static void ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData);
 
 	void Init();
 
@@ -52,7 +52,7 @@ public:
 class CBlacklist: public IBlacklist, public IContactList
 {
 public:
-	static void ConfigSaveCallback(IConfig *pConfig, void *pUserData);
+	static void ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData);
 
 	void Init();
 

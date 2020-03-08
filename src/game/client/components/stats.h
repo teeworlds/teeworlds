@@ -48,7 +48,9 @@ private:
 	};
 	CPlayerStats m_aStats[MAX_CLIENTS];
 
-	int m_Active;
+	bool m_Active;
+	bool m_Activate;
+
 	bool m_ScreenshotTaken;
 	int64 m_ScreenshotTime;
 	static void ConKeyStats(IConsole::IResult *pResult, void *pUserData);
@@ -56,13 +58,13 @@ private:
 
 public:
 	CStats();
-	bool IsActive();
+	bool IsActive() const;
 	virtual void OnReset();
 	void OnStartGame();
 	virtual void OnConsoleInit();
 	virtual void OnRender();
+	virtual void OnRelease();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
-	bool IsActive() const { return m_Active; }
 
 	void UpdatePlayTime(int Ticks);
 	void OnMatchStart();

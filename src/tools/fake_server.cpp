@@ -113,7 +113,7 @@ static int Run()
 	int64 NextHeartBeat = 0;
 	NETADDR BindAddr = {NETTYPE_IPV4, {0},0};
 
-	if(!pNet->Open(BindAddr, 0, 0, 0, 0))
+	if(!pNet->Open(BindAddr, 0, 0, 0, 0, 0, 0, 0, 0, 0))
 		return 0;
 
 	while(1)
@@ -202,6 +202,12 @@ int main(int argc, char **argv)
 		}
 
 		argc--; argv++;
+	}
+
+	if(secure_random_init() != 0)
+	{
+		dbg_msg("fake_server", "could not initialize secure RNG");
+		return -1;
 	}
 
 	BuildInfoMsg();

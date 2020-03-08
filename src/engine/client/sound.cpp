@@ -207,6 +207,7 @@ int CSound::Init()
 		m_aChannels[i].m_Vol = 255;
 
 	m_SoundEnabled = 0;
+	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
@@ -214,7 +215,7 @@ int CSound::Init()
 
 	m_SoundLock = lock_create();
 
-	if(!g_Config.m_SndInit)
+	if(!m_pConfig->m_SndInit)
 		return 0;
 
 	if(SDL_InitSubSystem(SDL_INIT_AUDIO) < 0)
@@ -223,13 +224,13 @@ int CSound::Init()
 		return -1;
 	}
 
-	m_MixingRate = g_Config.m_SndRate;
+	m_MixingRate = m_pConfig->m_SndRate;
 
 	// Set 16-bit stereo audio at 22Khz
-	Format.freq = g_Config.m_SndRate; // ignore_convention
+	Format.freq = m_pConfig->m_SndRate; // ignore_convention
 	Format.format = AUDIO_S16; // ignore_convention
 	Format.channels = 2; // ignore_convention
-	Format.samples = g_Config.m_SndBufferSize; // ignore_convention
+	Format.samples = m_pConfig->m_SndBufferSize; // ignore_convention
 	Format.callback = SdlCallback; // ignore_convention
 	Format.userdata = NULL; // ignore_convention
 
@@ -242,7 +243,7 @@ int CSound::Init()
 	else
 		dbg_msg("client/sound", "sound init successful");
 
-	m_MaxFrames = g_Config.m_SndBufferSize*2;
+	m_MaxFrames = m_pConfig->m_SndBufferSize*2;
 	m_pMixBuffer = (int *)mem_alloc(m_MaxFrames*2*sizeof(int), 1);
 
 	SDL_PauseAudio(0);
@@ -255,9 +256,9 @@ int CSound::Init()
 int CSound::Update()
 {
 	// update volume
-	int WantedVolume = g_Config.m_SndVolume;
+	int WantedVolume = m_pConfig->m_SndVolume;
 
-	if(!m_pGraphics->WindowActive() && g_Config.m_SndNonactiveMute)
+	if(!m_pGraphics->WindowActive() && m_pConfig->m_SndNonactiveMute)
 		WantedVolume = 0;
 
 	if(WantedVolume != m_SoundVolume)
@@ -311,7 +312,7 @@ void CSound::RateConvert(int SampleID)
 
 	for(int i = 0; i < NumFrames; i++)
 	{
-		// resample TODO: this should be done better, like linear atleast
+		// resample TODO: this should be done better, like linear at least
 		float a = i/(float)NumFrames;
 		int f = (int)(a*pSample->m_NumFrames);
 		if(f >= pSample->m_NumFrames)
@@ -378,7 +379,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 	WavpackContext *pContext;
 
 	// don't waste memory on sound when we are stress testing
-	if(g_Config.m_DbgStress)
+	if(m_pConfig->m_DbgStress)
 		return CSampleHandle();
 
 	// no need to load sound when we are running with no sound
@@ -482,7 +483,7 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 	io_close(s_File);
 	s_File = NULL;
 
-	if(g_Config.m_Debug)
+	if(m_pConfig->m_Debug)
 		dbg_msg("sound/wv", "loaded %s", pFilename);
 
 	RateConvert(SampleID);

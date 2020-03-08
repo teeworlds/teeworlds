@@ -1,0 +1,308 @@
+{"tileset": [
+	{"single horizontal":
+		{
+			"comment": "| vertical",
+			"basetile": 17,
+
+			"rules": [
+			{
+				"comment": "| reset flags",
+				"index": 17,
+				"condition": [
+					{"x": 0, "y": 0, "value": "full"}
+				],
+				"rotate": 0,
+				"hflip": 0,
+				"vflip": 0
+			},
+			{
+				"comment": "^ top spike",
+				"index": 1,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"comment": "v bottom spike",
+				"index": 1,
+				"condition": [
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"}
+				],
+				"vflip": 1
+			},
+			{
+				"comment": "- horizontal",
+				"index": 34,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"}
+				]
+			},
+			{
+				"comment": "> right spike",
+				"index": 33,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "empty"}
+				],
+				"hflip": 1
+			},
+			{
+				"comment": "< left spike",
+				"index": 33,
+				"condition": [
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"}
+				]
+			},
+			{
+				"comment": "+ connector cross",
+				"index": 16,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": -1, "y": 1, "value": "empty"}
+				]
+			}]
+		}
+	},{"single vertical":
+		{
+			"comment": "| vertical",
+			"basetile": 17,
+
+			"rules": [
+			{
+				"comment": "| reset flags",
+				"index": 17,
+				"condition": [
+					{"x": 0, "y": 0, "value": "full"}
+				],
+				"rotate": 0,
+				"hflip": 0,
+				"vflip": 0
+			},
+			{
+				"comment": "> right spike",
+				"index": 33,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "empty"}
+				],
+				"hflip": 1
+			},
+			{
+				"comment": "< left spike",
+				"index": 33,
+				"condition": [
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"comment": "^ top spike",
+				"index": 1,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"comment": "bottom spike",
+				"index": 1,
+				"condition": [
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"}
+				],
+				"vflip": 1
+			},
+			{
+				"comment": "- horizontal",
+				"index": 34,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"comment": "+ connector cross",
+				"index": 16,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": -1, "y": 1, "value": "empty"}
+				]
+			}]
+		}
+	},
+	{"double horizontal":
+		{
+			"comment": "||",
+			"basetile": 21,
+
+			"rules": [
+			{
+				"comment": "|| reset flags",
+				"index": 21,
+				"condition": [
+					{"x": 0, "y": 0, "value": "full"}
+				],
+				"rotate": 0,
+				"hflip": 0,
+				"vflip": 0
+			},
+			{
+				"comment": "^ top spike",
+				"index": 5,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"comment": "v bottom spike",
+				"index": 5,
+				"condition": [
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"}
+				],
+				"vflip": 1
+			},
+			{
+				"comment": "= horizontal",
+				"index": 38,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"}
+				]
+			},
+			{
+				"comment": "> right spike",
+				"index": 37,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "empty"}
+				],
+				"hflip": 1
+			},
+			{
+				"comment": "< left spike",
+				"index": 37,
+				"condition": [
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"}
+				]
+			},
+			{
+				"comment": "# connector cross",
+				"index": 32,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": -1, "y": 1, "value": "empty"}
+				]
+			}]
+		}
+	},{"double vertical":
+		{
+			"comment": "||",
+			"basetile": 21,
+
+			"rules": [
+			{
+				"comment": "= reset flags",
+				"index": 21,
+				"condition": [
+					{"x": 0, "y": 0, "value": "full"}
+				],
+				"rotate": 0,
+				"hflip": 0,
+				"vflip": 0
+			},
+			{
+				"comment": "> right spike",
+				"index": 37,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "empty"},
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "empty"}
+				],
+				"hflip": 1
+			},
+			{
+				"comment": "< left spike",
+				"index": 37,
+				"condition": [
+					{"x": -1, "y": 0, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "empty"}
+				]
+			},
+			{
+				"comment": "^ top spike",
+				"index": 5,
+				"condition": [
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"}
+				]
+			},
+			{
+				"comment": "v bottom spike",
+				"index": 5,
+				"condition": [
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 0, "y": 1, "value": "empty"}
+				],
+				"vflip": 1
+			},
+			{
+				"comment": "= horizontal",
+				"index": 38,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 0, "y": -1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "empty"}
+				]
+			},
+			{
+				"comment": "# connector cross",
+				"index": 32,
+				"condition": [
+					{"x": -1, "y": 0, "value": "full"},
+					{"x": -1, "y": -1, "value": "empty"},
+					{"x": 0, "y": -1, "value": "full"},
+					{"x": 1, "y": -1, "value": "empty"},
+					{"x": 1, "y": 0, "value": "full"},
+					{"x": 1, "y": 1, "value": "empty"},
+					{"x": 0, "y": 1, "value": "full"},
+					{"x": -1, "y": 1, "value": "empty"}
+				]
+			}]
+		}
+	}]
+}

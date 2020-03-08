@@ -253,7 +253,7 @@ void CEditorImage::LoadAutoMapper()
 
 	// clean up
 	json_value_free(pJsonData);
-	if(m_pAutoMapper && g_Config.m_Debug)
+	if(m_pAutoMapper && m_pEditor->Config()->m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf),"loaded %s.json (%s)", m_aName, IAutoMapper::GetTypeName(m_pAutoMapper->GetType()));
 		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
@@ -284,7 +284,7 @@ void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pU
 
 int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden, int Corners)
 {
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 	bool ReturnValue = false;
 	bool UpdateOffset = false;
 	static int s_AtIndex = 0;
@@ -459,7 +459,7 @@ float CEditor::UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Curre
 
 	// logic
 	float Ret = Current;
-	int Inside = UI()->MouseInside(&Handle);
+	bool Inside = UI()->MouseInside(&Handle);
 
 	if(UI()->CheckActiveItem(pID))
 	{
@@ -533,7 +533,7 @@ int CEditor::DoButton_Editor_Common(const void *pID, const char *pText, int Chec
 	if(UI()->HotItem() == pID && pToolTip)
 		m_pTooltip = (const char *)pToolTip;
 
-	return UI()->DoButtonLogic(pID, pText, Checked, pRect);
+	return UI()->DoButtonLogic(pID, pRect);
 
 	// Draw here
 	//return UI()->DoButton(id, text, checked, r, draw_func, 0);
@@ -666,18 +666,18 @@ void CEditor::RenderGrid(CLayerGroup *pGroup)
 	for(int i = 0; i < (int)w; i++)
 	{
 		if((i+YGridOffset) % m_GridFactor == 0)
-			GridColor = HexToRgba(g_Config.m_EdColorGridOuter);
+			GridColor = HexToRgba(Config()->m_EdColorGridOuter);
 		else
-			GridColor = HexToRgba(g_Config.m_EdColorGridInner);
+			GridColor = HexToRgba(Config()->m_EdColorGridInner);
 
 		Graphics()->SetColor(GridColor.r, GridColor.g, GridColor.b, GridColor.a);
 		IGraphics::CLineItem Line = IGraphics::CLineItem(LineDistance*XOffset, LineDistance*i+LineDistance*YOffset, w+aGroupPoints[2], LineDistance*i+LineDistance*YOffset);
 		Graphics()->LinesDraw(&Line, 1);
 
 		if((i+XGridOffset) % m_GridFactor == 0)
-			GridColor = HexToRgba(g_Config.m_EdColorGridOuter);
+			GridColor = HexToRgba(Config()->m_EdColorGridOuter);
 		else
-			GridColor = HexToRgba(g_Config.m_EdColorGridInner);
+			GridColor = HexToRgba(Config()->m_EdColorGridInner);
 
 		Graphics()->SetColor(GridColor.r, GridColor.g, GridColor.b, GridColor.a);
 		Line = IGraphics::CLineItem(LineDistance*i+LineDistance*XOffset, LineDistance*YOffset, LineDistance*i+LineDistance*XOffset, h+aGroupPoints[3]);
@@ -703,7 +703,7 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 {
 	// logic
 	static float s_Value;
-	int Inside = UI()->MouseInside(pRect);
+	bool Inside = UI()->MouseInside(pRect);
 
 	if(UI()->CheckActiveItem(pID))
 	{
@@ -920,7 +920,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// tile info button
 	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
 	static int s_TileInfoButton = 0;
-	if(DoButton_Editor(&s_TileInfoButton, "Info", m_ShowTileInfo, &Button, 0, "[ctrl+i] Show tile informations") ||
+	if(DoButton_Editor(&s_TileInfoButton, "Info", m_ShowTileInfo, &Button, 0, "[ctrl+i] Show tile information") ||
 		(Input()->KeyPress(KEY_I) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
 	{
 		m_ShowTileInfo = !m_ShowTileInfo;
@@ -1301,13 +1301,13 @@ void CEditor::DoQuad(CQuad *q, int Index)
 			}
 		}
 
-		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotActive);
+		PivotColor = HexToRgba(Config()->m_EdColorQuadPivotActive);
 	}
 	else if(UI()->HotItem() == pID)
 	{
 		ms_pUiGotContext = pID;
 
-		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivotHover);
+		PivotColor = HexToRgba(Config()->m_EdColorQuadPivotHover);
 		m_pTooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
@@ -1345,7 +1345,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		}
 	}
 	else
-		PivotColor = HexToRgba(g_Config.m_EdColorQuadPivot);
+		PivotColor = HexToRgba(Config()->m_EdColorQuadPivot);
 
 	Graphics()->SetColor(PivotColor.r, PivotColor.g, PivotColor.b, PivotColor.a);
 	IGraphics::CQuadItem QuadItem(CenterX, CenterY, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
@@ -1482,13 +1482,13 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 			}
 		}
 
-		pointColor = HexToRgba(g_Config.m_EdColorQuadPointActive);
+		pointColor = HexToRgba(Config()->m_EdColorQuadPointActive);
 	}
 	else if(UI()->HotItem() == pID)
 	{
 		ms_pUiGotContext = pID;
 
-		pointColor = HexToRgba(g_Config.m_EdColorQuadPointHover);
+		pointColor = HexToRgba(Config()->m_EdColorQuadPointHover);
 		m_pTooltip = "Left mouse button to move. Hold shift to move the texture. Hold alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
@@ -1530,7 +1530,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 		}
 	}
 	else
-		pointColor = HexToRgba(g_Config.m_EdColorQuadPoint);
+		pointColor = HexToRgba(Config()->m_EdColorQuadPoint);
 
 	Graphics()->SetColor(pointColor.r, pointColor.g, pointColor.b, pointColor.a);
 	IGraphics::CQuadItem QuadItem(px, py, 5.0f*m_WorldZoom, 5.0f*m_WorldZoom);
@@ -1821,7 +1821,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 	}
 
 	static void *s_pEditorID = (void *)&s_pEditorID;
-	int Inside = UI()->MouseInside(&View);
+	bool Inside = UI()->MouseInside(&View);
 
 	// fetch mouse position
 	float wx = UI()->MouseWorldX();
@@ -1856,10 +1856,10 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		float y = -(View.y/Screen.h)*h;
 		wx = x+w*mx/Screen.w;
 		wy = y+h*my/Screen.h;
-		Graphics()->MapScreen(x, y, x+w, y+h);
 		CLayerTiles *t = (CLayerTiles *)GetSelectedLayerType(0, LAYERTYPE_TILES);
 		if(t)
 		{
+			Graphics()->MapScreen(x, y, x+w, y+h);
 			m_TilesetPicker.m_Image = t->m_Image;
 			m_TilesetPicker.m_Texture = t->m_Texture;
 			m_TilesetPicker.m_Game = t->m_Game;
@@ -1867,15 +1867,39 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 			if(m_ShowTileInfo)
 				m_TilesetPicker.ShowInfo();
 		}
+		else
+		{
+			CLayerQuads *t = (CLayerQuads *)GetSelectedLayerType(0, LAYERTYPE_QUADS);
+			if(t)
+			{
+				m_QuadsetPicker.m_Image = t->m_Image;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[0].x = (int) View.x << 10;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[0].y = (int) View.y << 10;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[1].x = (int) (View.x+View.w) << 10;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[1].y = (int) View.y << 10;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[2].x = (int) View.x << 10;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[2].y = (int) (View.y+View.h) << 10;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[3].x = (int) (View.x+View.w) << 10;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[3].y = (int) (View.y+View.h) << 10;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[4].x = (int) (View.x+View.w/2) << 10;
+				m_QuadsetPicker.m_lQuads[0].m_aPoints[4].y = (int) (View.y+View.h/2) << 10;
+				m_QuadsetPicker.Render();
+			}
+		}
 	}
 
 	// draw layer borders
 	CLayer *pEditLayers[16];
 	int NumEditLayers = 0;
 
-	if(m_ShowTilePicker)
+	if(m_ShowTilePicker && GetSelectedLayer(0) && GetSelectedLayer(0)->m_Type == LAYERTYPE_TILES)
 	{
 		pEditLayers[0] = &m_TilesetPicker;
+		NumEditLayers++;
+	}
+	else if(m_ShowTilePicker)
+	{
+		pEditLayers[0] = &m_QuadsetPicker;
 		NumEditLayers++;
 	}
 	else
@@ -2496,9 +2520,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 		else if(pProps[i].m_Type == PROPTYPE_SHIFT)
 		{
 			CUIRect Left, Right, Up, Down;
-			Shifter.VSplitMid(&Left, &Up);
-			Left.VSplitRight(1.0f, &Left, 0);
-			Up.VSplitLeft(1.0f, 0, &Up);
+			Shifter.VSplitMid(&Left, &Up, 2.0f);
 			Left.VSplitLeft(10.0f, &Left, &Shifter);
 			Shifter.VSplitRight(10.0f, &Shifter, &Right);
 			RenderTools()->DrawUIRect(&Shifter, vec4(1,1,1,0.5f), 0, 0.0f);
@@ -2789,66 +2811,6 @@ void CEditor::AddImage(const char *pFileName, int StorageType, void *pUser)
 	pEditor->m_Dialog = DIALOG_NONE;
 }
 
-
-static int gs_ModifyIndexDeletedIndex;
-static void ModifyIndexDeleted(int *pIndex)
-{
-	if(*pIndex == gs_ModifyIndexDeletedIndex)
-		*pIndex = -1;
-	else if(*pIndex > gs_ModifyIndexDeletedIndex)
-		*pIndex = *pIndex - 1;
-}
-
-int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
-{
-	static int s_ReplaceButton = 0;
-	static int s_RemoveButton = 0;
-
-	CUIRect Slot;
-	View.HSplitTop(2.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	CEditorImage *pImg = pEditor->m_Map.m_lImages[pEditor->m_SelectedImage];
-
-	static int s_ExternalButton = 0;
-	if(pImg->m_External)
-	{
-		if(pEditor->DoButton_MenuItem(&s_ExternalButton, "Embed", 0, &Slot, 0, "Embeds the image into the map file."))
-		{
-			pImg->m_External = 0;
-			return 1;
-		}
-	}
-	else
-	{
-		if(pEditor->DoButton_MenuItem(&s_ExternalButton, "Make external", 0, &Slot, 0, "Removes the image from the map file."))
-		{
-			pImg->m_External = 1;
-			return 1;
-		}
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_ReplaceButton, "Replace", 0, &Slot, 0, "Replaces the image with a new one"))
-	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_IMG, "Replace Image", "Replace", "mapres", "", ReplaceImage, pEditor);
-		return 1;
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_RemoveButton, "Remove", 0, &Slot, 0, "Removes the image from the map"))
-	{
-		delete pImg;
-		pEditor->m_Map.m_lImages.remove_index(pEditor->m_SelectedImage);
-		gs_ModifyIndexDeletedIndex = pEditor->m_SelectedImage;
-		pEditor->m_Map.ModifyImageIndex(ModifyIndexDeleted);
-		return 1;
-	}
-
-	return 0;
-}
-
 static int *gs_pSortedIndex = 0;
 static void ModifySortedIndex(int *pIndex)
 {
@@ -3103,6 +3065,7 @@ void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
 		else
 			m_aFileDialogFileName[0] = 0;
 		m_FilesSelectedIndex = Index;
+		m_PreviewImageIsLoaded = false;
 
 		if(Input()->MouseDoubleClick())
 			m_aFileDialogActivate = true;
@@ -3114,6 +3077,7 @@ void CEditor::RenderFileDialog()
 	// GUI coordsys
 	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 	CUIRect View = *UI()->Screen();
+	CUIRect Preview;
 	float Width = View.w, Height = View.h;
 
 	RenderTools()->DrawUIRect(&View, vec4(0,0,0,0.25f), 0, 0);
@@ -3132,6 +3096,8 @@ void CEditor::RenderFileDialog()
 	View.HSplitBottom(14.0f, &View, &FileBox);
 	FileBox.VSplitLeft(55.0f, &FileBoxLabel, &FileBox);
 	View.HSplitBottom(10.0f, &View, 0); // some spacing
+	if (m_FileDialogFileType == CEditor::FILETYPE_IMG)
+		View.VSplitMid(&View, &Preview);
 	View.VSplitRight(15.0f, &View, &Scroll);
 
 	// title
@@ -3229,7 +3195,48 @@ void CEditor::RenderFileDialog()
 				else
 					m_aFileDialogFileName[0] = 0;
 				m_FilesSelectedIndex = NewIndex;
+				m_PreviewImageIsLoaded = false;
 			}
+		}
+
+		if (m_FileDialogFileType == CEditor::FILETYPE_IMG && !m_PreviewImageIsLoaded && m_FilesSelectedIndex > -1)
+		{
+			int Length = str_length(m_FileList[m_FilesSelectedIndex].m_aFilename);
+			if (Length >= 4 && str_endswith_nocase(m_FileList[m_FilesSelectedIndex].m_aFilename, ".png"))
+			{
+				char aBuffer[1024];
+				str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_pFileDialogPath, m_FileList[m_FilesSelectedIndex].m_aFilename);
+
+				if(Graphics()->LoadPNG(&m_FilePreviewImageInfo, aBuffer, m_FileList[m_FilesSelectedIndex].m_StorageType))
+				{
+					Graphics()->UnloadTexture(&m_FilePreviewImage);
+					m_FilePreviewImage = Graphics()->LoadTextureRaw(m_FilePreviewImageInfo.m_Width, m_FilePreviewImageInfo.m_Height, m_FilePreviewImageInfo.m_Format, m_FilePreviewImageInfo.m_pData, m_FilePreviewImageInfo.m_Format, IGraphics::TEXLOAD_NORESAMPLE);
+					mem_free(m_FilePreviewImageInfo.m_pData);
+					m_PreviewImageIsLoaded = true;
+				}
+			}
+		}
+		if (m_PreviewImageIsLoaded)
+		{
+			int w = m_FilePreviewImageInfo.m_Width;
+			int h = m_FilePreviewImageInfo.m_Height;
+			if (m_FilePreviewImageInfo.m_Width > Preview.w)
+			{
+				h = m_FilePreviewImageInfo.m_Height * Preview.w / m_FilePreviewImageInfo.m_Width;
+				w = Preview.w;
+			}
+			if (h > Preview.h)
+			{
+				w = w * Preview.h / h,
+				h = Preview.h;
+			}
+
+			Graphics()->TextureSet(m_FilePreviewImage);
+			Graphics()->BlendNormal();
+			Graphics()->QuadsBegin();
+			IGraphics::CQuadItem QuadItem(Preview.x, Preview.y, w, h);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
+			Graphics()->QuadsEnd();
 		}
 	}
 
@@ -3375,6 +3382,7 @@ void CEditor::FilelistPopulate(int StorageType)
 	}
 	Storage()->ListDirectory(StorageType, m_pFileDialogPath, EditorListdirCallback, this);
 	m_FilesSelectedIndex = m_FileList.size() ? 0 : -1;
+	m_PreviewImageIsLoaded = false;
 	m_aFileDialogActivate = false;
 }
 
@@ -3396,6 +3404,7 @@ void CEditor::InvokeFileDialog(int StorageType, int FileType, const char *pTitle
 	m_FileDialogScrollValue = 0.0f;
 	m_FilesSearchBoxID = 0;
 	UI()->SetActiveItem(&m_FilesSearchBoxID);
+	m_PreviewImageIsLoaded = false;
 
 	if(pDefaultName)
 		str_copy(m_aFileDialogFileName, pDefaultName, sizeof(m_aFileDialogFileName));
@@ -4089,113 +4098,6 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 	}
 }
 
-int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
-{
-	static int s_NewMapButton = 0;
-	static int s_SaveButton = 0;
-	static int s_SaveAsButton = 0;
-	static int s_OpenButton = 0;
-	static int s_OpenCurrentButton = 0;
-	static int s_AppendButton = 0;
-	static int s_ExitButton = 0;
-
-	CUIRect Slot;
-	View.HSplitTop(2.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_NewMapButton, "New", 0, &Slot, 0, "Creates a new map"))
-	{
-		if(pEditor->HasUnsavedData())
-		{
-			pEditor->m_PopupEventType = POPEVENT_NEW;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-		{
-			pEditor->Reset();
-			pEditor->m_aFileName[0] = 0;
-		}
-		return 1;
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_OpenButton, "Load", 0, &Slot, 0, "Opens a map for editing"))
-	{
-		if(pEditor->HasUnsavedData())
-		{
-			pEditor->m_PopupEventType = POPEVENT_LOAD;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
-		return 1;
-	}
-
-	if(pEditor->Client()->State() == IClient::STATE_ONLINE)
-	{
-		View.HSplitTop(2.0f, &Slot, &View);
-		View.HSplitTop(12.0f, &Slot, &View);
-		if(pEditor->DoButton_MenuItem(&s_OpenCurrentButton, "Load Current Map", 0, &Slot, 0, "Opens the current in game map for editing"))
-		{
-			if(pEditor->HasUnsavedData())
-			{
-				pEditor->m_PopupEventType = POPEVENT_LOAD_CURRENT;
-				pEditor->m_PopupEventActivated = true;
-			}
-			else
-				pEditor->LoadCurrentMap();
-			return 1;
-		}
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_AppendButton, "Append", 0, &Slot, 0, "Opens a map and adds everything from that map to the current one"))
-	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Append map", "Append", "maps", "", pEditor->CallbackAppendMap, pEditor);
-		return 1;
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_SaveButton, "Save", 0, &Slot, 0, "Saves the current map"))
-	{
-		if(pEditor->m_aFileName[0] && pEditor->m_ValidSaveFilename)
-		{
-			str_copy(pEditor->m_aFileSaveName, pEditor->m_aFileName, sizeof(pEditor->m_aFileSaveName));
-			pEditor->m_PopupEventType = POPEVENT_SAVE;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", pEditor->CallbackSaveMap, pEditor);
-		return 1;
-	}
-
-	View.HSplitTop(2.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_SaveAsButton, "Save As", 0, &Slot, 0, "Saves the current map under a new name"))
-	{
-		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", pEditor->CallbackSaveMap, pEditor);
-		return 1;
-	}
-
-	View.HSplitTop(10.0f, &Slot, &View);
-	View.HSplitTop(12.0f, &Slot, &View);
-	if(pEditor->DoButton_MenuItem(&s_ExitButton, "Exit", 0, &Slot, 0, "Exits from the editor"))
-	{
-		if(pEditor->HasUnsavedData())
-		{
-			pEditor->m_PopupEventType = POPEVENT_EXIT;
-			pEditor->m_PopupEventActivated = true;
-		}
-		else
-			g_Config.m_ClEditor = 0;
-		return 1;
-	}
-
-	return 0;
-}
-
 void CEditor::RenderMenubar(CUIRect MenuBar)
 {
 	CUIRect ExitButton;
@@ -4223,7 +4125,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	ExitButton.VSplitRight(13.f, 0, &ExitButton);
 	if(DoButton_Editor(&s_ExitButton, "\xE2\x9C\x95", 1, &ExitButton, 0, "[ctrl+shift+e] Exit"))
 	{
-		g_Config.m_ClEditor ^= 1;
+		Config()->m_ClEditor ^= 1;
 		Input()->MouseModeRelative();
 	}
 }
@@ -4297,7 +4199,7 @@ void CEditor::Render()
 		{
 			float OldLevel = m_ZoomLevel;
 			m_ZoomLevel = clamp(m_ZoomLevel + Zoom * 20, 50, 2000);
-			if(g_Config.m_EdZoomTarget)
+			if(Config()->m_EdZoomTarget)
 				ZoomMouseTarget((float)m_ZoomLevel / OldLevel);
 		}
 	}
@@ -4370,7 +4272,7 @@ void CEditor::Render()
 		RenderStatusbar(StatusBar);
 
 	// todo: fix this
-	if(g_Config.m_EdShowkeys)
+	if(Config()->m_EdShowkeys)
 	{
 		Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 		CTextCursor Cursor;
@@ -4592,13 +4494,13 @@ void CEditor::Init()
 {
 	m_pInput = Kernel()->RequestInterface<IInput>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
+	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
-	m_RenderTools.m_pGraphics = m_pGraphics;
-	m_RenderTools.m_pUI = &m_UI;
-	m_UI.SetGraphics(m_pGraphics, m_pTextRender);
+	m_RenderTools.Init(m_pConfig, m_pGraphics, &m_UI);
+	m_UI.Init(m_pConfig, m_pGraphics, m_pTextRender);
 	m_Map.m_pEditor = this;
 
 	m_CheckerTexture = Graphics()->LoadTexture("editor/checker.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
@@ -4609,6 +4511,10 @@ void CEditor::Init()
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();
 	m_TilesetPicker.m_Readonly = true;
+
+	m_QuadsetPicker.m_pEditor = this;
+	m_QuadsetPicker.NewQuad();
+	m_QuadsetPicker.m_Readonly = true;
 
 	m_Brush.m_pMap = &m_Map;
 

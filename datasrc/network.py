@@ -1,22 +1,24 @@
 from datatypes import *
 
-Pickups = Enum("PICKUP", ["HEALTH", "ARMOR", "GRENADE", "SHOTGUN", "LASER", "NINJA"])
+Pickups = Enum("PICKUP", ["HEALTH", "ARMOR", "GRENADE", "SHOTGUN", "LASER", "NINJA", "GUN", "HAMMER"])
 Emotes = Enum("EMOTE", ["NORMAL", "PAIN", "HAPPY", "SURPRISE", "ANGRY", "BLINK"])
 Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", "MUSIC", "SORRY", "GHOST", "SUSHI", "SPLATTEE", "DEVILTEE", "ZOMG", "ZZZ", "WTF", "EYES", "QUESTION"])
 Votes = Enum("VOTE", ["UNKNOWN", "START_OP", "START_KICK", "START_SPEC", "END_ABORT", "END_PASS", "END_FAIL"]) # todo 0.8: add RUN_OP, RUN_KICK, RUN_SPEC; rem UNKNOWN
 ChatModes = Enum("CHAT", ["NONE", "ALL", "TEAM", "WHISPER"])
+RaceRecordTypes = Enum("RECORDTYPE", ["NONE", "PLAYER", "MAP"])
 
 PlayerFlags = Flags("PLAYERFLAG", ["ADMIN", "CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING", "BOT"])
-GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL"])
+GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL", "RACE"])
 GameStateFlags = Flags("GAMESTATEFLAG", ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"])
 CoreEventFlags = Flags("COREEVENTFLAG", ["GROUND_JUMP", "AIR_JUMP", "HOOK_ATTACH_PLAYER", "HOOK_ATTACH_GROUND", "HOOK_HIT_NOHOOK"])
+RaceFlags = Flags("RACEFLAG", ["HIDE_KILLMSG", "FINISHMSG_AS_CHAT", "KEEP_WANTED_WEAPON"])
 
 GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "SPEC_INVALIDID", "TEAM_SHUFFLE", "TEAM_BALANCE", "CTF_DROP", "CTF_RETURN",
-							
+
 							"TEAM_ALL", "TEAM_BALANCE_VICTIM", "CTF_GRAB",
-							
+
 							"CTF_CAPTURE",
-							
+
 							"GAME_PAUSED"]) # todo 0.8: sort (1 para)
 
 
@@ -67,6 +69,7 @@ Enums = [
 	Emoticons,
 	Votes,
 	ChatModes,
+	RaceRecordTypes,
 	GameMsgIDs,
 ]
 
@@ -75,6 +78,7 @@ Flags = [
 	GameFlags,
 	GameStateFlags,
 	CoreEventFlags,
+	RaceFlags,
 ]
 
 Objects = [
@@ -208,7 +212,7 @@ Objects = [
 
 	NetObject("De_GameInfo", [
 		NetFlag("m_GameFlags", GameFlags),
-		
+
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
 
@@ -247,6 +251,18 @@ Objects = [
 		NetIntRange("m_HealthAmount", 0, 9),
 		NetIntRange("m_ArmorAmount", 0, 9),
 		NetBool("m_Self"),
+	]),
+
+	## Race
+	# todo 0.8: move up
+	NetObject("PlayerInfoRace", [
+		NetTick("m_RaceStartTick"),
+	]),
+
+	NetObject("GameDataRace", [
+		NetIntRange("m_BestTime", -1, 'max_int'),
+		NetIntRange("m_Precision", 0, 3),
+		NetFlag("m_RaceFlags", RaceFlags),
 	]),
 ]
 
@@ -346,7 +362,7 @@ Messages = [
 
 	NetMessage("Sv_GameInfo", [
 		NetFlag("m_GameFlags", GameFlags),
-		
+
 		NetIntRange("m_ScoreLimit", 0, 'max_int'),
 		NetIntRange("m_TimeLimit", 0, 'max_int'),
 
@@ -432,4 +448,32 @@ Messages = [
 		NetArray(NetBool("m_aUseCustomColors"), 6),
 		NetArray(NetIntAny("m_aSkinPartColors"), 6),
 	]),
+
+	## Race
+	NetMessage("Sv_RaceFinish", [
+		NetIntRange("m_ClientID", 0, 'MAX_CLIENTS-1'),
+		NetIntRange("m_Time", -1, 'max_int'),
+		NetIntAny("m_Diff"),
+		NetEnum("m_RecordType", RaceRecordTypes)
+	]),
+
+	NetMessage("Sv_Checkpoint", [
+		NetIntAny("m_Diff"),
+	]),
+
+	NetMessage("Sv_CommandInfo", [
+			NetStringStrict("m_Name"),
+			NetStringStrict("m_ArgsFormat"),
+			NetStringStrict("m_HelpText")
+	]),
+
+	NetMessage("Sv_CommandInfoRemove", [
+			NetStringStrict("m_Name")
+	]),
+
+	NetMessage("Cl_Command", [
+			NetStringStrict("m_Name"),
+			NetStringStrict("m_Arguments")
+	]),
+
 ]

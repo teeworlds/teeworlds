@@ -41,7 +41,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 		s_LastGameTickTime = Client()->GameTickTime();
 	float Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 	if(Ct < 0)
-		return; // projectile havn't been shot yet
+		return; // projectile haven't been shot yet
 
 	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
 	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
@@ -109,7 +109,9 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		SPRITE_PICKUP_GRENADE,
 		SPRITE_PICKUP_SHOTGUN,
 		SPRITE_PICKUP_LASER,
-		SPRITE_PICKUP_NINJA
+		SPRITE_PICKUP_NINJA,
+		SPRITE_PICKUP_GUN,
+		SPRITE_PICKUP_HAMMER
 		};
 	RenderTools()->SelectSprite(c[pCurrent->m_Type]);
 
@@ -128,6 +130,13 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
 		Size *= 2.0f;
 		Pos.x -= 10.0f;
+		break;
+	case PICKUP_GUN:
+		Size = g_pData->m_Weapons.m_aId[WEAPON_GUN].m_VisualSize;
+		break;
+	case PICKUP_HAMMER:
+		Size = g_pData->m_Weapons.m_aId[WEAPON_HAMMER].m_VisualSize;
+		break;
 	}
 	
 

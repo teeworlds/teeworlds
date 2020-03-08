@@ -6,7 +6,7 @@
 #include <base/system.h>
 
 /*
-	Connection diagram - How the initilization works.
+	Connection diagram - How the initialization works.
 
 	Client -> INFO -> Server
 		Contains version info, name, and some other info.
@@ -20,7 +20,7 @@
 		modc_connected is called on the client and
 		mods_connected is called on the server.
 		The client should call client_entergame when the
-		mod has done it's initilization.
+		mod has done it's initialization.
 
 	Client -> ENTERGAME -> Server
 		Tells the server to start sending snapshots.
@@ -80,6 +80,7 @@ enum
 {
 	SERVER_TICK_SPEED=50,
 	SERVERINFO_FLAG_PASSWORD = 0x1,
+	SERVERINFO_FLAG_TIMESCORE = 0x2,
 	SERVERINFO_LEVEL_MIN=0,
 	SERVERINFO_LEVEL_MAX=2,
 

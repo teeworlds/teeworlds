@@ -43,9 +43,15 @@ CGameConsole::CInstance::CInstance(int Type)
 	m_Type = Type;
 
 	if(Type == CGameConsole::CONSOLETYPE_LOCAL)
+	{
+		m_pName = "local_console";
 		m_CompletionFlagmask = CFGFLAG_CLIENT;
+	}
 	else
+	{
+		m_pName = "remote_console";
 		m_CompletionFlagmask = CFGFLAG_SERVER;
+	}
 
 	m_aCompletionMapBuffer[0] = 0;
 	m_CompletionMapChosen = -1;
@@ -185,7 +191,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				}
 
 				// maplist completion
-				if(str_comp_nocase_num(GetString(), "sv_map ", 7) == 0 && m_Type != CGameConsole::CONSOLETYPE_LOCAL)
+				if(str_startswith_nocase(GetString(), "sv_map ") && m_Type != CGameConsole::CONSOLETYPE_LOCAL)
 				{
 					m_CompletionMapChosen++;
 					m_CompletionMapEnumerationCount = 0;
@@ -223,7 +229,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			m_CompletionChosen = -1;
 			str_copy(m_aCompletionBuffer, m_Input.GetString(), sizeof(m_aCompletionBuffer));
 
-			if(str_comp_nocase_num(GetString(), "sv_map ", 7) == 0)
+			if(str_startswith_nocase(GetString(), "sv_map "))
 			{
 				m_CompletionMapChosen = -1;
 				str_copy(m_aCompletionMapBuffer, &m_Input.GetString()[7], sizeof(m_aCompletionBuffer));
@@ -374,7 +380,7 @@ void CGameConsole::OnRender()
 		Progress = 1.0f;
 	}
 
-	if (m_ConsoleState == CONSOLE_OPEN && g_Config.m_ClEditor)
+	if (m_ConsoleState == CONSOLE_OPEN && Config()->m_ClEditor)
 		Toggle(CONSOLETYPE_LOCAL);
 
 	if (m_ConsoleState == CONSOLE_CLOSED)
@@ -659,21 +665,26 @@ void CGameConsole::Toggle(int Type)
 void CGameConsole::Dump(int Type)
 {
 	CInstance *pConsole = Type == CONSOLETYPE_REMOTE ? &m_RemoteConsole : &m_LocalConsole;
+	char aBuf[256];
 	char aFilename[128];
-	char aDate[20];
-
-	str_timestamp(aDate, sizeof(aDate));
-	str_format(aFilename, sizeof(aFilename), "dumps/%s_dump_%s.txt", Type==CONSOLETYPE_REMOTE?"remote_console":"local_console", aDate);
-	IOHANDLE io = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
-	if(io)
+	str_timestamp(aBuf, sizeof(aBuf));
+	str_format(aFilename, sizeof(aFilename), "dumps/%s_dump_%s.txt", pConsole->m_pName, aBuf);
+	IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	if(File)
 	{
 		for(CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.First(); pEntry; pEntry = pConsole->m_Backlog.Next(pEntry))
 		{
-			io_write(io, pEntry->m_aText, str_length(pEntry->m_aText));
-			io_write_newline(io);
+			io_write(File, pEntry->m_aText, str_length(pEntry->m_aText));
+			io_write_newline(File);
 		}
-		io_close(io);
+		io_close(File);
+		str_format(aBuf, sizeof(aBuf), "%s contents were written to '%s'", pConsole->m_pName, aFilename);
 	}
+	else
+	{
+		str_format(aBuf, sizeof(aBuf), "Failed to open '%s'", aFilename);
+	}
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
 }
 
 void CGameConsole::ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData)
@@ -743,14 +754,14 @@ void CGameConsole::OnConsoleInit()
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 
 	//
-	m_PrintCBIndex = Console()->RegisterPrintCallback(g_Config.m_ConsoleOutputLevel, ClientConsolePrintCallback, this);
+	m_PrintCBIndex = Console()->RegisterPrintCallback(Config()->m_ConsoleOutputLevel, ClientConsolePrintCallback, this);
 
 	Console()->Register("toggle_local_console", "", CFGFLAG_CLIENT, ConToggleLocalConsole, this, "Toggle local console");
 	Console()->Register("toggle_remote_console", "", CFGFLAG_CLIENT, ConToggleRemoteConsole, this, "Toggle remote console");
 	Console()->Register("clear_local_console", "", CFGFLAG_CLIENT, ConClearLocalConsole, this, "Clear local console");
 	Console()->Register("clear_remote_console", "", CFGFLAG_CLIENT, ConClearRemoteConsole, this, "Clear remote console");
-	Console()->Register("dump_local_console", "", CFGFLAG_CLIENT, ConDumpLocalConsole, this, "Dump local console");
-	Console()->Register("dump_remote_console", "", CFGFLAG_CLIENT, ConDumpRemoteConsole, this, "Dump remote console");
+	Console()->Register("dump_local_console", "", CFGFLAG_CLIENT, ConDumpLocalConsole, this, "Write local console contents to a text file");
+	Console()->Register("dump_remote_console", "", CFGFLAG_CLIENT, ConDumpRemoteConsole, this, "Write remote console contents to a text file");
 
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
 }

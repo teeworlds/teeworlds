@@ -9,6 +9,7 @@
 #include <engine/input.h>
 #include <engine/keys.h>
 #include <engine/storage.h>
+#include <engine/client.h>
 
 #include "editor.h"
 
@@ -148,7 +149,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		}
 	}
 
-	// new tile layer
+	// new quad layer
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewQuadLayerButton = 0;
@@ -162,13 +163,13 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		return 1;
 	}
 
-	// new quad layer
+	// new tile layer
 	View.HSplitBottom(5.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_NewTileLayerButton = 0;
 	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, "Add tile layer", 0, &Button, 0, "Creates a new tile layer"))
 	{
-		CLayer *l = new CLayerTiles(50, 50);
+		CLayer *l = new CLayerTiles(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
 		l->m_pEditor = pEditor;
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
 		pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
@@ -251,35 +252,36 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 
 int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 {
+	CLayer *pCurrentLayer = pEditor->GetSelectedLayer(0);
+	bool IsGameLayer = pEditor->m_Map.m_pGameLayer == pCurrentLayer;
+
 	// remove layer button
 	CUIRect Button;
 	View.HSplitBottom(12.0f, &View, &Button);
 	static int s_DeleteButton = 0;
 
 	// don't allow deletion of game layer
-	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0) &&
-		pEditor->DoButton_Editor(&s_DeleteButton, "Delete layer", 0, &Button, 0, "Deletes the layer"))
+	if(!IsGameLayer && pEditor->DoButton_Editor(&s_DeleteButton, "Delete layer", 0, &Button, 0, "Deletes the layer"))
 	{
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return 1;
 	}
 
 	// layer name
-	if(pEditor->m_Map.m_pGameLayer != pEditor->GetSelectedLayer(0))
+	if(!IsGameLayer)
 	{
 		View.HSplitBottom(5.0f, &View, &Button);
 		View.HSplitBottom(12.0f, &View, &Button);
 		static float s_Name = 0;
 		pEditor->UI()->DoLabel(&Button, "Name:", 10.0f, CUI::ALIGN_LEFT);
 		Button.VSplitLeft(40.0f, 0, &Button);
-		if(pEditor->DoEditBox(&s_Name, &Button, pEditor->GetSelectedLayer(0)->m_aName, sizeof(pEditor->GetSelectedLayer(0)->m_aName), 10.0f, &s_Name))
+		if(pEditor->DoEditBox(&s_Name, &Button, pCurrentLayer->m_aName, sizeof(pCurrentLayer->m_aName), 10.0f, &s_Name))
 			pEditor->m_Map.m_Modified = true;
 	}
 
 	View.HSplitBottom(10.0f, &View, 0);
 
 	CLayerGroup *pCurrentGroup = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup];
-	CLayer *pCurrentLayer = pEditor->GetSelectedLayer(0);
 
 	enum
 	{
@@ -296,7 +298,7 @@ int CEditor::PopupLayer(CEditor *pEditor, CUIRect View)
 		{0},
 	};
 
-	if(pEditor->m_Map.m_pGameLayer == pEditor->GetSelectedLayer(0)) // dont use Group and Detail from the selection if this is the game layer
+	if(IsGameLayer) // dont use Group and Detail from the selection if this is the game layer
 	{
 		aProps[0].m_Type = PROPTYPE_NULL;
 		aProps[2].m_Type = PROPTYPE_NULL;
@@ -795,7 +797,7 @@ int CEditor::PopupEvent(CEditor *pEditor, CUIRect View)
 	if(pEditor->DoButton_Editor(&s_OkButton, "Ok", 0, &Label, 0, 0))
 	{
 		if(pEditor->m_PopupEventType == POPEVENT_EXIT)
-			g_Config.m_ClEditor = 0;
+			pEditor->Config()->m_ClEditor = 0;
 		else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
 			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
@@ -1168,6 +1170,173 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 	}
 
 	pEditor->m_SelectedPickerColor = hsv;
+
+	return 0;
+}
+
+
+static int gs_ModifyIndexDeletedIndex;
+static void ModifyIndexDeleted(int *pIndex)
+{
+	if(*pIndex == gs_ModifyIndexDeletedIndex)
+		*pIndex = -1;
+	else if(*pIndex > gs_ModifyIndexDeletedIndex)
+		*pIndex = *pIndex - 1;
+}
+
+int CEditor::PopupImage(CEditor *pEditor, CUIRect View)
+{
+	static int s_ReplaceButton = 0;
+	static int s_RemoveButton = 0;
+
+	CUIRect Slot;
+	View.HSplitTop(2.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	CEditorImage *pImg = pEditor->m_Map.m_lImages[pEditor->m_SelectedImage];
+
+	static int s_ExternalButton = 0;
+	if(pImg->m_External)
+	{
+		if(pEditor->DoButton_MenuItem(&s_ExternalButton, "Embed", 0, &Slot, 0, "Embeds the image into the map file."))
+		{
+			pImg->m_External = 0;
+			return 1;
+		}
+	}
+	else
+	{
+		if(pEditor->DoButton_MenuItem(&s_ExternalButton, "Make external", 0, &Slot, 0, "Removes the image from the map file."))
+		{
+			pImg->m_External = 1;
+			return 1;
+		}
+	}
+
+	View.HSplitTop(10.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&s_ReplaceButton, "Replace", 0, &Slot, 0, "Replaces the image with a new one"))
+	{
+		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_IMG, "Replace Image", "Replace", "mapres", "", ReplaceImage, pEditor);
+		return 1;
+	}
+
+	View.HSplitTop(10.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&s_RemoveButton, "Remove", 0, &Slot, 0, "Removes the image from the map"))
+	{
+		delete pImg;
+		pEditor->m_Map.m_lImages.remove_index(pEditor->m_SelectedImage);
+		gs_ModifyIndexDeletedIndex = pEditor->m_SelectedImage;
+		pEditor->m_Map.ModifyImageIndex(ModifyIndexDeleted);
+		return 1;
+	}
+
+	return 0;
+}
+
+int CEditor::PopupMenuFile(CEditor *pEditor, CUIRect View)
+{
+	static int s_NewMapButton = 0;
+	static int s_SaveButton = 0;
+	static int s_SaveAsButton = 0;
+	static int s_OpenButton = 0;
+	static int s_OpenCurrentButton = 0;
+	static int s_AppendButton = 0;
+	static int s_ExitButton = 0;
+
+	CUIRect Slot;
+	View.HSplitTop(2.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&s_NewMapButton, "New", 0, &Slot, 0, "Creates a new map"))
+	{
+		if(pEditor->HasUnsavedData())
+		{
+			pEditor->m_PopupEventType = POPEVENT_NEW;
+			pEditor->m_PopupEventActivated = true;
+		}
+		else
+		{
+			pEditor->Reset();
+			pEditor->m_aFileName[0] = 0;
+		}
+		return 1;
+	}
+
+	View.HSplitTop(10.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&s_OpenButton, "Load", 0, &Slot, 0, "Opens a map for editing"))
+	{
+		if(pEditor->HasUnsavedData())
+		{
+			pEditor->m_PopupEventType = POPEVENT_LOAD;
+			pEditor->m_PopupEventActivated = true;
+		}
+		else
+			pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
+		return 1;
+	}
+
+	if(pEditor->Client()->State() == IClient::STATE_ONLINE)
+	{
+		View.HSplitTop(2.0f, &Slot, &View);
+		View.HSplitTop(12.0f, &Slot, &View);
+		if(pEditor->DoButton_MenuItem(&s_OpenCurrentButton, "Load Current Map", 0, &Slot, 0, "Opens the current in game map for editing"))
+		{
+			if(pEditor->HasUnsavedData())
+			{
+				pEditor->m_PopupEventType = POPEVENT_LOAD_CURRENT;
+				pEditor->m_PopupEventActivated = true;
+			}
+			else
+				pEditor->LoadCurrentMap();
+			return 1;
+		}
+	}
+
+	View.HSplitTop(10.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&s_AppendButton, "Append", 0, &Slot, 0, "Opens a map and adds everything from that map to the current one"))
+	{
+		pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Append map", "Append", "maps", "", pEditor->CallbackAppendMap, pEditor);
+		return 1;
+	}
+
+	View.HSplitTop(10.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&s_SaveButton, "Save", 0, &Slot, 0, "Saves the current map"))
+	{
+		if(pEditor->m_aFileName[0] && pEditor->m_ValidSaveFilename)
+		{
+			str_copy(pEditor->m_aFileSaveName, pEditor->m_aFileName, sizeof(pEditor->m_aFileSaveName));
+			pEditor->m_PopupEventType = POPEVENT_SAVE;
+			pEditor->m_PopupEventActivated = true;
+		}
+		else
+			pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", pEditor->CallbackSaveMap, pEditor);
+		return 1;
+	}
+
+	View.HSplitTop(2.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&s_SaveAsButton, "Save As", 0, &Slot, 0, "Saves the current map under a new name"))
+	{
+		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", pEditor->CallbackSaveMap, pEditor);
+		return 1;
+	}
+
+	View.HSplitTop(10.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&s_ExitButton, "Exit", 0, &Slot, 0, "Exits from the editor"))
+	{
+		if(pEditor->HasUnsavedData())
+		{
+			pEditor->m_PopupEventType = POPEVENT_EXIT;
+			pEditor->m_PopupEventActivated = true;
+		}
+		else
+			pEditor->Config()->m_ClEditor = 0;
+		return 1;
+	}
 
 	return 0;
 }

@@ -54,12 +54,12 @@ void CNetConnection::SetError(const char *pString)
 	str_copy(m_ErrorString, pString, sizeof(m_ErrorString));
 }
 
-void CNetConnection::Init(NETSOCKET Socket, bool BlockCloseMsg)
+void CNetConnection::Init(CNetBase *pNetBase, bool BlockCloseMsg)
 {
 	Reset();
 	ResetStats();
 
-	m_Socket = Socket;
+	m_pNetBase = pNetBase;
 	m_BlockCloseMsg = BlockCloseMsg;
 	mem_zero(m_ErrorString, sizeof(m_ErrorString));
 }
@@ -72,7 +72,7 @@ void CNetConnection::AckChunks(int Ack)
 		if(!pResend)
 			break;
 
-		if(CNetBase::IsSeqInBackroom(pResend->m_Sequence, Ack))
+		if(IsSeqInBackroom(pResend->m_Sequence, Ack))
 			m_Buffer.PopFirst();
 		else
 			break;
@@ -93,7 +93,7 @@ int CNetConnection::Flush()
 	// send of the packets
 	m_Construct.m_Ack = m_Ack;
 	m_Construct.m_Token = m_PeerToken;
-	CNetBase::SendPacket(m_Socket, &m_PeerAddr, &m_Construct);
+	m_pNetBase->SendPacket(&m_PeerAddr, &m_Construct);
 
 	// update send times
 	m_LastSendTime = time_get();
@@ -163,18 +163,18 @@ void CNetConnection::SendControl(int ControlMsg, const void *pExtra, int ExtraSi
 {
 	// send the control message
 	m_LastSendTime = time_get();
-	CNetBase::SendControlMsg(m_Socket, &m_PeerAddr, m_PeerToken, m_Ack, ControlMsg, pExtra, ExtraSize);
+	m_pNetBase->SendControlMsg(&m_PeerAddr, m_PeerToken, m_Ack, ControlMsg, pExtra, ExtraSize);
 }
 
 void CNetConnection::SendPacketConnless(const char *pData, int DataSize)
 {
-	CNetBase::SendPacketConnless(m_Socket, &m_PeerAddr, m_PeerToken, m_Token, pData, DataSize);
+	m_pNetBase->SendPacketConnless(&m_PeerAddr, m_PeerToken, m_Token, pData, DataSize);
 }
 
 void CNetConnection::SendControlWithToken(int ControlMsg)
 {
 	m_LastSendTime = time_get();
-	CNetBase::SendControlMsgWithToken(m_Socket, &m_PeerAddr, m_PeerToken, 0, ControlMsg, m_Token, true);
+	m_pNetBase->SendControlMsgWithToken(&m_PeerAddr, m_PeerToken, 0, ControlMsg, m_Token, true);
 }
 
 void CNetConnection::ResendChunk(CNetChunkResend *pResend)
@@ -286,7 +286,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 					SetError(Str);
 				}
 
-				if(g_Config.m_Debug)
+				if(Config()->m_Debug)
 					dbg_msg("conn", "closed reason='%s'", Str);
 			}
 			return 0;
@@ -304,7 +304,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 					SendControlWithToken(NET_CTRLMSG_CONNECT);
 					dbg_msg("connection", "got token, replying, token=%x mytoken=%x", m_PeerToken, m_Token);
 				}
-				else if(g_Config.m_Debug)
+				else if(Config()->m_Debug)
 					dbg_msg("connection", "got token, token=%x", m_PeerToken);
 			}
 			else
@@ -325,7 +325,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 						m_LastRecvTime = Now;
 						m_LastUpdateTime = Now;
 						SendControl(NET_CTRLMSG_CONNECTACCEPT, 0, 0);
-						if(g_Config.m_Debug)
+						if(Config()->m_Debug)
 							dbg_msg("connection", "got connection, sending connect+accept");
 					}
 				}
@@ -337,7 +337,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 						m_LastRecvTime = Now;
 						SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
 						m_State = NET_CONNSTATE_ONLINE;
-						if(g_Config.m_Debug)
+						if(Config()->m_Debug)
 							dbg_msg("connection", "got connect+accept, sending accept. connection online");
 					}
 				}
@@ -350,7 +350,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 		{
 			m_LastRecvTime = Now;
 			m_State = NET_CONNSTATE_ONLINE;
-			if(g_Config.m_Debug)
+			if(Config()->m_Debug)
 				dbg_msg("connection", "connecting online");
 		}
 	}
@@ -398,7 +398,7 @@ int CNetConnection::Update()
 		}
 		else
 		{
-			// resend packet if we havn't got it acked in 1 second
+			// resend packet if we haven't got it acked in 1 second
 			if(Now-pResend->m_LastSendTime > time_freq())
 				ResendChunk(pResend);
 		}
@@ -410,7 +410,7 @@ int CNetConnection::Update()
 		if(time_get()-m_LastSendTime > time_freq()/2) // flush connection after 500ms if needed
 		{
 			int NumFlushedChunks = Flush();
-			if(NumFlushedChunks && g_Config.m_Debug)
+			if(NumFlushedChunks && Config()->m_Debug)
 				dbg_msg("connection", "flushed connection due to timeout. %d chunks.", NumFlushedChunks);
 		}
 
@@ -431,6 +431,25 @@ int CNetConnection::Update()
 	{
 		if(time_get()-m_LastSendTime > time_freq()/2) // send a new connect/accept every 500ms
 			SendControl(NET_CTRLMSG_CONNECTACCEPT, 0, 0);
+	}
+
+	return 0;
+}
+
+int CNetConnection::IsSeqInBackroom(int Seq, int Ack)
+{
+	int Bottom = (Ack - NET_MAX_SEQUENCE / 2);
+	if(Bottom < 0)
+	{
+		if(Seq <= Ack)
+			return 1;
+		if(Seq >= (Bottom + NET_MAX_SEQUENCE))
+			return 1;
+	}
+	else
+	{
+		if(Seq <= Ack && Seq >= Bottom)
+			return 1;
 	}
 
 	return 0;

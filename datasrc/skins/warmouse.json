@@ -1,0 +1,38 @@
+{"skin": {
+	"body": {
+		"filename": "mouse",
+		"custom_colors": "true",
+		"hue": 28,
+		"sat": 0,
+		"lgt": 213
+	},
+	"marking": {
+		"filename": "mice",
+		"custom_colors": "true",
+		"hue": 0,
+		"sat": 0,
+		"lgt": 255,
+		"alp": 255
+	},
+	"hands": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 27,
+		"sat": 0,
+		"lgt": 255
+	},
+	"feet": {
+		"filename": "standard",
+		"custom_colors": "true",
+		"hue": 28,
+		"sat": 135,
+		"lgt": 255
+	},
+	"eyes": {
+		"filename": "negative",
+		"custom_colors": "true",
+		"hue": 0,
+		"sat": 200,
+		"lgt": 28
+	}}
+}

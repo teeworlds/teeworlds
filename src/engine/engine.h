@@ -25,6 +25,7 @@ protected:
 public:
 	virtual void Init() = 0;
 	virtual void InitLogfile() = 0;
+	virtual void QueryNetLogHandles(IOHANDLE *pHDLSend, IOHANDLE *pHDLRecv) = 0;
 	virtual void HostLookup(CHostLookup *pLookup, const char *pHostname, int Nettype) = 0;
 	virtual void AddJob(CJob *pJob, JOBFUNC pfnFunc, void *pData) = 0;
 };

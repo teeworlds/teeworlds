@@ -1,4 +1,4 @@
-Copyright (C) 2007-2018 Magnus Auvinen
+Copyright (C) 2007-2020 Magnus Auvinen
 
 This software is provided 'as-is', without any express or implied
 warranty.  In no event will the authors be held liable for any damages

@@ -46,7 +46,7 @@ public:
 		STATE_LOADING - The client has connected to a server and is loading resources.
 		STATE_ONLINE - The client is connected to a server and running the game.
 		STATE_DEMOPLAYBACK - The client is playing a demo
-		STATE_QUITING - The client is quiting.
+		STATE_QUITING - The client is quitting.
 	*/
 
 	enum
@@ -115,7 +115,7 @@ public:
 	virtual void Rcon(const char *pLine) = 0;
 
 	// server info
-	virtual void GetServerInfo(class CServerInfo *pServerInfo) const = 0;
+	virtual void GetServerInfo(class CServerInfo *pServerInfo) = 0;
 
 	// snapshot interface
 
@@ -152,8 +152,6 @@ public:
 	virtual bool ConnectionProblems() const = 0;
 
 	virtual bool SoundInitFailed() const = 0;
-
-	virtual IGraphics::CTextureHandle GetDebugFont() const = 0; // TODO: remove this function
 };
 
 class IGameClient : public IInterface

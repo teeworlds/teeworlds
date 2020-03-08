@@ -29,7 +29,7 @@ static int LoadSoundsThread(void *pUser)
 		}
 
 		if(pData->m_Render)
-			pData->m_pGameClient->m_pMenus->RenderLoading();
+			pData->m_pGameClient->m_pMenus->RenderLoading(1);
 	}
 
 	return 0;
@@ -37,7 +37,7 @@ static int LoadSoundsThread(void *pUser)
 
 ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 {
-	if(!g_Config.m_SndEnable || !Sound()->IsSoundEnabled() || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
+	if(!Config()->m_SndEnable || !Sound()->IsSoundEnabled() || m_WaitForSoundJob || SetId < 0 || SetId >= g_pData->m_NumSounds)
 		return ISound::CSampleHandle();
 	
 	CDataSoundset *pSet = &g_pData->m_aSounds[SetId];
@@ -58,6 +58,13 @@ ISound::CSampleHandle CSounds::GetSampleId(int SetId)
 	return pSet->m_aSounds[Id].m_Id;
 }
 
+int CSounds::GetInitAmount() const
+{
+	if(Config()->m_SndAsyncLoading)
+		return 0;
+	return g_pData->m_NumSounds;
+}
+
 void CSounds::OnInit()
 {
 	// setup sound channels
@@ -71,7 +78,7 @@ void CSounds::OnInit()
 	ClearQueue();
 
 	// load sounds
-	if(g_Config.m_SndAsyncLoading)
+	if(Config()->m_SndAsyncLoading)
 	{
 		g_UserData.m_pGameClient = m_pClient;
 		g_UserData.m_Render = false;
@@ -113,7 +120,7 @@ void CSounds::OnRender()
 			return;
 	}
 
-	// set listner pos
+	// set listener pos
 	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
 	Sound()->SetListenerPos(Pos.x, Pos.y);
 
@@ -143,7 +150,7 @@ void CSounds::Enqueue(int Channel, int SetId)
 	// add sound to the queue
 	if(m_QueuePos < QUEUE_SIZE)
 	{
-		if(Channel == CHN_MUSIC || !g_Config.m_ClEditor)
+		if(Channel == CHN_MUSIC || !Config()->m_ClEditor)
 		{
 			m_aQueue[m_QueuePos].m_Channel = Channel;
 			m_aQueue[m_QueuePos++].m_SetId = SetId;
@@ -153,7 +160,7 @@ void CSounds::Enqueue(int Channel, int SetId)
 
 void CSounds::Play(int Chn, int SetId, float Vol)
 {
-	if(Chn == CHN_MUSIC && !g_Config.m_SndMusic)
+	if(Chn == CHN_MUSIC && !Config()->m_SndMusic)
 		return;
 
 	ISound::CSampleHandle SampleId = GetSampleId(SetId);
@@ -169,7 +176,7 @@ void CSounds::Play(int Chn, int SetId, float Vol)
 
 void CSounds::PlayAt(int Chn, int SetId, float Vol, vec2 Pos)
 {
-	if(Chn == CHN_MUSIC && !g_Config.m_SndMusic)
+	if(Chn == CHN_MUSIC && !Config()->m_SndMusic)
 		return;
 	
 	ISound::CSampleHandle SampleId = GetSampleId(SetId);

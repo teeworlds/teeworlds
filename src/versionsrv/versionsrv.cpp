@@ -2,6 +2,11 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
 
+#include <engine/config.h>
+#include <engine/console.h>
+#include <engine/kernel.h>
+#include <engine/storage.h>
+
 #include <engine/shared/network.h>
 
 #include <game/version.h>
@@ -74,17 +79,36 @@ void SendVer(NETADDR *pAddr, TOKEN ResponseToken)
 	g_NetOp.Send(&p, ResponseToken);
 }
 
-int main(int argc, char **argv) // ignore_convention
+int main(int argc, const char **argv) // ignore_convention
 {
 	NETADDR BindAddr;
 
 	dbg_logger_stdout();
-	net_init();
+
+	int FlagMask = 0;
+	IKernel *pKernel = IKernel::Create();
+	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
+	IConfigManager *pConfigManager = CreateConfigManager();
+	IConsole *pConsole = CreateConsole(FlagMask);
+
+	bool RegisterFail = !pKernel->RegisterInterface(pStorage);
+	RegisterFail |= !pKernel->RegisterInterface(pConsole);
+	RegisterFail |= !pKernel->RegisterInterface(pConfigManager);
+
+	if(RegisterFail)
+		return -1;
+	pConfigManager->Init(FlagMask);
+	pConsole->Init();
 
 	mem_zero(&BindAddr, sizeof(BindAddr));
 	BindAddr.type = NETTYPE_ALL;
 	BindAddr.port = VERSIONSRV_PORT;
-	if(!g_NetOp.Open(BindAddr, 0))
+	if(secure_random_init() != 0)
+	{
+		dbg_msg("versionsrv", "could not initialize secure RNG");
+		return -1;
+	}
+	if(!g_NetOp.Open(BindAddr, pConfigManager->Values(), pConsole, 0, 0))
 	{
 		dbg_msg("mastersrv", "couldn't start network");
 		return -1;

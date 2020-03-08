@@ -1,0 +1,154 @@
+name: Build
+
+on: [push, pull_request]
+
+jobs:
+  build-cmake:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-16.04]
+        include:
+        - os: ubuntu-latest
+          cmake-args: -G "Unix Makefiles"
+          build-args: --parallel
+          package-file: teeworlds-*-linux_x86_64.tar.xz
+          env:
+            CFLAGS: -Wdeclaration-after-statement -Werror
+            CXXFLAGS: -Werror
+        - os: ubuntu-16.04
+          cmake-path: /usr/bin/
+          cmake-args: -G "Unix Makefiles"
+          package-file: teeworlds-*-linux_x86_64.tar.xz
+          env:
+            CFLAGS: -Wdeclaration-after-statement -Werror
+            CXXFLAGS: -Werror
+        - os: macOS-latest
+          cmake-args: -G "Unix Makefiles"
+          build-args: --parallel
+          package-file: teeworlds-*-osx.dmg
+          env:
+            CFLAGS: -Wdeclaration-after-statement -Werror
+            CXXFLAGS: -Werror
+        - os: windows-latest
+          cmake-args: -G "Visual Studio 16 2019" -A x64
+          package-file: teeworlds-*-win64.zip
+          env:
+            CFLAGS: /WX
+            CXXFLAGS: /WX
+            LDFLAGS: /WX
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Checkout submodules
+      shell: bash
+      run: |
+        auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+        git submodule sync --recursive
+        git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+
+    - name: Prepare Linux
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install pkg-config cmake libfreetype6-dev libsdl2-dev -y
+
+    - name: Prepare MacOS
+      if: contains(matrix.os, 'macOS')
+      run: |
+        brew update
+        brew install pkg-config freetype sdl2
+
+    - name: Build in debug mode
+      env: ${{ matrix.env }}
+      run: |
+        mkdir debug
+        cd debug
+        ${{ matrix.cmake-path }}cmake --version
+        ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Debug -Werror=dev -DDOWNLOAD_GTEST=ON -DDEV=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG=. ..
+        ${{ matrix.cmake-path }}cmake --build . --config Debug ${{ matrix.build-args }} --target everything
+    - name: Test debug
+      run: |
+        cd debug
+        ${{ matrix.cmake-path }}cmake --build . --config Debug ${{ matrix.build-args }} --target run_tests
+        ./teeworlds_srv shutdown
+
+    - name: Build in release mode
+      env: ${{ matrix.env }}
+      run: |
+        mkdir release
+        cd release
+        ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -Werror=dev -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
+        ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target everything
+    - name: Test release
+      run: |
+        cd release
+        ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target run_tests
+        ./teeworlds_srv shutdown
+
+    - name: Package
+      run: |
+        cd release
+        ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target package_default
+        mkdir artifacts
+        mv ${{ matrix.package-file }} artifacts
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v1
+      with:
+        name: teeworlds-${{ matrix.os }}
+        path: release/artifacts
+
+  build-bam:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macOS-latest, windows-latest]
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Checkout submodules
+      shell: bash
+      run: |
+        auth_header="$(git config --local --get http.https://github.com/.extraheader)"
+        git submodule sync --recursive
+        git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
+
+    - name: Checkout bam
+      uses: actions/checkout@v2
+      with:
+        repository: matricks/bam
+        ref: 07fbb5543c692f6b9a7f09e48c64e2368349a3a8
+        path: ./bam
+
+    - name: Prepare Linux
+      if: contains(matrix.os, 'ubuntu')
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install libfreetype6-dev libsdl2-dev -y
+        cd bam
+        ./make_unix.sh
+
+    - name: Prepare MacOS
+      if: contains(matrix.os, 'macOS')
+      run: |
+        brew update
+        brew install freetype sdl2
+        cd bam
+        ./make_unix.sh
+
+    - name: Prepare Windows
+      if: contains(matrix.os, 'windows')
+      run: |
+        cd bam
+        ./make_win64_msvc.bat
+
+    - name: Build in debug mode
+      run: ./bam/bam conf=debug all
+    - name: Test debug
+      run: ./build/x86_64/debug/teeworlds_srv shutdown
+
+    - name: Build in release mode
+      run: ./bam/bam conf=release all
+    - name: Test release
+      run: ./build/x86_64/release/teeworlds_srv shutdown

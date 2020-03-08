@@ -178,6 +178,20 @@ void mem_zero(void *block, unsigned size);
 */
 int mem_comp(const void *a, const void *b, int size);
 
+/*
+	Function: mem_has_null
+		Checks whether a block of memory contains null bytes.
+
+	Parameters:
+		block - Pointer to the block to check for nulls.
+		size - Size of the block.
+
+	Returns:
+		1 - The block has a null byte.
+		0 - The block does not have a null byte.
+*/
+int mem_has_null(const void *block, unsigned size);
+
 /* Group: File IO */
 enum {
 	IOFLAG_READ = 1,
@@ -211,7 +225,7 @@ IOHANDLE io_open(const char *filename, int flags);
 
 	Parameters:
 		io - Handle to the file to read data from.
-		buffer - Pointer to the buffer that will recive the data.
+		buffer - Pointer to the buffer that will receive the data.
 		size - Number of bytes to read from the file.
 
 	Returns:
@@ -219,6 +233,40 @@ IOHANDLE io_open(const char *filename, int flags);
 
 */
 unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
+
+/*
+	Function: io_read_all
+		Reads the rest of the file into a buffer.
+
+	Parameters:
+		io - Handle to the file to read data from.
+		result - Receives the file's remaining contents.
+		result_len - Receives the file's remaining length.
+
+	Remarks:
+		- Does NOT guarantee that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+void io_read_all(IOHANDLE io, void **result, unsigned *result_len);
+
+/*
+	Function: io_read_all_str
+		Reads the rest of the file into a zero-terminated buffer with
+		no internal null bytes.
+
+	Parameters:
+		io - Handle to the file to read data from.
+
+	Returns:
+		The file's remaining contents or null on failure.
+
+	Remarks:
+		- Guarantees that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+char *io_read_all_str(IOHANDLE io);
 
 /*
 	Function: io_unread_byte
@@ -480,7 +528,7 @@ int64 time_freq();
 
 /*
 	Function: time_timestamp
-		Retrives the current time as a UNIX timestamp
+		Retrieves the current time as a UNIX timestamp
 
 	Returns:
 		The time as a UNIX timestamp
@@ -543,8 +591,16 @@ typedef struct
 } NETADDR;
 
 /*
+	Function: net_invalidate_socket
+		Invalidates a socket.
+
+	Remarks:
+		You should close the socket before invalidating it.
+*/
+void net_invalidate_socket(NETSOCKET *socket);
+/*
 	Function: net_init
-		Initiates network functionallity.
+		Initiates network functionality.
 
 	Returns:
 		Returns 0 on success,
@@ -643,13 +699,13 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 
 /*
 	Function: net_udp_recv
-		Recives a packet over an UDP socket.
+		Receives a packet over an UDP socket.
 
 	Parameters:
 		sock - Socket to use.
-		addr - Pointer to an NETADDR that will recive the address.
-		data - Pointer to a buffer that will recive the data.
-		maxsize - Maximum size to recive.
+		addr - Pointer to an NETADDR that will receive the address.
+		data - Pointer to a buffer that will receive the data.
+		maxsize - Maximum size to receive.
 
 	Returns:
 		On success it returns the number of bytes recived. Returns -1
@@ -830,18 +886,18 @@ int str_length(const char *str);
 
 /*
 	Function: str_format
-		Performs printf formating into a buffer.
+		Performs printf formatting into a buffer.
 
 	Parameters:
-		buffer - Pointer to the buffer to recive the formated string.
+		buffer - Pointer to the buffer to receive the formatted string.
 		buffer_size - Size of the buffer.
-		format - printf formating string.
-		... - Parameters for the formating.
+		format - printf formatting string.
+		... - Parameters for the formatting.
 
 	Remarks:
-		- See the C manual for syntax for the printf formating string.
-		- The strings are treated as zero-terminated strings.
-		- Garantees that dst string will contain zero-termination.
+		- See the C manual for syntax for the printf formatting string.
+		- The strings are treated as zero-termineted strings.
+		- Guarantees that dst string will contain zero-termination.
 */
 void str_format(char *buffer, int buffer_size, const char *format, ...)
 GNUC_ATTRIBUTE((format(printf, 3, 4)));
@@ -894,22 +950,22 @@ void str_sanitize(char *str);
 	Remarks:
 		- The strings are treated as zero-terminated strings.
 */
-char* str_sanitize_filename(char* aName);
+char *str_sanitize_filename(char *name);
 
 /*
-	Function: str_check_pathname
+	Function: str_path_unsafe
 		Check if the string contains '..' (parent directory) paths.
 
 	Parameters:
 		str - String to check.
 
 	Returns:
-		Returns 0 if the path is valid, -1 otherwise.
+		Returns 0 if the path is safe, -1 otherwise.
 
 	Remarks:
 		- The strings are treated as zero-terminated strings.
 */
-int str_check_pathname(const char* str);
+int str_path_unsafe(const char *str);
 
 /*
 	Function: str_clean_whitespaces
@@ -972,6 +1028,12 @@ const char *str_skip_to_whitespace_const(const char *str);
 		- The strings are treated as zero-terminated strings.
 */
 char *str_skip_whitespaces(char *str);
+
+/*
+	Function: str_skip_whitespaces_const
+		See str_skip_whitespaces.
+*/
+const char *str_skip_whitespaces_const(const char *str);
 
 /*
 	Function: str_comp_nocase
@@ -1068,8 +1130,26 @@ int str_comp_num(const char *a, const char *b, const int num);
 int str_comp_filenames(const char *a, const char *b);
 
 /*
+	Function: str_startswith_nocase
+		Checks case insensitive whether the string begins with a certain prefix.
+
+	Parameter:
+		str - String to check.
+		prefix - Prefix to look for.
+
+	Returns:
+		A pointer to the string str after the string prefix, or 0 if
+		the string prefix isn't a prefix of the string str.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+const char *str_startswith_nocase(const char *str, const char *prefix);
+
+
+/*
 	Function: str_startswith
-		Checks whether the string begins with a certain prefix.
+		Checks case sensitive whether the string begins with a certain prefix.
 
 	Parameter:
 		str - String to check.
@@ -1085,8 +1165,25 @@ int str_comp_filenames(const char *a, const char *b);
 const char *str_startswith(const char *str, const char *prefix);
 
 /*
+	Function: str_endswith_nocase
+		Checks case insensitive whether the string ends with a certain suffix.
+
+	Parameter:
+		str - String to check.
+		suffix - Suffix to look for.
+
+	Returns:
+		A pointer to the beginning of the suffix in the string str, or
+		0 if the string suffix isn't a suffix of the string str.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+const char *str_endswith_nocase(const char *str, const char *suffix);
+
+/*
 	Function: str_endswith
-		Checks whether the string ends with a certain suffix.
+		Checks case sensitive whether the string ends with a certain suffix.
 
 	Parameter:
 		str - String to check.
@@ -1147,9 +1244,24 @@ const char *str_find(const char *haystack, const char *needle);
 		data - Size of the data
 
 	Remarks:
-		- The desination buffer will be zero-terminated
+		- The destination buffer will be zero-terminated
 */
 void str_hex(char *dst, int dst_size, const void *data, int data_size);
+
+/*
+	Function: str_is_number
+		Check if the string contains only digits.
+
+	Parameters:
+		str - String to check.
+
+	Returns:
+		Returns 0 if it's a number, -1 otherwise.
+
+	Remarks:
+		- The strings are treated as zero-terminated strings.
+*/
+int str_is_number(const char *pstr);
 
 /*
 	Function: str_timestamp
@@ -1302,6 +1414,44 @@ int fs_remove(const char *filename);
 		- The strings are treated as zero-terminated strings.
 */
 int fs_rename(const char *oldname, const char *newname);
+
+/*
+	Function: fs_read
+		Reads a whole file into memory and returns its contents.
+
+	Parameters:
+		name - The filename to read.
+		result - Receives the file's contents.
+		result_len - Receives the file's length.
+
+	Returns:
+		Returns 0 on success, 1 on failure.
+
+	Remarks:
+		- Does NOT guarantee that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+int fs_read(const char *name, void **result, unsigned *result_len);
+
+/*
+	Function: fs_read_str
+		Reads a whole file into memory and returns its contents,
+		guaranteeing a null-terminated string with no internal null
+		bytes.
+
+	Parameters:
+		name - The filename to read.
+
+	Returns:
+		Returns the file's contents on success, null on failure.
+
+	Remarks:
+		- Guarantees that there are no internal null bytes.
+		- Guarantees that result will contain zero-termination.
+		- The result must be freed after it has been used.
+*/
+char *fs_read_str(const char *name);
 
 /*
 	Group: Undocumented
@@ -1525,6 +1675,29 @@ void secure_random_fill(void *bytes, unsigned length);
 		The process ID of the current process.
 */
 int pid();
+
+/*
+	Function: bytes_be_to_uint
+		Packs 4 big endian bytes into an unsigned
+
+	Returns:
+		The packed unsigned
+
+	Remarks:
+		- Assumes the passed array is 4 bytes
+		- Assumes unsigned is 4 bytes
+*/
+unsigned bytes_be_to_uint(const unsigned char *bytes);
+
+/*
+	Function: uint_to_bytes_be
+		Packs an unsigned into 4 big endian bytes
+
+	Remarks:
+		- Assumes the passed array is 4 bytes
+		- Assumes unsigned is 4 bytes
+*/
+void uint_to_bytes_be(unsigned char *bytes, unsigned value);
 
 #ifdef __cplusplus
 }

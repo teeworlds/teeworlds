@@ -10,6 +10,9 @@ class CHud : public CComponent
 	float m_AverageFPS;
 	int64 m_WarmupHideTick;
 
+	int m_CheckpointDiff;
+	int64 m_CheckpointTime;
+
 	void RenderCursor();
 
 	void RenderFps();
@@ -28,10 +31,13 @@ class CHud : public CComponent
 	void RenderSpectatorNotification();
 	void RenderReadyUpNotification();
 	void RenderWarmupTimer();
+	void RenderRaceTime(const CNetObj_PlayerInfoRace *pRaceInfo);
+	void RenderCheckpoint();
 public:
 	CHud();
 
 	virtual void OnReset();
+	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual void OnRender();
 };
 

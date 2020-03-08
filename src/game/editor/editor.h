@@ -502,6 +502,7 @@ class CEditor : public IEditor
 {
 	class IInput *m_pInput;
 	class IClient *m_pClient;
+	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
@@ -511,6 +512,7 @@ class CEditor : public IEditor
 public:
 	class IInput *Input() { return m_pInput; };
 	class IClient *Client() { return m_pClient; };
+	class CConfig *Config() { return m_pConfig; }
 	class IConsole *Console() { return m_pConsole; };
 	class IGraphics *Graphics() { return m_pGraphics; };
 	class ITextRender *TextRender() { return m_pTextRender; };
@@ -675,6 +677,10 @@ public:
 	char m_FileDialogNewFolderName[64];
 	char m_FileDialogErrString[64];
 	float m_FilesSearchBoxID;
+	IGraphics::CTextureHandle m_FilePreviewImage;
+	bool m_PreviewImageIsLoaded;
+	CImageInfo m_FilePreviewImageInfo;
+
 
 	struct CFilelistItem
 	{
@@ -732,7 +738,7 @@ public:
 	int m_SelectedPoints;
 	int m_SelectedEnvelope;
 	int m_SelectedEnvelopePoint;
-    int m_SelectedQuadEnvelope;
+	int m_SelectedQuadEnvelope;
 	int m_SelectedImage;
 	
 	vec4 m_SelectedColor;
@@ -746,6 +752,7 @@ public:
 
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;
+	CLayerQuads m_QuadsetPicker;
 
 	static const void *ms_pUiGotContext;
 

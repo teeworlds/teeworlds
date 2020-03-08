@@ -368,6 +368,49 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
 	return fread(buffer, 1, size, (FILE*)io);
 }
 
+void io_read_all(IOHANDLE io, void **result, unsigned *result_len)
+{
+	unsigned char *buffer = malloc(1024);
+	unsigned len = 0;
+	unsigned cap = 1024;
+	unsigned read;
+
+	*result = 0;
+	*result_len = 0;
+
+	while((read = io_read(io, buffer + len, cap - len)) != 0)
+	{
+		len += read;
+		if(len == cap)
+		{
+			cap *= 2;
+			buffer = realloc(buffer, cap);
+		}
+	}
+	if(len == cap)
+	{
+		buffer = realloc(buffer, cap + 1);
+	}
+	// ensure null termination
+	buffer[len] = 0;
+	*result = buffer;
+	*result_len = len;
+}
+
+char *io_read_all_str(IOHANDLE io)
+{
+	void *buffer;
+	unsigned len;
+
+	io_read_all(io, &buffer, &len);
+	if(mem_has_null(buffer, len))
+	{
+		free(buffer);
+		return 0;
+	}
+	return buffer;
+}
+
 unsigned io_unread_byte(IOHANDLE io, unsigned char byte)
 {
 	return ungetc(byte, (FILE*)io) == EOF;
@@ -1411,6 +1454,11 @@ int net_would_block()
 #endif
 }
 
+void net_invalidate_socket(NETSOCKET *socket)
+{
+	*socket = invalid_socket;
+}
+
 int net_init()
 {
 #if defined(CONF_FAMILY_WINDOWS)
@@ -1489,10 +1537,10 @@ int fs_storage_path(const char *appname, char *path, int max)
 	int i;
 	char *xdgdatahome = getenv("XDG_DATA_HOME");
 	char xdgpath[max];
-	
+
 	if(!home)
 		return -1;
-	
+
 #if defined(CONF_PLATFORM_MACOSX)
 	str_format(path, max, "%s/Library/Application Support/%s", home, appname);
 	return 0;
@@ -1516,7 +1564,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 		for(i = strlen(xdgdatahome)+1; xdgpath[i]; i++)
 			xdgpath[i] = tolower(xdgpath[i]);
 	}
-	
+
 	/* check for old location / backward compatibility */
 	if(fs_is_dir(path))
 	{
@@ -1524,7 +1572,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 		/* for backward compatibility */
 		return 0;
 	}
-	
+
 	str_format(path, max, "%s", xdgpath);
 
 	return 0;
@@ -1652,6 +1700,33 @@ int fs_rename(const char *oldname, const char *newname)
 	if(rename(oldname, newname) != 0)
 		return 1;
 	return 0;
+}
+
+int fs_read(const char *name, void **result, unsigned *result_len)
+{
+	IOHANDLE file = io_open(name, IOFLAG_READ);
+	*result = 0;
+	*result_len = 0;
+	if(!file)
+	{
+		return 1;
+	}
+	io_read_all(file, result, result_len);
+	io_close(file);
+	return 0;
+}
+
+char *fs_read_str(const char *name)
+{
+	IOHANDLE file = io_open(name, IOFLAG_READ);
+	char *result;
+	if(!file)
+	{
+		return 0;
+	}
+	result = io_read_all_str(file);
+	io_close(file);
+	return result;
 }
 
 void swap_endian(void *data, unsigned elem_size, unsigned num)
@@ -1862,7 +1937,7 @@ void str_sanitize_cc(char *str_in)
 }
 
 /* check if the string contains '..' (parent directory) paths */
-int str_check_pathname(const char* str)
+int str_path_unsafe(const char *str)
 {
 	// State machine. 0 means that we're at the beginning
 	// of a new directory/filename, and a positive number represents the number of
@@ -2014,10 +2089,17 @@ char *str_skip_whitespaces(char *str)
 	return str;
 }
 
+const char *str_skip_whitespaces_const(const char *str)
+{
+	while(*str && (*str == ' ' || *str == '\t' || *str == '\n' || *str == '\r'))
+		str++;
+	return str;
+}
+
 /* case */
 int str_comp_nocase(const char *a, const char *b)
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
 	return _stricmp(a,b);
 #else
 	return strcasecmp(a,b);
@@ -2026,7 +2108,7 @@ int str_comp_nocase(const char *a, const char *b)
 
 int str_comp_nocase_num(const char *a, const char *b, const int num)
 {
-#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
 	return _strnicmp(a, b, num);
 #else
 	return strncasecmp(a, b, num);
@@ -2074,12 +2156,45 @@ int str_comp_filenames(const char *a, const char *b)
 	return tolower(*a) - tolower(*b);
 }
 
+const char *str_startswith_nocase(const char *str, const char *prefix)
+{
+	int prefixl = str_length(prefix);
+	if(str_comp_nocase_num(str, prefix, prefixl) == 0)
+	{
+		return str + prefixl;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
 const char *str_startswith(const char *str, const char *prefix)
 {
 	int prefixl = str_length(prefix);
 	if(str_comp_num(str, prefix, prefixl) == 0)
 	{
 		return str + prefixl;
+	}
+	else
+	{
+		return 0;
+	}
+}
+
+const char *str_endswith_nocase(const char *str, const char *suffix)
+{
+	int strl = str_length(str);
+	int suffixl = str_length(suffix);
+	const char *strsuffix;
+	if(strl < suffixl)
+	{
+		return 0;
+	}
+	strsuffix = str + strl - suffixl;
+	if(str_comp_nocase(strsuffix, suffix) == 0)
+	{
+		return strsuffix;
 	}
 	else
 	{
@@ -2160,6 +2275,16 @@ void str_hex(char *dst, int dst_size, const void *data, int data_size)
 	}
 }
 
+int str_is_number(const char *str)
+{
+	while(*str)
+	{
+		if(!(*str >= '0' && *str <= '9'))
+			return -1;
+		str++;
+	}
+	return 0;
+}
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wformat-nonliteral"
@@ -2191,6 +2316,19 @@ void str_timestamp(char *buffer, int buffer_size)
 int mem_comp(const void *a, const void *b, int size)
 {
 	return memcmp(a,b,size);
+}
+
+int mem_has_null(const void *block, unsigned size)
+{
+	const unsigned char *bytes = block;
+	for(unsigned i = 0; i < size; i++)
+	{
+		if(bytes[i] == 0)
+		{
+			return 1;
+		}
+	}
+	return 0;
 }
 
 void net_stats(NETSTATS *stats_inout)
@@ -2487,6 +2625,19 @@ int pid()
 #else
 	return getpid();
 #endif
+}
+
+unsigned bytes_be_to_uint(const unsigned char *bytes)
+{
+	return (bytes[0]<<24) | (bytes[1]<<16) | (bytes[2]<<8) | bytes[3];
+}
+
+void uint_to_bytes_be(unsigned char *bytes, unsigned value)
+{
+	bytes[0] = (value>>24)&0xff;
+	bytes[1] = (value>>16)&0xff;
+	bytes[2] = (value>>8)&0xff;
+	bytes[3] = value&0xff;
 }
 
 #if defined(__cplusplus)
