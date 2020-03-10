@@ -1212,7 +1212,7 @@ void CServer::GenerateServerInfo(CNetChunkStore *pStore, int Token)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(true || m_aClients[i].m_State != CClient::STATE_EMPTY)
+			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 			{
 				int PreviousSize = Packer.Size();
 
