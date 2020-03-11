@@ -137,22 +137,22 @@ void CParticles::OnRender()
 	if(Client()->State() < IClient::STATE_ONLINE)
 		return;
 
-	static int64 LastTime = 0;
-	int64 t = time_get();
+	static int64 s_LastTime = 0;
+	int64 Now = time_get();
 
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 		if(!pInfo->m_Paused)
-			Update((float)((t-LastTime)/(double)time_freq())*pInfo->m_Speed);
+			Update((float)((Now-s_LastTime)/(double)time_freq())*pInfo->m_Speed);
 	}
 	else
 	{
 		if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
-			Update((float)((t-LastTime)/(double)time_freq()));
+			Update((float)((Now-s_LastTime)/(double)time_freq()));
 	}
 
-	LastTime = t;
+	s_LastTime = Now;
 }
 
 void CParticles::RenderGroup(int Group)
