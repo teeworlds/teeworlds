@@ -1426,8 +1426,8 @@ void CChat::HandleCommands(float x, float y, float w)
 				TextRender()->TextColor(0.0f, 0.5f, 0.5f, 1.0f);
 				for(const char *c = pCommand->m_aArgsFormat; *c;)
 				{
-					const char Brackets[2][3] = { "<>", "[]" };
-					char aBuf[32];
+					char aBuf[32] = "";
+					char aDesc[32];
 
 					bool Optional = false;
 					if(c[0] == '?')
@@ -1436,37 +1436,46 @@ void CChat::HandleCommands(float x, float y, float w)
 						c++;
 					}
 
+					const char *pDesc = 0;
 					if(c[1] == '[')
 					{
-						str_format(aBuf, sizeof(aBuf), "%c%.*s%c ",
-							Brackets[Optional][0], str_span(&c[2], "]"), &c[2], Brackets[Optional][1]);
+						str_format(aDesc, sizeof(aDesc), "%.*s", str_span(&c[2], "]"), &c[2]);
+						pDesc = aDesc;
 						c += str_span(c, "]") + 1;
 					}
 					else
 					{
-						switch(c[0]) {
-						case 'i':
-							str_format(aBuf, sizeof(aBuf), "%cnumber%c",
-								Brackets[Optional][0], Brackets[Optional][1]);
-							break;
-						case 'f':
-							str_format(aBuf, sizeof(aBuf), "%cfloat%c",
-								Brackets[Optional][0], Brackets[Optional][1]);
-							break;
-						case 'r':
-						case 's':
-							str_format(aBuf, sizeof(aBuf), "%cstring%c",
-								Brackets[Optional][0], Brackets[Optional][1]);
-							break;
-						default:
-							goto illformed;
+						if(c[0] == 'i')
+						{
+							pDesc = "number";
 						}
+						else if(c[0] == 'f')
+						{
+							pDesc = "float";
+						}
+						else if(c[0] == 'r' || c[0] == 's')
+						{
+							pDesc = "string";
+						}
+						else
+						{
+							break; // ill-formed
+						}
+
+						if(Optional)
+						{
+							str_format(aBuf, sizeof(aBuf), "[%s] ", pDesc);
+						}
+						else
+						{
+							str_format(aBuf, sizeof(aBuf), "<%s> ", pDesc);
+						}
+
 						c++;
 					}
 					c = str_skip_whitespaces_const(c);
 					TextRender()->TextEx(&Cursor, aBuf, -1);
 				}
-			illformed:
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
 				TextRender()->TextEx(&Cursor, pCommand->m_aHelpText, -1);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
