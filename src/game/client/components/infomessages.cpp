@@ -141,7 +141,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 
 void CInfoMessages::OnRender()
 {
-	if(!Config()->m_ClShowhud)
+	if(!Config()->m_ClShowhud || Client()->State() < IClient::STATE_ONLINE)
 		return;
 
 	float Width = 400*3.0f*Graphics()->ScreenAspect();

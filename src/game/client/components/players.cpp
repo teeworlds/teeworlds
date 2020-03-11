@@ -483,6 +483,9 @@ void CPlayers::RenderPlayer(
 
 void CPlayers::OnRender()
 {
+	if(Client()->State() < IClient::STATE_ONLINE)
+		return;
+
 	// update RenderInfo for ninja
 	bool IsTeamplay = (m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS) != 0;
 	for(int i = 0; i < MAX_CLIENTS; ++i)

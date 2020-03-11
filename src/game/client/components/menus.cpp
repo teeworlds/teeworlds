@@ -1513,16 +1513,23 @@ int CMenus::Render()
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 
-	static bool s_First = true;
-	if(s_First)
+	static int s_InitTick = 5;
+	if(s_InitTick > 0)
 	{
-		// refresh server browser before we are in browser menu to save time
-		m_pClient->m_pCamera->ChangePosition(CCamera::POS_START);
-		ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET|IServerBrowser::REFRESHFLAG_LAN);
-		ServerBrowser()->SetType(Config()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
-
-		UpdateMusicState();
-		s_First = false;
+		s_InitTick--;
+		if(s_InitTick == 4)
+		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_START);
+			UpdateMusicState();
+		}
+		else if(s_InitTick == 0)
+		{
+			// Wait a few frames before refreshing server browser,
+			// else the increased rendering time at startup prevents
+			// the network from being pumped effectively.
+			ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET|IServerBrowser::REFRESHFLAG_LAN);
+			ServerBrowser()->SetType(Config()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
+		}
 	}
 
 	// render background only if needed
@@ -2390,8 +2397,6 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		SetActive(false);
 	}
 }
-
-extern "C" void font_debug_render();
 
 void CMenus::OnRender()
 {

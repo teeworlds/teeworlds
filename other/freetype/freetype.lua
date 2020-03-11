@@ -9,20 +9,18 @@ FreeType = {
 			option.use_winlib = 0
 			option.lib_path = nil
 
-			if ExecuteSilent("pkg-config freetype2") == 0 then
-				option.value = true
-				option.use_pkgconfig = true
-			elseif ExecuteSilent("freetype-config") > 0 and ExecuteSilent("freetype-config --cflags") == 0 then
-				option.value = true
-				option.use_ftconfig = true
-			end
-
 			if platform == "win32" then
 				option.value = true
 				option.use_winlib = 32
 			elseif platform == "win64" then
 				option.value = true
 				option.use_winlib = 64
+			elseif ExecuteSilent("pkg-config freetype2") == 0 then
+				option.value = true
+				option.use_pkgconfig = true
+			elseif ExecuteSilent("freetype-config") > 0 and ExecuteSilent("freetype-config --cflags") == 0 then
+				option.value = true
+				option.use_ftconfig = true
 			end
 		end
 
