@@ -76,14 +76,14 @@ void CChat::OnReset()
 
 	// init chat commands (must be in alphabetical order)
 	m_CommandManager.ClearCommands();
-	m_CommandManager.AddCommand("all", "Switch to all chat", "?r", &Com_All, this);
-	m_CommandManager.AddCommand("friend", "Add player as friend", "p", &Com_Befriend, this);
-	m_CommandManager.AddCommand("m", "Mute a player", "p", &Com_Mute, this);
-	m_CommandManager.AddCommand("mute", "Mute a player", "p", &Com_Mute, this);
-	m_CommandManager.AddCommand("r", "Reply to a whisper", "?r", &Com_Reply, this);
-	m_CommandManager.AddCommand("team", "Switch to team chat", "?r", &Com_Team, this);
-	m_CommandManager.AddCommand("w", "Whisper another player", "p", &Com_Whisper, this);
-	m_CommandManager.AddCommand("whisper", "Whisper another player", "p", &Com_Whisper, this);
+	m_CommandManager.AddCommand("all", "Switch to all chat", "?r[message]", &Com_All, this);
+	m_CommandManager.AddCommand("friend", "Add player as friend", "s[name]", &Com_Befriend, this);
+	m_CommandManager.AddCommand("m", "Mute a player", "s[name]", &Com_Mute, this);
+	m_CommandManager.AddCommand("mute", "Mute a player", "s[name]", &Com_Mute, this);
+	m_CommandManager.AddCommand("r", "Reply to a whisper", "?r[message]", &Com_Reply, this);
+	m_CommandManager.AddCommand("team", "Switch to team chat", "?r[message]", &Com_Team, this);
+	m_CommandManager.AddCommand("w", "Whisper another player", "s[name] ?r[message]", &Com_Whisper, this);
+	m_CommandManager.AddCommand("whisper", "Whisper another player", "s[name] ?r[message]", &Com_Whisper, this);
 }
 
 void CChat::OnMapLoad()
@@ -1586,7 +1586,13 @@ void CChat::Com_Whisper(IConsole::IResult *pResult, void *pContext)
 	if(TargetID != -1)
 	{
 		pChatData->m_WhisperTarget = TargetID;
-		pChatData->EnableMode(CHAT_WHISPER);
+		pChatData->m_ChatCmdBuffer[0] = 0;
+		if(pResult->NumArguments() > 1)
+		{
+			// save the parameter in a buffer before EnableMode clears it
+			str_copy(pChatData->m_ChatCmdBuffer, pResult->GetString(1), sizeof(pChatData->m_ChatCmdBuffer));
+		}
+		pChatData->EnableMode(CHAT_WHISPER, pChatData->m_ChatCmdBuffer);
 	}
 }
 
