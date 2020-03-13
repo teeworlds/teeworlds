@@ -13,6 +13,11 @@ void CPacker::Reset()
 	m_pEnd = m_pCurrent + PACKER_BUFFER_SIZE;
 }
 
+void CPacker::Truncate(int Size)
+{
+	m_pEnd = m_aBuffer + Size;
+}
+
 void CPacker::AddInt(int i)
 {
 	if(m_Error)

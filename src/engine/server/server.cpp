@@ -1149,11 +1149,20 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 		{
 			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
 			{
+				int PreviousSize = pPacker->Size();
+
 				pPacker->AddString(ClientName(i), MAX_NAME_LENGTH); // client name
 				pPacker->AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
 				pPacker->AddInt(m_aClients[i].m_Country); // client country
 				pPacker->AddInt(m_aClients[i].m_Score); // client score
 				pPacker->AddInt(GameServer()->IsClientPlayer(i)?0:1); // flag spectator=1, bot=2 (player=0)
+
+				// For old Serverinfo drop the extra players
+				if(pPacker->Size() >= NET_MAX_PAYLOAD)
+				{
+					pPacker->Truncate(PreviousSize);
+					break;
+				}
 			}
 		}
 	}
@@ -1163,16 +1172,7 @@ void CServer::SendServerInfo(int ClientID)
 {
 	CMsgPacker Msg(NETMSG_SERVERINFO, true);
 	GenerateServerInfo(&Msg, -1);
-	if(ClientID == -1)
-	{
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
-				SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, i);
-		}
-	}
-	else if(ClientID >= 0 && ClientID < MAX_CLIENTS && m_aClients[ClientID].m_State != CClient::STATE_EMPTY)
-		SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 }
 
 
