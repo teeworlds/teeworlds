@@ -286,6 +286,7 @@ void CServerBrowser::Refresh(int RefreshFlags)
 		Packer.Reset();
 		Packer.AddRaw(SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
 		Packer.AddInt(m_CurrentLanToken);
+		Packer.AddString("giex", 4);
 
 		/* do the broadcast version */
 		CNetChunk Packet;
@@ -476,7 +477,20 @@ CServerEntry *CServerBrowser::Find(int ServerlistType, const NETADDR &Addr)
 		if(net_addr_comp(&pEntry->m_Addr, &Addr) == 0)
 			return pEntry;
 	}
-	return (CServerEntry*)0;
+	return (CServerEntry *)0;
+}
+
+CServerEntry *CServerBrowser::FindAll(const NETADDR &Addr)
+{
+	for(int i = 0; i < NUM_TYPES; i++)
+	{
+		for(CServerEntry *pEntry = m_aServerlist[i].m_aServerlistIp[AddrHash(&Addr)]; pEntry; pEntry = pEntry->m_pNextIp)
+		{
+			if(net_addr_comp(&pEntry->m_Addr, &Addr) == 0)
+				return pEntry;
+		}
+	}
+	return (CServerEntry *)0;
 }
 
 void CServerBrowser::QueueRequest(CServerEntry *pEntry)
@@ -549,6 +563,7 @@ void CServerBrowser::RequestImpl(const NETADDR &Addr, CServerEntry *pEntry)
 	Packer.Reset();
 	Packer.AddRaw(SERVERBROWSE_GETINFO, sizeof(SERVERBROWSE_GETINFO));
 	Packer.AddInt(pEntry ? pEntry->m_CurrentToken : m_CurrentLanToken);
+	Packer.AddString("giex", 4);
 
 	CNetChunk Packet;
 	Packet.m_ClientID = -1;

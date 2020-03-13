@@ -26,6 +26,7 @@ static const unsigned char SERVERBROWSE_COUNT[] = {255, 255, 255, 255, 's', 'i',
 
 static const unsigned char SERVERBROWSE_GETINFO[] = {255, 255, 255, 255, 'g', 'i', 'e', '3'};
 static const unsigned char SERVERBROWSE_INFO[] = {255, 255, 255, 255, 'i', 'n', 'f', '3'};
+static const unsigned char SERVERBROWSE_INFO_PLAYERS[] = {255, 255, 255, 255, 'i', 'n', 'f', 'p'};
 
 static const unsigned char SERVERBROWSE_FWCHECK[] = {255, 255, 255, 255, 'f', 'w', '?', '?'};
 static const unsigned char SERVERBROWSE_FWRESPONSE[] = {255, 255, 255, 255, 'f', 'w', '!', '!'};

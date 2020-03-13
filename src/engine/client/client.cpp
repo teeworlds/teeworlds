@@ -913,8 +913,10 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 	pInfo->m_ServerLevel = clamp<int>(pUnpacker->GetInt(), SERVERINFO_LEVEL_MIN, SERVERINFO_LEVEL_MAX);
 	pInfo->m_NumPlayers = pUnpacker->GetInt();
 	pInfo->m_MaxPlayers = pUnpacker->GetInt();
+	pInfo->m_NumReceivedPlayers = 0;
 	pInfo->m_NumClients = pUnpacker->GetInt();
 	pInfo->m_MaxClients = pUnpacker->GetInt();
+	pInfo->m_NumReceivedClients = 0;
 	pInfo->m_NumBotPlayers = 0;
 	pInfo->m_NumBotSpectators = 0;
 
@@ -953,10 +955,60 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 		if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
 			NumPlayers++;
 	}
-	pInfo->m_NumPlayers = NumPlayers;
-	pInfo->m_NumClients = NumClients;
+	pInfo->m_NumReceivedPlayers += NumPlayers;
+	pInfo->m_NumReceivedClients += NumClients;
 
 	return 0;
+}
+
+int CClient::UnpackExtraServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken)
+{
+	dbg_assert(!!pToken, "Extra info packets can't exist without a token");
+
+	*pToken = pUnpacker->GetInt();
+	int PacketNo = pUnpacker->GetInt();
+	if(PacketNo <= 0 || PacketNo >= 64) // packet 0 is reserved
+		return -1;
+
+	if(pUnpacker->Error())
+		return -1;
+
+	bool IgnoreError = false;
+	int NumPlayers = 0;
+	int NumClients = 0;
+	for(int i = pInfo->m_NumReceivedClients; i < pInfo->m_NumClients; i++)
+	{
+		str_copy(pInfo->m_aClients[i].m_aName, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[i].m_aName));
+		if(pUnpacker->Error()) // packet end
+		{
+			IgnoreError = true;
+			break;
+		}
+
+		str_copy(pInfo->m_aClients[i].m_aClan, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[i].m_aClan));
+		pInfo->m_aClients[i].m_Country = pUnpacker->GetInt();
+		pInfo->m_aClients[i].m_Score = pUnpacker->GetInt();
+		pInfo->m_aClients[i].m_PlayerType = pUnpacker->GetInt()&CServerInfo::CClient::PLAYERFLAG_MASK;
+
+		if(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_BOT)
+		{
+			if(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC)
+				pInfo->m_NumBotSpectators++;
+			else
+				pInfo->m_NumBotPlayers++;
+		}
+
+		NumClients++;
+		if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
+			NumPlayers++;
+	}
+	pInfo->m_NumReceivedPlayers += NumPlayers;
+	pInfo->m_NumReceivedClients += NumClients;
+
+	if(IgnoreError)
+		return NumClients;
+
+	return pUnpacker->Error() ? -1 : NumClients;
 }
 
 bool CompareScore(const CServerInfo::CClient &C1, const CServerInfo::CClient &C2)
@@ -1099,6 +1151,21 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		{
 			SortClients(&Info);
 			m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, &Info);
+		}
+	}
+	else if(pPacket->m_DataSize >= (int)(sizeof(SERVERBROWSE_INFO_PLAYERS)) &&
+		mem_comp(pPacket->m_pData, SERVERBROWSE_INFO_PLAYERS, sizeof(SERVERBROWSE_INFO_PLAYERS)) == 0)
+	{
+		CServerEntry *pEntry = m_ServerBrowser.FindAll(pPacket->m_Address);
+		if(!pEntry) // We haven't received the main packet yet
+			return;
+
+		CUnpacker Up;
+		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO_PLAYERS), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO_PLAYERS));
+		int Token, NumNew;
+		if((NumNew = UnpackExtraServerInfo(&Up, &pEntry->m_Info, &Token)) >= 0)
+		{
+			SortClients(&pEntry->m_Info); // TODO: std::inplace_merge would be much more efficient here
 		}
 	}
 }
