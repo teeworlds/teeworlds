@@ -428,7 +428,7 @@ CServerEntry *CServerBrowser::Add(int ServerlistType, const NETADDR &Addr)
 	// set the info
 	pEntry->m_Addr = Addr;
 	pEntry->m_InfoState = CServerEntry::STATE_INVALID;
-	pEntry->m_CurrentToken = GetNewToken();
+	pEntry->m_CurrentToken = ServerlistType == IServerBrowser::TYPE_LAN ? m_CurrentLanToken : GetNewToken();
 	pEntry->m_Info.m_NetAddr = Addr;
 
 	pEntry->m_Info.m_Latency = 999;

@@ -933,11 +933,21 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 	if(!pToken)
 		return 0;
 
+	if(pUnpacker->Error())
+		return -1;
+
+	bool IgnoreError = false;
 	int NumPlayers = 0;
 	int NumClients = 0;
 	for(int i = 0; i < pInfo->m_NumClients; i++)
 	{
 		str_copy(pInfo->m_aClients[i].m_aName, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[i].m_aName));
+		if(pUnpacker->Error()) // packet end
+		{
+			IgnoreError = true;
+			break;
+		}
+
 		str_copy(pInfo->m_aClients[i].m_aClan, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[i].m_aClan));
 		pInfo->m_aClients[i].m_Country = pUnpacker->GetInt();
 		pInfo->m_aClients[i].m_Score = pUnpacker->GetInt();
@@ -958,7 +968,10 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 	pInfo->m_NumReceivedPlayers += NumPlayers;
 	pInfo->m_NumReceivedClients += NumClients;
 
-	return 0;
+	if(IgnoreError)
+		return NumClients;
+
+	return pUnpacker->Error() ? -1 : NumClients;
 }
 
 int CClient::UnpackExtraServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo)
@@ -1032,7 +1045,7 @@ bool CompareTime(const CServerInfo::CClient &C1, const CServerInfo::CClient &C2)
 
 inline void SortClients(CServerInfo *pInfo)
 {
-	std::stable_sort(pInfo->m_aClients, pInfo->m_aClients + pInfo->m_NumClients,
+	std::stable_sort(pInfo->m_aClients, pInfo->m_aClients + pInfo->m_NumReceivedClients,
 		(pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE) ? CompareTime : CompareScore);
 }
 
@@ -1143,8 +1156,8 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		CServerInfo Info = {0};
 		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO));
 		net_addr_str(&pPacket->m_Address, Info.m_aAddress, sizeof(Info.m_aAddress), true);
-		int Token;
-		if(!UnpackServerInfo(&Up, &Info, &Token) && !Up.Error())
+		int Token, NumNew;
+		if((NumNew = UnpackServerInfo(&Up, &Info, &Token)) >= 0)
 		{
 			SortClients(&Info);
 			m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, &Info);
@@ -1156,8 +1169,6 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		CServerEntry *pEntry = m_ServerBrowser.FindAll(pPacket->m_Address);
 		if(!pEntry) // We haven't received the main packet yet
 			return;
-
-		dbg_msg("debug", "got extra info for %s", pEntry->m_Info.m_aHostname);
 
 		CUnpacker Up;
 		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO_PLAYERS), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO_PLAYERS));

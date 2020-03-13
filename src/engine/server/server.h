@@ -250,7 +250,7 @@ public:
 	void ProcessClientPacket(CNetChunk *pPacket);
 
 	void SendServerInfo(int ClientID);
-	int GenerateServerInfo(CPacker *pPacker, int Token);
+	int GenerateServerInfo(CPacker *pPacker, int Token, bool Extended);
 	void GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int LastClient);
 
 	void PumpNetwork();

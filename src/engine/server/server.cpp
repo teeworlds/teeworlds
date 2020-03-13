@@ -1134,8 +1134,11 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	}
 }
 
-int CServer::GenerateServerInfo(CPacker *pPacker, int Token)
+int CServer::GenerateServerInfo(CPacker *pPacker, int Token, bool Extended)
 {
+	CPacker *pOriginal = pPacker;
+	CPacker Temp;
+
 	// count the players
 	int PlayerCount = 0, ClientCount = 0;
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1175,7 +1178,9 @@ int CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	pPacker->AddInt(Config()->m_SvSkillLevel);	// server skill level
 	pPacker->AddInt(PlayerCount); // num players
 	pPacker->AddInt(Config()->m_SvPlayerSlots); // max players
-	pPacker->AddInt(ClientCount); // num clients
+
+	Temp.Reset();
+	pPacker = &Temp;
 	pPacker->AddInt(max(ClientCount, Config()->m_SvMaxClients)); // max clients
 
 	int i = 0;
@@ -1183,25 +1188,30 @@ int CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	{
 		for(i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
+			if(m_aClients[i].m_State == CClient::STATE_EMPTY)
+				continue;
+
+			int PreviousSize = pPacker->Size();
+
+			pPacker->AddString(ClientName(i), MAX_NAME_LENGTH); // client name
+			pPacker->AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
+			pPacker->AddInt(m_aClients[i].m_Country); // client country
+			pPacker->AddInt(m_aClients[i].m_Score); // client score
+			pPacker->AddInt(GameServer()->IsClientPlayer(i)?0:1); // flag spectator=1, bot=2 (player=0)
+
+			unsigned char aPCount[32];
+			const unsigned char *pEnd = CVariableInt::Pack(aPCount, i);
+			if(pPacker->Size() + (aPCount - pEnd) + pOriginal->Size() > NET_MAX_PAYLOAD)
 			{
-				int PreviousSize = pPacker->Size();
-
-				pPacker->AddString(ClientName(i), MAX_NAME_LENGTH); // client name
-				pPacker->AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
-				pPacker->AddInt(m_aClients[i].m_Country); // client country
-				pPacker->AddInt(m_aClients[i].m_Score); // client score
-				pPacker->AddInt(GameServer()->IsClientPlayer(i)?0:1); // flag spectator=1, bot=2 (player=0)
-
-				// For old Serverinfo drop the extra players
-				if(pPacker->Size() >= NET_MAX_PAYLOAD)
-				{
-					pPacker->Truncate(PreviousSize);
-					return i - 1;
-				}
+				i--;
+				pPacker->Truncate(PreviousSize);
+				break;
 			}
 		}
 	}
+
+	pOriginal->AddInt(Extended ? ClientCount : i);
+	pOriginal->AddRaw(pPacker->Data(), pPacker->Size());
 
 	return i;
 }
@@ -1238,6 +1248,9 @@ void CServer::GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int Las
 
 	for(int i = LastClient; i < MAX_CLIENTS; i++)
 	{
+		if(m_aClients[i].m_State == CClient::STATE_EMPTY)
+			continue;
+
 		int PreviousSize = Packer.Size();
 
 		Packer.AddString(ClientName(i), MAX_NAME_LENGTH); // client name
@@ -1260,7 +1273,7 @@ void CServer::GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int Las
 void CServer::SendServerInfo(int ClientID)
 {
 	CMsgPacker Msg(NETMSG_SERVERINFO, true);
-	int LastClient = GenerateServerInfo(&Msg, -1);
+	int LastClient = GenerateServerInfo(&Msg, -1, false);
 	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 
 	CNetChunkStore ChunkStore;
@@ -1292,12 +1305,12 @@ void CServer::PumpNetwork()
 					continue;
 
 				bool Extended = false;
-				if(str_comp(Unpacker.GetString(), "giex") && !Unpacker.Error())
+				if(!str_comp(Unpacker.GetString(), "giex") && !Unpacker.Error())
 					Extended = true;
 
 				CNetChunkStore ChunkStore;
 				CPacker Packer;
-				int LastClient = GenerateServerInfo(&Packer, SrvBrwsToken);
+				int LastClient = GenerateServerInfo(&Packer, SrvBrwsToken, Extended);
 
 				CNetChunk Response;
 				Response.m_pData = Packer.Data();
