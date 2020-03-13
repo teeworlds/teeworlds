@@ -262,7 +262,7 @@ public:
 	const char *LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pWantedSha256, int WantedCrc);
 
 	int UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken);
-	int UnpackExtraServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken);
+	int UnpackExtraServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo);
 
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);

@@ -1206,8 +1206,11 @@ int CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	return i;
 }
 
-void CServer::GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int LastPlayer)
+void CServer::GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int LastClient)
 {
+	if(LastClient >= MAX_CLIENTS)
+		return;
+
 	int PacketsStored = 1;
 	CPacker Packer;
 	CNetChunk Packet;
@@ -1233,7 +1236,7 @@ void CServer::GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int Las
 
 	RESET();
 
-	for(int i = LastPlayer; i < MAX_CLIENTS; i++)
+	for(int i = LastClient; i < MAX_CLIENTS; i++)
 	{
 		int PreviousSize = Packer.Size();
 
@@ -1257,11 +1260,11 @@ void CServer::GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int Las
 void CServer::SendServerInfo(int ClientID)
 {
 	CMsgPacker Msg(NETMSG_SERVERINFO, true);
-	int LastPlayer = GenerateServerInfo(&Msg, -1);
+	int LastClient = GenerateServerInfo(&Msg, -1);
 	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 
 	CNetChunkStore ChunkStore;
-	GenerateExtraServerInfo(&ChunkStore, -1, LastPlayer);
+	GenerateExtraServerInfo(&ChunkStore, -1, LastClient);
 	SendStoredChunks(&ChunkStore, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 }
 
@@ -1288,35 +1291,28 @@ void CServer::PumpNetwork()
 				if(Unpacker.Error())
 					continue;
 
-				const char *Ex = Unpacker.GetString();
 				bool Extended = false;
-				if(!Unpacker.Error() && str_comp(Unpacker.GetString(), "giex"))
+				if(str_comp(Unpacker.GetString(), "giex") && !Unpacker.Error())
 					Extended = true;
 
+				CNetChunkStore ChunkStore;
 				CPacker Packer;
+				int LastClient = GenerateServerInfo(&Packer, SrvBrwsToken);
+
 				CNetChunk Response;
-
-				int LastPlayer = GenerateServerInfo(&Packer, SrvBrwsToken);
-
-				Response.m_ClientID = -1;
-				Response.m_Address = Packet.m_Address;
-				Response.m_Flags = NETSENDFLAG_CONNLESS;
 				Response.m_pData = Packer.Data();
 				Response.m_DataSize = Packer.Size();
-				m_NetServer.Send(&Response, ResponseToken);
+				ChunkStore.Add(&Response);
 
 				if(Extended)
-				{
-					CNetChunkStore ChunkStore;
-					GenerateExtraServerInfo(&ChunkStore, SrvBrwsToken, LastPlayer);
+					GenerateExtraServerInfo(&ChunkStore, SrvBrwsToken, LastClient);
 
-					for(CNetChunk *pChunk = ChunkStore.First(); pChunk; pChunk = ChunkStore.Next())
-					{
-						pChunk->m_ClientID = -1;
-						pChunk->m_Address = Packet.m_Address;
-						pChunk->m_Flags = NETSENDFLAG_CONNLESS;
-						m_NetServer.Send(pChunk, ResponseToken);
-					}
+				for(CNetChunk *pChunk = ChunkStore.First(); pChunk; pChunk = ChunkStore.Next())
+				{
+					pChunk->m_ClientID = -1;
+					pChunk->m_Address = Packet.m_Address;
+					pChunk->m_Flags = NETSENDFLAG_CONNLESS;
+					m_NetServer.Send(pChunk, ResponseToken);
 				}
 			}
 		}

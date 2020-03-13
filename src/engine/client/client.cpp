@@ -961,11 +961,8 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 	return 0;
 }
 
-int CClient::UnpackExtraServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken)
+int CClient::UnpackExtraServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo)
 {
-	dbg_assert(!!pToken, "Extra info packets can't exist without a token");
-
-	*pToken = pUnpacker->GetInt();
 	int PacketNo = pUnpacker->GetInt();
 	if(PacketNo <= 0 || PacketNo >= 64) // packet 0 is reserved
 		return -1;
@@ -1160,10 +1157,16 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		if(!pEntry) // We haven't received the main packet yet
 			return;
 
+		dbg_msg("debug", "got extra info for %s", pEntry->m_Info.m_aHostname);
+
 		CUnpacker Up;
 		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_INFO_PLAYERS), pPacket->m_DataSize-sizeof(SERVERBROWSE_INFO_PLAYERS));
-		int Token, NumNew;
-		if((NumNew = UnpackExtraServerInfo(&Up, &pEntry->m_Info, &Token)) >= 0)
+		int Token = Up.GetInt();
+		if(Up.Error() || Token != pEntry->m_CurrentToken)
+			return;
+
+		int NumNew = -1;
+		if((NumNew = UnpackExtraServerInfo(&Up, &pEntry->m_Info)) >= 0)
 		{
 			SortClients(&pEntry->m_Info); // TODO: std::inplace_merge would be much more efficient here
 		}

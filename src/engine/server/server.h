@@ -251,7 +251,7 @@ public:
 
 	void SendServerInfo(int ClientID);
 	int GenerateServerInfo(CPacker *pPacker, int Token);
-	void GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int LastPlayer);
+	void GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int LastClient);
 
 	void PumpNetwork();
 
