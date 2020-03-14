@@ -1,4 +1,4 @@
-#include "ed_map2.h"
+#include "ed2_map.h"
 #include <zlib.h> // crc32
 #include <engine/console.h>
 #include <engine/storage.h>
