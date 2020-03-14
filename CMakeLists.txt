@@ -1505,8 +1505,10 @@ if(CLIENT)
     auto_map.h
     auto_map2.cpp
     auto_map2.h
-    ed_console.cpp
-    ed_console.h
+    ed_console2.cpp
+    ed_console2.h
+    ed_map2.cpp
+    ed_map2.h
     editor.cpp
     editor.h
     editor2.cpp

@@ -1,5 +1,5 @@
 // LordSk
-#include "ed_console.h"
+#include "ed_console2.h"
 
 #include <engine/console.h>
 #include <engine/graphics.h>
