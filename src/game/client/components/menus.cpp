@@ -657,7 +657,8 @@ void CMenus::DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pR
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Label, ScrollBar;
-	pRect->VSplitRight(60.0f, &Label, &ScrollBar);
+	pRect->VSplitLeft(5.0f, 0, &Label);
+	Label.VSplitRight(60.0f, &Label, &ScrollBar);
 	
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
@@ -855,7 +856,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
 	// layout
 	CUIRect Handle;
-	pRect->VSplitLeft(min(pRect->w/8.0f, 33.0f), &Handle, 0);
+	pRect->VSplitLeft(max(min(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
 	Handle.x += (pRect->w-Handle.w)*Current;
 	Handle.HMargin(5.0f, &Handle);
 
