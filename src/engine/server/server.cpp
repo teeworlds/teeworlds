@@ -1305,7 +1305,7 @@ void CServer::PumpNetwork()
 					continue;
 
 				bool Extended = false;
-				if(!str_comp(Unpacker.GetString(), "giex") && !Unpacker.Error())
+				if(!str_comp(Unpacker.GetString(), SERVERBROWSE_GETINFO_EX) && !Unpacker.Error())
 					Extended = true;
 
 				CNetChunkStore ChunkStore;
