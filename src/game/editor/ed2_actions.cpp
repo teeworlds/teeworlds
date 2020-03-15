@@ -180,8 +180,7 @@ int CEditor2::EditCreateAndAddTileLayerUnder(int UnderLyID, int GroupID)
 	Layer.m_ImageID = LyImageID;
 
 	const int GrpLyID = UnderGrpLyID+1;
-	memmove(&Group.m_apLayerIDs[GrpLyID+1], &Group.m_apLayerIDs[GrpLyID],
-		(Group.m_LayerCount-GrpLyID) * sizeof(Group.m_apLayerIDs[0]));
+	mem_move(&Group.m_apLayerIDs[GrpLyID+1], &Group.m_apLayerIDs[GrpLyID], (Group.m_LayerCount-GrpLyID) * sizeof(Group.m_apLayerIDs[0]));
 
 	Group.m_apLayerIDs[GrpLyID] = NewLyID;
 	Group.m_LayerCount++;

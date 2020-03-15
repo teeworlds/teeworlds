@@ -28,7 +28,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 {
 	enum
 	{
-		MAX_HISTORY=1024,
+		MAX_HISTORY = 1024,
 	};
 
 	IClient *m_pClient;
@@ -67,14 +67,25 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	CUIRect m_UiScreenRect;
 	CUIRect m_UiMainViewRect;
-	array2<u8> m_UiGroupOpen;
-	array2<u8> m_UiGroupHidden;
-	array2<u8> m_UiGroupHovered;
-	array2<u8> m_UiLayerHovered;
-	array2<u8> m_UiLayerHidden;
 	int m_UiSelectedLayerID;
 	int m_UiSelectedGroupID;
 	int m_UiSelectedImageID;
+
+	struct CGroupUiState
+	{
+		u8 m_IsOpen;
+		u8 m_IsHidden;
+		u8 m_IsHovered;
+	};
+
+	struct CLayerUiState
+	{
+		u8 m_IsHidden;
+		u8 m_IsHovered;
+	};
+
+	CPlainArray<CGroupUiState,CEditorMap2::MAX_GROUPS> m_UiGroupState;
+	CPlainArray<CLayerUiState,CEditorMap2::MAX_LAYERS> m_UiLayerState;
 
 	enum
 	{

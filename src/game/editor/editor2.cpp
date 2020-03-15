@@ -581,7 +581,7 @@ void CEditor2::RenderMap()
 		const u32 GroupID = GroupIDList[gi];
 		const CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(GroupID);
 
-		if(m_UiGroupHidden[GroupID])
+		if(m_UiGroupState[GroupID].m_IsHidden)
 			continue;
 
 		// group clip
@@ -625,7 +625,7 @@ void CEditor2::RenderMap()
 		for(int li = 0; li < LayerCount; li++)
 		{
 			const int LyID = Group.m_apLayerIDs[li];
-			if(m_UiLayerHidden[LyID])
+			if(m_UiLayerState[LyID].m_IsHidden)
 				continue;
 
 			const CEditorMap2::CLayer& Layer = m_Map.m_aLayers.Get(LyID);
@@ -644,7 +644,7 @@ void CEditor2::RenderMap()
 					continue;
 				}
 
-				if(m_UiGroupHovered[GroupID] || m_UiLayerHovered[LyID])
+				if(m_UiGroupState[GroupID].m_IsHovered || m_UiLayerState[LyID].m_IsHovered)
 					LyColor = vec4(1, 0, 1, 1);
 
 				/*if(SelectedLayerID >= 0 && SelectedLayerID != LyID)
@@ -675,7 +675,7 @@ void CEditor2::RenderMap()
 					Graphics()->TextureSet(m_Map.m_Assets.m_aTextureHandle[Layer.m_ImageID]);
 
 				Graphics()->BlendNormal();
-				if(m_UiGroupHovered[gi] || m_UiLayerHovered[LyID])
+				if(m_UiGroupState[GroupID].m_IsHovered || m_UiLayerState[LyID].m_IsHovered)
 					Graphics()->BlendAdditive();
 
 				RenderTools()->RenderQuads(Layer.m_aQuads.base_ptr(), Layer.m_aQuads.size(),
@@ -689,7 +689,7 @@ void CEditor2::RenderMap()
 
 	// game layer
 	const int LyID = m_Map.m_GameLayerID;
-	if(!m_ConfigShowGameEntities && !m_UiLayerHidden[LyID] && !m_UiGroupHidden[m_Map.m_GameGroupID])
+	if(!m_ConfigShowGameEntities && !m_UiLayerState[LyID].m_IsHidden && !m_UiGroupState[m_Map.m_GameGroupID].m_IsHidden)
 	{
 		const vec2 MapOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight, 0, 0, 1, 1);
 		CUIRect ScreenRect = { MapOff.x, MapOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
@@ -1572,12 +1572,6 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	ArraySetSizeAndZero(&s_UiLayerButState, TotalLayerCount); // FIXME: can LayerID (m_aLayers.Get(LayerId)) be >= TotalLayerCount? This is probably a bad way of tracking button/other state.
 	ArraySetSizeAndZero(&s_UiLayerShowButState, TotalLayerCount);
 
-	ArraySetSizeAndZero(&m_UiGroupOpen, TotalGroupCount);
-	ArraySetSizeAndZero(&m_UiGroupHidden, TotalGroupCount);
-	ArraySetSizeAndZero(&m_UiGroupHovered, TotalGroupCount);
-	ArraySetSizeAndZero(&m_UiLayerHovered, TotalLayerCount);
-	ArraySetSizeAndZero(&m_UiLayerHidden, TotalLayerCount);
-
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOff(0, 0);
 	UiBeginScrollRegion(&s_ScrollRegion, &NavRect, &ScrollOff);
@@ -1619,7 +1613,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		// check whole line for hover
 		CUIButton WholeLineState;
 		UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
-		m_UiGroupHovered[GroupID] = WholeLineState.m_Hovered;
+		m_UiGroupState[GroupID].m_IsHovered = WholeLineState.m_Hovered;
 
 		// drag started on this item
 		if(StartedMouseDragging && WholeLineState.m_Hovered)
@@ -1640,9 +1634,9 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		UiDoButtonBehavior(&ShowButState, ShowButton, &ShowButState);
 
 		if(ShowButState.m_Clicked)
-			m_UiGroupHidden[GroupID] ^= 1;
+			m_UiGroupState[GroupID].m_IsHidden ^= 1;
 
-		const bool IsShown = !m_UiGroupHidden[GroupID];
+		const bool IsShown = !m_UiGroupState[GroupID].m_IsHidden;
 
 		vec4 ShowButColor = StyleColorButton;
 		if(ShowButState.m_Hovered)
@@ -1660,7 +1654,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		if(ButState.m_Clicked)
 		{
 			if(m_UiSelectedGroupID == GroupID)
-				m_UiGroupOpen[GroupID] ^= 1;
+				m_UiGroupState[GroupID].m_IsOpen ^= 1;
 
 			m_UiSelectedGroupID = GroupID;
 			if(Group.m_LayerCount > 0)
@@ -1670,7 +1664,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		}
 
 		const bool IsSelected = m_UiSelectedGroupID == GroupID;
-		const bool IsOpen = m_UiGroupOpen[GroupID];
+		const bool IsOpen = m_UiGroupState[GroupID].m_IsOpen;
 
 		vec4 ButColor = StyleColorButton;
 		if(ButState.m_Hovered)
@@ -1694,7 +1688,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			str_format(aGroupName, sizeof(aGroupName), "Group #%d", gi);
 		DrawText(ButtonRect, aGroupName, FontSize);
 
-		if(m_UiGroupOpen[GroupID])
+		if(m_UiGroupState[GroupID].m_IsOpen)
 		{
 			const int LayerCount = Group.m_LayerCount;
 
@@ -1712,7 +1706,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				// check whole line for hover
 				CUIButton WholeLineState;
 				UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
-				m_UiLayerHovered[LyID] = WholeLineState.m_Hovered;
+				m_UiLayerState[LyID].m_IsHovered = WholeLineState.m_Hovered;
 
 				// drag started on this item
 				if(StartedMouseDragging && WholeLineState.m_Hovered)
@@ -1732,9 +1726,9 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				UiDoButtonBehavior(&ShowButState, ShowButton, &ShowButState);
 
 				if(ShowButState.m_Clicked)
-					m_UiLayerHidden[LyID] ^= 1;
+					m_UiLayerState[LyID].m_IsHidden ^= 1;
 
-				const bool IsShown = !m_UiLayerHidden[LyID];
+				const bool IsShown = !m_UiLayerState[LyID].m_IsHovered;
 
 				vec4 ShowButColor = StyleColorButton;
 				if(ShowButState.m_Hovered)
@@ -1910,7 +1904,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			if(DragMoveGroupListIndex != -1)
 			{
 				int NewGroupListIndex = EditGroupOrderMove(DragMoveGroupListIndex,  DragMoveDir < 0 ? -1 : 1);
-				m_UiGroupOpen[m_Map.m_aGroupIDList[NewGroupListIndex]] = true;
+				m_UiGroupState[m_Map.m_aGroupIDList[NewGroupListIndex]].m_IsOpen = true;
 
 				if((int)m_Map.m_aGroupIDList[DragMoveGroupListIndex] == m_UiSelectedGroupID && NewGroupListIndex != DragMoveGroupListIndex)
 				{
@@ -1921,7 +1915,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			else if(DragMoveLayerListIndex != -1)
 			{
 				int NewGroupListIndex = EditLayerOrderMove(DragMoveParentGroupListIndex, DragMoveLayerListIndex, DragMoveDir < 0 ? -1 : 1);
-				m_UiGroupOpen[m_Map.m_aGroupIDList[NewGroupListIndex]] = true;
+				m_UiGroupState[m_Map.m_aGroupIDList[NewGroupListIndex]].m_IsOpen = true;
 			}
 		}
 	}
@@ -3277,12 +3271,9 @@ void CEditor2::OnMapLoaded()
 {
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
-	mem_zero(m_UiGroupHidden.base_ptr(), sizeof(m_UiGroupHidden[0]) * m_UiGroupHidden.size());
-	m_UiGroupOpen.set_size(m_Map.m_aGroups.Count());
-	mem_zero(m_UiGroupOpen.base_ptr(), sizeof(m_UiGroupOpen[0]) * m_UiGroupOpen.size());
-	m_UiGroupOpen[m_Map.m_GameGroupID] = true;
-	mem_zero(m_UiLayerHidden.base_ptr(), sizeof(m_UiLayerHidden[0]) * m_UiLayerHidden.size());
-	mem_zero(m_UiLayerHovered.base_ptr(), sizeof(m_UiLayerHovered[0]) * m_UiLayerHovered.size());
+	mem_zero(m_UiGroupState.data, sizeof(m_UiGroupState.data));
+	mem_zero(m_UiLayerState.data, sizeof(m_UiLayerState.data));
+	m_UiGroupState[m_Map.m_GameGroupID].m_IsOpen = true;
 	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
 	ResetCamera();
 	BrushClear();
@@ -3315,14 +3306,6 @@ void CEditor2::OnMapLoaded()
 	m_pHistoryEntryCurrent->m_pUiSnap = SaveUiSnapshot();
 	m_pHistoryEntryCurrent->SetAction("Map loaded");
 	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
-
-	const int TotalGroupCount = m_Map.m_aGroups.Count();
-	const int TotalLayerCount = m_Map.m_aLayers.Count();
-	ArraySetSizeAndZero(&m_UiGroupOpen, TotalGroupCount);
-	ArraySetSizeAndZero(&m_UiGroupHidden, TotalGroupCount);
-	ArraySetSizeAndZero(&m_UiGroupHovered, TotalGroupCount);
-	ArraySetSizeAndZero(&m_UiLayerHovered, TotalLayerCount);
-	ArraySetSizeAndZero(&m_UiLayerHidden, TotalLayerCount);
 }
 
 void CEditor2::HistoryClear()

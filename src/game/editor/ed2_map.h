@@ -19,6 +19,7 @@ struct CEditorMap2
 		MAX_IMAGES=128,
 		MAX_GROUP_LAYERS=64,
 		MAX_GROUPS=128,
+		MAX_LAYERS=1024,
 		MAX_IMAGE_NAME_LEN=64,
 		MAX_EMBEDDED_FILES=64,
 	};
@@ -165,8 +166,8 @@ struct CEditorMap2
 	char m_aPath[256];
 
 	array2<CEnvPoint> m_aEnvPoints;
-	CSparseArray<CLayer,1024> m_aLayers;
-	CSparseArray<CGroup,256> m_aGroups;
+	CSparseArray<CLayer,MAX_LAYERS> m_aLayers;
+	CSparseArray<CGroup,MAX_GROUPS> m_aGroups;
 	array2<CMapItemEnvelope> m_aEnvelopes;
 
 	u32 m_aGroupIDList[MAX_GROUPS];

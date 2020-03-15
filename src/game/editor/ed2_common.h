@@ -208,6 +208,24 @@ struct CSparseArray
 	}
 };
 
+template<typename T, u32 COUNT_>
+struct CPlainArray
+{
+	enum {
+		CAPACITY = COUNT_
+	};
+
+	T data[CAPACITY];
+
+	inline T& operator [] (u32 ID)
+	{
+#ifdef CONF_DEBUG
+		dbg_assert(ID < CAPACITY, "Index out of bounds");
+#endif
+		return data[ID];
+	}
+};
+
 #define ARR_COUNT(arr) (sizeof(arr)/sizeof(arr[0]))
 
 inline float fract(float f)
