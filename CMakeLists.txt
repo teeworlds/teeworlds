@@ -1505,6 +1505,7 @@ if(CLIENT)
     auto_map.h
     auto_map2.cpp
     auto_map2.h
+    ed2_actions.cpp
     ed2_common.h
     ed2_console.cpp
     ed2_console.h
