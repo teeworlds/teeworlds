@@ -1462,16 +1462,16 @@ void CChat::HandleCommands(float x, float y, float w)
 							break; // ill-formed
 						}
 
-						if(Optional)
-						{
-							str_format(aBuf, sizeof(aBuf), "[%s] ", pDesc);
-						}
-						else
-						{
-							str_format(aBuf, sizeof(aBuf), "<%s> ", pDesc);
-						}
-
 						c++;
+					}
+
+					if(Optional)
+					{
+						str_format(aBuf, sizeof(aBuf), "[%s] ", pDesc);
+					}
+					else
+					{
+						str_format(aBuf, sizeof(aBuf), "<%s> ", pDesc);
 					}
 					c = str_skip_whitespaces_const(c);
 					TextRender()->TextEx(&Cursor, aBuf, -1);
