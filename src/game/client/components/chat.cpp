@@ -979,7 +979,7 @@ void CChat::OnRender()
 				TextRender()->SetCursor(&InfoCursor, 2.0f, y+12.0f, CategoryFontSize*0.75, TEXTFLAG_RENDER);
 
 				char aInfoText[128];
-				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients"));
+				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients. Whispers aren't encrypted and might be logged by the server."));
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
 				TextRender()->TextEx(&InfoCursor, aInfoText, -1);
 			}
