@@ -13,7 +13,7 @@ public:
     public:
         char m_aName[16];
         char m_aHelpText[64];
-        char m_aArgsFormat[16];
+        char m_aArgsFormat[64];
 
         IConsole::FCommandCallback m_pfnCallback;
         void *m_pContext;

@@ -162,7 +162,7 @@ void CVoting::OnStateChange(int NewState, int OldState)
 
 void CVoting::OnConsoleInit()
 {
-	Console()->Register("vote", "r", CFGFLAG_CLIENT, ConVote, this, "Vote yes/no");
+	Console()->Register("vote", "r['yes'|'no']", CFGFLAG_CLIENT, ConVote, this, "Vote yes/no");
 }
 
 void CVoting::OnMessage(int MsgType, void *pRawMsg)
@@ -350,5 +350,3 @@ void CVoting::RenderBars(CUIRect Bars, bool Text)
 		}
 	}
 }
-
-
