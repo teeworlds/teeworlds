@@ -252,6 +252,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void ChangePage(int Page);
 	void ChangeTool(int Tool);
 	void SelectLayerBelowCurrentOne();
+	void SelectGroupBelowCurrentOne();
 
 	void SetNewBrush(CTile* aTiles, int Width, int Height);
 	void BrushClear();

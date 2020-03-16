@@ -539,9 +539,9 @@ void CEditor2::RenderMap()
 	float SelectedPositionX = 0;
 	float SelectedPositionY = 0;
 	const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
-	const int SelectedGroupID = m_UiSelectedLayerID != -1 ? m_UiSelectedGroupID : m_Map.m_GameGroupID;
-	dbg_assert(SelectedLayerID >= 0, "No layer selected");
-	dbg_assert(SelectedGroupID >= 0, "Parent group of selected layer not found");
+	const int SelectedGroupID = m_UiSelectedGroupID != -1 ? m_UiSelectedGroupID : m_Map.m_GameGroupID;
+	dbg_assert(m_Map.m_aLayers.IsValid(SelectedLayerID), "No layer selected");
+	dbg_assert(m_Map.m_aGroups.IsValid(SelectedGroupID), "Parent group of selected layer not found");
 	const CEditorMap2::CLayer& SelectedLayer = m_Map.m_aLayers.Get(SelectedLayerID);
 	const CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups.Get(SelectedGroupID);
 	SelectedParallaxX = SelectedGroup.m_ParallaxX / 100.f;
@@ -1865,9 +1865,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		vec4(0.96f, 0.16f, 0.16f, 1), vec4(0.31f, 0, 0, 1), vec4(0.63f, 0.035f, 0.035f, 1), 10) && !IsGameGroup)
 	{
 		int ToDeleteID = m_UiSelectedGroupID;
-		// TODO: select group below
-		m_UiSelectedGroupID = m_Map.m_GameGroupID;
-		m_UiSelectedLayerID = m_Map.m_GameLayerID;
+		SelectGroupBelowCurrentOne();
 		EditDeleteGroup(ToDeleteID);
 	}
 
@@ -3012,6 +3010,37 @@ void CEditor2::SelectLayerBelowCurrentOne()
 	dbg_assert(m_Map.m_aGroups.IsValid(m_UiSelectedGroupID), "m_UiSelectedGroupID is invalid");
 }
 
+void CEditor2::SelectGroupBelowCurrentOne()
+{
+	dbg_assert(m_Map.m_aGroups.IsValid(m_UiSelectedGroupID), "m_UiSelectedGroupID is invalid");
+
+	int GroupPos = -1;
+	const int Count = m_Map.m_GroupIDListCount;
+	for(int i = 0; i < Count; i++)
+	{
+		if(m_Map.m_aGroupIDList[i] == (u32)m_UiSelectedGroupID)
+		{
+			GroupPos = i;
+			break;
+		}
+	}
+
+	dbg_assert(GroupPos != -1, "m_UiSelectedGroupID not found in m_Map.m_aGroupIDList");
+
+	m_UiSelectedGroupID = m_Map.m_aGroupIDList[(GroupPos+1) % Count];
+	const CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(m_UiSelectedGroupID);
+	if(Group.m_LayerCount > 0) {
+		m_UiSelectedLayerID = Group.m_apLayerIDs[0];
+		dbg_assert(m_Map.m_aLayers.IsValid(m_UiSelectedLayerID), "m_UiSelectedLayerID is invalid");
+	}
+	else {
+		m_UiSelectedLayerID = -1;
+	}
+
+	// slightly overkill
+	dbg_assert(m_Map.m_aGroups.IsValid(m_UiSelectedGroupID), "m_UiSelectedGroupID is invalid");
+}
+
 void CEditor2::SetNewBrush(CTile* aTiles, int Width, int Height)
 {
 	dbg_assert(Width > 0 && Height > 0, "Brush: wrong dimensions");
@@ -3407,7 +3436,7 @@ void CEditor2::RestoreUiSnapshot(CUISnapshot* pUiSnap)
 {
 	m_UiSelectedLayerID = pUiSnap->m_SelectedLayerID;
 	m_UiSelectedGroupID = pUiSnap->m_SelectedGroupID;
-	dbg_assert(m_Map.m_aLayers.IsValid(m_UiSelectedLayerID), "Selected layer is invalid");
+	dbg_assert(m_UiSelectedLayerID == -1 || m_Map.m_aLayers.IsValid(m_UiSelectedLayerID), "Selected layer is invalid");
 	dbg_assert(m_Map.m_aGroups.IsValid(m_UiSelectedGroupID), "Selected group is invalid");
 	m_Tool = pUiSnap->m_ToolID;
 	BrushClear(); // TODO: save brush?
