@@ -2946,6 +2946,8 @@ void CEditor2::ResetCamera()
 
 void CEditor2::ChangeZoom(float Zoom)
 {
+	Zoom = clamp(Zoom, 0.2f, 5.f);
+
 	// zoom centered on mouse
 	const float WorldWidth = m_ZoomWorldViewWidth/m_Zoom;
 	const float WorldHeight = m_ZoomWorldViewHeight/m_Zoom;
