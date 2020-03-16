@@ -2986,7 +2986,7 @@ void CEditor2::SelectLayerBelowCurrentOne()
 
 	const CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(m_UiSelectedGroupID);
 	int LayerPos = -1;
-	for(int i = 0; i < (Group.m_LayerCount-1); i++)
+	for(int i = 0; i < Group.m_LayerCount; i++)
 	{
 		if(Group.m_apLayerIDs[i] == m_UiSelectedLayerID)
 		{
@@ -2995,18 +2995,17 @@ void CEditor2::SelectLayerBelowCurrentOne()
 		}
 	}
 
-	if(LayerPos != -1)
-	{
-		m_UiSelectedLayerID = Group.m_apLayerIDs[LayerPos+1];
+	dbg_assert(LayerPos != -1, "m_UiSelectedLayerID not found in selected group");
+
+	if(Group.m_LayerCount > 1) {
+		m_UiSelectedLayerID = Group.m_apLayerIDs[(LayerPos+1) % Group.m_LayerCount];
+		dbg_assert(m_Map.m_aLayers.IsValid(m_UiSelectedLayerID), "m_UiSelectedLayerID is invalid");
 	}
-	else
-	{
-		m_UiSelectedLayerID = m_Map.m_GameLayerID;
-		m_UiSelectedGroupID = m_Map.m_GameGroupID;
+	else {
+		m_UiSelectedLayerID = -1;
 	}
 
 	// slightly overkill
-	dbg_assert(m_Map.m_aLayers.IsValid(m_UiSelectedLayerID), "m_UiSelectedLayerID is invalid");
 	dbg_assert(m_Map.m_aGroups.IsValid(m_UiSelectedGroupID), "m_UiSelectedGroupID is invalid");
 }
 
