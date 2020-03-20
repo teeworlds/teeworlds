@@ -236,6 +236,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderMapEditorUI();
 	void RenderTopPanel(CUIRect TopPanel);
 	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
+	void RenderHistory(CUIRect NavRect);
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
 	void RenderPopupMenuFile();
 	void RenderPopupBrushPalette();

@@ -1104,63 +1104,7 @@ void CEditor2::RenderMapEditorUI()
 	}
 	else if(s_CurrentTab == TAB_HISTORY)
 	{
-		static CScrollRegion s_ScrollRegion;
-		vec2 ScrollOff(0, 0);
-		UiBeginScrollRegion(&s_ScrollRegion, &NavRect, &ScrollOff);
-		NavRect.y += ScrollOff.y;
-
-		CHistoryEntry* pFirstEntry = m_pHistoryEntryCurrent;
-		while(pFirstEntry->m_pPrev)
-			pFirstEntry = pFirstEntry->m_pPrev;
-
-		static CUIButton s_ButEntry[50];
-		const float ButtonHeight = 20.0f;
-		const float Spacing = 2.0f;
-
-		CHistoryEntry* pCurrentEntry = pFirstEntry;
-		int i = 0;
-		while(pCurrentEntry)
-		{
-			NavRect.HSplitTop(ButtonHeight*2, &ButtonRect, &NavRect);
-			NavRect.HSplitTop(Spacing, 0, &NavRect);
-			UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
-
-			// somewhat hacky
-			CUIButton& ButState = s_ButEntry[i % (sizeof(s_ButEntry)/sizeof(s_ButEntry[0]))];
-			UiDoButtonBehavior(pCurrentEntry, ButtonRect, &ButState);
-
-			// clickety click, restore to this entry
-			if(ButState.m_Clicked && pCurrentEntry != m_pHistoryEntryCurrent)
-			{
-				HistoryRestoreToEntry(pCurrentEntry);
-			}
-
-			vec4 ColorButton = StyleColorButton;
-			if(ButState.m_Pressed)
-				ColorButton = StyleColorButtonPressed;
-			else if(ButState.m_Hovered)
-				ColorButton = StyleColorButtonHover;
-
-			vec4 ColorBorder = StyleColorButtonBorder;
-			if(pCurrentEntry == m_pHistoryEntryCurrent)
-				ColorBorder = vec4(1, 0, 0, 1);
-			DrawRectBorder(ButtonRect, ColorButton, 1, ColorBorder);
-
-			CUIRect ButTopRect, ButBotRect;
-			ButtonRect.HSplitMid(&ButTopRect, &ButBotRect);
-
-			DrawText(ButTopRect, pCurrentEntry->m_aActionStr, 8.0f, vec4(1, 1, 1, 1));
-			DrawText(ButBotRect, pCurrentEntry->m_aDescStr, 8.0f, vec4(0, 0.5, 1, 1));
-
-			pCurrentEntry = pCurrentEntry->m_pNext;
-			i++;
-		}
-
-		// some padding at the end
-		NavRect.HSplitTop(10, &ButtonRect, &NavRect);
-		UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
-
-		UiEndScrollRegion(&s_ScrollRegion);
+		RenderHistory(NavRect);
 	}
 
 	// detail panel
@@ -1917,6 +1861,69 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			}
 		}
 	}
+}
+
+void CEditor2::RenderHistory(CUIRect NavRect)
+{
+	CUIRect ButtonRect;
+
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOff(0, 0);
+	UiBeginScrollRegion(&s_ScrollRegion, &NavRect, &ScrollOff);
+	NavRect.y += ScrollOff.y;
+
+	CHistoryEntry* pFirstEntry = m_pHistoryEntryCurrent;
+	while(pFirstEntry->m_pPrev)
+		pFirstEntry = pFirstEntry->m_pPrev;
+
+	static CUIButton s_ButEntry[50];
+	const float ButtonHeight = 20.0f;
+	const float Spacing = 2.0f;
+
+	CHistoryEntry* pCurrentEntry = pFirstEntry;
+	int i = 0;
+	while(pCurrentEntry)
+	{
+		NavRect.HSplitTop(ButtonHeight*2, &ButtonRect, &NavRect);
+		NavRect.HSplitTop(Spacing, 0, &NavRect);
+		//UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
+
+		// somewhat hacky
+		CUIButton& ButState = s_ButEntry[i % (sizeof(s_ButEntry)/sizeof(s_ButEntry[0]))];
+		UiDoButtonBehavior(pCurrentEntry, ButtonRect, &ButState);
+
+		// clickety click, restore to this entry
+		if(ButState.m_Clicked && pCurrentEntry != m_pHistoryEntryCurrent)
+		{
+			HistoryRestoreToEntry(pCurrentEntry);
+		}
+
+		vec4 ColorButton = StyleColorButton;
+		if(ButState.m_Pressed)
+			ColorButton = StyleColorButtonPressed;
+		else if(ButState.m_Hovered)
+			ColorButton = StyleColorButtonHover;
+
+		vec4 ColorBorder = StyleColorButtonBorder;
+		if(pCurrentEntry == m_pHistoryEntryCurrent)
+			ColorBorder = vec4(1, 0, 0, 1);
+		DrawRectBorder(ButtonRect, ColorButton, 1, ColorBorder);
+
+		CUIRect ButTopRect, ButBotRect;
+		ButtonRect.HSplitMid(&ButTopRect, &ButBotRect);
+
+		DrawText(ButTopRect, pCurrentEntry->m_aActionStr, 8.0f, vec4(1, 1, 1, 1));
+		DrawText(ButBotRect, pCurrentEntry->m_aDescStr, 8.0f, vec4(0, 0.5, 1, 1));
+
+		pCurrentEntry = pCurrentEntry->m_pNext;
+		i++;
+	}
+
+	// some padding at the end
+	NavRect.HSplitTop(10, &ButtonRect, &NavRect);
+	UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
+
+	UiEndScrollRegion(&s_ScrollRegion);
 }
 
 void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
