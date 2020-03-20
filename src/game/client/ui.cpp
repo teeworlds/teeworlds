@@ -128,7 +128,7 @@ void CUI::UpdateClipping()
 		const CUIRect *pRect = ClipArea();
 		const float XScale = Graphics()->ScreenWidth()/Screen()->w;
 		const float YScale = Graphics()->ScreenHeight()/Screen()->h;
-		Graphics()->ClipEnable((int)(pRect->x*XScale), (int)(pRect->y*YScale), (int)(pRect->w*XScale), (int)(pRect->h*YScale));
+		Graphics()->ClipEnable((int)(pRect->x*XScale), (int)(pRect->y*YScale), (int)ceilf(pRect->w*XScale), (int)ceilf(pRect->h*YScale));
 	}
 	else
 	{
