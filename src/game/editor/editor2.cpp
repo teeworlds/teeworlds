@@ -3314,16 +3314,14 @@ void CEditor2::OnMapLoaded()
 		CHistoryEntry* pCurrent = m_pHistoryEntryCurrent->m_pNext;
 		while(pCurrent)
 		{
-			mem_free(pCurrent->m_pSnap);
-			mem_free(pCurrent->m_pUiSnap); // TODO: make a HistoryDeleteEntry function
+			HistoryDeleteEntry(pCurrent);
 			pCurrent = pCurrent->m_pNext;
 		}
 
 		pCurrent = m_pHistoryEntryCurrent;
 		while(pCurrent)
 		{
-			mem_free(pCurrent->m_pSnap);
-			mem_free(pCurrent->m_pUiSnap); // TODO: make a HistoryDeleteEntry function
+			HistoryDeleteEntry(pCurrent);
 			pCurrent = pCurrent->m_pPrev;
 		}
 		HistoryClear();
@@ -3420,6 +3418,12 @@ void CEditor2::HistoryRedo()
 	dbg_assert(m_pHistoryEntryCurrent != 0x0, "Current history entry is null");
 	if(m_pHistoryEntryCurrent->m_pNext)
 		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pNext);
+}
+
+void CEditor2::HistoryDeleteEntry(CEditor2::CHistoryEntry* pEntry)
+{
+	mem_free(pEntry->m_pSnap);
+	mem_free(pEntry->m_pUiSnap);
 }
 
 CEditor2::CUISnapshot* CEditor2::SaveUiSnapshot()
