@@ -190,3 +190,5 @@ const vec4 StyleColorInputSelected(0,0.2f,1,1);
 const vec4 StyleColorTileSelection(0.0, 0.31f, 1, 0.4f);
 const vec4 StyleColorTileHover(1, 1, 1, 0.25f);
 const vec4 StyleColorTileHoverBorder(0.0, 0.31f, 1, 1);
+
+const float MenuBarHeight = 20;

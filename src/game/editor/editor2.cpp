@@ -138,6 +138,8 @@ void CEditor2::Init()
 	HistoryClear();
 	m_pHistoryEntryCurrent = 0x0;
 
+	ResetCamera();
+
 	/*
 	m_Map.LoadDefault();
 	OnMapLoaded();
@@ -585,11 +587,9 @@ void CEditor2::RenderMap()
 			continue;
 
 		// group clip
-		const vec2 ClipOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight,
-			0, 0, 1, 1);
+		const vec2 ClipOff = CalcGroupScreenOffset(ZoomWorldViewWidth, ZoomWorldViewHeight, 0, 0, 1, 1);
 		const CUIRect ClipScreenRect = { ClipOff.x, ClipOff.y, ZoomWorldViewWidth, ZoomWorldViewHeight };
-		Graphics()->MapScreen(ClipScreenRect.x, ClipScreenRect.y, ClipScreenRect.x+ClipScreenRect.w,
-			ClipScreenRect.y+ClipScreenRect.h);
+		Graphics()->MapScreen(ClipScreenRect.x, ClipScreenRect.y, ClipScreenRect.x+ClipScreenRect.w, ClipScreenRect.y+ClipScreenRect.h);
 
 		const bool Clipped = Group.m_UseClipping && Group.m_ClipWidth > 0 && Group.m_ClipHeight > 0;
 		if(Clipped)
@@ -757,8 +757,7 @@ void CEditor2::RenderMap()
 				const bool MajorLine = (int)(x/TileSize)%10 == 0 && m_ConfigShowGridMajor;
 				if(MajorLine)
 				{
-					Graphics()->SetColor(0.5f * GridAlpha, 0.5f * GridAlpha, 1.0f * GridAlpha,
-						GridAlpha);
+					Graphics()->SetColor(0.5f * GridAlpha, 0.5f * GridAlpha, 1.0f * GridAlpha, GridAlpha);
 				}
 
 				IGraphics::CQuadItem Line(x, SelectedScreenOff.y, bw, ZoomWorldViewHeight);
@@ -774,8 +773,7 @@ void CEditor2::RenderMap()
 				const bool MajorLine = (int)(y/TileSize)%10 == 0 && m_ConfigShowGridMajor;
 				if(MajorLine)
 				{
-					Graphics()->SetColor(1.0f * GridAlpha*2.0f, 1.0f * GridAlpha*2.0f, 1.0f * GridAlpha*2.0f,
-						GridAlpha*2.0f);
+					Graphics()->SetColor(1.0f * GridAlpha*2.0f, 1.0f * GridAlpha*2.0f, 1.0f * GridAlpha*2.0f, GridAlpha*2.0f);
 				}
 
 				IGraphics::CQuadItem Line(SelectedScreenOff.x, y, ZoomWorldViewWidth, bh);
@@ -1002,7 +1000,7 @@ void CEditor2::RenderMapOverlay()
 	}
 }
 
-void CEditor2::RenderTopPanel(CUIRect TopPanel)
+void CEditor2::RenderMenuBar(CUIRect TopPanel)
 {
 	DrawRect(TopPanel, StyleColorBg);
 
@@ -1065,9 +1063,9 @@ void CEditor2::RenderMapEditorUI()
 
 	CUIRect TopPanel, RightPanel, DetailPanel, ToolColumnRect;
 	UiScreenRect.VSplitRight(150.0f, &m_UiMainViewRect, &RightPanel);
-	m_UiMainViewRect.HSplitTop(20.0f, &TopPanel, &m_UiMainViewRect);
+	m_UiMainViewRect.HSplitTop(MenuBarHeight, &TopPanel, &m_UiMainViewRect);
 
-	RenderTopPanel(TopPanel);
+	RenderMenuBar(TopPanel);
 
 	DrawRect(RightPanel, StyleColorBg);
 
@@ -2794,7 +2792,7 @@ void CEditor2::RenderAssetManager()
 
 	CUIRect TopPanel, RightPanel, MainViewRect;
 	UiScreenRect.VSplitRight(150.0f, &MainViewRect, &RightPanel);
-	MainViewRect.HSplitTop(20.0f, &TopPanel, &MainViewRect);
+	MainViewRect.HSplitTop(MenuBarHeight, &TopPanel, &MainViewRect);
 
 	DrawRect(RightPanel, StyleColorBg);
 
@@ -2936,7 +2934,7 @@ void CEditor2::RenderAssetManager()
 	if(m_UiSelectedImageID >= Assets.m_ImageCount)
 		m_UiSelectedImageID = -1;
 
-	RenderTopPanel(TopPanel);
+	RenderMenuBar(TopPanel);
 }
 
 void CEditor2::Reset()
@@ -2948,7 +2946,7 @@ void CEditor2::Reset()
 void CEditor2::ResetCamera()
 {
 	m_Zoom = 1;
-	m_MapUiPosOffset = vec2(0,0);
+	m_MapUiPosOffset = vec2(0,-MenuBarHeight);
 }
 
 void CEditor2::ChangeZoom(float Zoom)

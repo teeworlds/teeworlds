@@ -234,7 +234,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderMap();
 	void RenderMapOverlay();
 	void RenderMapEditorUI();
-	void RenderTopPanel(CUIRect TopPanel);
+	void RenderMenuBar(CUIRect TopPanel);
 	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
 	void RenderHistory(CUIRect NavRect);
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
