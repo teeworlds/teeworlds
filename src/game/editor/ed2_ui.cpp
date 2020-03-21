@@ -164,18 +164,11 @@ void CEditor2Ui::DrawText(const CUIRect& Rect, const char* pText, float FontSize
 	TextRender()->TextShadowed(&Cursor, pText, -1, vec2(0,0), vec4(0,0,0,0), Color);
 }
 
-void CEditor2Ui::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState)
+void CEditor2Ui::UiDoButtonBehaviorNoID(const CUIRect& Rect, CUIButton* pButState)
 {
 	pButState->m_Clicked = false;
-
-	if(UI()->CheckActiveItem(pID))
-	{
-		if(!UI()->MouseButton(0))
-		{
-			pButState->m_Clicked = true;
-			UI()->SetActiveItem(0);
-		}
-	}
+	if(pButState->m_Pressed && !UI()->MouseButton(0))
+		pButState->m_Clicked = true;
 
 	pButState->m_Hovered = false;
 	pButState->m_Pressed = false;
@@ -183,32 +176,64 @@ void CEditor2Ui::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIBut
 	if(UI()->MouseInside(&Rect) && UI()->MouseInsideClip())
 	{
 		pButState->m_Hovered = true;
-		if(pID)
-			UI()->SetHotItem(pID);
 
 		if(UI()->MouseButton(0))
-		{
 			pButState->m_Pressed = true;
-			if(pID && UI()->MouseButtonClicked(0))
-				UI()->SetActiveItem(pID);
-		}
 	}
-	else if(pID && UI()->HotItem() == pID)
-	{
-		UI()->SetHotItem(0);
-	}
-
 }
 
-bool CEditor2Ui::UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDrag* pDragState)
+void CEditor2Ui::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState)
+{
+	dbg_assert(pID != 0x0, "id is null");
+
+	pButState->m_Clicked = false;
+	if(pButState->m_Pressed && !UI()->MouseButton(0))
+		pButState->m_Clicked = true;
+
+	if(pID)
+	{
+		UI()->DoButtonLogic(pID, &Rect);
+		pButState->m_Hovered = (UI()->HotItem() == pID);
+		pButState->m_Pressed = (UI()->CheckActiveItem(pID));
+	}
+}
+
+bool CEditor2Ui::UiDoMouseDraggingNoID(const CUIRect& Rect, CUIMouseDrag* pDragState)
 {
 	bool Return = false;
-	CUIButton ButState;
-	UiDoButtonBehavior(pID, Rect, &ButState);
+	UiDoButtonBehaviorNoID(Rect, &pDragState->m_Button);
 
-	if((!pID || UI()->CheckActiveItem(pID)) && UI()->MouseButton(0))
+	if(UI()->MouseButton(0))
 	{
-		if(!pDragState->m_IsDragging && UI()->MouseButtonClicked(0) && ButState.m_Pressed)
+		if(!pDragState->m_IsDragging && UI()->MouseButtonClicked(0) && pDragState->m_Button.m_Pressed)
+		{
+			pDragState->m_StartDragPos = vec2(UI()->MouseX(), UI()->MouseY());
+			pDragState->m_IsDragging = true;
+		}
+	}
+	else
+	{
+		if(pDragState->m_IsDragging)
+		{
+			pDragState->m_EndDragPos = vec2(UI()->MouseX(), UI()->MouseY());
+			Return = true; // finished dragging
+		}
+		pDragState->m_IsDragging = false;
+	}
+
+	return Return;
+}
+
+bool CEditor2Ui::UiDoMouseDragging(const CUIRect& Rect, CUIMouseDrag* pDragState)
+{
+	const void* pID = pDragState;
+
+	bool Return = false;
+	UiDoButtonBehavior(pID, Rect, &pDragState->m_Button);
+
+	if(UI()->CheckActiveItem(pID) && UI()->MouseButton(0))
+	{
+		if(!pDragState->m_IsDragging && UI()->MouseButtonClicked(0) && pDragState->m_Button.m_Pressed)
 		{
 			pDragState->m_StartDragPos = vec2(UI()->MouseX(), UI()->MouseY());
 			pDragState->m_IsDragging = true;
@@ -472,7 +497,7 @@ bool CEditor2Ui::UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButto
 
 bool CEditor2Ui::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive)
 {
-	UiDoMouseDragging(pGrabHandle, Rect, pGrabHandle);
+	UiDoMouseDragging(Rect, pGrabHandle);
 	const bool Active = IsInsideRect(vec2(UI()->MouseX(), UI()->MouseY()), Rect) || pGrabHandle->m_IsDragging;
 	DrawRect(Rect, Active ? ColorActive : ColorNormal);
 	pGrabHandle->m_IsGrabbed = UI()->CheckActiveItem(pGrabHandle);

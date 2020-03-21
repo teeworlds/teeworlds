@@ -51,6 +51,7 @@ struct CUIMouseDrag
 	vec2 m_StartDragPos;
 	vec2 m_EndDragPos;
 	bool m_IsDragging;
+	CUIButton m_Button;
 
 	CUIMouseDrag()
 	{
@@ -91,8 +92,10 @@ struct CEditor2Ui
 	void DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
 
+	void UiDoButtonBehaviorNoID(const CUIRect& Rect, CUIButton* pButState);
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState);
-	bool UiDoMouseDragging(const void* pID, const CUIRect& Rect, CUIMouseDrag* pDragState);
+	bool UiDoMouseDraggingNoID(const CUIRect& Rect, CUIMouseDrag* pDragState);
+	bool UiDoMouseDragging(const CUIRect& Rect, CUIMouseDrag* pDragState);
 
 	bool UiButton(const CUIRect& Rect, const char* pText, CUIButton* pButState, float FontSize = 10);
 	bool UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* pButState,

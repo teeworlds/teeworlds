@@ -99,10 +99,10 @@ void CEditor2::Init()
 	m_BrushAutomapRuleID = -1;
 	m_pHistoryEntryCurrent = 0x0;
 	m_Page = PAGE_MAP_EDITOR;
-	m_Tool = TOOL_SELECT;
+	m_Tool = TOOL_TILE_BRUSH;
 	m_UiCurrentPopupID = POPUP_NONE;
 	m_UiDetailPanelIsOpen = false;
-	m_WasMouseOnUiElement = false;
+	m_MapZoomRequested = 0;
 
 	// grenade pickup
 	{
@@ -201,6 +201,8 @@ void CEditor2::Update()
 	m_UiMousePos.x = NewUiMousePosX;
 	m_UiMousePos.y = NewUiMousePosY;
 
+	m_MapZoomRequested = 0;
+
 	enum
 	{
 		MOUSE_LEFT=1,
@@ -213,10 +215,6 @@ void CEditor2::Update()
 	if(Input()->KeyIsPressed(KEY_MOUSE_2)) MouseButtons |= MOUSE_RIGHT;
 	if(Input()->KeyIsPressed(KEY_MOUSE_3)) MouseButtons |= MOUSE_MIDDLE;
 	UI()->Update(m_UiMousePos.x, m_UiMousePos.y, 0, 0, MouseButtons);
-
-	// was the mouse on a ui element
-	m_WasMouseOnUiElement = UI()->HotItem() != 0;
-	UI()->SetHotItem(0);
 
 	if(Input()->KeyPress(KEY_F1))
 	{
@@ -234,13 +232,10 @@ void CEditor2::Update()
 			}
 
 			// zoom with mouse wheel
-			if(!m_WasMouseOnUiElement)
-			{
-				if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-					ChangeZoom(m_Zoom / 1.1f);
-				else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-					ChangeZoom(m_Zoom * 1.1f);
-			}
+			if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+				m_MapZoomRequested = 1;
+			else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+				m_MapZoomRequested = -1;
 
 			if(Input()->KeyPress(KEY_HOME))
 			{
@@ -821,9 +816,15 @@ void CEditor2::RenderMapOverlay()
 	const vec2 GridMousePos(MouseTx*TileSize, MouseTy*TileSize);
 
 	static CUIMouseDrag s_MapViewDrag;
-	bool FinishedDragging = UiDoMouseDragging(0, m_UiMainViewRect, &s_MapViewDrag);
+	bool FinishedDragging = UiDoMouseDragging(m_UiMainViewRect, &s_MapViewDrag);
 
-	const bool CanClick = !m_WasMouseOnUiElement;
+	const bool CanClick = s_MapViewDrag.m_Button.m_Hovered;
+
+	if(CanClick)
+	{
+		if(m_MapZoomRequested == 1)  ChangeZoom(m_Zoom / 1.1f);
+		if(m_MapZoomRequested == -1) ChangeZoom(m_Zoom * 1.1f);
+	}
 
 	// TODO: kinda weird?
 	if(!CanClick)
@@ -1504,6 +1505,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	const int TotalGroupCount = m_Map.m_aGroups.Count();
 	const int TotalLayerCount = m_Map.m_aLayers.Count();
 
+	// TODO: move to group/layer ui state?
 	static array2<CUIButton> s_UiGroupButState;
 	static array2<CUIButton> s_UiGroupShowButState;
 	static array2<CUIButton> s_UiLayerButState;
@@ -1532,7 +1534,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	}
 
 	bool OldIsMouseDragging = s_DragMove.m_IsDragging;
-	bool FinishedMouseDragging = UiDoMouseDragging(0, NavRect, &s_DragMove);
+	bool FinishedMouseDragging = UiDoMouseDraggingNoID(NavRect, &s_DragMove);
 	bool StartedMouseDragging = s_DragMove.m_IsDragging && OldIsMouseDragging == false;
 
 	bool DisplayDragMoveOverlay = s_DragMove.m_IsDragging && (DragMoveGroupListIndex >= 0 || DragMoveLayerListIndex >= 0);
@@ -1554,7 +1556,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 		// check whole line for hover
 		CUIButton WholeLineState;
-		UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
+		UiDoButtonBehaviorNoID(ButtonRect, &WholeLineState);
 		m_UiGroupState[GroupID].m_IsHovered = WholeLineState.m_Hovered;
 
 		// drag started on this item
@@ -1647,7 +1649,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 				// check whole line for hover
 				CUIButton WholeLineState;
-				UiDoButtonBehavior(0, ButtonRect, &WholeLineState);
+				UiDoButtonBehaviorNoID(ButtonRect, &WholeLineState);
 				m_UiLayerState[LyID].m_IsHovered = WholeLineState.m_Hovered;
 
 				// drag started on this item
@@ -2519,7 +2521,7 @@ void CEditor2::RenderPopupBrushPalette()
 
 	// do mouse dragging
 	static CUIMouseDrag s_DragState;
-	bool FinishedDragging = UiDoMouseDragging(&s_DragState, m_UiPopupBrushPaletteImageRect, &s_DragState);
+	bool FinishedDragging = UiDoMouseDragging(m_UiPopupBrushPaletteImageRect, &s_DragState);
 	// TODO: perhaps allow dragging from outside the popup for convenience
 
 	// finished dragging
