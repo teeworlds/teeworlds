@@ -97,18 +97,18 @@ class CEditor2: public IEditor, public CEditor2Ui
 	int m_UiCurrentPopupID;
 	CUIRect m_UiCurrentPopupRect;
 
-	struct CUIBrushPaletteState
+	struct CUIBrushPalette
 	{
 		u8 m_aTileSelected[256];
 		int m_ImageID;
 
-		CUIBrushPaletteState()
+		CUIBrushPalette()
 		{
 			memset(m_aTileSelected, 0, sizeof(m_aTileSelected));
 			m_ImageID = -1;
 		}
 	};
-	CUIBrushPaletteState m_UiBrushPaletteState;
+	CUIBrushPalette m_UiBrushPaletteState;
 	CUIRect m_UiPopupBrushPaletteRect;
 	CUIRect m_UiPopupBrushPaletteImageRect;
 
@@ -243,9 +243,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderBrush(vec2 Pos);
 
 	void RenderAssetManager();
-
-	inline bool IsPopupBrushPalette() const { return m_UiCurrentPopupID == POPUP_BRUSH_PALETTE; }
-	inline bool IsPopupMenuFile() const { return m_UiCurrentPopupID == POPUP_MENU_FILE; }
 
 	void Reset();
 	void ResetCamera();

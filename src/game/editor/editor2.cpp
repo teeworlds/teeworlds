@@ -2510,7 +2510,7 @@ void CEditor2::RenderPopupBrushPalette()
 
 	const float TileSize = ImageRect.w / 16.f;
 
-	CUIBrushPaletteState& Bps = m_UiBrushPaletteState;
+	CUIBrushPalette& Bps = m_UiBrushPaletteState;
 	u8* aTileSelected = Bps.m_aTileSelected;
 
 	// right click clears brush

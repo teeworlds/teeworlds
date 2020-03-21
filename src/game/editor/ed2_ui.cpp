@@ -276,13 +276,12 @@ bool CEditor2Ui::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* p
 
 bool CEditor2Ui::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInput* pInputState)
 {
-	UiDoButtonBehavior(pInputState, Rect, &pInputState->m_Button);
+	UiDoButtonBehaviorNoID(Rect, &pInputState->m_Button);
 	if(pInputState->m_Button.m_Clicked)
 	{
 		UI()->SetActiveItem(pInputState);
 	}
-	else if(UI()->CheckActiveItem(pInputState) && !pInputState->m_Button.m_Hovered &&
-		UI()->MouseButtonClicked(0))
+	else if(UI()->CheckActiveItem(pInputState) && !pInputState->m_Button.m_Hovered && UI()->MouseButtonClicked(0))
 	{
 		UI()->SetActiveItem(0);
 	}
