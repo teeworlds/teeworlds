@@ -1599,7 +1599,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		CUIButton& ButState = s_UiGroupButState[GroupID];
 		UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
-		if(ButState.m_Clicked && !FinishedMouseDragging) // mouse dragging shouldn't trigger it
+		if(ButState.m_Clicked)
 		{
 			if(m_UiSelectedGroupID == GroupID)
 				m_UiGroupState[GroupID].m_IsOpen ^= 1;
@@ -1821,9 +1821,9 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	if(DragMoveOffset != 0)
 	{
 		if(DragMoveLayerListIndex != -1)
-			DragMoveOffset = EditLayerClampMove(DragMoveParentGroupListIndex, DragMoveLayerListIndex, DragMoveOffset);
+			DragMoveOffset = LayerCalcDragMoveOffset(DragMoveParentGroupListIndex, DragMoveLayerListIndex, DragMoveOffset);
 		else if(DragMoveGroupListIndex != -1)
-			DragMoveGroupIdOffset = EditGroupClampMove(DragMoveGroupListIndex, &DragMoveOffset);
+			DragMoveGroupIdOffset = GroupCalcDragMoveOffset(DragMoveGroupListIndex, &DragMoveOffset);
 	}
 
 	// drag overlay indicator
@@ -3061,6 +3061,84 @@ void CEditor2::SelectGroupBelowCurrentOne()
 
 	// slightly overkill
 	dbg_assert(m_Map.m_aGroups.IsValid(m_UiSelectedGroupID), "m_UiSelectedGroupID is invalid");
+}
+
+// returns the GroupIdOffset, also clamps pRelativePos
+int CEditor2::GroupCalcDragMoveOffset(int ParentGroupListIndex, int* pRelativePos)
+{
+	if(*pRelativePos == 0)
+		return 0;
+
+	const int RelativeDir = sign(*pRelativePos);
+	int CurrentPos = 0, CurrentGroupIndex = ParentGroupListIndex, GroupIdOffset;
+
+	// skip current group if we are moving down
+	if(RelativeDir == +1 && m_UiGroupState[m_Map.m_aGroupIDList[ParentGroupListIndex]].m_IsOpen)
+		CurrentPos += m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex]).m_LayerCount;
+
+	for(GroupIdOffset = 0; ; GroupIdOffset += RelativeDir)
+	{
+		// check if we are at the group list boundaries
+		if((RelativeDir == -1 && CurrentGroupIndex <= 0) || (RelativeDir == +1 && CurrentGroupIndex >= m_Map.m_GroupIDListCount-1))
+			break;
+
+		const int LastPos = CurrentPos;
+		const int RelevantGroupIndex = (RelativeDir == -1) ? CurrentGroupIndex-1 : CurrentGroupIndex+1;
+		const bool RelevantGroupIsOpen = m_UiGroupState[m_Map.m_aGroupIDList[RelevantGroupIndex]].m_IsOpen;
+		const int RelevantGroupLayerCount = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[RelevantGroupIndex]).m_LayerCount;
+
+		if(RelevantGroupIsOpen)
+			CurrentPos += RelevantGroupLayerCount*RelativeDir;
+		CurrentPos += RelativeDir; // add the group header too
+		CurrentGroupIndex += RelativeDir;
+
+		if((RelativeDir == -1 && CurrentPos < *pRelativePos) || (RelativeDir == +1 && CurrentPos > *pRelativePos))
+		{
+			// we went over the asked position, go back to the last valid position
+			CurrentPos = LastPos;
+			break;
+		}
+	}
+	*pRelativePos = GroupIdOffset ? CurrentPos : 0; // make sure pRelativePos stays at 0 if we are not moving (necessary when moving down)
+	return GroupIdOffset;
+}
+
+int CEditor2::LayerCalcDragMoveOffset(int ParentGroupListIndex, int LayerListIndex, int RelativePos)
+{
+	if(RelativePos == 0)
+		return 0;
+	else if(RelativePos < 0)
+	{
+		for(int Pos = -1; Pos >= RelativePos; Pos--)
+		{
+			const bool CurrentGroupIsOpen = m_UiGroupState[m_Map.m_aGroupIDList[ParentGroupListIndex]].m_IsOpen;
+			LayerListIndex--;
+			if(LayerListIndex < 0 || !CurrentGroupIsOpen)
+			{
+				ParentGroupListIndex--;
+				if(ParentGroupListIndex < 0)
+					return Pos+1;
+				LayerListIndex = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex]).m_LayerCount;
+			}
+		}
+	}
+	else
+	{
+		for(int Pos = 1; Pos <= RelativePos; Pos++)
+		{
+			CEditorMap2::CGroup& ParentGroup = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex]);
+			const bool CurrentGroupIsOpen = m_UiGroupState[m_Map.m_aGroupIDList[ParentGroupListIndex]].m_IsOpen;
+			LayerListIndex++;
+			if(LayerListIndex >= ParentGroup.m_LayerCount || !CurrentGroupIsOpen)
+			{
+				ParentGroupListIndex++;
+				if(ParentGroupListIndex >= m_Map.m_GroupIDListCount)
+					return Pos-1;
+				LayerListIndex = -1;
+			}
+		}
+	}
+	return RelativePos;
 }
 
 void CEditor2::SetNewBrush(CTile* aTiles, int Width, int Height)

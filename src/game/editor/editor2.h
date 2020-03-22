@@ -251,8 +251,11 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void ChangeZoom(float Zoom);
 	void ChangePage(int Page);
 	void ChangeTool(int Tool);
+
 	void SelectLayerBelowCurrentOne();
 	void SelectGroupBelowCurrentOne();
+	int GroupCalcDragMoveOffset(int ParentGroupListIndex, int* pRelativePos);
+	int LayerCalcDragMoveOffset(int ParentGroupListIndex, int LayerListIndex, int RelativePos);
 
 	void SetNewBrush(CTile* aTiles, int Width, int Height);
 	void BrushClear();
@@ -285,9 +288,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void EditLayerChangeImage(int LayerID, int NewImageID);
 	void EditLayerHighDetail(int LayerID, bool NewHighDetail);
 	void EditGroupUseClipping(int GroupID, bool NewUseClipping);
-	int EditGroupClampMove(int ParentGroupListIndex, int* pRelativePos);
 	int EditGroupOrderMove(int GroupListIndex, int RelativePos);
-	int EditLayerClampMove(int ParentGroupListIndex, int LayerListIndex, int RelativePos);
 	int EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, int RelativePos);
 	void EditTileSelectionFlipX(int LayerID);
 	void EditTileSelectionFlipY(int LayerID);
