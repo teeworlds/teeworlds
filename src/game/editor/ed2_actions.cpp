@@ -294,7 +294,9 @@ int CEditor2::EditGroupOrderMove(int GroupListIndex, int RelativePos)
 	// returns new List Index
 
 	dbg_assert(GroupListIndex >= 0 && GroupListIndex < m_Map.m_GroupIDListCount, "GroupListIndex out of bounds");
+	dbg_assert(m_Map.m_aGroups.IsValid(m_Map.m_aGroupIDList[GroupListIndex]), "Group is invalid");
 
+	const int OldGroupIndex = GroupListIndex;
 	const int NewGroupListIndex = clamp(GroupListIndex + RelativePos, 0, m_Map.m_GroupIDListCount-1);
 	if(NewGroupListIndex == GroupListIndex)
 		return GroupListIndex;
@@ -304,16 +306,15 @@ int CEditor2::EditGroupOrderMove(int GroupListIndex, int RelativePos)
 	{
 		int NextGroupIndex = GroupListIndex + MoveDir;
 		tl_swap(m_Map.m_aGroupIDList[GroupListIndex], m_Map.m_aGroupIDList[NextGroupIndex]);
-
-		char aHistoryEntryAction[64];
-		char aHistoryEntryDesc[64];
-		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: change order"), GroupListIndex);
-		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
-			GroupListIndex,
-			NextGroupIndex);
-		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 		GroupListIndex = NextGroupIndex;
 	} while(GroupListIndex != NewGroupListIndex);
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: change order"), OldGroupIndex);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", OldGroupIndex, NewGroupListIndex);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+
 	return NewGroupListIndex;
 }
 
@@ -323,7 +324,11 @@ int CEditor2::EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, i
 	if(RelativePos == 0)
 		return ParentGroupListIndex;
 
-	dbg_assert(ParentGroupListIndex >= 0 && ParentGroupListIndex < m_Map.m_GroupIDListCount, "GroupListIndex out of bounds");
+	dbg_assert(ParentGroupListIndex >= 0 && ParentGroupListIndex < m_Map.m_GroupIDListCount, "ParentGroupListIndex out of bounds");
+	dbg_assert(m_Map.m_aGroups.IsValid(m_Map.m_aGroupIDList[ParentGroupListIndex]), "ParentGroup is invalid");
+
+	const int OldParentGroupListIndex = ParentGroupListIndex;
+	const int OldLayerListIndex = LayerListIndex;
 
 	// let's move one at a time
 	const int RelativeDir = clamp(RelativePos, -1, 1);
@@ -336,9 +341,6 @@ int CEditor2::EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, i
 		const int NewPos = LayerListIndex + RelativeDir;
 		const bool IsGameLayer = LayerID == (u32)m_Map.m_GameLayerID;
 		const bool CurrentGroupIsOpen = m_UiGroupState[m_Map.m_aGroupIDList[ParentGroupListIndex]].m_IsOpen;
-
-		char aHistoryEntryAction[64];
-		char aHistoryEntryDesc[64];
 
 		// go up one group
 		if(NewPos < 0 || (!CurrentGroupIsOpen && RelativeDir == -1))
@@ -364,9 +366,6 @@ int CEditor2::EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, i
 					ParentGroup.m_LayerCount--;
 				}			
 
-				str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"), LayerID);
-				str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", ParentGroupListIndex, ParentGroupListIndex-1);
-				HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 				ParentGroupListIndex--;
 				LayerListIndex = Group.m_LayerCount-1;
 			}
@@ -399,10 +398,6 @@ int CEditor2::EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, i
 					memmove(&ParentGroup.m_apLayerIDs[0], &ParentGroup.m_apLayerIDs[1], sizeof(ParentGroup.m_apLayerIDs[0]) * ParentGroup.m_LayerCount);				
 				}
 				
-
-				str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"), LayerID);
-				str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", ParentGroupListIndex, ParentGroupListIndex+1);
-				HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 				ParentGroupListIndex++;
 				LayerListIndex = 0;
 			}
@@ -410,13 +405,16 @@ int CEditor2::EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, i
 		else
 		{
 			tl_swap(ParentGroup.m_apLayerIDs[LayerListIndex], ParentGroup.m_apLayerIDs[NewPos]);
-
-			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change order"), LayerID);
-			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", LayerListIndex, NewPos);
-			HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 			LayerListIndex = NewPos;
 		}
 	}
+
+	char aHistoryEntryAction[64];
+	char aHistoryEntryDesc[64];
+	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change order"), OldLayerListIndex);
+	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "Group:(%d > %d)  Layer:(%d > %d)", OldParentGroupListIndex, ParentGroupListIndex, OldLayerListIndex, LayerListIndex);
+	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+
 	return ParentGroupListIndex;
 }
 
