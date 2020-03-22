@@ -102,7 +102,7 @@ void CEditor2::Init()
 	m_Tool = TOOL_TILE_BRUSH;
 	m_UiCurrentPopupID = POPUP_NONE;
 	m_UiDetailPanelIsOpen = false;
-	m_MapZoomRequested = 0;
+	m_MapViewZoom = 0;
 
 	// grenade pickup
 	{
@@ -201,7 +201,8 @@ void CEditor2::Update()
 	m_UiMousePos.x = NewUiMousePosX;
 	m_UiMousePos.y = NewUiMousePosY;
 
-	m_MapZoomRequested = 0;
+	m_MapViewZoom = 0;
+	m_MapViewMove = vec2(0,0);
 
 	enum
 	{
@@ -223,47 +224,48 @@ void CEditor2::Update()
 
 	if(!m_InputConsole.IsOpen())
 	{
-		if(m_UiCurrentPopupID == POPUP_NONE)
+		// move view
+		if(MouseButtons&MOUSE_RIGHT)
 		{
-			// move view
-			if(MouseButtons&MOUSE_RIGHT)
-			{
-				m_MapUiPosOffset -= m_UiMouseDelta;
-			}
-
-			// zoom with mouse wheel
-			if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-				m_MapZoomRequested = 1;
-			else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-				m_MapZoomRequested = -1;
-
-			if(Input()->KeyPress(KEY_HOME))
-			{
-				ResetCamera();
-			}
-
-			// undo / redo
-			const bool IsCtrlPressed = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
-			if(IsCtrlPressed && Input()->KeyPress(KEY_Z))
-				HistoryUndo();
-			else if(IsCtrlPressed && Input()->KeyPress(KEY_Y))
-				HistoryRedo();
-
-			// TODO: remove
-			if(IsCtrlPressed && Input()->KeyPress(KEY_A))
-				ChangePage((m_Page+1) % PAGE_COUNT_);
-
-			if(IsToolSelect() && Input()->KeyPress(KEY_ESCAPE)) {
-				m_TileSelection.Deselect();
-			}
-			if(IsToolBrush() && Input()->KeyPress(KEY_ESCAPE))
-				BrushClear();
+			m_MapViewMove = m_UiMouseDelta;
 		}
 
-		if(IsToolBrush() && Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
-			m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
-		else if((!IsToolBrush() || !Input()->KeyIsPressed(KEY_SPACE)) && m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
-			m_UiCurrentPopupID = POPUP_NONE;
+		// zoom with mouse wheel
+		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
+			m_MapViewZoom = 1;
+		else if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+			m_MapViewZoom = -1;
+
+		if(Input()->KeyPress(KEY_HOME))
+		{
+			ResetCamera();
+		}
+
+		// undo / redo
+		const bool IsCtrlPressed = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
+		if(IsCtrlPressed && Input()->KeyPress(KEY_Z))
+			HistoryUndo();
+		else if(IsCtrlPressed && Input()->KeyPress(KEY_Y))
+			HistoryRedo();
+
+		// TODO: remove
+		if(IsCtrlPressed && Input()->KeyPress(KEY_A))
+			ChangePage((m_Page+1) % PAGE_COUNT_);
+
+		if(IsToolSelect() && Input()->KeyPress(KEY_ESCAPE)) {
+			m_TileSelection.Deselect();
+		}
+
+		if(IsToolBrush())
+		{
+			if(Input()->KeyPress(KEY_ESCAPE))
+				BrushClear();
+
+			if(Input()->KeyIsPressed(KEY_SPACE))
+				m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
+			else
+				m_UiCurrentPopupID = POPUP_NONE;
+		}
 	}
 }
 
@@ -822,8 +824,9 @@ void CEditor2::RenderMapOverlay()
 
 	if(CanClick)
 	{
-		if(m_MapZoomRequested == 1)  ChangeZoom(m_Zoom / 1.1f);
-		if(m_MapZoomRequested == -1) ChangeZoom(m_Zoom * 1.1f);
+		m_MapUiPosOffset -= m_MapViewMove;
+		if(m_MapViewZoom == 1)  ChangeZoom(m_Zoom / 1.1f);
+		if(m_MapViewZoom == -1) ChangeZoom(m_Zoom * 1.1f);
 	}
 
 	// TODO: kinda weird?

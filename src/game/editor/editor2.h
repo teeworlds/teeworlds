@@ -113,7 +113,9 @@ class CEditor2: public IEditor, public CEditor2Ui
 	CUIRect m_UiPopupBrushPaletteImageRect;
 
 	bool m_UiDetailPanelIsOpen;
-	i8 m_MapZoomRequested;
+
+	i8 m_MapViewZoom;
+	vec2 m_MapViewMove;
 
 	struct CBrush
 	{
