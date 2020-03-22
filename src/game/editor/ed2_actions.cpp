@@ -302,6 +302,46 @@ void CEditor2::EditGroupUseClipping(int GroupID, bool NewUseClipping)
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
+// returns the GroupIdOffset, also clamps pRelativePos
+int CEditor2::EditGroupClampMove(int ParentGroupListIndex, int* pRelativePos)
+{
+	if(*pRelativePos == 0)
+		return 0;
+
+	const int RelativeDir = sign(*pRelativePos);
+	int CurrentPos = 0, CurrentGroupIndex = ParentGroupListIndex, GroupIdOffset;
+
+	// skip current group if we are moving down
+	if(RelativeDir == +1 && m_UiGroupState[m_Map.m_aGroupIDList[ParentGroupListIndex]].m_IsOpen)
+		CurrentPos += m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex]).m_LayerCount;
+
+	for(GroupIdOffset = 0; ; GroupIdOffset += RelativeDir)
+	{
+		// check if we are at the group list boundaries
+		if((RelativeDir == -1 && CurrentGroupIndex <= 0) || (RelativeDir == +1 && CurrentGroupIndex >= m_Map.m_GroupIDListCount-1))
+			break;
+
+		const int LastPos = CurrentPos;
+		const int RelevantGroupIndex = (RelativeDir == -1) ? CurrentGroupIndex-1 : CurrentGroupIndex+1;
+		const bool RelevantGroupIsOpen = m_UiGroupState[m_Map.m_aGroupIDList[RelevantGroupIndex]].m_IsOpen;
+		const int RelevantGroupLayerCount = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[RelevantGroupIndex]).m_LayerCount;
+		
+		if(RelevantGroupIsOpen)
+			CurrentPos += RelevantGroupLayerCount*RelativeDir;
+		CurrentPos += RelativeDir; // add the group header too
+		CurrentGroupIndex += RelativeDir;
+		
+		if((RelativeDir == -1 && CurrentPos < *pRelativePos) || (RelativeDir == +1 && CurrentPos > *pRelativePos))
+		{
+			// we went over the asked position, go back to the last valid position
+			CurrentPos = LastPos;
+			break;
+		}
+	}
+	*pRelativePos = GroupIdOffset ? CurrentPos : 0; // make sure pRelativePos stays at 0 if we are not moving (necessary when moving down)
+	return GroupIdOffset;
+}
+
 int CEditor2::EditGroupOrderMove(int GroupListIndex, int RelativePos)
 {
 	// returns new List Index
@@ -312,16 +352,21 @@ int CEditor2::EditGroupOrderMove(int GroupListIndex, int RelativePos)
 	if(NewGroupListIndex == GroupListIndex)
 		return GroupListIndex;
 
-	tl_swap(m_Map.m_aGroupIDList[GroupListIndex], m_Map.m_aGroupIDList[NewGroupListIndex]);
+	const int MoveDir = sign(RelativePos);
+	do
+	{
+		int NextGroupIndex = GroupListIndex + MoveDir;
+		tl_swap(m_Map.m_aGroupIDList[GroupListIndex], m_Map.m_aGroupIDList[NextGroupIndex]);
 
-	char aHistoryEntryAction[64];
-	char aHistoryEntryDesc[64];
-	str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: change order"),
-		GroupListIndex);
-	str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
-		GroupListIndex,
-		NewGroupListIndex);
-	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Group %d: change order"), GroupListIndex);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d",
+			GroupListIndex,
+			NextGroupIndex);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+		GroupListIndex = NextGroupIndex;
+	} while(GroupListIndex != NewGroupListIndex);
 	return NewGroupListIndex;
 }
 
@@ -372,7 +417,6 @@ int CEditor2::EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, i
 	const int RelativeDir = clamp(RelativePos, -1, 1);
 	while(RelativePos != 0)
 	{
-		ed_dbg("x y = %d %d", ParentGroupListIndex, LayerListIndex);
 		EditLayerOrderMoveByOne(ParentGroupListIndex, LayerListIndex, RelativeDir);
 		RelativePos -= RelativeDir;
 	}

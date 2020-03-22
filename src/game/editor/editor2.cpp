@@ -1538,6 +1538,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	bool DisplayDragMoveOverlay = s_DragMove.m_IsDragging && (DragMoveGroupListIndex >= 0 || DragMoveLayerListIndex >= 0);
 	CUIRect DragMoveOverlayRect;
 	int DragMoveOffset = 0;
+	int DragMoveGroupIdOffset = 0; // for group dragging
 	// -----------------------
 
 	const int GroupCount = m_Map.m_GroupIDListCount;
@@ -1593,7 +1594,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		CUIButton& ButState = s_UiGroupButState[GroupID];
 		UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
-		if(ButState.m_Clicked)
+		if(ButState.m_Clicked && !FinishedMouseDragging) // mouse dragging shouldn't trigger it
 		{
 			if(m_UiSelectedGroupID == GroupID)
 				m_UiGroupState[GroupID].m_IsOpen ^= 1;
@@ -1811,31 +1812,23 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		EditDeleteGroup(ToDeleteID);
 	}
 
-	// sanitize DragMoveOffset
+	// clamp DragMoveOffset
 	if(DragMoveOffset != 0)
 	{
 		if(DragMoveLayerListIndex != -1)
 			DragMoveOffset = EditLayerClampMove(DragMoveParentGroupListIndex, DragMoveLayerListIndex, DragMoveOffset);
 		else if(DragMoveGroupListIndex != -1)
-		{
-			const int MinNewPos = 0;
-			const int MaxNewPos = m_Map.m_GroupIDListCount-1;
-			DragMoveOffset = clamp(DragMoveOffset, MinNewPos-DragMoveGroupListIndex, MaxNewPos-DragMoveGroupListIndex);
-		}
+			DragMoveGroupIdOffset = EditGroupClampMove(DragMoveGroupListIndex, &DragMoveOffset);
 	}
 
-	// drag overlay (arrows for now)
+	// drag overlay indicator
 	if(DisplayDragMoveOverlay && !UI()->MouseInside(&DragMoveOverlayRect) && DragMoveOffset != 0)
 	{
 		const float x = DragMoveOverlayRect.x;
-		const float y = DragMoveOverlayRect.y 
-			+ (sign(DragMoveOffset) == 1 ? DragMoveOverlayRect.h : 0) 
+		const float y = DragMoveOverlayRect.y
+			+ (sign(DragMoveOffset) == 1 ? DragMoveOverlayRect.h : 0)
 			+ (ButtonHeight+Spacing) * DragMoveOffset;
 		const float w = DragMoveOverlayRect.w;
-
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "Drag=%d", DragMoveOffset);
-		DrawText(DragMoveOverlayRect, aBuf, FontSize*2);
 
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
@@ -1860,7 +1853,8 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		{
 			if(DragMoveGroupListIndex != -1)
 			{
-				int NewGroupListIndex = EditGroupOrderMove(DragMoveGroupListIndex,  DragMoveOffset < 0 ? -1 : 1);
+				ed_dbg("DragMoveGroupIdOffset = %d", DragMoveGroupIdOffset);
+				int NewGroupListIndex = EditGroupOrderMove(DragMoveGroupListIndex, DragMoveGroupIdOffset);
 				m_UiGroupState[m_Map.m_aGroupIDList[NewGroupListIndex]].m_IsOpen = true;
 
 				if((int)m_Map.m_aGroupIDList[DragMoveGroupListIndex] == m_UiSelectedGroupID && NewGroupListIndex != DragMoveGroupListIndex)
