@@ -1542,7 +1542,8 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 
 	bool DisplayDragMoveOverlay = s_DragMove.m_IsDragging && (DragMoveGroupListIndex >= 0 || DragMoveLayerListIndex >= 0);
 	CUIRect DragMoveOverlayRect;
-	int DragMoveDir = 0;
+	int DragMoveOffset = 0;
+	int DragMoveGroupIdOffset = 0; // for group dragging
 	// -----------------------
 
 	const int GroupCount = m_Map.m_GroupIDListCount;
@@ -1570,7 +1571,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		if(DragMoveGroupListIndex == gi)
 		{
 			DragMoveOverlayRect = ButtonRect;
-			DragMoveDir = (int)sign(m_UiMousePos.y - ButtonRect.y);
+			DragMoveOffset = (int)(m_UiMousePos.y - ButtonRect.y - ButtonHeight/2.0f)/(Spacing+ButtonHeight);
 		}
 
 		CUIRect ExpandBut, ShowButton;
@@ -1598,7 +1599,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		CUIButton& ButState = s_UiGroupButState[GroupID];
 		UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
 
-		if(ButState.m_Clicked)
+		if(ButState.m_Clicked && !FinishedMouseDragging) // mouse dragging shouldn't trigger it
 		{
 			if(m_UiSelectedGroupID == GroupID)
 				m_UiGroupState[GroupID].m_IsOpen ^= 1;
@@ -1664,7 +1665,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				if(DragMoveLayerListIndex == li && DragMoveParentGroupListIndex == gi)
 				{
 					DragMoveOverlayRect = ButtonRect;
-					DragMoveDir = (int)sign(m_UiMousePos.y - ButtonRect.y);
+					DragMoveOffset = (int)(m_UiMousePos.y - ButtonRect.y - ButtonHeight/2.0f)/(Spacing+ButtonHeight);
 				}
 
 				// show button
@@ -1816,27 +1817,36 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		EditDeleteGroup(ToDeleteID);
 	}
 
-	// drag overlay (arrows for now)
-	if(DisplayDragMoveOverlay && !UI()->MouseInside(&DragMoveOverlayRect))
+	// clamp DragMoveOffset
+	if(DragMoveOffset != 0)
 	{
-		const vec4 Color = StyleColorInputSelected;
-		const float MarginX = 10.0f;
-		const float x = DragMoveOverlayRect.x + MarginX;
-		const float y = DragMoveOverlayRect.y + (DragMoveDir == 1 ? DragMoveOverlayRect.h : 0);
-		const float w = DragMoveOverlayRect.w - (MarginX * 2);
+		if(DragMoveLayerListIndex != -1)
+			DragMoveOffset = EditLayerClampMove(DragMoveParentGroupListIndex, DragMoveLayerListIndex, DragMoveOffset);
+		else if(DragMoveGroupListIndex != -1)
+			DragMoveGroupIdOffset = EditGroupClampMove(DragMoveGroupListIndex, &DragMoveOffset);
+	}
+
+	// drag overlay indicator
+	if(DisplayDragMoveOverlay && !UI()->MouseInside(&DragMoveOverlayRect) && DragMoveOffset != 0)
+	{
+		const float x = DragMoveOverlayRect.x;
+		const float y = DragMoveOverlayRect.y
+			+ (sign(DragMoveOffset) == 1 ? DragMoveOverlayRect.h : 0)
+			+ (ButtonHeight+Spacing) * DragMoveOffset;
+		const float w = DragMoveOverlayRect.w;
 
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
-		IGraphics::CFreeformItem Triangle(
+		IGraphics::CFreeformItem RowIndicator(
+			x, y + Spacing * sign(DragMoveOffset),
+			x + w, y + Spacing * sign(DragMoveOffset),
 			x, y,
-			x + w, y,
-			x + w * 0.5f, y - 25 * -DragMoveDir,
 			x + w, y
-		);
+		); 
 
-		Graphics()->SetColor(Color.r*Color.a, Color.g*Color.a, Color.b*Color.a, Color.a);
+		Graphics()->SetColor(1, 0, 0, 1);
 
-		Graphics()->QuadsDrawFreeform(&Triangle, 1);
+		Graphics()->QuadsDrawFreeform(&RowIndicator, 1);
 		Graphics()->QuadsEnd();
 	}
 
@@ -1848,7 +1858,8 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		{
 			if(DragMoveGroupListIndex != -1)
 			{
-				int NewGroupListIndex = EditGroupOrderMove(DragMoveGroupListIndex,  DragMoveDir < 0 ? -1 : 1);
+				ed_dbg("DragMoveGroupIdOffset = %d", DragMoveGroupIdOffset);
+				int NewGroupListIndex = EditGroupOrderMove(DragMoveGroupListIndex, DragMoveGroupIdOffset);
 				m_UiGroupState[m_Map.m_aGroupIDList[NewGroupListIndex]].m_IsOpen = true;
 
 				if((int)m_Map.m_aGroupIDList[DragMoveGroupListIndex] == m_UiSelectedGroupID && NewGroupListIndex != DragMoveGroupListIndex)
@@ -1859,7 +1870,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			}
 			else if(DragMoveLayerListIndex != -1)
 			{
-				int NewGroupListIndex = EditLayerOrderMove(DragMoveParentGroupListIndex, DragMoveLayerListIndex, DragMoveDir < 0 ? -1 : 1);
+				int NewGroupListIndex = EditLayerOrderMove(DragMoveParentGroupListIndex, DragMoveLayerListIndex, DragMoveOffset);
 				m_UiGroupState[m_Map.m_aGroupIDList[NewGroupListIndex]].m_IsOpen = true;
 			}
 		}
