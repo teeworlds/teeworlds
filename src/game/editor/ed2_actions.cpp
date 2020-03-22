@@ -1,18 +1,5 @@
 #include "editor2.h"
 
-static char s_aEdMsg[256];
-#define ed_log(...)\
-	str_format(s_aEdMsg, sizeof(s_aEdMsg), __VA_ARGS__);\
-	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", s_aEdMsg)
-
-#ifdef CONF_DEBUG
-	#define ed_dbg(...)\
-		str_format(s_aEdMsg, sizeof(s_aEdMsg), __VA_ARGS__);\
-		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg)
-#else
-	#define ed_dbg(...)
-#endif
-
 void CEditor2::EditDeleteLayer(int LyID, int ParentGroupID)
 {
 	dbg_assert(m_Map.m_aLayers.IsValid(LyID), "LyID out of bounds");
