@@ -397,123 +397,105 @@ int CEditor2::EditLayerClampMove(int ParentGroupListIndex, int LayerListIndex, i
 
 int CEditor2::EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, int RelativePos)
 {
+	// Returns new parent group list index (or the same if it does not change)
 	if(RelativePos == 0)
 		return ParentGroupListIndex;
 
-	// let's move one at a time
-	const int RelativeDir = clamp(RelativePos, -1, 1);
-	while(RelativePos != 0)
-	{
-		EditLayerOrderMoveByOne(ParentGroupListIndex, LayerListIndex, RelativeDir);
-		RelativePos -= RelativeDir;
-	}
-	return ParentGroupListIndex;
-}
-
-// TODO: merge with function above
-// void CEditor2::EditLayerOrderMoveByOne(int& ParentGroupListIndex, int& LayerListIndex, int RelativePos)
-void CEditor2::EditLayerOrderMoveByOne(int& ParentGroupListIndex, int& LayerListIndex, int RelativePos)
-{
-	// Returns new parent group list index (or the same if it does not change)
-
 	dbg_assert(ParentGroupListIndex >= 0 && ParentGroupListIndex < m_Map.m_GroupIDListCount, "GroupListIndex out of bounds");
 
-	CEditorMap2::CGroup& ParentGroup = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex]);
-	dbg_assert(LayerListIndex >= 0 && LayerListIndex < ParentGroup.m_LayerCount, "LayerID out of bounds");
-
-	if(RelativePos == 0)
-		return;
- 	RelativePos = clamp(RelativePos, -1, 1); // make sure we only move by one
-	const u32 LayerID = ParentGroup.m_apLayerIDs[LayerListIndex];
-	const int NewPos = LayerListIndex + RelativePos;
-	const bool IsGameLayer = LayerID == (u32)m_Map.m_GameLayerID;
-	const bool CurrentGroupIsOpen = m_UiGroupState[m_Map.m_aGroupIDList[ParentGroupListIndex]].m_IsOpen;
-
-	char aHistoryEntryAction[64];
-	char aHistoryEntryDesc[64];
-
-	// go up one group
-	if(NewPos < 0 || (!CurrentGroupIsOpen && RelativePos == -1))
+	// let's move one at a time
+	const int RelativeDir = clamp(RelativePos, -1, 1);
+	for(; RelativePos != 0; RelativePos -= RelativeDir)
 	{
-		if(ParentGroupListIndex > 0 && !IsGameLayer)
+		CEditorMap2::CGroup& ParentGroup = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex]);
+		dbg_assert(LayerListIndex >= 0 && LayerListIndex < ParentGroup.m_LayerCount, "LayerID out of bounds");
+
+		const u32 LayerID = ParentGroup.m_apLayerIDs[LayerListIndex];
+		const int NewPos = LayerListIndex + RelativeDir;
+		const bool IsGameLayer = LayerID == (u32)m_Map.m_GameLayerID;
+		const bool CurrentGroupIsOpen = m_UiGroupState[m_Map.m_aGroupIDList[ParentGroupListIndex]].m_IsOpen;
+
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+
+		// go up one group
+		if(NewPos < 0 || (!CurrentGroupIsOpen && RelativeDir == -1))
 		{
-			CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex-1]);
-
-			// TODO: make a function GroupAddLayer?
-			if(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS)
-				Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
-
-			if(NewPos < 0)
+			if(ParentGroupListIndex > 0 && !IsGameLayer)
 			{
-				// squash layer from previous group
-				ParentGroup.m_LayerCount--;
-				memmove(&ParentGroup.m_apLayerIDs[0], &ParentGroup.m_apLayerIDs[1], sizeof(ParentGroup.m_apLayerIDs[0]) * ParentGroup.m_LayerCount);
+				CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex-1]);
+
+				// TODO: make a function GroupAddLayer?
+				if(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS)
+					Group.m_apLayerIDs[Group.m_LayerCount++] = LayerID;
+
+				if(NewPos < 0)
+				{
+					// squash layer from previous group
+					ParentGroup.m_LayerCount--;
+					memmove(&ParentGroup.m_apLayerIDs[0], &ParentGroup.m_apLayerIDs[1], sizeof(ParentGroup.m_apLayerIDs[0]) * ParentGroup.m_LayerCount);
+				}
+				else
+				{
+					dbg_assert(LayerListIndex == ParentGroup.m_LayerCount-1, "shouldn't happen, we are on an intermediary hidden group, going up");
+					// "remove" layer from previous group
+					ParentGroup.m_LayerCount--;
+				}			
+
+				str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"), LayerID);
+				str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", ParentGroupListIndex, ParentGroupListIndex-1);
+				HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+				ParentGroupListIndex--;
+				LayerListIndex = Group.m_LayerCount-1;
 			}
-			else
+		}
+		// go down one group
+		else if(NewPos >= ParentGroup.m_LayerCount || (!CurrentGroupIsOpen && RelativeDir == +1))
+		{
+			if(ParentGroupListIndex < m_Map.m_GroupIDListCount-1 && !IsGameLayer)
 			{
-				dbg_assert(LayerListIndex == ParentGroup.m_LayerCount-1, "shouldn't happen, we are on an intermediary hidden group, going up");
-				// "remove" layer from previous group
-				ParentGroup.m_LayerCount--;
-			}			
+				CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex+1]);
 
-			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"), LayerID);
-			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", ParentGroupListIndex, ParentGroupListIndex-1);
+				// move other layers down, put this one first
+				if(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS)
+				{
+					memmove(&Group.m_apLayerIDs[1], &Group.m_apLayerIDs[0], sizeof(Group.m_apLayerIDs[0]) * Group.m_LayerCount);
+					Group.m_apLayerIDs[0] = LayerID;
+					Group.m_LayerCount++;
+				}
+
+				if(NewPos >= ParentGroup.m_LayerCount)
+				{
+					// "remove" layer from previous group
+					ParentGroup.m_LayerCount--;
+				}
+				else
+				{
+					dbg_assert(LayerListIndex == 0, "shouldn't happen, we are on an intermediary hidden group, going down");
+					/// squash layer from previous group
+					ParentGroup.m_LayerCount--;
+					memmove(&ParentGroup.m_apLayerIDs[0], &ParentGroup.m_apLayerIDs[1], sizeof(ParentGroup.m_apLayerIDs[0]) * ParentGroup.m_LayerCount);				
+				}
+				
+
+				str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"), LayerID);
+				str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", ParentGroupListIndex, ParentGroupListIndex+1);
+				HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+				ParentGroupListIndex++;
+				LayerListIndex = 0;
+			}
+		}
+		else
+		{
+			tl_swap(ParentGroup.m_apLayerIDs[LayerListIndex], ParentGroup.m_apLayerIDs[NewPos]);
+
+			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change order"), LayerID);
+			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", LayerListIndex, NewPos);
 			HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
-			ParentGroupListIndex--;
-			LayerListIndex = Group.m_LayerCount-1;
-			return;
+			LayerListIndex = NewPos;
 		}
 	}
-	// go down one group
-	else if(NewPos >= ParentGroup.m_LayerCount || (!CurrentGroupIsOpen && RelativePos == +1))
-	{
-		if(ParentGroupListIndex < m_Map.m_GroupIDListCount-1 && !IsGameLayer)
-		{
-			CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(m_Map.m_aGroupIDList[ParentGroupListIndex+1]);
-
-			// move other layers down, put this one first
-			if(Group.m_LayerCount < CEditorMap2::MAX_GROUP_LAYERS)
-			{
-				memmove(&Group.m_apLayerIDs[1], &Group.m_apLayerIDs[0], sizeof(Group.m_apLayerIDs[0]) * Group.m_LayerCount);
-				Group.m_apLayerIDs[0] = LayerID;
-				Group.m_LayerCount++;
-			}
-
-			if(NewPos >= ParentGroup.m_LayerCount)
-			{
-				// "remove" layer from previous group
-				ParentGroup.m_LayerCount--;
-			}
-			else
-			{
-				dbg_assert(LayerListIndex == 0, "shouldn't happen, we are on an intermediary hidden group, going down");
-				/// squash layer from previous group
-				ParentGroup.m_LayerCount--;
-				memmove(&ParentGroup.m_apLayerIDs[0], &ParentGroup.m_apLayerIDs[1], sizeof(ParentGroup.m_apLayerIDs[0]) * ParentGroup.m_LayerCount);				
-			}
-			
-
-			str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change group"), LayerID);
-			str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", ParentGroupListIndex, ParentGroupListIndex+1);
-			HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
-			ParentGroupListIndex++;
-			LayerListIndex = 0;
-			return;
-		}
-	}
-	else
-	{
-		tl_swap(ParentGroup.m_apLayerIDs[LayerListIndex], ParentGroup.m_apLayerIDs[NewPos]);
-
-		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: change order"), LayerID);
-		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "%d > %d", LayerListIndex, NewPos);
-		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
-		LayerListIndex = NewPos;
-		return;
-	}
-
-	// never reached
-	return;
+	return ParentGroupListIndex;
 }
 
 void CEditor2::EditTileSelectionFlipX(int LayerID)

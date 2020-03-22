@@ -290,7 +290,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 	int EditGroupOrderMove(int GroupListIndex, int RelativePos);
 	int EditLayerClampMove(int ParentGroupListIndex, int LayerListIndex, int RelativePos);
 	int EditLayerOrderMove(int ParentGroupListIndex, int LayerListIndex, int RelativePos);
-	void EditLayerOrderMoveByOne(int& ParentGroupListIndex, int& LayerListIndex, int RelativePos);
 	void EditTileSelectionFlipX(int LayerID);
 	void EditTileSelectionFlipY(int LayerID);
 	void EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID);
