@@ -92,6 +92,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 		POPUP_NONE = -1,
 		POPUP_BRUSH_PALETTE = 0,
 		POPUP_MENU_FILE,
+		POPUP_FILE_SELECT,
 	};
 
 	int m_UiCurrentPopupID;
@@ -242,6 +243,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
 	void RenderPopupMenuFile();
 	void RenderPopupBrushPalette();
+	void RenderPopupFileSelect();
 	void RenderBrush(vec2 Pos);
 
 	void RenderAssetManager();

@@ -156,11 +156,23 @@ void CEditor2Ui::DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, fl
 	Graphics()->QuadsEnd();
 }
 
-void CEditor2Ui::DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color)
+void CEditor2Ui::DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color, CUI::EAlignment Align)
 {
-	const float OffY = (Rect.h - FontSize - 3.0f) * 0.5f;
 	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, Rect.x + OffY, Rect.y + OffY, FontSize, TEXTFLAG_RENDER);
+
+	const float OffY = (Rect.h - FontSize - 3.0f) * 0.5f;
+	float OffX = OffY;
+
+	if(Align != CUI::ALIGN_LEFT)
+	{
+		float tw = TextRender()->TextWidth(0, FontSize, pText, -1, -1);
+		if(Align == CUI::ALIGN_CENTER)
+			OffX = (Rect.w - tw) * 0.5f;
+		else if(Align == CUI::ALIGN_RIGHT)
+			OffX = Rect.w - tw;
+	}
+
+	TextRender()->SetCursor(&Cursor, Rect.x + OffX, Rect.y + OffY, FontSize, TEXTFLAG_RENDER);
 	TextRender()->TextShadowed(&Cursor, pText, -1, vec2(0,0), vec4(0,0,0,0), Color);
 }
 
@@ -501,6 +513,53 @@ bool CEditor2Ui::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, c
 	DrawRect(Rect, Active ? ColorActive : ColorNormal);
 	pGrabHandle->m_IsGrabbed = UI()->CheckActiveItem(pGrabHandle);
 	return pGrabHandle->m_IsDragging;
+}
+
+bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *ColumnWs, int ColumnCount, const char **pEntryMatrix, int EntryCount, CUIListBox *pListBoxState)
+{
+	const float FontSize = 10.0f;
+	const float ItemHeight = 20.0f;
+	const vec4 ButtonColorLight(0.162f, 0.1, 0.29f, 1);
+
+	CUIRect Header, List;
+	Rect.HSplitTop(ItemHeight * 0.75f, &Header, &List);
+
+	DrawRect(Header, ButtonColorLight);
+	int SumW = 0;
+	for(int i = 0; i < ColumnCount; i++)
+		SumW += ColumnWs[i];
+
+	float ColUnitSize = Header.w / SumW;
+	for(int i = 0, u = 0; i < ColumnCount; i++)
+	{
+		CUIRect Button = {Header.x + u * ColUnitSize, Header.y, ColUnitSize * ColumnWs[i], Header.h};
+		DrawText(Button, pColumns[i], FontSize);
+		u += ColumnWs[i];
+		// TODO: Make these buttons
+	}
+
+	DrawRect(List, StyleColorButton);
+	static CScrollRegion s_List;
+	vec2 ScrollOffset(0, 0);
+	UiBeginScrollRegion(&s_List, &List, &ScrollOffset);
+	List.y += ScrollOffset.y;
+
+	for(int i = 0; i < EntryCount; i++)
+	{
+		CUIRect Line;
+		List.HSplitTop(ItemHeight, &Line, &List);
+		DrawRect(Line, i % 2 ? ButtonColorLight : StyleColorButton);
+		for(int j = 0, u = 0; j < ColumnCount; j++)
+		{
+			CUIRect Col = {Line.x + u * ColUnitSize, Line.y, ColUnitSize * ColumnWs[j], Line.h};
+			DrawText(Col, pEntryMatrix[i * ColumnCount + j], FontSize);
+			u += ColumnWs[j];
+		}
+		UiScrollRegionAddRect(&s_List, Line);
+	}
+	UiEndScrollRegion(&s_List);
+
+	return false;
 }
 
 

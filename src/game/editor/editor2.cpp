@@ -1491,6 +1491,10 @@ void CEditor2::RenderMapEditorUI()
 		RenderPopupMenuFile();
 
 	UI()->ClipDisable(); // main view rect clip
+
+	m_UiCurrentPopupID = POPUP_FILE_SELECT;
+	if(m_UiCurrentPopupID == POPUP_FILE_SELECT)
+		RenderPopupFileSelect();
 }
 
 void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
@@ -2748,6 +2752,166 @@ void CEditor2::RenderPopupBrushPalette()
 	}
 
 	RenderBrush(m_UiMousePos);
+}
+
+void CEditor2::RenderPopupFileSelect()
+{
+	const float Padding = 20.0f;
+	const float Scale = 2.0f/3.0f;
+	const float FontSize = 7.0f;
+	const vec4 White(1, 1, 1, 1);
+
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5)); // darken the background (should be in a common function)
+
+	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f,
+		UiScreenRect.w * Scale, UiScreenRect.h * Scale};
+
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145, 0, 0.4, 1));
+	MainRect.Margin(Padding * 3/4, &MainRect);
+
+	CUIRect Top, Search;
+	MainRect.HSplitTop(20.0f, &Top, &MainRect);
+	Top.VSplitLeft(Top.w * 4/5 - (Padding/2), &Top, &Search);
+	Search.VSplitLeft(Padding/2, 0, &Search);
+
+	static CUITextInput s_SearchBox;
+	static char s_aSearchInput[32];
+	UiTextInput(Search, s_aSearchInput, 32, &s_SearchBox);
+
+	CUIRect BRefresh, BUp, BPrev, BNext, Path;
+	Top.VSplitLeft(Top.h, &BRefresh, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Top);
+	Top.VSplitLeft(Top.h, &BUp, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Top);
+	Top.VSplitLeft(Top.h, &BPrev, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Top);
+	Top.VSplitLeft(Top.h, &BNext, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Path);
+
+	static CUIButton s_BRefresh;
+	if(UiButton(BRefresh, "\xE2\x86\xBB", &s_BRefresh, 15.0f))
+	{
+		dbg_msg("debug", "button down");
+	}
+
+	static CUIButton s_BUp;
+	if(UiButton(BUp, "\xE2\x86\x91", &s_BUp, 15.0f))
+	{
+		dbg_msg("debug", "button down");
+	}
+
+	static CUIButton s_BPrev;
+	if(UiButton(BPrev, "\xE2\x86\x90", &s_BPrev, 15.0f))
+	{
+		dbg_msg("debug", "button down");
+	}
+
+	static CUIButton s_BNext;
+	if(UiButton(BNext, "\xE2\x86\x92", &s_BNext, 15.0f))
+	{
+		dbg_msg("debug", "button down");
+	}
+
+	DrawRectBorder(Path, StyleColorButton, 1, StyleColorButtonBorder);
+
+	MainRect.HSplitTop(Padding * 1/2, 0, &MainRect);
+
+	CUIRect Bookmarks, Browser, Preview;
+	MainRect.VSplitLeft(MainRect.w * 1/5 - (Padding/2), &Bookmarks, &MainRect);
+	MainRect.VSplitLeft(Padding/2, 0, &MainRect);
+	MainRect.VSplitLeft(MainRect.w * 3/4 - (Padding/2), &Browser, &Preview);
+	Preview.VSplitLeft(Padding/2, 0, &Preview);
+
+	Preview.h = Preview.w;
+
+	{
+		CUIRect Label;
+		Bookmarks.HSplitTop(Padding / 2, &Label, &Bookmarks);
+		Label.Margin(1.0f, &Label);
+		DrawText(Label, "Favorites:", Label.h);
+	}
+
+	Browser.HSplitTop(Padding / 2, 0, &Browser);
+
+	{
+		CUIRect Label;
+		Preview.HSplitTop(Padding / 2, &Label, &Preview);
+		Label.Margin(1.0f, &Label);
+		DrawText(Label, "Preview:", Label.h);
+	}
+
+	Bookmarks.HSplitBottom(20.0f + Padding, &Bookmarks, 0);
+	DrawRect(Bookmarks, vec4(0.4, 0.4, 0.5, 1));
+
+	DrawRect(Preview, vec4(0.4, 0.5, 0.5, 1));
+
+	CUIRect Bottom;
+	Browser.HSplitBottom(20.0f, &Browser, &Bottom);
+	Browser.HSplitBottom(Padding, &Browser, 0);
+
+	{
+		static const char *s_apColumns[] = {"Name", "Modified", "Created"};
+		static int s_aCW[] = {3, 1, 1};
+		static const char *s_apEntries[] = {"Test", "D1", "D2", "Test2", "D3", "D4", "Test3", "D3", "D4", "Test4", "D3", "D4", "Test5", "D3", "D4",
+			"Test", "D1", "D2", "Test2", "D3", "D4", "Test3", "D3", "D4", "Test4", "D3", "D4", "Test5", "D3", "D4",
+			"Test", "D1", "D2", "Test2", "D3", "D4", "Test3", "D3", "D4", "Test4", "D3", "D4", "Test5", "D3", "D4",
+			"Test", "D1", "D2", "Test2", "D3", "D4", "Test3", "D3", "D4", "Test4", "D3", "D4", "Test5", "D3", "D4",
+			"Test", "D1", "D2", "Test2", "D3", "D4", "Test3", "D3", "D4", "Test4", "D3", "D4", "Test5", "D3", "D4"};
+
+		static CUIListBox s_Browser;
+		UiListBox(Browser, s_apColumns, s_aCW, 3, s_apEntries, 25, &s_Browser);
+	}
+
+	const float ButtonPadding = (Bottom.h - FontSize - 3.0f) * 0.5f;
+
+	const char *NewFolderText = Localize("New Folder");
+	const float NewFolderTextW = TextRender()->TextWidth(0, FontSize, NewFolderText, -1, -1);
+	const float ButtonW = min(Bottom.w / 7, NewFolderTextW + ButtonPadding) + ButtonPadding;
+	const vec4 ButtonTextColor(1, 1, 1, 1);
+
+	{
+		CUIRect BNewFolder;
+		Bottom.VSplitLeft(ButtonW, &BNewFolder, &Bottom);
+		Bottom.VSplitLeft(Padding / 2, 0, &Bottom);
+
+		static CUIButton s_BNewFolder;
+		if(UiButton(BNewFolder, NewFolderText, &s_BNewFolder, FontSize))
+		{
+			dbg_msg("debug", "button down");
+		}
+	}
+
+	{
+		CUIRect BCancel;
+		Bottom.VSplitRight(ButtonW, &Bottom, &BCancel);
+		Bottom.VSplitRight(Padding / 2, &Bottom, 0);
+
+		static CUIButton s_BCancel;
+		if(UiButton(BCancel, Localize("Cancel"), &s_BCancel, FontSize))
+		{
+			dbg_msg("debug", "button down");
+		}
+	}
+
+	{
+		CUIRect SelectedFile, BOpen;
+		Bottom.VSplitRight(ButtonW, &SelectedFile, &BOpen);
+
+		static CUIButton s_BOpen;
+		if(UiButton(BOpen, Localize("Open"), &s_BOpen, FontSize))
+		{
+			dbg_msg("debug", "button down");
+		}
+
+		if(SelectedFile.w - ButtonW / 2 > 3 * ButtonW)
+			SelectedFile.VSplitLeft(ButtonW / 2, 0, &SelectedFile);
+
+		DrawRectBorder(SelectedFile, StyleColorButton, 1, StyleColorButtonBorder);
+	}
+
 }
 
 void CEditor2::RenderBrush(vec2 Pos)

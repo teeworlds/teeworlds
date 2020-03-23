@@ -70,6 +70,11 @@ struct CUIGrabHandle: CUIMouseDrag
 	bool m_IsGrabbed;
 };
 
+struct CUIListBox
+{
+	int Selected;
+};
+
 struct CEditor2Ui
 {
 	ITextRender *m_pTextRender;
@@ -90,7 +95,7 @@ struct CEditor2Ui
 	void DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawRectBorderOutside(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
-	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
+	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1), CUI::EAlignment Align = CUI::ALIGN_LEFT);
 
 	void UiDoButtonBehaviorNoID(const CUIRect& Rect, CUIButton* pButState);
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState);
@@ -109,6 +114,7 @@ struct CEditor2Ui
 	bool UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
 		float FontSize = 10);
 	bool UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive); // Returns pGrabHandle->m_IsDragging
+	bool UiListBox(const CUIRect& Rect, const char **pColumns, int *ColumnWs, int ColumnCount, const char **pEntryMatrix, int EntryCount, CUIListBox *pListBoxState);
 
 	struct CScrollRegionParams
 	{
