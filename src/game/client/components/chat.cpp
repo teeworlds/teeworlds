@@ -257,16 +257,15 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	else if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
+		bool AddEntry = false;
 		if(IsTypingCommand() && ExecuteCommand(true))
 		{
-			// everything is handled within
+			AddEntry = true;
 		}
 		else
 		{
 			if(m_Input.GetString()[0])
 			{
-				bool AddEntry = false;
-
 				if(m_PendingChatCounter == 0 && m_LastChatSend+time_freq() < time_get())
 				{
 					Say(m_Mode, m_Input.GetString());
@@ -277,17 +276,17 @@ bool CChat::OnInput(IInput::CEvent Event)
 					++m_PendingChatCounter;
 					AddEntry = true;
 				}
-
-				if(AddEntry)
-				{
-					CHistoryEntry *pEntry = m_History.Allocate(sizeof(CHistoryEntry)+m_Input.GetLength());
-					pEntry->m_Mode = m_Mode;
-					mem_copy(pEntry->m_aText, m_Input.GetString(), m_Input.GetLength()+1);
-				}
 			}
 			m_pHistoryEntry = 0x0;
 			m_Mode = CHAT_NONE;
 			m_pClient->OnRelease();
+		}
+
+		if(AddEntry)
+		{
+			CHistoryEntry *pEntry = m_History.Allocate(sizeof(CHistoryEntry)+m_Input.GetLength());
+			pEntry->m_Mode = m_Mode;
+			mem_copy(pEntry->m_aText, m_Input.GetString(), m_Input.GetLength()+1);
 		}
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
