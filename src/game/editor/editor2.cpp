@@ -2831,7 +2831,7 @@ void CEditor2::RenderPopupFileSelect()
 	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f,
 		UiScreenRect.w * Scale, UiScreenRect.h * Scale};
 
-	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145, 0, 0.4, 1));
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
 	MainRect.Margin(Padding * 3/4, &MainRect);
 
 	CUIRect Top, Search;
@@ -2910,9 +2910,9 @@ void CEditor2::RenderPopupFileSelect()
 	}
 
 	Bookmarks.HSplitBottom(20.0f + Padding, &Bookmarks, 0);
-	DrawRect(Bookmarks, vec4(0.4, 0.4, 0.5, 1));
+	DrawRect(Bookmarks, vec4(0.4f, 0.4f, 0.5f, 1.0f));
 
-	DrawRect(Preview, vec4(0.4, 0.5, 0.5, 1));
+	DrawRect(Preview, vec4(0.4f, 0.5f, 0.5f, 1.0f));
 
 	CUIRect Bottom;
 	Browser.HSplitBottom(20.0f, &Browser, &Bottom);

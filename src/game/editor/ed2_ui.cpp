@@ -519,7 +519,7 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 {
 	const float FontSize = 10.0f;
 	const float ItemHeight = 20.0f;
-	const vec4 ButtonColorLight(0.162f, 0.1, 0.29f, 1);
+	const vec4 ButtonColorLight(0.162f, 0.1f, 0.29f, 1.0f);
 
 	pListBoxState->m_Hovering = clamp(pListBoxState->m_Hovering, -1, EntryCount);
 	pListBoxState->m_Selected = clamp(pListBoxState->m_Selected, -1, EntryCount);
