@@ -521,6 +521,9 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 	const float ItemHeight = 20.0f;
 	const vec4 ButtonColorLight(0.162f, 0.1, 0.29f, 1);
 
+	pListBoxState->m_Hovering = clamp(pListBoxState->m_Hovering, -1, EntryCount);
+	pListBoxState->m_Selected = clamp(pListBoxState->m_Selected, -1, EntryCount);
+
 	CUIRect Header, List;
 	Rect.HSplitTop(ItemHeight * 0.75f, &Header, &List);
 
@@ -539,27 +542,44 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 	}
 
 	DrawRect(List, StyleColorButton);
+
 	static CScrollRegion s_List;
 	vec2 ScrollOffset(0, 0);
 	UiBeginScrollRegion(&s_List, &List, &ScrollOffset);
 	List.y += ScrollOffset.y;
 
+	bool Done = false;
 	for(int i = 0; i < EntryCount; i++)
 	{
+		void *pID = (void *)pEntryMatrix[i * ColumnCount];
+
 		CUIRect Line;
 		List.HSplitTop(ItemHeight, &Line, &List);
-		DrawRect(Line, i % 2 ? ButtonColorLight : StyleColorButton);
+
+		if(UI()->DoButtonLogic(pID, &Line))
+		{
+			pListBoxState->m_Selected = i;
+			if(Input()->MouseDoubleClick())
+				Done = true;
+		}
+
+		if(UI()->HotItem() == pID)
+			pListBoxState->m_Hovering = i;
+
+		const vec4 LineColor = i % 2 ? ButtonColorLight : StyleColorButton;
+		DrawRect(Line, pListBoxState->m_Hovering == i || pListBoxState->m_Selected == i ? StyleColorButtonHover : LineColor);
+
 		for(int j = 0, u = 0; j < ColumnCount; j++)
 		{
 			CUIRect Col = {Line.x + u * ColUnitSize, Line.y, ColUnitSize * ColumnWs[j], Line.h};
-			DrawText(Col, pEntryMatrix[i * ColumnCount + j], FontSize);
+			DrawText(Col, pEntryMatrix[i * ColumnCount + j], FontSize); // truncate this text
 			u += ColumnWs[j];
 		}
 		UiScrollRegionAddRect(&s_List, Line);
 	}
 	UiEndScrollRegion(&s_List);
 
-	return false;
+	return Done;
 }
 
 

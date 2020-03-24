@@ -2,6 +2,8 @@
 #ifndef GAME_EDITOR_EDITOR2_H
 #define GAME_EDITOR_EDITOR2_H
 
+#include <base/tl/sorted_array.h>
+
 #include <base/system.h>
 
 #include <engine/editor.h>
@@ -112,6 +114,47 @@ class CEditor2: public IEditor, public CEditor2Ui
 	CUIBrushPalette m_UiBrushPaletteState;
 	CUIRect m_UiPopupBrushPaletteRect;
 	CUIRect m_UiPopupBrushPaletteImageRect;
+
+	struct CFileListItem
+	{
+		char m_aFilename[128];
+		char m_aName[128];
+		bool m_IsDir;
+		bool m_IsLink;
+		int m_StorageType;
+
+		bool operator<(const CFileListItem &Other) { return !str_comp(m_aFilename, "..") ? true : !str_comp(Other.m_aFilename, "..") ? false :
+														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
+														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
+	};
+
+	struct CUIFileSelect
+	{
+		int m_Selected;
+		char m_aPath[512];
+		char m_aCompletePath[512];
+
+		bool (*m_pfnMapSelectCB)(const char *pFilepath, void *pContext);
+		void *m_pContext;
+
+		sorted_array<CFileListItem> m_aFileList;
+		const char **m_ppListBoxEntries;
+
+		char m_aFilter[64];
+
+		CUIFileSelect()
+		{
+			m_Selected = -1;
+			m_aPath[0] = '\0';
+			m_aCompletePath[0] = '\0';
+			m_aFilter[0] = '\0';
+		}
+
+		static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+		void PopulateFileList(IStorage *pStorage, int StorageType);
+		void GenerateListBoxEntries();
+	};
+	CUIFileSelect m_UiFileSelectState;
 
 	bool m_UiDetailPanelIsOpen;
 
@@ -234,6 +277,8 @@ class CEditor2: public IEditor, public CEditor2Ui
 	static void StaticEnvelopeEval(float TimeOffset, int EnvID, float *pChannels, void *pUser);
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
+	static bool LoadFileCallback(const char *pFilepath, void *pContext);
+
 	void RenderMap();
 	void RenderMapOverlay();
 	void RenderMapEditorUI();
@@ -243,7 +288,10 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
 	void RenderPopupMenuFile();
 	void RenderPopupBrushPalette();
+
+	void InvokePopupFileSelect(const char *pInitialPath, bool (*pfnCallback)(const char *pFilename, void *pContext), void *pContext);
 	void RenderPopupFileSelect();
+
 	void RenderBrush(vec2 Pos);
 
 	void RenderAssetManager();

@@ -72,7 +72,13 @@ struct CUIGrabHandle: CUIMouseDrag
 
 struct CUIListBox
 {
-	int Selected;
+	int m_Hovering;
+	int m_Selected;
+
+	CUIListBox()
+	{
+		m_Hovering = m_Selected = -1;
+	}
 };
 
 struct CEditor2Ui
