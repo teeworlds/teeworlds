@@ -936,42 +936,7 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 	if(pUnpacker->Error())
 		return -1;
 
-	bool IgnoreError = false;
-	int NumPlayers = 0;
-	int NumClients = 0;
-	for(int i = 0; i < pInfo->m_NumClients; i++)
-	{
-		str_copy(pInfo->m_aClients[i].m_aName, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[i].m_aName));
-		if(pUnpacker->Error()) // packet end
-		{
-			IgnoreError = true;
-			break;
-		}
-
-		str_copy(pInfo->m_aClients[i].m_aClan, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[i].m_aClan));
-		pInfo->m_aClients[i].m_Country = pUnpacker->GetInt();
-		pInfo->m_aClients[i].m_Score = pUnpacker->GetInt();
-		pInfo->m_aClients[i].m_PlayerType = pUnpacker->GetInt()&CServerInfo::CClient::PLAYERFLAG_MASK;
-
-		if(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_BOT)
-		{
-			if(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC)
-				pInfo->m_NumBotSpectators++;
-			else
-				pInfo->m_NumBotPlayers++;
-		}
-
-		NumClients++;
-		if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
-			NumPlayers++;
-	}
-	pInfo->m_NumReceivedPlayers += NumPlayers;
-	pInfo->m_NumReceivedClients += NumClients;
-
-	if(IgnoreError)
-		return NumClients;
-
-	return pUnpacker->Error() ? -1 : NumClients;
+	return UnpackServerInfoClients(pUnpacker, pInfo);
 }
 
 int CClient::UnpackExtraServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo)
@@ -983,6 +948,11 @@ int CClient::UnpackExtraServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo)
 	if(pUnpacker->Error())
 		return -1;
 
+	return UnpackServerInfoClients(pUnpacker, pInfo);
+}
+
+int CClient::UnpackServerInfoClients(CUnpacker *pUnpacker, CServerInfo *pInfo)
+{
 	bool IgnoreError = false;
 	int NumPlayers = 0;
 	int NumClients = 0;
@@ -1046,6 +1016,17 @@ bool CompareTime(const CServerInfo::CClient &C1, const CServerInfo::CClient &C2)
 inline void SortClients(CServerInfo *pInfo)
 {
 	std::stable_sort(pInfo->m_aClients, pInfo->m_aClients + pInfo->m_NumReceivedClients,
+		(pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE) ? CompareTime : CompareScore);
+}
+
+inline void SortNewClients(CServerInfo *pInfo, int NumNew)
+{
+	std::stable_sort(pInfo->m_aClients + pInfo->m_NumReceivedClients - NumNew,
+		pInfo->m_aClients + pInfo->m_NumReceivedClients,
+		(pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE) ? CompareTime : CompareScore);
+
+	std::inplace_merge(pInfo->m_aClients, pInfo->m_aClients + pInfo->m_NumReceivedClients - NumNew,
+		pInfo->m_aClients + pInfo->m_NumReceivedClients,
 		(pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE) ? CompareTime : CompareScore);
 }
 
@@ -1159,7 +1140,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		int Token, NumNew;
 		if((NumNew = UnpackServerInfo(&Up, &Info, &Token)) >= 0)
 		{
-			SortClients(&Info);
+			SortNewClients(&Info, NumNew);
 			m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, &Info);
 		}
 	}
@@ -1167,7 +1148,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		mem_comp(pPacket->m_pData, SERVERBROWSE_INFO_PLAYERS, sizeof(SERVERBROWSE_INFO_PLAYERS)) == 0)
 	{
 		CServerEntry *pEntry = m_ServerBrowser.FindAll(pPacket->m_Address);
-		if(!pEntry) // We haven't received the main packet yet
+		if(!pEntry) // We didn't request info?
 			return;
 
 		CUnpacker Up;
@@ -1179,7 +1160,7 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		int NumNew = -1;
 		if((NumNew = UnpackExtraServerInfo(&Up, &pEntry->m_Info)) >= 0)
 		{
-			SortClients(&pEntry->m_Info); // TODO: std::inplace_merge would be much more efficient here
+			SortNewClients(&pEntry->m_Info, NumNew);
 		}
 	}
 }

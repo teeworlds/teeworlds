@@ -263,6 +263,7 @@ public:
 
 	int UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken);
 	int UnpackExtraServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo);
+	int UnpackServerInfoClients(CUnpacker *pUnpacker, CServerInfo *pInfo);
 
 	void ProcessConnlessPacket(CNetChunk *pPacket);
 	void ProcessServerPacket(CNetChunk *pPacket);
