@@ -118,26 +118,26 @@ public:
 		BLEND_ADDITIVE,
 	};
 
-	struct SPoint { float x, y; };
-	struct STexCoord { float u, v, i; };
-	struct SColor { float r, g, b, a; };
+	struct CPoint { float x, y; };
+	struct CTexCoord { float u, v, i; };
+	struct CColor { float r, g, b, a; };
 
-	struct SVertex
+	struct CVertex
 	{
-		SPoint m_Pos;
-		STexCoord m_Tex;
-		SColor m_Color;
+		CPoint m_Pos;
+		CTexCoord m_Tex;
+		CColor m_Color;
 	};
 
-	struct SCommand
+	struct CCommand
 	{
 	public:
-		SCommand(unsigned Cmd) : m_Cmd(Cmd), m_Size(0) {}
+		CCommand(unsigned Cmd) : m_Cmd(Cmd), m_Size(0) {}
 		unsigned m_Cmd;
 		unsigned m_Size;
 	};
 
-	struct SState
+	struct CState
 	{
 		int m_BlendMode;
 		int m_WrapModeU;
@@ -145,8 +145,8 @@ public:
 		int m_Texture;
 		int m_TextureArrayIndex;
 		int m_Dimension;
-		SPoint m_ScreenTL;
-		SPoint m_ScreenBR;
+		CPoint m_ScreenTL;
+		CPoint m_ScreenBR;
 
 		// clip
 		bool m_ClipEnable;
@@ -156,43 +156,43 @@ public:
 		int m_ClipH;
 	};
 
-	struct SCommand_Clear : public SCommand
+	struct CClearCommand : public CCommand
 	{
-		SCommand_Clear() : SCommand(CMD_CLEAR) {}
-		SColor m_Color;
+		CClearCommand() : CCommand(CMD_CLEAR) {}
+		CColor m_Color;
 	};
 
-	struct SCommand_Signal : public SCommand
+	struct CSignalCommand : public CCommand
 	{
-		SCommand_Signal() : SCommand(CMD_SIGNAL) {}
+		CSignalCommand() : CCommand(CMD_SIGNAL) {}
 		semaphore *m_pSemaphore;
 	};
 
-	struct SCommand_RunBuffer : public SCommand
+	struct CRunBufferCommand : public CCommand
 	{
-		SCommand_RunBuffer() : SCommand(CMD_RUNBUFFER) {}
+		CRunBufferCommand() : CCommand(CMD_RUNBUFFER) {}
 		CCommandBuffer *m_pOtherBuffer;
 	};
 
-	struct SCommand_Render : public SCommand
+	struct CRenderCommand : public CCommand
 	{
-		SCommand_Render() : SCommand(CMD_RENDER) {}
-		SState m_State;
+		CRenderCommand() : CCommand(CMD_RENDER) {}
+		CState m_State;
 		unsigned m_PrimType;
 		unsigned m_PrimCount;
-		SVertex *m_pVertices; // you should use the command buffer data to allocate vertices for this command
+		CVertex *m_pVertices; // you should use the command buffer data to allocate vertices for this command
 	};
 
-	struct SCommand_Screenshot : public SCommand
+	struct CScreenshotCommand : public CCommand
 	{
-		SCommand_Screenshot() : SCommand(CMD_SCREENSHOT) {}
+		CScreenshotCommand() : CCommand(CMD_SCREENSHOT) {}
 		int m_X, m_Y, m_W, m_H; // specify rectangle size, -1 if fullscreen (width/height)
 		CImageInfo *m_pImage; // processor will fill this out, the one who adds this command must free the data as well
 	};
 
-	struct SCommand_VideoModes : public SCommand
+	struct CVideoModesCommand : public CCommand
 	{
-		SCommand_VideoModes() : SCommand(CMD_VIDEOMODES) {}
+		CVideoModesCommand() : CCommand(CMD_VIDEOMODES) {}
 
 		CVideoMode *m_pModes; // processor will fill this in
 		int m_MaxModes; // maximum of modes the processor can write to the m_pModes
@@ -200,24 +200,24 @@ public:
 		int m_Screen;
 	};
 
-	struct SCommand_Swap : public SCommand
+	struct CSwapCommand : public CCommand
 	{
-		SCommand_Swap() : SCommand(CMD_SWAP) {}
+		CSwapCommand() : CCommand(CMD_SWAP) {}
 
 		int m_Finish;
 	};
 
-	struct SCommand_VSync : public SCommand
+	struct CVSyncCommand : public CCommand
 	{
-		SCommand_VSync() : SCommand(CMD_VSYNC) {}
+		CVSyncCommand() : CCommand(CMD_VSYNC) {}
 
 		int m_VSync;
 		bool *m_pRetOk;
 	};
 
-	struct SCommand_Texture_Create : public SCommand
+	struct CTextureCreateCommand : public CCommand
 	{
-		SCommand_Texture_Create() : SCommand(CMD_TEXTURE_CREATE) {}
+		CTextureCreateCommand() : CCommand(CMD_TEXTURE_CREATE) {}
 
 		// texture information
 		int m_Slot;
@@ -231,9 +231,9 @@ public:
 		void *m_pData; // will be freed by the command processor
 	};
 
-	struct SCommand_Texture_Update : public SCommand
+	struct CTextureUpdateCommand : public CCommand
 	{
-		SCommand_Texture_Update() : SCommand(CMD_TEXTURE_UPDATE) {}
+		CTextureUpdateCommand() : CCommand(CMD_TEXTURE_UPDATE) {}
 
 		// texture information
 		int m_Slot;
@@ -247,9 +247,9 @@ public:
 	};
 
 
-	struct SCommand_Texture_Destroy : public SCommand
+	struct CTextureDestroyCommand : public CCommand
 	{
-		SCommand_Texture_Destroy() : SCommand(CMD_TEXTURE_DESTROY) {}
+		CTextureDestroyCommand() : CCommand(CMD_TEXTURE_DESTROY) {}
 
 		// texture information
 		int m_Slot;
@@ -270,10 +270,10 @@ public:
 	bool AddCommand(const T &Command)
 	{
 		// make sure that we don't do something stupid like ->AddCommand(&Cmd);
-		(void)static_cast<const SCommand *>(&Command);
+		(void)static_cast<const CCommand *>(&Command);
 
 		// allocate and copy the command into the buffer
-		SCommand *pCmd = (SCommand *)m_CmdBuffer.Alloc(sizeof(Command));
+		CCommand *pCmd = (CCommand *)m_CmdBuffer.Alloc(sizeof(Command));
 		if(!pCmd)
 			return false;
 		mem_copy(pCmd, &Command, sizeof(Command));
@@ -281,12 +281,12 @@ public:
 		return true;
 	}
 
-	SCommand *GetCommand(unsigned *pIndex)
+	CCommand *GetCommand(unsigned *pIndex)
 	{
 		if(*pIndex >= m_CmdBuffer.DataUsed())
 			return NULL;
 
-		SCommand *pCommand = (SCommand *)&m_CmdBuffer.DataPtr()[*pIndex];
+		CCommand *pCommand = (CCommand *)&m_CmdBuffer.DataPtr()[*pIndex];
 		*pIndex += pCommand->m_Size;
 		return pCommand;
 	}
@@ -351,7 +351,7 @@ class CGraphics_Threaded : public IEngineGraphics
 		DRAWING_LINES=2
 	};
 
-	CCommandBuffer::SState m_State;
+	CCommandBuffer::CState m_State;
 	IGraphicsBackend *m_pBackend;
 
 	CCommandBuffer *m_apCommandBuffers[NUM_CMDBUFFERS];
@@ -363,11 +363,11 @@ class CGraphics_Threaded : public IEngineGraphics
 	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
 
-	CCommandBuffer::SVertex m_aVertices[MAX_VERTICES];
+	CCommandBuffer::CVertex m_aVertices[MAX_VERTICES];
 	int m_NumVertices;
 
-	CCommandBuffer::SColor m_aColor[4];
-	CCommandBuffer::STexCoord m_aTexture[4];
+	CCommandBuffer::CColor m_aColor[4];
+	CCommandBuffer::CTexCoord m_aTexture[4];
 
 	bool m_RenderEnable;
 
@@ -385,7 +385,7 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	void FlushVertices();
 	void AddVertices(int Count);
-	void Rotate4(const CCommandBuffer::SPoint &rCenter, CCommandBuffer::SVertex *pPoints);
+	void Rotate4(const CCommandBuffer::CPoint &rCenter, CCommandBuffer::CVertex *pPoints);
 
 	void KickCommandBuffer();
 
