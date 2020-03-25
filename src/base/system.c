@@ -1479,8 +1479,8 @@ static inline time_t filetime_to_unixtime(LPFILETIME filetime)
 {
 	time_t t;
 	ULARGE_INTEGER li;
-	li.LowPart = filetime.dwLowDateTime;
-	li.HighPart = filetime.dwHighDateTime;
+	li.LowPart = filetime->dwLowDateTime;
+	li.HighPart = filetime->dwHighDateTime;
 
 	li.QuadPart /= 10000000; // 100ns to 1s
 	li.QuadPart -= 11644473600LL; // Windows epoch is in the past
@@ -1511,8 +1511,8 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	do
 	{
 		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
-		if(cb(finddata.cFileName, fs_is_dir(buffer), type, filetime_to_unixtime(finddata.ftCreationTime),
-			 filetime_to_unixtime(ftLastWriteTime), user))
+		if(cb(finddata.cFileName, fs_is_dir(buffer), type, filetime_to_unixtime(&finddata.ftCreationTime),
+			 filetime_to_unixtime(&ftLastWriteTime), user))
 			break;
 	}
 	while (FindNextFileA(handle, &finddata));
@@ -1762,12 +1762,24 @@ char *fs_read_str(const char *name)
 
 int fs_file_time(const char *name, time_t *created, time_t *modified)
 {
+#if defined(CONF_FAMILY_WINDOWS)
+	WIN32_FIND_DATA finddata;
+	HANDLE handle = FindFirstFile(name, finddata);
+	if(handle == INVALID_HANDLE_VALUE)
+		return 1;
+
+	*created = filetime_to_unixtime(&finddata.ftCreationTime);
+	*modified = filetime_to_unixtime(&finddata.ftWriteTime);
+#elif defined(CONF_FAMILY_UNIX)
 	struct stat sb;
 	if(stat(name, &sb))
 		return 1;
 
 	*created = sb.st_ctime;
 	*modified = sb.st_mtime;
+#else
+	#error not implemented
+#endif
 
 	return 0;
 }
