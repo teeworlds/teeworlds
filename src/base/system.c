@@ -1752,7 +1752,7 @@ int fs_file_time(const char *name, time_t *created, time_t *modified)
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	WIN32_FIND_DATA finddata;
-	HANDLE handle = FindFirstFile(name, finddata);
+	HANDLE handle = FindFirstFile(name, &finddata);
 	if(handle == INVALID_HANDLE_VALUE)
 		return 1;
 
