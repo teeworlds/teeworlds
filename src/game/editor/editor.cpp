@@ -3007,7 +3007,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 }
 
 
-static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, time_t, time_t, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
 	const char *pExt = 0;
@@ -4111,7 +4111,7 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 	MenuBar.VSplitRight(20.f, &MenuBar, &ExitButton);
 	MenuBar.VSplitLeft(40.0f, 0, &MenuBar);
 	MenuBar.VSplitLeft(MenuBar.w*0.75f, &MenuBar, &Info);
-	
+
 
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "File: %s", m_aFileName);

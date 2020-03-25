@@ -1471,6 +1471,22 @@ int net_init()
 	return 0;
 }
 
+#if defined (CONF_FAMILY_WINDOWS)
+static inline time_t filetime_to_unixtime(LPFILETIME filetime)
+{
+	time_t t;
+	ULARGE_INTEGER li;
+	li.LowPart = filetime.dwLowDateTime;
+	li.HighPart = filetime.dwHighDateTime;
+
+	li.QuadPart /= 10000000; // 100ns to 1s
+	li.QuadPart -= 11644473600LL; // Windows epoch is in the past
+
+	t = li.QuadPart;
+	return t == li.QuadPart ? t : (time_t)-1;
+}
+#endif
+
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
@@ -1492,7 +1508,8 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	do
 	{
 		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
-		if(cb(finddata.cFileName, fs_is_dir(buffer), type, user))
+		if(cb(finddata.cFileName, fs_is_dir(buffer), type, filetime_to_unixtime(finddata.ftCreationTime),
+			 filetime_to_unixtime(ftLastWriteTime), user))
 			break;
 	}
 	while (FindNextFileA(handle, &finddata));
@@ -1501,6 +1518,7 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	return;
 #else
 	struct dirent *entry;
+	time_t created, modified;
 	char buffer[1024*2];
 	int length;
 	DIR *d = opendir(dir);
@@ -1514,7 +1532,8 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	while((entry = readdir(d)) != NULL)
 	{
 		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
-		if(cb(entry->d_name, fs_is_dir(buffer), type, user))
+		fs_file_time(buffer, &created, &modified);
+		if(cb(entry->d_name, fs_is_dir(buffer), type, created, modified, user))
 			break;
 	}
 
@@ -1727,6 +1746,18 @@ char *fs_read_str(const char *name)
 	result = io_read_all_str(file);
 	io_close(file);
 	return result;
+}
+
+int fs_file_time(const char *name, time_t *created, time_t *modified)
+{
+	struct stat sb;
+	if(stat(name, &sb))
+		return 1;
+
+	*created = sb.st_ctime;
+	*modified = sb.st_mtime;
+
+	return 0;
 }
 
 void swap_endian(void *data, unsigned elem_size, unsigned num)

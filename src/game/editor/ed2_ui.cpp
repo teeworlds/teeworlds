@@ -516,16 +516,47 @@ bool CEditor2Ui::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, c
 	return pGrabHandle->m_IsDragging;
 }
 
-struct ListBoxComparator {
+class CListBoxComparator {
+protected:
 	int m_Col, m_Dir;
-	ListBoxComparator(int Col, int Dir) : m_Col(Col), m_Dir(Dir) {};
-	bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b)
+	CListBoxComparator(int Col, int Dir) : m_Col(Col), m_Dir(Dir) {};
+
+public:
+	virtual bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b) = 0;
+};
+
+class CListBoxComparatorText : public CListBoxComparator {
+public:
+	CListBoxComparatorText(int Col, int Dir) : CListBoxComparator(Col, Dir) {};
+	virtual bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b)
 	{
-		return str_comp(a.m_paData[m_Col], b.m_paData[m_Col]) * m_Dir < 0;
+		return str_comp((const char *)a.m_paData[m_Col], (const char *)b.m_paData[m_Col]) * m_Dir < 0;
 	}
 };
 
-bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *ColumnWs, int ColumnCount, CUIListBox::Entry *pEntries, int EntryCount, const char *pFilter, int FilterCol, CUIListBox *pListBoxState)
+class CListBoxComparatorDate : public CListBoxComparator {
+public:
+	CListBoxComparatorDate(int Col, int Dir) : CListBoxComparator(Col, Dir) {};
+	virtual bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b)
+	{
+		if(m_Dir > 0)
+			return *(time_t *)a.m_paData[m_Col] < *(time_t *)b.m_paData[m_Col];
+		else
+			return *(time_t *)a.m_paData[m_Col] > *(time_t *)b.m_paData[m_Col];
+
+	}
+};
+
+class CListBoxComparatorIdentity : public CListBoxComparator {
+public:
+	CListBoxComparatorIdentity(int Col, int Dir) : CListBoxComparator(Col, Dir) {};
+	virtual bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b)
+	{
+		return a.m_Id < b.m_Id;
+	}
+};
+
+bool CEditor2Ui::UiListBox(const CUIRect& Rect, const CUIListBox::ColData *pColumns, int ColumnCount, CUIListBox::Entry *pEntries, int EntryCount, const char *pFilter, int FilterCol, CUIListBox *pListBoxState)
 {
 	const float FontSize = 10.0f;
 	const float ItemHeight = 20.0f;
@@ -540,12 +571,12 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 	DrawRect(Header, ButtonColorLight);
 	int SumW = 0;
 	for(int i = 0; i < ColumnCount; i++)
-		SumW += ColumnWs[i];
+		SumW += pColumns[i].m_Width;
 
 	float ColUnitSize = Header.w / SumW;
 	for(int i = 0, u = 0; i < ColumnCount; i++)
 	{
-		CUIRect Item = {Header.x + u * ColUnitSize, Header.y, ColUnitSize * ColumnWs[i], Header.h};
+		CUIRect Item = {Header.x + u * ColUnitSize, Header.y, ColUnitSize * pColumns[i].m_Width, Header.h};
 
 		CUIRect Button;
 		Item.VSplitRight(Item.h, 0, &Button);
@@ -553,8 +584,8 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 		if(i == pListBoxState->m_SortCol)
 			DrawText(Button, pListBoxState->m_SortDir >= 0 ? "\xE2\x86\x91" : "\xE2\x86\x93" , FontSize);
 
-		DrawText(Item, pColumns[i], FontSize);
-		u += ColumnWs[i];
+		DrawText(Item, pColumns[i].m_pName, FontSize);
+		u += pColumns[i].m_Width;
 
 		if(UI()->DoButtonLogic(&pColumns[i], &Item))
 		{
@@ -565,7 +596,17 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 			}
 			else
 			{
-				pListBoxState->m_SortDir *= -1;
+				switch(pListBoxState->m_SortDir)
+				{
+				case -1:
+					pListBoxState->m_SortDir = 1;
+					break;
+				case 0:
+					pListBoxState->m_SortDir = -1;
+					break;
+				case 1:
+					pListBoxState->m_SortCol = -1;
+				}
 			}
 		}
 	}
@@ -581,8 +622,24 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 	// might need to figure out a way to only sort when the entries change e.g. a flag in the state
 	// to be marked by the caller
 	if(pListBoxState->m_SortCol >= 0)
+	{
+		switch(pColumns[pListBoxState->m_SortCol].m_Type)
+		{
+		case CUIListBox::COLTYPE_TEXT:
+			std::stable_sort(pEntries, pEntries + EntryCount,
+				CListBoxComparatorText(pListBoxState->m_SortCol, pListBoxState->m_SortDir));
+			break;
+		case CUIListBox::COLTYPE_DATE:
+			std::stable_sort(pEntries, pEntries + EntryCount,
+				CListBoxComparatorDate(pListBoxState->m_SortCol, pListBoxState->m_SortDir));
+			break;
+		}
+	}
+	else
+	{
 		std::stable_sort(pEntries, pEntries + EntryCount,
-			ListBoxComparator(pListBoxState->m_SortCol, pListBoxState->m_SortDir));
+			CListBoxComparatorIdentity(pListBoxState->m_SortCol, pListBoxState->m_SortDir));
+	}
 
 	bool Done = false;
 	for(int i = 0, j = 0; i < EntryCount; i++)
@@ -590,8 +647,10 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 		CUIListBox::Entry *pEntry = &pEntries[i];
 		void *pID = (void *)&pEntry->m_Id;
 
-		if(!str_find(pEntry->m_paData[FilterCol], pFilter))
+		if(pColumns[FilterCol].m_Type == CUIListBox::COLTYPE_TEXT &&
+			!str_find((const char *)pEntry->m_paData[FilterCol], pFilter))
 			continue;
+
 		j++;
 
 		CUIRect Line;
@@ -612,9 +671,25 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 
 		for(int j = 0, u = 0; j < ColumnCount; j++)
 		{
-			CUIRect Col = {Line.x + u * ColUnitSize, Line.y, ColUnitSize * ColumnWs[j], Line.h};
-			DrawText(Col, pEntry->m_paData[j], FontSize); // truncate this text
-			u += ColumnWs[j];
+			CUIRect Col = {Line.x + u * ColUnitSize, Line.y, ColUnitSize * pColumns[j].m_Width, Line.h};
+
+			if(pColumns[j].m_Type == CUIListBox::COLTYPE_TEXT)
+			{
+				DrawText(Col, (const char *)pEntry->m_paData[j], FontSize); // truncate this text
+			}
+			else if(pColumns[j].m_Type == CUIListBox::COLTYPE_DATE)
+			{
+				char aBuf[32];
+				str_timestamp_ex(*(const time_t *)pEntry->m_paData[j], aBuf, sizeof(aBuf), FORMAT_SPACE);
+				DrawText(Col, aBuf, FontSize * 0.8f);
+			}
+			else
+			{
+				DrawText(Col, "INVALID", FontSize);
+			}
+
+
+			u += pColumns[j].m_Width;
 		}
 		UiScrollRegionAddRect(&s_List, Line);
 	}

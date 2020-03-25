@@ -1324,7 +1324,7 @@ void CMenus::RenderBackButton(CUIRect MainView)
 	}
 }
 
-int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser)
+int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	if(IsDir || !str_endswith(pName, ".png"))
@@ -2495,7 +2495,7 @@ void CMenus::OnRender()
 
 bool CMenus::CheckHotKey(int Key) const
 {
-	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !m_PrevCursorActive && !m_PopupActive && 
+	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !m_PrevCursorActive && !m_PopupActive &&
 		!Input()->KeyIsPressed(KEY_LSHIFT) && !Input()->KeyIsPressed(KEY_RSHIFT) && !Input()->KeyIsPressed(KEY_LCTRL) && !Input()->KeyIsPressed(KEY_RCTRL) && !Input()->KeyIsPressed(KEY_LALT) && // no modifier
 		Input()->KeyIsPressed(Key) && !m_pClient->m_pGameConsole->IsConsoleActive();
 }

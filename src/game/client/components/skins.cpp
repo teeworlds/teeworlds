@@ -25,7 +25,7 @@ int *CSkins::ms_apColorVariables[NUM_SKINPARTS] = {0};
 
 const float MIN_EYE_BODY_COLOR_DIST = 80.f; // between body and eyes (LAB color space)
 
-int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
+int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser)
 {
 	CSkins *pSelf = (CSkins *)pUser;
 	if(IsDir || !str_endswith(pName, ".png"))
@@ -103,7 +103,7 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	return 0;
 }
 
-int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
+int CSkins::SkinScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser)
 {
 	if(IsDir || !str_endswith(pName, ".json"))
 		return 0;

@@ -2770,7 +2770,7 @@ void CEditor2::InvokePopupFileSelect(const char *pInitialPath, bool (*pfnCallbac
 	m_UiCurrentPopupID = POPUP_FILE_SELECT;
 }
 
-int CEditor2::CUIFileSelect::EditorListdirCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+int CEditor2::CUIFileSelect::EditorListdirCallback(const char *pName, int IsDir, int StorageType, time_t Created, time_t Modified, void *pUser)
 {
 	CUIFileSelect *pState = (CUIFileSelect *)pUser;
 
@@ -2787,6 +2787,8 @@ int CEditor2::CUIFileSelect::EditorListdirCallback(const char *pName, int IsDir,
 	Item.m_IsDir = IsDir != 0;
 	Item.m_IsLink = false;
 	Item.m_StorageType = StorageType;
+	Item.m_Created = Created;
+	Item.m_Modified = Modified;
 	pState->m_aFileList.add(Item);
 
 	return 0;
@@ -2805,15 +2807,17 @@ void CEditor2::CUIFileSelect::GenerateListBoxEntries()
 {
 	// An array<const char *> might help get allocations down
 	if(m_pListBoxEntries)
+	{
 		free(m_pListBoxEntries);
+	}
 
 	m_pListBoxEntries = (CUIListBox::Entry *)mem_alloc(m_aFileList.size() * sizeof(*m_pListBoxEntries), 0);
 	for(int i = 0; i < m_aFileList.size(); i++)
 	{
 		m_pListBoxEntries[i].m_Id = i;
 		m_pListBoxEntries[i].m_paData[0] = m_aFileList[i].m_aName;
-		m_pListBoxEntries[i].m_paData[1] = "D1";
-		m_pListBoxEntries[i].m_paData[2] = "D2";
+		m_pListBoxEntries[i].m_paData[1] = &m_aFileList[i].m_Modified;
+		m_pListBoxEntries[i].m_paData[2] = &m_aFileList[i].m_Created;
 	}
 }
 
@@ -2928,11 +2932,12 @@ void CEditor2::RenderPopupFileSelect()
 	Browser.HSplitBottom(20.0f, &Browser, &Bottom);
 	Browser.HSplitBottom(Padding, &Browser, 0);
 
-	static const char *s_apColumns[] = {"Name", "Modified", "Created"};
-	static int s_aCW[] = {3, 1, 1};
+	static const CUIListBox::ColData s_aColumns[] = {{CUIListBox::COLTYPE_TEXT, 4, "Name"},
+		{CUIListBox::COLTYPE_DATE, 2, "Modified"},
+		{CUIListBox::COLTYPE_DATE, 2, "Created"}};
 
 	static CUIListBox s_Browser;
-	if(UiListBox(Browser, s_apColumns, s_aCW, 3, m_UiFileSelectState.m_pListBoxEntries,
+	if(UiListBox(Browser, s_aColumns, 3, m_UiFileSelectState.m_pListBoxEntries,
 			m_UiFileSelectState.m_aFileList.size(), m_UiFileSelectState.m_aFilter, 0, &s_Browser) ||
 		Input()->KeyPress(KEY_RETURN))
 	{
