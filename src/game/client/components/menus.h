@@ -373,7 +373,7 @@ private:
 	};
 	array<CMenuImage> m_lMenuImages;
 
-	static int MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int MenuImageScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser);
 
 	const CMenuImage *FindMenuImage(const char* pName);
 
@@ -392,8 +392,8 @@ private:
 	};
 	sorted_array<CTheme> m_lThemes;
 
-	static int ThemeScan(const char *pName, int IsDir, int DirType, void *pUser);
-	static int ThemeIconScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int ThemeScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser);
+	static int ThemeIconScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser);
 
 	// gametype icons
 	class CGameIcon
@@ -413,7 +413,7 @@ private:
 	array<CGameIcon> m_lGameIcons;
 	IGraphics::CTextureHandle m_GameIconDefault;
 	void DoGameIcon(const char *pName, const CUIRect *pRect);
-	static int GameIconScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int GameIconScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser);
 
 	int64 m_LastInput;
 
@@ -551,7 +551,7 @@ private:
 
 	void DemolistOnUpdate(bool Reset);
 	void DemolistPopulate();
-	static int DemolistFetchCallback(const char *pName, time_t Date, int IsDir, int StorageType, void *pUser);
+	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, time_t, time_t, void *pUser);
 
 	// friends
 	class CFriendItem

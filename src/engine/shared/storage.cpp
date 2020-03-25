@@ -432,7 +432,7 @@ public:
 		bool m_CheckHashAndSize;
 	};
 
-	static int FindFileCallback(const char *pName, int IsDir, int Type, void *pUser)
+	static int FindFileCallback(const char *pName, int IsDir, int Type, time_t, time_t, void *pUser)
 	{
 		CFindCBData Data = *static_cast<CFindCBData *>(pUser);
 		if(IsDir)
@@ -598,6 +598,14 @@ public:
 		*pCrc = Crc;
 		*pSize = Size;
 		return true;
+	}
+
+	virtual bool GetFileTime(const char *pFilename, int StorageType, time_t *pCreated, time_t *pModified)
+	{
+		char aBuf[MAX_PATH_LENGTH];
+		GetCompletePath(StorageType, pFilename, aBuf, sizeof(aBuf));
+
+		return !fs_file_time(aBuf, pCreated, pModified);
 	}
 
 	static IStorage *Create(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments)

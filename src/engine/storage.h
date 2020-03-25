@@ -34,6 +34,7 @@ public:
 	virtual bool CreateFolder(const char *pFoldername, int Type) = 0;
 	virtual void GetCompletePath(int Type, const char *pDir, char *pBuffer, unsigned BufferSize) = 0;
 	virtual bool GetHashAndSize(const char *pFilename, int StorageType, SHA256_DIGEST *pSha256, unsigned *pCrc, unsigned *pSize) = 0;
+	virtual bool GetFileTime(const char *pFilename, int StorageType, time_t *pCreated, time_t *pModified) = 0;
 };
 
 IStorage *CreateStorage(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments);

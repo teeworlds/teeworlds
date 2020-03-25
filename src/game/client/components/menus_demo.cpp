@@ -349,7 +349,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	}
 }
 
-int CMenus::DemolistFetchCallback(const char *pName, time_t Date, int IsDir, int StorageType, void *pUser)
+int CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType, time_t, time_t, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	if(str_comp(pName, ".") == 0

@@ -1333,7 +1333,8 @@ int str_span(const char *str, const char *set);
 		type - Type of the directory
 		user - Pointer to give to the callback
 */
-typedef int (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, int dir_type, void *user);
+typedef int (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, int dir_type,
+	time_t created, time_t modified, void *user);
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 
 
@@ -1499,6 +1500,23 @@ int fs_read(const char *name, void **result, unsigned *result_len);
 		- The result must be freed after it has been used.
 */
 char *fs_read_str(const char *name);
+
+/*
+	Function: fs_file_time
+		Gets the creation and the last modification date of a file.
+
+	Parameters:
+		name - The filename.
+		created - Pointer to time_t
+		modified - Pointer to time_t
+
+	Returns:
+		0 on success non-zero on failure
+
+	Remarks:
+		- Returned time is in seconds since UNIX Epoch
+*/
+int fs_file_time(const char *name, time_t *created, time_t *modified);
 
 /*
 	Group: Undocumented
