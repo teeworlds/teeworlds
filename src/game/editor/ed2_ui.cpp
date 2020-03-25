@@ -641,6 +641,9 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const CUIListBox::ColData *pColu
 			CListBoxComparatorIdentity(pListBoxState->m_SortCol, pListBoxState->m_SortDir));
 	}
 
+	if(!UI()->MouseInside(&Rect))
+		pListBoxState->m_Hovering = -1;
+
 	bool Done = false;
 	for(int i = 0, j = 0; i < EntryCount; i++)
 	{
