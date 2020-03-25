@@ -1,5 +1,6 @@
 #include "ed2_ui.h"
 #include <stdio.h> // sscanf
+#include <algorithm> // std::stable_sort
 #include <engine/textrender.h>
 #include <engine/keys.h>
 #include <game/client/gameclient.h> // Localize
@@ -515,6 +516,15 @@ bool CEditor2Ui::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, c
 	return pGrabHandle->m_IsDragging;
 }
 
+struct ListBoxComparator {
+	int m_Col, m_Dir;
+	ListBoxComparator(int Col, int Dir) : m_Col(Col), m_Dir(Dir) {};
+	bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b)
+	{
+		return str_comp(a.m_paData[m_Col], b.m_paData[m_Col]) * m_Dir < 0;
+	}
+};
+
 bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *ColumnWs, int ColumnCount, CUIListBox::Entry *pEntries, int EntryCount, const char *pFilter, int FilterCol, CUIListBox *pListBoxState)
 {
 	const float FontSize = 10.0f;
@@ -535,10 +545,29 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 	float ColUnitSize = Header.w / SumW;
 	for(int i = 0, u = 0; i < ColumnCount; i++)
 	{
-		CUIRect Button = {Header.x + u * ColUnitSize, Header.y, ColUnitSize * ColumnWs[i], Header.h};
-		DrawText(Button, pColumns[i], FontSize);
+		CUIRect Item = {Header.x + u * ColUnitSize, Header.y, ColUnitSize * ColumnWs[i], Header.h};
+
+		CUIRect Button;
+		Item.VSplitRight(Item.h, 0, &Button);
+
+		if(i == pListBoxState->m_SortCol)
+			DrawText(Button, pListBoxState->m_SortDir >= 0 ? "\xE2\x86\x91" : "\xE2\x86\x93" , FontSize);
+
+		DrawText(Item, pColumns[i], FontSize);
 		u += ColumnWs[i];
-		// TODO: Make these buttons
+
+		if(UI()->DoButtonLogic(&pColumns[i], &Item))
+		{
+			if(pListBoxState->m_SortCol != i)
+			{
+				pListBoxState->m_SortCol = i;
+				pListBoxState->m_SortDir = -1;
+			}
+			else
+			{
+				pListBoxState->m_SortDir *= -1;
+			}
+		}
 	}
 
 	DrawRect(List, StyleColorButton);
@@ -547,6 +576,13 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 	vec2 ScrollOffset(0, 0);
 	UiBeginScrollRegion(&s_List, &List, &ScrollOffset);
 	List.y += ScrollOffset.y;
+
+	// std::stable_sort probably has worse than O(n) performance on already/nearly sorted arrays
+	// might need to figure out a way to only sort when the entries change e.g. a flag in the state
+	// to be marked by the caller
+	if(pListBoxState->m_SortCol >= 0)
+		std::stable_sort(pEntries, pEntries + EntryCount,
+			ListBoxComparator(pListBoxState->m_SortCol, pListBoxState->m_SortDir));
 
 	bool Done = false;
 	for(int i = 0, j = 0; i < EntryCount; i++)

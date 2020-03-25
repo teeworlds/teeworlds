@@ -84,9 +84,12 @@ struct CUIListBox
 	int m_Hovering;
 	int m_Selected;
 
+	int m_SortCol;
+	int m_SortDir;
+
 	CUIListBox()
 	{
-		m_Hovering = m_Selected = -1;
+		m_Hovering = m_Selected = m_SortCol = m_SortDir = -1;
 	}
 };
 

@@ -2840,6 +2840,7 @@ void CEditor2::RenderPopupFileSelect()
 	Top.VSplitLeft(Top.w * 4/5 - (Padding/2), &Top, &Search);
 	Search.VSplitLeft(Padding/2, 0, &Search);
 
+	// Debounce this a little for better performance?
 	static CUITextInput s_SearchBox;
 	UiTextInput(Search, m_UiFileSelectState.m_aFilter, sizeof(m_UiFileSelectState.m_aFilter), &s_SearchBox);
 
