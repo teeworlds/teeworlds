@@ -1518,7 +1518,7 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	return;
 #else
 	struct dirent *entry;
-	time_t created, modified;
+	time_t created = -1, modified = -1;
 	char buffer[1024*2];
 	int length;
 	DIR *d = opendir(dir);
