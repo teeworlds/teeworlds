@@ -515,7 +515,7 @@ bool CEditor2Ui::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, c
 	return pGrabHandle->m_IsDragging;
 }
 
-bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *ColumnWs, int ColumnCount, const char **pEntryMatrix, int EntryCount, CUIListBox *pListBoxState)
+bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *ColumnWs, int ColumnCount, CUIListBox::Entry *pEntries, int EntryCount, const char *pFilter, int FilterCol, CUIListBox *pListBoxState)
 {
 	const float FontSize = 10.0f;
 	const float ItemHeight = 20.0f;
@@ -549,30 +549,35 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const char **pColumns, int *Colu
 	List.y += ScrollOffset.y;
 
 	bool Done = false;
-	for(int i = 0; i < EntryCount; i++)
+	for(int i = 0, j = 0; i < EntryCount; i++)
 	{
-		void *pID = (void *)pEntryMatrix[i * ColumnCount];
+		CUIListBox::Entry *pEntry = &pEntries[i];
+		void *pID = (void *)&pEntry->m_Id;
+
+		if(!str_find(pEntry->m_paData[FilterCol], pFilter))
+			continue;
+		j++;
 
 		CUIRect Line;
 		List.HSplitTop(ItemHeight, &Line, &List);
 
 		if(UI()->DoButtonLogic(pID, &Line))
 		{
-			pListBoxState->m_Selected = i;
+			pListBoxState->m_Selected = pEntry->m_Id;
 			if(Input()->MouseDoubleClick())
 				Done = true;
 		}
 
 		if(UI()->HotItem() == pID)
-			pListBoxState->m_Hovering = i;
+			pListBoxState->m_Hovering = pEntry->m_Id;
 
-		const vec4 LineColor = i % 2 ? ButtonColorLight : StyleColorButton;
-		DrawRect(Line, pListBoxState->m_Hovering == i || pListBoxState->m_Selected == i ? StyleColorButtonHover : LineColor);
+		const vec4 LineColor = j % 2 ? ButtonColorLight : StyleColorButton;
+		DrawRect(Line, pListBoxState->m_Hovering == pEntry->m_Id|| pListBoxState->m_Selected == pEntry->m_Id ? StyleColorButtonHover : LineColor);
 
 		for(int j = 0, u = 0; j < ColumnCount; j++)
 		{
 			CUIRect Col = {Line.x + u * ColUnitSize, Line.y, ColUnitSize * ColumnWs[j], Line.h};
-			DrawText(Col, pEntryMatrix[i * ColumnCount + j], FontSize); // truncate this text
+			DrawText(Col, pEntry->m_paData[j], FontSize); // truncate this text
 			u += ColumnWs[j];
 		}
 		UiScrollRegionAddRect(&s_List, Line);
@@ -619,8 +624,6 @@ void CEditor2Ui::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec
 void CEditor2Ui::UiEndScrollRegion(CScrollRegion* pSr)
 {
 	UI()->ClipDisable();
-
-	dbg_assert(pSr->m_ContentH > 0, "Add some rects with ScrollRegionAddRect()");
 
 	// only show scrollbar if content overflows
 	if(pSr->m_ContentH <= pSr->m_ClipRect.h)

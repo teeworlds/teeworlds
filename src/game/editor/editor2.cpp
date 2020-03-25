@@ -2443,7 +2443,7 @@ void CEditor2::RenderPopupMenuFile()
 		}
 		else
 		{
-			InvokePopupFileSelect("", LoadFileCallback, this);
+			InvokePopupFileSelect("maps", LoadFileCallback, this);
 			// pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		}
 	}
@@ -2763,7 +2763,7 @@ void CEditor2::InvokePopupFileSelect(const char *pInitialPath, bool (*pfnCallbac
 	m_UiFileSelectState.m_pContext = pContext;
 	m_UiFileSelectState.m_pfnMapSelectCB = pfnCallback;
 	str_copy(m_UiFileSelectState.m_aPath, pInitialPath, sizeof(m_UiFileSelectState.m_aPath));
-	m_UiFileSelectState.m_ppListBoxEntries = 0;
+	m_UiFileSelectState.m_pListBoxEntries = 0;
 
 	m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
 
@@ -2774,7 +2774,7 @@ int CEditor2::CUIFileSelect::EditorListdirCallback(const char *pName, int IsDir,
 {
 	CUIFileSelect *pState = (CUIFileSelect *)pUser;
 
-	if(!str_comp(pName, "."))
+	if(!str_comp(pName, ".") || !str_comp(pName, ".."))
 		return 0;
 
 	CEditor2::CFileListItem Item;
@@ -2804,15 +2804,16 @@ void CEditor2::CUIFileSelect::PopulateFileList(IStorage *pStorage, int StorageTy
 void CEditor2::CUIFileSelect::GenerateListBoxEntries()
 {
 	// An array<const char *> might help get allocations down
-	if(m_ppListBoxEntries)
-		free(m_ppListBoxEntries);
+	if(m_pListBoxEntries)
+		free(m_pListBoxEntries);
 
-	m_ppListBoxEntries = (const char **)mem_alloc(m_aFileList.size() * 3 * sizeof(*m_ppListBoxEntries), 0);
+	m_pListBoxEntries = (CUIListBox::Entry *)mem_alloc(m_aFileList.size() * sizeof(*m_pListBoxEntries), 0);
 	for(int i = 0; i < m_aFileList.size(); i++)
 	{
-		m_ppListBoxEntries[i * 3] = m_aFileList[i].m_aName;
-		m_ppListBoxEntries[i * 3 + 1] = "D1";
-		m_ppListBoxEntries[i * 3 + 2] = "D2";
+		m_pListBoxEntries[i].m_Id = i;
+		m_pListBoxEntries[i].m_paData[0] = m_aFileList[i].m_aName;
+		m_pListBoxEntries[i].m_paData[1] = "D1";
+		m_pListBoxEntries[i].m_paData[2] = "D2";
 	}
 }
 
@@ -2842,7 +2843,9 @@ void CEditor2::RenderPopupFileSelect()
 	static CUITextInput s_SearchBox;
 	UiTextInput(Search, m_UiFileSelectState.m_aFilter, sizeof(m_UiFileSelectState.m_aFilter), &s_SearchBox);
 
-	CUIRect BRefresh, BUp, BPrev, BNext, Path;
+	CUIRect BNewFolder, BRefresh, BUp, BPrev, BNext, Path;
+	Top.VSplitLeft(Top.h, &BNewFolder, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Top);
 	Top.VSplitLeft(Top.h, &BRefresh, &Top);
 	Top.VSplitLeft(Padding / 8, 0, &Top);
 	Top.VSplitLeft(Top.h, &BUp, &Top);
@@ -2851,6 +2854,12 @@ void CEditor2::RenderPopupFileSelect()
 	Top.VSplitLeft(Padding / 8, 0, &Top);
 	Top.VSplitLeft(Top.h, &BNext, &Top);
 	Top.VSplitLeft(Padding / 8, 0, &Path);
+
+	static CUIButton s_BNewFolder;
+	if(UiButton(BNewFolder, "+", &s_BNewFolder, 15.0f))
+	{
+		m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+	}
 
 	static CUIButton s_BRefresh;
 	if(UiButton(BRefresh, "\xE2\x86\xBB", &s_BRefresh, 15.0f))
@@ -2922,8 +2931,8 @@ void CEditor2::RenderPopupFileSelect()
 	static int s_aCW[] = {3, 1, 1};
 
 	static CUIListBox s_Browser;
-	if(UiListBox(Browser, s_apColumns, s_aCW, 3, m_UiFileSelectState.m_ppListBoxEntries,
-			m_UiFileSelectState.m_aFileList.size(), &s_Browser) ||
+	if(UiListBox(Browser, s_apColumns, s_aCW, 3, m_UiFileSelectState.m_pListBoxEntries,
+			m_UiFileSelectState.m_aFileList.size(), m_UiFileSelectState.m_aFilter, 0, &s_Browser) ||
 		Input()->KeyPress(KEY_RETURN))
 	{
 		m_UiFileSelectState.m_Selected = s_Browser.m_Selected;
@@ -2936,23 +2945,10 @@ void CEditor2::RenderPopupFileSelect()
 
 	const float ButtonPadding = (Bottom.h - FontSize - 3.0f) * 0.5f;
 
-	const char *NewFolderText = Localize("New Folder");
-	const float NewFolderTextW = TextRender()->TextWidth(0, FontSize, NewFolderText, -1, -1);
-	const float ButtonW = min(Bottom.w / 7, NewFolderTextW + ButtonPadding) + ButtonPadding;
-	const vec4 ButtonTextColor(1, 1, 1, 1);
-
-	{
-		CUIRect BNewFolder;
-		Bottom.VSplitLeft(ButtonW, &BNewFolder, &Bottom);
-		Bottom.VSplitLeft(Padding / 2, 0, &Bottom);
-
-		static CUIButton s_BNewFolder;
-		if(UiButton(BNewFolder, NewFolderText, &s_BNewFolder, FontSize))
-		{
-			// Implement a text prompt for this
-			dbg_msg("debug", "button down");
-		}
-	}
+	const char *CancelText = Localize("Cancel");
+	const float CancelTextW = TextRender()->TextWidth(0, FontSize, CancelText, -1, -1);
+	const float ButtonW = min(Bottom.w / 7, CancelTextW + ButtonPadding) + ButtonPadding;
+	const vec4 ButtonTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 	{
 		CUIRect BCancel;
@@ -2960,7 +2956,7 @@ void CEditor2::RenderPopupFileSelect()
 		Bottom.VSplitRight(Padding / 2, &Bottom, 0);
 
 		static CUIButton s_BCancel;
-		if(UiButton(BCancel, Localize("Cancel"), &s_BCancel, FontSize))
+		if(UiButton(BCancel, CancelText, &s_BCancel, FontSize))
 		{
 			m_UiCurrentPopupID = POPUP_NONE;
 		}

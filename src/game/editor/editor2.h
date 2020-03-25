@@ -138,7 +138,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 		void *m_pContext;
 
 		sorted_array<CFileListItem> m_aFileList;
-		const char **m_ppListBoxEntries;
+		CUIListBox::Entry *m_pListBoxEntries;
 
 		char m_aFilter[64];
 

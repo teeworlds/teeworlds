@@ -72,6 +72,15 @@ struct CUIGrabHandle: CUIMouseDrag
 
 struct CUIListBox
 {
+	enum {
+		MAX_COLUMNS = 10,
+	};
+
+	struct Entry {
+		int m_Id;
+		const char *m_paData[10];
+	};
+
 	int m_Hovering;
 	int m_Selected;
 
@@ -120,7 +129,7 @@ struct CEditor2Ui
 	bool UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
 		float FontSize = 10);
 	bool UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive); // Returns pGrabHandle->m_IsDragging
-	bool UiListBox(const CUIRect& Rect, const char **pColumns, int *ColumnWs, int ColumnCount, const char **pEntryMatrix, int EntryCount, CUIListBox *pListBoxState);
+	bool UiListBox(const CUIRect& Rect, const char **pColumns, int *ColumnWs, int ColumnCount, CUIListBox::Entry *pEntries, int EntryCount, const char *pFilter, int FilterCol, CUIListBox *pListBoxState);
 
 	struct CScrollRegionParams
 	{
