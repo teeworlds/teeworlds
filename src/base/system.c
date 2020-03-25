@@ -1509,7 +1509,7 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	{
 		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
 		if(cb(finddata.cFileName, fs_is_dir(buffer), type, filetime_to_unixtime(&finddata.ftCreationTime),
-			 filetime_to_unixtime(&ftLastWriteTime), user))
+			 filetime_to_unixtime(&finddata.ftLastWriteTime), user))
 			break;
 	}
 	while (FindNextFileA(handle, &finddata));
@@ -1757,7 +1757,7 @@ int fs_file_time(const char *name, time_t *created, time_t *modified)
 		return 1;
 
 	*created = filetime_to_unixtime(&finddata.ftCreationTime);
-	*modified = filetime_to_unixtime(&finddata.ftWriteTime);
+	*modified = filetime_to_unixtime(&finddata.ftLastWriteTime);
 #elif defined(CONF_FAMILY_UNIX)
 	struct stat sb;
 	if(stat(name, &sb))
