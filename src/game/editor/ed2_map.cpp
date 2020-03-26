@@ -124,11 +124,11 @@ bool CEditorMap2::Save(const char* pFileName)
 
 	// FIXME: fix group and layer saving
 	const int GroupCount = m_aGroups.Count();
-
 	for(int mli = 0, gi = 0; gi < GroupCount; gi++)
 	{
-		const CGroup& Group = m_aGroups.Get(gi);
-		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", gi, Group.m_LayerCount, Group.m_OffsetX, Group.m_OffsetY);
+		const int mgi = m_aGroupIDList[gi];
+		const CGroup& Group = m_aGroups.Get(mgi);
+		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", mgi, Group.m_LayerCount, Group.m_OffsetX, Group.m_OffsetY);
 		// old feature
 		// if(!Group->m_SaveToMap)
 		// 	continue;
@@ -155,8 +155,8 @@ bool CEditorMap2::Save(const char* pFileName)
 
 		for(int gli = 0; gli < Group.m_LayerCount; gli++, mli++)
 		{
-			int li = Group.m_apLayerIDs[gli];
-			const CLayer& Layer = m_aLayers.Get(li);
+			const int ili = Group.m_apLayerIDs[gli];
+			const CLayer& Layer = m_aLayers.Get(ili);
 			// old feature
 			// if(!Group->m_lLayers[l]->m_SaveToMap)
 			// 	continue;
@@ -166,7 +166,7 @@ bool CEditorMap2::Save(const char* pFileName)
 				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving tiles layer");
 				// Layer.PrepareForSave();
 
-				ed_dbg("  Group#%d Layer=%d (w=%d, h=%d)", gi, li, Layer.m_Width, Layer.m_Height);
+				ed_dbg("  Group#%d Layer=%d (w=%d, h=%d)", mgi, mli, Layer.m_Width, Layer.m_Height);
 
 				CMapItemLayerTilemap Item;
 				Item.m_Version = CMapItemLayerTilemap::CURRENT_VERSION;
@@ -185,7 +185,7 @@ bool CEditorMap2::Save(const char* pFileName)
 				Item.m_Width = Layer.m_Width;
 				Item.m_Height = Layer.m_Height;
 
-				if(m_GameGroupID == gi && m_GameLayerID == li)
+				if(m_GameGroupID == gi && m_GameLayerID == ili)
 				{
 					Item.m_Flags = TILESLAYERFLAG_GAME;
 					ed_dbg("Game layer reached");
@@ -206,7 +206,7 @@ bool CEditorMap2::Save(const char* pFileName)
 			else if(Layer.IsQuadLayer())
 			{
 				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving quads layer");
-				ed_dbg("  Group#%d Quad=%d (w=%d, h=%d)", gi, mli, Layer.m_Width, Layer.m_Height);
+				ed_dbg("  Group#%d Quad=%d (w=%d, h=%d)", mgi, mli, Layer.m_Width, Layer.m_Height);
 
 				if(Layer.m_aQuads.size())
 				{
@@ -230,7 +230,7 @@ bool CEditorMap2::Save(const char* pFileName)
 			}
 		}
 
-		File.AddItem(MAPITEMTYPE_GROUP, gi, sizeof(GItem), &GItem);
+		File.AddItem(MAPITEMTYPE_GROUP, mgi, sizeof(GItem), &GItem);
 	}
 
 	// check for bezier curve envelopes, otherwise use older, smaller envelope points
