@@ -1323,15 +1323,15 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	}
 
 	// check for valid option
-	if(!pSelf->Console()->LineIsValid(pCommand) || str_length(pCommand) >= VOTE_CMD_LENGTH)
+	if((pCommand[0] != '#' && !pSelf->Console()->LineIsValid(pCommand)) || str_length(pCommand) >= VOTE_CMD_LENGTH)
 	{
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "skipped invalid command '%s'", pCommand);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 		return;
 	}
-	while(*pDescription == ' ')
-		pDescription++;
+
+	pDescription = str_skip_whitespaces_const(pDescription);
 	if(str_length(pDescription) >= VOTE_DESC_LENGTH || *pDescription == 0)
 	{
 		char aBuf[256];
@@ -1341,8 +1341,7 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 	}
 
 	// check for duplicate entry
-	CVoteOptionServer *pOption = pSelf->m_pVoteOptionFirst;
-	while(pOption)
+	for(CVoteOptionServer *pOption = pSelf->m_pVoteOptionFirst; pOption; pOption = pOption->m_pNext)
 	{
 		if(str_comp_nocase(pDescription, pOption->m_aDescription) == 0)
 		{
@@ -1351,14 +1350,13 @@ void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
 			return;
 		}
-		pOption = pOption->m_pNext;
 	}
 
 	// add the option
 	++pSelf->m_NumVoteOptions;
 	int Len = str_length(pCommand);
 
-	pOption = (CVoteOptionServer *)pSelf->m_pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
+	CVoteOptionServer *pOption = (CVoteOptionServer *)pSelf->m_pVoteOptionHeap->Allocate(sizeof(CVoteOptionServer) + Len);
 	pOption->m_pNext = 0;
 	pOption->m_pPrev = pSelf->m_pVoteOptionLast;
 	if(pOption->m_pPrev)
