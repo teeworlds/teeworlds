@@ -121,13 +121,10 @@ bool CEditorMap2::Save(const char* pFileName)
 	}
 
 	// save layers
-
-	// FIXME: fix group and layer saving
-	const int GroupCount = m_aGroups.Count();
-	for(int mli = 0, gi = 0; gi < GroupCount; gi++)
+	for(int mli = 0, mgi = 0; mgi < m_GroupIDListCount; mgi++)
 	{
-		const int mgi = m_aGroupIDList[gi];
-		const CGroup& Group = m_aGroups.Get(mgi);
+		const int gi = m_aGroupIDList[mgi];
+		const CGroup& Group = m_aGroups.Get(gi);
 		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", mgi, Group.m_LayerCount, Group.m_OffsetX, Group.m_OffsetY);
 		// old feature
 		// if(!Group->m_SaveToMap)
@@ -155,8 +152,8 @@ bool CEditorMap2::Save(const char* pFileName)
 
 		for(int gli = 0; gli < Group.m_LayerCount; gli++, mli++)
 		{
-			const int ili = Group.m_apLayerIDs[gli];
-			const CLayer& Layer = m_aLayers.Get(ili);
+			const int li = Group.m_apLayerIDs[gli];
+			const CLayer& Layer = m_aLayers.Get(li);
 			// old feature
 			// if(!Group->m_lLayers[l]->m_SaveToMap)
 			// 	continue;
@@ -185,7 +182,7 @@ bool CEditorMap2::Save(const char* pFileName)
 				Item.m_Width = Layer.m_Width;
 				Item.m_Height = Layer.m_Height;
 
-				if(m_GameGroupID == gi && m_GameLayerID == ili)
+				if(m_GameGroupID == gi && m_GameLayerID == li)
 				{
 					Item.m_Flags = TILESLAYERFLAG_GAME;
 					ed_dbg("Game layer reached");
