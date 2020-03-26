@@ -67,7 +67,7 @@ enum
 enum
 {
 	NET_MAX_CHUNKHEADERSIZE = 3,
-	
+
 	// packets
 	NET_PACKETHEADERSIZE = 7,
 	NET_PACKETHEADERSIZE_CONNLESS = NET_PACKETHEADERSIZE + 2,
@@ -108,7 +108,7 @@ enum
 	//
 	NET_MAX_CLIENTS = 64,
 	NET_MAX_CONSOLE_CLIENTS = 4,
-	
+
 	NET_MAX_SEQUENCE = 1<<10,
 	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
 
@@ -130,6 +130,7 @@ enum
 	NET_CTRLMSG_TOKEN=5,
 
 	NET_CONN_BUFFERSIZE=1024*32,
+	NET_CONNLIMIT_IPS=16,
 
 	NET_ENUM_TERMINATOR
 };
@@ -214,7 +215,7 @@ public:
 	CConfig *Config() { return m_pConfig; }
 	class IEngine *Engine() { return m_pEngine; }
 	int NetType() { return m_Socket.type; }
-	
+
 	void Init(NETSOCKET Socket, class CConfig *pConfig, class IConsole *pConsole, class IEngine *pEngine);
 	void Shutdown();
 	void UpdateLogHandles();
@@ -466,6 +467,14 @@ class CNetServer : public CNetBase
 	CNetTokenManager m_TokenManager;
 	CNetTokenCache m_TokenCache;
 
+	struct SConnection
+	{
+		NETADDR m_Addr;
+		int64 m_Time;
+		int m_Conns;
+	};
+	SConnection m_aConnLog[NET_CONNLIMIT_IPS];
+
 public:
 	//
 	bool Open(NETADDR BindAddr, class CConfig *pConfig, class IConsole *pConsole, class IEngine *pEngine, class CNetBan *pNetBan,
@@ -488,6 +497,8 @@ public:
 	//
 	void SetMaxClients(int MaxClients);
 	void SetMaxClientsPerIP(int MaxClientsPerIP);
+
+	bool Connlimit(const NETADDR &Addr);
 };
 
 class CNetConsole

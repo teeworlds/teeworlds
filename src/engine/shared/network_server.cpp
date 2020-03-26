@@ -5,6 +5,7 @@
 
 #include <engine/console.h>
 
+#include "config.h"
 #include "netban.h"
 #include "network.h"
 
@@ -19,7 +20,7 @@ bool CNetServer::Open(NETADDR BindAddr, CConfig *pConfig, IConsole *pConsole, IE
 	NETSOCKET Socket = net_udp_create(BindAddr, 0);
 	if(!Socket.type)
 		return false;
-	
+
 	// init
 	m_pNetBan = pNetBan;
 	Init(Socket, pConfig, pConsole, pEngine);
@@ -63,7 +64,6 @@ void CNetServer::Drop(int ClientID, const char *pReason)
 
 int CNetServer::Update()
 {
-	int64 Now = time_get();
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 	{
 		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
@@ -72,13 +72,7 @@ int CNetServer::Update()
 		m_aSlots[i].m_Connection.Update();
 		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_ERROR)
 		{
-			if(Now - m_aSlots[i].m_Connection.ConnectTime() < time_freq() && NetBan())
-			{
-				if(NetBan()->BanAddr(ClientAddr(i), 60, "Stressing network") == -1)
-					Drop(i, m_aSlots[i].m_Connection.ErrorString());
-			}
-			else
-				Drop(i, m_aSlots[i].m_Connection.ErrorString());
+			Drop(i, m_aSlots[i].m_Connection.ErrorString());
 		}
 	}
 
@@ -173,6 +167,13 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 						continue;
 					}
 
+					if(Connlimit(Addr))
+					{
+						const char Msg[] = "Too many connections in a short time";
+						SendControlMsg(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, Msg, sizeof(Msg));
+						continue;
+					}
+
 					// only allow a specific number of players with the same ip
 					NETADDR ThisAddr = Addr, OtherAddr;
 					int FoundAddr = 1;
@@ -207,7 +208,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 								m_pfnNewClient(i, m_UserPtr);
 							break;
 						}
-					}					
+					}
 				}
 				else if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
 					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, NET_TOKENFLAG_RESPONSEONLY);
@@ -311,4 +312,38 @@ void CNetServer::SetMaxClients(int MaxClients)
 void CNetServer::SetMaxClientsPerIP(int MaxClientsPerIP)
 {
 	m_MaxClientsPerIP = clamp(MaxClientsPerIP, 1, int(NET_MAX_CLIENTS));
+}
+
+bool CNetServer::Connlimit(const NETADDR &Addr)
+{
+	int64 Now = time_get();
+	int Oldest = 0;
+
+	// This could probably be optimized, maybe addr hashes?
+	for(int i = 0; i < NET_CONNLIMIT_IPS; ++i)
+	{
+		if(!net_addr_comp(&m_aConnLog[i].m_Addr, &Addr))
+		{
+			if(m_aConnLog[i].m_Time > Now - time_freq() * Config()->m_SvConnlimitTime)
+			{
+				if(m_aConnLog[i].m_Conns >= Config()->m_SvConnlimit)
+					return true;
+			}
+			else
+			{
+				m_aConnLog[i].m_Time = Now;
+				m_aConnLog[i].m_Conns = 0;
+			}
+			m_aConnLog[i].m_Conns++;
+			return false;
+		}
+
+		if(m_aConnLog[i].m_Time < m_aConnLog[Oldest].m_Time)
+			Oldest = i;
+	}
+
+	m_aConnLog[Oldest].m_Addr = Addr;
+	m_aConnLog[Oldest].m_Time = Now;
+	m_aConnLog[Oldest].m_Conns = 1;
+	return false;
 }
