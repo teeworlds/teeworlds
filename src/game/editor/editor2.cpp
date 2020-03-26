@@ -2402,6 +2402,13 @@ bool CEditor2::LoadFileCallback(const char *pFilepath, void *pContext)
 	return pEditor->LoadMap(pFilepath);
 }
 
+bool CEditor2::SaveFileCallback(const char *pFilepath, void *pContext)
+{
+	CEditor2 *pEditor = (CEditor2 *)pContext;
+
+	return pEditor->SaveMap(pFilepath);
+}
+
 void CEditor2::RenderPopupMenuFile()
 {
 	if(m_UiCurrentPopupID != POPUP_MENU_FILE)
@@ -2443,7 +2450,7 @@ void CEditor2::RenderPopupMenuFile()
 		}
 		else
 		{
-			InvokePopupFileSelect("maps", LoadFileCallback, this);
+			InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, this);
 			// pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		}
 	}
@@ -2456,6 +2463,7 @@ void CEditor2::RenderPopupMenuFile()
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Save", &s_SaveButton))
 	{
+		InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -2757,11 +2765,13 @@ void CEditor2::RenderPopupBrushPalette()
 	RenderBrush(m_UiMousePos);
 }
 
-void CEditor2::InvokePopupFileSelect(const char *pInitialPath, bool (*pfnCallback)(const char *pFilename, void *pContext), void *pContext)
+void CEditor2::InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext)
 {
+	m_UiFileSelectState.m_pButtonText = pButtonText;
+	m_UiFileSelectState.m_NewFile = NewFile;
 	m_UiFileSelectState.m_Selected = -1;
 	m_UiFileSelectState.m_pContext = pContext;
-	m_UiFileSelectState.m_pfnMapSelectCB = pfnCallback;
+	m_UiFileSelectState.m_pfnFileSelectCB = pfnCallback;
 	str_copy(m_UiFileSelectState.m_aPath, pInitialPath, sizeof(m_UiFileSelectState.m_aPath));
 	m_UiFileSelectState.m_pListBoxEntries = 0;
 
@@ -2828,6 +2838,10 @@ void CEditor2::RenderPopupFileSelect()
 	const float FontSize = 7.0f;
 	const vec4 White(1, 1, 1, 1);
 
+	if(Input()->KeyPress(KEY_ESCAPE))
+		m_UiCurrentPopupID = POPUP_NONE;
+
+	CUIFileSelect *pState = &m_UiFileSelectState;
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
@@ -2846,7 +2860,7 @@ void CEditor2::RenderPopupFileSelect()
 
 	// Debounce this a little for better performance?
 	static CUITextInput s_SearchBox;
-	UiTextInput(Search, m_UiFileSelectState.m_aFilter, sizeof(m_UiFileSelectState.m_aFilter), &s_SearchBox);
+	UiTextInput(Search, pState->m_aFilter, sizeof(pState->m_aFilter), &s_SearchBox);
 
 	CUIRect BNewFolder, BRefresh, BUp, BPrev, BNext, Path;
 	Top.VSplitLeft(Top.h, &BNewFolder, &Top);
@@ -2863,22 +2877,13 @@ void CEditor2::RenderPopupFileSelect()
 	static CUIButton s_BNewFolder;
 	if(UiButton(BNewFolder, "+", &s_BNewFolder, 15.0f))
 	{
-		m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+		pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
 	}
 
 	static CUIButton s_BRefresh;
 	if(UiButton(BRefresh, "\xE2\x86\xBB", &s_BRefresh, 15.0f))
 	{
-		m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
-	}
-
-	static CUIButton s_BUp;
-	if(UiButton(BUp, "\xE2\x86\x91", &s_BUp, 15.0f))
-	{
-		if(fs_parent_dir(m_UiFileSelectState.m_aPath))
-			m_UiFileSelectState.m_aPath[0] = '\0';
-
-		m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+		pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
 	}
 
 	static CUIButton s_BPrev;
@@ -2936,18 +2941,28 @@ void CEditor2::RenderPopupFileSelect()
 		{CUIListBox::COLTYPE_DATE, 2, "Modified"},
 		{CUIListBox::COLTYPE_DATE, 2, "Created"}};
 
+	bool Open = false;
+
 	static CUIListBox s_Browser;
-	if(UiListBox(Browser, s_aColumns, 3, m_UiFileSelectState.m_pListBoxEntries,
-			m_UiFileSelectState.m_aFileList.size(), m_UiFileSelectState.m_aFilter, 0, &s_Browser) ||
+	if(UiListBox(Browser, s_aColumns, 3, pState->m_pListBoxEntries,
+			pState->m_aFileList.size(), pState->m_aFilter, 0, &s_Browser) ||
 		Input()->KeyPress(KEY_RETURN))
 	{
-		m_UiFileSelectState.m_Selected = s_Browser.m_Selected;
+		Open = true;
+		pState->m_Selected = s_Browser.m_Selected;
 	}
 
-	if(s_Browser.m_Selected >= 0)
+	static CUIButton s_BUp;
+	if(UiButton(BUp, "\xE2\x86\x91", &s_BUp, 15.0f))
 	{
-		DrawText(Path, m_UiFileSelectState.m_aCompletePath, FontSize);
+		if(fs_parent_dir(pState->m_aPath))
+			pState->m_aPath[0] = '\0';
+
+		s_Browser.m_Selected = -1;
+		pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
 	}
+
+	DrawText(Path, pState->m_aCompletePath, FontSize);
 
 	const float ButtonPadding = (Bottom.h - FontSize - 3.0f) * 0.5f;
 
@@ -2968,53 +2983,89 @@ void CEditor2::RenderPopupFileSelect()
 		}
 	}
 
+	static char s_aNewFileName[128];
 	{
 		CUIRect SelectedFile, BOpen;
 		Bottom.VSplitRight(ButtonW, &SelectedFile, &BOpen);
 
 		static CUIButton s_BOpen;
-		if(UiButton(BOpen, Localize("Open"), &s_BOpen, FontSize))
+		const char *pButtonText = pState->m_pButtonText;
+		if(pState->m_NewFile && pState->m_Selected >= 0 && pState->m_aFileList[pState->m_Selected].m_IsDir)
 		{
-			m_UiFileSelectState.m_Selected = s_Browser.m_Selected;
+			pButtonText = "Open";
+		}
+		if(UiButton(BOpen, Localize(pButtonText), &s_BOpen, FontSize))
+		{
+			Open = true;
+			pState->m_Selected = s_Browser.m_Selected;
 		}
 
 		if(SelectedFile.w - ButtonW / 2 > 3 * ButtonW)
 			SelectedFile.VSplitLeft(ButtonW / 2, 0, &SelectedFile);
 
-		DrawRectBorder(SelectedFile, StyleColorButton, 1, StyleColorButtonBorder);
-		if(s_Browser.m_Selected >= 0)
-			DrawText(SelectedFile, m_UiFileSelectState.m_aFileList[s_Browser.m_Selected].m_aFilename, FontSize);
+		if(!pState->m_NewFile)
+		{
+			DrawRectBorder(SelectedFile, StyleColorButton, 1, StyleColorButtonBorder);
+			if(s_Browser.m_Selected >= 0)
+				DrawText(SelectedFile, pState->m_aFileList[s_Browser.m_Selected].m_aFilename, FontSize);
+		}
+		else
+		{
+			static CUITextInput s_NewFileName;
+			if(s_Browser.m_Selected >= 0)
+				str_copy(s_aNewFileName,  pState->m_aFileList[s_Browser.m_Selected].m_aFilename, sizeof(s_aNewFileName));
+
+			if(UiTextInput(SelectedFile, s_aNewFileName, sizeof(s_aNewFileName), &s_NewFileName))
+			{
+				s_Browser.m_Selected = -1;
+				for(int i = 0; i < pState->m_aFileList.size(); i++)
+				{
+					if(!str_comp(pState->m_aFileList[i].m_aFilename, s_aNewFileName))
+					{
+						s_Browser.m_Selected = i;
+						break;
+					}
+				}
+			}
+		}
 	}
 
-	if(m_UiFileSelectState.m_Selected >= 0)
+	if(pState->m_Selected >= 0)
 	{
-		int Selected = m_UiFileSelectState.m_Selected;
-		if(m_UiFileSelectState.m_aFileList[Selected].m_IsDir)
+		int Selected = pState->m_Selected;
+		if(pState->m_aFileList[Selected].m_IsDir)
 		{
-			if(!str_comp(m_UiFileSelectState.m_aFileList[Selected].m_aFilename, ".."))
+			if(!str_comp(pState->m_aFileList[Selected].m_aFilename, ".."))
 			{
-				if(fs_parent_dir(m_UiFileSelectState.m_aPath))
-					m_UiFileSelectState.m_aPath[0] = '\0';
+				if(fs_parent_dir(pState->m_aPath))
+					pState->m_aPath[0] = '\0';
 			}
 			else
 			{
-				if(m_UiFileSelectState.m_aPath[0])
-					str_append(m_UiFileSelectState.m_aPath, "/", sizeof(m_UiFileSelectState.m_aPath));
+				if(pState->m_aPath[0])
+					str_append(pState->m_aPath, "/", sizeof(pState->m_aPath));
 
-				str_append(m_UiFileSelectState.m_aPath, m_UiFileSelectState.m_aFileList[Selected].m_aFilename,
-					sizeof(m_UiFileSelectState.m_aPath));
+				str_append(pState->m_aPath, pState->m_aFileList[Selected].m_aFilename,
+					sizeof(pState->m_aPath));
 			}
 
-			m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
-			m_UiFileSelectState.m_Selected = -1;
+			pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+			s_Browser.m_Selected = pState->m_Selected = -1;
 		}
 		else
 		{
 			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "%s/%s", m_UiFileSelectState.m_aPath, m_UiFileSelectState.m_aFileList[Selected].m_aFilename);
-			m_UiFileSelectState.m_pfnMapSelectCB(aBuf, m_UiFileSelectState.m_pContext);
+			str_format(aBuf, sizeof(aBuf), "%s/%s", pState->m_aPath, pState->m_aFileList[Selected].m_aFilename);
+			pState->m_pfnFileSelectCB(aBuf, pState->m_pContext);
 			m_UiCurrentPopupID = POPUP_NONE;
 		}
+	}
+	else if(Open && pState->m_NewFile && s_aNewFileName[0])
+	{
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "%s/%s", pState->m_aPath, s_aNewFileName);
+		pState->m_pfnFileSelectCB(aBuf, pState->m_pContext);
+		m_UiCurrentPopupID = POPUP_NONE;
 	}
 }
 

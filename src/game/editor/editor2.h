@@ -130,13 +130,16 @@ class CEditor2: public IEditor, public CEditor2Ui
 														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
 	};
 
+	typedef bool (*FILE_SELECT_CALLBACK)(const char *pFilename, void *pContext);
 	struct CUIFileSelect
 	{
+		bool m_NewFile;
+		const char *m_pButtonText;
 		int m_Selected;
 		char m_aPath[512];
 		char m_aCompletePath[512];
 
-		bool (*m_pfnMapSelectCB)(const char *pFilepath, void *pContext);
+		FILE_SELECT_CALLBACK m_pfnFileSelectCB;
 		void *m_pContext;
 
 		sorted_array<CFileListItem> m_aFileList;
@@ -280,6 +283,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
 	static bool LoadFileCallback(const char *pFilepath, void *pContext);
+	static bool SaveFileCallback(const char *pFilepath, void *pContext);
 
 	void RenderMap();
 	void RenderMapOverlay();
@@ -291,7 +295,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderPopupMenuFile();
 	void RenderPopupBrushPalette();
 
-	void InvokePopupFileSelect(const char *pInitialPath, bool (*pfnCallback)(const char *pFilename, void *pContext), void *pContext);
+	void InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext);
 	void RenderPopupFileSelect();
 
 	void RenderBrush(vec2 Pos);
