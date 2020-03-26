@@ -120,7 +120,19 @@ void CVoting::AddOption(const char *pDescription)
 	if(!m_pFirst)
 		m_pFirst = pOption;
 
+	int Depth = 0;
+	for(;*pDescription == '#'; pDescription++, Depth++);
+	pOption->m_Depth = Depth ? Depth : pOption->m_pPrev ? pOption->m_pPrev->m_Depth : 0;
+
+	if(Depth)
+		pOption->m_IsSubheader = true;
+
+	if(!*pDescription)
+		pOption->m_Depth = 0;
+
 	str_copy(pOption->m_aDescription, pDescription, sizeof(pOption->m_aDescription));
+
+	dbg_msg("Debug", "Added option '%s' with depth='%d'", pDescription, pOption->m_Depth);
 	++m_NumVoteOptions;
 }
 

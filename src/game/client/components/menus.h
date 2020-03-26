@@ -241,6 +241,7 @@ private:
 	{
 		bool m_Visible;
 		bool m_Selected;
+		bool m_Disabled;
 		CUIRect m_Rect;
 	};
 
@@ -278,6 +279,7 @@ private:
 		void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int SelectedIndex,
 					const CUIRect *pRect = 0, bool Background = true, bool *pActive = 0);
 		CListboxItem DoNextItem(const void *pID, bool Selected = false, bool *pActive = 0);
+		CListboxItem DoSubheader();
 		int DoEnd();
 		bool FilterMatches(const char *pNeedle) const;
 		bool WasItemActivated() const { return m_ListBoxItemActivated; };
