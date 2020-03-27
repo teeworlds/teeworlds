@@ -121,11 +121,11 @@ bool CEditorMap2::Save(const char* pFileName)
 	}
 
 	// save layers
-	for(int mli = 0, mgi = 0; mgi < m_GroupIDListCount; mgi++)
+	for(int SavedLayerIndex = 0, gi = 0; gi < m_GroupIDListCount; gi++)
 	{
-		const int gi = m_aGroupIDList[mgi];
-		const CGroup& Group = m_aGroups.Get(gi);
-		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", mgi, Group.m_LayerCount, Group.m_OffsetX, Group.m_OffsetY);
+		const int GroupID = m_aGroupIDList[gi];
+		const CGroup& Group = m_aGroups.Get(GroupID);
+		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", gi, Group.m_LayerCount, Group.m_OffsetX, Group.m_OffsetY);
 		// old feature
 		// if(!Group->m_SaveToMap)
 		// 	continue;
@@ -144,16 +144,16 @@ bool CEditorMap2::Save(const char* pFileName)
 		// GItem.m_ClipH = Group.m_ClipH;
 		GItem.m_ClipW = 0;
 		GItem.m_ClipH = 0;
-		GItem.m_StartLayer = mli;
+		GItem.m_StartLayer = SavedLayerIndex;
 		GItem.m_NumLayers = 0;
 
 		// save group name
 		StrToInts(GItem.m_aName, sizeof(GItem.m_aName)/sizeof(int), Group.m_aName);
 
-		for(int gli = 0; gli < Group.m_LayerCount; gli++, mli++)
+		for(int gli = 0; gli < Group.m_LayerCount; gli++, SavedLayerIndex++)
 		{
-			const int li = Group.m_apLayerIDs[gli];
-			const CLayer& Layer = m_aLayers.Get(li);
+			const int LayerID = Group.m_apLayerIDs[gli];
+			const CLayer& Layer = m_aLayers.Get(LayerID);
 			// old feature
 			// if(!Group->m_lLayers[l]->m_SaveToMap)
 			// 	continue;
@@ -163,7 +163,7 @@ bool CEditorMap2::Save(const char* pFileName)
 				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving tiles layer");
 				// Layer.PrepareForSave();
 
-				ed_dbg("  Group#%d Layer=%d (w=%d, h=%d)", mgi, mli, Layer.m_Width, Layer.m_Height);
+				ed_dbg("  Group#%d Layer=%d (w=%d, h=%d)", gi, SavedLayerIndex, Layer.m_Width, Layer.m_Height);
 
 				CMapItemLayerTilemap Item;
 				Item.m_Version = CMapItemLayerTilemap::CURRENT_VERSION;
@@ -182,7 +182,7 @@ bool CEditorMap2::Save(const char* pFileName)
 				Item.m_Width = Layer.m_Width;
 				Item.m_Height = Layer.m_Height;
 
-				if(m_GameGroupID == gi && m_GameLayerID == li)
+				if(m_GameGroupID == GroupID && m_GameLayerID == LayerID)
 				{
 					Item.m_Flags = TILESLAYERFLAG_GAME;
 					ed_dbg("Game layer reached");
@@ -196,14 +196,14 @@ bool CEditorMap2::Save(const char* pFileName)
 				// save layer name
 				StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), Layer.m_aName);
 
-				File.AddItem(MAPITEMTYPE_LAYER, mli, sizeof(Item), &Item);
+				File.AddItem(MAPITEMTYPE_LAYER, SavedLayerIndex, sizeof(Item), &Item);
 
 				GItem.m_NumLayers++;
 			}
 			else if(Layer.IsQuadLayer())
 			{
 				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving quads layer");
-				ed_dbg("  Group#%d Quad=%d (w=%d, h=%d)", mgi, mli, Layer.m_Width, Layer.m_Height);
+				ed_dbg("  Group#%d Quad=%d (w=%d, h=%d)", gi, SavedLayerIndex, Layer.m_Width, Layer.m_Height);
 
 				if(Layer.m_aQuads.size())
 				{
@@ -220,14 +220,14 @@ bool CEditorMap2::Save(const char* pFileName)
 					// save layer name
 					StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), Layer.m_aName);
 
-					File.AddItem(MAPITEMTYPE_LAYER, mli, sizeof(Item), &Item);
+					File.AddItem(MAPITEMTYPE_LAYER, SavedLayerIndex, sizeof(Item), &Item);
 
 					GItem.m_NumLayers++;
 				}
 			}
 		}
 
-		File.AddItem(MAPITEMTYPE_GROUP, mgi, sizeof(GItem), &GItem);
+		File.AddItem(MAPITEMTYPE_GROUP, gi, sizeof(GItem), &GItem);
 	}
 
 	// check for bezier curve envelopes, otherwise use older, smaller envelope points
