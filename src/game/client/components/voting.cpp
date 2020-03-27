@@ -132,7 +132,9 @@ void CVoting::AddOption(const char *pDescription)
 
 	str_copy(pOption->m_aDescription, pDescription, sizeof(pOption->m_aDescription));
 
-	dbg_msg("Debug", "Added option '%s' with depth='%d'", pDescription, pOption->m_Depth);
+	if(Config()->m_Debug)
+		dbg_msg("voting", "added option '%s' with depth='%d'", pDescription, pOption->m_Depth);
+
 	++m_NumVoteOptions;
 }
 
