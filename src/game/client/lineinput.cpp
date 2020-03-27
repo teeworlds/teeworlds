@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/math.h>
+
 #include <engine/keys.h>
 #include <engine/input.h>
 #include "lineinput.h"
@@ -41,8 +43,7 @@ void CLineInput::Set(const char *pString)
 void CLineInput::GetSelection(char *pBuf, int BufSize) const
 {
 	int Len = m_CursorPos - m_SelectionStart;
-
-	str_format(pBuf, BufSize, "%.*s", Len > 0 ? Len : Len * -1, &m_Str[Len > 0 ? m_SelectionStart : m_CursorPos]);
+	str_format(pBuf, BufSize, "%.*s", absolute(Len), &m_Str[Len > 0 ? m_SelectionStart : m_CursorPos]);
 }
 
 bool CLineInput::MoveWordStop(char c)
@@ -192,7 +193,7 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 		{
 			char aBuf[MAX_SIZE];
 			int Len = CursorPos - SelectionStart;
-			str_format(aBuf, sizeof(aBuf), "%.*s", Len > 0 ? Len : Len * -1, &pStr[Len > 0 ? SelectionStart : CursorPos]);
+			str_format(aBuf, sizeof(aBuf), "%.*s", absolute(Len), &pStr[Len > 0 ? SelectionStart : CursorPos]);
 			pInput->SetClipboardText(aBuf);
 		}
 	}

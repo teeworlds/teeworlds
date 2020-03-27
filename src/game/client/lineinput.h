@@ -40,7 +40,7 @@ public:
 	int GetLength() const { return m_Len; }
 	int GetSelectionLength() const { return m_CursorPos - m_SelectionStart; }
 	int GetCursorOffset() const { return m_CursorPos; }
-	int GetSelectionStartOffset() const { return m_CursorPos < m_SelectionStart ? m_CursorPos : m_SelectionStart; }
+	int GetSelectionStartOffset() const { return min(m_CursorPos, m_SelectionStart); }
 	void SetCursorOffset(int Offset) { m_CursorPos = Offset > m_Len ? m_Len : Offset < 0 ? 0 : Offset; }
 };
 
