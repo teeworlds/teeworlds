@@ -209,6 +209,14 @@ class CNetBase
 	CHuffman m_Huffman;
 	unsigned char m_aRequestTokenBuf[NET_TOKENREQUEST_DATASIZE];
 
+	struct SConnection
+	{
+		NETADDR m_Addr;
+		int64 m_Time;
+		int m_Conns;
+	};
+	SConnection m_aConnLog[NET_CONNLIMIT_IPS];
+
 public:
 	CNetBase();
 	~CNetBase();
@@ -226,6 +234,8 @@ public:
 	void SendPacketConnless(const NETADDR *pAddr, TOKEN Token, TOKEN ResponseToken, const void *pData, int DataSize);
 	void SendPacket(const NETADDR *pAddr, CNetPacketConstruct *pPacket);
 	int UnpackPacket(NETADDR *pAddr, unsigned char *pBuffer, CNetPacketConstruct *pPacket);
+
+	bool Connlimit(const NETADDR &Addr, int Window, int Limit);
 };
 
 class CNetTokenManager
@@ -467,14 +477,6 @@ class CNetServer : public CNetBase
 	CNetTokenManager m_TokenManager;
 	CNetTokenCache m_TokenCache;
 
-	struct SConnection
-	{
-		NETADDR m_Addr;
-		int64 m_Time;
-		int m_Conns;
-	};
-	SConnection m_aConnLog[NET_CONNLIMIT_IPS];
-
 public:
 	//
 	bool Open(NETADDR BindAddr, class CConfig *pConfig, class IConsole *pConsole, class IEngine *pEngine, class CNetBan *pNetBan,
@@ -497,8 +499,6 @@ public:
 	//
 	void SetMaxClients(int MaxClients);
 	void SetMaxClientsPerIP(int MaxClientsPerIP);
-
-	bool Connlimit(const NETADDR &Addr);
 };
 
 class CNetConsole

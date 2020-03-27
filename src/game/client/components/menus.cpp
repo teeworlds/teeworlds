@@ -50,6 +50,8 @@ CMenus::CMenus()
 	m_ActivePage = PAGE_INTERNET;
 	m_GamePage = PAGE_GAME;
 
+	m_aError[0] = 0;
+
 	m_SidebarTab = 0;
 	m_SidebarActive = true;
 	m_ShowServerDetails = true;
@@ -653,13 +655,13 @@ void CMenus::DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pR
 	str_format(aBuf, sizeof(aBuf), "%s: %s", pStr, aLabels[Value]);
 
 	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
-	
+
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
 	CUIRect Label, ScrollBar;
 	pRect->VSplitLeft(5.0f, 0, &Label);
 	Label.VSplitRight(60.0f, &Label, &ScrollBar);
-	
+
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
 
@@ -1722,7 +1724,7 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_DISCONNECTED)
 		{
 			pTitle = Localize("Disconnected");
-			pExtraText = Client()->ErrorString();
+			pExtraText = m_aError;
 			pButtonText = Localize("Ok");
 			ExtraAlign = CUI::ALIGN_LEFT;
 		}
@@ -2397,6 +2399,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		m_Popup = POPUP_NONE;
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)
 		{
+			str_copy(m_aError, Client()->ErrorString(), sizeof(m_aError));
 			if(str_find(Client()->ErrorString(), "password"))
 			{
 				m_Popup = POPUP_PASSWORD;
@@ -2520,7 +2523,7 @@ void CMenus::OnRender()
 
 bool CMenus::CheckHotKey(int Key) const
 {
-	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !m_PrevCursorActive && !m_PopupActive && 
+	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !m_PrevCursorActive && !m_PopupActive &&
 		!Input()->KeyIsPressed(KEY_LSHIFT) && !Input()->KeyIsPressed(KEY_RSHIFT) && !Input()->KeyIsPressed(KEY_LCTRL) && !Input()->KeyIsPressed(KEY_RCTRL) && !Input()->KeyIsPressed(KEY_LALT) && // no modifier
 		Input()->KeyIsPressed(Key) && !m_pClient->m_pGameConsole->IsConsoleActive();
 }
