@@ -166,7 +166,7 @@ function GenerateMacOSXSettings(settings, conf, arch, compiler)
 	settings.link.frameworks:Add("AGL")
 	-- FIXME: the SDL config is applied in BuildClient too but is needed here before so the launcher will compile
 	config.sdl:Apply(settings)
-	-- settings.link.extrafiles:Merge(Compile(settings, "src/osxlaunch/client.m"))
+	settings.link.extrafiles:Merge(Compile(settings, "src/osxlaunch/client.m"))
 	BuildClient(settings)
 
 	-- Content
@@ -349,20 +349,20 @@ end
 function BuildClient(settings, family, platform)
 	config.sdl:Apply(settings)
 	config.freetype:Apply(settings)
-
+	
 	local client = Compile(settings, Collect("src/engine/client/*.cpp"))
-
+	
 	local game_client = Compile(settings, CollectRecursive("src/game/client/*.cpp"), SharedClientFiles())
 	local game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
-
+	
 	Link(settings, "teeworlds", libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], client, game_client, game_editor)
 end
 
 function BuildServer(settings, family, platform)
 	local server = Compile(settings, Collect("src/engine/server/*.cpp"))
-
+	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
-
+	
 	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], server, game_server)
 end
 
@@ -423,7 +423,7 @@ function GenerateSettings(conf, arch, builddir, compiler)
 		config.compiler:Apply(settings)
 		compiler = config.compiler.driver
 	end
-
+	
 	if conf ==  "debug" then
 		settings.debug = 1
 		settings.optimize = 0
@@ -433,25 +433,25 @@ function GenerateSettings(conf, arch, builddir, compiler)
 		settings.optimize = 1
 		settings.cc.defines:Add("CONF_RELEASE")
 	end
-
+	
 	-- Generate object files in {builddir}/objs/
 	settings.cc.Output = function (settings_, input)
-		-- strip
+		-- strip 
 		input = input:gsub("^src/", "")
 		input = input:gsub("^" .. generated_src_dir .. "/", "")
 		return PathJoin(PathJoin(builddir, "objs"), PathBase(input))
 	end
-
+	
 	-- Build output files in {builddir}
 	settings.link.Output = function (settings_, input)
 		return PathJoin(builddir, PathBase(input) .. settings_.config_ext)
 	end
-
+	
 	settings.cc.includes:Add("src")
 	settings.cc.includes:Add("src/engine/external/pnglite")
 	settings.cc.includes:Add("src/engine/external/wavpack")
 	settings.cc.includes:Add(generated_src_dir)
-
+	
 	if family == "windows" then
 		GenerateWindowsSettings(settings, conf, arch, compiler)
 	elseif family == "unix" then

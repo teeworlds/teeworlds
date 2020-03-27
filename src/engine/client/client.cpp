@@ -2529,7 +2529,11 @@ void CClient::DoVersionSpecificActions()
 	Prediction Latency
 		Upstream latency
 */
+#if defined(CONF_PLATFORM_MACOSX)
+extern "C" int TWMain(int argc, const char **argv) // ignore_convention
+#else
 int main(int argc, const char **argv) // ignore_convention
+#endif
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	bool QuickEditMode = false;
