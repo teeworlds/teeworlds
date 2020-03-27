@@ -509,9 +509,9 @@ bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 		}
 
 		int SelectionStart = min(s_SelStart, s_AtIndex);
-		int SelectionLength = absolute(s_SelStart - s_AtIndex);
-		float ssw = TextRender()->TextWidth(0, FontSize, pDisplayStr, SelectionStart, -1);
-		float sw = TextRender()->TextWidth(0, FontSize, pDisplayStr + SelectionStart, SelectionLength, -1);
+		int SelectionLength = s_AtIndex - s_SelStart;
+		float sw = TextRender()->TextWidth(0, FontSize, pDisplayStr + SelectionStart, absolute(SelectionLength), -1);
+		float ssw = SelectionLength < 0 ? w : w - sw;
 
 		CUIRect Selection = {pRect->x + 2.0f + ssw, pRect->y, sw, pRect->h};
 		Selection.HMargin(2.0f, &Selection);

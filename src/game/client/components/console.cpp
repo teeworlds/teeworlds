@@ -196,7 +196,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 					m_CompletionMapChosen++;
 					m_CompletionMapEnumerationCount = 0;
 					m_pGameConsole->m_pConsole->PossibleMaps(m_aCompletionMapBuffer, PossibleMapsCompleteCallback, this);
-					
+
 					// handle wrapping
 					if(m_CompletionMapEnumerationCount && m_CompletionMapChosen >= m_CompletionMapEnumerationCount)
 					{
@@ -501,18 +501,24 @@ void CGameConsole::OnRender()
 		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
 		TextRender()->TextEx(&Cursor, aInputString+pConsole->m_Input.GetCursorOffset(), -1);
 		int Lines = Cursor.m_LineCount;
-		
+
 		y -= (Lines - 1) * FontSize;
 		TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
 		Cursor.m_LineWidth = Screen.w - 10.0f - x;
-		
-		TextRender()->TextEx(&Cursor, aInputString, pConsole->m_Input.GetCursorOffset());
+
 		static float MarkerOffset = TextRender()->TextWidth(0, FontSize, "|", -1, -1.0f)/3;
-		CTextCursor Marker = Cursor;
-		Marker.m_X -= MarkerOffset;
-		Marker.m_LineWidth = -1;
-		TextRender()->TextEx(&Marker, "|", -1);
-		TextRender()->TextEx(&Cursor, aInputString+pConsole->m_Input.GetCursorOffset(), -1);
+		TextRender()->TextEx(&Cursor, aInputString, -1);
+		float w = TextRender()->TextWidth(0, FontSize, aInputString, pConsole->m_Input.GetCursorOffset(), -1);
+		TextRender()->Text(0, x + w - MarkerOffset, Cursor.m_Y, FontSize, "|", -1);
+
+		int SelectionStart = pConsole->m_Input.GetSelectionStartOffset();
+		int SelectionLength = pConsole->m_Input.GetSelectionLength();
+		float sw = TextRender()->TextWidth(0, FontSize, aInputString + SelectionStart, absolute(SelectionLength), -1);
+		float ssw = SelectionLength < 0 ? w : w - sw;
+
+		// Cheat with the Y coordinate in lieu of a proper bounding box
+		CUIRect Selection = {x + ssw, Cursor.m_Y + FontSize * 0.25f, sw, FontSize};
+		RenderTools()->DrawUIRect(&Selection, vec4(1.0f, 1.0f, 1.0f, 0.3f), 0, 0.0f);
 
 		// render possible commands
 		if(m_ConsoleType == CONSOLETYPE_LOCAL || Client()->RconAuthed())
