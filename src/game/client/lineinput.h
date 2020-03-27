@@ -16,11 +16,12 @@ class CLineInput
 	char m_Str[MAX_SIZE];
 	int m_Len;
 	int m_CursorPos;
+	int m_SelectionStart;
 	int m_NumChars;
 	IInput *m_pInput;
 public:
 	static bool MoveWordStop(char c);
-	static bool Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr, IInput *pInput);
+	static bool Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pSelectionStart, int *pNumCharsPtr, IInput *pInput);
 
 	class CCallback
 	{
@@ -35,8 +36,11 @@ public:
 	bool ProcessInput(IInput::CEvent e);
 	void Set(const char *pString);
 	const char *GetString() const { return m_Str; }
+	void GetSelection(char *pBuf, int BufSize) const;
 	int GetLength() const { return m_Len; }
+	int GetSelectionLength() const { return m_CursorPos - m_SelectionStart; }
 	int GetCursorOffset() const { return m_CursorPos; }
+	int GetSelectionStartOffset() const { return m_CursorPos < m_SelectionStart ? m_CursorPos : m_SelectionStart; }
 	void SetCursorOffset(int Offset) { m_CursorPos = Offset > m_Len ? m_Len : Offset < 0 ? 0 : Offset; }
 };
 

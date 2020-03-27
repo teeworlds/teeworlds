@@ -288,6 +288,7 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 	bool ReturnValue = false;
 	bool UpdateOffset = false;
 	static int s_AtIndex = 0;
+	static int s_SelStart = 0;
 	static bool s_DoScroll = false;
 	static float s_ScrollStart = 0.0f;
 
@@ -348,7 +349,7 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 			{
 				Len = str_length(pStr);
 				int NumChars = Len;
-				ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars, Input());
+				ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &s_SelStart, &NumChars, Input());
 			}
 		}
 	}

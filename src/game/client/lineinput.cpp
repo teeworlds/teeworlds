@@ -15,6 +15,7 @@ void CLineInput::Clear()
 	mem_zero(m_Str, sizeof(m_Str));
 	m_Len = 0;
 	m_CursorPos = 0;
+	m_SelectionStart = 0;
 	m_NumChars = 0;
 }
 
@@ -37,6 +38,13 @@ void CLineInput::Set(const char *pString)
 	}
 }
 
+void CLineInput::GetSelection(char *pBuf, int BufSize) const
+{
+	int Len = m_CursorPos - m_SelectionStart;
+
+	str_format(pBuf, BufSize, "%.*s", Len > 0 ? Len : Len * -1, &m_Str[Len > 0 ? m_SelectionStart : m_CursorPos]);
+}
+
 bool CLineInput::MoveWordStop(char c)
 {
 	// jump to spaces and special ASCII characters
@@ -45,10 +53,11 @@ bool CLineInput::MoveWordStop(char c)
 			(91 <= c && c <= 96));  // [\]^_`
 }
 
-bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr, IInput *pInput)
+bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pSelectionStart, int *pNumCharsPtr, IInput *pInput)
 {
 	int NumChars = *pNumCharsPtr;
 	int CursorPos = *pCursorPosPtr;
+	int SelectionStart = *pSelectionStart;
 	int Len = *pStrLenPtr;
 	bool Changes = false;
 
@@ -87,6 +96,7 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 		}
 	}
 
+	bool Selecting = !Changes && pInput && (pInput->KeyIsPressed(KEY_RSHIFT) || pInput->KeyIsPressed(KEY_LSHIFT));
 	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
 		int Key = Event.m_Key;
@@ -97,6 +107,7 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 		if(pInput && (pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)))
 #endif
 			MoveWord = true;
+
 		if(Key == KEY_BACKSPACE && CursorPos > 0)
 		{
 			int NewCursorPos = CursorPos;
@@ -177,6 +188,18 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 				}
 			}
 		}
+		else if((pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)) && Key == KEY_C)
+		{
+			char aBuf[MAX_SIZE];
+			int Len = CursorPos - SelectionStart;
+			str_format(aBuf, sizeof(aBuf), "%.*s", Len > 0 ? Len : Len * -1, &pStr[Len > 0 ? SelectionStart : CursorPos]);
+			pInput->SetClipboardText(aBuf);
+		}
+	}
+
+	if(*pCursorPosPtr != CursorPos)
+	{
+		*pSelectionStart = Selecting ? SelectionStart : CursorPos;
 	}
 
 	*pNumCharsPtr = NumChars;
@@ -188,5 +211,5 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 
 bool CLineInput::ProcessInput(IInput::CEvent e)
 {
-	return Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_NumChars, m_pInput);
+	return Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_SelectionStart, &m_NumChars, m_pInput);
 }

@@ -345,11 +345,13 @@ bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 	bool Changed = false;
 	bool UpdateOffset = false;
 	static int s_AtIndex = 0;
+	static int s_SelStart = 0;
 	static bool s_DoScroll = false;
 
 	if(UI()->LastActiveItem() == pID)
 	{
 		static float s_ScrollStart = 0.0f;
+		int OldIndex = s_AtIndex;
 
 		int Len = str_length(pStr);
 		if(Len == 0)
@@ -399,13 +401,16 @@ bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 			UI()->ClearLastActiveItem();
 		}
 
+		if(s_AtIndex != OldIndex)
+			s_SelStart = s_AtIndex;
+
 		if(UI()->LastActiveItem() == pID && UI()->Enabled())
 		{
 			for(int i = 0; i < Input()->NumEvents(); i++)
 			{
 				Len = str_length(pStr);
 				int NumChars = Len;
-				Changed |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars, Input());
+				Changed |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &s_SelStart, &NumChars, Input());
 			}
 		}
 	}
@@ -502,6 +507,15 @@ bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 			Textbox.x += TextWidth - *pOffset - TextRender()->TextWidth(0, FontSize, "|", -1, -1.0f)/2;
 			UI()->DoLabel(&Textbox, "|", FontSize, CUI::ALIGN_LEFT);
 		}
+
+		int SelectionStart = min(s_SelStart, s_AtIndex);
+		int SelectionLength = absolute(s_SelStart - s_AtIndex);
+		float ssw = TextRender()->TextWidth(0, FontSize, pDisplayStr, SelectionStart, -1);
+		float sw = TextRender()->TextWidth(0, FontSize, pDisplayStr + SelectionStart, SelectionLength, -1);
+
+		CUIRect Selection = {pRect->x + 2.0f + ssw, pRect->y, sw, pRect->h};
+		Selection.HMargin(2.0f, &Selection);
+		RenderTools()->DrawUIRect(&Selection, vec4(1.0f, 1.0f, 1.0f, 0.3f), 0, 0.0f);
 	}
 	UI()->ClipDisable();
 
@@ -2254,7 +2268,7 @@ bool CMenus::CheckHotKey(int Key) const
 }
 
 bool CMenus::IsBackgroundNeeded() const
-{ 
+{
 	return !m_pClient->m_InitComplete || (Client()->State() != IClient::STATE_ONLINE && !m_pClient->m_pMapLayersBackGround->MenuMapLoaded());
 }
 

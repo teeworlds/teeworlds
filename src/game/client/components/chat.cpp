@@ -971,14 +971,59 @@ void CChat::OnRender()
 		}
 		else
 		{
-			//Render normal text
-			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
 			static float MarkerOffset = TextRender()->TextWidth(0, 8.0f, "|", -1, -1.0f)/3;
-			CTextCursor Marker = Cursor;
-			Marker.m_X -= MarkerOffset;
+			//Render normal text
+			int SelectionStart = m_Input.GetSelectionStartOffset();
+			int SelectionLength = m_Input.GetSelectionLength();
 
-			TextRender()->TextEx(&Marker, "|", -1);
-			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
+			// Cheat with the Y coordinate in lieu of a proper bounding box
+			CUIRect Selection = {0, Cursor.m_Y + Cursor.m_FontSize * 0.25f, 0, Cursor.m_FontSize};
+			if(SelectionStart >= m_ChatStringOffset && SelectionLength)
+			{
+				if(SelectionLength < 0)
+				{
+					// render until cursor
+					TextRender()->TextEx(&Cursor, m_Input.GetString() + m_ChatStringOffset, m_Input.GetCursorOffset() - m_ChatStringOffset);
+					// render cursor
+					CTextCursor Marker = Cursor;
+					Marker.m_X -= MarkerOffset;
+
+					TextRender()->TextEx(&Marker, "|", -1);
+					// render selection
+					Selection.x = Cursor.m_X;
+					TextRender()->TextEx(&Cursor, m_Input.GetString() + SelectionStart, absolute(SelectionLength));
+					Selection.w = Cursor.m_X - Selection.x;
+				}
+				else
+				{
+					// render until selectionstart
+					TextRender()->TextEx(&Cursor, m_Input.GetString() + m_ChatStringOffset, SelectionStart - m_ChatStringOffset);
+					// render selection
+					Selection.x = Cursor.m_X;
+					TextRender()->TextEx(&Cursor, m_Input.GetString() + SelectionStart, absolute(SelectionLength));
+					Selection.w = Cursor.m_X - Selection.x;
+
+					// render cursor
+					CTextCursor Marker = Cursor;
+					Marker.m_X -= MarkerOffset;
+
+					TextRender()->TextEx(&Marker, "|", -1);
+				}
+
+				//render rest
+				TextRender()->TextEx(&Cursor, m_Input.GetString() + SelectionStart + absolute(SelectionLength), -1);
+
+				RenderTools()->DrawUIRect(&Selection, vec4(1.0f, 1.0f, 1.0f, 0.3f), 0, 0.0f);
+			}
+			else
+			{
+				TextRender()->TextEx(&Cursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
+				CTextCursor Marker = Cursor;
+				Marker.m_X -= MarkerOffset;
+
+				TextRender()->TextEx(&Marker, "|", -1);
+				TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
+			}
 
 			//Render command autocomplete option hint
 			if(IsTypingCommand() && m_CommandManager.CommandCount() - m_FilteredCount && m_SelectedCommand >= 0)
