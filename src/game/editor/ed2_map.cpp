@@ -121,17 +121,11 @@ bool CEditorMap2::Save(const char* pFileName)
 	}
 
 	// save layers
-
-	// FIXME: fix group and layer saving
-	dbg_assert(0, "Implement me");
-#if 0
-	const int GroupCount = m_aGroups.Count();
-	const CGroup* aGroups = m_aGroups.Data();
-
-	for(int li = 0, gi = 0; gi < GroupCount; gi++)
+	for(int mli = 0, mgi = 0; mgi < m_GroupIDListCount; mgi++)
 	{
-		const CGroup& Group = aGroups[gi];
-		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", gi, Group.m_LayerCount, Group.m_OffsetX, Group.m_OffsetY);
+		const int gi = m_aGroupIDList[mgi];
+		const CGroup& Group = m_aGroups.Get(gi);
+		ed_dbg("Group#%d NumLayers=%d Offset=(%d, %d)", mgi, Group.m_LayerCount, Group.m_OffsetX, Group.m_OffsetY);
 		// old feature
 		// if(!Group->m_SaveToMap)
 		// 	continue;
@@ -150,27 +144,26 @@ bool CEditorMap2::Save(const char* pFileName)
 		// GItem.m_ClipH = Group.m_ClipH;
 		GItem.m_ClipW = 0;
 		GItem.m_ClipH = 0;
-		GItem.m_StartLayer = li;
+		GItem.m_StartLayer = mli;
 		GItem.m_NumLayers = 0;
 
 		// save group name
 		StrToInts(GItem.m_aName, sizeof(GItem.m_aName)/sizeof(int), Group.m_aName);
 
-
-		for(; li < GItem.m_StartLayer + Group.m_LayerCount; li++)
+		for(int gli = 0; gli < Group.m_LayerCount; gli++, mli++)
 		{
-
+			const int li = Group.m_apLayerIDs[gli];
+			const CLayer& Layer = m_aLayers.Get(li);
 			// old feature
 			// if(!Group->m_lLayers[l]->m_SaveToMap)
 			// 	continue;
 
-			if(m_aLayers[li].IsTileLayer())
+			if(Layer.IsTileLayer())
 			{
 				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving tiles layer");
-				CLayer& Layer = m_aLayers[li];
 				// Layer.PrepareForSave();
 
-				ed_dbg("  Group#%d Layer=%d (w=%d, h=%d)", gi, li, Layer.m_Width, Layer.m_Height);
+				ed_dbg("  Group#%d Layer=%d (w=%d, h=%d)", mgi, mli, Layer.m_Width, Layer.m_Height);
 
 				CMapItemLayerTilemap Item;
 				Item.m_Version = CMapItemLayerTilemap::CURRENT_VERSION;
@@ -198,47 +191,44 @@ bool CEditorMap2::Save(const char* pFileName)
 					Item.m_Flags = 0;
 				Item.m_Image = Layer.m_ImageID;
 				// Item.m_Data = File.AddData(Layer.m_SaveTilesSize, Layer.m_pSaveTiles);
-				Item.m_Data = File.AddData(Layer.m_aTiles.size()*sizeof(CTile), Layer.m_aTiles.base_ptr());
+				Item.m_Data = File.AddData(Layer.m_aTiles.size() * sizeof(CTile), (void *)Layer.m_aTiles.base_ptr());
 
 				// save layer name
 				StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), Layer.m_aName);
 
-				File.AddItem(MAPITEMTYPE_LAYER, li, sizeof(Item), &Item);
+				File.AddItem(MAPITEMTYPE_LAYER, mli, sizeof(Item), &Item);
 
 				GItem.m_NumLayers++;
 			}
-			else if(m_aLayers[li].IsQuadLayer())
+			else if(Layer.IsQuadLayer())
 			{
 				// Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", "saving quads layer");
-				CLayer& LayerQuad = m_aLayers[li];
+				ed_dbg("  Group#%d Quad=%d (w=%d, h=%d)", mgi, mli, Layer.m_Width, Layer.m_Height);
 
-				ed_dbg("  Group#%d Quad=%d (w=%d, h=%d)", gi, li, LayerQuad.m_Width, LayerQuad.m_Height);
-
-				if(LayerQuad.m_aQuads.size())
+				if(Layer.m_aQuads.size())
 				{
 					CMapItemLayerQuads Item;
 					Item.m_Version = CMapItemLayerQuads::CURRENT_VERSION;
-					Item.m_Layer.m_Flags = (int)LayerQuad.m_HighDetail*LAYERFLAG_DETAIL; // LAYERFLAG_DETAIL or 0
-					Item.m_Layer.m_Type = LayerQuad.m_Type;
-					Item.m_Image = LayerQuad.m_ImageID;
+					Item.m_Layer.m_Flags = (int)Layer.m_HighDetail*LAYERFLAG_DETAIL; // LAYERFLAG_DETAIL or 0
+					Item.m_Layer.m_Type = Layer.m_Type;
+					Item.m_Image = Layer.m_ImageID;
 
 					// add the data
-					Item.m_NumQuads = LayerQuad.m_aQuads.size();
-					Item.m_Data = File.AddDataSwapped(LayerQuad.m_aQuads.size()*sizeof(CQuad), LayerQuad.m_aQuads.base_ptr());
+					Item.m_NumQuads = Layer.m_aQuads.size();
+					Item.m_Data = File.AddDataSwapped(Layer.m_aQuads.size()*sizeof(CQuad), (void *)Layer.m_aQuads.base_ptr());
 
 					// save layer name
-					StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), LayerQuad.m_aName);
+					StrToInts(Item.m_aName, sizeof(Item.m_aName)/sizeof(int), Layer.m_aName);
 
-					File.AddItem(MAPITEMTYPE_LAYER, li, sizeof(Item), &Item);
+					File.AddItem(MAPITEMTYPE_LAYER, mli, sizeof(Item), &Item);
 
 					GItem.m_NumLayers++;
 				}
 			}
 		}
 
-		File.AddItem(MAPITEMTYPE_GROUP, gi, sizeof(GItem), &GItem);
+		File.AddItem(MAPITEMTYPE_GROUP, mgi, sizeof(GItem), &GItem);
 	}
-#endif
 
 	// check for bezier curve envelopes, otherwise use older, smaller envelope points
 	int Version = CMapItemEnvelope_v2::CURRENT_VERSION;
