@@ -12,7 +12,7 @@ static IOHANDLE s_File = 0;
 static IStorage *s_pStorage = 0;
 static IEngineMap *s_pEngineMap = 0;
 
-int MaplistCallback(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser)
+int MaplistCallback(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	int l = str_length(pName);
 	if(l < 4 || IsDir || str_comp(pName+l-4, ".map") != 0)
