@@ -259,7 +259,7 @@ public:
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, CConfig *pConfig, IConsole *pConsole);
 	int Run();
 
-	static int MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser);
+	static int MapListEntryCallback(const char *pFilename, int IsDir, int DirType, time_t, time_t, void *pUser);
 
 	static void ConKick(IConsole::IResult *pResult, void *pUser);
 	static void ConStatus(IConsole::IResult *pResult, void *pUser);

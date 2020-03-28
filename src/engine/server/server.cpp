@@ -1201,7 +1201,7 @@ void CServer::PumpNetwork()
 
 				CPacker Packer;
 				CNetChunk Response;
-				
+
 				GenerateServerInfo(&Packer, SrvBrwsToken);
 
 				Response.m_ClientID = -1;
@@ -1489,7 +1489,7 @@ int CServer::Run()
 	return 0;
 }
 
-int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser)
+int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType, time_t, time_t, void *pUser)
 {
 	CSubdirCallbackUserdata *pUserdata = (CSubdirCallbackUserdata *)pUser;
 	CServer *pThis = pUserdata->m_pServer;
@@ -1513,7 +1513,7 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 		pThis->m_pStorage->ListDirectory(IStorage::TYPE_ALL, FindPath, MapListEntryCallback, &Userdata);
 		return 0;
 	}
-	
+
 	const char *pSuffix = str_endswith(aFilename, ".map");
 	if(!pSuffix) // not ending with .map
 	{
@@ -1902,4 +1902,3 @@ int main(int argc, const char **argv) // ignore_convention
 
 	return Ret;
 }
-

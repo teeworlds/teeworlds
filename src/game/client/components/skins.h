@@ -16,7 +16,7 @@ public:
 		SKINFLAG_STANDARD=1<<1,
 
 		DARKEST_COLOR_LGT=61,
-		
+
 		NUM_COLOR_COMPONENTS=4,
 
 		HAT_NUM=2,
@@ -83,8 +83,8 @@ private:
 	sorted_array<CSkin> m_aSkins;
 	CSkin m_DummySkin;
 
-	static int SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser);
-	static int SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int SkinPartScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser);
+	static int SkinScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser);
 };
 
 #endif

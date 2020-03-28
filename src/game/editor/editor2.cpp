@@ -256,16 +256,12 @@ void CEditor2::Update()
 			m_TileSelection.Deselect();
 		}
 
-		if(IsToolBrush())
-		{
-			if(Input()->KeyPress(KEY_ESCAPE))
-				BrushClear();
-
-			if(Input()->KeyIsPressed(KEY_SPACE))
-				m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
-			else
-				m_UiCurrentPopupID = POPUP_NONE;
-		}
+		if(IsToolBrush() && Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
+			m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
+		else if((!IsToolBrush() || !Input()->KeyIsPressed(KEY_SPACE)) && m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
+			m_UiCurrentPopupID = POPUP_NONE;
+		if(IsToolBrush() && Input()->KeyPress(KEY_ESCAPE))
+			BrushClear();
 	}
 }
 
@@ -1491,6 +1487,9 @@ void CEditor2::RenderMapEditorUI()
 		RenderPopupMenuFile();
 
 	UI()->ClipDisable(); // main view rect clip
+
+	if(m_UiCurrentPopupID == POPUP_FILE_SELECT)
+		RenderPopupFileSelect();
 }
 
 void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
@@ -1842,7 +1841,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			x + w, y + Spacing * sign(DragMoveOffset),
 			x, y,
 			x + w, y
-		); 
+		);
 
 		Graphics()->SetColor(1, 0, 0, 1);
 
@@ -2396,6 +2395,20 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	}
 }
 
+bool CEditor2::LoadFileCallback(const char *pFilepath, void *pContext)
+{
+	CEditor2 *pEditor = (CEditor2 *)pContext;
+
+	return pEditor->LoadMap(pFilepath);
+}
+
+bool CEditor2::SaveFileCallback(const char *pFilepath, void *pContext)
+{
+	CEditor2 *pEditor = (CEditor2 *)pContext;
+
+	return pEditor->SaveMap(pFilepath);
+}
+
 void CEditor2::RenderPopupMenuFile()
 {
 	if(m_UiCurrentPopupID != POPUP_MENU_FILE)
@@ -2437,6 +2450,7 @@ void CEditor2::RenderPopupMenuFile()
 		}
 		else
 		{
+			InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, this);
 			// pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		}
 	}
@@ -2449,6 +2463,7 @@ void CEditor2::RenderPopupMenuFile()
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Save", &s_SaveButton))
 	{
+		InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -2748,6 +2763,310 @@ void CEditor2::RenderPopupBrushPalette()
 	}
 
 	RenderBrush(m_UiMousePos);
+}
+
+void CEditor2::InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext)
+{
+	m_UiFileSelectState.m_pButtonText = pButtonText;
+	m_UiFileSelectState.m_NewFile = NewFile;
+	m_UiFileSelectState.m_Selected = -1;
+	m_UiFileSelectState.m_pContext = pContext;
+	m_UiFileSelectState.m_pfnFileSelectCB = pfnCallback;
+	str_copy(m_UiFileSelectState.m_aPath, pInitialPath, sizeof(m_UiFileSelectState.m_aPath));
+	m_UiFileSelectState.m_pListBoxEntries = 0;
+
+	m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+
+	m_UiCurrentPopupID = POPUP_FILE_SELECT;
+}
+
+int CEditor2::CUIFileSelect::EditorListdirCallback(const char *pName, int IsDir, int StorageType, time_t Created, time_t Modified, void *pUser)
+{
+	CUIFileSelect *pState = (CUIFileSelect *)pUser;
+
+	if(!str_comp(pName, ".") || !str_comp(pName, ".."))
+		return 0;
+
+	CEditor2::CFileListItem Item;
+	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
+	if(IsDir)
+		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
+	else
+		str_copy(Item.m_aName, pName, sizeof(Item.m_aName));
+
+	Item.m_IsDir = IsDir != 0;
+	Item.m_IsLink = false;
+	Item.m_StorageType = StorageType;
+	Item.m_Created = Created;
+	Item.m_Modified = Modified;
+	pState->m_aFileList.add(Item);
+
+	return 0;
+}
+
+void CEditor2::CUIFileSelect::PopulateFileList(IStorage *pStorage, int StorageType)
+{
+	m_aFileList.clear();
+	pStorage->ListDirectory(StorageType, m_aPath, EditorListdirCallback, this);
+	GenerateListBoxEntries();
+
+	pStorage->GetCompletePath(IStorage::TYPE_SAVE, m_aPath, m_aCompletePath, sizeof(m_aCompletePath));
+}
+
+void CEditor2::CUIFileSelect::GenerateListBoxEntries()
+{
+	// An array<const char *> might help get allocations down
+	if(m_pListBoxEntries)
+	{
+		free(m_pListBoxEntries);
+	}
+
+	m_pListBoxEntries = (CUIListBox::Entry *)mem_alloc(m_aFileList.size() * sizeof(*m_pListBoxEntries), 0);
+	for(int i = 0; i < m_aFileList.size(); i++)
+	{
+		m_pListBoxEntries[i].m_Id = i;
+		m_pListBoxEntries[i].m_paData[0] = m_aFileList[i].m_aName;
+		m_pListBoxEntries[i].m_paData[1] = &m_aFileList[i].m_Modified;
+		m_pListBoxEntries[i].m_paData[2] = &m_aFileList[i].m_Created;
+	}
+}
+
+void CEditor2::RenderPopupFileSelect()
+{
+	const float Padding = 20.0f;
+	const float Scale = 2.0f/3.0f;
+	const float FontSize = 7.0f;
+	const vec4 White(1, 1, 1, 1);
+
+	if(Input()->KeyPress(KEY_ESCAPE))
+		m_UiCurrentPopupID = POPUP_NONE;
+
+	CUIFileSelect *pState = &m_UiFileSelectState;
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5)); // darken the background (should be in a common function)
+
+	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f,
+		UiScreenRect.w * Scale, UiScreenRect.h * Scale};
+
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
+	MainRect.Margin(Padding * 3/4, &MainRect);
+
+	CUIRect Top, Search;
+	MainRect.HSplitTop(20.0f, &Top, &MainRect);
+	Top.VSplitLeft(Top.w * 4/5 - (Padding/2), &Top, &Search);
+	Search.VSplitLeft(Padding/2, 0, &Search);
+
+	// Debounce this a little for better performance?
+	static CUITextInput s_SearchBox;
+	UiTextInput(Search, pState->m_aFilter, sizeof(pState->m_aFilter), &s_SearchBox);
+
+	CUIRect BNewFolder, BRefresh, BUp, BPrev, BNext, Path;
+	Top.VSplitLeft(Top.h, &BNewFolder, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Top);
+	Top.VSplitLeft(Top.h, &BRefresh, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Top);
+	Top.VSplitLeft(Top.h, &BUp, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Top);
+	Top.VSplitLeft(Top.h, &BPrev, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Top);
+	Top.VSplitLeft(Top.h, &BNext, &Top);
+	Top.VSplitLeft(Padding / 8, 0, &Path);
+
+	static CUIButton s_BNewFolder;
+	if(UiButton(BNewFolder, "+", &s_BNewFolder, 15.0f))
+	{
+		pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+	}
+
+	static CUIButton s_BRefresh;
+	if(UiButton(BRefresh, "\xE2\x86\xBB", &s_BRefresh, 15.0f))
+	{
+		pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+	}
+
+	static CUIButton s_BPrev;
+	if(UiButton(BPrev, "\xE2\x86\x90", &s_BPrev, 15.0f))
+	{
+		// Need to implement some history
+		dbg_msg("debug", "button down");
+	}
+
+	static CUIButton s_BNext;
+	if(UiButton(BNext, "\xE2\x86\x92", &s_BNext, 15.0f))
+	{
+		// Need to implement some history
+		dbg_msg("debug", "button down");
+	}
+
+	DrawRectBorder(Path, StyleColorButton, 1, StyleColorButtonBorder);
+
+	MainRect.HSplitTop(Padding * 1/2, 0, &MainRect);
+
+	CUIRect Bookmarks, Browser, Preview;
+	MainRect.VSplitLeft(MainRect.w * 1/5 - (Padding/2), &Bookmarks, &MainRect);
+	MainRect.VSplitLeft(Padding/2, 0, &MainRect);
+	MainRect.VSplitLeft(MainRect.w * 3/4 - (Padding/2), &Browser, &Preview);
+	Preview.VSplitLeft(Padding/2, 0, &Preview);
+
+	Preview.h = Preview.w;
+
+	{
+		CUIRect Label;
+		Bookmarks.HSplitTop(Padding / 2, &Label, &Bookmarks);
+		Label.Margin(1.0f, &Label);
+		DrawText(Label, "Favorites:", Label.h);
+	}
+
+	Browser.HSplitTop(Padding / 2, 0, &Browser);
+
+	{
+		CUIRect Label;
+		Preview.HSplitTop(Padding / 2, &Label, &Preview);
+		Label.Margin(1.0f, &Label);
+		DrawText(Label, "Preview:", Label.h);
+	}
+
+	Bookmarks.HSplitBottom(20.0f + Padding, &Bookmarks, 0);
+	DrawRect(Bookmarks, vec4(0.4f, 0.4f, 0.5f, 1.0f));
+
+	DrawRect(Preview, vec4(0.4f, 0.5f, 0.5f, 1.0f));
+
+	CUIRect Bottom;
+	Browser.HSplitBottom(20.0f, &Browser, &Bottom);
+	Browser.HSplitBottom(Padding, &Browser, 0);
+
+	static const CUIListBox::ColData s_aColumns[] = {{CUIListBox::COLTYPE_TEXT, 4, "Name"},
+		{CUIListBox::COLTYPE_DATE, 2, "Modified"},
+		{CUIListBox::COLTYPE_DATE, 2, "Created"}};
+
+	bool Open = false;
+
+	static CUIListBox s_Browser;
+	if(UiListBox(Browser, s_aColumns, 3, pState->m_pListBoxEntries,
+			pState->m_aFileList.size(), pState->m_aFilter, 0, &s_Browser) ||
+		Input()->KeyPress(KEY_RETURN))
+	{
+		Open = true;
+		pState->m_Selected = s_Browser.m_Selected;
+	}
+
+	static CUIButton s_BUp;
+	if(UiButton(BUp, "\xE2\x86\x91", &s_BUp, 15.0f))
+	{
+		if(fs_parent_dir(pState->m_aPath))
+			pState->m_aPath[0] = '\0';
+
+		s_Browser.m_Selected = -1;
+		pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+	}
+
+	DrawText(Path, pState->m_aCompletePath, FontSize);
+
+	const float ButtonPadding = (Bottom.h - FontSize - 3.0f) * 0.5f;
+
+	const char *CancelText = Localize("Cancel");
+	const float CancelTextW = TextRender()->TextWidth(0, FontSize, CancelText, -1, -1);
+	const float ButtonW = min(Bottom.w / 7, CancelTextW + ButtonPadding) + ButtonPadding;
+	const vec4 ButtonTextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	{
+		CUIRect BCancel;
+		Bottom.VSplitRight(ButtonW, &Bottom, &BCancel);
+		Bottom.VSplitRight(Padding / 2, &Bottom, 0);
+
+		static CUIButton s_BCancel;
+		if(UiButton(BCancel, CancelText, &s_BCancel, FontSize))
+		{
+			m_UiCurrentPopupID = POPUP_NONE;
+		}
+	}
+
+	static char s_aNewFileName[128];
+	{
+		CUIRect SelectedFile, BOpen;
+		Bottom.VSplitRight(ButtonW, &SelectedFile, &BOpen);
+
+		static CUIButton s_BOpen;
+		const char *pButtonText = pState->m_pButtonText;
+		if(pState->m_NewFile && pState->m_Selected >= 0 && pState->m_aFileList[pState->m_Selected].m_IsDir)
+		{
+			pButtonText = "Open";
+		}
+		if(UiButton(BOpen, Localize(pButtonText), &s_BOpen, FontSize))
+		{
+			Open = true;
+			pState->m_Selected = s_Browser.m_Selected;
+		}
+
+		if(SelectedFile.w - ButtonW / 2 > 3 * ButtonW)
+			SelectedFile.VSplitLeft(ButtonW / 2, 0, &SelectedFile);
+
+		if(!pState->m_NewFile)
+		{
+			DrawRectBorder(SelectedFile, StyleColorButton, 1, StyleColorButtonBorder);
+			if(s_Browser.m_Selected >= 0)
+				DrawText(SelectedFile, pState->m_aFileList[s_Browser.m_Selected].m_aFilename, FontSize);
+		}
+		else
+		{
+			static CUITextInput s_NewFileName;
+			if(s_Browser.m_Selected >= 0)
+				str_copy(s_aNewFileName,  pState->m_aFileList[s_Browser.m_Selected].m_aFilename, sizeof(s_aNewFileName));
+
+			if(UiTextInput(SelectedFile, s_aNewFileName, sizeof(s_aNewFileName), &s_NewFileName))
+			{
+				s_Browser.m_Selected = -1;
+				for(int i = 0; i < pState->m_aFileList.size(); i++)
+				{
+					if(!str_comp(pState->m_aFileList[i].m_aFilename, s_aNewFileName))
+					{
+						s_Browser.m_Selected = i;
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	if(pState->m_Selected >= 0)
+	{
+		int Selected = pState->m_Selected;
+		if(pState->m_aFileList[Selected].m_IsDir)
+		{
+			if(!str_comp(pState->m_aFileList[Selected].m_aFilename, ".."))
+			{
+				if(fs_parent_dir(pState->m_aPath))
+					pState->m_aPath[0] = '\0';
+			}
+			else
+			{
+				if(pState->m_aPath[0])
+					str_append(pState->m_aPath, "/", sizeof(pState->m_aPath));
+
+				str_append(pState->m_aPath, pState->m_aFileList[Selected].m_aFilename,
+					sizeof(pState->m_aPath));
+			}
+
+			pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+			s_Browser.m_Selected = pState->m_Selected = -1;
+		}
+		else
+		{
+			char aBuf[512];
+			str_format(aBuf, sizeof(aBuf), "%s/%s", pState->m_aPath, pState->m_aFileList[Selected].m_aFilename);
+			pState->m_pfnFileSelectCB(aBuf, pState->m_pContext);
+			m_UiCurrentPopupID = POPUP_NONE;
+		}
+	}
+	else if(Open && pState->m_NewFile && s_aNewFileName[0])
+	{
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "%s/%s", pState->m_aPath, s_aNewFileName);
+		pState->m_pfnFileSelectCB(aBuf, pState->m_pContext);
+		m_UiCurrentPopupID = POPUP_NONE;
+	}
 }
 
 void CEditor2::RenderBrush(vec2 Pos)

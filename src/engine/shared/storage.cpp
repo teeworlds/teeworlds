@@ -24,7 +24,7 @@ public:
 	char m_aUserDir[MAX_PATH_LENGTH];
 	char m_aCurrentDir[MAX_PATH_LENGTH];
 	char m_aAppDir[MAX_PATH_LENGTH];
-	
+
 	CStorage()
 	{
 		mem_zero(m_aaStoragePaths, sizeof(m_aaStoragePaths));
@@ -39,7 +39,7 @@ public:
 	{
 		// get userdir
 		fs_storage_path(pApplicationName, m_aUserDir, sizeof(m_aUserDir));
-		
+
 		// get appdir
 		FindAppDir(ppArguments[0]);
 
@@ -214,7 +214,7 @@ public:
 			}
 		}
 	}
-	
+
 	void FindAppDir(const char *pArgv0)
 	{
 		// check for usable path in argv[0]
@@ -222,7 +222,7 @@ public:
 		for(unsigned i = 0; pArgv0[i]; ++i)
 			if(pArgv0[i] == '/' || pArgv0[i] == '\\')
 				Pos = i;
-		
+
 		if(Pos < MAX_PATH_LENGTH)
 		{
 			str_copy(m_aAppDir, pArgv0, Pos+1);
@@ -348,7 +348,7 @@ public:
 		{
 			IOHANDLE Handle = 0;
 			int LB = 0, UB = m_NumPaths;	// check all available directories
-			
+
 			if(Type >= 0 && Type < m_NumPaths)	// check wanted directory
 			{
 				LB = Type;
@@ -417,7 +417,7 @@ public:
 		bool m_CheckHashAndSize;
 	};
 
-	static int FindFileCallback(const char *pName, int IsDir, int Type, void *pUser)
+	static int FindFileCallback(const char *pName, int IsDir, int Type, time_t, time_t, void *pUser)
 	{
 		CFindCBData Data = *static_cast<CFindCBData *>(pUser);
 		if(IsDir)
@@ -451,7 +451,7 @@ public:
 					return 0;
 				}
 			}
-			
+
 			return 1;
 		}
 
@@ -466,7 +466,7 @@ public:
 		pCBData->m_pBuffer[0] = 0;
 
 		char aBuf[MAX_PATH_LENGTH];
-		
+
 		if(Type == TYPE_ALL)
 		{
 			// search within all available directories
@@ -554,7 +554,7 @@ public:
 
 		GetPath(Type, pDir, pBuffer, BufferSize);
 	}
-	
+
 	virtual bool GetHashAndSize(const char *pFilename, int StorageType, SHA256_DIGEST *pSha256, unsigned *pCrc, unsigned *pSize)
 	{
 		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ, StorageType);
@@ -583,6 +583,14 @@ public:
 		*pCrc = Crc;
 		*pSize = Size;
 		return true;
+	}
+
+	virtual bool GetFileTime(const char *pFilename, int StorageType, time_t *pCreated, time_t *pModified)
+	{
+		char aBuf[MAX_PATH_LENGTH];
+		GetCompletePath(StorageType, pFilename, aBuf, sizeof(aBuf));
+
+		return !fs_file_time(aBuf, pCreated, pModified);
 	}
 
 	static IStorage *Create(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments)

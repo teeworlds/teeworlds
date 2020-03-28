@@ -277,7 +277,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	}
 }
 
-int CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+int CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType, time_t, time_t, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	if(str_comp(pName, ".") == 0
@@ -538,10 +538,10 @@ float CMenus::RenderDemoDetails(CUIRect View)
 	if(!m_DemolistSelectedIsDir && m_DemolistSelectedIndex >= 0 && m_lDemos[m_DemolistSelectedIndex].m_Valid)
 	{
 		CUIRect Button;
-		
+
 		const float ButtonHeight = 20.0f;
 		const float Spacing = 2.0f;
-		
+
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
 		DoInfoBox(&Button, Localize("Created"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aTimestamp);

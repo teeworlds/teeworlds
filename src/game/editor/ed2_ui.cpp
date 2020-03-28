@@ -1,5 +1,6 @@
 #include "ed2_ui.h"
 #include <stdio.h> // sscanf
+#include <algorithm> // std::stable_sort
 #include <engine/textrender.h>
 #include <engine/keys.h>
 #include <game/client/gameclient.h> // Localize
@@ -156,11 +157,23 @@ void CEditor2Ui::DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, fl
 	Graphics()->QuadsEnd();
 }
 
-void CEditor2Ui::DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color)
+void CEditor2Ui::DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color, CUI::EAlignment Align)
 {
-	const float OffY = (Rect.h - FontSize - 3.0f) * 0.5f;
 	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, Rect.x + OffY, Rect.y + OffY, FontSize, TEXTFLAG_RENDER);
+
+	const float OffY = (Rect.h - FontSize - 3.0f) * 0.5f;
+	float OffX = OffY;
+
+	if(Align != CUI::ALIGN_LEFT)
+	{
+		float tw = TextRender()->TextWidth(0, FontSize, pText, -1, -1);
+		if(Align == CUI::ALIGN_CENTER)
+			OffX = (Rect.w - tw) * 0.5f;
+		else if(Align == CUI::ALIGN_RIGHT)
+			OffX = Rect.w - tw;
+	}
+
+	TextRender()->SetCursor(&Cursor, Rect.x + OffX, Rect.y + OffY, FontSize, TEXTFLAG_RENDER);
 	TextRender()->TextShadowed(&Cursor, pText, -1, vec2(0,0), vec4(0,0,0,0), Color);
 }
 
@@ -503,6 +516,191 @@ bool CEditor2Ui::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, c
 	return pGrabHandle->m_IsDragging;
 }
 
+class CListBoxComparator {
+protected:
+	int m_Col, m_Dir;
+	CListBoxComparator(int Col, int Dir) : m_Col(Col), m_Dir(Dir) {};
+
+public:
+	virtual bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b) = 0;
+};
+
+class CListBoxComparatorText : public CListBoxComparator {
+public:
+	CListBoxComparatorText(int Col, int Dir) : CListBoxComparator(Col, Dir) {};
+	virtual bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b)
+	{
+		return str_comp((const char *)a.m_paData[m_Col], (const char *)b.m_paData[m_Col]) * m_Dir < 0;
+	}
+};
+
+class CListBoxComparatorDate : public CListBoxComparator {
+public:
+	CListBoxComparatorDate(int Col, int Dir) : CListBoxComparator(Col, Dir) {};
+	virtual bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b)
+	{
+		if(m_Dir > 0)
+			return *(time_t *)a.m_paData[m_Col] < *(time_t *)b.m_paData[m_Col];
+		else
+			return *(time_t *)a.m_paData[m_Col] > *(time_t *)b.m_paData[m_Col];
+
+	}
+};
+
+class CListBoxComparatorIdentity : public CListBoxComparator {
+public:
+	CListBoxComparatorIdentity(int Col, int Dir) : CListBoxComparator(Col, Dir) {};
+	virtual bool operator()(const CUIListBox::Entry &a, const CUIListBox::Entry &b)
+	{
+		return a.m_Id < b.m_Id;
+	}
+};
+
+bool CEditor2Ui::UiListBox(const CUIRect& Rect, const CUIListBox::ColData *pColumns, int ColumnCount, CUIListBox::Entry *pEntries, int EntryCount, const char *pFilter, int FilterCol, CUIListBox *pListBoxState)
+{
+	const float FontSize = 10.0f;
+	const float ItemHeight = 20.0f;
+	const vec4 ButtonColorLight(0.162f, 0.1f, 0.29f, 1.0f);
+
+	pListBoxState->m_Hovering = clamp(pListBoxState->m_Hovering, -1, EntryCount);
+	pListBoxState->m_Selected = clamp(pListBoxState->m_Selected, -1, EntryCount);
+
+	CUIRect Header, List;
+	Rect.HSplitTop(ItemHeight * 0.75f, &Header, &List);
+
+	DrawRect(Header, ButtonColorLight);
+	int SumW = 0;
+	for(int i = 0; i < ColumnCount; i++)
+		SumW += pColumns[i].m_Width;
+
+	float ColUnitSize = Header.w / SumW;
+	for(int i = 0, u = 0; i < ColumnCount; i++)
+	{
+		CUIRect Item = {Header.x + u * ColUnitSize, Header.y, ColUnitSize * pColumns[i].m_Width, Header.h};
+
+		CUIRect Button;
+		Item.VSplitRight(Item.h, 0, &Button);
+
+		if(i == pListBoxState->m_SortCol)
+			DrawText(Button, pListBoxState->m_SortDir >= 0 ? "\xE2\x86\x91" : "\xE2\x86\x93" , FontSize);
+
+		DrawText(Item, pColumns[i].m_pName, FontSize);
+		u += pColumns[i].m_Width;
+
+		if(UI()->DoButtonLogic(&pColumns[i], &Item))
+		{
+			if(pListBoxState->m_SortCol != i)
+			{
+				pListBoxState->m_SortCol = i;
+				pListBoxState->m_SortDir = -1;
+			}
+			else
+			{
+				switch(pListBoxState->m_SortDir)
+				{
+				case -1:
+					pListBoxState->m_SortDir = 1;
+					break;
+				case 0:
+					pListBoxState->m_SortDir = -1;
+					break;
+				case 1:
+					pListBoxState->m_SortCol = -1;
+				}
+			}
+		}
+	}
+
+	DrawRect(List, StyleColorButton);
+
+	static CScrollRegion s_List;
+	vec2 ScrollOffset(0, 0);
+	UiBeginScrollRegion(&s_List, &List, &ScrollOffset);
+	List.y += ScrollOffset.y;
+
+	// std::stable_sort probably has worse than O(n) performance on already/nearly sorted arrays
+	// might need to figure out a way to only sort when the entries change e.g. a flag in the state
+	// to be marked by the caller
+	if(pListBoxState->m_SortCol >= 0)
+	{
+		switch(pColumns[pListBoxState->m_SortCol].m_Type)
+		{
+		case CUIListBox::COLTYPE_TEXT:
+			std::stable_sort(pEntries, pEntries + EntryCount,
+				CListBoxComparatorText(pListBoxState->m_SortCol, pListBoxState->m_SortDir));
+			break;
+		case CUIListBox::COLTYPE_DATE:
+			std::stable_sort(pEntries, pEntries + EntryCount,
+				CListBoxComparatorDate(pListBoxState->m_SortCol, pListBoxState->m_SortDir));
+			break;
+		}
+	}
+	else
+	{
+		std::stable_sort(pEntries, pEntries + EntryCount,
+			CListBoxComparatorIdentity(pListBoxState->m_SortCol, pListBoxState->m_SortDir));
+	}
+
+	if(!UI()->MouseInside(&Rect))
+		pListBoxState->m_Hovering = -1;
+
+	bool Done = false;
+	for(int i = 0, j = 0; i < EntryCount; i++)
+	{
+		CUIListBox::Entry *pEntry = &pEntries[i];
+		void *pID = (void *)&pEntry->m_Id;
+
+		if(pColumns[FilterCol].m_Type == CUIListBox::COLTYPE_TEXT &&
+			!str_find((const char *)pEntry->m_paData[FilterCol], pFilter))
+			continue;
+
+		j++;
+
+		CUIRect Line;
+		List.HSplitTop(ItemHeight, &Line, &List);
+
+		if(UI()->DoButtonLogic(pID, &Line))
+		{
+			pListBoxState->m_Selected = pEntry->m_Id;
+			if(Input()->MouseDoubleClick())
+				Done = true;
+		}
+
+		if(UI()->HotItem() == pID)
+			pListBoxState->m_Hovering = pEntry->m_Id;
+
+		const vec4 LineColor = j % 2 ? ButtonColorLight : StyleColorButton;
+		DrawRect(Line, pListBoxState->m_Hovering == pEntry->m_Id|| pListBoxState->m_Selected == pEntry->m_Id ? StyleColorButtonHover : LineColor);
+
+		for(int j = 0, u = 0; j < ColumnCount; j++)
+		{
+			CUIRect Col = {Line.x + u * ColUnitSize, Line.y, ColUnitSize * pColumns[j].m_Width, Line.h};
+
+			if(pColumns[j].m_Type == CUIListBox::COLTYPE_TEXT)
+			{
+				DrawText(Col, (const char *)pEntry->m_paData[j], FontSize); // truncate this text
+			}
+			else if(pColumns[j].m_Type == CUIListBox::COLTYPE_DATE)
+			{
+				char aBuf[32];
+				str_timestamp_ex(*(const time_t *)pEntry->m_paData[j], aBuf, sizeof(aBuf), FORMAT_SPACE);
+				DrawText(Col, aBuf, FontSize * 0.8f);
+			}
+			else
+			{
+				DrawText(Col, "INVALID", FontSize);
+			}
+
+
+			u += pColumns[j].m_Width;
+		}
+		UiScrollRegionAddRect(&s_List, Line);
+	}
+	UiEndScrollRegion(&s_List);
+
+	return Done;
+}
+
 
 void CEditor2Ui::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
 {
@@ -540,8 +738,6 @@ void CEditor2Ui::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec
 void CEditor2Ui::UiEndScrollRegion(CScrollRegion* pSr)
 {
 	UI()->ClipDisable();
-
-	dbg_assert(pSr->m_ContentH > 0, "Add some rects with ScrollRegionAddRect()");
 
 	// only show scrollbar if content overflows
 	if(pSr->m_ContentH <= pSr->m_ClipRect.h)

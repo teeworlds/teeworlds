@@ -70,6 +70,38 @@ struct CUIGrabHandle: CUIMouseDrag
 	bool m_IsGrabbed;
 };
 
+struct CUIListBox
+{
+	enum {
+		MAX_COLUMNS = 10,
+		COLTYPE_TEXT = 0,
+		COLTYPE_DATE,
+		COLTYPE_ICON,
+	};
+
+	struct ColData{
+		int m_Type;
+		int m_Width;
+		const char *m_pName;
+	};
+
+	struct Entry {
+		int m_Id;
+		const void *m_paData[10];
+	};
+
+	int m_Hovering;
+	int m_Selected;
+
+	int m_SortCol;
+	int m_SortDir;
+
+	CUIListBox()
+	{
+		m_Hovering = m_Selected = m_SortCol = m_SortDir = -1;
+	}
+};
+
 struct CEditor2Ui
 {
 	ITextRender *m_pTextRender;
@@ -90,7 +122,7 @@ struct CEditor2Ui
 	void DrawRectBorder(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawRectBorderOutside(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
 	void DrawRectBorderMiddle(const CUIRect& Rect, const vec4& Color, float Border, const vec4 BorderColor);
-	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1));
+	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1), CUI::EAlignment Align = CUI::ALIGN_LEFT);
 
 	void UiDoButtonBehaviorNoID(const CUIRect& Rect, CUIButton* pButState);
 	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState);
@@ -109,6 +141,9 @@ struct CEditor2Ui
 	bool UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
 		float FontSize = 10);
 	bool UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive); // Returns pGrabHandle->m_IsDragging
+	bool UiListBox(const CUIRect& Rect, const CUIListBox::ColData *pColumns, int ColumnCount,
+		CUIListBox::Entry *pEntries, int EntryCount, const char *pFilter, int FilterCol,
+		CUIListBox *pListBoxState);
 
 	struct CScrollRegionParams
 	{
