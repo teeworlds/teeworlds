@@ -1592,11 +1592,12 @@ void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 
 	while((entry = readdir(d)) != NULL)
 	{
+		CFsFileInfo info;
+
 		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
 		fs_file_time(buffer, &created, &modified);
 
-		CFsFileInfo info;
-		info.m_pName = finddata.cFileName;
+		info.m_pName = entry->d_name;
 		info.m_TimeCreated = created;
 		info.m_TimeModified = modified;
 
