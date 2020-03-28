@@ -168,7 +168,7 @@ void CFileCollection::AddEntry(int64 Timestamp)
 	}
 }
 
-int CFileCollection::FilelistCallback(const char *pFilename, int IsDir, int StorageType, time_t, time_t, void *pUser)
+int CFileCollection::FilelistCallback(const char *pFilename, int IsDir, int StorageType, void *pUser)
 {
 	CFileCollection *pThis = static_cast<CFileCollection *>(pUser);
 

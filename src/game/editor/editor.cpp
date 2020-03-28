@@ -3008,7 +3008,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 }
 
 
-static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, time_t, time_t, void *pUser)
+static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
 	const char *pExt = 0;

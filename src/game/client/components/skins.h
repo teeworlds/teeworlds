@@ -83,8 +83,8 @@ private:
 	sorted_array<CSkin> m_aSkins;
 	CSkin m_DummySkin;
 
-	static int SkinPartScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser);
-	static int SkinScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser);
+	static int SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
 };
 
 #endif

@@ -1225,7 +1225,7 @@ void CMenus::RenderBackButton(CUIRect MainView)
 	}
 }
 
-int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser)
+int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	if(IsDir || !str_endswith(pName, ".png"))
