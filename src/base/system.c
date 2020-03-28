@@ -2475,7 +2475,7 @@ int mem_comp(const void *a, const void *b, int size)
 int mem_has_null(const void *block, unsigned size)
 {
 	const unsigned char *bytes = block;
-	unsigned i;        
+	unsigned i;
 	for(i = 0; i < size; i++)
 	{
 		if(bytes[i] == 0)
@@ -2715,6 +2715,15 @@ void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
 	}
 
 	str_copy(dst, src, cursor < dst_size ? cursor+1 : dst_size);
+}
+
+int str_utf8_charcount(const char *str, int len)
+{
+	int count = 0;
+	for(int i = 0; i < len && str[i]; i = str_utf8_forward(str, i))
+		count++;
+
+	return count;
 }
 
 unsigned str_quickhash(const char *str)

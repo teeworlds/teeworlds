@@ -124,3 +124,15 @@ TEST(Str, PathUnsafe)
 	EXPECT_FALSE(str_path_unsafe("abc/def\\ghi.txt"));
 	EXPECT_FALSE(str_path_unsafe("любовь"));
 }
+
+TEST(Utf8, CharacterCount)
+{
+	EXPECT_EQ(str_utf8_charcount("", 0), 0);
+	EXPECT_EQ(str_utf8_charcount("", 1), 0);
+	EXPECT_EQ(str_utf8_charcount("a", 1), 1);
+	EXPECT_EQ(str_utf8_charcount("a", 2), 1);
+	EXPECT_EQ(str_utf8_charcount("a", 3), 1);
+	EXPECT_EQ(str_utf8_charcount("ab", 2), 2);
+	EXPECT_EQ(str_utf8_charcount("abc", 2), 2);
+	EXPECT_EQ(str_utf8_charcount("\xE2\x86\x91\xF0\x9F\x98\x81", 7), 2);
+}

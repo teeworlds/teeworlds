@@ -1749,6 +1749,19 @@ int str_utf8_check(const char *str);
 void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num);
 
 /*
+	Function: str_utf8_charcount
+		Counts the number of uft8 codepoints in str.
+
+	Parameters:
+		str - Pointer to utf8 string.
+		len - Length of str
+
+	Remarks:
+		- Counts until a null byte or until len runs out
+*/
+int str_utf8_charcount(const char *str, int len);
+
+/*
 	Function: secure_random_init
 		Initializes the secure random module.
 		You *MUST* check the return value of this function.
