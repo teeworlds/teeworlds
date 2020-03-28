@@ -193,7 +193,15 @@ void CGameContext::SendChat(int ChatterClientID, int Mode, int To, const char *p
 {
 	char aBuf[256];
 	if(ChatterClientID >= 0 && ChatterClientID < MAX_CLIENTS)
-		str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", ChatterClientID, Mode, Server()->ClientName(ChatterClientID), pText);
+	{
+		if(Mode == CHAT_TEAM)
+		{
+			int TeamID = m_apPlayers[ChatterClientID]->GetTeam();
+			str_format(aBuf, sizeof(aBuf), "%d:%d:%d:%s: %s", Mode, TeamID, ChatterClientID, Server()->ClientName(ChatterClientID), pText);
+		}
+		else
+			str_format(aBuf, sizeof(aBuf), "%d:%d:%s: %s", Mode, ChatterClientID, Server()->ClientName(ChatterClientID), pText);
+	}
 	else
 		str_format(aBuf, sizeof(aBuf), "*** %s", pText);
 
