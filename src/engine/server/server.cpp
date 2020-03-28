@@ -1489,7 +1489,7 @@ int CServer::Run()
 	return 0;
 }
 
-int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType, time_t, time_t, void *pUser)
+int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser)
 {
 	CSubdirCallbackUserdata *pUserdata = (CSubdirCallbackUserdata *)pUser;
 	CServer *pThis = pUserdata->m_pServer;

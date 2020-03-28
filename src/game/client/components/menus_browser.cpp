@@ -2326,7 +2326,7 @@ void CMenus::DoGameIcon(const char *pName, const CUIRect *pRect)
 	Graphics()->QuadsEnd();
 }
 
-int CMenus::GameIconScan(const char *pName, int IsDir, int DirType, time_t, time_t, void *pUser)
+int CMenus::GameIconScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	const char *pSuffix = str_endswith(pName, ".png");

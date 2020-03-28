@@ -155,7 +155,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 			m_aFilter[0] = '\0';
 		}
 
-		static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, time_t Created, time_t Modified, void *pUser);
+		static int EditorListdirCallback(const CFsFileInfo* info, int IsDir, int StorageType, void *pUser);
 		void PopulateFileList(IStorage *pStorage, int StorageType);
 		void GenerateListBoxEntries();
 	};

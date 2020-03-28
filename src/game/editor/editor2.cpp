@@ -2780,25 +2780,25 @@ void CEditor2::InvokePopupFileSelect(const char *pButtonText, const char *pIniti
 	m_UiCurrentPopupID = POPUP_FILE_SELECT;
 }
 
-int CEditor2::CUIFileSelect::EditorListdirCallback(const char *pName, int IsDir, int StorageType, time_t Created, time_t Modified, void *pUser)
+int CEditor2::CUIFileSelect::EditorListdirCallback(const CFsFileInfo* info, int IsDir, int StorageType, void *pUser)
 {
 	CUIFileSelect *pState = (CUIFileSelect *)pUser;
 
-	if(!str_comp(pName, ".") || !str_comp(pName, ".."))
+	if(!str_comp(info->m_pName, ".") || !str_comp(info->m_pName, ".."))
 		return 0;
 
 	CEditor2::CFileListItem Item;
-	str_copy(Item.m_aFilename, pName, sizeof(Item.m_aFilename));
+	str_copy(Item.m_aFilename, info->m_pName, sizeof(Item.m_aFilename));
 	if(IsDir)
-		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
+		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", info->m_pName);
 	else
-		str_copy(Item.m_aName, pName, sizeof(Item.m_aName));
+		str_copy(Item.m_aName, info->m_pName, sizeof(Item.m_aName));
 
 	Item.m_IsDir = IsDir != 0;
 	Item.m_IsLink = false;
 	Item.m_StorageType = StorageType;
-	Item.m_Created = Created;
-	Item.m_Modified = Modified;
+	Item.m_Created = info->m_TimeCreated;
+	Item.m_Modified = info->m_TimeModified;
 	pState->m_aFileList.add(Item);
 
 	return 0;
@@ -2807,7 +2807,7 @@ int CEditor2::CUIFileSelect::EditorListdirCallback(const char *pName, int IsDir,
 void CEditor2::CUIFileSelect::PopulateFileList(IStorage *pStorage, int StorageType)
 {
 	m_aFileList.clear();
-	pStorage->ListDirectory(StorageType, m_aPath, EditorListdirCallback, this);
+	pStorage->ListDirectoryFileInfo(StorageType, m_aPath, EditorListdirCallback, this);
 	GenerateListBoxEntries();
 
 	pStorage->GetCompletePath(IStorage::TYPE_SAVE, m_aPath, m_aCompletePath, sizeof(m_aCompletePath));
