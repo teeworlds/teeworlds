@@ -1317,6 +1317,23 @@ GNUC_ATTRIBUTE((format(strftime, 4, 0)));
 */
 int str_span(const char *str, const char *set);
 
+/*
+	Function: str_remove_segment
+		Removes a segment from a string.
+
+	Parameters:
+		str - Pointer to string
+		start - Start of segment
+		end - End of Segment
+		len - Length of string
+
+	Remarks:
+		- Guarantees null termination
+		- Assumes nothing about the encoding of the string it's the users responsibility
+		  to make sure the bounds are aligned.
+*/
+void str_remove_segment(char *str, int start, int end, int len);
+
 #define FORMAT_TIME "%H:%M:%S"
 #define FORMAT_SPACE "%Y-%m-%d %H:%M:%S"
 #define FORMAT_NOSPACE "%Y-%m-%d_%H-%M-%S"

@@ -54,13 +54,6 @@ bool CLineInput::MoveWordStop(char c)
 			(91 <= c && c <= 96));  // [\]^_`
 }
 
-static void DeleteSegment(char *pStr, int StartPos, int EndPos, int StrLen)
-{
-	dbg_assert(StartPos <= StrLen && EndPos <= StrLen && StartPos >= 0 && StartPos <= EndPos, "segment out of bounds");
-	mem_move(pStr + StartPos, pStr + EndPos, StrLen - EndPos);
-	pStr[StartPos + StrLen - EndPos] = '\0';
-}
-
 bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pSelectionStart, int *pNumCharsPtr, IInput *pInput)
 {
 	int NumChars = *pNumCharsPtr;
@@ -78,14 +71,6 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 	if(Event.m_Flags&IInput::FLAG_TEXT &&
 		!(KEY_LCTRL <= Event.m_Key && Event.m_Key <= KEY_RGUI))
 	{
-		if(SelectionLength)
-		{
-			DeleteSegment(pStr, SelectionLeft, SelectionLeft + SelectionLength, Len);
-			NumChars -= str_utf8_charcount(pStr + SelectionLeft, SelectionLength);
-			CursorPos = SelectionLeft;
-			Len -= SelectionLength;
-		}
-
 		// gather string stats
 		int CharCount = 0;
 		int CharSize = 0;
@@ -97,6 +82,18 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 				++CharCount;
 				CharSize = NewCharSize;
 			}
+		}
+
+		// if it doesn't fit, don't do anything
+		if(Len - (SelectionLength ? SelectionLength : 1) + CharSize >= StrMaxSize)
+			return Changes;
+
+		if(SelectionLength)
+		{
+			NumChars -= str_utf8_charcount(pStr + SelectionLeft, SelectionLength);
+			str_remove_segment(pStr, SelectionLeft, SelectionLeft + SelectionLength, Len);
+			CursorPos = SelectionLeft;
+			Len -= SelectionLength;
 		}
 
 		// add new string
@@ -115,6 +112,8 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 		}
 	}
 
+	bool Selecting = false;
+	bool Deselect = false;
 	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
 		int Key = Event.m_Key;
@@ -144,7 +143,7 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 				NumChars -= str_utf8_charcount(pStr + SegmentLeft, SelectionLength);
 			}
 
-			DeleteSegment(pStr, SegmentLeft, SegmentRight, Len);
+			str_remove_segment(pStr, SegmentLeft, SegmentRight, Len);
 			CursorPos = SegmentLeft;
 			Len -= SegmentRight - SegmentLeft;
 			Changes = true;
@@ -167,7 +166,7 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 				NumChars -= str_utf8_charcount(pStr + SegmentLeft, SelectionLength);
 			}
 
-			DeleteSegment(pStr, SegmentLeft, SegmentRight, Len);
+			str_remove_segment(pStr, SegmentLeft, SegmentRight, Len);
 			CursorPos = SegmentLeft;
 			Len -= SegmentRight - SegmentLeft;
 			Changes = true;
@@ -178,6 +177,7 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 			{
 				CursorPos = str_utf8_rewind(pStr, CursorPos);
 			} while(MoveWord && CursorPos > 0 && !MoveWordStop(pStr[CursorPos - 1]));
+			Deselect = true;
 		}
 		else if(Key == KEY_RIGHT && CursorPos < Len)
 		{
@@ -185,6 +185,7 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 			{
 				CursorPos = str_utf8_forward(pStr, CursorPos);
 			} while(MoveWord && CursorPos < Len && !MoveWordStop(pStr[CursorPos - 1]));
+			Deselect = true;
 		}
 		else if(Key == KEY_HOME)
 			CursorPos = 0;
@@ -196,14 +197,6 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 			const char *pClipboardText = pInput->GetClipboardText();
 			if(pClipboardText)
 			{
-				if(SelectionLength)
-				{
-					DeleteSegment(pStr, SelectionLeft, SelectionLeft + SelectionLength, Len);
-					NumChars -= str_utf8_charcount(pStr + SelectionLeft, SelectionLength);
-					CursorPos = SelectionLeft;
-					Len -= SelectionLength;
-				}
-
 				// gather string stats
 				int CharCount = 0;
 				int CharSize = 0;
@@ -215,6 +208,18 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 						++CharCount;
 						CharSize = NewCharSize;
 					}
+				}
+
+				// if it doesn't fit, don't do anything
+				if(Len - (SelectionLength ? SelectionLength : 1) + CharSize >= StrMaxSize)
+					return Changes;
+
+				if(SelectionLength)
+				{
+					NumChars -= str_utf8_charcount(pStr + SelectionLeft, SelectionLength);
+					str_remove_segment(pStr, SelectionLeft, SelectionLeft + SelectionLength, Len);
+					CursorPos = SelectionLeft;
+					Len -= SelectionLength;
 				}
 
 				// add new string
@@ -233,17 +238,31 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 				}
 			}
 		}
-		else if((pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)) && Key == KEY_C)
+		else if((pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)) && (Key == KEY_C || Key == KEY_X))
 		{
 			char aBuf[MAX_SIZE];
-			int Len = CursorPos - SelectionStart;
-			str_format(aBuf, sizeof(aBuf), "%.*s", absolute(Len), &pStr[Len > 0 ? SelectionStart : CursorPos]);
+			str_format(aBuf, sizeof(aBuf), "%.*s", SelectionLength, pStr + SelectionLeft);
 			pInput->SetClipboardText(aBuf);
+
+			if(Key == KEY_X)
+			{
+				NumChars -= str_utf8_charcount(pStr + SelectionLeft, SelectionLength);
+				str_remove_segment(pStr, SelectionLeft, SelectionLeft + SelectionLength, Len);
+				CursorPos = SelectionLeft;
+				Len -= SelectionLength;
+				Changes = true;
+			}
+		}
+		else if((pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)) && Key == KEY_A)
+		{
+			SelectionStart = 0;
+			CursorPos = Len;
+			Selecting = true;
 		}
 	}
 
-	bool Selecting = !Changes && pInput && (pInput->KeyIsPressed(KEY_RSHIFT) || pInput->KeyIsPressed(KEY_LSHIFT));
-	if(*pCursorPosPtr != CursorPos || Changes)
+	Selecting |= !Changes && pInput && (pInput->KeyIsPressed(KEY_RSHIFT) || pInput->KeyIsPressed(KEY_LSHIFT));
+	if(*pCursorPosPtr != CursorPos || Changes || Selecting || Deselect)
 	{
 		*pSelectionStart = Selecting ? SelectionStart : CursorPos;
 	}

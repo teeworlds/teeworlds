@@ -2467,6 +2467,13 @@ int str_span(const char *str, const char *set)
 	return strcspn(str, set);
 }
 
+void str_remove_segment(char *str, int start, int end, int len)
+{
+	dbg_assert(start <= len && end <= len && start >= 0 && start <= end, "segment out of bounds");
+	mem_move(str + start, str + end, len - end);
+	str[start + len - end] = '\0';
+}
+
 int mem_comp(const void *a, const void *b, int size)
 {
 	return memcmp(a,b,size);

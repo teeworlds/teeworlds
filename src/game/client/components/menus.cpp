@@ -513,7 +513,7 @@ bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 		float sw = TextRender()->TextWidth(0, FontSize, pDisplayStr + SelectionStart, absolute(SelectionLength), -1);
 		float ssw = SelectionLength < 0 ? w : w - sw;
 
-		CUIRect Selection = {pRect->x + 2.0f + ssw, pRect->y, sw, pRect->h};
+		CUIRect Selection = {pRect->x + 2.0f + ssw - *pOffset, pRect->y, sw, pRect->h};
 		Selection.HMargin(2.0f, &Selection);
 		RenderTools()->DrawUIRect(&Selection, vec4(1.0f, 1.0f, 1.0f, 0.3f), 0, 0.0f);
 	}
