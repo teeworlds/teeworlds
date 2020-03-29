@@ -171,20 +171,26 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 			Len -= SegmentRight - SegmentLeft;
 			Changes = true;
 		}
-		else if(Key == KEY_LEFT && CursorPos > 0)
+		else if(Key == KEY_LEFT)
 		{
-			do
+			if(CursorPos > 0)
 			{
-				CursorPos = str_utf8_rewind(pStr, CursorPos);
-			} while(MoveWord && CursorPos > 0 && !MoveWordStop(pStr[CursorPos - 1]));
+				do
+				{
+					CursorPos = str_utf8_rewind(pStr, CursorPos);
+				} while(MoveWord && CursorPos > 0 && !MoveWordStop(pStr[CursorPos - 1]));
+			}
 			Deselect = true;
 		}
-		else if(Key == KEY_RIGHT && CursorPos < Len)
+		else if(Key == KEY_RIGHT)
 		{
-			do
+			if(CursorPos < Len)
 			{
-				CursorPos = str_utf8_forward(pStr, CursorPos);
-			} while(MoveWord && CursorPos < Len && !MoveWordStop(pStr[CursorPos - 1]));
+				do
+				{
+					CursorPos = str_utf8_forward(pStr, CursorPos);
+				} while(MoveWord && CursorPos < Len && !MoveWordStop(pStr[CursorPos - 1]));
+			}
 			Deselect = true;
 		}
 		else if(Key == KEY_HOME)
