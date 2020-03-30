@@ -386,6 +386,18 @@ class CEditor2: public IEditor, public CEditor2Ui
 	// - Make a CEditor2 RenderMyPopup(void*) function
 	// - Pass it to PushPopup() along with some data if needed
 	// - Exit the popup with ExitPopup() *inside* RenderMyPopup
+	/* Example code:
+	 *
+	 * void RenderMyPopup(void* pPopupData)
+	 * {
+	 *		...
+	 *		if(something)
+	 *			ExitPopup();
+	 * }
+	 *
+	 * PushPopup(&CEditor2::RenderMyPopup, ...);
+	 *
+	*/
 	void PushPopup(CUIPopup::Func_PopupRender pFuncRender, void* pPopupData);
 	void ExitPopup();
 	void RenderPopups();
