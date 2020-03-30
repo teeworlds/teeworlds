@@ -194,9 +194,15 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 			Deselect = true;
 		}
 		else if(Key == KEY_HOME)
+		{
 			CursorPos = 0;
+			Deselect = true;
+		}
 		else if(Key == KEY_END)
+		{
 			CursorPos = Len;
+			Deselect = true;
+		}
 		else if((pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)) && Key == KEY_V)
 		{
 			// paste clipboard to cursor
@@ -244,7 +250,7 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 				}
 			}
 		}
-		else if((pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)) && (Key == KEY_C || Key == KEY_X))
+		else if((pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)) && (Key == KEY_C || Key == KEY_X) && SelectionLength)
 		{
 			char aBuf[MAX_SIZE];
 			str_format(aBuf, sizeof(aBuf), "%.*s", SelectionLength, pStr + SelectionLeft);
