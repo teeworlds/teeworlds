@@ -701,7 +701,6 @@ bool CEditor2Ui::UiListBox(const CUIRect& Rect, const CUIListBox::ColData *pColu
 	return Done;
 }
 
-
 void CEditor2Ui::UiBeginScrollRegion(CScrollRegion* pSr, CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
 {
 	if(pParams)

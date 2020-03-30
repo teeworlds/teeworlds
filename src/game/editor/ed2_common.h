@@ -225,6 +225,11 @@ struct CPlainArray
 #endif
 		return data[ID];
 	}
+
+	inline int Capacity() const
+	{
+		return CAPACITY;
+	}
 };
 
 #define ARR_COUNT(arr) (sizeof(arr)/sizeof(arr[0]))

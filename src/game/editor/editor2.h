@@ -97,7 +97,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 		POPUP_FILE_SELECT,
 	};
 
-	int m_UiCurrentPopupID;
 	CUIRect m_UiCurrentPopupRect;
 
 	struct CUIBrushPalette
@@ -272,6 +271,21 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	CTileSelection m_TileSelection;
 
+	struct CUIPopup
+	{
+		typedef void (CEditor2::*Func_PopupRender)(void* pPopupData);
+		typedef void (CEditor2::*Func_PopupExit)(void* pPopupData);
+
+		void* m_pData;
+		Func_PopupRender m_pFuncRender;
+		Func_PopupExit m_pFuncExit;
+	};
+
+	CPlainArray<CUIPopup,32> m_UiPopupStack;
+	CPlainArray<u8,32> m_UiPopupStackToRemove;
+	int m_UiPopupStackCount;
+	int m_UiCurrentPopupID;
+
 	void RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer);
 
 	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
@@ -377,6 +391,10 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	CUISnapshot* SaveUiSnapshot();
 	void RestoreUiSnapshot(CUISnapshot* pUiSnap);
+
+	void PushPopup(CUIPopup::Func_PopupRender pFuncRender, CUIPopup::Func_PopupRender pFuncExit, void* pPopupData);
+	void ExitPopup();
+	void RenderPopups();
 
 	const char* GetLayerName(int LayerID);
 	const char* GetGroupName(int GroupID);

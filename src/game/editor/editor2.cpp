@@ -100,9 +100,11 @@ void CEditor2::Init()
 	m_pHistoryEntryCurrent = 0x0;
 	m_Page = PAGE_MAP_EDITOR;
 	m_Tool = TOOL_TILE_BRUSH;
-	m_UiCurrentPopupID = POPUP_NONE;
 	m_UiDetailPanelIsOpen = false;
 	m_MapViewZoom = 0;
+
+	m_UiPopupStackCount = 0;
+	m_UiCurrentPopupID = -1;
 
 	// grenade pickup
 	{
@@ -3864,6 +3866,53 @@ void CEditor2::RestoreUiSnapshot(CUISnapshot* pUiSnap)
 	m_Tool = pUiSnap->m_ToolID;
 	BrushClear(); // TODO: save brush?
 	m_TileSelection.Deselect(); // TODO: save selection?
+}
+
+void CEditor2::PushPopup(CEditor2::CUIPopup::Func_PopupRender pFuncRender, CEditor2::CUIPopup::Func_PopupRender pFuncExit, void* pPopupData)
+{
+	dbg_assert(m_UiPopupStackCount < m_UiPopupStack.Capacity(), "Popup stack is full");
+
+	CUIPopup Popup;
+	Popup.m_pData = pPopupData;
+	Popup.m_pFuncRender = pFuncRender;
+	Popup.m_pFuncExit = pFuncExit;
+	m_UiPopupStack[m_UiPopupStackCount++] = Popup;
+}
+
+// Call this inside the popup render function
+void CEditor2::ExitPopup()
+{
+	dbg_assert(m_UiPopupStackCount > 0, "Popup stack is empty");
+	dbg_assert(m_UiCurrentPopupID >= 0 && m_UiCurrentPopupID < m_UiPopupStackCount, "Tried to ExitPopup outside the popup Render function");
+	CUIPopup& Popup = m_UiPopupStack[m_UiCurrentPopupID];
+	(this->*Popup.m_pFuncExit)(Popup.m_pData);
+	m_UiPopupStackToRemove[m_UiCurrentPopupID] = 1;
+}
+
+void CEditor2::RenderPopups()
+{
+	memset(m_UiPopupStackToRemove.data, 0, sizeof(m_UiPopupStackToRemove.data));
+
+	const int PopupCount = m_UiPopupStackCount;
+	for(int i = 0; i < PopupCount; i++)
+	{
+		m_UiCurrentPopupID = i;
+		CUIPopup& Popup = m_UiPopupStack[i];
+		(this->*Popup.m_pFuncRender)(Popup.m_pData);
+	}
+
+	m_UiCurrentPopupID = -1;
+
+	// remove exited popups
+	CPlainArray<CUIPopup,32> Copy = m_UiPopupStack;
+	m_UiPopupStackCount = 0;
+	for(int i = 0; i < PopupCount; i++)
+	{
+		if(!m_UiPopupStackToRemove[i])
+		{
+			m_UiPopupStack[m_UiPopupStackCount++] = Copy[i];
+		}
+	}
 }
 
 const char* CEditor2::GetLayerName(int LayerID)
