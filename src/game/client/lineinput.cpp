@@ -232,6 +232,7 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 					str_remove_segment(pStr, SelectionLeft, SelectionLeft + SelectionLength, Len);
 					CursorPos = SelectionLeft;
 					Len -= SelectionLength;
+					Changes = true;
 				}
 
 				// add new string
