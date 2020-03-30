@@ -89,25 +89,17 @@ class CEditor2: public IEditor, public CEditor2Ui
 	CPlainArray<CGroupUiState,CEditorMap2::MAX_GROUPS> m_UiGroupState;
 	CPlainArray<CLayerUiState,CEditorMap2::MAX_LAYERS> m_UiLayerState;
 
-	enum
-	{
-		POPUP_NONE = -1,
-		POPUP_BRUSH_PALETTE = 0,
-		POPUP_MENU_FILE,
-		POPUP_FILE_SELECT,
-	};
-
-	CUIRect m_UiCurrentPopupRect;
-
 	struct CUIBrushPalette
 	{
 		u8 m_aTileSelected[256];
 		int m_ImageID;
+		bool m_PopupEnabled;
 
 		CUIBrushPalette()
 		{
 			memset(m_aTileSelected, 0, sizeof(m_aTileSelected));
 			m_ImageID = -1;
+			m_PopupEnabled = false;
 		}
 	};
 	CUIBrushPalette m_UiBrushPaletteState;
@@ -274,11 +266,9 @@ class CEditor2: public IEditor, public CEditor2Ui
 	struct CUIPopup
 	{
 		typedef void (CEditor2::*Func_PopupRender)(void* pPopupData);
-		typedef void (CEditor2::*Func_PopupExit)(void* pPopupData);
 
 		void* m_pData;
 		Func_PopupRender m_pFuncRender;
-		Func_PopupExit m_pFuncExit;
 	};
 
 	CPlainArray<CUIPopup,32> m_UiPopupStack;
@@ -306,11 +296,11 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
 	void RenderHistory(CUIRect NavRect);
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
-	void RenderPopupMenuFile();
-	void RenderPopupBrushPalette();
 
+	void RenderPopupMenuFile(void* pPopupData);
+	void RenderPopupBrushPalette(void* pPopupData);
 	void InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext);
-	void RenderPopupFileSelect();
+	void RenderPopupFileSelect(void* pPopupData);
 
 	void RenderBrush(vec2 Pos);
 
@@ -392,7 +382,11 @@ class CEditor2: public IEditor, public CEditor2Ui
 	CUISnapshot* SaveUiSnapshot();
 	void RestoreUiSnapshot(CUISnapshot* pUiSnap);
 
-	void PushPopup(CUIPopup::Func_PopupRender pFuncRender, CUIPopup::Func_PopupRender pFuncExit, void* pPopupData);
+	// How to make a popup:
+	// - Make a CEditor2 RenderMyPopup(void*) function
+	// - Pass it to PushPopup() along with some data if needed
+	// - Exit the popup with ExitPopup() *inside* RenderMyPopup
+	void PushPopup(CUIPopup::Func_PopupRender pFuncRender, void* pPopupData);
 	void ExitPopup();
 	void RenderPopups();
 

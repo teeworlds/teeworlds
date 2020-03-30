@@ -258,10 +258,12 @@ void CEditor2::Update()
 			m_TileSelection.Deselect();
 		}
 
-		if(IsToolBrush() && Input()->KeyIsPressed(KEY_SPACE) && m_UiCurrentPopupID != POPUP_BRUSH_PALETTE)
-			m_UiCurrentPopupID = POPUP_BRUSH_PALETTE;
-		else if((!IsToolBrush() || !Input()->KeyIsPressed(KEY_SPACE)) && m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
-			m_UiCurrentPopupID = POPUP_NONE;
+		if(IsToolBrush() && Input()->KeyIsPressed(KEY_SPACE) && !m_UiBrushPaletteState.m_PopupEnabled)
+		{
+			PushPopup(&CEditor2::RenderPopupBrushPalette, &m_UiBrushPaletteState);
+			m_UiBrushPaletteState.m_PopupEnabled = true;
+		}
+
 		if(IsToolBrush() && Input()->KeyPress(KEY_ESCAPE))
 			BrushClear();
 	}
@@ -803,7 +805,7 @@ void CEditor2::RenderMap()
 void CEditor2::RenderMapOverlay()
 {
 	// NOTE: we're in selected group world space here
-	if(m_UiCurrentPopupID != POPUP_NONE)
+	if(m_UiPopupStackCount > 0)
 		return;
 
 	const float TileSize = 32;
@@ -1009,12 +1011,11 @@ void CEditor2::RenderMenuBar(CUIRect TopPanel)
 	CUIRect ButtonRect;
 	TopPanel.VSplitLeft(50.0f, &ButtonRect, &TopPanel);
 
-	CUIRect FileMenuRect = {ButtonRect.x, ButtonRect.y+ButtonRect.h, 120, 20*7};
 	static CUIButton s_File;
 	if(UiButton(ButtonRect, "File", &s_File))
 	{
-		m_UiCurrentPopupID = POPUP_MENU_FILE;
-		m_UiCurrentPopupRect = FileMenuRect;
+		static CUIRect FileMenuRect = {ButtonRect.x, ButtonRect.y+ButtonRect.h, 120, 20*7};
+		PushPopup(&CEditor2::RenderPopupMenuFile, &FileMenuRect);
 	}
 
 	TopPanel.VSplitLeft(50.0f, &ButtonRect, &TopPanel);
@@ -1481,17 +1482,10 @@ void CEditor2::RenderMapEditorUI()
 		}
 	}
 
-	// popups
-	if(m_UiCurrentPopupID == POPUP_BRUSH_PALETTE)
-		RenderPopupBrushPalette();
-
-	if(m_UiCurrentPopupID == POPUP_MENU_FILE)
-		RenderPopupMenuFile();
-
 	UI()->ClipDisable(); // main view rect clip
 
-	if(m_UiCurrentPopupID == POPUP_FILE_SELECT)
-		RenderPopupFileSelect();
+	// popups
+	RenderPopups();
 }
 
 void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
@@ -2411,12 +2405,9 @@ bool CEditor2::SaveFileCallback(const char *pFilepath, void *pContext)
 	return pEditor->SaveMap(pFilepath);
 }
 
-void CEditor2::RenderPopupMenuFile()
+void CEditor2::RenderPopupMenuFile(void* pPopupData)
 {
-	if(m_UiCurrentPopupID != POPUP_MENU_FILE)
-		return;
-
-	CUIRect Rect = m_UiCurrentPopupRect;
+	CUIRect Rect = *(CUIRect*)pPopupData;
 
 	// render the actual menu
 	static CUIButton s_NewMapButton;
@@ -2426,6 +2417,14 @@ void CEditor2::RenderPopupMenuFile()
 	static CUIButton s_OpenCurrentButton;
 	static CUIButton s_AppendButton;
 	static CUIButton s_ExitButton;
+
+	// whole screen "button" that prevents clicking on other stuff when exiting
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, m_UiScreenRect, &OverlayFakeButton);
+	if(OverlayFakeButton.m_Clicked)
+	{
+		ExitPopup();
+	}
 
 	CUIRect Slot;
 	// Rect.HSplitTop(2.0f, &Slot, &Rect);
@@ -2441,6 +2440,8 @@ void CEditor2::RenderPopupMenuFile()
 			Reset();
 			// pEditor->m_aFileName[0] = 0;
 		}
+
+		ExitPopup();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -2455,6 +2456,8 @@ void CEditor2::RenderPopupMenuFile()
 			InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, this);
 			// pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		}
+
+		ExitPopup();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -2465,12 +2468,14 @@ void CEditor2::RenderPopupMenuFile()
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Save", &s_SaveButton))
 	{
-		InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
+		ExitPopup();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Save As", &s_SaveAsButton))
 	{
+		InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
+		ExitPopup();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -2478,21 +2483,18 @@ void CEditor2::RenderPopupMenuFile()
 	{
 		Config()->m_ClEditor = 0;
 	}
-
-	// close popup
-	if(Input()->KeyPress(KEY_ESCAPE) || (UI()->MouseButtonClicked(0) && !UI()->MouseInside(&m_UiCurrentPopupRect)))
-	{
-		m_UiCurrentPopupID = POPUP_NONE;
-		UI()->SetActiveItem(0);
-	}
 }
 
-void CEditor2::RenderPopupBrushPalette()
+void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 {
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
 	DrawRect(UiScreenRect, vec4(0, 0, 0, 0.5)); // darken the background a bit
+
+	// whole screen "button" that prevents clicking on other stuff
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
 
 	CUIRect MainRect = {0, 0, m_UiMainViewRect.h, m_UiMainViewRect.h};
 	MainRect.x += (m_UiMainViewRect.w - MainRect.w) * 0.5;
@@ -2765,6 +2767,12 @@ void CEditor2::RenderPopupBrushPalette()
 	}
 
 	RenderBrush(m_UiMousePos);
+
+	if((!IsToolBrush() || !Input()->KeyIsPressed(KEY_SPACE)) && m_UiBrushPaletteState.m_PopupEnabled)
+	{
+		m_UiBrushPaletteState.m_PopupEnabled = false;
+		ExitPopup();
+	}
 }
 
 void CEditor2::InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext)
@@ -2779,7 +2787,7 @@ void CEditor2::InvokePopupFileSelect(const char *pButtonText, const char *pIniti
 
 	m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
 
-	m_UiCurrentPopupID = POPUP_FILE_SELECT;
+	PushPopup(&CEditor2::RenderPopupFileSelect, &m_UiFileSelectState);
 }
 
 int CEditor2::CUIFileSelect::EditorListdirCallback(const CFsFileInfo* info, int IsDir, int StorageType, void *pUser)
@@ -2833,21 +2841,24 @@ void CEditor2::CUIFileSelect::GenerateListBoxEntries()
 	}
 }
 
-void CEditor2::RenderPopupFileSelect()
+void CEditor2::RenderPopupFileSelect(void* pPopupData)
 {
 	const float Padding = 20.0f;
-	const float Scale = 2.0f/3.0f;
+	const float Scale = 5.0f/6.0f;
 	const float FontSize = 7.0f;
 	const vec4 White(1, 1, 1, 1);
 
 	if(Input()->KeyPress(KEY_ESCAPE))
-		m_UiCurrentPopupID = POPUP_NONE;
+		ExitPopup();
 
 	CUIFileSelect *pState = &m_UiFileSelectState;
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
 	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5)); // darken the background (should be in a common function)
+	// whole screen "button" that prevents clicking on other stuff
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
 
 	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f,
 		UiScreenRect.w * Scale, UiScreenRect.h * Scale};
@@ -2981,7 +2992,7 @@ void CEditor2::RenderPopupFileSelect()
 		static CUIButton s_BCancel;
 		if(UiButton(BCancel, CancelText, &s_BCancel, FontSize))
 		{
-			m_UiCurrentPopupID = POPUP_NONE;
+			ExitPopup();
 		}
 	}
 
@@ -3059,7 +3070,7 @@ void CEditor2::RenderPopupFileSelect()
 			char aBuf[512];
 			str_format(aBuf, sizeof(aBuf), "%s/%s", pState->m_aPath, pState->m_aFileList[Selected].m_aFilename);
 			pState->m_pfnFileSelectCB(aBuf, pState->m_pContext);
-			m_UiCurrentPopupID = POPUP_NONE;
+			ExitPopup();
 		}
 	}
 	else if(Open && pState->m_NewFile && s_aNewFileName[0])
@@ -3067,7 +3078,7 @@ void CEditor2::RenderPopupFileSelect()
 		char aBuf[512];
 		str_format(aBuf, sizeof(aBuf), "%s/%s", pState->m_aPath, s_aNewFileName);
 		pState->m_pfnFileSelectCB(aBuf, pState->m_pContext);
-		m_UiCurrentPopupID = POPUP_NONE;
+		ExitPopup();
 	}
 }
 
@@ -3868,14 +3879,13 @@ void CEditor2::RestoreUiSnapshot(CUISnapshot* pUiSnap)
 	m_TileSelection.Deselect(); // TODO: save selection?
 }
 
-void CEditor2::PushPopup(CEditor2::CUIPopup::Func_PopupRender pFuncRender, CEditor2::CUIPopup::Func_PopupRender pFuncExit, void* pPopupData)
+void CEditor2::PushPopup(CUIPopup::Func_PopupRender pFuncRender, void* pPopupData)
 {
 	dbg_assert(m_UiPopupStackCount < m_UiPopupStack.Capacity(), "Popup stack is full");
 
 	CUIPopup Popup;
 	Popup.m_pData = pPopupData;
 	Popup.m_pFuncRender = pFuncRender;
-	Popup.m_pFuncExit = pFuncExit;
 	m_UiPopupStack[m_UiPopupStackCount++] = Popup;
 }
 
@@ -3884,8 +3894,6 @@ void CEditor2::ExitPopup()
 {
 	dbg_assert(m_UiPopupStackCount > 0, "Popup stack is empty");
 	dbg_assert(m_UiCurrentPopupID >= 0 && m_UiCurrentPopupID < m_UiPopupStackCount, "Tried to ExitPopup outside the popup Render function");
-	CUIPopup& Popup = m_UiPopupStack[m_UiCurrentPopupID];
-	(this->*Popup.m_pFuncExit)(Popup.m_pData);
 	m_UiPopupStackToRemove[m_UiCurrentPopupID] = 1;
 }
 
@@ -3903,14 +3911,28 @@ void CEditor2::RenderPopups()
 
 	m_UiCurrentPopupID = -1;
 
-	// remove exited popups
-	CPlainArray<CUIPopup,32> Copy = m_UiPopupStack;
-	m_UiPopupStackCount = 0;
+	bool DoRemove = false;
 	for(int i = 0; i < PopupCount; i++)
 	{
-		if(!m_UiPopupStackToRemove[i])
+		if(m_UiPopupStackToRemove[i])
 		{
-			m_UiPopupStack[m_UiPopupStackCount++] = Copy[i];
+			DoRemove = true;
+			break;
+		}
+	}
+
+	// remove popups
+	if(DoRemove)
+	{
+		const int PopupCount = m_UiPopupStackCount; // get this once again since we might have pushed popups inside a popup render function
+		CPlainArray<CUIPopup,32> Copy = m_UiPopupStack;
+		m_UiPopupStackCount = 0;
+		for(int i = 0; i < PopupCount; i++)
+		{
+			if(!m_UiPopupStackToRemove[i])
+			{
+				m_UiPopupStack[m_UiPopupStackCount++] = Copy[i];
+			}
 		}
 	}
 }
