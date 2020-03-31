@@ -3144,16 +3144,16 @@ void CEditor2::RenderPopupYesNo(void *pData)
 	Text.HSplitTop(MainRect.h / 4, &Text, &Buttons);
 	Buttons.Margin(Buttons.h * 0.5f - 10, &Buttons);
 
-	DrawText(Title, pPopupData->m_pTitle, 15.0f, White, CUI::ALIGN_CENTER);
-	DrawText(Text, pPopupData->m_pText, 10.0f, White, CUI::ALIGN_CENTER);
+	DrawText(Title, Localize(pPopupData->m_pTitle), 15.0f, White, CUI::ALIGN_CENTER);
+	DrawText(Text, Localize(pPopupData->m_pText), 10.0f, White, CUI::ALIGN_CENTER);
 
 	CUIRect BYes, BNo;
 	Buttons.VSplitMid(&BNo, &BYes, 10.0f);
 
 	static CUIButton s_BNo, s_BYes;
-	if(UiButton(BNo, "No", &s_BNo, 10.0f, CUI::ALIGN_CENTER))
+	if(UiButton(BNo, Localize("No"), &s_BNo, 10.0f, CUI::ALIGN_CENTER))
 		pPopupData->m_pfnDoneCallback(false, pPopupData->m_pContext);
-	else if(UiButton(BYes, "Yes", &s_BYes, 10.0f, CUI::ALIGN_CENTER))
+	else if(UiButton(BYes, Localize("Yes"), &s_BYes, 10.0f, CUI::ALIGN_CENTER))
 		pPopupData->m_pfnDoneCallback(true, pPopupData->m_pContext);
 }
 
