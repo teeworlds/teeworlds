@@ -232,6 +232,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	CHistoryEntry m_aHistoryEntries[MAX_HISTORY];
 	u8 m_aHistoryEntryUsed[MAX_HISTORY];
 	CHistoryEntry* m_pHistoryEntryCurrent;
+	CHistoryEntry *m_pLastSavedHistoryEntry;
 
 	enum
 	{

@@ -159,7 +159,7 @@ void CEditor2::UpdateAndRender()
 
 bool CEditor2::HasUnsavedData() const
 {
-	return !!m_pHistoryEntryCurrent->m_pPrev;
+	return m_pLastSavedHistoryEntry != m_pHistoryEntryCurrent;
 }
 
 void CEditor2::OnInput(IInput::CEvent Event)
@@ -3787,6 +3787,7 @@ bool CEditor2::SaveMap(const char* pFileName)
 {
 	if(m_Map.Save(pFileName))
 	{
+		m_pLastSavedHistoryEntry = m_pHistoryEntryCurrent;
 		// send rcon.. if we can
 		// TODO: implement / uncomment
 		if(Client()->RconAuthed())
@@ -3843,6 +3844,7 @@ void CEditor2::OnMapLoaded()
 	m_pHistoryEntryCurrent->m_pUiSnap = SaveUiSnapshot();
 	m_pHistoryEntryCurrent->SetAction("Map loaded");
 	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
+	m_pLastSavedHistoryEntry = m_pHistoryEntryCurrent;
 }
 
 void CEditor2::HistoryClear()
