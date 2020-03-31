@@ -1539,6 +1539,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	CUIRect DragMoveOverlayRect;
 	int DragMoveOffset = 0;
 	int DragMoveGroupIdOffset = 0; // for group dragging
+	int OldSelectedGroupID = m_UiSelectedGroupID;
 	// -----------------------
 
 	const int GroupCount = m_Map.m_GroupIDListCount;
@@ -1593,12 +1594,8 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 		// group button
 		CUIButton& ButState = s_UiGroupButState[GroupID];
 		UiDoButtonBehavior(&ButState, ButtonRect, &ButState);
-
 		if(ButState.m_Clicked)
 		{
-			if(m_UiSelectedGroupID == GroupID)
-				m_UiGroupState[GroupID].m_IsOpen ^= 1;
-
 			m_UiSelectedGroupID = GroupID;
 			if(Group.m_LayerCount > 0)
 				m_UiSelectedLayerID = Group.m_apLayerIDs[0];
@@ -1855,7 +1852,6 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 			{
 				ed_dbg("DragMoveGroupIdOffset = %d", DragMoveGroupIdOffset);
 				int NewGroupListIndex = EditGroupOrderMove(DragMoveGroupListIndex, DragMoveGroupIdOffset);
-				m_UiGroupState[m_Map.m_aGroupIDList[NewGroupListIndex]].m_IsOpen = true;
 
 				if((int)m_Map.m_aGroupIDList[DragMoveGroupListIndex] == m_UiSelectedGroupID && NewGroupListIndex != DragMoveGroupListIndex)
 				{
@@ -1869,6 +1865,11 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				m_UiGroupState[m_Map.m_aGroupIDList[NewGroupListIndex]].m_IsOpen = true;
 			}
 		}
+		else if(m_UiSelectedGroupID == aGroupIDList[DragMoveGroupListIndex] && OldSelectedGroupID == m_UiSelectedGroupID)
+		{
+			m_UiGroupState[m_UiSelectedGroupID].m_IsOpen ^= 1;
+		}
+
 	}
 }
 
