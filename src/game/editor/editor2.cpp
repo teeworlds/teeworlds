@@ -1865,7 +1865,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				m_UiGroupState[m_Map.m_aGroupIDList[NewGroupListIndex]].m_IsOpen = true;
 			}
 		}
-		else if(m_UiSelectedGroupID == aGroupIDList[DragMoveGroupListIndex] && OldSelectedGroupID == m_UiSelectedGroupID)
+		else if((u32)m_UiSelectedGroupID == aGroupIDList[DragMoveGroupListIndex] && OldSelectedGroupID == m_UiSelectedGroupID)
 		{
 			m_UiGroupState[m_UiSelectedGroupID].m_IsOpen ^= 1;
 		}
