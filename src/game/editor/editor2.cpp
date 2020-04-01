@@ -102,6 +102,7 @@ void CEditor2::Init()
 	m_Tool = TOOL_TILE_BRUSH;
 	m_UiDetailPanelIsOpen = false;
 	m_MapViewZoom = 0;
+	m_MapSaved = false;
 
 	m_UiPopupStackCount = 0;
 	m_UiCurrentPopupID = -1;
@@ -159,7 +160,7 @@ void CEditor2::UpdateAndRender()
 
 bool CEditor2::HasUnsavedData() const
 {
-	return m_pLastSavedHistoryEntry != m_pHistoryEntryCurrent;
+	return !m_MapSaved;
 }
 
 void CEditor2::OnInput(IInput::CEvent Event)
@@ -256,10 +257,7 @@ void CEditor2::Update()
 
 		if(IsCtrlPressed && Input()->KeyPress(KEY_S))
 		{
-			if(m_aCurrentMapPath[0])
-				SaveMap(m_aCurrentMapPath);
-			else
-				InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
+			SaveMapUi();
 		}
 
 		if(IsToolSelect() && Input()->KeyPress(KEY_ESCAPE)) {
@@ -2413,16 +2411,27 @@ bool CEditor2::SaveFileCallback(const char *pFilepath, void *pContext)
 	return pEditor->SaveMap(pFilepath);
 }
 
+void CEditor2::NewFileSaveUnsavedFileCb(void *pContext)
+{
+	CEditor2 *pEditor = (CEditor2 *)pContext;
+	pEditor->Reset();
+}
+
 void CEditor2::InvokeNewCb(bool Choice, void *pContext)
 {
 	CEditor2 *pEditor = (CEditor2 *)pContext;
 	pEditor->ExitPopup();
 
-	if(!Choice)
-		return;
+	if(Choice)
+		pEditor->SaveMapUi(NewFileSaveUnsavedFileCb);
+	else
+		pEditor->Reset();
+}
 
-	pEditor->SaveMap(pEditor->m_aCurrentMapPath);
-	pEditor->Reset();
+void CEditor2::LoadFileSaveUnsavedFileCb(void *pContext)
+{
+	CEditor2 *pEditor = (CEditor2 *)pContext;
+	pEditor->InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, pEditor);
 }
 
 void CEditor2::InvokeLoadPopupCb(bool Choice, void *pContext)
@@ -2430,11 +2439,41 @@ void CEditor2::InvokeLoadPopupCb(bool Choice, void *pContext)
 	CEditor2 *pEditor = (CEditor2 *)pContext;
 	pEditor->ExitPopup();
 
-	if(!Choice)
-		return;
+	if(Choice)
+		pEditor->SaveMapUi(LoadFileSaveUnsavedFileCb);
+	else
+		pEditor->InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, pEditor);
+}
 
-	pEditor->SaveMap(pEditor->m_aCurrentMapPath);
-	pEditor->InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, pEditor);
+bool CEditor2::FileSelectChainCallback(const char *pName, void *pContext)
+{
+	SFileSelectChainContext *pChainContext = (SFileSelectChainContext *)pContext;
+	bool Result = pChainContext->m_pfnSelectCallback(pName, pChainContext->m_pContext);
+
+	if(pChainContext->m_pfnChainCallback)
+		pChainContext->m_pfnChainCallback(pChainContext->m_pContext);
+
+	return Result;
+}
+
+void CEditor2::SaveMapUi(CHAIN_CALLBACK pfnCallback)
+{
+	dbg_msg("debug", "saving '%s'", m_Map.m_aPath);
+	if(!m_Map.m_aPath[0])
+	{
+		static SFileSelectChainContext Context;
+		Context.m_pfnSelectCallback = SaveFileCallback;
+		Context.m_pfnChainCallback = pfnCallback;
+		Context.m_pContext = this;
+		InvokePopupFileSelect("Save", "maps", true, FileSelectChainCallback, &Context);
+	}
+	else
+	{
+		SaveMap(m_Map.m_aPath);
+		if(pfnCallback)
+			pfnCallback(this);
+	}
+
 }
 
 void CEditor2::RenderPopupMenuFile(void* pPopupData)
@@ -2463,32 +2502,30 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "New", &s_NewMapButton))
 	{
+		ExitPopup();
 		if(HasUnsavedData())
 		{
 			m_UiCurrentYNData = CYNPopup("Warning", "The current map has not been saved, would you like to save it?", InvokeNewCb, this);
-			ExitPopup();
 			PushPopup(&CEditor2::RenderPopupYesNo, &m_UiCurrentYNData);
 		}
 		else
 		{
 			Reset();
-			ExitPopup();
 		}
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Load", &s_OpenButton))
 	{
+		ExitPopup();
 		if(HasUnsavedData())
 		{
 			m_UiCurrentYNData = CYNPopup("Warning", "The current map has not been saved, would you like to save it?", InvokeLoadPopupCb, this);
-			ExitPopup();
 			PushPopup(&CEditor2::RenderPopupYesNo, &m_UiCurrentYNData);
 		}
 		else
 		{
 			InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, this);
-			ExitPopup();
 		}
 	}
 
@@ -2500,15 +2537,15 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Save", &s_SaveButton))
 	{
-		SaveMap(m_aCurrentMapPath);
 		ExitPopup();
+		SaveMapUi();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Save As", &s_SaveAsButton))
 	{
-		InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
 		ExitPopup();
+		InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -3364,7 +3401,6 @@ void CEditor2::RenderAssetManager()
 void CEditor2::Reset()
 {
 	m_Map.LoadDefault();
-	m_aCurrentMapPath[0] = 0;
 	OnMapLoaded();
 }
 
@@ -3774,7 +3810,6 @@ bool CEditor2::LoadMap(const char* pFileName)
 {
 	if(m_Map.Load(pFileName))
 	{
-		str_copy(m_aCurrentMapPath, pFileName, sizeof(m_aCurrentMapPath));
 		OnMapLoaded();
 		ed_log("map '%s' sucessfully loaded.", pFileName);
 		return true;
@@ -3787,7 +3822,7 @@ bool CEditor2::SaveMap(const char* pFileName)
 {
 	if(m_Map.Save(pFileName))
 	{
-		m_pLastSavedHistoryEntry = m_pHistoryEntryCurrent;
+		m_MapSaved = true;
 		// send rcon.. if we can
 		// TODO: implement / uncomment
 		if(Client()->RconAuthed())
@@ -3809,6 +3844,7 @@ bool CEditor2::SaveMap(const char* pFileName)
 
 void CEditor2::OnMapLoaded()
 {
+	m_MapSaved = true;
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
 	mem_zero(m_UiGroupState.data, sizeof(m_UiGroupState.data));
@@ -3844,7 +3880,6 @@ void CEditor2::OnMapLoaded()
 	m_pHistoryEntryCurrent->m_pUiSnap = SaveUiSnapshot();
 	m_pHistoryEntryCurrent->SetAction("Map loaded");
 	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
-	m_pLastSavedHistoryEntry = m_pHistoryEntryCurrent;
 }
 
 void CEditor2::HistoryClear()
@@ -3888,6 +3923,8 @@ void CEditor2::HistoryDeallocEntry(CEditor2::CHistoryEntry *pEntry)
 
 void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 {
+	m_MapSaved = false;
+
 	CHistoryEntry* pEntry;
 	pEntry = HistoryAllocEntry();
 	pEntry->m_pSnap = m_Map.SaveSnapshot();

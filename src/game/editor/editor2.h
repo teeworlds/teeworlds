@@ -55,7 +55,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	IGraphics::CTextureHandle m_GameTexture;
 
 	CEditorMap2 m_Map;
-	char m_aCurrentMapPath[512];
+	bool m_MapSaved;
 	CEditorConsoleUI m_InputConsole;
 
 	bool m_ConfigShowGrid;
@@ -232,7 +232,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 	CHistoryEntry m_aHistoryEntries[MAX_HISTORY];
 	u8 m_aHistoryEntryUsed[MAX_HISTORY];
 	CHistoryEntry* m_pHistoryEntryCurrent;
-	CHistoryEntry *m_pLastSavedHistoryEntry;
 
 	enum
 	{
@@ -321,9 +320,21 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderHistory(CUIRect NavRect);
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
 
+	static void NewFileSaveUnsavedFileCb(void *pContext);
 	static void InvokeNewCb(bool Choice, void *pContext);
+	static void LoadFileSaveUnsavedFileCb(void *pContext);
 	static void InvokeLoadPopupCb(bool Choice, void *pContext);
 
+	typedef void (*CHAIN_CALLBACK)(void *pContext);
+	typedef struct
+	{
+		FILE_SELECT_CALLBACK m_pfnSelectCallback;
+		CHAIN_CALLBACK m_pfnChainCallback;
+		void *m_pContext;
+	} SFileSelectChainContext;
+	static bool FileSelectChainCallback(const char *pFilename, void *pContext);
+
+	void SaveMapUi(CHAIN_CALLBACK pfnCallback = 0);
 
 	void RenderPopupMenuFile(void* pPopupData);
 	void RenderPopupBrushPalette(void* pPopupData);
