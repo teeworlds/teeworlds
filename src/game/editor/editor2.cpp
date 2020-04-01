@@ -3133,7 +3133,7 @@ void CEditor2::RenderPopupYesNo(void *pData)
 	static CUIButton OverlayFakeButton;
 	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
 
-	int w = UiScreenRect.w * Scale, h = UiScreenRect.h * Scale * 0.5f;
+	float w = UiScreenRect.w * Scale, h = UiScreenRect.h * Scale * 0.5f;
 	CUIRect MainRect = {(UiScreenRect.w - w) * 0.5f, (UiScreenRect.h - h) * 0.5f, w, h};
 
 	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
