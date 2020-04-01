@@ -44,7 +44,7 @@
 	{
 		return _InterlockedIncrement((volatile long *)pValue);
 	}
-	
+
 	inline unsigned atomic_dec(volatile unsigned *pValue)
 	{
 		return _InterlockedDecrement((volatile long *)pValue);
@@ -63,21 +63,15 @@
 	#error missing atomic implementation for this compiler
 #endif
 
-#if defined(CONF_PLATFORM_MACOSX)
-	/*
-		use semaphore provided by SDL on macosx
-	*/
-#else
-	class semaphore
-	{
-		SEMAPHORE sem;
-	public:
-		semaphore() { semaphore_init(&sem); }
-		~semaphore() { semaphore_destroy(&sem); }
-		void wait() { semaphore_wait(&sem); }
-		void signal() { semaphore_signal(&sem); }
-	};
-#endif
+class semaphore
+{
+	SEMAPHORE sem;
+public:
+	semaphore() { semaphore_init(&sem); }
+	~semaphore() { semaphore_destroy(&sem); }
+	void wait() { semaphore_wait(&sem); }
+	void signal() { semaphore_signal(&sem); }
+};
 
 class lock
 {

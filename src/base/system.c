@@ -659,20 +659,71 @@ void lock_unlock(LOCK lock)
 #endif
 }
 
-#if !defined(CONF_PLATFORM_MACOSX)
-	#if defined(CONF_FAMILY_UNIX)
-	void semaphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
-	void semaphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
-	void semaphore_signal(SEMAPHORE *sem) { sem_post(sem); }
-	void semaphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
-	#elif defined(CONF_FAMILY_WINDOWS)
-	void semaphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
-	void semaphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, INFINITE); }
-	void semaphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
-	void semaphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
-	#else
-		#error not implemented on this platform
-	#endif
+#if defined(CONF_FAMILY_UNIX) && !defined(CONF_PLATFORM_MACOSX) // this should be CONF_POSIX_SEM but bam can't run C programs
+void semaphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
+void semaphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
+void semaphore_signal(SEMAPHORE *sem) { sem_post(sem); }
+void semaphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
+#elif defined(CONF_FAMILY_WINDOWS)
+void semaphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
+void semaphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, INFINITE); }
+void semaphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
+void semaphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
+#else
+typedef struct SEMINTERNAL
+{
+	int count;
+	int waiters;
+	LOCK c_lock;
+	pthread_cond_t c_nzcond;
+} SEMINTERNAL;
+
+void semaphore_init(SEMAPHORE *sem)
+{
+	*sem = mem_alloc(sizeof(**sem), 0);
+
+	(*sem)->count = 0;
+	(*sem)->waiters = 0;
+
+	(*sem)->c_lock = lock_create();
+	pthread_cond_init(&(*sem)->c_nzcond, 0);
+}
+
+void semaphore_wait(SEMAPHORE *sem)
+{
+	lock_wait((*sem)->c_lock);
+
+	(*sem)->waiters++;
+	int result = 0;
+	while((*sem)->count == 0)
+		result = pthread_cond_wait(&(*sem)->c_nzcond, (LOCKINTERNAL *)(*sem)->c_lock);
+
+	(*sem)->waiters--;
+
+	if(!result)
+		(*sem)->count--;
+
+	lock_unlock((*sem)->c_lock);
+}
+
+void semaphore_signal(SEMAPHORE *sem)
+{
+	lock_wait((*sem)->c_lock);
+
+	if((*sem)->waiters)
+		pthread_cond_signal(&(*sem)->c_nzcond);
+
+	(*sem)->count++;
+	lock_unlock((*sem)->c_lock);
+}
+
+void semaphore_destroy(SEMAPHORE *sem)
+{
+	pthread_cond_destroy(&(*sem)->c_nzcond);
+	lock_destroy((*sem)->c_lock);
+	mem_free(*sem);
+}
+
 #endif
 
 
