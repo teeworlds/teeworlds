@@ -3,6 +3,8 @@
 #ifndef ENGINE_SHARED_NETWORK_H
 #define ENGINE_SHARED_NETWORK_H
 
+#include <base/tl/array.h>
+
 #include "ringbuffer.h"
 #include "huffman.h"
 
@@ -67,7 +69,7 @@ enum
 enum
 {
 	NET_MAX_CHUNKHEADERSIZE = 3,
-	
+
 	// packets
 	NET_PACKETHEADERSIZE = 7,
 	NET_PACKETHEADERSIZE_CONNLESS = NET_PACKETHEADERSIZE + 2,
@@ -108,7 +110,7 @@ enum
 	//
 	NET_MAX_CLIENTS = 64,
 	NET_MAX_CONSOLE_CLIENTS = 4,
-	
+
 	NET_MAX_SEQUENCE = 1<<10,
 	NET_SEQUENCE_MASK = NET_MAX_SEQUENCE-1,
 
@@ -149,6 +151,20 @@ struct CNetChunk
 	int m_Flags;
 	int m_DataSize;
 	const void *m_pData;
+};
+
+class CNetChunkStore
+{
+	array<CNetChunk> m_aChunks;
+	int m_Chunk;
+
+public:
+	CNetChunkStore();
+	~CNetChunkStore();
+
+	void Add(CNetChunk *pChunk);
+	CNetChunk *First();
+	CNetChunk *Next();
 };
 
 class CNetChunkHeader
@@ -214,7 +230,7 @@ public:
 	CConfig *Config() { return m_pConfig; }
 	class IEngine *Engine() { return m_pEngine; }
 	int NetType() { return m_Socket.type; }
-	
+
 	void Init(NETSOCKET Socket, class CConfig *pConfig, class IConsole *pConsole, class IEngine *pEngine);
 	void Shutdown();
 	void UpdateLogHandles();

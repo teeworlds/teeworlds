@@ -53,8 +53,10 @@ public:
 
 	int m_MaxClients;
 	int m_NumClients;
+	int m_NumReceivedClients;
 	int m_MaxPlayers;
 	int m_NumPlayers;
+	int m_NumReceivedPlayers;
 	int m_NumBotPlayers;
 	int m_NumBotSpectators;
 	int m_Flags;

@@ -13,6 +13,11 @@ void CPacker::Reset()
 	m_pEnd = m_pCurrent + PACKER_BUFFER_SIZE;
 }
 
+void CPacker::Truncate(int Size)
+{
+	m_pCurrent = m_aBuffer + Size;
+}
+
 void CPacker::AddInt(int i)
 {
 	if(m_Error)
@@ -116,8 +121,14 @@ int CUnpacker::GetInt()
 
 const char *CUnpacker::GetString(int SanitizeType)
 {
-	if(m_Error || m_pCurrent >= m_pEnd)
+	if(m_Error)
 		return "";
+
+	if(m_pCurrent >= m_pEnd)
+	{
+		m_Error = true;
+		return "";
+	}
 
 	char *pPtr = (char *)m_pCurrent;
 	while(*m_pCurrent) // skip the string

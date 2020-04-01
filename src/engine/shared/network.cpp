@@ -410,3 +410,43 @@ void CNetBase::UpdateLogHandles()
 	if(Engine())
 		Engine()->QueryNetLogHandles(&m_DataLogSent, &m_DataLogRecv);
 }
+
+CNetChunkStore::CNetChunkStore()
+{
+	m_aChunks.clear();
+	m_Chunk = 0;
+}
+
+CNetChunkStore::~CNetChunkStore()
+{
+	for(int i = 0; i < m_aChunks.size(); i++)
+	{
+		// Cast to non-const
+		mem_free((void *)m_aChunks[i].m_pData);
+	}
+}
+
+void CNetChunkStore::Add(CNetChunk *pChunk)
+{
+	void *pData = mem_alloc(pChunk->m_DataSize, 0);
+	mem_copy(pData, pChunk->m_pData, pChunk->m_DataSize);
+	pChunk->m_pData = pData;
+	m_aChunks.add(*pChunk);
+}
+
+CNetChunk *CNetChunkStore::First()
+{
+	if(!m_aChunks.size())
+		return 0;
+
+	m_Chunk = 0;
+	return &m_aChunks[m_Chunk++];
+}
+
+CNetChunk *CNetChunkStore::Next()
+{
+	if(m_Chunk == m_aChunks.size())
+		return 0;
+
+	return &m_aChunks[m_Chunk++];
+}

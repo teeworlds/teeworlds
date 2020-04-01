@@ -18,6 +18,7 @@ class CPacker
 	int m_Error;
 public:
 	void Reset();
+	void Truncate(int Size);
 	void AddInt(int i);
 	void AddString(const char *pStr, int Limit);
 	void AddRaw(const void *pData, int Size);

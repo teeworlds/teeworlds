@@ -529,6 +529,41 @@ int CServer::SendMsg(CMsgPacker *pMsg, int Flags, int ClientID)
 	return 0;
 }
 
+int CServer::SendStoredChunks(CNetChunkStore *pStore, int Flags, int ClientID)
+{
+	for(CNetChunk *pChunk = pStore->First(); pChunk; pChunk = pStore->Next())
+	{
+		pChunk->m_ClientID = ClientID;
+		if(Flags&MSGFLAG_VITAL)
+			pChunk->m_Flags |= NETSENDFLAG_VITAL;
+		if(Flags&MSGFLAG_FLUSH)
+			pChunk->m_Flags |= NETSENDFLAG_FLUSH;
+
+		// write message to demo recorder
+		if(!(Flags&MSGFLAG_NORECORD))
+			m_DemoRecorder.RecordMessage(pChunk->m_pData, pChunk->m_DataSize);
+
+		if(!(Flags&MSGFLAG_NOSEND))
+		{
+			if(ClientID == -1)
+			{
+				// broadcast
+				int i;
+				for(i = 0; i < MAX_CLIENTS; i++)
+					if(m_aClients[i].m_State == CClient::STATE_INGAME && !m_aClients[i].m_Quitting)
+					{
+						pChunk->m_ClientID = i;
+						m_NetServer.Send(pChunk);
+					}
+			}
+			else
+				m_NetServer.Send(pChunk);
+		}
+	}
+
+	return 0;
+}
+
 void CServer::DoSnapshot()
 {
 	GameServer()->OnPreSnap();
@@ -1099,8 +1134,11 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	}
 }
 
-void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
+int CServer::GenerateServerInfo(CPacker *pPacker, int Token, bool Extended)
 {
+	CPacker *pOriginal = pPacker;
+	CPacker Temp;
+
 	// count the players
 	int PlayerCount = 0, ClientCount = 0;
 	for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1140,41 +1178,108 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	pPacker->AddInt(Config()->m_SvSkillLevel);	// server skill level
 	pPacker->AddInt(PlayerCount); // num players
 	pPacker->AddInt(Config()->m_SvPlayerSlots); // max players
-	pPacker->AddInt(ClientCount); // num clients
+
+	Temp.Reset();
+	pPacker = &Temp;
 	pPacker->AddInt(max(ClientCount, Config()->m_SvMaxClients)); // max clients
 
+	int i = 0;
 	if(Token != -1)
 	{
-		for(int i = 0; i < MAX_CLIENTS; i++)
+		for(i = 0; i < MAX_CLIENTS; i++)
 		{
-			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
+			if(m_aClients[i].m_State == CClient::STATE_EMPTY)
+				continue;
+
+			int PreviousSize = pPacker->Size();
+
+			pPacker->AddString(ClientName(i), MAX_NAME_LENGTH); // client name
+			pPacker->AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
+			pPacker->AddInt(m_aClients[i].m_Country); // client country
+			pPacker->AddInt(m_aClients[i].m_Score); // client score
+			pPacker->AddInt(GameServer()->IsClientPlayer(i)?0:1); // flag spectator=1, bot=2 (player=0)
+
+			unsigned char aPCount[32];
+			const unsigned char *pEnd = CVariableInt::Pack(aPCount, i);
+			if(pPacker->Size() + (aPCount - pEnd) + pOriginal->Size() > NET_MAX_PAYLOAD)
 			{
-				pPacker->AddString(ClientName(i), MAX_NAME_LENGTH); // client name
-				pPacker->AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
-				pPacker->AddInt(m_aClients[i].m_Country); // client country
-				pPacker->AddInt(m_aClients[i].m_Score); // client score
-				pPacker->AddInt(GameServer()->IsClientPlayer(i)?0:1); // flag spectator=1, bot=2 (player=0)
+				i--;
+				pPacker->Truncate(PreviousSize);
+				break;
 			}
 		}
 	}
+
+	pOriginal->AddInt(Extended ? ClientCount : i);
+	pOriginal->AddRaw(pPacker->Data(), pPacker->Size());
+
+	return i;
+}
+
+void CServer::GenerateExtraServerInfo(CNetChunkStore *pStore, int Token, int LastClient)
+{
+	if(LastClient >= MAX_CLIENTS)
+		return;
+
+	int PacketsStored = 1;
+	CPacker Packer;
+	CNetChunk Packet;
+
+	#define ADD_CHUNK(Packer, Size) \
+	do \
+	{ \
+		mem_zero(&Packet, sizeof(Packet)); \
+		Packet.m_pData = Packer.Data(); \
+		Packet.m_DataSize = Size; \
+		pStore->Add(&Packet); \
+		PacketsStored++; \
+	} while(0)
+
+	#define RESET() \
+	do \
+	{ \
+		Packer.Reset(); \
+		Packer.AddRaw(SERVERBROWSE_INFO_PLAYERS, sizeof(SERVERBROWSE_INFO_PLAYERS)); \
+		Packer.AddInt(Token); \
+		Packer.AddInt(PacketsStored); \
+	} while(0)
+
+	RESET();
+
+	for(int i = LastClient; i < MAX_CLIENTS; i++)
+	{
+		if(m_aClients[i].m_State == CClient::STATE_EMPTY)
+			continue;
+
+		int PreviousSize = Packer.Size();
+
+		Packer.AddString(ClientName(i), MAX_NAME_LENGTH); // client name
+		Packer.AddString(ClientClan(i), MAX_CLAN_LENGTH); // client clan
+		Packer.AddInt(m_aClients[i].m_Country); // client country
+		Packer.AddInt(m_aClients[i].m_Score); // client score
+		Packer.AddInt(GameServer()->IsClientPlayer(i)?0:1); // flag spectator=1, bot=2 (player=0)
+
+		if(Packer.Size() >= NET_MAX_PAYLOAD)
+		{
+			i--; // put next player in next packet
+			ADD_CHUNK(Packer, PreviousSize);
+			RESET();
+			continue;
+		}
+	}
+	ADD_CHUNK(Packer, Packer.Size());
 }
 
 void CServer::SendServerInfo(int ClientID)
 {
 	CMsgPacker Msg(NETMSG_SERVERINFO, true);
-	GenerateServerInfo(&Msg, -1);
-	if(ClientID == -1)
-	{
-		for(int i = 0; i < MAX_CLIENTS; i++)
-		{
-			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
-				SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, i);
-		}
-	}
-	else if(ClientID >= 0 && ClientID < MAX_CLIENTS && m_aClients[ClientID].m_State != CClient::STATE_EMPTY)
-		SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
-}
+	int LastClient = GenerateServerInfo(&Msg, -1, false);
+	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
 
+	CNetChunkStore ChunkStore;
+	GenerateExtraServerInfo(&ChunkStore, -1, LastClient);
+	SendStoredChunks(&ChunkStore, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+}
 
 void CServer::PumpNetwork()
 {
@@ -1199,17 +1304,29 @@ void CServer::PumpNetwork()
 				if(Unpacker.Error())
 					continue;
 
+				bool Extended = false;
+				if(!str_comp(Unpacker.GetString(), SERVERBROWSE_GETINFO_EX) && !Unpacker.Error())
+					Extended = true;
+
+				CNetChunkStore ChunkStore;
 				CPacker Packer;
+				int LastClient = GenerateServerInfo(&Packer, SrvBrwsToken, Extended);
+
 				CNetChunk Response;
-
-				GenerateServerInfo(&Packer, SrvBrwsToken);
-
-				Response.m_ClientID = -1;
-				Response.m_Address = Packet.m_Address;
-				Response.m_Flags = NETSENDFLAG_CONNLESS;
 				Response.m_pData = Packer.Data();
 				Response.m_DataSize = Packer.Size();
-				m_NetServer.Send(&Response, ResponseToken);
+				ChunkStore.Add(&Response);
+
+				if(Extended)
+					GenerateExtraServerInfo(&ChunkStore, SrvBrwsToken, LastClient);
+
+				for(CNetChunk *pChunk = ChunkStore.First(); pChunk; pChunk = ChunkStore.Next())
+				{
+					pChunk->m_ClientID = -1;
+					pChunk->m_Address = Packet.m_Address;
+					pChunk->m_Flags = NETSENDFLAG_CONNLESS;
+					m_NetServer.Send(pChunk, ResponseToken);
+				}
 			}
 		}
 		else
