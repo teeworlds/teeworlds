@@ -151,7 +151,7 @@ void CServerBan::InitServerBan(IConsole *pConsole, IStorage *pStorage, CServer* 
 	m_pServer = pServer;
 
 	// overwrites base command, todo: improve this
-	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBanExt, this, "Ban player with IP/IP range/client id for x minutes for any reason");
+	Console()->Register("ban", "s[id|ip|range] ?i[minutes] r[reason]", CFGFLAG_SERVER|CFGFLAG_STORE, ConBanExt, this, "Ban player with IP/IP range/client id for x minutes for any reason");
 }
 
 template<class T>
@@ -1201,7 +1201,7 @@ void CServer::PumpNetwork()
 
 				CPacker Packer;
 				CNetChunk Response;
-				
+
 				GenerateServerInfo(&Packer, SrvBrwsToken);
 
 				Response.m_ClientID = -1;
@@ -1513,7 +1513,7 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 		pThis->m_pStorage->ListDirectory(IStorage::TYPE_ALL, FindPath, MapListEntryCallback, &Userdata);
 		return 0;
 	}
-	
+
 	const char *pSuffix = str_endswith(aFilename, ".map");
 	if(!pSuffix) // not ending with .map
 	{
@@ -1745,12 +1745,12 @@ void CServer::RegisterCommands()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	// register console commands
-	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
+	Console()->Register("kick", "i[id] ?r[reason]", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
 	Console()->Register("logout", "", CFGFLAG_SERVER|CFGFLAG_BASICACCESS, ConLogout, this, "Logout of rcon");
 
-	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
+	Console()->Register("record", "?s[file]", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "Stop recording");
 
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
@@ -1902,4 +1902,3 @@ int main(int argc, const char **argv) // ignore_convention
 
 	return Ret;
 }
-

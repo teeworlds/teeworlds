@@ -970,7 +970,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		GameRight.HSplitTop(Spacing, 0, &GameRight);
 		GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		/*RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 		CUIRect Text;
 		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
 		Button.VSplitLeft(200.0f, &Text, &Button);
@@ -989,7 +989,10 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 			str_format(aBuf, sizeof(aBuf), Localize("no one", "Show chat messages from:"));
 		static CButtonContainer s_ButtonFilterchat;
 		if(DoButton_Menu(&s_ButtonFilterchat, aBuf, 0, &Button))
-			Config()->m_ClFilterchat = (Config()->m_ClFilterchat + 1) % 3;
+			Config()->m_ClFilterchat = (Config()->m_ClFilterchat + 1) % 3;*/
+		const int NumLabels = 3;
+		const char *aLabels[NumLabels] = { Localize("everyone", "Show chat messages from"), Localize("friends only", "Show chat messages from"), Localize("no one", "Show chat messages from")};
+		DoScrollbarOptionLabeled(&Config()->m_ClFilterchat, &Config()->m_ClFilterchat, &Button, Localize("Show chat messages from"), aLabels, NumLabels);
 	}
 
 	GameRight.HSplitTop(Spacing, 0, &GameRight);

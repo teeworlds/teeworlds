@@ -71,7 +71,7 @@ void CNamePlates::RenderNameplate(
 
 void CNamePlates::OnRender()
 {
-	if (!Config()->m_ClNameplates)
+	if (!Config()->m_ClNameplates || Client()->State() < IClient::STATE_ONLINE)
 		return;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)

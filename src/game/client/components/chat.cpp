@@ -76,14 +76,14 @@ void CChat::OnReset()
 
 	// init chat commands (must be in alphabetical order)
 	m_CommandManager.ClearCommands();
-	m_CommandManager.AddCommand("all", "Switch to all chat", "?r", &Com_All, this);
-	m_CommandManager.AddCommand("friend", "Add player as friend", "p", &Com_Befriend, this);
-	m_CommandManager.AddCommand("m", "Mute a player", "p", &Com_Mute, this);
-	m_CommandManager.AddCommand("mute", "Mute a player", "p", &Com_Mute, this);
-	m_CommandManager.AddCommand("r", "Reply to a whisper", "?r", &Com_Reply, this);
-	m_CommandManager.AddCommand("team", "Switch to team chat", "?r", &Com_Team, this);
-	m_CommandManager.AddCommand("w", "Whisper another player", "p", &Com_Whisper, this);
-	m_CommandManager.AddCommand("whisper", "Whisper another player", "p", &Com_Whisper, this);
+	m_CommandManager.AddCommand("all", "Switch to all chat", "?r[message]", &Com_All, this);
+	m_CommandManager.AddCommand("friend", "Add player as friend", "s[name]", &Com_Befriend, this);
+	m_CommandManager.AddCommand("m", "Mute a player", "s[name]", &Com_Mute, this);
+	m_CommandManager.AddCommand("mute", "Mute a player", "s[name]", &Com_Mute, this);
+	m_CommandManager.AddCommand("r", "Reply to a whisper", "?r[message]", &Com_Reply, this);
+	m_CommandManager.AddCommand("team", "Switch to team chat", "?r[message]", &Com_Team, this);
+	m_CommandManager.AddCommand("w", "Whisper another player", "s[name] ?r[message]", &Com_Whisper, this);
+	m_CommandManager.AddCommand("whisper", "Whisper another player", "s[name] ?r[message]", &Com_Whisper, this);
 }
 
 void CChat::OnMapLoad()
@@ -204,11 +204,11 @@ void CChat::OnInit()
 
 void CChat::OnConsoleInit()
 {
-	Console()->Register("say", "r", CFGFLAG_CLIENT, ConSay, this, "Say in chat");
-	Console()->Register("say_team", "r", CFGFLAG_CLIENT, ConSayTeam, this, "Say in team chat");
-	Console()->Register("say_self", "r", CFGFLAG_CLIENT, ConSaySelf, this, "Say message just for yourself");
-	Console()->Register("whisper", "ir", CFGFLAG_CLIENT, ConWhisper, this, "Whisper to a client in chat");
-	Console()->Register("chat", "s?i", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team/whisper mode");
+	Console()->Register("say", "r[text]", CFGFLAG_CLIENT, ConSay, this, "Say in chat");
+	Console()->Register("say_team", "r[text]", CFGFLAG_CLIENT, ConSayTeam, this, "Say in team chat");
+	Console()->Register("say_self", "r[text]", CFGFLAG_CLIENT, ConSaySelf, this, "Say message just for yourself");
+	Console()->Register("whisper", "i[target] r[text]", CFGFLAG_CLIENT, ConWhisper, this, "Whisper to a client in chat");
+	Console()->Register("chat", "s[text] ?i[whisper-target]", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team/whisper mode");
 	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat");
 }
 
@@ -740,7 +740,7 @@ const char* CChat::GetCommandName(int Mode) const
 
 void CChat::OnRender()
 {
-	if(Client()->State() <= Client()->STATE_LOADING)
+	if(Client()->State() < IClient::STATE_ONLINE)
 		return;
 
 	// send pending chat messages
@@ -982,7 +982,7 @@ void CChat::OnRender()
 				TextRender()->SetCursor(&InfoCursor, 2.0f, y+12.0f, CategoryFontSize*0.75, TEXTFLAG_RENDER);
 
 				char aInfoText[128];
-				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients"));
+				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients. Whispers aren't encrypted and might be logged by the server."));
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
 				TextRender()->TextEx(&InfoCursor, aInfoText, -1);
 			}
@@ -1418,33 +1418,66 @@ void CChat::HandleCommands(float x, float y, float w)
 				// print command
 				CTextCursor Cursor;
 				TextRender()->SetCursor(&Cursor, Rect.x + 5.0f, y, 5.0f, TEXTFLAG_RENDER);
+				// Janky way to truncate
+				Cursor.m_LineWidth = LineWidth;
+				Cursor.m_MaxLines = 1;
+
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 				TextRender()->TextEx(&Cursor, pCommand->m_aName, -1);
 				TextRender()->TextEx(&Cursor, " ", -1);
 
 				TextRender()->TextColor(0.0f, 0.5f, 0.5f, 1.0f);
-				for(const char *c = pCommand->m_aArgsFormat; *c; c++)
+				for(const char *c = pCommand->m_aArgsFormat; *c;)
 				{
-					// Integer argument
-					if(*c == 'i')
+					char aBuf[32] = "";
+					char aDesc[32];
+
+					bool Optional = false;
+					if(c[0] == '?')
 					{
-						TextRender()->TextEx(&Cursor, "<number> ", -1);
+						Optional = true;
+						c++;
 					}
-					// Player name argument
-					else if(*c == 'p')
+
+					const char *pDesc = 0;
+					if(c[1] == '[')
 					{
-						TextRender()->TextEx(&Cursor, "<playername> ", -1);
+						str_format(aDesc, sizeof(aDesc), "%.*s", str_span(&c[2], "]"), &c[2]);
+						pDesc = aDesc;
+						c += str_span(c, "]") + 1;
 					}
-					// String argument
-					else if(*c == 's')
+					else
 					{
-						TextRender()->TextEx(&Cursor, "<text> ", -1);
+						if(c[0] == 'i')
+						{
+							pDesc = "number";
+						}
+						else if(c[0] == 'f')
+						{
+							pDesc = "float";
+						}
+						else if(c[0] == 'r' || c[0] == 's')
+						{
+							pDesc = "string";
+						}
+						else
+						{
+							break; // ill-formed
+						}
+
+						c++;
 					}
-					// Subcommand argument
-					else if(*c == 'c')
+
+					if(Optional)
 					{
-						TextRender()->TextEx(&Cursor, "<subcommand> ", -1);
+						str_format(aBuf, sizeof(aBuf), "[%s] ", pDesc);
 					}
+					else
+					{
+						str_format(aBuf, sizeof(aBuf), "<%s> ", pDesc);
+					}
+					c = str_skip_whitespaces_const(c);
+					TextRender()->TextEx(&Cursor, aBuf, -1);
 				}
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
 				TextRender()->TextEx(&Cursor, pCommand->m_aHelpText, -1);
@@ -1556,7 +1589,13 @@ void CChat::Com_Whisper(IConsole::IResult *pResult, void *pContext)
 	if(TargetID != -1)
 	{
 		pChatData->m_WhisperTarget = TargetID;
-		pChatData->EnableMode(CHAT_WHISPER);
+		pChatData->m_ChatCmdBuffer[0] = 0;
+		if(pResult->NumArguments() > 1)
+		{
+			// save the parameter in a buffer before EnableMode clears it
+			str_copy(pChatData->m_ChatCmdBuffer, pResult->GetString(1), sizeof(pChatData->m_ChatCmdBuffer));
+		}
+		pChatData->EnableMode(CHAT_WHISPER, pChatData->m_ChatCmdBuffer);
 	}
 }
 

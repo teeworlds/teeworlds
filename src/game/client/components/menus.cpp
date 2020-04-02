@@ -644,6 +644,31 @@ void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, co
 	*pOption = Value;
 }
 
+void CMenus::DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char* aLabels[], int Num, IScrollbarScale *pScale)
+{
+	int Value = clamp(*pOption, 0, Num - 1);
+	int Max = Num - 1;
+
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "%s: %s", pStr, aLabels[Value]);
+
+	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
+	
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	CUIRect Label, ScrollBar;
+	pRect->VSplitLeft(5.0f, 0, &Label);
+	Label.VSplitRight(60.0f, &Label, &ScrollBar);
+	
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
+
+	ScrollBar.VMargin(4.0f, &ScrollBar);
+	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, 0, Max)), 0, Max);
+
+	*pOption = clamp(Value, 0, Max);
+}
+
 float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback)
 {
 	CUIRect View = *pRect;
@@ -831,7 +856,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
 	// layout
 	CUIRect Handle;
-	pRect->VSplitLeft(min(pRect->w/8.0f, 33.0f), &Handle, 0);
+	pRect->VSplitLeft(max(min(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
 	Handle.x += (pRect->w-Handle.w)*Current;
 	Handle.HMargin(5.0f, &Handle);
 
@@ -1513,16 +1538,23 @@ int CMenus::Render()
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
 
-	static bool s_First = true;
-	if(s_First)
+	static int s_InitTick = 5;
+	if(s_InitTick > 0)
 	{
-		// refresh server browser before we are in browser menu to save time
-		m_pClient->m_pCamera->ChangePosition(CCamera::POS_START);
-		ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET|IServerBrowser::REFRESHFLAG_LAN);
-		ServerBrowser()->SetType(Config()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
-
-		UpdateMusicState();
-		s_First = false;
+		s_InitTick--;
+		if(s_InitTick == 4)
+		{
+			m_pClient->m_pCamera->ChangePosition(CCamera::POS_START);
+			UpdateMusicState();
+		}
+		else if(s_InitTick == 0)
+		{
+			// Wait a few frames before refreshing server browser,
+			// else the increased rendering time at startup prevents
+			// the network from being pumped effectively.
+			ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET|IServerBrowser::REFRESHFLAG_LAN);
+			ServerBrowser()->SetType(Config()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
+		}
 	}
 
 	// render background only if needed
@@ -2390,8 +2422,6 @@ void CMenus::OnStateChange(int NewState, int OldState)
 		SetActive(false);
 	}
 }
-
-extern "C" void font_debug_render();
 
 void CMenus::OnRender()
 {
