@@ -95,7 +95,6 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 {
 	while(1)
 	{
-	loopbegin:
 		// check for a chunk
 		if(m_RecvUnpacker.FetchChunk(pChunk))
 			return 1;
@@ -178,6 +177,8 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 					NETADDR ThisAddr = Addr, OtherAddr;
 					int FoundAddr = 1;
 					ThisAddr.port = 0;
+
+					bool Continue = false;
 					for(int i = 0; i < NET_MAX_CLIENTS; i++)
 					{
 						if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
@@ -192,10 +193,14 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 								char aBuf[128];
 								str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
 								SendControlMsg(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf) + 1);
-								goto loopbegin;
+								Continue = true;
+								break;
 							}
 						}
 					}
+
+					if(Continue)
+						continue;
 
 					for(int i = 0; i < NET_MAX_CLIENTS; i++)
 					{
