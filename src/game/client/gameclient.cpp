@@ -534,6 +534,8 @@ void CGameClient::UpdatePositions()
 void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 {
 	CWorldCore TempWorld;
+	TempWorld.m_Tuning = m_Tuning;
+
 	CCharacterCore TempCore;
 	mem_zero(&TempCore, sizeof(TempCore));
 	TempCore.Init(&TempWorld, Collision());
