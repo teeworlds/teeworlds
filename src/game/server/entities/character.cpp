@@ -784,8 +784,7 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 			CCharacter *pChr = GameServer()->m_apPlayers[From]->GetCharacter();
 			if (pChr)
 			{
-				pChr->m_EmoteType = EMOTE_HAPPY;
-				pChr->m_EmoteStop = Server()->Tick() + Server()->TickSpeed();
+				pChr->SetEmote(EMOTE_HAPPY, Server()->Tick() + Server()->TickSpeed());
 			}
 		}
 
@@ -797,8 +796,7 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 	else
 		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
 
-	m_EmoteType = EMOTE_PAIN;
-	m_EmoteStop = Server()->Tick() + 500 * Server()->TickSpeed() / 1000;
+	SetEmote(EMOTE_PAIN, Server()->Tick() + 500 * Server()->TickSpeed() / 1000);
 
 	return true;
 }
@@ -829,8 +827,7 @@ void CCharacter::Snap(int SnappingClient)
 	// set emote
 	if (m_EmoteStop < Server()->Tick())
 	{
-		m_EmoteType = EMOTE_NORMAL;
-		m_EmoteStop = -1;
+		SetEmote(EMOTE_NORMAL, -1);
 	}
 
 	pCharacter->m_Emote = m_EmoteType;
