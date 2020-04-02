@@ -364,7 +364,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		{
 			if(!Item->m_InfosLoaded)
 			{
-				char aBuffer[512];
+				char aBuffer[IO_MAX_PATH_LENGTH];
 				str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aCurrentDemoFolder, Item->m_aFilename);
 				Item->m_Valid = DemoPlayer()->GetDemoInfo(Storage(), aBuffer, Item->m_StorageType, &Item->m_Info);
 				Item->m_InfosLoaded = true;
@@ -507,7 +507,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 					fs_parent_dir(m_aCurrentDemoFolder);
 				else	// sub folder
 				{
-					char aTemp[256];
+					char aTemp[IO_MAX_PATH_LENGTH];
 					str_copy(aTemp, m_aCurrentDemoFolder, sizeof(aTemp));
 					str_format(m_aCurrentDemoFolder, sizeof(m_aCurrentDemoFolder), "%s/%s", aTemp, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
 					m_DemolistStorageType = m_lDemos[m_DemolistSelectedIndex].m_StorageType;
@@ -517,7 +517,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			}
 			else // file
 			{
-				char aBuf[512];
+				char aBuf[IO_MAX_PATH_LENGTH];
 				str_format(aBuf, sizeof(aBuf), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
 				const char *pError = Client()->DemoPlayer_Play(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType);
 				if(pError)
@@ -538,10 +538,10 @@ float CMenus::RenderDemoDetails(CUIRect View)
 	if(!m_DemolistSelectedIsDir && m_DemolistSelectedIndex >= 0 && m_lDemos[m_DemolistSelectedIndex].m_Valid)
 	{
 		CUIRect Button;
-		
+
 		const float ButtonHeight = 20.0f;
 		const float Spacing = 2.0f;
-		
+
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
 		DoInfoBox(&Button, Localize("Created"), m_lDemos[m_DemolistSelectedIndex].m_Info.m_aTimestamp);

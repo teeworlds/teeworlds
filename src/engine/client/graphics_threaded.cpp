@@ -407,7 +407,7 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTexture(const char *pFilename,
 
 int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
 {
-	char aCompleteFilename[512];
+	char aCompleteFilename[IO_MAX_PATH_LENGTH];
 	unsigned char *pBuffer;
 	png_t Png; // ignore_convention
 
@@ -617,7 +617,7 @@ void CGraphics_Threaded::QuadsSetSubsetFree(
 	// tileset fallback system
 	if(m_pBackend->GetTextureArraySize() > 1 && TextureIndex >= 0)
 		TilesetFallbackSystem(TextureIndex);
-	
+
 	m_State.m_TextureArrayIndex = m_TextureArrayIndex;
 
 	m_aTexture[0].u = x0; m_aTexture[0].v = y0;

@@ -510,7 +510,7 @@ void CMenus::RenderSkinPartPalette(CUIRect MainView)
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		MainView.VSplitLeft(Width/NUM_SKINPARTS, &Button, &MainView);
-		
+
 		// no palette if color is unused for this skin parts
 		static int s_aColorPalettes[NUM_SKINPARTS];
 		if(*CSkins::ms_apUCCVariables[p])
@@ -520,7 +520,7 @@ void CMenus::RenderSkinPartPalette(CUIRect MainView)
 			Button.VSplitRight(HMargin, &Button, 0);
 
 			vec4 PartColor = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[p], p==SKINPART_MARKING);
-			
+
 			bool Hovered = UI()->HotItem() == &s_aColorPalettes[p];
 			bool Clicked = UI()->DoButtonLogic(&s_aColorPalettes[p], &Button);
 			bool Selected = m_TeePartSelected == p;
@@ -623,7 +623,7 @@ int CMenus::ThemeIconScan(const char *pName, int IsDir, int DirType, void *pUser
 	{
 		if(str_comp(r.front().m_Name, aThemeName) == 0 || (!r.front().m_Name[0] && str_comp(aThemeName, "none") == 0))
 		{
-			char aBuf[512];
+			char aBuf[IO_MAX_PATH_LENGTH];
 			str_format(aBuf, sizeof(aBuf), "ui/themes/%s", pName);
 			CImageInfo Info;
 			if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
@@ -1553,11 +1553,11 @@ float CMenus::RenderSettingsControlsStats(CUIRect View)
 	View.HSplitTop(20.0f, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+5, Localize("Frags per minute"), Config()->m_ClStatboardInfos & TC_STATS_FPM, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FPM;
-		
+
 	View.HSplitTop(20.0f, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+6, Localize("Current spree"), Config()->m_ClStatboardInfos & TC_STATS_SPREE, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_SPREE;
-		
+
 	View.HSplitTop(20.0f, &Button, &View);
 	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+7, Localize("Best spree"), Config()->m_ClStatboardInfos & TC_STATS_BESTSPREE, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_BESTSPREE;
