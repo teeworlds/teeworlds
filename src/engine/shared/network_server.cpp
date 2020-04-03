@@ -96,7 +96,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 	while(1)
 	{
 		// check for a chunk
-		if(m_RecvUnpacker.FetchChunk(pChunk))
+		if(m_RecvUnpacker.IsActive() && m_RecvUnpacker.FetchChunk(pChunk))
 			return 1;
 
 		// TODO: empty the recvinfo
