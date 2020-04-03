@@ -17,6 +17,10 @@ else()
   message(FATAL_ERROR "Couldn't parse version from src/game/version.h")
 endif()
 
+if(POLICY CMP0017)
+  cmake_policy(SET CMP0017 NEW)
+endif()
+
 if(POLICY CMP0072)
   cmake_policy(SET CMP0072 OLD)
 endif()
@@ -309,7 +313,7 @@ if(NOT CMAKE_CROSSCOMPILING)
 endif()
 find_package(ZLIB)
 find_package(Crypto)
-find_package(OwnFreetype)
+find_package(Freetype)
 find_package(Git)
 find_package(GTest)
 find_package(Pnglite)
@@ -401,7 +405,6 @@ elseif(TARGET_OS STREQUAL "mac")
   find_library(COCOA Cocoa)
   find_library(OPENGL OpenGL)
   set(PLATFORM_CLIENT
-    src/osxlaunch/client.h
     src/osxlaunch/client.m
   )
   set(PLATFORM_CLIENT_LIBS ${COCOA} ${OPENGL})

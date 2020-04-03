@@ -258,7 +258,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	else if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
 		bool AddEntry = false;
-		if(IsTypingCommand() && ExecuteCommand(true))
+		if(IsTypingCommand() && m_SelectedCommand >= 0 && ExecuteCommand(true))
 		{
 			AddEntry = true;
 		}
@@ -291,7 +291,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
-		if(IsTypingCommand() && ExecuteCommand(false))
+		if(IsTypingCommand() && m_SelectedCommand >= 0 && ExecuteCommand(false))
 		{
 			// everything is handled within
 		}
@@ -488,8 +488,12 @@ void CChat::EnableMode(int Mode, const char* pText)
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	m_Mode = Mode;
 	ClearInput();
+
+	if(Mode == CHAT_WHISPER && Config()->m_ClDisableWhisper)
+		return;
+
+	m_Mode = Mode;
 
 	if(pText) // optional text to initalize with
 	{
@@ -534,6 +538,8 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	if(MsgType == NETMSGTYPE_SV_CHAT)
 	{
 		CNetMsg_Sv_Chat *pMsg = (CNetMsg_Sv_Chat *)pRawMsg;
+		if(pMsg->m_Mode == CHAT_WHISPER && Config()->m_ClDisableWhisper)
+			return;
 		AddLine(pMsg->m_pMessage, pMsg->m_ClientID, pMsg->m_Mode, pMsg->m_TargetID);
 	}
 	else if(MsgType == NETMSGTYPE_SV_COMMANDINFO)
@@ -1352,7 +1358,11 @@ void CChat::HandleCommands(float x, float y, float w)
 			NextActiveCommand(&m_CommandStart);
 		}
 
-		if(DisplayCount > 0) // at least one command to display
+		if(!DisplayCount)
+		{
+			m_SelectedCommand = -1;
+		}
+		else
 		{
 			CUIRect Rect = {x, y-(DisplayCount+1)*LineHeight, LineWidth, (DisplayCount+1)*LineHeight};
 			RenderTools()->DrawUIRect(&Rect,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_ALL, 3.0f);
@@ -1560,6 +1570,12 @@ void CChat::Com_Reply(IConsole::IResult *pResult, void *pContext)
 	CCommandManager::SCommandContext *pCommandContext = (CCommandManager::SCommandContext *)pContext;
 	CChat *pChatData = (CChat *)pCommandContext->m_pContext;
 
+	if(pChatData->Config()->m_ClDisableWhisper)
+	{
+		pChatData->ClearInput();
+		return;
+	}
+
 	if(pChatData->m_LastWhisperFrom == -1)
 		pChatData->ClearInput(); // just reset the chat
 	else
@@ -1580,6 +1596,12 @@ void CChat::Com_Whisper(IConsole::IResult *pResult, void *pContext)
 {
 	CCommandManager::SCommandContext *pCommandContext = (CCommandManager::SCommandContext *)pContext;
 	CChat *pChatData = (CChat *)pCommandContext->m_pContext;
+
+	if(pChatData->Config()->m_ClDisableWhisper)
+	{
+		pChatData->ClearInput();
+		return;
+	}
 
 	int TargetID = pChatData->m_pClient->GetClientID(pResult->GetString(0));
 	if(TargetID != -1)
