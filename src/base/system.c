@@ -272,7 +272,7 @@ void dbg_logger_stdout()
 #if defined(CONF_FAMILY_WINDOWS)
 	if(GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_CHAR)
 	{
-		dbg_logger(logger_win_console);
+		dbg_logger(logger_win_console, 0, 0);
 		return;
 	}
 #endif
