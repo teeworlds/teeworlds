@@ -114,6 +114,19 @@ int CUnpacker::GetInt()
 	return i;
 }
 
+int CUnpacker::GetIntOrDefault(int Default)
+{
+	if(m_Error)
+	{
+		return 0;
+	}
+	if(m_pCurrent == m_pEnd)
+	{
+		return Default;
+	}
+	return GetInt();
+}
+
 const char *CUnpacker::GetString(int SanitizeType)
 {
 	if(m_Error || m_pCurrent >= m_pEnd)
