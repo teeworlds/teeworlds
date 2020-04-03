@@ -61,7 +61,7 @@ struct SemTestStruct
 static void SemThread(void *pUser)
 {
 	struct SemTestStruct *pContext = (struct SemTestStruct *)pUser;
-	semaphore_wait(&pContext->sem);
+	sphore_wait(&pContext->sem);
 	lock_wait(pContext->k_lock);
 	pContext->k--;
 	lock_unlock(pContext->k_lock);
@@ -70,7 +70,7 @@ static void SemThread(void *pUser)
 TEST(Thread, Semaphore)
 {
 	struct SemTestStruct Context;
-	semaphore_init(&Context.sem);
+	sphore_init(&Context.sem);
 	Context.k_lock = lock_create();
 	Context.k = 5;
 
@@ -79,7 +79,7 @@ TEST(Thread, Semaphore)
 		apThreads[i] = thread_init(SemThread, &Context);
 
 	for(int i = 0; i < 3; i++)
-		semaphore_signal(&Context.sem);
+		sphore_signal(&Context.sem);
 
 	for(int i = 0; i < 3; i++)
 		thread_wait(apThreads[i]);
@@ -87,5 +87,5 @@ TEST(Thread, Semaphore)
 	EXPECT_EQ(Context.k, 2);
 
 	lock_destroy(Context.k_lock);
-	semaphore_destroy(&Context.sem);
+	sphore_destroy(&Context.sem);
 }

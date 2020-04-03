@@ -605,7 +605,7 @@ static void aio_handle_free_and_unlock(ASYNCIO *aio)
 	if(do_free)
 	{
 		free(aio->buffer);
-		semaphore_destroy(&aio->sphore);
+		sphore_destroy(&aio->sphore);
 		lock_destroy(aio->lock);
 		free(aio);
 	}
@@ -635,7 +635,7 @@ static void aio_thread(void *user)
 				break;
 			}
 			lock_unlock(aio->lock);
-			semaphore_wait(&aio->sphore);
+			sphore_wait(&aio->sphore);
 			lock_wait(aio->lock);
 			continue;
 		}
@@ -680,13 +680,13 @@ ASYNCIO *aio_new(IOHANDLE io)
 	}
 	aio->io = io;
 	aio->lock = lock_create();
-	semaphore_init(&aio->sphore);
+	sphore_init(&aio->sphore);
 	aio->thread = 0;
 
 	aio->buffer = malloc(ASYNC_BUFSIZE);
 	if(!aio->buffer)
 	{
-		semaphore_destroy(&aio->sphore);
+		sphore_destroy(&aio->sphore);
 		lock_destroy(aio->lock);
 		free(aio);
 		return 0;
@@ -702,7 +702,7 @@ ASYNCIO *aio_new(IOHANDLE io)
 	if(!aio->thread)
 	{
 		free(aio->buffer);
-		semaphore_destroy(&aio->sphore);
+		sphore_destroy(&aio->sphore);
 		lock_destroy(aio->lock);
 		free(aio);
 		return 0;
@@ -739,7 +739,7 @@ void aio_lock(ASYNCIO *aio)
 void aio_unlock(ASYNCIO *aio)
 {
 	lock_unlock(aio->lock);
-	semaphore_signal(&aio->sphore);
+	sphore_signal(&aio->sphore);
 }
 
 void aio_write_unlocked(ASYNCIO *aio, const void *buffer, unsigned size)
@@ -840,7 +840,7 @@ void aio_close(ASYNCIO *aio)
 	lock_wait(aio->lock);
 	aio->finish = ASYNCIO_CLOSE;
 	lock_unlock(aio->lock);
-	semaphore_signal(&aio->sphore);
+	sphore_signal(&aio->sphore);
 }
 
 void aio_wait(ASYNCIO *aio)
@@ -854,7 +854,7 @@ void aio_wait(ASYNCIO *aio)
 		aio->finish = ASYNCIO_EXIT;
 	}
 	lock_unlock(aio->lock);
-	semaphore_signal(&aio->sphore);
+	sphore_signal(&aio->sphore);
 	thread_wait(thread);
 }
 
@@ -1036,15 +1036,15 @@ void lock_unlock(LOCK lock)
 }
 
 #if defined(CONF_FAMILY_UNIX) && !defined(CONF_PLATFORM_MACOS) // this should be CONF_POSIX_SEM but bam can't run C programs
-void semaphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
-void semaphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
-void semaphore_signal(SEMAPHORE *sem) { sem_post(sem); }
-void semaphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
+void sphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
+void sphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
+void sphore_signal(SEMAPHORE *sem) { sem_post(sem); }
+void sphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
 #elif defined(CONF_FAMILY_WINDOWS)
-void semaphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
-void semaphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, INFINITE); }
-void semaphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
-void semaphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
+void sphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
+void sphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, INFINITE); }
+void sphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
+void sphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
 #else
 typedef struct SEMINTERNAL
 {
@@ -1054,7 +1054,7 @@ typedef struct SEMINTERNAL
 	pthread_cond_t c_nzcond;
 } SEMINTERNAL;
 
-void semaphore_init(SEMAPHORE *sem)
+void sphore_init(SEMAPHORE *sem)
 {
 	*sem = mem_alloc(sizeof(**sem));
 
@@ -1065,7 +1065,7 @@ void semaphore_init(SEMAPHORE *sem)
 	pthread_cond_init(&(*sem)->c_nzcond, 0);
 }
 
-void semaphore_wait(SEMAPHORE *sem)
+void sphore_wait(SEMAPHORE *sem)
 {
 	lock_wait((*sem)->c_lock);
 
@@ -1082,7 +1082,7 @@ void semaphore_wait(SEMAPHORE *sem)
 	lock_unlock((*sem)->c_lock);
 }
 
-void semaphore_signal(SEMAPHORE *sem)
+void sphore_signal(SEMAPHORE *sem)
 {
 	lock_wait((*sem)->c_lock);
 
@@ -1093,7 +1093,7 @@ void semaphore_signal(SEMAPHORE *sem)
 	lock_unlock((*sem)->c_lock);
 }
 
-void semaphore_destroy(SEMAPHORE *sem)
+void sphore_destroy(SEMAPHORE *sem)
 {
 	pthread_cond_destroy(&(*sem)->c_nzcond);
 	lock_destroy((*sem)->c_lock);

@@ -623,10 +623,10 @@ void lock_unlock(LOCK lock);
 	typedef struct SEMINTERNAL *SEMAPHORE;
 #endif
 
-void semaphore_init(SEMAPHORE *sem);
-void semaphore_wait(SEMAPHORE *sem);
-void semaphore_signal(SEMAPHORE *sem);
-void semaphore_destroy(SEMAPHORE *sem);
+void sphore_init(SEMAPHORE *sem);
+void sphore_wait(SEMAPHORE *sem);
+void sphore_signal(SEMAPHORE *sem);
+void sphore_destroy(SEMAPHORE *sem);
 
 /* Group: Timer */
 #ifdef __GNUC__
