@@ -257,7 +257,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	else if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
-		if(IsTypingCommand() && ExecuteCommand(true))
+		if(IsTypingCommand() && m_SelectedCommand >= 0 && ExecuteCommand(true))
 		{
 			// everything is handled within
 		}
@@ -292,7 +292,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
-		if(IsTypingCommand() && ExecuteCommand(false))
+		if(IsTypingCommand() && m_SelectedCommand >= 0 && ExecuteCommand(false))
 		{
 			// everything is handled within
 		}
@@ -1353,7 +1353,11 @@ void CChat::HandleCommands(float x, float y, float w)
 			NextActiveCommand(&m_CommandStart);
 		}
 
-		if(DisplayCount > 0) // at least one command to display
+		if(!DisplayCount)
+		{
+			m_SelectedCommand = -1;
+		}
+		else
 		{
 			CUIRect Rect = {x, y-(DisplayCount+1)*LineHeight, LineWidth, (DisplayCount+1)*LineHeight};
 			RenderTools()->DrawUIRect(&Rect,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_ALL, 3.0f);
