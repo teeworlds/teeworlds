@@ -31,7 +31,7 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	if(IsDir || !str_endswith(pName, ".png"))
 		return 0;
 
-	char aBuf[512];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s/%s", CSkins::ms_apSkinPartNames[pSelf->m_ScanningPart], pName);
 	CImageInfo Info;
 	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
@@ -111,7 +111,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 	CSkins *pSelf = (CSkins *)pUser;
 
 	// read file data into buffer
-	char aBuf[512];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
 	IOHANDLE File = pSelf->Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
@@ -530,7 +530,7 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 
 void CSkins::SaveSkinfile(const char *pSaveSkinName)
 {
-	char aBuf[512];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s.json", pSaveSkinName);
 	IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)

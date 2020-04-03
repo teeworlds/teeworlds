@@ -356,9 +356,9 @@ void CGameClient::OnInit()
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
 
 	// load default font
-	char aFontName[256];
+	char aFontName[IO_MAX_PATH_LENGTH];
 	str_format(aFontName, sizeof(aFontName), "fonts/%s", Config()->m_ClFontfile);
-	char aFilename[512];
+	char aFilename[IO_MAX_PATH_LENGTH];
 	IOHANDLE File = Storage()->OpenFile(aFontName, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
 	if(File)
 	{
@@ -534,6 +534,8 @@ void CGameClient::UpdatePositions()
 void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 {
 	CWorldCore TempWorld;
+	TempWorld.m_Tuning = m_Tuning;
+
 	CCharacterCore TempCore;
 	mem_zero(&TempCore, sizeof(TempCore));
 	TempCore.Init(&TempWorld, Collision());

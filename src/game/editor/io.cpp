@@ -183,7 +183,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 	// check for bezier curve envelopes, otherwise use older, smaller envelope points
 	int Version = CMapItemEnvelope_v2::CURRENT_VERSION;
-	int Size = sizeof(CEnvPoint_v1);	
+	int Size = sizeof(CEnvPoint_v1);
 	for(int e = 0; e < m_lEnvelopes.size(); e++)
 	{
 		for(int p = 0; p < m_lEnvelopes[e]->m_lPoints.size(); p++)
@@ -305,7 +305,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 				if(pItem->m_External || (pItem->m_Version > 1 && pItem->m_Format != CImageInfo::FORMAT_RGB && pItem->m_Format != CImageInfo::FORMAT_RGBA))
 				{
-					char aBuf[256];
+					char aBuf[IO_MAX_PATH_LENGTH];
 					str_format(aBuf, sizeof(aBuf),"mapres/%s.png", pName);
 
 					// load external
@@ -423,7 +423,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 							pTiles->ExtractTiles((CTile *)pData);
 						else
 							mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
-						
+
 
 						if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
 						{
