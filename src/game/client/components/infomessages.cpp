@@ -97,11 +97,11 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 		str_format(aBuf, sizeof(aBuf), "%2d: %s: finished in %s", pMsg->m_ClientID, m_pClient->m_aClients[pMsg->m_ClientID].m_aName, aTime);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "race", aBuf);
 
-		if(pMsg->m_RecordType != RECORDTYPE_NONE)
+		if(pMsg->m_RecordPersonal || pMsg->m_RecordServer)
 		{
-			if(pMsg->m_RecordType == RECORDTYPE_MAP)
+			if(pMsg->m_RecordServer)
 				str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new map record: %s"), aLabel, aTime);
-			else // RECORDTYPE_PLAYER
+			else // m_RecordPersonal
 				str_format(aBuf, sizeof(aBuf), Localize("'%s' has set a new personal record: %s"), aLabel, aTime);
 			
 			if(pMsg->m_Diff < 0)
@@ -117,7 +117,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 
 		if(m_pClient->m_Snap.m_pGameDataRace && m_pClient->m_Snap.m_pGameDataRace->m_RaceFlags&RACEFLAG_FINISHMSG_AS_CHAT)
 		{
-			if(pMsg->m_RecordType == RECORDTYPE_NONE) // don't print the time twice
+			if(!pMsg->m_RecordPersonal && !pMsg->m_RecordServer) // don't print the time twice
 			{
 				str_format(aBuf, sizeof(aBuf), Localize("'%s' finished in: %s"), aLabel, aTime);
 				m_pClient->m_pChat->AddLine(aBuf);
@@ -132,7 +132,8 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 
 			Finish.m_Time = pMsg->m_Time;
 			Finish.m_Diff = pMsg->m_Diff;
-			Finish.m_RecordType = pMsg->m_RecordType;
+			Finish.m_RecordPersonal = pMsg->m_RecordPersonal;
+			Finish.m_RecordServer = pMsg->m_RecordServer;
 
 			AddInfoMsg(INFOMSG_FINISH, Finish);
 		}
@@ -289,10 +290,10 @@ void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) 
 	float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1, -1.0f);
 
 	x -= TimeW;
-	if(pInfoMsg->m_RecordType == RECORDTYPE_PLAYER)
-		TextRender()->TextColor(0.2f, 0.6f, 1.0f, 1.0f);
-	else if(pInfoMsg->m_RecordType == RECORDTYPE_MAP)
+	if(pInfoMsg->m_RecordServer)
 		TextRender()->TextColor(1.0f, 0.5f, 0.0f, 1.0f);
+	else if(pInfoMsg->m_RecordPersonal)
+		TextRender()->TextColor(0.2f, 0.6f, 1.0f, 1.0f);
 	TextRender()->Text(0, x, y, FontSize, aTime, -1);
 
 	x -= 52.0f + 10.0f;
@@ -318,6 +319,6 @@ void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) 
 	x -= 28.0f;
 
 	// render player tee
-	int Emote = pInfoMsg->m_RecordType != RECORDTYPE_NONE ? EMOTE_HAPPY : EMOTE_NORMAL;
+	int Emote = (pInfoMsg->m_RecordPersonal || pInfoMsg->m_RecordServer) ? EMOTE_HAPPY : EMOTE_NORMAL;
 	RenderTools()->RenderTee(CAnimState::GetIdle(), &pInfoMsg->m_Player1RenderInfo, Emote, vec2(-1,0), vec2(x, y+28));
 }
