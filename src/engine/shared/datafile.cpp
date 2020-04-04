@@ -369,12 +369,22 @@ void CDataFileReader::UnloadData(int Index)
 	m_pDataFile->m_pDataSizes[Index] = 0;
 }
 
-int CDataFileReader::GetItemSize(int Index) const
+int CDataFileReader::GetFileItemSize(int Index) const
 {
 	if(!m_pDataFile) { return 0; }
 	if(Index == m_pDataFile->m_Header.m_NumItems-1)
 		return m_pDataFile->m_Header.m_ItemSize-m_pDataFile->m_Info.m_pItemOffsets[Index];
 	return m_pDataFile->m_Info.m_pItemOffsets[Index+1]-m_pDataFile->m_Info.m_pItemOffsets[Index];
+}
+
+int CDataFileReader::GetItemSize(int Index) const
+{
+	int FileSize = GetFileItemSize(Index);
+	if(FileSize == 0)
+	{
+		return 0;
+	}
+	return FileSize - sizeof(CDatafileItem);
 }
 
 void *CDataFileReader::GetItem(int Index, int *pType, int *pID)
