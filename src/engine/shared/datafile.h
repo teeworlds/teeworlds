@@ -3,6 +3,7 @@
 #ifndef ENGINE_SHARED_DATAFILE_H
 #define ENGINE_SHARED_DATAFILE_H
 
+#include <base/system.h>
 #include <base/hash.h>
 
 // raw datafile access
@@ -84,9 +85,9 @@ public:
 	CDataFileWriter();
 	~CDataFileWriter();
 	bool Open(class IStorage *pStorage, const char *Filename);
-	int AddData(int Size, void *pData);
-	int AddDataSwapped(int Size, void *pData);
-	int AddItem(int Type, int ID, int Size, void *pData);
+	int AddData(int Size, const void *pData);
+	int AddDataSwapped(int Size, const void *pData);
+	int AddItem(int Type, int ID, int Size, const void *pData);
 	int Finish();
 };
 
