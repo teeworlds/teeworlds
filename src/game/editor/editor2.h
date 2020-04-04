@@ -131,7 +131,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 		char m_aPath[512];
 		char m_aCompletePath[512];
 
-		FILE_SELECT_CALLBACK m_pfnFileSelectCB;
 		void *m_pContext;
 
 		sorted_array<CFileListItem> m_aFileList;
@@ -139,12 +138,15 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 		char m_aFilter[64];
 
+		char m_OutputPath[512];
+
 		CUIFileSelect()
 		{
 			m_Selected = -1;
 			m_aPath[0] = '\0';
 			m_aCompletePath[0] = '\0';
 			m_aFilter[0] = '\0';
+			m_OutputPath[0] = '\0';
 		}
 
 		static int EditorListdirCallback(const CFsFileInfo* info, int IsDir, int StorageType, void *pUser);
@@ -152,28 +154,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 		void GenerateListBoxEntries();
 	};
 	CUIFileSelect m_UiFileSelectState;
-
-	typedef void (*MODAL_BUTTON_CALLBACK)(bool Choice, void *pContext);
-	struct CYNPopup
-	{
-		const char *m_pTitle;
-		const char *m_pText;
-
-		MODAL_BUTTON_CALLBACK m_pfnDoneCallback;
-		void *m_pContext;
-
-		CYNPopup(const char *pTitle, const char *pText,
-			MODAL_BUTTON_CALLBACK pfnYesCallback, void *pContext):
-			m_pTitle(pTitle), m_pText(pText),
-			m_pfnDoneCallback(pfnYesCallback), m_pContext(pContext) {}
-
-		CYNPopup() // Can't delegate constructors in C++03
-		{
-			m_pTitle = "";
-			m_pText = "";
-		}
-	};
-	CYNPopup m_UiCurrentYNData;
 
 	bool m_UiDetailPanelIsOpen;
 
@@ -339,8 +319,53 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderPopupMenuFile(void* pPopupData);
 	void RenderPopupBrushPalette(void* pPopupData);
 	void InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext);
-	void RenderPopupFileSelect(void* pPopupData);
+	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState);
+	void RenderPopupMapLoad(void* pPopupData);
 	void RenderPopupYesNo(void *pPopupData);
+
+	struct CUIPopupYesNo
+	{
+		bool m_Active;
+		bool m_Done;
+		bool m_Choice;
+		const char *m_pTitle;
+		const char *m_pQuestionText;
+
+		CUIPopupYesNo()
+		{
+			Reset();
+		}
+
+		void Reset()
+		{
+			m_Active = false;
+			m_Done = false;
+			m_Choice = false;
+		}
+	};
+
+	struct CUIPopupLoadMap
+	{
+		bool m_DoSaveMapBefore;
+		CUIPopupYesNo m_PopupWarningSaveMap;
+
+		CUIPopupLoadMap()
+		{
+			Reset();
+			m_PopupWarningSaveMap.m_pTitle = Localize("Warning");
+			m_PopupWarningSaveMap.m_pQuestionText = Localize("The current map has not been saved, would you like to save it?");
+		}
+
+		void Reset()
+		{
+			m_DoSaveMapBefore = false;
+			m_PopupWarningSaveMap.Reset();
+		}
+	};
+
+	CUIPopupLoadMap m_UiPopupLoadMap;
+
+	bool DoPopupYesNo(CUIPopupYesNo* state);
 
 	void RenderBrush(vec2 Pos);
 

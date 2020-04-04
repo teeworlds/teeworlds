@@ -2458,7 +2458,7 @@ bool CEditor2::FileSelectChainCallback(const char *pName, void *pContext)
 
 void CEditor2::SaveMapUi(CHAIN_CALLBACK pfnCallback)
 {
-	dbg_msg("debug", "saving '%s'", m_Map.m_aPath);
+	ed_dbg("saving '%s'", m_Map.m_aPath);
 	if(!m_Map.m_aPath[0])
 	{
 		static SFileSelectChainContext Context;
@@ -2505,8 +2505,7 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 		ExitPopup();
 		if(HasUnsavedData())
 		{
-			m_UiCurrentYNData = CYNPopup("Warning", "The current map has not been saved, would you like to save it?", InvokeNewCb, this);
-			PushPopup(&CEditor2::RenderPopupYesNo, &m_UiCurrentYNData);
+			// FIXME: Do warning save map
 		}
 		else
 		{
@@ -2518,15 +2517,19 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 	if(UiButton(Slot, "Load", &s_OpenButton))
 	{
 		ExitPopup();
-		if(HasUnsavedData())
-		{
-			m_UiCurrentYNData = CYNPopup("Warning", "The current map has not been saved, would you like to save it?", InvokeLoadPopupCb, this);
-			PushPopup(&CEditor2::RenderPopupYesNo, &m_UiCurrentYNData);
-		}
-		else
-		{
-			InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, this);
-		}
+
+		m_UiPopupLoadMap.Reset();
+		m_UiPopupLoadMap.m_DoSaveMapBefore = HasUnsavedData() || 1;
+
+		m_UiFileSelectState.m_pButtonText = Localize("Open");
+		m_UiFileSelectState.m_NewFile = false;
+		m_UiFileSelectState.m_Selected = -1;
+		str_copy(m_UiFileSelectState.m_aPath, "maps", sizeof(m_UiFileSelectState.m_aPath));
+		m_UiFileSelectState.m_pListBoxEntries = 0;
+
+		m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+
+		PushPopup(&CEditor2::RenderPopupMapLoad, &m_UiPopupLoadMap);
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -2847,6 +2850,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 
 void CEditor2::InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext)
 {
+	/*
 	m_UiFileSelectState.m_pButtonText = pButtonText;
 	m_UiFileSelectState.m_NewFile = NewFile;
 	m_UiFileSelectState.m_Selected = -1;
@@ -2858,6 +2862,7 @@ void CEditor2::InvokePopupFileSelect(const char *pButtonText, const char *pIniti
 	m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
 
 	PushPopup(&CEditor2::RenderPopupFileSelect, &m_UiFileSelectState);
+	*/
 }
 
 int CEditor2::CUIFileSelect::EditorListdirCallback(const CFsFileInfo* info, int IsDir, int StorageType, void *pUser)
@@ -2911,27 +2916,11 @@ void CEditor2::CUIFileSelect::GenerateListBoxEntries()
 	}
 }
 
-void CEditor2::RenderPopupFileSelect(void* pPopupData)
+bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState)
 {
 	const float Padding = 20.0f;
-	const float Scale = 5.0f/6.0f;
 	const float FontSize = 7.0f;
 	const vec4 White(1, 1, 1, 1);
-
-	if(Input()->KeyPress(KEY_ESCAPE))
-		ExitPopup();
-
-	CUIFileSelect *pState = &m_UiFileSelectState;
-	const CUIRect UiScreenRect = m_UiScreenRect;
-	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
-
-	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5)); // darken the background (should be in a common function)
-	// whole screen "button" that prevents clicking on other stuff
-	static CUIButton OverlayFakeButton;
-	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
-
-	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f,
-		UiScreenRect.w * Scale, UiScreenRect.h * Scale};
 
 	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
 	MainRect.Margin(Padding * 3/4, &MainRect);
@@ -2973,14 +2962,14 @@ void CEditor2::RenderPopupFileSelect(void* pPopupData)
 	if(UiButton(BPrev, "\xE2\x86\x90", &s_BPrev, 15.0f))
 	{
 		// Need to implement some history
-		dbg_msg("debug", "button down");
+		ed_dbg("button down");
 	}
 
 	static CUIButton s_BNext;
 	if(UiButton(BNext, "\xE2\x86\x92", &s_BNext, 15.0f))
 	{
 		// Need to implement some history
-		dbg_msg("debug", "button down");
+		ed_dbg("button down");
 	}
 
 	DrawRectBorder(Path, StyleColorButton, 1, StyleColorButtonBorder);
@@ -3062,7 +3051,8 @@ void CEditor2::RenderPopupFileSelect(void* pPopupData)
 		static CUIButton s_BCancel;
 		if(UiButton(BCancel, CancelText, &s_BCancel, FontSize))
 		{
-			ExitPopup();
+			pState->m_OutputPath[0] = '\0'; // TODO: return that we hit cancel?
+			return true;
 		}
 	}
 
@@ -3137,30 +3127,73 @@ void CEditor2::RenderPopupFileSelect(void* pPopupData)
 		}
 		else
 		{
-			char aBuf[512];
-			str_format(aBuf, sizeof(aBuf), "%s/%s", pState->m_aPath, pState->m_aFileList[Selected].m_aFilename);
-			pState->m_pfnFileSelectCB(aBuf, pState->m_pContext);
-			ExitPopup();
+			str_format(pState->m_OutputPath, sizeof(pState->m_OutputPath), "%s/%s", pState->m_aPath, pState->m_aFileList[Selected].m_aFilename);
+			return true;
 		}
 	}
 	else if(Open && pState->m_NewFile && s_aNewFileName[0])
 	{
-		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "%s/%s", pState->m_aPath, s_aNewFileName);
-		pState->m_pfnFileSelectCB(aBuf, pState->m_pContext);
+		str_format(pState->m_OutputPath, sizeof(pState->m_OutputPath), "%s/%s", pState->m_aPath, s_aNewFileName);
+		return true;
+	}
+
+	return false;
+}
+
+void CEditor2::RenderPopupMapLoad(void* pPopupData)
+{
+	CUIPopupLoadMap& Popup = *(CUIPopupLoadMap*)pPopupData;
+
+	if(Popup.m_DoSaveMapBefore)
+	{
+		if(DoPopupYesNo(&Popup.m_PopupWarningSaveMap))
+		{
+			Popup.m_DoSaveMapBefore = false;
+			// TODO: Save As / Save here
+		}
+
+		return; // TODO: do not return here, add another CUIFileSelect state (one for loading one for saving)
+	}
+
+	if(Input()->KeyPress(KEY_ESCAPE))
+	{
+		ExitPopup();
+		return;
+	}
+
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	// whole screen "button" that prevents clicking on other stuff
+	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5));
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
+
+	const float Scale = 5.0f/6.0f;
+	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f, UiScreenRect.w * Scale, UiScreenRect.h * Scale};
+
+	if(DoFileSelect(MainRect, &m_UiFileSelectState))
+	{
+		if(m_UiFileSelectState.m_OutputPath[0])
+			LoadMap(m_UiFileSelectState.m_OutputPath);
+
 		ExitPopup();
 	}
 }
 
-void CEditor2::RenderPopupYesNo(void *pData)
+void CEditor2::RenderPopupYesNo(void* pPopupData)
 {
 	const float Padding = 5.0f;
 	const float Scale = 0.4f;
 	const vec4 White(1, 1, 1, 1);
 
-	CYNPopup *pPopupData = (CYNPopup *)pData;
+	CUIPopupYesNo& Popup = *(CUIPopupYesNo*)pPopupData;
 	if(Input()->KeyPress(KEY_ESCAPE))
+	{
+		Popup.m_Choice = false;
+		Popup.m_Done = true;
 		ExitPopup();
+	}
 
 	const CUIRect UiScreenRect = m_UiScreenRect;
 	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
@@ -3181,17 +3214,41 @@ void CEditor2::RenderPopupYesNo(void *pData)
 	Text.HSplitTop(MainRect.h / 4, &Text, &Buttons);
 	Buttons.Margin(Buttons.h * 0.5f - 10, &Buttons);
 
-	DrawText(Title, Localize(pPopupData->m_pTitle), 15.0f, White, CUI::ALIGN_CENTER);
-	DrawText(Text, Localize(pPopupData->m_pText), 10.0f, White, CUI::ALIGN_CENTER);
+	DrawText(Title, Popup.m_pTitle, 15.0f, White, CUI::ALIGN_CENTER);
+	DrawText(Text, Popup.m_pQuestionText, 10.0f, White, CUI::ALIGN_CENTER);
 
 	CUIRect BYes, BNo;
 	Buttons.VSplitMid(&BNo, &BYes, 10.0f);
 
 	static CUIButton s_BNo, s_BYes;
 	if(UiButton(BNo, Localize("No"), &s_BNo, 10.0f, CUI::ALIGN_CENTER))
-		pPopupData->m_pfnDoneCallback(false, pPopupData->m_pContext);
+	{
+		Popup.m_Choice = false;
+		Popup.m_Done = true;
+		ExitPopup();
+	}
 	else if(UiButton(BYes, Localize("Yes"), &s_BYes, 10.0f, CUI::ALIGN_CENTER))
-		pPopupData->m_pfnDoneCallback(true, pPopupData->m_pContext);
+	{
+		Popup.m_Choice = true;
+		Popup.m_Done = true;
+		ExitPopup();
+	}
+}
+
+bool CEditor2::DoPopupYesNo(CUIPopupYesNo* state)
+{
+	if(!state->m_Active)
+	{
+		PushPopup(&CEditor2::RenderPopupYesNo, state);
+		state->m_Active = true;
+	}
+
+	if(state->m_Done)
+	{
+		state->m_Done = false;
+		return true;
+	}
+	return false;
 }
 
 void CEditor2::RenderBrush(vec2 Pos)
