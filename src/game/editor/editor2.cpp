@@ -257,7 +257,7 @@ void CEditor2::Update()
 
 		if(IsCtrlPressed && Input()->KeyPress(KEY_S))
 		{
-			SaveMapUi();
+			UserMapSave();
 		}
 
 		if(IsToolSelect() && Input()->KeyPress(KEY_ESCAPE)) {
@@ -2397,85 +2397,6 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	}
 }
 
-bool CEditor2::LoadFileCallback(const char *pFilepath, void *pContext)
-{
-	CEditor2 *pEditor = (CEditor2 *)pContext;
-
-	return pEditor->LoadMap(pFilepath);
-}
-
-bool CEditor2::SaveFileCallback(const char *pFilepath, void *pContext)
-{
-	CEditor2 *pEditor = (CEditor2 *)pContext;
-
-	return pEditor->SaveMap(pFilepath);
-}
-
-void CEditor2::NewFileSaveUnsavedFileCb(void *pContext)
-{
-	CEditor2 *pEditor = (CEditor2 *)pContext;
-	pEditor->Reset();
-}
-
-void CEditor2::InvokeNewCb(bool Choice, void *pContext)
-{
-	CEditor2 *pEditor = (CEditor2 *)pContext;
-	pEditor->ExitPopup();
-
-	if(Choice)
-		pEditor->SaveMapUi(NewFileSaveUnsavedFileCb);
-	else
-		pEditor->Reset();
-}
-
-void CEditor2::LoadFileSaveUnsavedFileCb(void *pContext)
-{
-	CEditor2 *pEditor = (CEditor2 *)pContext;
-	pEditor->InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, pEditor);
-}
-
-void CEditor2::InvokeLoadPopupCb(bool Choice, void *pContext)
-{
-	CEditor2 *pEditor = (CEditor2 *)pContext;
-	pEditor->ExitPopup();
-
-	if(Choice)
-		pEditor->SaveMapUi(LoadFileSaveUnsavedFileCb);
-	else
-		pEditor->InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, pEditor);
-}
-
-bool CEditor2::FileSelectChainCallback(const char *pName, void *pContext)
-{
-	SFileSelectChainContext *pChainContext = (SFileSelectChainContext *)pContext;
-	bool Result = pChainContext->m_pfnSelectCallback(pName, pChainContext->m_pContext);
-
-	if(pChainContext->m_pfnChainCallback)
-		pChainContext->m_pfnChainCallback(pChainContext->m_pContext);
-
-	return Result;
-}
-
-void CEditor2::SaveMapUi(CHAIN_CALLBACK pfnCallback)
-{
-	ed_dbg("saving '%s'", m_Map.m_aPath);
-	if(!m_Map.m_aPath[0])
-	{
-		static SFileSelectChainContext Context;
-		Context.m_pfnSelectCallback = SaveFileCallback;
-		Context.m_pfnChainCallback = pfnCallback;
-		Context.m_pContext = this;
-		InvokePopupFileSelect("Save", "maps", true, FileSelectChainCallback, &Context);
-	}
-	else
-	{
-		SaveMap(m_Map.m_aPath);
-		if(pfnCallback)
-			pfnCallback(this);
-	}
-
-}
-
 void CEditor2::RenderPopupMenuFile(void* pPopupData)
 {
 	CUIRect Rect = *(CUIRect*)pPopupData;
@@ -2503,33 +2424,14 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 	if(UiButton(Slot, "New", &s_NewMapButton))
 	{
 		ExitPopup();
-		if(HasUnsavedData())
-		{
-			// FIXME: Do warning save map
-		}
-		else
-		{
-			Reset();
-		}
+		UserMapNew();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Load", &s_OpenButton))
 	{
 		ExitPopup();
-
-		m_UiPopupLoadMap.Reset();
-		m_UiPopupLoadMap.m_DoSaveMapBefore = HasUnsavedData() || 1;
-
-		m_UiFileSelectState.m_pButtonText = Localize("Open");
-		m_UiFileSelectState.m_NewFile = false;
-		m_UiFileSelectState.m_Selected = -1;
-		str_copy(m_UiFileSelectState.m_aPath, "maps", sizeof(m_UiFileSelectState.m_aPath));
-		m_UiFileSelectState.m_pListBoxEntries = 0;
-
-		m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
-
-		PushPopup(&CEditor2::RenderPopupMapLoad, &m_UiPopupLoadMap);
+		UserMapLoad();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -2541,14 +2443,14 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 	if(UiButton(Slot, "Save", &s_SaveButton))
 	{
 		ExitPopup();
-		SaveMapUi();
+		UserMapSave();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Save As", &s_SaveAsButton))
 	{
 		ExitPopup();
-		InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
+		UserMapSaveAs();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -2848,23 +2750,6 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	}
 }
 
-void CEditor2::InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext)
-{
-	/*
-	m_UiFileSelectState.m_pButtonText = pButtonText;
-	m_UiFileSelectState.m_NewFile = NewFile;
-	m_UiFileSelectState.m_Selected = -1;
-	m_UiFileSelectState.m_pContext = pContext;
-	m_UiFileSelectState.m_pfnFileSelectCB = pfnCallback;
-	str_copy(m_UiFileSelectState.m_aPath, pInitialPath, sizeof(m_UiFileSelectState.m_aPath));
-	m_UiFileSelectState.m_pListBoxEntries = 0;
-
-	m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
-
-	PushPopup(&CEditor2::RenderPopupFileSelect, &m_UiFileSelectState);
-	*/
-}
-
 int CEditor2::CUIFileSelect::EditorListdirCallback(const CFsFileInfo* info, int IsDir, int StorageType, void *pUser)
 {
 	CUIFileSelect *pState = (CUIFileSelect *)pUser;
@@ -2922,7 +2807,6 @@ bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState)
 	const float FontSize = 7.0f;
 	const vec4 White(1, 1, 1, 1);
 
-	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
 	MainRect.Margin(Padding * 3/4, &MainRect);
 
 	CUIRect Top, Search;
@@ -3051,7 +2935,7 @@ bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState)
 		static CUIButton s_BCancel;
 		if(UiButton(BCancel, CancelText, &s_BCancel, FontSize))
 		{
-			pState->m_OutputPath[0] = '\0'; // TODO: return that we hit cancel?
+			pState->m_aOutputPath[0] = '\0'; // TODO: return that we hit cancel?
 			return true;
 		}
 	}
@@ -3127,13 +3011,13 @@ bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState)
 		}
 		else
 		{
-			str_format(pState->m_OutputPath, sizeof(pState->m_OutputPath), "%s/%s", pState->m_aPath, pState->m_aFileList[Selected].m_aFilename);
+			str_format(pState->m_aOutputPath, sizeof(pState->m_aOutputPath), "%s/%s", pState->m_aPath, pState->m_aFileList[Selected].m_aFilename);
 			return true;
 		}
 	}
 	else if(Open && pState->m_NewFile && s_aNewFileName[0])
 	{
-		str_format(pState->m_OutputPath, sizeof(pState->m_OutputPath), "%s/%s", pState->m_aPath, s_aNewFileName);
+		str_format(pState->m_aOutputPath, sizeof(pState->m_aOutputPath), "%s/%s", pState->m_aPath, s_aNewFileName);
 		return true;
 	}
 
@@ -3142,14 +3026,15 @@ bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState)
 
 void CEditor2::RenderPopupMapLoad(void* pPopupData)
 {
-	CUIPopupLoadMap& Popup = *(CUIPopupLoadMap*)pPopupData;
+	CUIPopupMapLoad& Popup = *(CUIPopupMapLoad*)pPopupData;
 
 	if(Popup.m_DoSaveMapBefore)
 	{
 		if(DoPopupYesNo(&Popup.m_PopupWarningSaveMap))
 		{
 			Popup.m_DoSaveMapBefore = false;
-			// TODO: Save As / Save here
+			if(Popup.m_PopupWarningSaveMap.m_Choice)
+				UserMapSave();
 		}
 
 		return; // TODO: do not return here, add another CUIFileSelect state (one for loading one for saving)
@@ -3172,11 +3057,58 @@ void CEditor2::RenderPopupMapLoad(void* pPopupData)
 	const float Scale = 5.0f/6.0f;
 	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f, UiScreenRect.w * Scale, UiScreenRect.h * Scale};
 
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
+
+	CUIRect TitleRect;
+	MainRect.HSplitTop(20.0f, &TitleRect, &MainRect);
+	DrawText(TitleRect, Localize("Load"), 10);
+
 	if(DoFileSelect(MainRect, &m_UiFileSelectState))
 	{
-		if(m_UiFileSelectState.m_OutputPath[0])
-			LoadMap(m_UiFileSelectState.m_OutputPath);
+		if(m_UiFileSelectState.m_aOutputPath[0])
+			LoadMap(m_UiFileSelectState.m_aOutputPath);
 
+		ExitPopup();
+	}
+}
+
+void CEditor2::RenderPopupMapSaveAs(void* pPopupData)
+{
+	if(Input()->KeyPress(KEY_ESCAPE))
+	{
+		ExitPopup();
+		return;
+	}
+
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	// whole screen "button" that prevents clicking on other stuff
+	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5));
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
+
+	const float Scale = 5.0f/6.0f;
+	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f, UiScreenRect.w * Scale, UiScreenRect.h * Scale};
+
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
+
+	CUIRect TitleRect;
+	MainRect.HSplitTop(20.0f, &TitleRect, &MainRect);
+	DrawText(TitleRect, Localize("Save as"), 10);
+
+	if(DoFileSelect(MainRect, &m_UiFileSelectState))
+	{
+		const char* pOutput = m_UiFileSelectState.m_aOutputPath;
+		char aRevisedOutput[512];
+		if(!str_endswith(pOutput, ".map"))
+		{
+			str_format(aRevisedOutput, sizeof(aRevisedOutput), "%s.map", pOutput);
+			pOutput = aRevisedOutput;
+		}
+
+		// TODO: "Map saved" message or indicator of any kind
+		SaveMap(pOutput);
 		ExitPopup();
 	}
 }
@@ -3231,6 +3163,36 @@ void CEditor2::RenderPopupYesNo(void* pPopupData)
 	{
 		Popup.m_Choice = true;
 		Popup.m_Done = true;
+		ExitPopup();
+	}
+}
+
+void CEditor2::RenderPopupMapNew(void* pPopupData)
+{
+	CUIPopupMapNew& Popup = *(CUIPopupMapNew*)pPopupData;
+
+	if(Popup.m_DoSaveMapBefore)
+	{
+		if(DoPopupYesNo(&Popup.m_PopupWarningSaveMap))
+		{
+			Popup.m_DoSaveMapBefore = false;
+			if(Popup.m_PopupWarningSaveMap.m_Choice)
+				UserMapSave();
+		}
+
+		return;
+	}
+
+	if(Input()->KeyPress(KEY_ESCAPE))
+	{
+		ExitPopup();
+		return;
+	}
+
+	// TODO: New map popup (template based)
+	if(true)
+	{
+		Reset();
 		ExitPopup();
 	}
 }
@@ -3937,6 +3899,54 @@ void CEditor2::OnMapLoaded()
 	m_pHistoryEntryCurrent->m_pUiSnap = SaveUiSnapshot();
 	m_pHistoryEntryCurrent->SetAction("Map loaded");
 	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
+}
+
+void CEditor2::UserMapNew()
+{
+	m_UiPopupMapNew.Reset();
+	m_UiPopupMapNew.m_DoSaveMapBefore = HasUnsavedData();
+	PushPopup(&CEditor2::RenderPopupMapNew, &m_UiPopupMapNew);
+}
+
+void CEditor2::UserMapLoad()
+{
+	m_UiPopupMapLoad.Reset();
+	m_UiPopupMapLoad.m_DoSaveMapBefore = HasUnsavedData();
+
+	m_UiFileSelectState.m_pButtonText = Localize("Open");
+	m_UiFileSelectState.m_NewFile = false;
+	m_UiFileSelectState.m_Selected = -1;
+	str_copy(m_UiFileSelectState.m_aPath, "maps", sizeof(m_UiFileSelectState.m_aPath));
+	m_UiFileSelectState.m_pListBoxEntries = 0;
+
+	m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+
+	PushPopup(&CEditor2::RenderPopupMapLoad, &m_UiPopupMapLoad);
+}
+
+void CEditor2::UserMapSave()
+{
+	if(!m_Map.m_aPath[0]) // TODO: make a function for this
+	{
+		UserMapSaveAs();
+	}
+	else
+	{
+		// TODO: "Map saved" message or indicator of any kind
+		SaveMap(m_Map.m_aPath);
+	}
+}
+
+void CEditor2::UserMapSaveAs()
+{
+	m_UiFileSelectState.m_pButtonText = Localize("Save");
+	m_UiFileSelectState.m_NewFile = true;
+	m_UiFileSelectState.m_Selected = -1;
+	str_copy(m_UiFileSelectState.m_aPath, "maps", sizeof(m_UiFileSelectState.m_aPath));
+	m_UiFileSelectState.m_pListBoxEntries = 0;
+	m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+
+	PushPopup(&CEditor2::RenderPopupMapSaveAs, 0x0);
 }
 
 void CEditor2::HistoryClear()

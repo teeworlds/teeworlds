@@ -122,7 +122,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
 	};
 
-	typedef bool (*FILE_SELECT_CALLBACK)(const char *pFilename, void *pContext);
 	struct CUIFileSelect
 	{
 		bool m_NewFile;
@@ -138,7 +137,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 		char m_aFilter[64];
 
-		char m_OutputPath[512];
+		char m_aOutputPath[512];
 
 		CUIFileSelect()
 		{
@@ -146,14 +145,17 @@ class CEditor2: public IEditor, public CEditor2Ui
 			m_aPath[0] = '\0';
 			m_aCompletePath[0] = '\0';
 			m_aFilter[0] = '\0';
-			m_OutputPath[0] = '\0';
+			m_aOutputPath[0] = '\0';
 		}
 
 		static int EditorListdirCallback(const CFsFileInfo* info, int IsDir, int StorageType, void *pUser);
 		void PopulateFileList(IStorage *pStorage, int StorageType);
 		void GenerateListBoxEntries();
 	};
+
 	CUIFileSelect m_UiFileSelectState;
+
+	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState);
 
 	bool m_UiDetailPanelIsOpen;
 
@@ -289,9 +291,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 	static void StaticEnvelopeEval(float TimeOffset, int EnvID, float *pChannels, void *pUser);
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
-	static bool LoadFileCallback(const char *pFilepath, void *pContext);
-	static bool SaveFileCallback(const char *pFilepath, void *pContext);
-
 	void RenderMap();
 	void RenderMapOverlay();
 	void RenderMapEditorUI();
@@ -300,28 +299,12 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderHistory(CUIRect NavRect);
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
 
-	static void NewFileSaveUnsavedFileCb(void *pContext);
-	static void InvokeNewCb(bool Choice, void *pContext);
-	static void LoadFileSaveUnsavedFileCb(void *pContext);
-	static void InvokeLoadPopupCb(bool Choice, void *pContext);
-
-	typedef void (*CHAIN_CALLBACK)(void *pContext);
-	typedef struct
-	{
-		FILE_SELECT_CALLBACK m_pfnSelectCallback;
-		CHAIN_CALLBACK m_pfnChainCallback;
-		void *m_pContext;
-	} SFileSelectChainContext;
-	static bool FileSelectChainCallback(const char *pFilename, void *pContext);
-
-	void SaveMapUi(CHAIN_CALLBACK pfnCallback = 0);
-
 	void RenderPopupMenuFile(void* pPopupData);
 	void RenderPopupBrushPalette(void* pPopupData);
-	void InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext);
-	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState);
 	void RenderPopupMapLoad(void* pPopupData);
+	void RenderPopupMapSaveAs(void* pPopupData);
 	void RenderPopupYesNo(void *pPopupData);
+	void RenderPopupMapNew(void *pPopupData);
 
 	struct CUIPopupYesNo
 	{
@@ -344,12 +327,12 @@ class CEditor2: public IEditor, public CEditor2Ui
 		}
 	};
 
-	struct CUIPopupLoadMap
+	struct CUIPopupMapLoad
 	{
 		bool m_DoSaveMapBefore;
 		CUIPopupYesNo m_PopupWarningSaveMap;
 
-		CUIPopupLoadMap()
+		CUIPopupMapLoad()
 		{
 			Reset();
 			m_PopupWarningSaveMap.m_pTitle = Localize("Warning");
@@ -363,7 +346,27 @@ class CEditor2: public IEditor, public CEditor2Ui
 		}
 	};
 
-	CUIPopupLoadMap m_UiPopupLoadMap;
+	struct CUIPopupMapNew
+	{
+		bool m_DoSaveMapBefore;
+		CUIPopupYesNo m_PopupWarningSaveMap;
+
+		CUIPopupMapNew()
+		{
+			Reset();
+			m_PopupWarningSaveMap.m_pTitle = Localize("Warning");
+			m_PopupWarningSaveMap.m_pQuestionText = Localize("The current map has not been saved, would you like to save it?");
+		}
+
+		void Reset()
+		{
+			m_DoSaveMapBefore = false;
+			m_PopupWarningSaveMap.Reset();
+		}
+	};
+
+	CUIPopupMapLoad m_UiPopupMapLoad;
+	CUIPopupMapNew m_UiPopupMapNew;
 
 	bool DoPopupYesNo(CUIPopupYesNo* state);
 
@@ -402,6 +405,11 @@ class CEditor2: public IEditor, public CEditor2Ui
 	bool LoadMap(const char *pFileName);
 	bool SaveMap(const char *pFileName);
 	void OnMapLoaded();
+
+	void UserMapNew();
+	void UserMapLoad();
+	void UserMapSave();
+	void UserMapSaveAs();
 
 	void EditDeleteLayer(int LyID, int ParentGroupID);
 	void EditDeleteGroup(u32 GroupID);
