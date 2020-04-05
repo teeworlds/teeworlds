@@ -102,6 +102,7 @@ void CEditor2::Init()
 	m_Tool = TOOL_TILE_BRUSH;
 	m_UiDetailPanelIsOpen = false;
 	m_MapViewZoom = 0;
+	m_MapSaved = false;
 
 	m_UiPopupStackCount = 0;
 	m_UiCurrentPopupID = -1;
@@ -159,7 +160,7 @@ void CEditor2::UpdateAndRender()
 
 bool CEditor2::HasUnsavedData() const
 {
-	return false;
+	return !m_MapSaved;
 }
 
 void CEditor2::OnInput(IInput::CEvent Event)
@@ -253,6 +254,11 @@ void CEditor2::Update()
 		// TODO: remove
 		if(IsCtrlPressed && Input()->KeyPress(KEY_A))
 			ChangePage((m_Page+1) % PAGE_COUNT_);
+
+		if(IsCtrlPressed && Input()->KeyPress(KEY_S))
+		{
+			SaveMapUi();
+		}
 
 		if(IsToolSelect() && Input()->KeyPress(KEY_ESCAPE)) {
 			m_TileSelection.Deselect();
@@ -1039,7 +1045,7 @@ void CEditor2::RenderMenuBar(CUIRect TopPanel)
 		for(int t = 0; t < TOOL_COUNT_; t++)
 		{
 			TopPanel.VSplitLeft(25.0f, &ButtonRect, &TopPanel);
-			if(UiButtonEx(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t ? StyleColorInputSelected : StyleColorButton, m_Tool == t ? StyleColorInputSelected : StyleColorButtonHover, StyleColorButtonPressed, StyleColorButtonBorder, 10.0f))
+			if(UiButtonEx(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t ? StyleColorInputSelected : StyleColorButton, m_Tool == t ? StyleColorInputSelected : StyleColorButtonHover, StyleColorButtonPressed, StyleColorButtonBorder, 10.0f, CUI::ALIGN_LEFT))
 				ChangeTool(t);
 		}
 	}
@@ -1791,7 +1797,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	static CUIButton s_LayerDeleteButton;
 	if(UiButtonEx(ButtonRect, Localize("Delete layer"), &s_LayerDeleteButton,
 		vec4(0.4f, 0.04f, 0.04f, 1), vec4(0.96f, 0.16f, 0.16f, 1), vec4(0.31f, 0, 0, 1),
-		vec4(0.63f, 0.035f, 0.035f, 1), 10) && !IsGameLayer)
+		vec4(0.63f, 0.035f, 0.035f, 1), 10, CUI::ALIGN_LEFT) && !IsGameLayer)
 	{
 		int SelectedLayerID = m_UiSelectedLayerID;
 		int SelectedGroupID = m_UiSelectedGroupID;
@@ -1805,7 +1811,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	// delete button
 	static CUIButton s_GroupDeleteButton;
 	if(UiButtonEx(ButtonRect, Localize("Delete group"), &s_GroupDeleteButton, vec4(0.4f, 0.04f, 0.04f, 1),
-		vec4(0.96f, 0.16f, 0.16f, 1), vec4(0.31f, 0, 0, 1), vec4(0.63f, 0.035f, 0.035f, 1), 10) && !IsGameGroup)
+		vec4(0.96f, 0.16f, 0.16f, 1), vec4(0.31f, 0, 0, 1), vec4(0.63f, 0.035f, 0.035f, 1), 10, CUI::ALIGN_LEFT) && !IsGameGroup)
 	{
 		int ToDeleteID = m_UiSelectedGroupID;
 		SelectGroupBelowCurrentOne();
@@ -2405,6 +2411,71 @@ bool CEditor2::SaveFileCallback(const char *pFilepath, void *pContext)
 	return pEditor->SaveMap(pFilepath);
 }
 
+void CEditor2::NewFileSaveUnsavedFileCb(void *pContext)
+{
+	CEditor2 *pEditor = (CEditor2 *)pContext;
+	pEditor->Reset();
+}
+
+void CEditor2::InvokeNewCb(bool Choice, void *pContext)
+{
+	CEditor2 *pEditor = (CEditor2 *)pContext;
+	pEditor->ExitPopup();
+
+	if(Choice)
+		pEditor->SaveMapUi(NewFileSaveUnsavedFileCb);
+	else
+		pEditor->Reset();
+}
+
+void CEditor2::LoadFileSaveUnsavedFileCb(void *pContext)
+{
+	CEditor2 *pEditor = (CEditor2 *)pContext;
+	pEditor->InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, pEditor);
+}
+
+void CEditor2::InvokeLoadPopupCb(bool Choice, void *pContext)
+{
+	CEditor2 *pEditor = (CEditor2 *)pContext;
+	pEditor->ExitPopup();
+
+	if(Choice)
+		pEditor->SaveMapUi(LoadFileSaveUnsavedFileCb);
+	else
+		pEditor->InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, pEditor);
+}
+
+bool CEditor2::FileSelectChainCallback(const char *pName, void *pContext)
+{
+	SFileSelectChainContext *pChainContext = (SFileSelectChainContext *)pContext;
+	bool Result = pChainContext->m_pfnSelectCallback(pName, pChainContext->m_pContext);
+
+	if(pChainContext->m_pfnChainCallback)
+		pChainContext->m_pfnChainCallback(pChainContext->m_pContext);
+
+	return Result;
+}
+
+void CEditor2::SaveMapUi(CHAIN_CALLBACK pfnCallback)
+{
+	dbg_msg("debug", "saving '%s'", m_Map.m_aPath);
+	if(!m_Map.m_aPath[0])
+	{
+		static SFileSelectChainContext Context;
+		Context.m_pfnSelectCallback = SaveFileCallback;
+		Context.m_pfnChainCallback = pfnCallback;
+		Context.m_pContext = this;
+		InvokePopupFileSelect("Save", "maps", true, FileSelectChainCallback, &Context);
+	}
+	else
+	{
+		SaveMap(m_Map.m_aPath);
+		if(pfnCallback)
+			pfnCallback(this);
+	}
+
+}
+
 void CEditor2::RenderPopupMenuFile(void* pPopupData)
 {
 	CUIRect Rect = *(CUIRect*)pPopupData;
@@ -2431,33 +2502,31 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "New", &s_NewMapButton))
 	{
+		ExitPopup();
 		if(HasUnsavedData())
 		{
-
+			m_UiCurrentYNData = CYNPopup("Warning", "The current map has not been saved, would you like to save it?", InvokeNewCb, this);
+			PushPopup(&CEditor2::RenderPopupYesNo, &m_UiCurrentYNData);
 		}
 		else
 		{
 			Reset();
-			// pEditor->m_aFileName[0] = 0;
 		}
-
-		ExitPopup();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Load", &s_OpenButton))
 	{
+		ExitPopup();
 		if(HasUnsavedData())
 		{
-
+			m_UiCurrentYNData = CYNPopup("Warning", "The current map has not been saved, would you like to save it?", InvokeLoadPopupCb, this);
+			PushPopup(&CEditor2::RenderPopupYesNo, &m_UiCurrentYNData);
 		}
 		else
 		{
 			InvokePopupFileSelect("Open", "maps", false, LoadFileCallback, this);
-			// pEditor->InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_MAP, "Load map", "Load", "maps", "", pEditor->CallbackOpenMap, pEditor);
 		}
-
-		ExitPopup();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -2469,13 +2538,14 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 	if(UiButton(Slot, "Save", &s_SaveButton))
 	{
 		ExitPopup();
+		SaveMapUi();
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Save As", &s_SaveAsButton))
 	{
-		InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
 		ExitPopup();
+		InvokePopupFileSelect("Save", "maps", true, SaveFileCallback, this);
 	}
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
@@ -3082,6 +3152,48 @@ void CEditor2::RenderPopupFileSelect(void* pPopupData)
 	}
 }
 
+void CEditor2::RenderPopupYesNo(void *pData)
+{
+	const float Padding = 5.0f;
+	const float Scale = 0.4f;
+	const vec4 White(1, 1, 1, 1);
+
+	CYNPopup *pPopupData = (CYNPopup *)pData;
+	if(Input()->KeyPress(KEY_ESCAPE))
+		ExitPopup();
+
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5)); // darken the background (should be in a common function)
+	// whole screen "button" that prevents clicking on other stuff
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
+
+	float w = UiScreenRect.w * Scale, h = UiScreenRect.h * Scale * 0.5f;
+	CUIRect MainRect = {(UiScreenRect.w - w) * 0.5f, (UiScreenRect.h - h) * 0.5f, w, h};
+
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
+	MainRect.Margin(Padding * 3/4, &MainRect);
+
+	CUIRect Title, Text, Buttons;
+	MainRect.HSplitTop(MainRect.h / 4, &Title, &Text);
+	Text.HSplitTop(MainRect.h / 4, &Text, &Buttons);
+	Buttons.Margin(Buttons.h * 0.5f - 10, &Buttons);
+
+	DrawText(Title, Localize(pPopupData->m_pTitle), 15.0f, White, CUI::ALIGN_CENTER);
+	DrawText(Text, Localize(pPopupData->m_pText), 10.0f, White, CUI::ALIGN_CENTER);
+
+	CUIRect BYes, BNo;
+	Buttons.VSplitMid(&BNo, &BYes, 10.0f);
+
+	static CUIButton s_BNo, s_BYes;
+	if(UiButton(BNo, Localize("No"), &s_BNo, 10.0f, CUI::ALIGN_CENTER))
+		pPopupData->m_pfnDoneCallback(false, pPopupData->m_pContext);
+	else if(UiButton(BYes, Localize("Yes"), &s_BYes, 10.0f, CUI::ALIGN_CENTER))
+		pPopupData->m_pfnDoneCallback(true, pPopupData->m_pContext);
+}
+
 void CEditor2::RenderBrush(vec2 Pos)
 {
 	if(m_Brush.IsEmpty())
@@ -3181,7 +3293,8 @@ void CEditor2::RenderAssetManager()
 		const bool Selected = (m_UiSelectedImageID == s_aImageItems[i].m_Index);
 		const vec4 ColBorder = Selected ? vec4(1, 0, 0, 1) : StyleColorButtonBorder;
 		if(UiButtonEx(ButtonRect, s_aImageItems[i].m_Name.m_Buff, &s_UiImageButState[i],
-			StyleColorButton,StyleColorButtonHover, StyleColorButtonPressed, ColBorder, FontSize))
+			StyleColorButton,StyleColorButtonHover, StyleColorButtonPressed, ColBorder, FontSize,
+			CUI::ALIGN_LEFT))
 		{
 			m_UiSelectedImageID = s_aImageItems[i].m_Index;
 		}
@@ -3709,6 +3822,7 @@ bool CEditor2::SaveMap(const char* pFileName)
 {
 	if(m_Map.Save(pFileName))
 	{
+		m_MapSaved = true;
 		// send rcon.. if we can
 		// TODO: implement / uncomment
 		if(Client()->RconAuthed())
@@ -3730,6 +3844,7 @@ bool CEditor2::SaveMap(const char* pFileName)
 
 void CEditor2::OnMapLoaded()
 {
+	m_MapSaved = true;
 	m_UiSelectedLayerID = m_Map.m_GameLayerID;
 	m_UiSelectedGroupID = m_Map.m_GameGroupID;
 	mem_zero(m_UiGroupState.data, sizeof(m_UiGroupState.data));
@@ -3808,6 +3923,8 @@ void CEditor2::HistoryDeallocEntry(CEditor2::CHistoryEntry *pEntry)
 
 void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 {
+	m_MapSaved = false;
+
 	CHistoryEntry* pEntry;
 	pEntry = HistoryAllocEntry();
 	pEntry->m_pSnap = m_Map.SaveSnapshot();

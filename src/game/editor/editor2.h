@@ -55,6 +55,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	IGraphics::CTextureHandle m_GameTexture;
 
 	CEditorMap2 m_Map;
+	bool m_MapSaved;
 	CEditorConsoleUI m_InputConsole;
 
 	bool m_ConfigShowGrid;
@@ -151,6 +152,28 @@ class CEditor2: public IEditor, public CEditor2Ui
 		void GenerateListBoxEntries();
 	};
 	CUIFileSelect m_UiFileSelectState;
+
+	typedef void (*MODAL_BUTTON_CALLBACK)(bool Choice, void *pContext);
+	struct CYNPopup
+	{
+		const char *m_pTitle;
+		const char *m_pText;
+
+		MODAL_BUTTON_CALLBACK m_pfnDoneCallback;
+		void *m_pContext;
+
+		CYNPopup(const char *pTitle, const char *pText,
+			MODAL_BUTTON_CALLBACK pfnYesCallback, void *pContext):
+			m_pTitle(pTitle), m_pText(pText),
+			m_pfnDoneCallback(pfnYesCallback), m_pContext(pContext) {}
+
+		CYNPopup() // Can't delegate constructors in C++03
+		{
+			m_pTitle = "";
+			m_pText = "";
+		}
+	};
+	CYNPopup m_UiCurrentYNData;
 
 	bool m_UiDetailPanelIsOpen;
 
@@ -297,10 +320,27 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderHistory(CUIRect NavRect);
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
 
+	static void NewFileSaveUnsavedFileCb(void *pContext);
+	static void InvokeNewCb(bool Choice, void *pContext);
+	static void LoadFileSaveUnsavedFileCb(void *pContext);
+	static void InvokeLoadPopupCb(bool Choice, void *pContext);
+
+	typedef void (*CHAIN_CALLBACK)(void *pContext);
+	typedef struct
+	{
+		FILE_SELECT_CALLBACK m_pfnSelectCallback;
+		CHAIN_CALLBACK m_pfnChainCallback;
+		void *m_pContext;
+	} SFileSelectChainContext;
+	static bool FileSelectChainCallback(const char *pFilename, void *pContext);
+
+	void SaveMapUi(CHAIN_CALLBACK pfnCallback = 0);
+
 	void RenderPopupMenuFile(void* pPopupData);
 	void RenderPopupBrushPalette(void* pPopupData);
 	void InvokePopupFileSelect(const char *pButtonText, const char *pInitialPath, bool NewFile, FILE_SELECT_CALLBACK pfnCallback, void *pContext);
 	void RenderPopupFileSelect(void* pPopupData);
+	void RenderPopupYesNo(void *pPopupData);
 
 	void RenderBrush(vec2 Pos);
 

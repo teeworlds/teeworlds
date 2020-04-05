@@ -506,6 +506,7 @@ bool CEditorMap2::Load(const char* pFileName)
 
 void CEditorMap2::LoadDefault()
 {
+	m_aPath[0] = 0;
 	Clear();
 
 	CGroup BgGroup;

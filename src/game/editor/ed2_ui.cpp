@@ -265,14 +265,14 @@ bool CEditor2Ui::UiDoMouseDragging(const CUIRect& Rect, CUIMouseDrag* pDragState
 	return Return;
 }
 
-bool CEditor2Ui::UiButton(const CUIRect& Rect, const char* pText, CUIButton* pButState, float FontSize)
+bool CEditor2Ui::UiButton(const CUIRect& Rect, const char* pText, CUIButton* pButState, float FontSize, CUI::EAlignment TextAlign)
 {
 	return UiButtonEx(Rect, pText, pButState, StyleColorButton, StyleColorButtonHover,
-		StyleColorButtonPressed, StyleColorButtonBorder, FontSize);
+		StyleColorButtonPressed, StyleColorButtonBorder, FontSize, TextAlign);
 }
 
 bool CEditor2Ui::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* pButState, vec4 ColNormal,
-	vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize)
+	vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize, CUI::EAlignment TextAlign)
 {
 	UiDoButtonBehavior(pButState, Rect, pButState);
 
@@ -283,7 +283,7 @@ bool CEditor2Ui::UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* p
 		ShowButColor = ColPress;
 
 	DrawRectBorder(Rect, ShowButColor, 1, ColBorder);
-	DrawText(Rect, pText, FontSize);
+	DrawText(Rect, pText, FontSize, vec4(1.0f, 1.0f, 1.0f, 1.0f), TextAlign);
 	return pButState->m_Clicked;
 }
 
@@ -504,7 +504,7 @@ bool CEditor2Ui::UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButto
 	float FontSize)
 {
 	return UiButtonEx(Rect, pText, pButState, StyleColorButton, StyleColorButtonHover, StyleColorButtonPressed,
-					  Selected ? vec4(1, 0, 0, 1):StyleColorButtonBorder, FontSize);
+					  Selected ? vec4(1, 0, 0, 1):StyleColorButtonBorder, FontSize, CUI::ALIGN_LEFT);
 }
 
 bool CEditor2Ui::UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive)

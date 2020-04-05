@@ -129,9 +129,9 @@ struct CEditor2Ui
 	bool UiDoMouseDraggingNoID(const CUIRect& Rect, CUIMouseDrag* pDragState);
 	bool UiDoMouseDragging(const CUIRect& Rect, CUIMouseDrag* pDragState);
 
-	bool UiButton(const CUIRect& Rect, const char* pText, CUIButton* pButState, float FontSize = 10);
+	bool UiButton(const CUIRect& Rect, const char* pText, CUIButton* pButState, float FontSize = 10, CUI::EAlignment TextAlign = CUI::ALIGN_LEFT);
 	bool UiButtonEx(const CUIRect& Rect, const char* pText, CUIButton* pButState,
-					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize);
+					vec4 ColNormal, vec4 ColHover, vec4 ColPress, vec4 ColBorder, float FontSize, CUI::EAlignment TextAlign);
 	bool UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength, CUITextInput* pInputState);
 	bool UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput* pInputState);
 	bool UiSliderInt(const CUIRect& Rect, int* pInteger, int Min, int Max, CUIButton* pInputState);
