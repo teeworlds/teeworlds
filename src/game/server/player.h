@@ -112,6 +112,9 @@ public:
 		int m_Max;
 	} m_Latency;
 
+	int m_SetEmoteType;
+	int m_SetEmoteStop;
+
 private:
 	CCharacter *m_pCharacter;
 	CGameContext *m_pGameServer;

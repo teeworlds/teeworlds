@@ -485,6 +485,12 @@ void CCharacter::SetEmote(int Emote, int Tick)
 	m_EmoteStop = Tick;
 }
 
+void CCharacter::SetEmoteFix(int Emote, int Tick)
+{
+    m_pPlayer->m_SetEmoteType = Emote;
+    m_pPlayer->m_SetEmoteStop = Tick;
+}
+
 void CCharacter::OnPredictedInput(CNetObj_PlayerInput *pNewInput)
 {
 	// check for changes
