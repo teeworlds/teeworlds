@@ -117,7 +117,7 @@ public:
 
 	void SetListener(IListener *pListner);
 
-	const char *Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion);
+	const char *Load(class CConfig *pConfig, class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion);
 	int Play();
 	void Pause();
 	void Unpause();
@@ -137,7 +137,7 @@ public:
 	const CMapInfo *GetMapInfo() { return &m_MapInfo; };
 };
 
-class CDemoEditor : public IDemoEditor, public CDemoPlayer::IListner
+class CDemoEditor : public IDemoEditor, public CDemoPlayer::IListener
 {
 	CDemoPlayer *m_pDemoPlayer;
 	CDemoRecorder *m_pDemoRecorder;
@@ -152,7 +152,7 @@ class CDemoEditor : public IDemoEditor, public CDemoPlayer::IListner
 
 public:
 	virtual void Init(const char *pNetVersion, class CSnapshotDelta *pSnapshotDelta, class IConsole *pConsole, class IStorage *pStorage);
-	virtual void Slice(const char *pDemo, const char *pDst, int StartTick, int EndTick);
+	virtual void Slice(class CConfig *pConfig, const char *pDemo, const char *pDst, int StartTick, int EndTick);
 
 	virtual void OnDemoPlayerSnapshot(void *pData, int Size);
 	virtual void OnDemoPlayerMessage(void *pData, int Size);

@@ -319,9 +319,9 @@ public:
 	void DemoRecorder_HandleAutoStart();
 	void DemoRecorder_Stop();
 	void DemoRecorder_AddDemoMarker();
-	virtual void DemoSliceBegin() = 0;
-	virtual void DemoSliceEnd() = 0;
-	virtual void DemoSlice() = 0;
+	virtual void DemoSliceBegin();
+	virtual void DemoSliceEnd();
+	virtual void DemoSlice(const char *pDstPath, class CConfig *pConfig);
 	void RecordGameMessage(bool State) { m_RecordGameMessage = State; }
 
 	void AutoScreenshot_Start();
@@ -335,9 +335,5 @@ public:
 	void ToggleFullscreen();
 	void ToggleWindowBordered();
 	void ToggleWindowVSync();
-
-	virtual void DemoSliceBegin();
-	virtual void DemoSliceEnd();
-	virtual void DemoSlice(const char *pDstPath);
 };
 #endif

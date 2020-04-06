@@ -2257,19 +2257,19 @@ void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData)
 void CClient::DemoSliceBegin()
 {
 	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
-	g_Config.m_ClDemoSliceBegin = pInfo->m_Info.m_CurrentTick;
+	Config()->m_ClDemoSliceBegin = pInfo->m_Info.m_CurrentTick;
 }
 
 void CClient::DemoSliceEnd()
 {
 	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
-	g_Config.m_ClDemoSliceEnd = pInfo->m_Info.m_CurrentTick;
+	Config()->m_ClDemoSliceEnd = pInfo->m_Info.m_CurrentTick;
 }
 
 void CClient::Con_DemoSliceBegin(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->DemoSliceBegin();	
+	pSelf->DemoSliceBegin();
 }
 
 void CClient::Con_DemoSliceEnd(IConsole::IResult *pResult, void *pUserData)
@@ -2278,12 +2278,12 @@ void CClient::Con_DemoSliceEnd(IConsole::IResult *pResult, void *pUserData)
 	pSelf->DemoSliceEnd();
 }
 
-void CClient::DemoSlice(const char *pDstPath)
+void CClient::DemoSlice(const char *pDstPath, class CConfig *pConfig)
 {
 	if(m_DemoPlayer.IsPlaying())
 	{
 		const char *pDemoFileName = m_DemoPlayer.GetDemoFileName();
-		m_DemoEditor.Slice(pDemoFileName, pDstPath, g_Config.m_ClDemoSliceBegin, g_Config.m_ClDemoSliceEnd);
+		m_DemoEditor.Slice(pConfig, pDemoFileName, pDstPath, pConfig->m_ClDemoSliceBegin, pConfig->m_ClDemoSliceEnd);
 	}
 }
 
@@ -2297,7 +2297,7 @@ const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 	// try to start playback
 	m_DemoPlayer.SetListener(this);
 
-	const char *pError = m_DemoPlayer.Load(Storage(), m_pConsole, pFilename, StorageType, GameClient()->NetVersion());
+	const char *pError = m_DemoPlayer.Load(Config(), Storage(), m_pConsole, pFilename, StorageType, GameClient()->NetVersion());
 	if(pError)
 		return pError;
 

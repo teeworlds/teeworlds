@@ -41,38 +41,30 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	float TotalHeight;
 
 	// render popups
-	if (m_DemoPlayerState == DEMOPLAYER_SLICE_SAVE)
+	if(m_DemoPlayerState == DEMOPLAYER_SLICE_SAVE)
 	{
 		CUIRect Screen = *UI()->Screen();
 		CUIRect Box, Part;
 		Box = Screen;
-		Box.VMargin(150.0f/UI()->Scale(), &Box);
-#if defined(__ANDROID__)
-		Box.HMargin(100.0f/UI()->Scale(), &Box);
-#else
-		Box.HMargin(150.0f/UI()->Scale(), &Box);
-#endif
+		Box.VMargin(150.0f, &Box);
+		Box.HMargin(150.0f, &Box);
 
 		// render the box
 		RenderTools()->DrawUIRect(&Box, vec4(0,0,0,0.5f), CUI::CORNER_ALL, 15.0f);
 
-		Box.HSplitTop(20.f/UI()->Scale(), &Part, &Box);
-		Box.HSplitTop(24.f/UI()->Scale(), &Part, &Box);
-		UI()->DoLabelScaled(&Part, "Select a name", 24.f, 0);
-		Box.HSplitTop(20.f/UI()->Scale(), &Part, &Box);
-		Box.HSplitTop(24.f/UI()->Scale(), &Part, &Box);
-		Part.VMargin(20.f/UI()->Scale(), &Part);
-		UI()->DoLabelScaled(&Part, m_aDemoPlayerPopupHint, 24.f, 0);
+		Box.HSplitTop(20.f, &Part, &Box);
+		Box.HSplitTop(24.f, &Part, &Box);
+		UI()->DoLabel(&Part, "Select a name", 24.f, CUI::ALIGN_LEFT);
+		Box.HSplitTop(20.f, &Part, &Box);
+		Box.HSplitTop(24.f, &Part, &Box);
+		Part.VMargin(20.f, &Part);
+		UI()->DoLabel(&Part, m_aDemoPlayerPopupHint, 24.f, CUI::ALIGN_LEFT);
 
 
 		CUIRect Label, TextBox, Ok, Abort;
 
 		Box.HSplitBottom(20.f, &Box, &Part);
-#if defined(__ANDROID__)
-		Box.HSplitBottom(60.f, &Box, &Part);
-#else
 		Box.HSplitBottom(24.f, &Box, &Part);
-#endif
 		Part.VMargin(80.0f, &Part);
 
 		Part.VSplitMid(&Abort, &Ok);
@@ -80,11 +72,11 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		Ok.VMargin(20.0f, &Ok);
 		Abort.VMargin(20.0f, &Abort);
 
-		static int s_ButtonAbort = 0;
+		static CButtonContainer s_ButtonAbort;
 		if(DoButton_Menu(&s_ButtonAbort, Localize("Abort"), 0, &Abort) || m_EscapePressed)
 			m_DemoPlayerState = DEMOPLAYER_NONE;
 
-		static int s_ButtonOk = 0;
+		static CButtonContainer s_ButtonOk;
 		if(DoButton_Menu(&s_ButtonOk, Localize("Ok"), 0, &Ok) || m_EnterPressed)
 		{
 			if(str_comp(m_lDemos[m_DemolistSelectedIndex].m_aFilename, m_aCurrentDemoFile) == 0)
@@ -95,22 +87,18 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 				char aPath[512];
 				str_format(aPath, sizeof(aPath), "%s/%s", m_aCurrentDemoFolder, m_aCurrentDemoFile);
-				Client()->DemoSlice(aPath);
+				Client()->DemoSlice(aPath, Config());
 			}
 		}
 
 		Box.HSplitBottom(60.f, &Box, &Part);
-#if defined(__ANDROID__)
-		Box.HSplitBottom(60.f, &Box, &Part);
-#else
 		Box.HSplitBottom(24.f, &Box, &Part);
-#endif
 
 		Part.VSplitLeft(60.0f, 0, &Label);
 		Label.VSplitLeft(120.0f, 0, &TextBox);
 		TextBox.VSplitLeft(20.0f, 0, &TextBox);
 		TextBox.VSplitRight(60.0f, &TextBox, 0);
-		UI()->DoLabel(&Label, Localize("New name:"), 18.0f, -1);
+		UI()->DoLabel(&Label, Localize("New name:"), 18.0f, CUI::ALIGN_LEFT);
 		static float Offset = 0.0f;
 		DoEditBox(&Offset, &TextBox, m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile), 12.0f, &Offset);
 
@@ -125,7 +113,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	MainView.VSplitLeft(50.0f, 0, &MainView);
 	MainView.VSplitRight(450.0f, &MainView, 0);
 
-	if (m_SeekBarActive || m_MenuActive) // only draw the background if SeekBar or Menu is active
+	if(m_SeekBarActive || m_MenuActive) // only draw the background if SeekBar or Menu is active
 		RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), CUI::CORNER_T, 10.0f);
 
 	MainView.Margin(5.0f, &MainView);
@@ -138,7 +126,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// we can toggle the seekbar using CTRL
 	if(!m_MenuActive && (Input()->KeyPress(KEY_LCTRL) || Input()->KeyPress(KEY_RCTRL)))
 	{
-		if (m_SeekBarActive)
+		if(m_SeekBarActive)
 			m_SeekBarActive = false;
 		else
 		{
@@ -194,10 +182,10 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 		// draw slice markers
 		// begin
-		if(g_Config.m_ClDemoSliceBegin != -1)
+		if(Config()->m_ClDemoSliceBegin != -1)
 		{
-			float Ratio = (g_Config.m_ClDemoSliceBegin-pInfo->m_FirstTick) / (float)TotalTicks;
-			Graphics()->TextureSet(-1);
+			float Ratio = (Config()->m_ClDemoSliceBegin-pInfo->m_FirstTick) / (float)TotalTicks;
+			Graphics()->TextureClear();
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 0.0f, 0.0f, 1.0f);
 			IGraphics::CQuadItem QuadItem(10.0f + SeekBar.x + (SeekBar.w-10.0f)*Ratio, SeekBar.y, UI()->PixelSize(), SeekBar.h);
@@ -206,10 +194,10 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		}
 
 		// end
-		if(g_Config.m_ClDemoSliceEnd != -1)
+		if(Config()->m_ClDemoSliceEnd != -1)
 		{
-			float Ratio = (g_Config.m_ClDemoSliceEnd-pInfo->m_FirstTick) / (float)TotalTicks;
-			Graphics()->TextureSet(-1);
+			float Ratio = (Config()->m_ClDemoSliceEnd-pInfo->m_FirstTick) / (float)TotalTicks;
+			Graphics()->TextureClear();
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 0.0f, 0.0f, 1.0f);
 			IGraphics::CQuadItem QuadItem(10.0f + SeekBar.x + (SeekBar.w-10.0f)*Ratio, SeekBar.y, UI()->PixelSize(), SeekBar.h);
@@ -340,22 +328,22 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		// slice begin button
 		ButtonBar.VSplitLeft(Margins*10, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
-		static int s_SliceBeginButton = 0;
-		if(DoButton_Sprite(&s_SliceBeginButton, IMAGE_DEMOBUTTONS2, SPRITE_DEMOBUTTON_SLICE_BEGIN, 0, &Button, CUI::CORNER_ALL))
+		static CButtonContainer s_SliceBeginButton;
+		if(DoButton_SpriteID(&s_SliceBeginButton, IMAGE_DEMOSLICE, SPRITE_DEMOBUTTON_SLICE_BEGIN, false, &Button, CUI::CORNER_ALL))
 			Client()->DemoSliceBegin();
 
 		// slice end button
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
-		static int s_SliceEndButton = 0;
-		if(DoButton_Sprite(&s_SliceEndButton, IMAGE_DEMOBUTTONS2, SPRITE_DEMOBUTTON_SLICE_END, 0, &Button, CUI::CORNER_ALL))
+		static CButtonContainer s_SliceEndButton;
+		if(DoButton_SpriteID(&s_SliceEndButton, IMAGE_DEMOSLICE, SPRITE_DEMOBUTTON_SLICE_END, false, &Button, CUI::CORNER_ALL))
 			Client()->DemoSliceEnd();
 
 		// slice save button
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
-		static int s_SliceSaveButton = 0;
-		if(DoButton_Sprite(&s_SliceSaveButton, IMAGE_FILEICONS, SPRITE_FILE_DEMO2, 0, &Button, CUI::CORNER_ALL))
+		static CButtonContainer s_SliceSaveButton;
+		if(DoButton_SpriteID(&s_SliceSaveButton, IMAGE_FILEICONS, SPRITE_FILE_DEMO2, false, &Button, CUI::CORNER_ALL))
 		{
 			str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aCurrentDemoFile));
 			m_aDemoPlayerPopupHint[0] = '\0';

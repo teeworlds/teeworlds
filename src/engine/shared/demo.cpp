@@ -584,7 +584,7 @@ void CDemoPlayer::Unpause()
 	m_Info.m_Info.m_Paused = false;
 }
 
-const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion)
+const char *CDemoPlayer::Load(class CConfig *pConfig, class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion)
 {
 	m_pConsole = pConsole;
 	m_aErrorMsg[0] = 0;
@@ -693,8 +693,8 @@ const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole
 	ScanFile();
 
 	// reset slice markers
-	g_Config.m_ClDemoSliceBegin = -1;
-	g_Config.m_ClDemoSliceEnd = -1;
+	pConfig->m_ClDemoSliceBegin = -1;
+	pConfig->m_ClDemoSliceEnd = -1;
 
 	// ready for playback
 	return 0;
@@ -867,7 +867,7 @@ void CDemoEditor::Init(const char *pNetVersion, class CSnapshotDelta *pSnapshotD
 	m_pStorage = pStorage;
 }
 
-void CDemoEditor::Slice(const char *pDemo, const char *pDst, int StartTick, int EndTick)
+void CDemoEditor::Slice(class CConfig *pConfig, const char *pDemo, const char *pDst, int StartTick, int EndTick)
 {
 	class CDemoPlayer DemoPlayer(m_pSnapshotDelta);
 	class CDemoRecorder DemoRecorder(m_pSnapshotDelta);
@@ -875,13 +875,14 @@ void CDemoEditor::Slice(const char *pDemo, const char *pDst, int StartTick, int 
 	m_pDemoPlayer = &DemoPlayer;
 	m_pDemoRecorder = &DemoRecorder;
 
-	m_pDemoPlayer->SetListner(this);
+	m_pDemoPlayer->SetListener(this);
 
-	m_SliceFrom = StartTick;	
+	m_SliceFrom = StartTick;
 	m_SliceTo = EndTick;
 	m_Stop = false;
 
-	if(m_pDemoPlayer->Load(m_pStorage, m_pConsole, pDemo, IStorage::TYPE_ALL) == -1)
+	const char *pError = m_pDemoPlayer->Load(pConfig, m_pStorage, m_pConsole, pDemo, IStorage::TYPE_ALL, m_pNetVersion);
+	if (pError)
 		return;
 
 	const CDemoPlayer::CMapInfo *pMapInfo = m_pDemoPlayer->GetMapInfo();
@@ -913,7 +914,7 @@ void CDemoEditor::OnDemoPlayerSnapshot(void *pData, int Size)
 {
 	const CDemoPlayer::CPlaybackInfo *pInfo = m_pDemoPlayer->Info();
 
-	if (m_SliceTo != -1 && pInfo->m_Info.m_CurrentTick > m_SliceTo)
+	if(m_SliceTo != -1 && pInfo->m_Info.m_CurrentTick > m_SliceTo)
 		m_Stop = true;
 	else if (m_SliceFrom == -1 || pInfo->m_Info.m_CurrentTick >= m_SliceFrom)
 		m_pDemoRecorder->RecordSnapshot(pInfo->m_Info.m_CurrentTick, pData, Size);
@@ -923,7 +924,7 @@ void CDemoEditor::OnDemoPlayerMessage(void *pData, int Size)
 {
 	const CDemoPlayer::CPlaybackInfo *pInfo = m_pDemoPlayer->Info();
 
-	if (m_SliceTo != -1 && pInfo->m_Info.m_CurrentTick > m_SliceTo)
+	if(m_SliceTo != -1 && pInfo->m_Info.m_CurrentTick > m_SliceTo)
 		m_Stop = true;
 	else if (m_SliceFrom == -1 || pInfo->m_Info.m_CurrentTick >= m_SliceFrom)
 		m_pDemoRecorder->RecordMessage(pData, Size);
