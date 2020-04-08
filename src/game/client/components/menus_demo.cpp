@@ -54,7 +54,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 		Box.HSplitTop(20.f, &Part, &Box);
 		Box.HSplitTop(24.f, &Part, &Box);
-		UI()->DoLabel(&Part, "Select a name", 24.f, CUI::ALIGN_LEFT);
+		UI()->DoLabel(&Part, "Select a name", 24.f, CUI::ALIGN_CENTER);
 		Box.HSplitTop(20.f, &Part, &Box);
 		Box.HSplitTop(24.f, &Part, &Box);
 		Part.VMargin(20.f, &Part);
