@@ -27,7 +27,7 @@ class CDemoRecorder : public IDemoRecorder
 public:
 	CDemoRecorder(class CSnapshotDelta *pSnapshotDelta);
 
-	int Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetversion, const char *pMap, SHA256_DIGEST MapSha256, unsigned MapCrc, const char *pType);
+	int Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetversion, const char *pMap, SHA256_DIGEST MapSha256, unsigned MapCrc, const char *pType, bool Insecure = false);
 	int Stop();
 	void AddDemoMarker();
 

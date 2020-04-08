@@ -29,7 +29,7 @@ CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 }
 
 // Record
-int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetVersion, const char *pMap, SHA256_DIGEST Sha256, unsigned Crc, const char *pType)
+int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetVersion, const char *pMap, SHA256_DIGEST Sha256, unsigned Crc, const char *pType, bool Insecure)
 {
 	CDemoHeader Header;
 	if(m_File)
@@ -39,22 +39,23 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 
 	// open mapfile
 	char aMapFilename[128];
-	// try the normal maps folder
-	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
-	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
-	if(!MapFile)
-	{
-		// try the downloaded maps (sha256)
-		char aSha256[SHA256_MAXSTRSIZE];
-		sha256_str(Sha256, aSha256, sizeof(aSha256));
-		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%s.map", pMap, aSha256);
-		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
-	}
+
+	// try the downloaded maps (sha256)
+	char aSha256[SHA256_MAXSTRSIZE];
+	sha256_str(Sha256, aSha256, sizeof(aSha256));
+	str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%s.map", pMap, aSha256);
+	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, Insecure ? NULL : CDataFileReader::CheckSha256, &Sha256);
 	if(!MapFile)
 	{
 		// try the downloaded maps (crc)
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
-		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, Insecure ? NULL : CDataFileReader::CheckSha256, &Sha256);
+	}
+	if(!MapFile)
+	{
+		// try the normal maps folder
+		str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, Insecure ? NULL : CDataFileReader::CheckSha256, &Sha256);
 	}
 	if(!MapFile)
 	{
@@ -62,7 +63,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 		char aBuf[IO_MAX_PATH_LENGTH];
 		str_format(aMapFilename, sizeof(aMapFilename), "%s.map", pMap);
 		if(pStorage->FindFile(aMapFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
-			MapFile = pStorage->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
+			MapFile = pStorage->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, Insecure ? NULL : CDataFileReader::CheckSha256, &Sha256);
 	}
 	if(!MapFile)
 	{
@@ -891,7 +892,7 @@ void CDemoEditor::Slice(class CConfig *pConfig, const char *pDemo, const char *p
 	{
 		Fake.data[i] = 0xff;
 	}
-	if(m_pDemoRecorder->Start(m_pStorage, m_pConsole, pDst, m_pNetVersion, pMapInfo->m_aName, Fake, pMapInfo->m_Crc, "client") == -1)
+	if(m_pDemoRecorder->Start(m_pStorage, m_pConsole, pDst, m_pNetVersion, pMapInfo->m_aName, Fake, pMapInfo->m_Crc, "client", true) == -1)
 		return;
 
 	m_pDemoPlayer->Play();
