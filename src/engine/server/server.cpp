@@ -496,8 +496,8 @@ int CServer::SendMsg(CMsgPacker *pMsg, int Flags, int ClientID)
 	if(!pMsg)
 		return -1;
 
-	// drop packet to dummy client
-	if(0 <= ClientID && ClientID < MAX_CLIENTS && GameServer()->IsClientBot(ClientID))
+	// drop invalid packet
+	if(ClientID != -1 && (ClientID < 0 || ClientID >= MAX_CLIENTS || m_aClients[ClientID].m_State == CClient::STATE_EMPTY || m_aClients[ClientID].m_Quitting))
 		return 0;
 
 	mem_zero(&Packet, sizeof(CNetChunk));
