@@ -91,6 +91,7 @@ public:
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
 
+	virtual bool IsClientBot(int ClientID) const = 0;
 	virtual bool IsClientReady(int ClientID) const = 0;
 	virtual bool IsClientPlayer(int ClientID) const = 0;
 	virtual bool IsClientSpectator(int ClientID) const = 0;

@@ -711,11 +711,7 @@ void CGameContext::OnClientEnter(int ClientID)
 
 void CGameContext::OnClientConnected(int ClientID, bool Dummy, bool AsSpec)
 {
-	if(m_apPlayers[ClientID])
-	{
-		dbg_assert(m_apPlayers[ClientID]->IsDummy(), "invalid clientID");
-		OnClientDrop(ClientID, "removing dummy");
-	}
+	dbg_assert(!m_apPlayers[ClientID], "non-free player slot");
 
 	m_apPlayers[ClientID] = new(ClientID) CPlayer(this, ClientID, Dummy, AsSpec);
 
@@ -753,7 +749,7 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 	m_pController->OnPlayerDisconnect(m_apPlayers[ClientID]);
 
 	// update clients on drop
-	if(Server()->ClientIngame(ClientID))
+	if(Server()->ClientIngame(ClientID) || IsClientBot(ClientID))
 	{
 		if(Server()->DemoRecorder_IsRecording())
 		{
@@ -1669,6 +1665,11 @@ void CGameContext::OnPostSnap()
 {
 	m_World.PostSnap();
 	m_Events.Clear();
+}
+
+bool CGameContext::IsClientBot(int ClientID) const
+{
+	return m_apPlayers[ClientID] && m_apPlayers[ClientID]->IsDummy();
 }
 
 bool CGameContext::IsClientReady(int ClientID) const
