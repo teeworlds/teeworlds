@@ -18,12 +18,13 @@ int MaplistCallback(const char *pName, int IsDir, int DirType, void *pUser)
 	if(l < 4 || IsDir || str_comp(pName+l-4, ".map") != 0)
 		return 0;
 
-	char aBuf[128];
+	char aBuf[512];
 	str_format(aBuf, sizeof(aBuf), "maps/%s", pName);
 	if(!s_pEngineMap->Load(aBuf))
 		return 0;
 
 	unsigned MapCrc = s_pEngineMap->Crc();
+	SHA256_DIGEST MapSha256 = s_pEngineMap->Sha256();
 	s_pEngineMap->Unload();
 
 	IOHANDLE MapFile = s_pStorage->OpenFile(aBuf, IOFLAG_READ, DirType);
@@ -33,10 +34,14 @@ int MaplistCallback(const char *pName, int IsDir, int DirType, void *pUser)
 	char aMapName[8];
 	str_copy(aMapName, pName, min((int)sizeof(aMapName),l-3));
 
-	str_format(aBuf, sizeof(aBuf), "\t{\"%s\", {0x%02x, 0x%02x, 0x%02x, 0x%02x}, {0x%02x, 0x%02x, 0x%02x, 0x%02x}},\n", aMapName,
+	str_format(aBuf, sizeof(aBuf), "\t{\"%s\", {0x%02x, 0x%02x, 0x%02x, 0x%02x}, {0x%02x, 0x%02x, 0x%02x, 0x%02x}, {0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x, 0x%02x}}, \n", aMapName,
 		(MapCrc>>24)&0xff, (MapCrc>>16)&0xff, (MapCrc>>8)&0xff, MapCrc&0xff,
-		(MapSize>>24)&0xff, (MapSize>>16)&0xff, (MapSize>>8)&0xff, MapSize&0xff);
-	io_write(s_File, aBuf, str_length(aBuf));
+		(MapSize>>24)&0xff, (MapSize>>16)&0xff, (MapSize>>8)&0xff, MapSize&0xff,
+		MapSha256.data[0], MapSha256.data[1], MapSha256.data[2], MapSha256.data[3], MapSha256.data[4], MapSha256.data[5], MapSha256.data[6], MapSha256.data[7],
+		MapSha256.data[8], MapSha256.data[9], MapSha256.data[10], MapSha256.data[11], MapSha256.data[12], MapSha256.data[13], MapSha256.data[14], MapSha256.data[15],
+		MapSha256.data[16], MapSha256.data[17], MapSha256.data[18], MapSha256.data[19], MapSha256.data[20], MapSha256.data[21], MapSha256.data[22], MapSha256.data[23],
+		MapSha256.data[24], MapSha256.data[25], MapSha256.data[26], MapSha256.data[27], MapSha256.data[28], MapSha256.data[29], MapSha256.data[30], MapSha256.data[31]);
+io_write(s_File, aBuf, str_length(aBuf));
 
 	return 0;
 }
