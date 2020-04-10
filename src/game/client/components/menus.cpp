@@ -1870,7 +1870,7 @@ int CMenus::Render()
 			Box.HSplitTop(2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &Save, &Box);
 			CServerInfo ServerInfo = {0};
-			str_copy(ServerInfo.m_aHostname, GetServerBrowserAddress(), sizeof(ServerInfo.m_aHostname));
+			str_copy(ServerInfo.m_aHostname, m_aPasswordPopupServerAddress, sizeof(ServerInfo.m_aHostname));
 			ServerBrowser()->UpdateFavoriteState(&ServerInfo);
 			const bool Favorite = ServerInfo.m_Favorite;
 			const int OnValue = Favorite ? 1 : 2;
@@ -1883,12 +1883,16 @@ int CMenus::Render()
 
 			static CButtonContainer s_ButtonAbort;
 			if(DoButton_Menu(&s_ButtonAbort, Localize("Abort"), 0, &Abort) || m_EscapePressed)
+			{
 				m_Popup = POPUP_NONE;
+				m_aPasswordPopupServerAddress[0] = '\0';
+			}
 
 			static CButtonContainer s_ButtonTryAgain;
 			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Try again"), 0, &TryAgain) || m_EnterPressed)
 			{
-				Client()->Connect(GetServerBrowserAddress());
+				Client()->Connect(ServerInfo.m_aHostname);
+				m_aPasswordPopupServerAddress[0] = '\0';
 			}
 		}
 		else if(m_Popup == POPUP_CONNECTING)
@@ -1954,7 +1958,7 @@ int CMenus::Render()
 			else
 			{
 				Box.HSplitTop(27.0f, 0, &Box);
-				UI()->DoLabel(&Box, GetServerBrowserAddress(), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+				UI()->DoLabel(&Box, Client()->ServerAddress(), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
@@ -2394,12 +2398,15 @@ void CMenus::OnStateChange(int NewState, int OldState)
 	{
 		if(OldState >= IClient::STATE_ONLINE && NewState < IClient::STATE_QUITING)
 			UpdateMusicState();
+
 		m_Popup = POPUP_NONE;
+
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)
 		{
 			if(str_find(Client()->ErrorString(), "password"))
 			{
 				m_Popup = POPUP_PASSWORD;
+				str_copy(m_aPasswordPopupServerAddress, Client()->ServerAddress(), sizeof(m_aPasswordPopupServerAddress));
 				UI()->SetHotItem(&Config()->m_Password);
 				UI()->SetActiveItem(&Config()->m_Password);
 			}

@@ -437,6 +437,9 @@ private:
 	int m_DownloadLastCheckSize;
 	float m_DownloadSpeed;
 
+	// for password popup
+	char m_aPasswordPopupServerAddress[256];
+
 	// for call vote
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;

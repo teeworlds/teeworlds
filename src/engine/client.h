@@ -147,6 +147,7 @@ public:
 	}
 
 	//
+	virtual const char *ServerAddress() const = 0;
 	virtual const char *ErrorString() const = 0;
 	virtual const char *LatestVersion() const = 0;
 	virtual bool ConnectionProblems() const = 0;
