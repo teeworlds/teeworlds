@@ -358,16 +358,11 @@ bool CEditor2Ui::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength
 bool CEditor2Ui::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerInput* pInputState)
 {
 	const int OldInteger = *pInteger;
-	const u8 OldSelected = pInputState->m_TextInput.m_Selected;
-
-	// string format, when value differ, empty or on select/deselect
-	if((pInputState->m_Value != *pInteger && !OldSelected) ||
-		(pInputState->m_aIntBuff[0] == 0 && !OldSelected) ||
-		(OldSelected != pInputState->m_TextInput.m_Selected))
+	const bool IsEmpty = pInputState->m_aIntBuff[0] == 0; // allow "" and "-" when typing numbers
+	const bool IsMinusOnly = pInputState->m_aIntBuff[0] == '-' && pInputState->m_aIntBuff[1] == 0;
+	if(!pInputState->m_TextInput.m_Selected || (!IsEmpty && !IsMinusOnly))
 	{
-		pInputState->m_Value = *pInteger;
 		str_format(pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), "%d", *pInteger);
-		pInputState->m_TextInput.m_CursorPos = str_length(pInputState->m_aIntBuff);
 	}
 
 	UiTextInput(Rect, pInputState->m_aIntBuff, sizeof(pInputState->m_aIntBuff), &pInputState->m_TextInput);
@@ -375,17 +370,6 @@ bool CEditor2Ui::UiIntegerInput(const CUIRect& Rect, int* pInteger, CUIIntegerIn
 	// string parse
 	if(sscanf(pInputState->m_aIntBuff, "%d", pInteger) < 1)
 		*pInteger = 0;
-
-	char aBuff[sizeof(pInputState->m_aIntBuff)];
-	str_format(aBuff, sizeof(aBuff), "%d", *pInteger);
-	const bool IsEmpty = pInputState->m_aIntBuff[0] == 0;
-	const bool IsMinusOnly = pInputState->m_aIntBuff[0] == '-' && pInputState->m_aIntBuff[1] == 0;
-	if(!IsEmpty && !IsMinusOnly && str_comp(aBuff, pInputState->m_aIntBuff) != 0)
-	{
-		pInputState->m_Value = *pInteger;
-		str_copy(pInputState->m_aIntBuff, aBuff, sizeof(pInputState->m_aIntBuff));
-		pInputState->m_TextInput.m_CursorPos = str_length(pInputState->m_aIntBuff);
-	}
 
 	return OldInteger != *pInteger;
 }

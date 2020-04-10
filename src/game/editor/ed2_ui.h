@@ -37,12 +37,10 @@ struct CUIIntegerInput
 {
 	CUITextInput m_TextInput;
 	char m_aIntBuff[32];
-	int m_Value;
 
 	CUIIntegerInput()
 	{
 		m_aIntBuff[0] = 0;
-		m_Value = 0;
 	}
 };
 

@@ -2022,6 +2022,8 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	bool ParallaxChanged = false;
 	ParallaxChanged |= UiIntegerInput(ButtonRect, &NewGroupParallaxX, &s_IntInpParallaxX);
 	ParallaxChanged |= UiIntegerInput(ButtonRect2, &NewGroupParallaxY, &s_IntInpParallaxY);
+	NewGroupParallaxX = clamp(NewGroupParallaxX, 0, 1000);
+	NewGroupParallaxY = clamp(NewGroupParallaxY, 0, 1000);
 	if(ParallaxChanged)
 		EditHistCondGroupChangeParallax(m_UiSelectedGroupID, NewGroupParallaxX, NewGroupParallaxY, false);
 
@@ -2057,6 +2059,8 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	bool OffsetChanged = false;
 	OffsetChanged |= UiIntegerInput(ButtonRect, &NewGroupOffsetX, &s_IntInpOffsetX);
 	OffsetChanged |= UiIntegerInput(ButtonRect2, &NewGroupOffsetY, &s_IntInpOffsetY);
+	NewGroupOffsetX = clamp(NewGroupOffsetX, -99999, 99999);
+	NewGroupOffsetY = clamp(NewGroupOffsetY, -99999, 99999);
 	if(OffsetChanged)
 		EditHistCondGroupChangeOffset(m_UiSelectedGroupID, NewGroupOffsetX, NewGroupOffsetY, false);
 
