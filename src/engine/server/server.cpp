@@ -151,7 +151,7 @@ void CServerBan::InitServerBan(IConsole *pConsole, IStorage *pStorage, CServer* 
 	m_pServer = pServer;
 
 	// overwrites base command, todo: improve this
-	Console()->Register("ban", "s?ir", CFGFLAG_SERVER|CFGFLAG_STORE, ConBanExt, this, "Ban player with IP/IP range/client id for x minutes for any reason");
+	Console()->Register("ban", "s[id|ip|range] ?i[minutes] r[reason]", CFGFLAG_SERVER|CFGFLAG_STORE, ConBanExt, this, "Ban player with IP/IP range/client id for x minutes for any reason");
 }
 
 template<class T>
@@ -496,6 +496,10 @@ int CServer::SendMsg(CMsgPacker *pMsg, int Flags, int ClientID)
 	if(!pMsg)
 		return -1;
 
+	// drop invalid packet
+	if(ClientID != -1 && (ClientID < 0 || ClientID >= MAX_CLIENTS || m_aClients[ClientID].m_State == CClient::STATE_EMPTY || m_aClients[ClientID].m_Quitting))
+		return 0;
+
 	mem_zero(&Packet, sizeof(CNetChunk));
 	Packet.m_ClientID = ClientID;
 	Packet.m_pData = pMsg->Data();
@@ -665,6 +669,13 @@ void CServer::DoSnapshot()
 int CServer::NewClientCallback(int ClientID, void *pUser)
 {
 	CServer *pThis = (CServer *)pUser;
+
+	// Remove non human player on same slot
+	if(pThis->GameServer()->IsClientBot(ClientID))
+	{
+		pThis->GameServer()->OnClientDrop(ClientID, "removing dummy");
+	}
+
 	pThis->m_aClients[ClientID].m_State = CClient::STATE_AUTH;
 	pThis->m_aClients[ClientID].m_aName[0] = 0;
 	pThis->m_aClients[ClientID].m_aClan[0] = 0;
@@ -676,6 +687,7 @@ int CServer::NewClientCallback(int ClientID, void *pUser)
 	pThis->m_aClients[ClientID].m_NoRconNote = false;
 	pThis->m_aClients[ClientID].m_Quitting = false;
 	pThis->m_aClients[ClientID].Reset();
+
 	return 0;
 }
 
@@ -1234,7 +1246,7 @@ const char *CServer::GetMapName()
 
 int CServer::LoadMap(const char *pMapName)
 {
-	char aBuf[512];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
 
 	// check for valid standard map
@@ -1282,6 +1294,15 @@ int CServer::LoadMap(const char *pMapName)
 void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, CConfig *pConfig, IConsole *pConsole)
 {
 	m_Register.Init(pNetServer, pMasterServer, pConfig, pConsole);
+}
+
+void CServer::InitInterfaces(CConfig *pConfig, IConsole *pConsole, IGameServer *pGameServer, IEngineMap *pMap, IStorage *pStorage)
+{
+	m_pConfig = pConfig;
+	m_pConsole = pConsole;
+	m_pGameServer = pGameServer;
+	m_pMap = pMap;
+	m_pStorage = pStorage;
 }
 
 int CServer::Run()
@@ -1497,7 +1518,7 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 	if(pFilename[0] == '.') // hidden files
 		return 0;
 
-	char aFilename[512];
+	char aFilename[IO_MAX_PATH_LENGTH];
 	if(pUserdata->m_aName[0])
 		str_format(aFilename, sizeof(aFilename), "%s/%s", pUserdata->m_aName, pFilename);
 	else
@@ -1508,7 +1529,7 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 		CSubdirCallbackUserdata Userdata;
 		Userdata.m_pServer = pThis;
 		str_copy(Userdata.m_aName, aFilename, sizeof(Userdata.m_aName));
-		char FindPath[512];
+		char FindPath[IO_MAX_PATH_LENGTH];
 		str_format(FindPath, sizeof(FindPath), "maps/%s/", aFilename);
 		pThis->m_pStorage->ListDirectory(IStorage::TYPE_ALL, FindPath, MapListEntryCallback, &Userdata);
 		return 0;
@@ -1738,19 +1759,13 @@ void CServer::ConchainRconPasswordSet(IConsole::IResult *pResult, void *pUserDat
 
 void CServer::RegisterCommands()
 {
-	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
-	m_pConsole = Kernel()->RequestInterface<IConsole>();
-	m_pGameServer = Kernel()->RequestInterface<IGameServer>();
-	m_pMap = Kernel()->RequestInterface<IEngineMap>();
-	m_pStorage = Kernel()->RequestInterface<IStorage>();
-
 	// register console commands
-	Console()->Register("kick", "i?r", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
+	Console()->Register("kick", "i[id] ?r[reason]", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
 	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
 	Console()->Register("logout", "", CFGFLAG_SERVER|CFGFLAG_BASICACCESS, ConLogout, this, "Logout of rcon");
 
-	Console()->Register("record", "?s", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
+	Console()->Register("record", "?s[file]", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
 	Console()->Register("stoprecord", "", CFGFLAG_SERVER, ConStopRecord, this, "Stop recording");
 
 	Console()->Register("reload", "", CFGFLAG_SERVER, ConMapReload, this, "Reload the map");
@@ -1865,6 +1880,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pEngineMasterServer->Init();
 	pEngineMasterServer->Load();
 
+	pServer->InitInterfaces(pConfigManager->Values(), pConsole, pGameServer, pEngineMap, pStorage);
 	if(!UseDefaultConfig)
 	{
 		// register all console commands

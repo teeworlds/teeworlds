@@ -200,7 +200,9 @@ enum {
 
 	IOSEEK_START = 0,
 	IOSEEK_CUR = 1,
-	IOSEEK_END = 2
+	IOSEEK_END = 2,
+
+	IO_MAX_PATH_LENGTH = 512,
 };
 
 typedef struct IOINTERNAL *IOHANDLE;
@@ -1279,6 +1281,19 @@ void str_timestamp_format(char *buffer, int buffer_size, const char *format)
 GNUC_ATTRIBUTE((format(strftime, 3, 0)));
 void str_timestamp_ex(time_t time, char *buffer, int buffer_size, const char *format)
 GNUC_ATTRIBUTE((format(strftime, 4, 0)));
+
+/*
+	Function: str_span
+		Returns the length of the minimum initial segment that doesn't contain characters in set
+
+	Parameters:
+		str - String to search in
+		set - Set of characters to stop on
+
+	Remarks:
+		- Also stops on '\0'
+*/
+int str_span(const char *str, const char *set);
 
 #define FORMAT_TIME "%H:%M:%S"
 #define FORMAT_SPACE "%Y-%m-%d %H:%M:%S"

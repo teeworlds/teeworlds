@@ -19,7 +19,7 @@ bool CNetServer::Open(NETADDR BindAddr, CConfig *pConfig, IConsole *pConsole, IE
 	NETSOCKET Socket = net_udp_create(BindAddr, 0);
 	if(!Socket.type)
 		return false;
-	
+
 	// init
 	m_pNetBan = pNetBan;
 	Init(Socket, pConfig, pConsole, pEngine);
@@ -96,7 +96,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 	while(1)
 	{
 		// check for a chunk
-		if(m_RecvUnpacker.FetchChunk(pChunk))
+		if(m_RecvUnpacker.IsActive() && m_RecvUnpacker.FetchChunk(pChunk))
 			return 1;
 
 		// TODO: empty the recvinfo
@@ -177,6 +177,8 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 					NETADDR ThisAddr = Addr, OtherAddr;
 					int FoundAddr = 1;
 					ThisAddr.port = 0;
+
+					bool Continue = false;
 					for(int i = 0; i < NET_MAX_CLIENTS; i++)
 					{
 						if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
@@ -191,10 +193,14 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 								char aBuf[128];
 								str_format(aBuf, sizeof(aBuf), "Only %d players with the same IP are allowed", m_MaxClientsPerIP);
 								SendControlMsg(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, aBuf, str_length(aBuf) + 1);
-								return 0;
+								Continue = true;
+								break;
 							}
 						}
 					}
+
+					if(Continue)
+						continue;
 
 					for(int i = 0; i < NET_MAX_CLIENTS; i++)
 					{
@@ -207,7 +213,7 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 								m_pfnNewClient(i, m_UserPtr);
 							break;
 						}
-					}					
+					}
 				}
 				else if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
 					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, NET_TOKENFLAG_RESPONSEONLY);

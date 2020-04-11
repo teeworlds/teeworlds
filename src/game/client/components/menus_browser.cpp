@@ -2338,7 +2338,7 @@ int CMenus::GameIconScan(const char *pName, int IsDir, int DirType, void *pUser)
 	str_truncate(aGameIconName, sizeof(aGameIconName), pName, pSuffix - pName);
 
 	// add new game icon
-	char aBuf[512];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "ui/gametypes/%s", pName);
 	CImageInfo Info;
 	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType) || Info.m_Width != CGameIcon::GAMEICON_SIZE || (Info.m_Height != CGameIcon::GAMEICON_SIZE && Info.m_Height != CGameIcon::GAMEICON_OLDHEIGHT))

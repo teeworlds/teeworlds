@@ -124,8 +124,7 @@ enum
 
 	NET_CTRLMSG_KEEPALIVE=0,
 	NET_CTRLMSG_CONNECT=1,
-	NET_CTRLMSG_CONNECTACCEPT=2,
-	NET_CTRLMSG_ACCEPT=3,
+	NET_CTRLMSG_ACCEPT=2,
 	NET_CTRLMSG_CLOSE=4,
 	NET_CTRLMSG_TOKEN=5,
 
@@ -426,9 +425,9 @@ public:
 
 class CNetRecvUnpacker
 {
-public:
 	bool m_Valid;
 
+public:
 	NETADDR m_Addr;
 	CNetConnection *m_pConnection;
 	int m_CurrentChunk;
@@ -437,6 +436,7 @@ public:
 	unsigned char m_aBuffer[NET_MAX_PACKETSIZE];
 
 	CNetRecvUnpacker() { Clear(); }
+	bool IsActive() { return m_Valid; }
 	void Clear();
 	void Start(const NETADDR *pAddr, CNetConnection *pConnection, int ClientID);
 	int FetchChunk(CNetChunk *pChunk);

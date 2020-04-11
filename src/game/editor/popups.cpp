@@ -649,7 +649,7 @@ int CEditor::PopupNewFolder(CEditor *pEditor, CUIRect View)
 			// create the folder
 			if(*pEditor->m_FileDialogNewFolderName)
 			{
-				char aBuf[512];
+				char aBuf[IO_MAX_PATH_LENGTH];
 				str_format(aBuf, sizeof(aBuf), "%s/%s", pEditor->m_pFileDialogPath, pEditor->m_FileDialogNewFolderName);
 				if(pEditor->Storage()->CreateFolder(aBuf, IStorage::TYPE_SAVE))
 				{
@@ -1116,7 +1116,7 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 	if(pEditor->UI()->DoPickerLogic(&s_SVPicker, &SVPicker, &X, &Y))
 	{
 		hsv.y = X/SVPicker.w;
-		hsv.z = 1.0f - Y/SVPicker.h;	
+		hsv.z = 1.0f - Y/SVPicker.h;
 	}
 
 	// hue slider
@@ -1157,9 +1157,9 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 	static int s_HuePicker = 0;
 	if(pEditor->UI()->DoPickerLogic(&s_HuePicker, &HuePicker, &X, &Y))
 	{
-		hsv.x = 1.0f - Y/HuePicker.h;	
+		hsv.x = 1.0f - Y/HuePicker.h;
 	}
-	
+
 	// palette
 	static int s_Palette = 0;
 	pEditor->RenderTools()->DrawUIRect(&Palette, pEditor->m_SelectedColor, 0, 0.0f);

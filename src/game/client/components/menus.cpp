@@ -644,6 +644,31 @@ void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, co
 	*pOption = Value;
 }
 
+void CMenus::DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char* aLabels[], int Num, IScrollbarScale *pScale)
+{
+	int Value = clamp(*pOption, 0, Num - 1);
+	int Max = Num - 1;
+
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "%s: %s", pStr, aLabels[Value]);
+
+	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
+
+	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+
+	CUIRect Label, ScrollBar;
+	pRect->VSplitLeft(5.0f, 0, &Label);
+	Label.VSplitRight(60.0f, &Label, &ScrollBar);
+
+	Label.y += 2.0f;
+	UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
+
+	ScrollBar.VMargin(4.0f, &ScrollBar);
+	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, 0, Max)), 0, Max);
+
+	*pOption = clamp(Value, 0, Max);
+}
+
 float CMenus::DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback)
 {
 	CUIRect View = *pRect;
@@ -831,7 +856,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
 	// layout
 	CUIRect Handle;
-	pRect->VSplitLeft(min(pRect->w/8.0f, 33.0f), &Handle, 0);
+	pRect->VSplitLeft(max(min(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
 	Handle.x += (pRect->w-Handle.w)*Current;
 	Handle.HMargin(5.0f, &Handle);
 
@@ -859,10 +884,10 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 			OffsetX = UI()->MouseX()-Handle.x;
 		}
 	}
-	else if(UI()->MouseButton(0) && !InsideHandle && InsideRail)
+	else if(UI()->MouseButtonClicked(0) && !InsideHandle && InsideRail)
 	{
-		bool Left = UI()->MouseX() < Handle.x + Handle.w/2;
-		OffsetX = UI()->MouseX() - Handle.x + 8 * (Left ? 1 : -1);
+		OffsetX = Handle.w * 0.5f;
+		UI()->SetActiveItem(pID);
 		Grabbed = true;
 	}
 
@@ -1330,7 +1355,7 @@ int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser
 	if(IsDir || !str_endswith(pName, ".png"))
 		return 0;
 
-	char aBuf[512];
+	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "ui/menuimages/%s", pName);
 	CImageInfo Info;
 	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
@@ -1845,7 +1870,7 @@ int CMenus::Render()
 			Box.HSplitTop(2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &Save, &Box);
 			CServerInfo ServerInfo = {0};
-			str_copy(ServerInfo.m_aHostname, GetServerBrowserAddress(), sizeof(ServerInfo.m_aHostname));
+			str_copy(ServerInfo.m_aHostname, m_aPasswordPopupServerAddress, sizeof(ServerInfo.m_aHostname));
 			ServerBrowser()->UpdateFavoriteState(&ServerInfo);
 			const bool Favorite = ServerInfo.m_Favorite;
 			const int OnValue = Favorite ? 1 : 2;
@@ -1858,12 +1883,16 @@ int CMenus::Render()
 
 			static CButtonContainer s_ButtonAbort;
 			if(DoButton_Menu(&s_ButtonAbort, Localize("Abort"), 0, &Abort) || m_EscapePressed)
+			{
 				m_Popup = POPUP_NONE;
+				m_aPasswordPopupServerAddress[0] = '\0';
+			}
 
 			static CButtonContainer s_ButtonTryAgain;
 			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Try again"), 0, &TryAgain) || m_EnterPressed)
 			{
-				Client()->Connect(GetServerBrowserAddress());
+				Client()->Connect(ServerInfo.m_aHostname);
+				m_aPasswordPopupServerAddress[0] = '\0';
 			}
 		}
 		else if(m_Popup == POPUP_CONNECTING)
@@ -1929,7 +1958,7 @@ int CMenus::Render()
 			else
 			{
 				Box.HSplitTop(27.0f, 0, &Box);
-				UI()->DoLabel(&Box, GetServerBrowserAddress(), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
+				UI()->DoLabel(&Box, Client()->ServerAddress(), ButtonHeight*ms_FontmodHeight*0.8f, ExtraAlign);
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
@@ -2031,7 +2060,7 @@ int CMenus::Render()
 				// delete demo
 				if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
 				{
-					char aBuf[512];
+					char aBuf[IO_MAX_PATH_LENGTH];
 					str_format(aBuf, sizeof(aBuf), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
 					if(Storage()->RemoveFile(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType))
 					{
@@ -2073,10 +2102,10 @@ int CMenus::Render()
 					// rename demo
 					if(m_DemolistSelectedIndex >= 0 && !m_DemolistSelectedIsDir)
 					{
-						char aBufOld[512];
+						char aBufOld[IO_MAX_PATH_LENGTH];
 						str_format(aBufOld, sizeof(aBufOld), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
 						int Length = str_length(m_aCurrentDemoFile);
-						char aBufNew[512];
+						char aBufNew[IO_MAX_PATH_LENGTH];
 						if(Length <= 4 || m_aCurrentDemoFile[Length-5] != '.' || str_comp_nocase(m_aCurrentDemoFile+Length-4, "demo"))
 							str_format(aBufNew, sizeof(aBufNew), "%s/%s.demo", m_aCurrentDemoFolder, m_aCurrentDemoFile);
 						else
@@ -2206,7 +2235,7 @@ int CMenus::Render()
 				// delete demo
 				if(m_pSelectedSkin)
 				{
-					char aBuf[512];
+					char aBuf[IO_MAX_PATH_LENGTH];
 					str_format(aBuf, sizeof(aBuf), "skins/%s.json", m_pSelectedSkin->m_aName);
 					if(Storage()->RemoveFile(aBuf, IStorage::TYPE_SAVE))
 					{
@@ -2369,12 +2398,15 @@ void CMenus::OnStateChange(int NewState, int OldState)
 	{
 		if(OldState >= IClient::STATE_ONLINE && NewState < IClient::STATE_QUITING)
 			UpdateMusicState();
+
 		m_Popup = POPUP_NONE;
+
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)
 		{
 			if(str_find(Client()->ErrorString(), "password"))
 			{
 				m_Popup = POPUP_PASSWORD;
+				str_copy(m_aPasswordPopupServerAddress, Client()->ServerAddress(), sizeof(m_aPasswordPopupServerAddress));
 				UI()->SetHotItem(&Config()->m_Password);
 				UI()->SetActiveItem(&Config()->m_Password);
 			}

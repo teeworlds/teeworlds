@@ -111,7 +111,7 @@ void CFileCollection::AddEntry(int64 Timestamp)
 		// remove old file
 		if(m_NumTimestamps == m_MaxEntries)
 		{
-			char aBuf[512];
+			char aBuf[IO_MAX_PATH_LENGTH];
 			char aTimestring[TIMESTAMP_LENGTH];
 			BuildTimestring(m_aTimestamps[0], aTimestring);
 			str_format(aBuf, sizeof(aBuf), "%s/%s_%s%s", m_aPath, m_aFileDesc, aTimestring, m_aFileExt);

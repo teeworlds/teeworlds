@@ -14,16 +14,15 @@ class CStorage : public IStorage
 public:
 	enum
 	{
-		MAX_PATHS = 16,
-		MAX_PATH_LENGTH = 512
+		MAX_PATHS = 16
 	};
 
-	char m_aaStoragePaths[MAX_PATHS][MAX_PATH_LENGTH];
+	char m_aaStoragePaths[MAX_PATHS][IO_MAX_PATH_LENGTH];
 	int m_NumPaths;
-	char m_aDataDir[MAX_PATH_LENGTH];
-	char m_aUserDir[MAX_PATH_LENGTH];
-	char m_aCurrentDir[MAX_PATH_LENGTH];
-	char m_aAppDir[MAX_PATH_LENGTH];
+	char m_aDataDir[IO_MAX_PATH_LENGTH];
+	char m_aUserDir[IO_MAX_PATH_LENGTH];
+	char m_aCurrentDir[IO_MAX_PATH_LENGTH];
+	char m_aAppDir[IO_MAX_PATH_LENGTH];
 
 	CStorage()
 	{
@@ -64,7 +63,7 @@ public:
 		{
 			if(m_NumPaths && (!m_aaStoragePaths[TYPE_SAVE][0] || !fs_makedir_recursive(m_aaStoragePaths[TYPE_SAVE])))
 			{
-				char aPath[MAX_PATH_LENGTH];
+				char aPath[IO_MAX_PATH_LENGTH];
 				if(StorageType == STORAGETYPE_CLIENT)
 				{
 					fs_makedir(GetPath(TYPE_SAVE, "screenshots", aPath, sizeof(aPath)));
@@ -95,7 +94,7 @@ public:
 		if(!File)
 		{
 			// check usable path in argv[0]
-			char aBuffer[MAX_PATH_LENGTH];
+			char aBuffer[IO_MAX_PATH_LENGTH];
 			str_copy(aBuffer, m_aAppDir, sizeof(aBuffer));
 			str_append(aBuffer, "/storage.cfg", sizeof(aBuffer));
 			File = io_open(aBuffer, IOFLAG_READ);
@@ -154,7 +153,7 @@ public:
 			{
 				if(!IsDuplicatePath(m_aUserDir))
 				{
-					str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserDir, MAX_PATH_LENGTH);
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aUserDir, IO_MAX_PATH_LENGTH);
 					dbg_msg("storage", "added path '$USERDIR' ('%s')", m_aUserDir);
 				}
 				else
@@ -167,7 +166,7 @@ public:
 			{
 				if(!IsDuplicatePath(m_aDataDir))
 				{
-					str_copy(m_aaStoragePaths[m_NumPaths++], m_aDataDir, MAX_PATH_LENGTH);
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aDataDir, IO_MAX_PATH_LENGTH);
 					dbg_msg("storage", "added path '$DATADIR' ('%s')", m_aDataDir);
 				}
 				else
@@ -180,7 +179,7 @@ public:
 			{
 				if(!IsDuplicatePath(m_aCurrentDir))
 				{
-					str_copy(m_aaStoragePaths[m_NumPaths++], m_aCurrentDir, MAX_PATH_LENGTH);
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aCurrentDir, IO_MAX_PATH_LENGTH);
 					dbg_msg("storage", "added path '$CURRENTDIR' ('%s')", m_aCurrentDir);
 				}
 				else
@@ -193,7 +192,7 @@ public:
 			{
 				if(!IsDuplicatePath(m_aAppDir))
 				{
-					str_copy(m_aaStoragePaths[m_NumPaths++], m_aAppDir, MAX_PATH_LENGTH);
+					str_copy(m_aaStoragePaths[m_NumPaths++], m_aAppDir, IO_MAX_PATH_LENGTH);
 					dbg_msg("storage", "added path '$APPDIR' ('%s')", m_aAppDir);
 				}
 				else
@@ -206,7 +205,7 @@ public:
 			{
 				if(!IsDuplicatePath(pPath))
 				{
-					str_copy(m_aaStoragePaths[m_NumPaths++], pPath, MAX_PATH_LENGTH);
+					str_copy(m_aaStoragePaths[m_NumPaths++], pPath, IO_MAX_PATH_LENGTH);
 					dbg_msg("storage", "added path '%s'", pPath);
 				}
 				else
@@ -223,7 +222,7 @@ public:
 			if(pArgv0[i] == '/' || pArgv0[i] == '\\')
 				Pos = i;
 
-		if(Pos < MAX_PATH_LENGTH)
+		if(Pos < IO_MAX_PATH_LENGTH)
 		{
 			str_copy(m_aAppDir, pArgv0, Pos+1);
 			if(!fs_is_dir(m_aAppDir))
@@ -249,7 +248,7 @@ public:
 
 		// 3) check for usable path in argv[0]
 		{
-			char aBaseDir[MAX_PATH_LENGTH];
+			char aBaseDir[IO_MAX_PATH_LENGTH];
 			str_copy(aBaseDir, m_aAppDir, sizeof(aBaseDir));
 			str_format(m_aDataDir, sizeof(m_aDataDir), "%s/data", aBaseDir);
 			str_append(aBaseDir, "/data/mapres", sizeof(aBaseDir));
@@ -294,7 +293,7 @@ public:
 
 	virtual void ListDirectory(int Type, const char *pPath, FS_LISTDIR_CALLBACK pfnCallback, void *pUser)
 	{
-		char aBuffer[MAX_PATH_LENGTH];
+		char aBuffer[IO_MAX_PATH_LENGTH];
 		if(Type == TYPE_ALL)
 		{
 			// list all available directories
@@ -334,7 +333,7 @@ public:
 	// of one of the storage paths.
 	virtual IOHANDLE OpenFile(const char *pFilename, int Flags, int Type, char *pBuffer = 0, int BufferSize = 0, FCheckCallback pfnCheckCB = 0, const void *pCheckCBData = 0)
 	{
-		char aBuffer[MAX_PATH_LENGTH];
+		char aBuffer[IO_MAX_PATH_LENGTH];
 		if(!pBuffer)
 		{
 			pBuffer = aBuffer;
@@ -442,8 +441,8 @@ public:
 				return 0;
 
 			// search within the folder
-			char aBuf[MAX_PATH_LENGTH];
-			char aPath[MAX_PATH_LENGTH];
+			char aBuf[IO_MAX_PATH_LENGTH];
+			char aPath[IO_MAX_PATH_LENGTH];
 			str_format(aPath, sizeof(aPath), "%s/%s", Data.m_pPath, pName);
 			Data.m_pPath = aPath;
 			fs_listdir(Data.m_pStorage->GetPath(Type, aPath, aBuf, sizeof(aBuf)), FindFileCallback, Type, &Data);
@@ -481,7 +480,7 @@ public:
 
 		pCBData->m_pBuffer[0] = 0;
 
-		char aBuf[MAX_PATH_LENGTH];
+		char aBuf[IO_MAX_PATH_LENGTH];
 
 		if(Type == TYPE_ALL)
 		{
@@ -537,7 +536,7 @@ public:
 		if(Type < 0 || Type >= m_NumPaths)
 			return false;
 
-		char aBuffer[MAX_PATH_LENGTH];
+		char aBuffer[IO_MAX_PATH_LENGTH];
 		return !fs_remove(GetPath(Type, pFilename, aBuffer, sizeof(aBuffer)));
 	}
 
@@ -545,8 +544,8 @@ public:
 	{
 		if(Type < 0 || Type >= m_NumPaths)
 			return false;
-		char aOldBuffer[MAX_PATH_LENGTH];
-		char aNewBuffer[MAX_PATH_LENGTH];
+		char aOldBuffer[IO_MAX_PATH_LENGTH];
+		char aNewBuffer[IO_MAX_PATH_LENGTH];
 		return !fs_rename(GetPath(Type, pOldFilename, aOldBuffer, sizeof(aOldBuffer)), GetPath(Type, pNewFilename, aNewBuffer, sizeof (aNewBuffer)));
 	}
 
@@ -555,7 +554,7 @@ public:
 		if(Type < 0 || Type >= m_NumPaths)
 			return false;
 
-		char aBuffer[MAX_PATH_LENGTH];
+		char aBuffer[IO_MAX_PATH_LENGTH];
 		return !fs_makedir(GetPath(Type, pFoldername, aBuffer, sizeof(aBuffer)));
 	}
 

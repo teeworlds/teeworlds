@@ -92,7 +92,7 @@ bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, 
 		if(str_comp(pCurrent->m_aMapName, aMapName) == 0)
 		{
 			StandardMap = true;
-			char aBuffer[512]; // TODO: MAX_PATH_LENGTH (512) should be defined in a more central header and not in storage.cpp and editor.h
+			char aBuffer[IO_MAX_PATH_LENGTH];
 			if(pStorage->FindFile(aMapNameExt, "maps", StorageType, aBuffer, sizeof(aBuffer), &pCurrent->m_MapSha256, pCurrent->m_MapCrc, pCurrent->m_MapSize))
 				return true;
 		}

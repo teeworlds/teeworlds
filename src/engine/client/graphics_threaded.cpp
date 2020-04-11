@@ -42,7 +42,7 @@ void CGraphics_Threaded::FlushVertices()
 	int NumVerts = m_NumVertices;
 	m_NumVertices = 0;
 
-	CCommandBuffer::SCommand_Render Cmd;
+	CCommandBuffer::CRenderCommand Cmd;
 	Cmd.m_State = m_State;
 
 	if(m_Drawing == DRAWING_QUADS)
@@ -58,13 +58,13 @@ void CGraphics_Threaded::FlushVertices()
 	else
 		return;
 
-	Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+	Cmd.m_pVertices = (CCommandBuffer::CVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::CVertex)*NumVerts);
 	if(Cmd.m_pVertices == 0x0)
 	{
 		// kick command buffer and try again
 		KickCommandBuffer();
 
-		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+		Cmd.m_pVertices = (CCommandBuffer::CVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::CVertex)*NumVerts);
 		if(Cmd.m_pVertices == 0x0)
 		{
 			dbg_msg("graphics", "failed to allocate data for vertices");
@@ -78,7 +78,7 @@ void CGraphics_Threaded::FlushVertices()
 		// kick command buffer and try again
 		KickCommandBuffer();
 
-		Cmd.m_pVertices = (CCommandBuffer::SVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::SVertex)*NumVerts);
+		Cmd.m_pVertices = (CCommandBuffer::CVertex *)m_pCommandBuffer->AllocData(sizeof(CCommandBuffer::CVertex)*NumVerts);
 		if(Cmd.m_pVertices == 0x0)
 		{
 			dbg_msg("graphics", "failed to allocate data for vertices");
@@ -92,7 +92,7 @@ void CGraphics_Threaded::FlushVertices()
 		}
 	}
 
-	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(CCommandBuffer::SVertex)*NumVerts);
+	mem_copy(Cmd.m_pVertices, m_aVertices, sizeof(CCommandBuffer::CVertex)*NumVerts);
 }
 
 void CGraphics_Threaded::AddVertices(int Count)
@@ -102,7 +102,7 @@ void CGraphics_Threaded::AddVertices(int Count)
 		FlushVertices();
 }
 
-void CGraphics_Threaded::Rotate4(const CCommandBuffer::SPoint &rCenter, CCommandBuffer::SVertex *pPoints)
+void CGraphics_Threaded::Rotate4(const CCommandBuffer::CPoint &rCenter, CCommandBuffer::CVertex *pPoints)
 {
 	float c = cosf(m_Rotation);
 	float s = sinf(m_Rotation);
@@ -273,7 +273,7 @@ int CGraphics_Threaded::UnloadTexture(CTextureHandle *Index)
 	if(!Index->IsValid())
 		return 0;
 
-	CCommandBuffer::SCommand_Texture_Destroy Cmd;
+	CCommandBuffer::CTextureDestroyCommand Cmd;
 	Cmd.m_Slot = Index->Id();
 	m_pCommandBuffer->AddCommand(Cmd);
 
@@ -308,7 +308,7 @@ int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y
 	if(!TextureID.IsValid())
 		return 0;
 
-	CCommandBuffer::SCommand_Texture_Update Cmd;
+	CCommandBuffer::CTextureUpdateCommand Cmd;
 	Cmd.m_Slot = TextureID.Id();
 	Cmd.m_X = x;
 	Cmd.m_Y = y;
@@ -340,7 +340,7 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	m_FirstFreeTexture = m_aTextureIndices[Tex];
 	m_aTextureIndices[Tex] = -1;
 
-	CCommandBuffer::SCommand_Texture_Create Cmd;
+	CCommandBuffer::CTextureCreateCommand Cmd;
 	Cmd.m_Slot = Tex;
 	Cmd.m_Width = Width;
 	Cmd.m_Height = Height;
@@ -407,7 +407,7 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTexture(const char *pFilename,
 
 int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
 {
-	char aCompleteFilename[512];
+	char aCompleteFilename[IO_MAX_PATH_LENGTH];
 	unsigned char *pBuffer;
 	png_t Png; // ignore_convention
 
@@ -469,7 +469,7 @@ void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 	CImageInfo Image;
 	mem_zero(&Image, sizeof(Image));
 
-	CCommandBuffer::SCommand_Screenshot Cmd;
+	CCommandBuffer::CScreenshotCommand Cmd;
 	Cmd.m_pImage = &Image;
 	Cmd.m_X = 0; Cmd.m_Y = 0;
 	Cmd.m_W = -1; Cmd.m_H = -1;
@@ -510,7 +510,7 @@ void CGraphics_Threaded::TextureSet(CTextureHandle TextureID)
 
 void CGraphics_Threaded::Clear(float r, float g, float b)
 {
-	CCommandBuffer::SCommand_Clear Cmd;
+	CCommandBuffer::CClearCommand Cmd;
 	Cmd.m_Color.r = r;
 	Cmd.m_Color.g = g;
 	Cmd.m_Color.b = b;
@@ -617,7 +617,7 @@ void CGraphics_Threaded::QuadsSetSubsetFree(
 	// tileset fallback system
 	if(m_pBackend->GetTextureArraySize() > 1 && TextureIndex >= 0)
 		TilesetFallbackSystem(TextureIndex);
-	
+
 	m_State.m_TextureArrayIndex = m_TextureArrayIndex;
 
 	m_aTexture[0].u = x0; m_aTexture[0].v = y0;
@@ -642,7 +642,7 @@ void CGraphics_Threaded::QuadsDraw(CQuadItem *pArray, int Num)
 
 void CGraphics_Threaded::QuadsDrawTL(const CQuadItem *pArray, int Num)
 {
-	CCommandBuffer::SPoint Center;
+	CCommandBuffer::CPoint Center;
 
 	dbg_assert(m_Drawing == DRAWING_QUADS, "called Graphics()->QuadsDrawTL without begin");
 
@@ -926,7 +926,7 @@ void CGraphics_Threaded::ReadBackbuffer(unsigned char **ppPixels, int x, int y, 
 	CImageInfo Image;
 	mem_zero(&Image, sizeof(Image));
 
-	CCommandBuffer::SCommand_Screenshot Cmd;
+	CCommandBuffer::CScreenshotCommand Cmd;
 	Cmd.m_pImage = &Image;
 	Cmd.m_X = x; Cmd.m_Y = y;
 	Cmd.m_W = w; Cmd.m_H = h;
@@ -959,7 +959,7 @@ void CGraphics_Threaded::Swap()
 	}
 
 	// add swap command
-	CCommandBuffer::SCommand_Swap Cmd;
+	CCommandBuffer::CSwapCommand Cmd;
 	Cmd.m_Finish = m_pConfig->m_GfxFinish;
 	m_pCommandBuffer->AddCommand(Cmd);
 
@@ -971,7 +971,7 @@ bool CGraphics_Threaded::SetVSync(bool State)
 {
 	// add vsnc command
 	bool RetOk = 0;
-	CCommandBuffer::SCommand_VSync Cmd;
+	CCommandBuffer::CVSyncCommand Cmd;
 	Cmd.m_VSync = State ? 1 : 0;
 	Cmd.m_pRetOk = &RetOk;
 	m_pCommandBuffer->AddCommand(Cmd);
@@ -985,7 +985,7 @@ bool CGraphics_Threaded::SetVSync(bool State)
 // syncronization
 void CGraphics_Threaded::InsertSignal(semaphore *pSemaphore)
 {
-	CCommandBuffer::SCommand_Signal Cmd;
+	CCommandBuffer::CSignalCommand Cmd;
 	Cmd.m_pSemaphore = pSemaphore;
 	m_pCommandBuffer->AddCommand(Cmd);
 }
@@ -1016,7 +1016,7 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes, int Scre
 	mem_zero(&Image, sizeof(Image));
 
 	int NumModes = 0;
-	CCommandBuffer::SCommand_VideoModes Cmd;
+	CCommandBuffer::CVideoModesCommand Cmd;
 	Cmd.m_pModes = pModes;
 	Cmd.m_MaxModes = MaxModes;
 	Cmd.m_pNumModes = &NumModes;

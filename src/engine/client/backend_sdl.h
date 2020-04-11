@@ -75,9 +75,9 @@ private:
 class CCommandProcessorFragment_General
 {
 	void Cmd_Nop();
-	void Cmd_Signal(const CCommandBuffer::SCommand_Signal *pCommand);
+	void Cmd_Signal(const CCommandBuffer::CSignalCommand *pCommand);
 public:
-	bool RunCommand(const CCommandBuffer::SCommand * pBaseCommand);
+	bool RunCommand(const CCommandBuffer::CCommand * pBaseCommand);
 };
 
 // takes care of opengl related rendering
@@ -113,9 +113,9 @@ public:
 		CMD_INIT = CCommandBuffer::CMDGROUP_PLATFORM_OPENGL,
 	};
 
-	struct SCommand_Init : public CCommandBuffer::SCommand
+	struct CInitCommand : public CCommandBuffer::CCommand
 	{
-		SCommand_Init() : SCommand(CMD_INIT) {}
+		CInitCommand() : CCommand(CMD_INIT) {}
 		volatile int *m_pTextureMemoryUsage;
 		int *m_pTextureArraySize;
 	};
@@ -125,20 +125,20 @@ private:
 	static unsigned char Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp);
 	static void *Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData);
 
-	void SetState(const CCommandBuffer::SState &State);
+	void SetState(const CCommandBuffer::CState &State);
 
-	void Cmd_Init(const SCommand_Init *pCommand);
-	void Cmd_Texture_Update(const CCommandBuffer::SCommand_Texture_Update *pCommand);
-	void Cmd_Texture_Destroy(const CCommandBuffer::SCommand_Texture_Destroy *pCommand);
-	void Cmd_Texture_Create(const CCommandBuffer::SCommand_Texture_Create *pCommand);
-	void Cmd_Clear(const CCommandBuffer::SCommand_Clear *pCommand);
-	void Cmd_Render(const CCommandBuffer::SCommand_Render *pCommand);
-	void Cmd_Screenshot(const CCommandBuffer::SCommand_Screenshot *pCommand);
+	void Cmd_Init(const CInitCommand *pCommand);
+	void Cmd_Texture_Update(const CCommandBuffer::CTextureUpdateCommand *pCommand);
+	void Cmd_Texture_Destroy(const CCommandBuffer::CTextureDestroyCommand *pCommand);
+	void Cmd_Texture_Create(const CCommandBuffer::CTextureCreateCommand *pCommand);
+	void Cmd_Clear(const CCommandBuffer::CClearCommand *pCommand);
+	void Cmd_Render(const CCommandBuffer::CRenderCommand *pCommand);
+	void Cmd_Screenshot(const CCommandBuffer::CScreenshotCommand *pCommand);
 
 public:
 	CCommandProcessorFragment_OpenGL();
 
-	bool RunCommand(const CCommandBuffer::SCommand * pBaseCommand);
+	bool RunCommand(const CCommandBuffer::CCommand * pBaseCommand);
 };
 
 // takes care of sdl related commands
@@ -154,28 +154,28 @@ public:
 		CMD_SHUTDOWN,
 	};
 
-	struct SCommand_Init : public CCommandBuffer::SCommand
+	struct CInitCommand : public CCommandBuffer::CCommand
 	{
-		SCommand_Init() : SCommand(CMD_INIT) {}
+		CInitCommand() : CCommand(CMD_INIT) {}
 		SDL_Window *m_pWindow;
 		SDL_GLContext m_GLContext;
 	};
 
-	struct SCommand_Shutdown : public CCommandBuffer::SCommand
+	struct CShutdownCommand : public CCommandBuffer::CCommand
 	{
-		SCommand_Shutdown() : SCommand(CMD_SHUTDOWN) {}
+		CShutdownCommand() : CCommand(CMD_SHUTDOWN) {}
 	};
 
 private:
-	void Cmd_Init(const SCommand_Init *pCommand);
-	void Cmd_Shutdown(const SCommand_Shutdown *pCommand);
-	void Cmd_Swap(const CCommandBuffer::SCommand_Swap *pCommand);
-	void Cmd_VSync(const CCommandBuffer::SCommand_VSync *pCommand);
-	void Cmd_VideoModes(const CCommandBuffer::SCommand_VideoModes *pCommand);
+	void Cmd_Init(const CInitCommand *pCommand);
+	void Cmd_Shutdown(const CShutdownCommand *pCommand);
+	void Cmd_Swap(const CCommandBuffer::CSwapCommand *pCommand);
+	void Cmd_VSync(const CCommandBuffer::CVSyncCommand *pCommand);
+	void Cmd_VideoModes(const CCommandBuffer::CVideoModesCommand *pCommand);
 public:
 	CCommandProcessorFragment_SDL();
 
-	bool RunCommand(const CCommandBuffer::SCommand *pBaseCommand);
+	bool RunCommand(const CCommandBuffer::CCommand *pBaseCommand);
 };
 
 // command processor impelementation, uses the fragments to combine into one processor

@@ -116,7 +116,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	//
 	char m_aCurrentMap[256];
-	char m_aCurrentMapPath[256];
+	char m_aCurrentMapPath[IO_MAX_PATH_LENGTH];
 	SHA256_DIGEST m_CurrentMapSha256;
 	unsigned m_CurrentMapCrc;
 
@@ -124,8 +124,8 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	char m_aCmdConnect[256];
 
 	// map download
-	char m_aMapdownloadFilename[256];
-	char m_aMapdownloadName[256];
+	char m_aMapdownloadFilename[IO_MAX_PATH_LENGTH];
+	char m_aMapdownloadName[IO_MAX_PATH_LENGTH];
 	IOHANDLE m_MapdownloadFile;
 	int m_MapdownloadChunk;
 	int m_MapdownloadChunkNum;
@@ -238,6 +238,7 @@ public:
 	virtual void Connect(const char *pAddress);
 	void DisconnectWithReason(const char *pReason);
 	virtual void Disconnect();
+	const char *ServerAddress() const { return m_aServerAddressStr; }
 
 
 	virtual void GetServerInfo(CServerInfo *pServerInfo);

@@ -437,7 +437,7 @@ void CMapLayers::OnRender()
 					CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTMap->m_Data);
 					CServerInfo CurrentServerInfo;
 					Client()->GetServerInfo(&CurrentServerInfo);
-					char aFilename[256];
+					char aFilename[IO_MAX_PATH_LENGTH];
 					str_format(aFilename, sizeof(aFilename), "dumps/tilelayer_dump_%s-%d-%d-%dx%d.txt", CurrentServerInfo.m_aMap, g, l, pTMap->m_Width, pTMap->m_Height);
 					IOHANDLE File = Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 					if(File)
