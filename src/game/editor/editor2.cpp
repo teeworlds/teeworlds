@@ -2801,7 +2801,7 @@ void CEditor2::CUIFileSelect::GenerateListBoxEntries()
 	}
 }
 
-bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState)
+bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pPreviewRect)
 {
 	const float Padding = 20.0f;
 	const float FontSize = 7.0f;
@@ -2867,6 +2867,8 @@ bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState)
 	Preview.VSplitLeft(Padding/2, 0, &Preview);
 
 	Preview.h = Preview.w;
+	if(pPreviewRect)
+		*pPreviewRect = Preview;
 
 	{
 		CUIRect Label;

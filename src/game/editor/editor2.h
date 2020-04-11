@@ -155,7 +155,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	CUIFileSelect m_UiFileSelectState;
 
-	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState);
+	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pPreviewRect = 0);
 
 	bool m_UiDetailPanelIsOpen;
 
