@@ -1508,6 +1508,21 @@ char *fs_read_str(const char *name);
 int fs_file_time(const char *name, time_t *created, time_t *modified);
 
 /*
+	Function: fs_basename
+		Gets the basename(filename) for given path.
+
+	Parameters:
+		path - The path.
+
+	Returns:
+		Pointer inside the path to the start of the basename.
+
+	Remarks:
+		- Path is never modified
+*/
+char *fs_basename(char *path);
+
+/*
 	Group: Undocumented
 */
 

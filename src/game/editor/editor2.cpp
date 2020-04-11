@@ -289,6 +289,9 @@ void CEditor2::Render()
 	else if(m_Page == PAGE_ASSET_MANAGER)
 		RenderAssetManager();
 
+	// popups
+	RenderPopups();
+
 	// console
 	m_InputConsole.Render();
 
@@ -1489,9 +1492,6 @@ void CEditor2::RenderMapEditorUI()
 	}
 
 	UI()->ClipDisable(); // main view rect clip
-
-	// popups
-	RenderPopups();
 }
 
 void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
@@ -2774,13 +2774,16 @@ int CEditor2::CUIFileSelect::EditorListdirCallback(const CFsFileInfo* info, int 
 	return 0;
 }
 
-void CEditor2::CUIFileSelect::PopulateFileList(IStorage *pStorage, int StorageType)
+void CEditor2::CUIFileSelect::PopulateFileList(IStorage *pStorage)
 {
 	m_aFileList.clear();
-	pStorage->ListDirectoryFileInfo(StorageType, m_aPath, EditorListdirCallback, this);
+	pStorage->ListDirectoryFileInfo(m_StorageType, m_aPath, EditorListdirCallback, this);
 	GenerateListBoxEntries();
 
-	pStorage->GetCompletePath(IStorage::TYPE_SAVE, m_aPath, m_aCompletePath, sizeof(m_aCompletePath));
+	if(m_StorageType >= 0)
+		pStorage->GetCompletePath(m_StorageType, m_aPath, m_aCompletePath, sizeof(m_aCompletePath));
+	else // Can't really be more specific due to the way storage works
+		str_format(m_aCompletePath, sizeof(m_aCompletePath), "$STORAGE/%s", m_aPath);
 }
 
 void CEditor2::CUIFileSelect::GenerateListBoxEntries()
@@ -2833,13 +2836,13 @@ bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pP
 	static CUIButton s_BNewFolder;
 	if(UiButton(BNewFolder, "+", &s_BNewFolder, 15.0f))
 	{
-		pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+		pState->PopulateFileList(Storage());
 	}
 
 	static CUIButton s_BRefresh;
 	if(UiButton(BRefresh, "\xE2\x86\xBB", &s_BRefresh, 15.0f))
 	{
-		pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+		pState->PopulateFileList(Storage());
 	}
 
 	static CUIButton s_BPrev;
@@ -2917,7 +2920,7 @@ bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pP
 			pState->m_aPath[0] = '\0';
 
 		s_Browser.m_Selected = -1;
-		pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+		pState->PopulateFileList(Storage());
 	}
 
 	DrawText(Path, pState->m_aCompletePath, FontSize);
@@ -3008,12 +3011,13 @@ bool CEditor2::DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pP
 					sizeof(pState->m_aPath));
 			}
 
-			pState->PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+			pState->PopulateFileList(Storage());
 			s_Browser.m_Selected = pState->m_Selected = -1;
 		}
 		else
 		{
 			str_format(pState->m_aOutputPath, sizeof(pState->m_aOutputPath), "%s/%s", pState->m_aPath, pState->m_aFileList[Selected].m_aFilename);
+			dbg_msg("help", "%s", pState->m_aOutputPath);
 			return true;
 		}
 	}
@@ -3195,6 +3199,39 @@ void CEditor2::RenderPopupMapNew(void* pPopupData)
 	if(true)
 	{
 		Reset();
+		ExitPopup();
+	}
+}
+
+void CEditor2::RenderPopupAddImage(void *pPopupData)
+{
+	if(Input()->KeyPress(KEY_ESCAPE))
+	{
+		ExitPopup();
+		return;
+	}
+
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	// whole screen "button" that prevents clicking on other stuff
+	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5));
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
+
+	const float Scale = 5.0f/6.0f;
+	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f, UiScreenRect.w * Scale, UiScreenRect.h * Scale};
+
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
+
+	CUIRect TitleRect;
+	MainRect.HSplitTop(20.0f, &TitleRect, &MainRect);
+	DrawText(TitleRect, Localize("Add Image"), 10);
+
+	if(DoFileSelect(MainRect, &m_UiFileSelectState))
+	{
+		if(m_UiFileSelectState.m_aOutputPath[0])
+			EditAddImage(m_UiFileSelectState.m_aOutputPath);
 		ExitPopup();
 	}
 }
@@ -3399,17 +3436,19 @@ void CEditor2::RenderAssetManager()
 		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
 		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
 
-		static CUITextInput s_TextInputAdd;
-		static char aAddPath[256] = "grass_main.png";
-		UiTextInput(ButtonRect, aAddPath, sizeof(aAddPath), &s_TextInputAdd);
-
-		DetailRect.HSplitTop(ButtonHeight, &ButtonRect, &DetailRect);
-		DetailRect.HSplitTop(Spacing, 0, &DetailRect);
-
 		static CUIButton s_ButAdd;
 		if(UiButton(ButtonRect, Localize("Add image"), &s_ButAdd))
 		{
-			EditAddImage(aAddPath);
+			// Put this heavily duplicated code inside the constructor for the state
+			m_UiFileSelectState.m_pButtonText = Localize("Add");
+			m_UiFileSelectState.m_NewFile = false;
+			m_UiFileSelectState.m_Selected = -1;
+			str_copy(m_UiFileSelectState.m_aPath, "mapres", sizeof(m_UiFileSelectState.m_aPath));
+			m_UiFileSelectState.m_pListBoxEntries = 0;
+			m_UiFileSelectState.m_StorageType = IStorage::TYPE_ALL;
+			m_UiFileSelectState.PopulateFileList(Storage());
+
+			PushPopup(&CEditor2::RenderPopupAddImage, 0);
 		}
 	}
 
@@ -3920,8 +3959,8 @@ void CEditor2::UserMapLoad()
 	m_UiFileSelectState.m_Selected = -1;
 	str_copy(m_UiFileSelectState.m_aPath, "maps", sizeof(m_UiFileSelectState.m_aPath));
 	m_UiFileSelectState.m_pListBoxEntries = 0;
-
-	m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+	m_UiFileSelectState.m_StorageType = IStorage::TYPE_SAVE;
+	m_UiFileSelectState.PopulateFileList(Storage());
 
 	PushPopup(&CEditor2::RenderPopupMapLoad, &m_UiPopupMapLoad);
 }
@@ -3946,7 +3985,8 @@ void CEditor2::UserMapSaveAs()
 	m_UiFileSelectState.m_Selected = -1;
 	str_copy(m_UiFileSelectState.m_aPath, "maps", sizeof(m_UiFileSelectState.m_aPath));
 	m_UiFileSelectState.m_pListBoxEntries = 0;
-	m_UiFileSelectState.PopulateFileList(Storage(), IStorage::TYPE_SAVE);
+	m_UiFileSelectState.m_StorageType = IStorage::TYPE_SAVE;
+	m_UiFileSelectState.PopulateFileList(Storage());
 
 	PushPopup(&CEditor2::RenderPopupMapSaveAs, 0x0);
 }

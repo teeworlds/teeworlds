@@ -1837,6 +1837,12 @@ int fs_file_time(const char *name, time_t *created, time_t *modified)
 	return 0;
 }
 
+char *fs_basename(char *path)
+{
+    char *base = strrchr(path, '/');
+    return base ? base+1 : path;
+}
+
 void swap_endian(void *data, unsigned elem_size, unsigned num)
 {
 	char *src = (char*) data;
