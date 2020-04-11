@@ -309,7 +309,7 @@ public:
 
 	virtual void ListDirectoryFileInfo(int Type, const char *pPath, FS_LISTDIR_CALLBACK_FILEINFO pfnCallback, void *pUser)
 	{
-		char aBuffer[MAX_PATH_LENGTH];
+		char aBuffer[IO_MAX_PATH_LENGTH];
 		if(Type == TYPE_ALL)
 		{
 			// list all available directories
@@ -602,7 +602,7 @@ public:
 
 	virtual bool GetFileTime(const char *pFilename, int StorageType, time_t *pCreated, time_t *pModified)
 	{
-		char aBuf[MAX_PATH_LENGTH];
+		char aBuf[IO_MAX_PATH_LENGTH];
 		GetCompletePath(StorageType, pFilename, aBuf, sizeof(aBuf));
 
 		return !fs_file_time(aBuf, pCreated, pModified);

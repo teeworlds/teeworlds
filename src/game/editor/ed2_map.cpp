@@ -488,8 +488,8 @@ bool CEditorMap2::Load(const char* pFileName)
 		}
 		else
 		{
-			unsigned long DataSize = 0;
-			void *pData = File.GetData(pImg->m_ImageData, &DataSize);
+			void *pData = File.GetData(pImg->m_ImageData);
+			unsigned long DataSize = File.GetDataSize(pImg->m_ImageData);
 
 			// save embedded data
 			aImageEmbeddedCrc[i] = AssetsAddEmbeddedData(pData, DataSize);
