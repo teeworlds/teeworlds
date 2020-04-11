@@ -36,7 +36,7 @@ struct CUITextInput
 struct CUIIntegerInput
 {
 	CUITextInput m_TextInput;
-	char m_aIntBuff[32];
+	char m_aIntBuff[10]; // 10 clamps the int between -99999999 and 999999999, which should be more than enough. Do a 64bit version if it is not.
 
 	CUIIntegerInput()
 	{

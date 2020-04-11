@@ -24,6 +24,14 @@ struct CEditorMap2
 		MAX_EMBEDDED_FILES=64,
 	};
 
+	struct Limits
+	{
+		static const int GroupParallaxMin = -9999;
+		static const int GroupParallaxMax = 9999;
+		static const int GroupOffsetMin = -999999;
+		static const int GroupOffsetMax = 999999; // this breaks when high enough
+	};
+
 	// TODO: split this into CTileLayer and CQuadLayer (make one array of each to allocate them)
 	struct CLayer
 	{

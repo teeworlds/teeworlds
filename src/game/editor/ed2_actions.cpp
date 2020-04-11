@@ -715,6 +715,10 @@ void CEditor2::EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, in
 	if(NewParallaxX == Group.m_ParallaxX && NewParallaxY == Group.m_ParallaxY)
 		return;
 
+	// sanitize user input
+	NewParallaxX = clamp(NewParallaxX, CEditorMap2::Limits::GroupParallaxMin, CEditorMap2::Limits::GroupParallaxMax);
+	NewParallaxY = clamp(NewParallaxY, CEditorMap2::Limits::GroupParallaxMin, CEditorMap2::Limits::GroupParallaxMax);
+
 	const int OldParallaxX = Group.m_ParallaxX;
 	const int OldParallaxY = Group.m_ParallaxY;
 	Group.m_ParallaxX = NewParallaxX;
@@ -740,6 +744,10 @@ void CEditor2::EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int Ne
 	CEditorMap2::CGroup& Group = m_Map.m_aGroups.Get(GroupID);
 	if(NewOffsetX == Group.m_OffsetX && NewOffsetY == Group.m_OffsetY)
 		return;
+
+	// sanitize user input
+	NewOffsetX = clamp(NewOffsetX, CEditorMap2::Limits::GroupOffsetMin, CEditorMap2::Limits::GroupOffsetMax);
+	NewOffsetY = clamp(NewOffsetY, CEditorMap2::Limits::GroupOffsetMin, CEditorMap2::Limits::GroupOffsetMax);
 
 	const int OldOffsetX = Group.m_OffsetX;
 	const int OldOffsetY = Group.m_OffsetY;
