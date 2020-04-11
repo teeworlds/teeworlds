@@ -1279,7 +1279,6 @@ void CMenus::RenderLoading(int WorkedAmount)
 	s_LastLoadRender = Now;
 	static int64 s_LoadingStart = Now;
 
-	Graphics()->Clear(0.45f, 0.45f, 0.45f);
 	RenderBackground((Now-s_LoadingStart)/Freq);
 
 	CUIRect Screen = *UI()->Screen();
@@ -2534,6 +2533,7 @@ bool CMenus::CheckHotKey(int Key) const
 
 void CMenus::RenderBackground(float Time)
 {
+	Graphics()->Clear(0.45f, 0.45f, 0.45f);
 	float sw = 300*Graphics()->ScreenAspect();
 	float sh = 300;
 	Graphics()->MapScreen(0, 0, sw, sh);
