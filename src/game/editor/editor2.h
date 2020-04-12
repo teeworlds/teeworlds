@@ -129,6 +129,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 		int m_Selected;
 		char m_aPath[512];
 		char m_aCompletePath[512];
+		int m_StorageType;
 
 		void *m_pContext;
 
@@ -149,13 +150,13 @@ class CEditor2: public IEditor, public CEditor2Ui
 		}
 
 		static int EditorListdirCallback(const CFsFileInfo* info, int IsDir, int StorageType, void *pUser);
-		void PopulateFileList(IStorage *pStorage, int StorageType);
+		void PopulateFileList(IStorage *pStorage);
 		void GenerateListBoxEntries();
 	};
 
 	CUIFileSelect m_UiFileSelectState;
 
-	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState);
+	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pPreviewRect = 0);
 
 	bool m_UiDetailPanelIsOpen;
 
@@ -305,6 +306,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderPopupMapSaveAs(void* pPopupData);
 	void RenderPopupYesNo(void *pPopupData);
 	void RenderPopupMapNew(void *pPopupData);
+	void RenderPopupAddImage(void *pPopupData);
 
 	struct CUIPopupYesNo
 	{

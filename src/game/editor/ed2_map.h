@@ -201,7 +201,7 @@ struct CEditorMap2
 	void AssetsClearAndSetImages(CImageName* aName, CImageInfo* aInfo, u32* aImageEmbeddedCrc, int ImageCount);
 	u32 AssetsAddEmbeddedData(void* pData, u64 DataSize);
 	void AssetsClearEmbeddedFiles();
-	bool AssetsAddAndLoadImage(const char* pFilename); // also loads automap rules if there are any
+	bool AssetsAddAndLoadImage(const char* pFilePath); // also loads automap rules if there are any
 	void AssetsDeleteImage(int ImgID);
 	void AssetsLoadAutomapFileForImage(int ImgID);
 	void AssetsLoadMissingAutomapFiles();

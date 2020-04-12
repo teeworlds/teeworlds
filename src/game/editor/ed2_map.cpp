@@ -693,25 +693,24 @@ void CEditorMap2::AssetsClearEmbeddedFiles()
 	m_Assets.m_EmbeddedFileCount = 0;
 }
 
-bool CEditorMap2::AssetsAddAndLoadImage(const char* pFilename)
+bool CEditorMap2::AssetsAddAndLoadImage(const char* pFilepath)
 {
 	// TODO: return error ID
 	if(m_Assets.m_ImageCount > MAX_IMAGES-1)
 		return false;
 
-	const int StrLen = str_length(pFilename);
-	const bool EndsWithPng = StrLen > 4 && str_comp_nocase_num(pFilename+StrLen-4, ".png", 4) == 0;
-	if(!EndsWithPng)
+	if(!str_endswith(pFilepath, ".png"))
 	{
 		// TODO: can we load anything other than png files?
-		ed_dbg("ERROR: '%s' image file not supported", pFilename);
+		ed_dbg("ERROR: '%s' image file not supported", pFilepath);
 		return false;
 	}
 
+	const char *pFilename = fs_basename((char *)pFilepath);
 
 	CImageName ImgName;
 	mem_zero(&ImgName, sizeof(ImgName));
-	const int NameLen = min(StrLen-4, (int)sizeof(ImgName.m_Buff)-1);
+	const int NameLen = min(str_length(pFilename) - 4, (int)sizeof(ImgName.m_Buff) - 1);
 	memmove(ImgName.m_Buff, pFilename, NameLen);
 	ImgName.m_Buff[NameLen] = 0;
 	const u32 NameHash = fnv1a32(&ImgName, sizeof(ImgName));
@@ -722,7 +721,7 @@ bool CEditorMap2::AssetsAddAndLoadImage(const char* pFilename)
 	{
 		if(m_Assets.m_aImageNameHash[i] == NameHash)
 		{
-			ed_log("'%s' image file already loaded", pFilename);
+			ed_log("'%s' image file already loaded", pFilepath);
 			return false;
 		}
 	}
@@ -732,12 +731,9 @@ bool CEditorMap2::AssetsAddAndLoadImage(const char* pFilename)
 	m_Assets.m_aImageNameHash[ImgID] = NameHash;
 	m_Assets.m_aImageEmbeddedCrc[ImgID] = 0;
 
-	char aFilePath[256];
-	str_format(aFilePath, sizeof(aFilePath), "mapres/%s", pFilename);
-
 	CImageInfo ImgInfo;
 	IGraphics::CTextureHandle TexHnd;
-	if(Graphics()->LoadPNG(&ImgInfo, aFilePath, IStorage::TYPE_ALL))
+	if(Graphics()->LoadPNG(&ImgInfo, pFilepath, IStorage::TYPE_ALL))
 	{
 		const int TextureFlags = IGraphics::TEXLOAD_MULTI_DIMENSION;
 		ImgInfo.m_Format = CImageInfo::FORMAT_AUTO;
@@ -748,14 +744,14 @@ bool CEditorMap2::AssetsAddAndLoadImage(const char* pFilename)
 
 		if(!TexHnd.IsValid())
 		{
-			ed_dbg("LoadTextureRaw ERROR: could not load '%s' image file", aFilePath);
+			ed_dbg("LoadTextureRaw ERROR: could not load '%s' image file", pFilepath);
 			m_Assets.m_ImageCount--;
 			return false;
 		}
 	}
 	else
 	{
-		ed_dbg("LoadPNG ERROR: could not load '%s' image file", aFilePath);
+		ed_dbg("LoadPNG ERROR: could not load '%s' image file", pFilepath);
 		m_Assets.m_ImageCount--;
 		return false;
 	}
@@ -763,7 +759,7 @@ bool CEditorMap2::AssetsAddAndLoadImage(const char* pFilename)
 	m_Assets.m_aTextureHandle[ImgID] = TexHnd;
 	m_Assets.m_aTextureInfos[ImgID] = ImgInfo;
 
-	ed_dbg("Image '%s' loaded", aFilePath);
+	ed_dbg("Image '%s' loaded", pFilepath);
 
 	AssetsLoadAutomapFileForImage(ImgID);
 
