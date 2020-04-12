@@ -582,7 +582,7 @@ void CEditorMap2::Clear()
 	m_GroupIDListCount = 0;
 }
 
-void CEditorMap2::AssetsClearAndSetImages(CEditorMap2::CImageName* aName, CImageInfo* aInfo,
+void CEditorMap2::AssetsClearAndSetImages(CImageName* aName, CImageInfo* aInfo,
 	u32* aImageEmbeddedCrc, int ImageCount)
 {
 	dbg_assert(ImageCount <= MAX_IMAGES, "ImageCount > MAX_IMAGES");
@@ -617,7 +617,7 @@ void CEditorMap2::AssetsClearAndSetImages(CEditorMap2::CImageName* aName, CImage
 
 	for(int i = 0; i < ImageCount && i < MAX_IMAGES; i++)
 	{
-		const int TextureFlags = IGraphics::TEXLOAD_MULTI_DIMENSION;
+		m_Assets.m_aImageNameHash[i] = fnv1a32(&m_Assets.m_aImageNames[i], sizeof(m_Assets.m_aImageNames[i]));
 
 		if(aKeepTexHandle[i].IsValid())
 		{
@@ -625,6 +625,8 @@ void CEditorMap2::AssetsClearAndSetImages(CEditorMap2::CImageName* aName, CImage
 			m_Assets.m_aTextureHandle[i] = aKeepTexHandle[i];
 			continue;
 		}
+
+		const int TextureFlags = IGraphics::TEXLOAD_MULTI_DIMENSION;
 
 		if(m_Assets.m_aImageEmbeddedCrc[i] == 0) // external
 		{
@@ -655,9 +657,6 @@ void CEditorMap2::AssetsClearAndSetImages(CEditorMap2::CImageName* aName, CImage
 			m_Assets.m_aTextureHandle[i] = m_pGraphics->LoadTextureRaw(aInfo[i].m_Width, aInfo[i].m_Height,
 				aInfo[i].m_Format, pFile->m_pData, CImageInfo::FORMAT_RGBA, TextureFlags);
 		}
-
-		m_Assets.m_aImageNameHash[i] = fnv1a32(&m_Assets.m_aImageNames[i],
-			sizeof(m_Assets.m_aImageNames[i]));
 
 		dbg_assert(m_Assets.m_aTextureHandle[i].IsValid(), "Invalid texture");
 	}
@@ -768,10 +767,14 @@ bool CEditorMap2::AssetsAddAndLoadImage(const char* pFilepath)
 
 void CEditorMap2::AssetsDeleteImage(int ImgID)
 {
+	dbg_assert(ImgID >= 0 && ImgID < m_Assets.m_ImageCount, "ImgID out of bounds");
+
 	// TODO: use sparse arrays here as well?
+	// TODO: this is hard to manage, don't use so many arrays
 	Graphics()->UnloadTexture(&m_Assets.m_aTextureHandle[ImgID]);
 	const int SwappedID = m_Assets.m_ImageCount-1;
 	tl_swap(m_Assets.m_aImageNames[ImgID], m_Assets.m_aImageNames[SwappedID]);
+	tl_swap(m_Assets.m_aImageNameHash[ImgID], m_Assets.m_aImageNameHash[SwappedID]);
 	tl_swap(m_Assets.m_aImageEmbeddedCrc[ImgID], m_Assets.m_aImageEmbeddedCrc[SwappedID]);
 	tl_swap(m_Assets.m_aTextureHandle[ImgID], m_Assets.m_aTextureHandle[SwappedID]);
 	tl_swap(m_Assets.m_aTextureInfos[ImgID], m_Assets.m_aTextureInfos[SwappedID]);
