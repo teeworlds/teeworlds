@@ -1161,6 +1161,12 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 				else
 				{
+					if(m_MapdownloadFile)
+					{
+						io_close(m_MapdownloadFile);
+						Storage()->RemoveFile(m_aMapdownloadFilename, IStorage::TYPE_SAVE);
+					}
+
 					// start map download
 					FormatMapDownloadFilename(pMap, pMapSha256, MapCrc, m_aMapdownloadFilename, sizeof(m_aMapdownloadFilename));
 
@@ -1169,8 +1175,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", aBuf);
 
 					str_copy(m_aMapdownloadName, pMap, sizeof(m_aMapdownloadName));
-					if(m_MapdownloadFile)
-						io_close(m_MapdownloadFile);
 					m_MapdownloadFile = Storage()->OpenFile(m_aMapdownloadFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 					m_MapdownloadChunk = 0;
 					m_MapdownloadChunkNum = MapChunkNum;
