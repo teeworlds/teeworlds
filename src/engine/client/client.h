@@ -125,8 +125,9 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	// map download
 	char m_aMapdownloadFilename[IO_MAX_PATH_LENGTH];
+	char m_aMapdownloadFilenameTemp[IO_MAX_PATH_LENGTH];
 	char m_aMapdownloadName[IO_MAX_PATH_LENGTH];
-	IOHANDLE m_MapdownloadFile;
+	IOHANDLE m_MapdownloadFileTemp;
 	int m_MapdownloadChunk;
 	int m_MapdownloadChunkNum;
 	int m_MapDownloadChunkSize;
