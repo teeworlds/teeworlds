@@ -292,6 +292,9 @@ void CEditor2::Render()
 	// popups
 	RenderPopups();
 
+	// notifications
+	RenderNotifications();
+
 	// console
 	m_InputConsole.Render();
 
@@ -3119,8 +3122,10 @@ void CEditor2::RenderPopupMapSaveAs(void* pPopupData)
 			pOutput = aRevisedOutput;
 		}
 
-		// TODO: "Map saved" message or indicator of any kind
-		SaveMap(pOutput);
+		if(SaveMap(pOutput))
+			CreateNotification(Localize("Map saved"), 3);
+		else
+			CreateNotification(Localize("Failed to save map"), 3);
 		ExitPopup();
 	}
 }
@@ -4037,8 +4042,10 @@ void CEditor2::UserMapSave()
 	}
 	else
 	{
-		// TODO: "Map saved" message or indicator of any kind
-		SaveMap(m_Map.m_aPath);
+		if(SaveMap(m_Map.m_aPath))
+			CreateNotification(Localize("Map saved"), 3);
+		else
+			CreateNotification(Localize("Failed to save map"), 3);
 	}
 }
 
@@ -4224,6 +4231,85 @@ void CEditor2::RenderPopups()
 				m_UiPopupStack[m_UiPopupStackCount++] = Copy[i];
 			}
 		}
+	}
+}
+
+int CEditor2::CreateNotification(const char *pText, int Lifetime)
+{
+	int Slot = 0;
+	while(Slot < m_UiNotifications.Capacity() && m_UiNotifications[Slot].m_ID >= 0)
+		Slot++;
+
+	if(Slot == m_UiNotifications.Capacity())
+		return -1;
+
+	m_UiNotifications[Slot].m_ID = m_UiNotificationTotal++;
+	m_UiNotifications[Slot].m_pText = pText;
+	m_UiNotifications[Slot].m_Expires = m_LocalTime + Lifetime;
+
+	return m_UiNotifications[Slot].m_ID;
+}
+
+void CEditor2::DismissNotification(int ID)
+{
+	if(ID >= 0)
+	{
+		for(int i = 0; i < m_UiNotifications.Capacity(); i++)
+		{
+			if(m_UiNotifications[i].m_ID == ID)
+			{
+				m_UiNotifications[i].m_ID = -1;
+				break;
+			}
+		}
+	}
+	else
+	{
+		for(int i = 0; i < m_UiNotifications.Capacity(); i++)
+			m_UiNotifications[i].m_ID = -1;
+	}
+}
+
+float CEditor2::RenderNotification(const CUINotification &Notification, CUIRect Rect)
+{
+	dbg_assert(Rect.h == 0.0f && Rect.w > 0, "must pass a line");
+	const float FontSize = 15.0f;
+
+	const float TextH = FontSize * TextRender()->TextLineCount(0, FontSize, Notification.m_pText, Rect.w - 10.0f) + 10.0f;
+	const float H = max(TextH, 30.0f);
+	Rect.y -= H;
+	Rect.h = H;
+
+	DrawRectBorderOutside(Rect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
+
+	Rect.Margin(5.0f, &Rect);
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, Rect.x, Rect.y - FontSize * 0.25f, FontSize, TEXTFLAG_RENDER);
+	Cursor.m_LineWidth = Rect.w;
+	TextRender()->TextShadowed(&Cursor, Notification.m_pText, -1, vec2(0,0), vec4(0,0,0,0), vec4(1.0f, 1.0f, 1.0f, 1.0f));
+
+	return H;
+}
+
+void CEditor2::RenderNotifications()
+{
+	// We can sort this later if we want
+	CUIRect Start = {10.0f, m_UiScreenRect.h - 10.0f, m_UiScreenRect.w / 5, 0};
+	for(int i = 0; i < m_UiNotifications.Capacity(); i++)
+	{
+		CUINotification &Notification = m_UiNotifications[i];
+		if(Notification.m_ID < 0)
+			continue;
+
+		// Handle expiry
+		if(Notification.m_Expires > 0 && Notification.m_Expires < m_LocalTime)
+		{
+			Notification.m_ID = -1;
+			continue;
+		}
+
+		float H = RenderNotification(Notification, Start);
+		Start.y -= H + 10.0f;
 	}
 }
 
