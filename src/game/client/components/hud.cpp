@@ -656,6 +656,179 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	Graphics()->WrapNormal();
 }
 
+void CHud::RenderHealthAndAmmoFlat(const CNetObj_Character *pCharacter)
+{
+	#define RGBA255(r, g, b, a) (r) / 255.0f, (g) / 255.0f, (b) / 255.0f, (a) / 255.0f
+
+	const static vec4 C_COLOR_RED(RGBA255(208, 37, 18, 255));
+	const static vec4 C_COLOR_BLUE(RGBA255(18, 128, 208, 255));
+	const static vec4 C_COLOR_ORANGE(RGBA255(208, 98, 18, 255));
+	const static vec4 C_COLOR_LIME(RGBA255(163, 208, 18, 255));
+
+	const static float G_ALPHA_BOX = 0.40f;
+
+	if(!pCharacter)
+	{
+		return;
+	}
+
+	float Half = 300.0f * Graphics()->ScreenAspect() / 2.0f;
+
+	float x = Half - 160;
+	float y = 260;
+
+	x = 5;
+	y = 0;
+
+	float widthBlock = 30;
+	float heightBlock = 18;
+	float splitBlock = 2;
+
+	float imgSize = 12;
+
+	float split = 3;
+
+	// render health
+	{
+		// draw box
+		CUIRect Rect = {x, y, widthBlock, heightBlock};
+		vec4 color = pCharacter->m_Health > 5 ? C_COLOR_LIME : C_COLOR_ORANGE;
+		color.a = G_ALPHA_BOX;
+
+		Graphics()->BlendNormal();
+		RenderTools()->DrawUIRect(&Rect, color, 0, 0);
+
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		Graphics()->WrapClamp();
+
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// render health
+		RenderTools()->SelectSprite(SPRITE_HEALTH_FULL);
+		IGraphics::CQuadItem sprItem(x + split, y + heightBlock / 2 - imgSize / 2, imgSize, imgSize);
+		Graphics()->QuadsDrawTL(&sprItem, 1);
+
+		Graphics()->QuadsEnd();
+		Graphics()->WrapNormal();
+
+		// render text
+		char amount[10];
+		int fontSize = 10;
+
+		str_format(amount, sizeof(amount), "%d", min(pCharacter->m_Health, 10));
+		float w = TextRender()->TextWidth(0, fontSize, amount, -1, -1.0f);
+
+		CTextCursor Cursor;
+		float xTxt = x - split + widthBlock - w;
+		float yTxt = y + 2;
+
+		TextRender()->SetCursor(&Cursor, xTxt, yTxt, fontSize, TEXTFLAG_RENDER);
+		TextRender()->TextEx(&Cursor, amount, -1);
+	}
+
+	{
+		x += widthBlock;
+		x += splitBlock;
+	}
+
+	// render armor
+	{
+		// draw box
+		CUIRect Rect = {x, y, widthBlock, heightBlock};
+		vec4 color = pCharacter->m_Armor > 5 ? C_COLOR_LIME : (pCharacter->m_Armor > 0 ? C_COLOR_ORANGE : vec4(0.0f, 0.0f, 0.0f, G_ALPHA_BOX));
+		color.a = G_ALPHA_BOX;
+
+		Graphics()->BlendNormal();
+		RenderTools()->DrawUIRect(&Rect, color, 0, 0);
+
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		Graphics()->WrapClamp();
+
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// render health
+		RenderTools()->SelectSprite(SPRITE_ARMOR_FULL);
+		IGraphics::CQuadItem sprItem(x - split + widthBlock - imgSize, y + heightBlock / 2 - imgSize / 2, imgSize, imgSize);
+		Graphics()->QuadsDrawTL(&sprItem, 1);
+
+		Graphics()->QuadsEnd();
+		Graphics()->WrapNormal();
+
+		// render text
+		char amount[10];
+		int fontSize = 10;
+
+		str_format(amount, sizeof(amount), "%d", min(pCharacter->m_Armor, 10));
+		float w = TextRender()->TextWidth(0, fontSize, amount, -1, -1.0f);
+
+		CTextCursor Cursor;
+		float xTxt = x + split;
+		float yTxt = y + 2;
+
+		TextRender()->SetCursor(&Cursor, xTxt, yTxt, fontSize, TEXTFLAG_RENDER);
+		TextRender()->TextEx(&Cursor, amount, -1);
+	}
+
+	{
+		x -= widthBlock;
+		y += heightBlock;
+
+		x -= splitBlock;
+		y += splitBlock;
+	}
+
+	// render ammo
+	if(pCharacter->m_Weapon != WEAPON_NINJA)
+	{
+		bool isWphammer = pCharacter->m_Weapon == WEAPON_HAMMER;
+
+		imgSize = 20;
+
+		// draw box
+		CUIRect Rect = {x, y, widthBlock * 2 + splitBlock, heightBlock};
+		vec4 color = (pCharacter->m_AmmoCount <= 3 ? C_COLOR_RED : vec4(0.0f, 0.0f, 0.0f, G_ALPHA_BOX));
+		color.a = G_ALPHA_BOX;
+
+		Graphics()->BlendNormal();
+		RenderTools()->DrawUIRect(&Rect, isWphammer ? vec4(0.0f, 0.0f, 0.0f, 0.15f) : color, CUI::CORNER_B, 5.0f);
+
+		// set sprite
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		Graphics()->WrapClamp();
+
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		// render ammo
+		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[pCharacter->m_Weapon % NUM_WEAPONS].m_pSpriteBody);
+		RenderTools()->DrawSprite(x + imgSize / 2, y + heightBlock / 2 + 0, imgSize);
+
+		Graphics()->QuadsEnd();
+		Graphics()->WrapNormal();
+
+		if(!isWphammer)
+		{
+			// render text
+			char amount[10];
+			int fontSize = 10;
+
+			str_format(amount, sizeof(amount), "%d", min(pCharacter->m_AmmoCount, 10));
+
+			float w = TextRender()->TextWidth(0, fontSize, amount, -1, -1.0f);
+
+			CTextCursor Cursor;
+			float xTxt = x - split + widthBlock * 1 + splitBlock - w / 2;
+			float yTxt = y + 2;
+
+			TextRender()->SetCursor(&Cursor, xTxt, yTxt, fontSize, TEXTFLAG_RENDER);
+			TextRender()->TextEx(&Cursor, amount, -1);
+		}
+	}
+}
+
+
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
@@ -825,7 +998,15 @@ void CHud::OnRender()
 	{
 		if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 		{
-			RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
+			if(Config()->m_ClFlathud)
+			{
+				RenderHealthAndAmmoFlat(m_pClient->m_Snap.m_pLocalCharacter);
+			}
+			else
+			{
+				RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
+			}
+
 			if(Race)
 			{
 				RenderRaceTime(m_pClient->m_Snap.m_paPlayerInfosRace[m_pClient->m_LocalClientID]);
