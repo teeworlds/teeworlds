@@ -258,7 +258,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	else if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
 		bool AddEntry = false;
-		if(IsTypingCommand())
+		if(IsTypingCommand() && m_CommandManager.CommandCount() - m_FilteredCount)
 		{
 			if(ExecuteCommand())
 				AddEntry = true;
@@ -1331,7 +1331,7 @@ void CChat::Say(int Mode, const char *pLine)
 
 bool CChat::IsTypingCommand() const
 {
-	return m_Input.GetString()[0] == '/' && !m_IgnoreCommand && m_CommandManager.CommandCount() - m_FilteredCount;
+	return m_Input.GetString()[0] == '/' && !m_IgnoreCommand;
 }
 
 // chat commands handlers
