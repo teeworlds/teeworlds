@@ -245,7 +245,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 	if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_ESCAPE || Event.m_Key == KEY_MOUSE_1 || Event.m_Key == KEY_MOUSE_2))
 	{
-		if(IsTypingCommand())
+		if(IsTypingCommand() && m_CommandManager.CommandCount() - m_FilteredCount)
 		{
 			m_IgnoreCommand = true;
 		}
