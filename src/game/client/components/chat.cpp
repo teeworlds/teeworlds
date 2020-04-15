@@ -258,9 +258,10 @@ bool CChat::OnInput(IInput::CEvent Event)
 	else if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
 		bool AddEntry = false;
-		if(IsTypingCommand() && ExecuteCommand())
+		if(IsTypingCommand())
 		{
-			AddEntry = true;
+			if(ExecuteCommand())
+				AddEntry = true;
 		}
 		else
 		{
