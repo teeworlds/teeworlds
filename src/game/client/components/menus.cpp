@@ -857,7 +857,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	// layout
 	CUIRect Handle;
 	pRect->VSplitLeft(max(min(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
-	Handle.x += (pRect->w-Handle.w)*Current;
+	Handle.x += (pRect->w-Handle.w)*clamp(Current, 0.0f, 1.0f);
 	Handle.HMargin(5.0f, &Handle);
 
 	CUIRect Rail;
