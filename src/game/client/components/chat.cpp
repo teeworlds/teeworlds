@@ -1523,7 +1523,7 @@ bool CChat::CompleteCommand()
 		return false;
 
 	const CCommandManager::CCommand *pCommand = m_CommandManager.GetCommand(m_SelectedCommand);
-	if(!pCommand)
+	if(!pCommand || str_find(m_Input.GetString(), " "))
 		return false;
 
 	// autocomplete command
