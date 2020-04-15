@@ -761,7 +761,6 @@ void CHud::RenderHealthAndAmmoFlat(const CNetObj_Character *pCharacter)
 		int fontSize = 10;
 
 		str_format(amount, sizeof(amount), "%d", min(pCharacter->m_Armor, 10));
-		float w = TextRender()->TextWidth(0, fontSize, amount, -1, -1.0f);
 
 		CTextCursor Cursor;
 		float xTxt = x + split;
