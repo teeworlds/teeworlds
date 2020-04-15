@@ -258,7 +258,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	else if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER))
 	{
 		bool AddEntry = false;
-		if(IsTypingCommand() && m_SelectedCommand >= 0 && ExecuteCommand(true))
+		if(IsTypingCommand() && ExecuteCommand())
 		{
 			AddEntry = true;
 		}
@@ -291,7 +291,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	}
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_TAB)
 	{
-		if(IsTypingCommand() && m_SelectedCommand >= 0 && ExecuteCommand(false))
+		if(IsTypingCommand() && CompleteCommand())
 		{
 			// everything is handled within
 		}
@@ -1358,11 +1358,7 @@ void CChat::HandleCommands(float x, float y, float w)
 			NextActiveCommand(&m_CommandStart);
 		}
 
-		if(!DisplayCount)
-		{
-			m_SelectedCommand = -1;
-		}
-		else
+		if(DisplayCount > 0) // at least one command to display
 		{
 			CUIRect Rect = {x, y-(DisplayCount+1)*LineHeight, LineWidth, (DisplayCount+1)*LineHeight};
 			RenderTools()->DrawUIRect(&Rect,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_ALL, 3.0f);
@@ -1506,34 +1502,36 @@ void CChat::HandleCommands(float x, float y, float w)
 	}
 }
 
-bool CChat::ExecuteCommand(bool Execute)
+bool CChat::ExecuteCommand()
 {
-	if(!Execute && m_CommandManager.CommandCount() - m_FilteredCount == 0)
+	const char *pCommandStr = m_Input.GetString();
+	char aCommand[16];
+	str_format(aCommand, sizeof(aCommand), "%.*s", str_span(pCommandStr + 1, " "), pCommandStr + 1);
+	const CCommandManager::CCommand *pCommand = m_CommandManager.GetCommand(aCommand);
+	if(!pCommand)
+		return false;
+
+	// execute command
+	return !m_CommandManager.OnCommand(pCommand->m_aName, str_skip_whitespaces_const(str_skip_to_whitespace_const(pCommandStr)), -1);
+}
+
+bool CChat::CompleteCommand()
+{
+	if(m_CommandManager.CommandCount() - m_FilteredCount == 0)
 		return false;
 
 	const CCommandManager::CCommand *pCommand = m_CommandManager.GetCommand(m_SelectedCommand);
-	const char *pCommandStr = m_Input.GetString();
-	bool IsFullMatch = str_find(pCommandStr + 1, pCommand->m_aName); // if the command text is fully inside pCommandStr (aka, not a shortcut)
+	if(!pCommand)
+		return false;
 
-	if(IsFullMatch && Execute)
-	{
-		// execute command
-		return !m_CommandManager.OnCommand(pCommand->m_aName, str_skip_whitespaces_const(str_skip_to_whitespace_const(pCommandStr)), -1);
-	}
-	else if(!IsFullMatch && !Execute)
-	{
-		// autocomplete command
-		char aBuf[128];
-		str_copy(aBuf, "/", sizeof(aBuf));
-		str_append(aBuf, pCommand->m_aName, sizeof(aBuf));
-		str_append(aBuf, " ", sizeof(aBuf));
+	// autocomplete command
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "/%s ", pCommand->m_aName);
 
-		m_Input.Set(aBuf);
-		m_Input.SetCursorOffset(str_length(aBuf));
-		m_InputUpdate = true;
-		return true;
-	}
-	return false;
+	m_Input.Set(aBuf);
+	m_Input.SetCursorOffset(str_length(aBuf));
+	m_InputUpdate = true;
+	return true;
 }
 
 // callback functions for commands
