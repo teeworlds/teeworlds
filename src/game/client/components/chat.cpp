@@ -1371,11 +1371,12 @@ void CChat::HandleCommands(float x, float y, float w)
 				for(int i = End - m_CommandManager.CommandCount(); i >= 0; i--)
 					PreviousActiveCommand(&m_CommandStart);
 
-			if(m_SelectedCommand < m_CommandStart)
+			while(m_SelectedCommand < m_CommandStart)
 			{
 				PreviousActiveCommand(&m_CommandStart);
 			}
-			else if(m_SelectedCommand > End)
+
+			while(m_SelectedCommand > End)
 			{
 				NextActiveCommand(&m_CommandStart);
 				NextActiveCommand(&End);
