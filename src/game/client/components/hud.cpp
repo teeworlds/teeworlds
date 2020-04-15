@@ -802,7 +802,7 @@ void CHud::RenderHealthAndAmmoFlat(const CNetObj_Character *pCharacter)
 
 		// render ammo
 		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[pCharacter->m_Weapon % NUM_WEAPONS].m_pSpriteBody);
-		RenderTools()->DrawSprite(x + imgSize / 2, y + heightBlock / 2 + 0, imgSize);
+		RenderTools()->DrawSprite(x + imgSize / 2 + 2, y + heightBlock / 2 + 0, imgSize);
 
 		Graphics()->QuadsEnd();
 		Graphics()->WrapNormal();
