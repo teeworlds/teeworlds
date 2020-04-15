@@ -116,7 +116,7 @@ public:
         m_aCommands.clear();
     }
 
-    int CommandCount()
+    int CommandCount() const
     {
         return m_aCommands.size();
     }
@@ -140,7 +140,7 @@ public:
         return m_pConsole->ParseCommandArgs(pArgs, pCom->m_aArgsFormat, pCom->m_pfnCallback, &Context);
     }
 
-    int Filter(array<bool> &aFilter, const char *pStr)
+    int Filter(array<bool> &aFilter, const char *pStr, bool Exact)
     {
         dbg_assert(aFilter.size() == m_aCommands.size(), "filter size must match command count");
         if(!*pStr)
@@ -151,9 +151,15 @@ public:
         }
 
         int Filtered = 0;
-        for(int i = 0; i < m_aCommands.size(); i++)
+        if(Exact)
         {
-            Filtered += (aFilter[i] = str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName);
+            for(int i = 0; i < m_aCommands.size(); i++)
+                Filtered += (aFilter[i] = str_comp(m_aCommands[i].m_aName, pStr));
+        }
+        else
+        {
+            for(int i = 0; i < m_aCommands.size(); i++)
+                Filtered += (aFilter[i] = str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName);
         }
 
         return Filtered;

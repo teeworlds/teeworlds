@@ -1331,7 +1331,7 @@ void CChat::Say(int Mode, const char *pLine)
 
 bool CChat::IsTypingCommand() const
 {
-	return m_Input.GetString()[0] == '/' && !m_IgnoreCommand;
+	return m_Input.GetString()[0] == '/' && !m_IgnoreCommand && m_CommandManager.CommandCount() - m_FilteredCount;
 }
 
 // chat commands handlers
@@ -1666,7 +1666,10 @@ int CChat::FilterChatCommands(const char *pLine)
 {
 	m_aFilter.set_size(m_CommandManager.CommandCount());
 
-	m_FilteredCount = m_CommandManager.Filter(m_aFilter, pLine + 1);
+	char aCommand[16];
+	str_format(aCommand, sizeof(aCommand), "%.*s", str_span(pLine + 1, " "), pLine + 1);
+	m_FilteredCount = m_CommandManager.Filter(m_aFilter, aCommand, str_find(pLine, " ") ? true : false);
+
 	return m_FilteredCount;
 }
 
