@@ -2463,6 +2463,17 @@ void CMenus::ServerBrowserSortingOnUpdate()
 	m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND;
 }
 
+void CMenus::ConchainConnect(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	if(pResult->NumArguments() == 1)
+	{
+		CMenus *pMenus = (CMenus*)pUserData;
+		pMenus->SetServerBrowserAddress(pResult->GetString(0));
+		pMenus->m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND;
+	}
+	pfnCallback(pResult, pCallbackUserData);
+}
+
 void CMenus::ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
 {
 	pfnCallback(pResult, pCallbackUserData);
