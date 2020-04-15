@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+
 #include <engine/graphics.h>
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
@@ -502,7 +503,7 @@ void CHud::RenderVoting()
 
 void CHud::RenderCursor()
 {
-	if(!m_pClient->m_Snap.m_pLocalCharacter || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	if(!m_pClient->m_Snap.m_pLocalCharacter || !Config()->m_ClShowaim  || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
 	vec2 Pos = *m_pClient->m_pCamera->GetCenter();

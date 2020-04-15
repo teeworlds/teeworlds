@@ -471,7 +471,7 @@ void CMapLayers::OnRender()
 						RenderTools()->RenderTilemap(pTiles, pTMap->m_Width, pTMap->m_Height, 32.0f, Color, TILERENDERFLAG_EXTEND|LAYERRENDERFLAG_TRANSPARENT,
 														EnvelopeEval, this, pTMap->m_ColorEnv, pTMap->m_ColorEnvOffset);
 					}
-					else if(pLayer->m_Type == LAYERTYPE_QUADS)
+					else if(pLayer->m_Type == LAYERTYPE_QUADS && Config()->m_ClShowbackground)
 					{
 						CMapItemLayerQuads *pQLayer = (CMapItemLayerQuads *)pLayer;
 						if(pQLayer->m_Image == -1)
