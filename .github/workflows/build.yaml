@@ -152,3 +152,8 @@ jobs:
       run: ./bam/bam conf=release all
     - name: Test release
       run: ./build/x86_64/release/teeworlds_srv shutdown
+
+    - name: Create MacOS app using make_release.py
+      if: contains(matrix.os, 'macOS')
+      run: |
+        sudo python3 scripts/make_release.py 0.7.4 osx
