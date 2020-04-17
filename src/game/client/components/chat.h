@@ -97,6 +97,7 @@ class CChat : public CComponent
 	void HandleCommands(float x, float y, float w);
 	bool ExecuteCommand();
 	bool CompleteCommand();
+	void SendServerCommand(const char *pCommand, const char *pArgs);
 
 	static void Com_All(IConsole::IResult *pResult, void *pContext);
 	static void Com_Team(IConsole::IResult *pResult, void *pContext);

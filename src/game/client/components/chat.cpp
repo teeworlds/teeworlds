@@ -260,6 +260,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		bool AddEntry = false;
 		if(IsTypingCommand() && m_CommandManager.CommandCount() - m_FilteredCount)
 		{
+			//TODO: Add some error indication
 			if(ExecuteCommand())
 				AddEntry = true;
 		}
@@ -520,16 +521,20 @@ void CChat::ClearInput()
 	m_SelectedCommand = 0;
 }
 
+void CChat::SendServerCommand(const char *pCommand, const char *pArgs)
+{
+	CNetMsg_Cl_Command Msg;
+	Msg.m_Name = pCommand;
+	Msg.m_Arguments = pArgs;
+	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
+}
+
 void CChat::ServerCommandCallback(IConsole::IResult *pResult, void *pContext)
 {
 	CCommandManager::SCommandContext *pComContext = (CCommandManager::SCommandContext *)pContext;
 	CChat *pChatData = (CChat *)pComContext->m_pContext;
 
-	CNetMsg_Cl_Command Msg;
-	Msg.m_Name = pComContext->m_pCommand;
-	Msg.m_Arguments = pComContext->m_pArgs;
-	pChatData->Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
-
+	pChatData->SendServerCommand(pComContext->m_pCommand, pComContext->m_pArgs);
 	pChatData->m_Mode = CHAT_NONE;
 	pChatData->m_pClient->OnRelease();
 }
@@ -1513,8 +1518,19 @@ bool CChat::ExecuteCommand()
 	if(!pCommand)
 		return false;
 
-	// execute command
-	return !m_CommandManager.OnCommand(pCommand->m_aName, str_skip_whitespaces_const(str_skip_to_whitespace_const(pCommandStr)), -1);
+	// try execute command
+	bool Result = !m_CommandManager.OnCommand(pCommand->m_aName, str_skip_whitespaces_const(str_skip_to_whitespace_const(pCommandStr)), -1);
+
+	// fallback for servers sending malformed argument strings
+	if(!Result && pCommand->m_pfnCallback == ServerCommandCallback)
+	{
+		SendServerCommand(pCommand->m_aName, str_skip_whitespaces_const(str_skip_to_whitespace_const(pCommandStr)));
+		m_Mode = CHAT_NONE;
+		m_pClient->OnRelease();
+		Result = true;
+	}
+
+	return Result;
 }
 
 bool CChat::CompleteCommand()
