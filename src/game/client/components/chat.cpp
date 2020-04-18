@@ -525,7 +525,12 @@ void CChat::SendServerCommand(const char *pCommand, const char *pArgs)
 {
 	CNetMsg_Cl_Command Msg;
 	Msg.m_Name = pCommand;
-	Msg.m_Arguments = pArgs;
+
+	//TODO 0.8: don't send pCommand twice
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "/%s%s%s", pCommand, pArgs[0] ? " " : "", pArgs);
+	Msg.m_Arguments = aBuf;
+
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 }
 
