@@ -282,6 +282,17 @@ class CEditor2: public IEditor, public CEditor2Ui
 	int m_UiPopupStackCount;
 	int m_UiCurrentPopupID;
 
+	struct CUINotification
+	{
+		int m_ID;
+		const char *m_pText;
+		int m_Expires;
+
+		CUINotification() : m_ID(-1) {};
+	};
+	CPlainArray<CUINotification, 10> m_UiNotifications;
+	int m_UiNotificationTotal;
+
 	void RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer);
 
 	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
@@ -476,6 +487,11 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void PushPopup(CUIPopup::Func_PopupRender pFuncRender, void* pPopupData);
 	void ExitPopup();
 	void RenderPopups();
+
+	int CreateNotification(const char *pText, int Lifetime);
+	void DismissNotification(int ID);
+	float RenderNotification(const CUINotification &Notification, CUIRect Rect);
+	void RenderNotifications();
 
 	const char* GetLayerName(int LayerID);
 	const char* GetGroupName(int GroupID);
