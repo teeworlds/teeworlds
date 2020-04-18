@@ -1298,8 +1298,8 @@ void CChat::OnRender()
 
 		if(pLine->m_Highlighted)
 		{
-			TextRender()->TextColor(&TextColor);
-			TextRender()->TextOutlineColor(&ColorHighlightOutline);
+			TextRender()->TextColor(TextColor);
+			TextRender()->TextOutlineColor(ColorHighlightOutline);
 			TextRender()->TextEx(&Cursor, pLine->m_aText, -1);
 		}
 		else
