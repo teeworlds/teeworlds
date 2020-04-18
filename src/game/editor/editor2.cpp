@@ -107,6 +107,8 @@ void CEditor2::Init()
 	m_UiPopupStackCount = 0;
 	m_UiCurrentPopupID = -1;
 
+	m_UiNotificationNextID = 0;
+
 	// grenade pickup
 	{
 		const float SpriteW = g_pData->m_aSprites[SPRITE_PICKUP_GRENADE].m_W;
@@ -4243,7 +4245,7 @@ int CEditor2::CreateNotification(const char *pText, int Lifetime)
 	if(Slot == m_UiNotifications.Capacity())
 		return -1;
 
-	m_UiNotifications[Slot].m_ID = m_UiNotificationTotal++;
+	m_UiNotifications[Slot].m_ID = m_UiNotificationNextID++;
 	m_UiNotifications[Slot].m_pText = pText;
 	m_UiNotifications[Slot].m_Expires = m_LocalTime + Lifetime;
 

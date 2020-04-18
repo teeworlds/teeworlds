@@ -291,7 +291,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 		CUINotification() : m_ID(-1) {};
 	};
 	CPlainArray<CUINotification, 10> m_UiNotifications;
-	int m_UiNotificationTotal;
+	int m_UiNotificationNextID;
 
 	void RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer);
 
