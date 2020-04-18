@@ -140,7 +140,8 @@ void CEditor2::Init()
 	m_Map.Init(m_pStorage, m_pGraphics, m_pConsole);
 	m_Brush.m_aTiles.clear();
 
-	HistoryClear();
+	// init history
+	mem_zero(m_aHistoryEntryUsed, sizeof(m_aHistoryEntryUsed));
 	m_pHistoryEntryCurrent = 0x0;
 
 	ResetCamera();
@@ -4042,24 +4043,7 @@ void CEditor2::OnMapLoaded()
 	BrushClear();
 
 	// clear history
-	if(m_pHistoryEntryCurrent)
-	{
-		CHistoryEntry* pCurrent = m_pHistoryEntryCurrent->m_pNext;
-		while(pCurrent)
-		{
-			HistoryDeleteEntry(pCurrent);
-			pCurrent = pCurrent->m_pNext;
-		}
-
-		pCurrent = m_pHistoryEntryCurrent;
-		while(pCurrent)
-		{
-			HistoryDeleteEntry(pCurrent);
-			pCurrent = pCurrent->m_pPrev;
-		}
-		HistoryClear();
-		m_pHistoryEntryCurrent = 0x0;
-	}
+	HistoryClear();
 
 	// initialize history
 	m_pHistoryEntryCurrent = HistoryAllocEntry();
@@ -4122,7 +4106,16 @@ void CEditor2::UserMapSaveAs()
 
 void CEditor2::HistoryClear()
 {
+	for(int i = 0; i < MAX_HISTORY; i++)
+	{
+		if(m_aHistoryEntryUsed[i])
+		{
+			HistoryDeallocEntry(&m_aHistoryEntries[i]);
+		}
+	}
+
 	mem_zero(m_aHistoryEntryUsed, sizeof(m_aHistoryEntryUsed));
+	m_pHistoryEntryCurrent = 0x0;
 }
 
 CEditor2::CHistoryEntry *CEditor2::HistoryAllocEntry()
@@ -4204,12 +4197,6 @@ void CEditor2::HistoryRedo()
 	dbg_assert(m_pHistoryEntryCurrent != 0x0, "Current history entry is null");
 	if(m_pHistoryEntryCurrent->m_pNext)
 		HistoryRestoreToEntry(m_pHistoryEntryCurrent->m_pNext);
-}
-
-void CEditor2::HistoryDeleteEntry(CEditor2::CHistoryEntry* pEntry)
-{
-	mem_free(pEntry->m_pSnap);
-	mem_free(pEntry->m_pUiSnap);
 }
 
 CEditor2::CUISnapshot* CEditor2::SaveUiSnapshot()

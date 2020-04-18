@@ -468,7 +468,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
 	void HistoryUndo();
 	void HistoryRedo();
-	void HistoryDeleteEntry(CHistoryEntry* pEntry);
 
 	CUISnapshot* SaveUiSnapshot();
 	void RestoreUiSnapshot(CUISnapshot* pUiSnap);
