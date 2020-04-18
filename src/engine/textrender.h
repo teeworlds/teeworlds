@@ -52,6 +52,8 @@ public:
 	// old foolish interface
 	virtual void TextColor(float r, float g, float b, float a) = 0;
 	virtual void TextOutlineColor(float r, float g, float b, float a) = 0;
+	inline void TextColor(const vec4 *pColor) { TextColor(pColor->r, pColor->g, pColor->b, pColor->a); }
+	inline void TextOutlineColor(const vec4 *pColor) { TextOutlineColor(pColor->r, pColor->g, pColor->b, pColor->a); }
 	virtual void Text(void *pFontSetV, float x, float y, float Size, const char *pText, float LineWidth, bool MultiLine=true) = 0;
 	virtual float TextWidth(void *pFontSetV, float Size, const char *pText, int StrLength, float LineWidth) = 0;
 	virtual int TextLineCount(void *pFontSetV, float Size, const char *pText, float LineWidth) = 0;
