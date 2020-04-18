@@ -17,6 +17,8 @@
 #include "ed2_ui.h"
 #include "ed2_console.h"
 
+const float TileSize = 32;
+
 class IStorage;
 class IGraphics;
 class IInput;
@@ -304,12 +306,15 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
 
 	void RenderMap();
-	void RenderMapOverlay();
 	void RenderMapEditorUI();
 	void RenderMenuBar(CUIRect TopPanel);
 	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
 	void RenderHistory(CUIRect NavRect);
 	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
+
+	void DoToolStuff();
+	void DoToolSelect(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
+	void DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
 
 	void RenderPopupMenuFile(void* pPopupData);
 	void RenderPopupBrushPalette(void* pPopupData);
