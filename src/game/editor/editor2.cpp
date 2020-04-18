@@ -3211,7 +3211,10 @@ void CEditor2::RenderPopupMapNew(void* pPopupData)
 	// TODO: New map popup (template based)
 	if(true)
 	{
+		// TODO: make a function
 		Reset();
+		m_Map.LoadDefault();
+
 		ExitPopup();
 	}
 }

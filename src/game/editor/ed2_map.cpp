@@ -539,7 +539,7 @@ void CEditorMap2::LoadDefault()
 	BgQuadLayer.m_aQuads.add(SkyQuad);
 
 	BgGroup.m_apLayerIDs[BgGroup.m_LayerCount++] = BgQuadlayerID;
-	m_aGroups.Push(BgGroup);
+	m_aGroupIDList[m_GroupIDListCount++] = m_aGroups.Push(BgGroup);
 
 	CGroup GameGroup;
 	GameGroup.m_OffsetX = 0;
@@ -554,6 +554,8 @@ void CEditorMap2::LoadDefault()
 
 	m_GameGroupID = m_aGroups.Push(GameGroup);
 	m_GameLayerID = GameLayerID;
+
+	m_aGroupIDList[m_GroupIDListCount++] = m_GameGroupID;
 }
 
 void CEditorMap2::Clear()
