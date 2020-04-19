@@ -140,8 +140,7 @@ class CConsole : public IConsole
 		struct CQueueEntry
 		{
 			CQueueEntry *m_pNext;
-			FCommandCallback m_pfnCommandCallback;
-			void *m_pCommandUserData;
+			CCommand *m_pCommand;
 			CResult m_Result;
 		} *m_pFirst, *m_pLast;
 
