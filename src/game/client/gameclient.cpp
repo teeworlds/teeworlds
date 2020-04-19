@@ -205,6 +205,7 @@ static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 
 void CGameClient::OnConsoleInit()
 {
+	m_InitComplete = false;
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
@@ -393,18 +394,19 @@ void CGameClient::OnInit()
 	m_pEditor->Init();
 	m_pMenus->RenderLoading(2);
 
-	OnReset();
-
-	int64 End = time_get();
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "initialisation finished after %.2fms", ((End-Start)*1000)/(float)time_freq());
-	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
+	OnReset();	
 
 	m_ServerMode = SERVERMODE_PURE;
 
 	m_IsXmasDay = time_isxmasday();
 	m_IsEasterDay = time_iseasterday();
 	m_pMenus->RenderLoading();
+	m_InitComplete = true;
+
+	int64 End = time_get();
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "initialisation finished after %.2fms", ((End - Start) * 1000) / (float)time_freq());
+	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 }
 
 void CGameClient::OnUpdate()
@@ -550,10 +552,43 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 	TempCore.Write(pCharacter);
 }
 
+void CGameClient::StartRendering()
+{
+	if(Config()->m_GfxClear)
+	{
+		if(m_pMenus->IsBackgroundNeeded())
+			Graphics()->Clear(0.45f, 0.45f, 0.45f);
+		else
+			Graphics()->Clear(1.0f, 1.0f, 0.0f);
+	}
+	else if(m_pMenus->IsBackgroundNeeded())
+	{
+		// render background color
+		float sw = 300 * Graphics()->ScreenAspect();
+		float sh = 300;
+		Graphics()->MapScreen(0, 0, sw, sh);
+		Graphics()->TextureClear();
+		Graphics()->QuadsBegin();
+		vec4 Bottom(0.45f, 0.45f, 0.45f, 1.0f);
+		vec4 Top(0.45f, 0.45f, 0.45f, 1.0f);
+		IGraphics::CColorVertex Array[4] = {
+			IGraphics::CColorVertex(0, Top.r, Top.g, Top.b, Top.a),
+			IGraphics::CColorVertex(1, Top.r, Top.g, Top.b, Top.a),
+			IGraphics::CColorVertex(2, Bottom.r, Bottom.g, Bottom.b, Bottom.a),
+			IGraphics::CColorVertex(3, Bottom.r, Bottom.g, Bottom.b, Bottom.a) };
+		Graphics()->SetColorVertex(Array, 4);
+		IGraphics::CQuadItem QuadItem(0, 0, sw, sh);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+	}
+}
+
 void CGameClient::OnRender()
 {
 	// update the local character and spectate position
 	UpdatePositions();
+
+	StartRendering();
 
 	// render all systems
 	for(int i = 0; i < m_All.m_Num; i++)

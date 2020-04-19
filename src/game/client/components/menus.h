@@ -782,6 +782,7 @@ private:
 public:
 	void InitLoading(int TotalWorkAmount);
 	void RenderLoading(int WorkedAmount = 0);
+	bool IsBackgroundNeeded() const;
 
 	struct CSwitchTeamInfo
 	{

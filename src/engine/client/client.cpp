@@ -778,8 +778,6 @@ void CClient::Render()
 	}
 	else
 	{
-		if(Config()->m_GfxClear)
-			Graphics()->Clear(1,1,0);
 		GameClient()->OnRender();
 	}
 	DebugRender();

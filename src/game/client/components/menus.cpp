@@ -1279,7 +1279,7 @@ void CMenus::RenderLoading(int WorkedAmount)
 	s_LastLoadRender = Now;
 	static int64 s_LoadingStart = Now;
 
-	Graphics()->Clear(0.45f, 0.45f, 0.45f);
+	m_pClient->StartRendering();
 	RenderBackground((Now-s_LoadingStart)/Freq);
 
 	CUIRect Screen = *UI()->Screen();
@@ -1560,7 +1560,7 @@ int CMenus::Render()
 	}
 
 	// render background only if needed
-	if(Client()->State() != IClient::STATE_ONLINE && !m_pClient->m_pMapLayersBackGround->MenuMapLoaded())
+	if(IsBackgroundNeeded())
 		RenderBackground(Client()->LocalTime());
 
 	CUIRect TabBar, MainView;
@@ -2532,6 +2532,11 @@ bool CMenus::CheckHotKey(int Key) const
 	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !m_PrevCursorActive && !m_PopupActive &&
 		!Input()->KeyIsPressed(KEY_LSHIFT) && !Input()->KeyIsPressed(KEY_RSHIFT) && !Input()->KeyIsPressed(KEY_LCTRL) && !Input()->KeyIsPressed(KEY_RCTRL) && !Input()->KeyIsPressed(KEY_LALT) && // no modifier
 		Input()->KeyIsPressed(Key) && !m_pClient->m_pGameConsole->IsConsoleActive();
+}
+
+bool CMenus::IsBackgroundNeeded() const
+{ 
+	return !m_pClient->m_InitComplete || (Client()->State() != IClient::STATE_ONLINE && !m_pClient->m_pMapLayersBackGround->MenuMapLoaded());
 }
 
 void CMenus::RenderBackground(float Time)
