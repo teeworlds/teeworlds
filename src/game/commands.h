@@ -87,6 +87,9 @@ public:
         if(pCom)
             return 1;
 
+        if(!m_pConsole->ArgStringIsValid(pArgsFormat))
+            return 1;
+
         int Index = m_aCommands.add(CCommand(pCommand, pHelpText, pArgsFormat, pfnCallback, pContext));
         if(m_pfnNewCommandHook)
             m_pfnNewCommandHook(&m_aCommands[Index], m_pHookContext);
