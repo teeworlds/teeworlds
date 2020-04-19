@@ -745,6 +745,8 @@ void CChat::OnRender()
 {
 	if(Client()->State() < IClient::STATE_ONLINE)
 		return;
+	if(!Config()->m_ClShowChat)
+		return;
 
 	// send pending chat messages
 	if(m_PendingChatCounter > 0 && m_LastChatSend+time_freq() < time_get())
