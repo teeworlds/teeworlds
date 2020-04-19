@@ -1519,6 +1519,8 @@ void CMenus::OnInit()
 	Console()->Chain("snd_enable_music", ConchainUpdateMusicState, this);
 
 	RenderLoading(1);
+
+	ServerBrowser()->SetType(Config()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
 }
 
 void CMenus::PopupMessage(const char *pTopic, const char *pBody, const char *pButton, int Next)
@@ -1554,7 +1556,6 @@ int CMenus::Render()
 			// else the increased rendering time at startup prevents
 			// the network from being pumped effectively.
 			ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET|IServerBrowser::REFRESHFLAG_LAN);
-			ServerBrowser()->SetType(Config()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
 		}
 	}
 
