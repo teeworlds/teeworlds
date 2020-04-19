@@ -83,6 +83,7 @@ public:
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser) = 0;
 	virtual void StoreCommands(bool Store) = 0;
 
+	virtual bool ArgStringIsValid(const char *pFormat) = 0;
 	virtual bool LineIsValid(const char *pStr) = 0;
 	virtual void ExecuteLine(const char *pStr) = 0;
 	virtual void ExecuteLineFlag(const char *pStr, int FlagMask) = 0;
