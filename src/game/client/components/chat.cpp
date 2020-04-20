@@ -82,8 +82,8 @@ void CChat::OnReset()
 	m_CommandManager.AddCommand("mute", "Mute a player", "s[name]", &Com_Mute, this);
 	m_CommandManager.AddCommand("r", "Reply to a whisper", "?r[message]", &Com_Reply, this);
 	m_CommandManager.AddCommand("team", "Switch to team chat", "?r[message]", &Com_Team, this);
-	m_CommandManager.AddCommand("w", "Whisper another player", "s[name]", &Com_Whisper, this);
-	m_CommandManager.AddCommand("whisper", "Whisper another player", "s[name]", &Com_Whisper, this);
+	m_CommandManager.AddCommand("w", "Whisper another player", "r[name]", &Com_Whisper, this);
+	m_CommandManager.AddCommand("whisper", "Whisper another player", "r[name]", &Com_Whisper, this);
 }
 
 void CChat::OnMapLoad()
