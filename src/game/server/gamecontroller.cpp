@@ -932,7 +932,8 @@ void IGameController::CycleMap()
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "rotating map to %s", m_aMapWish);
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-		str_copy(Config()->m_SvMap, m_aMapWish, sizeof(Config()->m_SvMap));
+		Server()->ChangeMap(m_aMapWish);
+
 		m_aMapWish[0] = 0;
 		m_MatchCount = 0;
 		return;
@@ -991,7 +992,7 @@ void IGameController::CycleMap()
 	char aBufMsg[256];
 	str_format(aBufMsg, sizeof(aBufMsg), "rotating map to %s", &aBuf[i]);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-	str_copy(Config()->m_SvMap, &aBuf[i], sizeof(Config()->m_SvMap));
+	Server()->ChangeMap(&aBuf[i]);
 }
 
 // spawn

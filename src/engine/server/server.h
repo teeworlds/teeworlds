@@ -251,6 +251,7 @@ public:
 
 	void PumpNetwork();
 
+	virtual void ChangeMap(const char *pMap);
 	const char *GetMapName();
 	int LoadMap(const char *pMapName);
 
