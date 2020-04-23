@@ -1001,7 +1001,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	if(DoButton_CheckBox(&s_EnableColoredBroadcasts, Localize("Enable colored server broadcasts"),
 						 Config()->m_ClColoredBroadcast, &Button))
 		Config()->m_ClColoredBroadcast ^= 1;
-	
+
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
 	static int s_DisableWhisperFeature = 0;
@@ -1644,6 +1644,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
 	bool CheckSettings = false;
 
+	static int s_GfxFullscreen = Config()->m_GfxFullscreen;
 	static int s_GfxScreenWidth = Config()->m_GfxScreenWidth;
 	static int s_GfxScreenHeight = Config()->m_GfxScreenHeight;
 	static int s_GfxFsaaSamples = Config()->m_GfxFsaaSamples;
@@ -1692,7 +1693,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
 	static int s_ButtonGfxFullscreen = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxFullscreen, Localize("Fullscreen"), Config()->m_GfxFullscreen, &Button))
-		Client()->ToggleFullscreen();
+		CheckSettings |= !Client()->ToggleFullscreen();
 
 	if(!Config()->m_GfxFullscreen)
 	{
@@ -1903,7 +1904,11 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			s_GfxScreenHeight == Config()->m_GfxScreenHeight &&
 			s_GfxFsaaSamples == Config()->m_GfxFsaaSamples &&
 			s_GfxTextureQuality == Config()->m_GfxTextureQuality &&
-			s_GfxTextureCompression == Config()->m_GfxTextureCompression)
+			s_GfxTextureCompression == Config()->m_GfxTextureCompression
+			#ifdef CONF_PLATFORM_MACOSX
+				&& s_GfxFullscreen == Config()->m_GfxFullscreen
+			#endif
+			)
 			m_NeedRestartGraphics = false;
 		else
 			m_NeedRestartGraphics = true;

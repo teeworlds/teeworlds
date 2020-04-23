@@ -2439,10 +2439,16 @@ void CClient::ConchainWindowScreen(IConsole::IResult *pResult, void *pUserData, 
 		pfnCallback(pResult, pCallbackUserData);
 }
 
-void CClient::ToggleFullscreen()
+bool CClient::ToggleFullscreen()
 {
+#ifndef CONF_PLATFORM_MACOSX
 	if(Graphics()->Fullscreen(Config()->m_GfxFullscreen^1))
 		Config()->m_GfxFullscreen ^= 1;
+	return true;
+#else
+	Config()->m_GfxFullscreen ^= 1;
+	return false;
+#endif
 }
 
 void CClient::ConchainFullscreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
