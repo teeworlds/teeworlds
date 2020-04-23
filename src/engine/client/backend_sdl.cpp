@@ -246,6 +246,17 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::CState &St
 
 void CCommandProcessorFragment_OpenGL::Cmd_Init(const CInitCommand *pCommand)
 {
+	// set some default settings
+	glEnable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+	glDisable(GL_DEPTH_TEST);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	glAlphaFunc(GL_GREATER, 0);
+	glEnable(GL_ALPHA_TEST);
+	glDepthMask(0);
+
 	m_pTextureMemoryUsage = pCommand->m_pTextureMemoryUsage;
 	*m_pTextureMemoryUsage = 0;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &m_MaxTexSize);
@@ -534,17 +545,6 @@ void CCommandProcessorFragment_SDL::Cmd_Init(const CInitCommand *pCommand)
 	m_GLContext = pCommand->m_GLContext;
 	m_pWindow = pCommand->m_pWindow;
 	SDL_GL_MakeCurrent(m_pWindow, m_GLContext);
-
-	// set some default settings
-	glEnable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
-	glDisable(GL_DEPTH_TEST);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	glAlphaFunc(GL_GREATER, 0);
-	glEnable(GL_ALPHA_TEST);
-	glDepthMask(0);
 }
 
 void CCommandProcessorFragment_SDL::Cmd_Shutdown(const CShutdownCommand *pCommand)
