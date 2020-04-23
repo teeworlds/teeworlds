@@ -740,7 +740,6 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWin
 	}
 
 	SDL_GetWindowSize(m_pWindow, pWindowWidth, pWindowHeight);
-	SDL_GL_GetDrawableSize(m_pWindow, pScreenWidth, pScreenHeight); // drawable size may differ in high dpi mode
 
 	// create gl context
 	m_GLContext = SDL_GL_CreateContext(m_pWindow);
@@ -749,6 +748,8 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWin
 		dbg_msg("gfx", "unable to create OpenGL context: %s", SDL_GetError());
 		return -1;
 	}
+
+	SDL_GL_GetDrawableSize(m_pWindow, pScreenWidth, pScreenHeight); // drawable size may differ in high dpi mode
 
 	#if defined(CONF_FAMILY_WINDOWS)
 		glTexImage3DInternal = (PFNGLTEXIMAGE3DPROC) wglGetProcAddress("glTexImage3D");
