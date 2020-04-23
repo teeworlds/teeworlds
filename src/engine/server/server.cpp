@@ -275,7 +275,7 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 	m_pGameServer = 0;
 
 	m_CurrentGameTick = 0;
-	m_RunServer = 1;
+	m_RunServer = true;
 
 	m_pCurrentMapData = 0;
 	m_CurrentMapSize = 0;
@@ -285,7 +285,7 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 	m_pLastMapEntry = 0;
 	m_pMapListHeap = 0;
 
-	m_MapReload = 0;
+	m_MapReload = false;
 
 	m_RconClientID = IServer::RCON_CID_SERV;
 	m_RconAuthLevel = AUTHED_ADMIN;
@@ -1375,21 +1375,14 @@ int CServer::Run()
 
 	// start game
 	{
-		int64 ReportTime = time_get();
-		int ReportInterval = 3;
-
-		m_Lastheartbeat = 0;
 		m_GameStartTime = time_get();
 
 		while(m_RunServer)
 		{
-			int64 t = time_get();
-			int NewTicks = 0;
-
-			// load new map TODO: don't poll this
-			if(str_comp(Config()->m_SvMap, m_aCurrentMap) != 0 || m_MapReload || m_CurrentGameTick >= 0x6FFFFFFF) //	force reload to make sure the ticks stay within a valid range
+			// load new map
+			if(m_MapReload || m_CurrentGameTick >= 0x6FFFFFFF) //	force reload to make sure the ticks stay within a valid range
 			{
-				m_MapReload = 0;
+				m_MapReload = false;
 
 				// load map
 				if(LoadMap(Config()->m_SvMap))
@@ -1424,10 +1417,12 @@ int CServer::Run()
 				}
 			}
 
-			while(t > TickStartTime(m_CurrentGameTick+1))
+			int64 Now = time_get();
+			bool NewTicks = false;
+			while(Now > TickStartTime(m_CurrentGameTick+1))
 			{
 				m_CurrentGameTick++;
-				NewTicks++;
+				NewTicks = true;
 
 				// apply new input
 				for(int c = 0; c < MAX_CLIENTS; c++)
@@ -1462,31 +1457,6 @@ int CServer::Run()
 			m_Register.RegisterUpdate(m_NetServer.NetType());
 
 			PumpNetwork();
-
-			if(ReportTime < time_get())
-			{
-				if(Config()->m_Debug)
-				{
-					/*
-					static NETSTATS prev_stats;
-					NETSTATS stats;
-					netserver_stats(net, &stats);
-
-					perf_next();
-
-					if(config.dbg_pref)
-						perf_dump(&rootscope);
-
-					dbg_msg("server", "send=%8d recv=%8d",
-						(stats.send_bytes - prev_stats.send_bytes)/reportinterval,
-						(stats.recv_bytes - prev_stats.recv_bytes)/reportinterval);
-
-					prev_stats = stats;
-					*/
-				}
-
-				ReportTime += time_freq()*ReportInterval;
-			}
 
 			// wait for incomming data
 			m_NetServer.Wait(5);
@@ -1597,7 +1567,7 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 {
-	((CServer *)pUser)->m_RunServer = 0;
+	((CServer *)pUser)->m_RunServer = false;
 }
 
 void CServer::DemoRecorder_HandleAutoStart()
@@ -1646,7 +1616,7 @@ void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser)
 
 void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
 {
-	((CServer *)pUser)->m_MapReload = 1;
+	((CServer *)pUser)->m_MapReload = true;
 }
 
 void CServer::ConLogout(IConsole::IResult *pResult, void *pUser)
@@ -1759,6 +1729,16 @@ void CServer::ConchainRconPasswordSet(IConsole::IResult *pResult, void *pUserDat
 	}
 }
 
+void CServer::ConchainMapUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments() >= 1)
+	{
+		CServer *pThis = static_cast<CServer *>(pUserData);
+		pThis->m_MapReload = str_comp(pThis->Config()->m_SvMap, pThis->m_aCurrentMap) != 0;
+	}
+}
+
 void CServer::RegisterCommands()
 {
 	// register console commands
@@ -1782,6 +1762,7 @@ void CServer::RegisterCommands()
 	Console()->Chain("mod_command", ConchainModCommandUpdate, this);
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
 	Console()->Chain("sv_rcon_password", ConchainRconPasswordSet, this);
+	Console()->Chain("sv_map", ConchainMapUpdate, this);
 
 	// register console commands in sub parts
 	m_ServerBan.InitServerBan(Console(), Storage(), this);

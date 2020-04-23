@@ -152,13 +152,11 @@ public:
 	IEngineMap *m_pMap;
 
 	int64 m_GameStartTime;
-	int m_RunServer;
-	int m_MapReload;
+	bool m_RunServer;
+	bool m_MapReload;
 	int m_RconClientID;
 	int m_RconAuthLevel;
 	int m_PrintCBIndex;
-
-	int64 m_Lastheartbeat;
 
 	// map
 	enum
@@ -277,6 +275,7 @@ public:
 	static void ConchainModCommandUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainConsoleOutputLevelUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainRconPasswordSet(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	static void ConchainMapUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void RegisterCommands();
 
