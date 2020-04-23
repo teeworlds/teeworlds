@@ -171,7 +171,6 @@ private:
 	void Cmd_Shutdown(const CShutdownCommand *pCommand);
 	void Cmd_Swap(const CCommandBuffer::CSwapCommand *pCommand);
 	void Cmd_VSync(const CCommandBuffer::CVSyncCommand *pCommand);
-	void Cmd_VideoModes(const CCommandBuffer::CVideoModesCommand *pCommand);
 public:
 	CCommandProcessorFragment_SDL();
 
@@ -212,6 +211,7 @@ public:
 	virtual void SetWindowBordered(bool State);	// on=true/off=false
 	virtual bool SetWindowScreen(int Index);
 	virtual int GetWindowScreen();
+	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen);
 	virtual bool GetDesktopResolution(int Index, int *pDesktopWidth, int* pDesktopHeight);
 	virtual int WindowActive();
 	virtual int WindowOpen();
