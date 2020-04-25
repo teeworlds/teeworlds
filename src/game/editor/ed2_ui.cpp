@@ -195,20 +195,15 @@ void CEditor2Ui::UiDoButtonBehaviorNoID(const CUIRect& Rect, CUIButton* pButStat
 	}
 }
 
-void CEditor2Ui::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState)
+void CEditor2Ui::UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pOutButState)
 {
 	dbg_assert(pID != 0x0, "id is null");
 
-	pButState->m_Clicked = false;
-	if(pButState->m_Pressed && !UI()->MouseButton(0))
-		pButState->m_Clicked = true;
+	pOutButState->m_Clicked = (UI()->CheckActiveItem(pID) && !UI()->MouseButton(0));
 
-	if(pID)
-	{
-		UI()->DoButtonLogic(pID, &Rect);
-		pButState->m_Hovered = (UI()->HotItem() == pID);
-		pButState->m_Pressed = (UI()->CheckActiveItem(pID));
-	}
+	UI()->DoButtonLogic(pID, &Rect);
+	pOutButState->m_Hovered = (UI()->HotItem() == pID);
+	pOutButState->m_Pressed = (UI()->CheckActiveItem(pID));
 }
 
 bool CEditor2Ui::UiDoMouseDraggingNoID(const CUIRect& Rect, CUIMouseDrag* pDragState)

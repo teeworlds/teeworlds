@@ -123,7 +123,7 @@ struct CEditor2Ui
 	void DrawText(const CUIRect& Rect, const char* pText, float FontSize, vec4 Color = vec4(1,1,1,1), CUI::EAlignment Align = CUI::ALIGN_LEFT);
 
 	void UiDoButtonBehaviorNoID(const CUIRect& Rect, CUIButton* pButState);
-	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pButState);
+	void UiDoButtonBehavior(const void* pID, const CUIRect& Rect, CUIButton* pOutButState);
 	bool UiDoMouseDraggingNoID(const CUIRect& Rect, CUIMouseDrag* pDragState);
 	bool UiDoMouseDragging(const CUIRect& Rect, CUIMouseDrag* pDragState);
 

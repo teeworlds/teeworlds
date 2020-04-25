@@ -831,7 +831,7 @@ void CEditor2::DoToolStuff()
 
 	const bool CanClick = s_MapViewDrag.m_Button.m_Hovered;
 
-	if(CanClick)
+	if(CanClick) // TODO: having this here causes a frame (frames?) delay on move since we update m_MapUiPosOffset *after* using it to render the map. Move it up?
 	{
 		m_MapUiPosOffset -= m_MapViewMove;
 		if(m_MapViewZoom == 1)  ChangeZoom(m_Zoom / 1.1f);
@@ -1035,7 +1035,7 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 		// draw brush
 		RenderBrush(GridMousePos);
 
-		// paint
+		// block paint
 		if(IsShiftPressed && FinishedDragging)
 		{
 			const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
@@ -1068,6 +1068,10 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 				else // drag, fill the rectangle by repeating the brush
 					EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
 			}
+		}
+		else if(pMouseDrag->m_IsDragging) // stroke paint
+		{
+			EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
 		}
 	}
 }
@@ -1950,26 +1954,25 @@ void CEditor2::RenderHistory(CUIRect NavRect)
 	while(pFirstEntry->m_pPrev)
 		pFirstEntry = pFirstEntry->m_pPrev;
 
-	static CUIButton s_ButEntry[50];
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
 
 	CHistoryEntry* pCurrentEntry = pFirstEntry;
+	CHistoryEntry* pClickedEntry = 0x0;
 	int i = 0;
 	while(pCurrentEntry)
 	{
 		NavRect.HSplitTop(ButtonHeight*2, &ButtonRect, &NavRect);
 		NavRect.HSplitTop(Spacing, 0, &NavRect);
-		//UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
+		UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
 
-		// somewhat hacky
-		CUIButton& ButState = s_ButEntry[i % (sizeof(s_ButEntry)/sizeof(s_ButEntry[0]))];
+		CUIButton ButState;
 		UiDoButtonBehavior(pCurrentEntry, ButtonRect, &ButState);
 
 		// clickety click, restore to this entry
 		if(ButState.m_Clicked && pCurrentEntry != m_pHistoryEntryCurrent)
 		{
-			HistoryRestoreToEntry(pCurrentEntry);
+			pClickedEntry = pCurrentEntry;
 		}
 
 		vec4 ColorButton = StyleColorButton;
@@ -1998,6 +2001,9 @@ void CEditor2::RenderHistory(CUIRect NavRect)
 	UiScrollRegionAddRect(&s_ScrollRegion, ButtonRect);
 
 	UiEndScrollRegion(&s_ScrollRegion);
+
+	if(pClickedEntry)
+		HistoryRestoreToEntry(pClickedEntry);
 }
 
 void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
