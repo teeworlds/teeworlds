@@ -1072,22 +1072,8 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		Config()->m_ClDynamicCamera = 0;
-		Config()->m_ClMouseMaxDistanceStatic = 400;
-		Config()->m_ClMouseMaxDistanceDynamic = 1000;
-		Config()->m_ClMouseFollowfactor = 60;
-		Config()->m_ClMouseDeadzone = 300;
-		Config()->m_ClAutoswitchWeapons = 1;
-		Config()->m_ClShowhud = 1;
-		Config()->m_ClFilterchat = 0;
-		Config()->m_ClNameplates = 1;
-		Config()->m_ClNameplatesAlways = 1;
-		Config()->m_ClNameplatesSize = 50;
-		Config()->m_ClNameplatesTeamcolors = 1;
-		Config()->m_ClAutoDemoRecord = 0;
-		Config()->m_ClAutoDemoMax = 10;
-		Config()->m_ClAutoScreenshot = 0;
-		Config()->m_ClAutoScreenshotMax = 10;
+		PopupConfirm(Localize("Reset general settings"), Localize("Are you sure that you want to reset the general settings to their defaults?"),
+			Localize("Reset"), Localize("Cancel"), &CMenus::ResetSettingsGeneral);
 	}
 }
 
@@ -1256,13 +1242,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
 	// render skin preview background
-	float SpacingH = 2.0f;
-	float SpacingW = 3.0f;
-	float ButtonHeight = 20.0f;
-	float SkinHeight = 50.0f;
-	float BackgroundHeight = ButtonHeight+SpacingH+SkinHeight;
-	if(!s_CustomSkinMenu)
-		BackgroundHeight = (ButtonHeight+SpacingH)*2.0f+SkinHeight;
+	const float SpacingH = 2.0f;
+	const float SpacingW = 3.0f;
+	const float ButtonHeight = 20.0f;
+	const float SkinHeight = 50.0f;
+	const float BackgroundHeight = (ButtonHeight+SpacingH)*(s_CustomSkinMenu ? 1.0f : 2.0f) + SkinHeight;
 
 	if(this->Client()->State() == IClient::STATE_ONLINE)
 		Background = MainView;
@@ -1430,7 +1414,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 		static CButtonContainer s_CustomSkinDeleteButton;
 		if(DoButton_Menu(&s_CustomSkinDeleteButton, Localize("Delete"), 0, &Button))
-			m_Popup = POPUP_DELETE_SKIN;
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), Localize("Are you sure that you want to delete the skin '%s'?"), m_pSelectedSkin->m_aName);
+			PopupConfirm(Localize("Delete skin"), aBuf, Localize("Yes"), Localize("No"), &CMenus::PopupConfirmDeleteSkin);
+		}
 		BottomView.VSplitLeft(SpacingW, 0, &BottomView);
 	}
 
@@ -1438,10 +1426,24 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	static CButtonContainer s_CustomSwitchButton;
 	if(DoButton_Menu(&s_CustomSwitchButton, s_CustomSkinMenu ? Localize("Basic") : Localize("Custom"), 0, &Button))
 	{
-		if(s_CustomSkinMenu)
-			s_CustomSkinMenu = false;
+		s_CustomSkinMenu = !s_CustomSkinMenu;
+	}
+}
+
+void CMenus::PopupConfirmDeleteSkin()
+{
+	if(m_pSelectedSkin)
+	{
+		char aBuf[IO_MAX_PATH_LENGTH];
+		str_format(aBuf, sizeof(aBuf), "skins/%s.json", m_pSelectedSkin->m_aName);
+		if(Storage()->RemoveFile(aBuf, IStorage::TYPE_SAVE))
+		{
+			m_pClient->m_pSkins->RemoveSkin(m_pSelectedSkin);
+			m_RefreshSkinSelector = true;
+			m_pSelectedSkin = 0;
+		}
 		else
-			s_CustomSkinMenu = true;
+			PopupMessage(Localize("Error"), Localize("Unable to delete the skin"), Localize("Ok"));
 	}
 }
 
@@ -1530,7 +1532,10 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	Button = BottomView;
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
-		m_pClient->m_pBinds->SetDefaults();
+	{
+		PopupConfirm(Localize("Reset controls"), Localize("Are you sure that you want to reset the controls to their defaults?"),
+			Localize("Reset"), Localize("Cancel"), &CMenus::ResetSettingsControls);
+	}
 }
 
 float CMenus::RenderSettingsControlsStats(CUIRect View)
@@ -1642,18 +1647,17 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
-	bool CheckSettings = false;
 	bool CheckFullscreen = false;
 	#ifdef CONF_PLATFORM_MACOSX
 	CheckFullscreen = true;
 	#endif
 
-	static int s_GfxFullscreen = Config()->m_GfxFullscreen;
-	static int s_GfxScreenWidth = Config()->m_GfxScreenWidth;
-	static int s_GfxScreenHeight = Config()->m_GfxScreenHeight;
-	static int s_GfxFsaaSamples = Config()->m_GfxFsaaSamples;
-	static int s_GfxTextureQuality = Config()->m_GfxTextureQuality;
-	static int s_GfxTextureCompression = Config()->m_GfxTextureCompression;
+	static const int s_GfxFullscreen = Config()->m_GfxFullscreen;
+	static const int s_GfxScreenWidth = Config()->m_GfxScreenWidth;
+	static const int s_GfxScreenHeight = Config()->m_GfxScreenHeight;
+	static const int s_GfxFsaaSamples = Config()->m_GfxFsaaSamples;
+	static const int s_GfxTextureQuality = Config()->m_GfxTextureQuality;
+	static const int s_GfxTextureCompression = Config()->m_GfxTextureCompression;
 
 	CUIRect Label, Button, ScreenLeft, ScreenRight, Texture, BottomView, Background;
 
@@ -1697,7 +1701,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
 	static int s_ButtonGfxFullscreen = 0;
 	if(DoButton_CheckBox(&s_ButtonGfxFullscreen, Localize("Fullscreen"), Config()->m_GfxFullscreen, &Button))
-		CheckSettings |= !Client()->ToggleFullscreen();
+		m_CheckVideoSettings |= !Client()->ToggleFullscreen();
 
 	if(!Config()->m_GfxFullscreen)
 	{
@@ -1757,7 +1761,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 				Config()->m_GfxFsaaSamples = 0;
 			else
 				Config()->m_GfxFsaaSamples *= 2;
-			CheckSettings = true;
+			m_CheckVideoSettings = true;
 		}
 	}
 
@@ -1799,7 +1803,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	if(DoButton_CheckBox(&s_ButtonGfxTextureQuality, Localize("Quality Textures"), Config()->m_GfxTextureQuality, &Button))
 	{
 		Config()->m_GfxTextureQuality ^= 1;
-		CheckSettings = true;
+		m_CheckVideoSettings = true;
 	}
 
 	Texture.HSplitTop(Spacing, 0, &Texture);
@@ -1808,7 +1812,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	if(DoButton_CheckBox(&s_ButtonGfxTextureCompression, Localize("Texture Compression"), Config()->m_GfxTextureCompression, &Button))
 	{
 		Config()->m_GfxTextureCompression ^= 1;
-		CheckSettings = true;
+		m_CheckVideoSettings = true;
 	}
 
 	Texture.HSplitTop(Spacing, 0, &Texture);
@@ -1866,8 +1870,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 		static CListBox s_RecListBox;
 		static CListBox s_OthListBox;
-		CheckSettings |= DoResolutionList(&ListRec, &s_RecListBox, m_lRecommendedVideoModes);
-		CheckSettings |= DoResolutionList(&ListOth, &s_OthListBox, m_lOtherVideoModes);
+		m_CheckVideoSettings |= DoResolutionList(&ListRec, &s_RecListBox, m_lRecommendedVideoModes);
+		m_CheckVideoSettings |= DoResolutionList(&ListOth, &s_OthListBox, m_lOtherVideoModes);
 	}
 
 	// reset button
@@ -1882,38 +1886,21 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		Config()->m_GfxScreenWidth = Graphics()->DesktopWidth();
-		Config()->m_GfxScreenHeight = Graphics()->DesktopHeight();
-		Config()->m_GfxBorderless = 0;
-		Config()->m_GfxFullscreen = 1;
-		Config()->m_GfxVsync = 1;
-		Config()->m_GfxFsaaSamples = 0;
-		Config()->m_GfxTextureQuality = 1;
-		Config()->m_GfxTextureCompression = 0;
-		Config()->m_GfxHighDetail = 1;
-
-		if(Config()->m_GfxDisplayAllModes)
-		{
-			Config()->m_GfxDisplayAllModes = 0;
-			UpdateVideoModeSettings();
-		}
-
-		CheckSettings = true;
+		PopupConfirm(Localize("Reset graphics settings"), Localize("Are you sure that you want to reset the graphics settings to their defaults?"),
+			Localize("Reset"), Localize("Cancel"), &CMenus::ResetSettingsGraphics);
 	}
 
 	// check if the new settings require a restart
-	if(CheckSettings)
+	if(m_CheckVideoSettings)
 	{
-		if(s_GfxScreenWidth == Config()->m_GfxScreenWidth &&
-			s_GfxScreenHeight == Config()->m_GfxScreenHeight &&
-			s_GfxFsaaSamples == Config()->m_GfxFsaaSamples &&
-			s_GfxTextureQuality == Config()->m_GfxTextureQuality &&
-			s_GfxTextureCompression == Config()->m_GfxTextureCompression &&
-			(!CheckFullscreen || s_GfxFullscreen == Config()->m_GfxFullscreen)
-			)
-			m_NeedRestartGraphics = false;
-		else
-			m_NeedRestartGraphics = true;
+		m_NeedRestartGraphics =
+			s_GfxScreenWidth != Config()->m_GfxScreenWidth ||
+			s_GfxScreenHeight != Config()->m_GfxScreenHeight ||
+			s_GfxFsaaSamples != Config()->m_GfxFsaaSamples ||
+			s_GfxTextureQuality != Config()->m_GfxTextureQuality ||
+			s_GfxTextureCompression != Config()->m_GfxTextureCompression ||
+			(CheckFullscreen && s_GfxFullscreen != Config()->m_GfxFullscreen);
+		m_CheckVideoSettings = false;
 	}
 }
 
@@ -2067,14 +2054,66 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	static CButtonContainer s_ResetButton;
 	if(DoButton_Menu(&s_ResetButton, Localize("Reset"), 0, &Button))
 	{
-		Config()->m_SndEnable = 1;
-		Config()->m_SndInit = 1;
-		Config()->m_SndMusic = 1;
-		Config()->m_SndNonactiveMute = 0;
-		Config()->m_SndRate = 48000;
-		Config()->m_SndVolume = 100;
-		UpdateMusicState();
+		PopupConfirm(Localize("Reset sound settings"), Localize("Are you sure that you want to reset the sound settings to their defaults?"),
+			Localize("Reset"), Localize("Cancel"), &CMenus::ResetSettingsSound);
 	}
+}
+
+void CMenus::ResetSettingsGeneral()
+{
+	Config()->m_ClDynamicCamera = 0;
+	Config()->m_ClMouseMaxDistanceStatic = 400;
+	Config()->m_ClMouseMaxDistanceDynamic = 1000;
+	Config()->m_ClMouseFollowfactor = 60;
+	Config()->m_ClMouseDeadzone = 300;
+	Config()->m_ClAutoswitchWeapons = 1;
+	Config()->m_ClShowhud = 1;
+	Config()->m_ClFilterchat = 0;
+	Config()->m_ClNameplates = 1;
+	Config()->m_ClNameplatesAlways = 1;
+	Config()->m_ClNameplatesSize = 50;
+	Config()->m_ClNameplatesTeamcolors = 1;
+	Config()->m_ClAutoDemoRecord = 0;
+	Config()->m_ClAutoDemoMax = 10;
+	Config()->m_ClAutoScreenshot = 0;
+	Config()->m_ClAutoScreenshotMax = 10;
+}
+
+void CMenus::ResetSettingsControls()
+{
+	m_pClient->m_pBinds->SetDefaults();
+}
+
+void CMenus::ResetSettingsGraphics()
+{
+	Config()->m_GfxScreenWidth = Graphics()->DesktopWidth();
+	Config()->m_GfxScreenHeight = Graphics()->DesktopHeight();
+	Config()->m_GfxBorderless = 0;
+	Config()->m_GfxFullscreen = 1;
+	Config()->m_GfxVsync = 1;
+	Config()->m_GfxFsaaSamples = 0;
+	Config()->m_GfxTextureQuality = 1;
+	Config()->m_GfxTextureCompression = 0;
+	Config()->m_GfxHighDetail = 1;
+
+	if(Config()->m_GfxDisplayAllModes)
+	{
+		Config()->m_GfxDisplayAllModes = 0;
+		UpdateVideoModeSettings();
+	}
+
+	m_CheckVideoSettings = true;
+}
+
+void CMenus::ResetSettingsSound()
+{
+	Config()->m_SndEnable = 1;
+	Config()->m_SndInit = 1;
+	Config()->m_SndMusic = 1;
+	Config()->m_SndNonactiveMute = 0;
+	Config()->m_SndRate = 48000;
+	Config()->m_SndVolume = 100;
+	UpdateMusicState();
 }
 
 void CMenus::RenderSettings(CUIRect MainView)

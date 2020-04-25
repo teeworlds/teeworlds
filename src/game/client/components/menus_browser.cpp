@@ -738,7 +738,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	UI()->DoLabel(&View, pFilter->Name(), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
 	View.VSplitRight(20.0f, &View, 0); // little space
-	char aBuf[64];
+	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), Localize("%d servers, %d players"), pFilter->NumSortedServers(), pFilter->NumPlayers());
 	UI()->DoLabel(&View, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
 
@@ -749,7 +749,8 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 		if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_A, &Button))
 		{
 			m_RemoveFilterIndex = FilterIndex;
-			m_Popup = POPUP_REMOVE_FILTER;
+			str_format(aBuf, sizeof(aBuf), Localize("Are you sure that you want to remove the filter '%s' from the server browser?"), pFilter->Name());
+			PopupConfirm(Localize("Remove filter"), aBuf, Localize("Yes"), Localize("No"), &CMenus::PopupConfirmRemoveFilter);
 		}
 	}
 	else
@@ -797,6 +798,15 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 					m_lFilters[i].Switch();
 			}
 		}
+	}
+}
+
+void CMenus::PopupConfirmRemoveFilter()
+{
+	// remove filter
+	if(m_RemoveFilterIndex)
+	{
+		RemoveFilter(m_RemoveFilterIndex);
 	}
 }
 
@@ -1727,8 +1737,21 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	// delete friend
 	if(m_pDeleteFriend)
 	{
-		m_Popup = POPUP_REMOVE_FRIEND;
+		const bool IsPlayer = m_pDeleteFriend->m_FriendState == CContactInfo::CONTACT_PLAYER;
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf),
+			IsPlayer ? Localize("Are you sure that you want to remove the player '%s' from your friends list?") : Localize("Are you sure that you want to remove the clan '%s' from your friends list?"),
+			IsPlayer ? m_pDeleteFriend->m_aName : m_pDeleteFriend->m_aClan);
+		PopupConfirm(Localize("Remove friend"), aBuf, Localize("Yes"), Localize("No"), &CMenus::PopupConfirmRemoveFriend);
 	}
+}
+
+void CMenus::PopupConfirmRemoveFriend()
+{
+	m_pClient->Friends()->RemoveFriend(m_pDeleteFriend->m_FriendState == CContactInfo::CONTACT_PLAYER ? m_pDeleteFriend->m_aName : "", m_pDeleteFriend->m_aClan);
+	FriendlistOnUpdate();
+	Client()->ServerBrowserUpdate();
+	m_pDeleteFriend = 0;
 }
 
 void CMenus::RenderServerbrowserFilterTab(CUIRect View)
