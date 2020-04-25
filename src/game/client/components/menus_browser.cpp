@@ -169,7 +169,7 @@ void CMenus::LoadFilters()
 	if(rSettingsEntry["sidebar_active"].type == json_integer)
 		m_SidebarActive = rSettingsEntry["sidebar_active"].u.integer;
 	if(rSettingsEntry["sidebar_tab"].type == json_integer)
-		m_SidebarTab = clamp(int(rSettingsEntry["sidebar_tab"].u.integer), int(SIDEBAR_TAB_INFO), int(SIDEBAR_TAB_FRIEND));
+		m_SidebarTab = clamp(int(rSettingsEntry["sidebar_tab"].u.integer), int(SIDEBAR_TAB_INFO), int(NUM_SIDEBAR_TABS-1));
 	if(rSettingsEntry["filters"].type == json_array)
 	{
 		for(unsigned i = 0; i < IServerBrowser::NUM_TYPES; ++i)
