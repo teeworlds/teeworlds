@@ -1643,6 +1643,10 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
 	bool CheckSettings = false;
+	bool CheckFullscreen = false;
+	#ifdef CONF_PLATFORM_MACOSX
+	CheckFullscreen = true;
+	#endif
 
 	static int s_GfxFullscreen = Config()->m_GfxFullscreen;
 	static int s_GfxScreenWidth = Config()->m_GfxScreenWidth;
@@ -1904,10 +1908,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 			s_GfxScreenHeight == Config()->m_GfxScreenHeight &&
 			s_GfxFsaaSamples == Config()->m_GfxFsaaSamples &&
 			s_GfxTextureQuality == Config()->m_GfxTextureQuality &&
-			s_GfxTextureCompression == Config()->m_GfxTextureCompression
-			#ifdef CONF_PLATFORM_MACOSX
-				&& s_GfxFullscreen == Config()->m_GfxFullscreen
-			#endif
+			s_GfxTextureCompression == Config()->m_GfxTextureCompression &&
+			(!CheckFullscreen || s_GfxFullscreen == Config()->m_GfxFullscreen)
 			)
 			m_NeedRestartGraphics = false;
 		else
