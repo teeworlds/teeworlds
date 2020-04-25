@@ -285,51 +285,36 @@ void CEffects::HammerHit(vec2 Pos)
 
 void CEffects::OnRender()
 {
-	static int64 LastUpdate100hz = 0;
-	static int64 LastUpdate50hz = 0;
+	static int64 s_LastUpdate100hz = 0;
+	static int64 s_LastUpdate50hz = 0;
 
-	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-	{
-		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
+	const float Speed = GetEffectsSpeed();
+	const int64 Now = time_get();
+	const int64 Freq = time_freq();
 
-		if(time_get()-LastUpdate100hz > time_freq()/(100*pInfo->m_Speed))
-		{
-			m_Add100hz = true;
-			LastUpdate100hz = time_get();
-		}
-		else
-			m_Add100hz = false;
-
-		if(time_get()-LastUpdate50hz > time_freq()/(100*pInfo->m_Speed))
-		{
-			m_Add50hz = true;
-			LastUpdate50hz = time_get();
-		}
-		else
-			m_Add50hz = false;
-
-		if(m_Add50hz)
-			m_pClient->m_pFlow->Update();
-
-		return;
-	}
-
-	if(time_get()-LastUpdate100hz > time_freq()/100)
+	if(Now-s_LastUpdate100hz > Freq/(100*Speed))
 	{
 		m_Add100hz = true;
-		LastUpdate100hz = time_get();
+		s_LastUpdate100hz = Now;
 	}
 	else
 		m_Add100hz = false;
 
-	if(time_get()-LastUpdate50hz > time_freq()/100)
+	if(Now-s_LastUpdate50hz > Freq/(50*Speed))
 	{
 		m_Add50hz = true;
-		LastUpdate50hz = time_get();
+		s_LastUpdate50hz = Now;
 	}
 	else
 		m_Add50hz = false;
 
 	if(m_Add50hz)
 		m_pClient->m_pFlow->Update();
+}
+
+float CEffects::GetEffectsSpeed()
+{
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		return DemoPlayer()->BaseInfo()->m_Speed;
+	return 1.0f;
 }
