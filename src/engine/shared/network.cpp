@@ -379,6 +379,40 @@ void CNetBase::SendControlMsgWithToken(const NETADDR *pAddr, TOKEN Token, int Ac
 	SendControlMsg(pAddr, Token, 0, ControlMsg, m_aRequestTokenBuf, Extended ? sizeof(m_aRequestTokenBuf) : 4);
 }
 
+bool CNetBase::Connlimit(const NETADDR &Addr, int Window, int Limit)
+{
+	int64 Now = time_get();
+	int Oldest = 0;
+
+	// This could probably be optimized, maybe addr hashes?
+	for(int i = 0; i < NET_CONNLIMIT_IPS; ++i)
+	{
+		if(!net_addr_comp(&m_aConnLog[i].m_Addr, &Addr))
+		{
+			if(m_aConnLog[i].m_Time > Now - time_freq() * Window)
+			{
+				if(m_aConnLog[i].m_Conns >= Limit)
+					return true;
+			}
+			else
+			{
+				m_aConnLog[i].m_Time = Now;
+				m_aConnLog[i].m_Conns = 0;
+			}
+			m_aConnLog[i].m_Conns++;
+			return false;
+		}
+
+		if(m_aConnLog[i].m_Time < m_aConnLog[Oldest].m_Time)
+			Oldest = i;
+	}
+
+	m_aConnLog[Oldest].m_Addr = Addr;
+	m_aConnLog[Oldest].m_Time = Now;
+	m_aConnLog[Oldest].m_Conns = 1;
+	return false;
+}
+
 unsigned char *CNetChunkHeader::Pack(unsigned char *pData)
 {
 	pData[0] = ((m_Flags&0x03)<<6) | ((m_Size>>6)&0x3F);

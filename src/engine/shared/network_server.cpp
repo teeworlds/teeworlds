@@ -5,6 +5,7 @@
 
 #include <engine/console.h>
 
+#include "config.h"
 #include "netban.h"
 #include "network.h"
 
@@ -63,7 +64,6 @@ void CNetServer::Drop(int ClientID, const char *pReason)
 
 int CNetServer::Update()
 {
-	int64 Now = time_get();
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
 	{
 		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_OFFLINE)
@@ -72,13 +72,7 @@ int CNetServer::Update()
 		m_aSlots[i].m_Connection.Update();
 		if(m_aSlots[i].m_Connection.State() == NET_CONNSTATE_ERROR)
 		{
-			if(Now - m_aSlots[i].m_Connection.ConnectTime() < time_freq() && NetBan())
-			{
-				if(NetBan()->BanAddr(ClientAddr(i), 60, "Stressing network") == -1)
-					Drop(i, m_aSlots[i].m_Connection.ErrorString());
-			}
-			else
-				Drop(i, m_aSlots[i].m_Connection.ErrorString());
+			Drop(i, m_aSlots[i].m_Connection.ErrorString());
 		}
 	}
 
@@ -170,6 +164,13 @@ int CNetServer::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 					{
 						const char FullMsg[] = "This server is full";
 						SendControlMsg(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, FullMsg, sizeof(FullMsg));
+						continue;
+					}
+
+					if(Connlimit(Addr, Config()->m_SvConnlimitWindow, Config()->m_SvConnlimit))
+					{
+						const char Msg[] = "Too many connections in a short time";
+						SendControlMsg(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, 0, NET_CTRLMSG_CLOSE, Msg, sizeof(Msg));
 						continue;
 					}
 

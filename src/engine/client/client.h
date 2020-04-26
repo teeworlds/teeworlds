@@ -122,6 +122,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 
 	//
 	char m_aCmdConnect[256];
+	const char *m_pErrorOverride;
 
 	// map download
 	char m_aMapdownloadFilename[IO_MAX_PATH_LENGTH];

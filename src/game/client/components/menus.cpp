@@ -50,6 +50,8 @@ CMenus::CMenus()
 	m_ActivePage = PAGE_INTERNET;
 	m_GamePage = PAGE_GAME;
 
+	m_aError[0] = 0;
+
 	m_SidebarTab = 0;
 	m_SidebarActive = true;
 	m_ShowServerDetails = true;
@@ -1724,7 +1726,7 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_DISCONNECTED)
 		{
 			pTitle = Localize("Disconnected");
-			pExtraText = Client()->ErrorString();
+			pExtraText = m_aError;
 			pButtonText = Localize("Ok");
 			ExtraAlign = CUI::ALIGN_LEFT;
 		}
@@ -2405,6 +2407,7 @@ void CMenus::OnStateChange(int NewState, int OldState)
 
 		if(Client()->ErrorString() && Client()->ErrorString()[0] != 0)
 		{
+			str_copy(m_aError, Client()->ErrorString(), sizeof(m_aError));
 			if(str_find(Client()->ErrorString(), "password"))
 			{
 				m_Popup = POPUP_PASSWORD;

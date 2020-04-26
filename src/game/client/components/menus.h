@@ -333,6 +333,7 @@ private:
 
 	int m_GamePage;
 	int m_Popup;
+	char m_aError[256];
 	int m_ActivePage;
 	int m_MenuPage;
 	int m_MenuPageOld;

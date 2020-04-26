@@ -275,6 +275,7 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 
 	//
 	m_aCmdConnect[0] = 0;
+	m_pErrorOverride = 0;
 
 	// map download
 	m_aMapdownloadFilename[0] = 0;
@@ -512,6 +513,24 @@ void CClient::Connect(const char *pAddress)
 {
 	char aBuf[512];
 	int Port = 8303;
+	NETADDR Addr;
+
+	if(net_addr_from_str(&Addr, pAddress) != 0 && net_host_lookup(pAddress, &Addr, m_NetClient.NetType()) != 0)
+	{
+		char aBufMsg[256];
+		str_format(aBufMsg, sizeof(aBufMsg), "could not find the address of %s, connecting to localhost", aBuf);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBufMsg);
+		net_host_lookup("localhost", &Addr, m_NetClient.NetType());
+	}
+
+	if(m_NetClient.Connlimit(Addr, 1, 1))
+	{
+		m_pErrorOverride = "Too fast";
+		SetState(IClient::STATE_CONNECTING);
+		DisconnectWithReason(m_pErrorOverride);
+		m_pErrorOverride = 0;
+		return;
+	}
 
 	Disconnect();
 
@@ -522,13 +541,7 @@ void CClient::Connect(const char *pAddress)
 
 	mem_zero(&m_CurrentServerInfo, sizeof(m_CurrentServerInfo));
 
-	if(net_addr_from_str(&m_ServerAddress, m_aServerAddressStr) != 0 && net_host_lookup(m_aServerAddressStr, &m_ServerAddress, m_NetClient.NetType()) != 0)
-	{
-		char aBufMsg[256];
-		str_format(aBufMsg, sizeof(aBufMsg), "could not find the address of %s, connecting to localhost", aBuf);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBufMsg);
-		net_host_lookup("localhost", &m_ServerAddress, m_NetClient.NetType());
-	}
+	m_ServerAddress = Addr;
 
 	m_RconAuthed = 0;
 	m_UseTempRconCommands = 0;
@@ -767,7 +780,7 @@ void CClient::Quit()
 
 const char *CClient::ErrorString() const
 {
-	return m_NetClient.ErrorString();
+	return m_pErrorOverride ? m_pErrorOverride : m_NetClient.ErrorString();
 }
 
 void CClient::Render()
