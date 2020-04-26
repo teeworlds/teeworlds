@@ -460,6 +460,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool HistoryCondition);
 	void EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, bool HistoryCondition);
 	void EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom, bool HistoryCondition);
+	void EditHistCondBrushPaintStrokeOnLayer(int StartTX, int StartTY, int EndTX, int EndTY, int LayerID, bool HistoryCondition);
 
 	void HistoryClear();
 	CHistoryEntry* HistoryAllocEntry();

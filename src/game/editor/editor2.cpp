@@ -842,9 +842,7 @@ void CEditor2::DoToolStuff()
 	if(!CanClick)
 		s_MapViewDrag = CUIMouseDrag();
 
-	const int SelectedLayerID = m_UiSelectedLayerID != -1 ? m_UiSelectedLayerID : m_Map.m_GameLayerID;
 	const CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups.Get(m_UiSelectedGroupID);
-	const CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers.Get(SelectedLayerID);
 
 	// TODO: switch
 	if(IsToolSelect())
@@ -969,7 +967,6 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 		return;
 
 	const bool IsShiftPressed = (Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_LSHIFT));
-	const bool IsBlockPainting = !m_Brush.IsEmpty() && IsShiftPressed && pMouseDrag->m_IsDragging;
 
 	if(pMouseDrag->m_IsDragging)
 	{
@@ -1036,42 +1033,50 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 		RenderBrush(GridMousePos);
 
 		// block paint
-		if(IsShiftPressed && FinishedDragging)
+		if(IsShiftPressed)
 		{
-			const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
-				m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, pMouseDrag->m_StartDragPos);
-			const int StartTX = floor(StartMouseWorldPos.x/TileSize);
-			const int StartTY = floor(StartMouseWorldPos.y/TileSize);
-
-			const int RectStartX = min(MouseTx, StartTX);
-			const int RectStartY = min(MouseTy, StartTY);
-			const int RectEndX = max(MouseTx, StartTX);
-			const int RectEndY = max(MouseTy, StartTY);
-
-			// automap
-			if(m_BrushAutomapRuleID >= 0)
+			if(FinishedDragging)
 			{
-				// click without dragging, paint whole brush in place
-				if(StartTX == MouseTx && StartTY == MouseTy)
-					EditBrushPaintLayerAutomap(MouseTx, MouseTy, SelectedLayerID, m_BrushAutomapRuleID);
-				else // drag, fill the rectangle by repeating the brush
+				const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, pMouseDrag->m_StartDragPos);
+				const int StartTX = floor(StartMouseWorldPos.x/TileSize);
+				const int StartTY = floor(StartMouseWorldPos.y/TileSize);
+
+				const int RectStartX = min(MouseTx, StartTX);
+				const int RectStartY = min(MouseTy, StartTY);
+				const int RectEndX = max(MouseTx, StartTX);
+				const int RectEndY = max(MouseTy, StartTY);
+
+				// automap
+				if(m_BrushAutomapRuleID >= 0)
 				{
-					EditBrushPaintLayerFillRectAutomap(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID, m_BrushAutomapRuleID);
+					// click without dragging, paint whole brush in place
+					if(StartTX == MouseTx && StartTY == MouseTy)
+						EditBrushPaintLayerAutomap(MouseTx, MouseTy, SelectedLayerID, m_BrushAutomapRuleID);
+					else // drag, fill the rectangle by repeating the brush
+					{
+						EditBrushPaintLayerFillRectAutomap(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID, m_BrushAutomapRuleID);
+					}
+				}
+				// no automap
+				else
+				{
+					// click without dragging, paint whole brush in place
+					if(StartTX == MouseTx && StartTY == MouseTy)
+						EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
+					else // drag, fill the rectangle by repeating the brush
+						EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
 				}
 			}
-			// no automap
-			else
-			{
-				// click without dragging, paint whole brush in place
-				if(StartTX == MouseTx && StartTY == MouseTy)
-					EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
-				else // drag, fill the rectangle by repeating the brush
-					EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
-			}
+
 		}
-		else if(pMouseDrag->m_IsDragging) // stroke paint
+		else // stroke paint
 		{
-			EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
+			// TODO: input last mouse position as "StartTX/Y"
+			if(pMouseDrag->m_IsDragging)
+				EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, false);
+			else if(FinishedDragging)
+				EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, true); // push history entry when we finish the stroke
 		}
 	}
 }

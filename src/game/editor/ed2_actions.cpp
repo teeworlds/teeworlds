@@ -874,6 +874,24 @@ void CEditor2::EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom,
 	}
 }
 
+void CEditor2::EditHistCondBrushPaintStrokeOnLayer(int StartTX, int StartTY, int EndTX, int EndTY, int LayerID, bool HistoryCondition)
+{
+	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
+	dbg_assert(m_Map.m_aLayers.Get(LayerID).IsTileLayer(), "Layer is not a tile layer");
+
+	// TODO: trace from Start to End
+	BrushPaintLayer(EndTX, EndTY, LayerID);
+
+	if(HistoryCondition)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: brush paint"), LayerID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d)", EndTX, EndTY);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
 void CEditor2::ConLoad(IConsole::IResult* pResult, void* pUserData)
 {
 	CEditor2 *pSelf = (CEditor2 *)pUserData;
