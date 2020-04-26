@@ -326,7 +326,7 @@ public:
 
 	// gfx
 	void SwitchWindowScreen(int Index);
-	void ToggleFullscreen();
+	bool ToggleFullscreen();
 	void ToggleWindowBordered();
 	void ToggleWindowVSync();
 };
