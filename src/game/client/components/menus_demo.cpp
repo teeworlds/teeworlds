@@ -20,15 +20,7 @@
 #include "maplayers.h"
 #include "menus.h"
 
-int CMenus::DoButton_DemoPlayer(CButtonContainer *pBC, const char *pText, const CUIRect *pRect)
-{
-	float Seconds = 0.6f; //  0.6 seconds for fade
-	float Fade = ButtonFade(pBC, Seconds);
 
-	RenderTools()->DrawUIRect(pRect, vec4(1,1,1, 0.5f+(Fade/Seconds)*0.25f), CUI::CORNER_ALL, 5.0f);
-	UI()->DoLabel(pRect, pText, 14.0f, CUI::ALIGN_CENTER);
-	return UI()->DoButtonLogic(pBC->GetID(), pRect);
-}
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)
 {
@@ -38,8 +30,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	const float ButtonbarHeight = 20.0f;
 	const float NameBarHeight = 20.0f;
 	const float Margins = 5.0f;
-	float TotalHeight;
 
+	float TotalHeight;
 	if(m_MenuActive)
 		TotalHeight = SeekBarHeight+ButtonbarHeight+NameBarHeight+Margins*3;
 	else
@@ -56,22 +48,27 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 	CUIRect SeekBar, ButtonBar, NameBar;
 
+	const bool CtrlDown = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
+	static bool s_LastCtrlDown = CtrlDown;
+
 	int CurrentTick = pInfo->m_CurrentTick - pInfo->m_FirstTick;
 	int TotalTicks = pInfo->m_LastTick - pInfo->m_FirstTick;
+	int64 Now = time_get();
 
 	// we can toggle the seekbar using CTRL
-	if(!m_MenuActive && (Input()->KeyPress(KEY_LCTRL) || Input()->KeyPress(KEY_RCTRL)))
+	if(!m_MenuActive && !s_LastCtrlDown && CtrlDown)
 	{
 		if (m_SeekBarActive)
 			m_SeekBarActive = false;
 		else
 		{
 			m_SeekBarActive = true;
-			m_SeekBarActivatedTime = time_get(); // stores at which point of time the seekbar was activated, so we can automatically hide it after few seconds
+			m_SeekBarActivatedTime = Now; // stores at which point of time the seekbar was activated, so we can automatically hide it after few seconds
 		}
 	}
+	s_LastCtrlDown = CtrlDown;
 
-	if(m_SeekBarActivatedTime < time_get() - 5*time_freq())
+	if(m_SeekBarActivatedTime < Now - 5*time_freq())
 		m_SeekBarActive = false;
 
 	if(m_MenuActive)
@@ -81,28 +78,27 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.HSplitBottom(NameBarHeight, &ButtonBar, &NameBar);
 		NameBar.HSplitTop(4.0f, 0, &NameBar);
 		m_SeekBarActive = true;
-		m_SeekBarActivatedTime = time_get();
+		m_SeekBarActivatedTime = Now;
 	}
 	else
 		SeekBar = MainView;
 
 	// do seekbar
+	float PositionToSeek = -1.0f;
 	if(m_SeekBarActive || m_MenuActive)
 	{
-		static int s_SeekBarID = 0;
 		static bool s_PausedBeforeSeeking = false;
 		static float s_PrevAmount = -1.0f;
-		char aBuffer[128];
 		const float Rounding = 5.0f;
 
 		// draw seek bar
-		RenderTools()->DrawUIRect(&SeekBar, vec4(0,0,0,0.5f), CUI::CORNER_ALL, Rounding);
+		RenderTools()->DrawUIRect(&SeekBar, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_ALL, Rounding);
 
 		// draw filled bar
 		float Amount = CurrentTick/(float)TotalTicks;
 		CUIRect FilledBar = SeekBar;
 		FilledBar.w = (FilledBar.w-2*Rounding)*Amount + 2*Rounding;
-		RenderTools()->DrawUIRect(&FilledBar, vec4(1,1,1,0.5f), CUI::CORNER_ALL, Rounding);
+		RenderTools()->DrawUIRect(&FilledBar, vec4(1.0f, 1.0f , 1.0f, 0.5f), CUI::CORNER_ALL, Rounding);
 
 		// draw markers
 		for(int i = 0; i < pInfo->m_NumTimelineMarkers; i++)
@@ -117,6 +113,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		}
 
 		// draw time
+		char aBuffer[64];
 		str_format(aBuffer, sizeof(aBuffer), "%d:%02d / %d:%02d",
 			CurrentTick/SERVER_TICK_SPEED/60, (CurrentTick/SERVER_TICK_SPEED)%60,
 			TotalTicks/SERVER_TICK_SPEED/60, (TotalTicks/SERVER_TICK_SPEED)%60);
@@ -125,7 +122,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		// do the logic
 		bool Inside = UI()->MouseInside(&SeekBar);
 
-		if(UI()->CheckActiveItem(&s_SeekBarID))
+		if(UI()->CheckActiveItem(&s_PrevAmount))
 		{
 			if(!UI()->MouseButton(0))
 			{
@@ -140,20 +137,15 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 				if(absolute(s_PrevAmount-Amount) >= (0.1f/UI()->Screen()->w))
 				{
 					s_PrevAmount = Amount;
-					m_pClient->OnReset();
-					m_pClient->m_SuppressEvents = true;
-					DemoPlayer()->SetPos(Amount);
-					m_pClient->m_SuppressEvents = false;
-					m_pClient->m_pMapLayersBackGround->EnvelopeUpdate();
-					m_pClient->m_pMapLayersForeGround->EnvelopeUpdate();
+					PositionToSeek = Amount;
 				}
 			}
 		}
-		else if(UI()->HotItem() == &s_SeekBarID)
+		else if(UI()->HotItem() == &s_PrevAmount)
 		{
 			if(UI()->MouseButton(0))
 			{
-				UI()->SetActiveItem(&s_SeekBarID);
+				UI()->SetActiveItem(&s_PrevAmount);
 				s_PausedBeforeSeeking = pInfo->m_Paused;
 				if(!pInfo->m_Paused)
 					DemoPlayer()->Pause();
@@ -161,25 +153,99 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		}
 
 		if(Inside)
-			UI()->SetHotItem(&s_SeekBarID);
+			UI()->SetHotItem(&s_PrevAmount);
 	}
 
+	// rewind when reaching the end
 	if(CurrentTick == TotalTicks)
 	{
 		m_pClient->OnReset();
 		DemoPlayer()->Pause();
-		DemoPlayer()->SetPos(0);
+		PositionToSeek = 0.0f;
 	}
 
-	bool IncreaseDemoSpeed = false, DecreaseDemoSpeed = false;
+	bool IncreaseDemoSpeed = Input()->KeyPress(KEY_MOUSE_WHEEL_UP) || Input()->KeyPress(KEY_PLUS) || Input()->KeyPress(KEY_KP_PLUS);
+	bool DecreaseDemoSpeed = Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) || Input()->KeyPress(KEY_MINUS) || Input()->KeyPress(KEY_KP_MINUS);
 
-	//add spacebar for toggling Play/Pause
+	// add spacebar for toggling Play/Pause
 	if(Input()->KeyPress(KEY_SPACE))
 	{
 		if(!pInfo->m_Paused)
 			DemoPlayer()->Pause();
 		else
 			DemoPlayer()->Unpause();
+	}
+
+	// skip forward/backward using left/right arrow keys
+	const bool ShiftDown = Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_RSHIFT);
+	const bool SkipBackwards = Input()->KeyPress(KEY_LEFT);
+	const bool SkipForwards = Input()->KeyPress(KEY_RIGHT);
+	if(SkipBackwards || SkipForwards)
+	{
+		int DesiredTick = 0;
+		if(CtrlDown)
+		{
+			// Go to previous/next marker if ctrl is held.
+			// Go to start/end if there is no marker.
+
+			// Threshold to consider all ticks close to a marker to be that markers position.
+			// Necessary, as setting the demo players position does not set it to exactly the desired tick.
+			const int Threshold = 10;
+
+			if(SkipForwards)
+			{
+				DesiredTick = TotalTicks-1; // jump to end if no markers, or after last one
+				for(int i = 0; i < pInfo->m_NumTimelineMarkers; i++)
+				{
+					const int MarkerTick = pInfo->m_aTimelineMarkers[i]-pInfo->m_FirstTick;
+					if(abs(MarkerTick-CurrentTick) < Threshold)
+					{
+						if(i+1 < pInfo->m_NumTimelineMarkers)
+							DesiredTick = pInfo->m_aTimelineMarkers[i+1]-pInfo->m_FirstTick;
+						break;
+					}
+					else if(CurrentTick < MarkerTick)
+					{
+						DesiredTick = MarkerTick;
+						break;
+					}
+				}
+			}
+			else
+			{
+				DesiredTick = 0; // jump to start if no markers, or before first one
+				for(int i = pInfo->m_NumTimelineMarkers-1; i >= 0; i--)
+				{
+					const int MarkerTick = pInfo->m_aTimelineMarkers[i]-pInfo->m_FirstTick;
+					if(abs(MarkerTick-CurrentTick) < Threshold)
+					{
+						if(i > 0)
+							DesiredTick = pInfo->m_aTimelineMarkers[i-1]-pInfo->m_FirstTick;
+						break;
+					}
+					else if(CurrentTick > MarkerTick)
+					{
+						DesiredTick = MarkerTick;
+						break;
+					}
+				}
+			}
+
+			// Skipping to previous marker/the end is inconvenient if demo continues running
+			DemoPlayer()->Pause();
+		}
+		else
+		{
+			// Skip longer time if shift is held
+			const int SkippedTicks = (ShiftDown ? 30 : 5) * SERVER_TICK_SPEED;
+			DesiredTick = CurrentTick + (SkipBackwards ? -1 : 1) * SkippedTicks;
+		}
+
+		PositionToSeek = clamp(DesiredTick, 0, TotalTicks-1)/(float)TotalTicks;
+
+		// Show the seek bar for a few seconds after skipping
+		m_SeekBarActive = true;
+		m_SeekBarActivatedTime = Now;
 	}
 
 	if(m_MenuActive)
@@ -202,7 +268,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		}
 
 		// stop button
-
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static CButtonContainer s_ResetButton;
@@ -210,7 +275,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		{
 			m_pClient->OnReset();
 			DemoPlayer()->Pause();
-			DemoPlayer()->SetPos(0);
+			PositionToSeek = 0.0f;
 		}
 
 		// slowdown
@@ -230,16 +295,13 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		// speed meter
 		ButtonBar.VSplitLeft(Margins*3, 0, &ButtonBar);
 		char aBuffer[64];
-		if(pInfo->m_Speed >= 1.0f)
-			str_format(aBuffer, sizeof(aBuffer), "x%.0f", pInfo->m_Speed);
-		else
-			str_format(aBuffer, sizeof(aBuffer), "x%.2f", pInfo->m_Speed);
+		str_format(aBuffer, sizeof(aBuffer), pInfo->m_Speed >= 1.0f ? "x%.0f" : "x%.2f", pInfo->m_Speed);
 		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, CUI::ALIGN_LEFT);
 
 		// close button
 		ButtonBar.VSplitRight(ButtonbarHeight*3, &ButtonBar, &Button);
 		static CButtonContainer s_ExitButton;
-		if(DoButton_DemoPlayer(&s_ExitButton, Localize("Close"), &Button))
+		if(DoButton_Menu(&s_ExitButton, Localize("Close"), 0, &Button))
 			Client()->Disconnect();
 
 		// demo name
@@ -253,7 +315,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		TextRender()->TextEx(&Cursor, aBuf, -1);
 	}
 
-	if(IncreaseDemoSpeed || Input()->KeyPress(KEY_MOUSE_WHEEL_UP) || Input()->KeyPress(KEY_PLUS) || Input()->KeyPress(KEY_KP_PLUS))
+	if(IncreaseDemoSpeed)
 	{
 		if(pInfo->m_Speed < 0.1f) DemoPlayer()->SetSpeed(0.1f);
 		else if(pInfo->m_Speed < 0.25f) DemoPlayer()->SetSpeed(0.25f);
@@ -264,7 +326,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		else if(pInfo->m_Speed < 4.0f) DemoPlayer()->SetSpeed(4.0f);
 		else DemoPlayer()->SetSpeed(8.0f);
 	}
-	else if(DecreaseDemoSpeed || Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) || Input()->KeyPress(KEY_MINUS) || Input()->KeyPress(KEY_KP_MINUS))
+	else if(DecreaseDemoSpeed)
 	{
 		if(pInfo->m_Speed > 4.0f) DemoPlayer()->SetSpeed(4.0f);
 		else if(pInfo->m_Speed > 2.0f) DemoPlayer()->SetSpeed(2.0f);
@@ -274,6 +336,16 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		else if(pInfo->m_Speed > 0.25f) DemoPlayer()->SetSpeed(0.25f);
 		else if(pInfo->m_Speed > 0.1f) DemoPlayer()->SetSpeed(0.1f);
 		else DemoPlayer()->SetSpeed(0.05f);
+	}
+
+	if(PositionToSeek >= 0.0f && PositionToSeek <= 1.0f)
+	{
+		m_pClient->OnReset();
+		m_pClient->m_SuppressEvents = true;
+		DemoPlayer()->SetPos(PositionToSeek);
+		m_pClient->m_SuppressEvents = false;
+		m_pClient->m_pMapLayersBackGround->EnvelopeUpdate();
+		m_pClient->m_pMapLayersForeGround->EnvelopeUpdate();
 	}
 }
 
@@ -320,15 +392,6 @@ void CMenus::DemolistOnUpdate(bool Reset)
 	m_DemolistSelectedIndex = Reset ? m_lDemos.size() > 0 ? 0 : -1 :
 										m_DemolistSelectedIndex >= m_lDemos.size() ? m_lDemos.size()-1 : m_DemolistSelectedIndex;
 	m_DemolistSelectedIsDir = m_DemolistSelectedIndex < 0 ? false : m_lDemos[m_DemolistSelectedIndex].m_IsDir;
-}
-
-inline int DemoGetMarkerCount(CDemoHeader Demo)
-{
-	int DemoMarkerCount = ((Demo.m_aNumTimelineMarkers[0]<<24)&0xFF000000) |
-			((Demo.m_aNumTimelineMarkers[1]<<16)&0xFF0000) |
-			((Demo.m_aNumTimelineMarkers[2]<<8)&0xFF00) |
-			(Demo.m_aNumTimelineMarkers[3]&0xFF);
-	return DemoMarkerCount;
 }
 
 void CMenus::RenderDemoList(CUIRect MainView)
@@ -394,9 +457,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), (&r.front() - m_lDemos.base_ptr()) == m_DemolistSelectedIndex);
 		// marker count
 		const CDemoItem& DemoItem = r.front();
-		int DemoMarkerCount = 0;
-		if(DemoItem.m_Valid && DemoItem.m_InfosLoaded)
-			DemoMarkerCount = DemoGetMarkerCount(DemoItem.m_Info);
+		const int DemoMarkerCount = DemoItem.GetMarkerCount();
 
 		if(Item.m_Visible)
 		{
@@ -408,9 +469,10 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			vec4 IconColor = vec4(1, 1, 1, 1);
 			if(!DemoItem.m_IsDir)
 			{
-				IconColor = vec4(0.6f, 0.6f, 0.6f, 1.0f); // not loaded
-				if(DemoItem.m_Valid && DemoItem.m_InfosLoaded)
-					IconColor = DemoMarkerCount > 0 ? vec4(0.5, 1, 0.5, 1) : vec4(1,1,1,1);
+				if(DemoMarkerCount < 0)
+					IconColor = vec4(0.6f, 0.6f, 0.6f, 1.0f); // not loaded
+				else if(DemoMarkerCount > 0)
+					IconColor = vec4(0.5, 1, 0.5, 1);
 			}
 
 			DoIconColor(IMAGE_FILEICONS, DemoItem.m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon, IconColor);
@@ -587,7 +649,7 @@ float CMenus::RenderDemoDetails(CUIRect View)
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		const int MarkerCount = DemoGetMarkerCount(m_lDemos[m_DemolistSelectedIndex].m_Info);
+		const int MarkerCount = m_lDemos[m_DemolistSelectedIndex].GetMarkerCount();
 		str_format(aBuf, sizeof(aBuf), "%d", MarkerCount);
 		if(MarkerCount > 0)
 			TextRender()->TextColor(0.5, 1, 0.5, 1);
