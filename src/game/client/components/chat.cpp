@@ -711,7 +711,7 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 	int64 Now = time_get();
 	if(ClientID < 0)
 	{
-		if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
+		if(Config()->m_SndEnableServerChat && Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
 		{
 			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
 			m_aLastSoundPlayed[CHAT_SERVER] = Now;
@@ -719,13 +719,16 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 	}
 	else if(Highlighted || Mode == CHAT_WHISPER)
 	{
-		if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
+		if((Highlighted && Config()->m_SndEnableHighlightChat) || (Mode == CHAT_WHISPER && Config()->m_SndEnableWhisperChat))
 		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
-			m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
+			if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
+			{
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+				m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
+			}
 		}
 	}
-	else
+	else if(Config()->m_SndEnableRegularChat)
 	{
 		if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
 		{

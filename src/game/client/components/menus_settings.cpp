@@ -1909,7 +1909,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	CUIRect Label, Button, Sound, Detail, BottomView, Background;
 
 	// render sound menu background
-	int NumOptions = Config()->m_SndEnable ? 3 : 2;
+	int NumOptions = Config()->m_SndEnable ? 7 : 2;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
@@ -1967,6 +1967,34 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		static int s_ButtonSndNonactiveMute = 0;
 		if(DoButton_CheckBox(&s_ButtonSndNonactiveMute, Localize("Mute when not active"), Config()->m_SndNonactiveMute, &Button))
 			Config()->m_SndNonactiveMute ^= 1;
+
+		Sound.HSplitTop(Spacing, 0, &Sound);
+		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ButtonSndEnableRegularChat = 0;
+		if(DoButton_CheckBox(&s_ButtonSndEnableRegularChat, Localize("Enable regular chat sounds"), Config()->m_SndEnableRegularChat, &Button))
+			Config()->m_SndEnableRegularChat ^= 1;
+
+		Sound.HSplitTop(Spacing, 0, &Sound);
+		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ButtonSndEnableWhisperChat = 0;
+		if(DoButton_CheckBox(&s_ButtonSndEnableWhisperChat, Localize("Enable whisper chat sounds"), Config()->m_SndEnableWhisperChat, &Button))
+			Config()->m_SndEnableWhisperChat ^= 1;
+
+		Sound.HSplitTop(Spacing, 0, &Sound);
+		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ButtonSndEnableHighlightChat = 0;
+		if(DoButton_CheckBox(&s_ButtonSndEnableHighlightChat, Localize("Enable chat sound when highlighted"), Config()->m_SndEnableHighlightChat, &Button))
+			Config()->m_SndEnableHighlightChat ^= 1;
+
+		Sound.HSplitTop(Spacing, 0, &Sound);
+		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
+		Button.VSplitLeft(ButtonHeight, 0, &Button);
+		static int s_ButtonSndEnableServerChat = 0;
+		if(DoButton_CheckBox(&s_ButtonSndEnableServerChat, Localize("Enable server chat sounds"), Config()->m_SndEnableServerChat, &Button))
+			Config()->m_SndEnableServerChat ^= 1;
 
 		// render detail menu
 		Detail.HSplitTop(ButtonHeight, &Label, &Detail);
