@@ -158,6 +158,8 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pPreviewRect = 0);
 
+	const char *m_pChosenTemplate;
+
 	bool m_UiDetailPanelIsOpen;
 
 	i8 m_MapViewZoom;
@@ -318,6 +320,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderPopupYesNo(void *pPopupData);
 	void RenderPopupMapNew(void *pPopupData);
 	void RenderPopupAddImage(void *pPopupData);
+	void RenderPopupMapNewDetails(void *pPopupData);
 
 	struct CUIPopupYesNo
 	{

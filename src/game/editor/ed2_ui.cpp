@@ -326,7 +326,9 @@ bool CEditor2Ui::UiTextInput(const CUIRect& Rect, char* pText, int TextMaxLength
 	const float FontSize = 8.0f;
 
 	vec4 BorderColor;
-	if(pInputState->m_Selected)
+	if(pInputState->m_Error)
+		BorderColor = vec4(1, 0, 0, 1);
+	else if(pInputState->m_Selected)
 		BorderColor = StyleColorInputSelected;
 	else if(pInputState->m_Button.m_Hovered)
 		BorderColor = StyleColorButtonHover;
