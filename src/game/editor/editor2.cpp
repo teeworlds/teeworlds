@@ -3273,13 +3273,50 @@ void CEditor2::RenderPopupMapNew(void* pPopupData)
 		return;
 	}
 
-	// TODO: New map popup (template based)
-	if(true)
-	{
-		// TODO: make a function
-		Reset();
-		m_Map.LoadDefault();
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
 
+	// whole screen "button" that prevents clicking on other stuff
+	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5));
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
+
+	CUIRect MainRect = {0,0,m_UiScreenRect.w * 0.250f, 210.0f};
+	MainRect.x = (m_UiScreenRect.w - MainRect.w) * 0.5f;
+	MainRect.y = (m_UiScreenRect.h - MainRect.h) * 0.5f;
+
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
+
+	CUIRect TitleRect;
+	MainRect.HSplitTop(20.0f, &TitleRect, &MainRect);
+	DrawText(TitleRect, Localize("New map"), 10, vec4(1.0f, 1.0f, 1.0f, 1.0f), CUI::ALIGN_CENTER);
+
+	MainRect.Margin(10.0f, &MainRect);
+
+	m_pChosenTemplate = 0;
+	static CUIButton s_aButtons[4];
+	static const char *s_apTemplates[4] = {"grass", "jungle", "desert", "snow"};
+	for(int i = 0; i < 4; i++)
+	{
+		CUIRect Button;
+		MainRect.HSplitTop(30.0f, &Button, &MainRect);
+		char aButtonName[16];
+		str_format(aButtonName, sizeof(aButtonName), "Template %s", s_apTemplates[i]);
+		if(UiButton(Button, aButtonName, &s_aButtons[i], 10.0f, CUI::ALIGN_CENTER))
+			m_pChosenTemplate = s_apTemplates[i];
+
+		MainRect.HSplitTop(5.0f, 0, &MainRect);
+	}
+
+	static CUIButton s_BCustom;
+	CUIRect BCustom;
+	MainRect.HSplitTop(30.0f, &BCustom, &MainRect);
+	if(UiButton(BCustom, "Empty", &s_BCustom, 10.0f, CUI::ALIGN_CENTER))
+		m_pChosenTemplate = "empty";
+
+	if(m_pChosenTemplate)
+	{
+		PushPopup(&CEditor2::RenderPopupMapNewDetails, &m_pChosenTemplate);
 		ExitPopup();
 	}
 }
@@ -3372,6 +3409,87 @@ void CEditor2::RenderPopupAddImage(void *pPopupData)
 		IGraphics::CQuadItem Quad(Image.x, Image.y, Image.w, Image.h);
 		Graphics()->QuadsDrawTL(&Quad, 1);
 		Graphics()->QuadsEnd();
+	}
+}
+
+void CEditor2::RenderPopupMapNewDetails(void *pPopupData)
+{
+	const char *pChosenTemplate = *(const char **)pPopupData;
+
+	if(Input()->KeyPress(KEY_ESCAPE))
+	{
+		ExitPopup();
+		return;
+	}
+
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	// whole screen "button" that prevents clicking on other stuff
+	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5));
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
+
+	const float Scale = 1.0f/8.0f;
+	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, (UiScreenRect.h - UiScreenRect.w * Scale) * 0.5f, UiScreenRect.w * Scale, UiScreenRect.w * Scale};
+
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
+
+	MainRect.Margin(5.0f, &MainRect);
+
+	CUIRect TitleRect;
+	MainRect.HSplitTop(20.0f, &TitleRect, &MainRect);
+	DrawText(TitleRect, pChosenTemplate, 10);
+
+	static char s_aWText[5];
+	static bool s_WError;
+	static CUITextInput s_WField;
+	CUIRect WLine, WLabel, WInput;
+	MainRect.HSplitTop(20.0f, &WLine, &MainRect);
+	WLine.VSplitMid(&WLabel, &WInput, 5.0f);
+
+	DrawText(WLabel, "W:", 12.0f, vec4(1, 1, 1, 1), CUI::ALIGN_RIGHT);
+	if(UiTextInput(WInput, s_aWText, sizeof(s_aWText), &s_WField))
+		s_WField.m_Error = str_is_number(s_aWText) || !s_aWText[0];
+
+	MainRect.HSplitTop(5.0f, 0, &MainRect);
+
+	static char s_aHText[5];
+	static bool s_HError;
+	static CUITextInput s_HField;
+	CUIRect HLine, HLabel, HInput;
+	MainRect.HSplitTop(20.0f, &HLine, &MainRect);
+	HLine.VSplitMid(&HLabel, &HInput, 5.0f);
+
+	DrawText(HLabel, "H:", 12.0f, vec4(1, 1, 1, 1), CUI::ALIGN_RIGHT);
+	if(UiTextInput(HInput, s_aHText, sizeof(s_aHText), &s_HField))
+		s_HField.m_Error = str_is_number(s_aHText) || !s_aHText[0];
+
+	MainRect.HSplitTop(5.0f, 0, &MainRect);
+
+	static CUIButton s_BCancel, s_BConfirm;
+	CUIRect BLine, BCancel, BConfirm;
+	MainRect.HSplitBottom(20.0f, &MainRect, &BLine);
+	BLine.VSplitMid(&BCancel, &BConfirm, 10.0f);
+
+	if(UiButton(BCancel, Localize("Cancel"), &s_BCancel, 10.0f, CUI::ALIGN_CENTER))
+	{
+		ExitPopup();
+		return;
+	}
+
+	if(UiButton(BConfirm, Localize("Confirm"), &s_BConfirm, 10.0f, CUI::ALIGN_CENTER))
+	{
+		if(s_WError || s_HError)
+			return;
+
+		if(!str_comp(pChosenTemplate, "empty"))
+		{
+			Reset();
+			m_Map.LoadDefault(str_toint(s_aWText), str_toint(s_aHText));
+		}
+
+		ExitPopup();
 	}
 }
 

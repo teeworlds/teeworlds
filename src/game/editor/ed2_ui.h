@@ -26,10 +26,12 @@ struct CUITextInput
 	u8 m_Selected;
 	CLineInput m_LineInput;
 	int m_CursorPos;
+	bool m_Error;
 
 	CUITextInput()
 	{
 		m_Selected = false;
+		m_Error = false;
 	}
 };
 

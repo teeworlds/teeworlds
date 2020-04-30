@@ -194,7 +194,7 @@ struct CEditorMap2
 	void Init(IStorage *pStorage, IGraphics* pGraphics, IConsole* pConsole);
 	bool Save(const char *pFileName);
 	bool Load(const char *pFileName);
-	void LoadDefault();
+	void LoadDefault(int W = 50, int H = 50);
 	void Clear();
 
 	// loads not-loaded images, clears the rest

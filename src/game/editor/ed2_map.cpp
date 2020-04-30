@@ -504,7 +504,7 @@ bool CEditorMap2::Load(const char* pFileName)
 }
 
 
-void CEditorMap2::LoadDefault()
+void CEditorMap2::LoadDefault(int W, int H)
 {
 	m_aPath[0] = 0;
 	Clear();
@@ -548,7 +548,7 @@ void CEditorMap2::LoadDefault()
 	GameGroup.m_ParallaxY = 100;
 
 	u32 GameLayerID;
-	NewTileLayer(50, 50, &GameLayerID);
+	NewTileLayer(W, H, &GameLayerID);
 
 	GameGroup.m_apLayerIDs[GameGroup.m_LayerCount++] = GameLayerID;
 
