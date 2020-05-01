@@ -98,6 +98,9 @@ public:
 	// networking
 	virtual void EnterGame() = 0;
 
+	// network stats
+	virtual int GetInputtimeMarginStabilityScore() = 0;
+
 	//
 	virtual const char *GetCurrentMapName() const = 0;
 	virtual const char *GetCurrentMapPath() const = 0;
