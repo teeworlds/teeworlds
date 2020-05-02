@@ -374,7 +374,8 @@ private:
 	};
 	array<CMenuImage> m_lMenuImages;
 
-	static int MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int MenuImageCountingScan(const char *pName, int IsDir, int DirType, void *pUser);
+	static int MenuImageLoadingScan(const char *pName, int IsDir, int DirType, void *pUser);
 
 	const CMenuImage *FindMenuImage(const char* pName);
 

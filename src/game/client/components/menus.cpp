@@ -1272,9 +1272,6 @@ void CMenus::RenderLoading(int WorkedAmount)
 	// because that will slow down loading if we have vsync
 	if(s_LastLoadRender > 0 && Now-s_LastLoadRender < Freq/60)
 		return;
-	if(!Graphics()->IsIdle())
-		return;
-
 	s_LastLoadRender = Now;
 	static int64 s_LoadingStart = Now;
 
@@ -1348,7 +1345,14 @@ void CMenus::RenderBackButton(CUIRect MainView)
 	}
 }
 
-int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser)
+int CMenus::MenuImageCountingScan(const char *pName, int IsDir, int DirType, void *pUser)
+{
+	if(!IsDir && str_endswith(pName, ".png"))
+		(*(int *)pUser)++;
+	return 0;
+}
+
+int CMenus::MenuImageLoadingScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	if(IsDir || !str_endswith(pName, ".png"))
@@ -1426,6 +1430,7 @@ int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser
 	str_format(aBuf, sizeof(aBuf), "load menu image %s", MenuImage.m_aName);
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 	pSelf->m_lMenuImages.add(MenuImage);
+	pSelf->RenderLoading(5);
 
 	return 0;
 }
@@ -1473,21 +1478,23 @@ void CMenus::UpdateVideoModeSettings()
 
 int CMenus::GetInitAmount() const
 {
-	return 10;
+	int NumMenuImages = 0;
+	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/menuimages", MenuImageCountingScan, &NumMenuImages);
+
+	return 6 + 5 * NumMenuImages;
 }
 
 void CMenus::OnInit()
 {
 	UpdateVideoModeSettings();
-	RenderLoading(5);
+	RenderLoading(3);
 
 	m_MousePos.x = Graphics()->ScreenWidth()/2;
 	m_MousePos.y = Graphics()->ScreenHeight()/2;
 
 	// load menu images
 	m_lMenuImages.clear();
-	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/menuimages", MenuImageScan, this);
-	RenderLoading(2);
+	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/menuimages", MenuImageLoadingScan, this);
 
 	// load filters
 	LoadFilters();
@@ -2399,19 +2406,19 @@ bool CMenus::IsBackgroundNeeded() const
 
 void CMenus::RenderBackground(float Time)
 {
-	float sw = 300*Graphics()->ScreenAspect();
-	float sh = 300;
-	Graphics()->MapScreen(0, 0, sw, sh);
+	float ScreenWidth = 300*Graphics()->ScreenAspect();
+	float ScreenHeight = 300;
+	Graphics()->MapScreen(0, 0, ScreenWidth, ScreenHeight);
 
 	// render the tiles
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
-		float Size = 15.0f;
-		float OffsetTime = fmod(Time*0.15f, 2.0f);
-		for(int y = -2; y < (int)(sw/Size); y++)
-			for(int x = -2; x < (int)(sh/Size); x++)
+		const float Size = 15.0f;
+		const float OffsetTime = fmod(Time*0.15f, 2.0f);
+		for(int y = -2; y < (int)(ScreenWidth/Size); y++)
+			for(int x = -2; x < (int)(ScreenHeight/Size); x++)
 			{
-				Graphics()->SetColor(0,0,0,0.045f);
+				Graphics()->SetColor(0.0f, 0.0f, 0.0f, 0.045f);
 				IGraphics::CQuadItem QuadItem((x-OffsetTime)*Size*2+(y&1)*Size, (y+OffsetTime)*Size, Size, Size);
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 			}
@@ -2422,7 +2429,7 @@ void CMenus::RenderBackground(float Time)
 	Graphics()->TextureSet(s_TextureBlob);
 	Graphics()->QuadsBegin();
 		Graphics()->SetColor(0,0,0,0.5f);
-		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(-100, -100, sw+200, sh+200);
+		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(-100, -100, ScreenWidth+200, ScreenHeight+200);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 

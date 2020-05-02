@@ -38,9 +38,6 @@ void CMapLayers::OnStateChange(int NewState, int OldState)
 
 void CMapLayers::LoadBackgroundMap()
 {
-	if(!Config()->m_ClShowMenuMap)
-		return;
-
 	int HourOfTheDay = time_houroftheday();
 	char aBuf[128];
 	// check for the appropriate day/night map
@@ -73,7 +70,7 @@ void CMapLayers::LoadBackgroundMap()
 int CMapLayers::GetInitAmount() const
 {
 	if(m_Type == TYPE_BACKGROUND)
-		return 15;
+		return 1 + (Config()->m_ClShowMenuMap ? 14 : 0);
 	return 0;
 }
 
@@ -84,8 +81,11 @@ void CMapLayers::OnInit()
 		m_pMenuLayers = new CLayers;
 		m_pMenuMap = CreateEngineMap();
 		m_pClient->m_pMenus->RenderLoading(1);
-		LoadBackgroundMap();
-		m_pClient->m_pMenus->RenderLoading(14);
+		if(Config()->m_ClShowMenuMap)
+		{
+			LoadBackgroundMap();
+			m_pClient->m_pMenus->RenderLoading(14);
+		}
 	}
 
 	m_pEggTiles = 0;
@@ -531,7 +531,7 @@ void CMapLayers::BackgroundMapUpdate()
 	{
 		// unload map
 		m_pMenuMap->Unload();
-
-		LoadBackgroundMap();
+		if(Config()->m_ClShowMenuMap)
+			LoadBackgroundMap();
 	}
 }

@@ -132,7 +132,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 
 int CCountryFlags::GetInitAmount() const
 {
-	return 15;
+	return 10;
 }
 
 void CCountryFlags::OnInit()
@@ -140,7 +140,6 @@ void CCountryFlags::OnInit()
 	// load country flags
 	m_aCountryFlags.clear();
 	LoadCountryflagsIndexfile();
-	m_pClient->m_pMenus->RenderLoading(5);
 	if(!m_aCountryFlags.size())
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "countryflags", "failed to load country flags. folder='countryflags/'");

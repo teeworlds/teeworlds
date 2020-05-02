@@ -345,8 +345,11 @@ void CGameClient::OnInit()
 
 	int64 Start = time_get();
 
-	// set the language
-	g_Localization.Load(Config()->m_ClLanguagefile, Storage(), Console());
+	// Render load screen at 0% to get graphics sooner.
+	// Render twice to clear front and back buffers and minimize initial flashing color.
+	m_pMenus->InitLoading(1);
+	m_pMenus->RenderLoading();
+	m_pMenus->RenderLoading();
 
 	// TODO: this should be different
 	// setup item sizes
@@ -355,6 +358,14 @@ void CGameClient::OnInit()
 	static const int OLD_NUM_NETOBJTYPES = 23;
 	for(int i = 0; i < OLD_NUM_NETOBJTYPES; i++)
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
+
+	// determine total work for loading all components
+	int TotalWorkAmount = g_pData->m_NumImages + 4 + 1 + 1 + 2; // +4=load init, +1=font, +1=localization, +2=editor
+	for(int i = m_All.m_Num-1; i >= 0; --i)
+		TotalWorkAmount += m_All.m_paComponents[i]->GetInitAmount();
+
+	m_pMenus->InitLoading(TotalWorkAmount);
+	m_pMenus->RenderLoading(4);
 
 	// load default font
 	char aFontName[IO_MAX_PATH_LENGTH];
@@ -371,17 +382,15 @@ void CGameClient::OnInit()
 			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", aBuf);
 		}
 	}
+	m_pMenus->RenderLoading(1);
 
-	// determine total work for loading all components
-	int TotalWorkAmount = g_pData->m_NumImages + 2; // +2=editor
-	for(int i = m_All.m_Num-1; i >= 0; --i)
-		TotalWorkAmount += m_All.m_paComponents[i]->GetInitAmount();
+	// set the language
+	g_Localization.Load(Config()->m_ClLanguagefile, Storage(), Console());
+	m_pMenus->RenderLoading(1);
 
-	m_pMenus->InitLoading(TotalWorkAmount);
-	m_pMenus->RenderLoading(); // render initial loading screen
 	// init all components
 	for(int i = m_All.m_Num-1; i >= 0; --i)
-		m_All.m_paComponents[i]->OnInit();
+		m_All.m_paComponents[i]->OnInit(); // this will call RenderLoading again
 
 	// load textures
 	for(int i = 0; i < g_pData->m_NumImages; i++)
