@@ -894,6 +894,8 @@ set(EXPECTED_DATA
   editor/checker.png
   editor/cursor.png
   editor/entities.png
+  editor/templates/grass_preview.png
+  editor/templates/grass_template.map
   emoticons.png
   fonts/DejaVuSans.ttf
   game.png
