@@ -10,9 +10,11 @@
 #include <engine/textrender.h>
 #include <engine/shared/config.h>
 
-//#include <intrin.h>
 
 // TODO:
+// - Magic brush (auto map)
+// - Multi layer paint (game layer collision/death/...)
+
 // - Easily know if we're clicking on UI or elsewhere
 // ---- what event gets handled where should be VERY clear
 
@@ -96,7 +98,6 @@ void CEditor2::Init()
 	m_UiSelectedLayerID = -1;
 	m_UiSelectedGroupID = -1;
 	m_UiSelectedImageID = -1;
-	m_BrushAutomapRuleID = -1;
 	m_pHistoryEntryCurrent = 0x0;
 	m_Page = PAGE_MAP_EDITOR;
 	m_Tool = TOOL_TILE_BRUSH;
@@ -304,10 +305,11 @@ void CEditor2::Render()
 		Graphics()->WrapClamp();
 		Graphics()->QuadsBegin();
 
-		const vec3 aToolColors[] = {
+		const vec3 aToolColors[TOOL_COUNT_] = {
 			vec3(1, 0.2f, 1),
 			vec3(1, 0.5f, 0.2f),
 			vec3(0.2f, 0.7f, 1),
+			vec3(1, 1, 1),
 		};
 		const vec3& ToolColor = aToolColors[m_Tool];
 		Graphics()->SetColor(ToolColor.r, ToolColor.g, ToolColor.b, 1);
@@ -529,6 +531,18 @@ void CEditor2::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
 
 void CEditor2::RenderMap()
 {
+	// Move the map view
+	// We do this here so there are no frame delay
+	// NOTE: we use the same id as in DoToolStuff() on purpose
+	CUIButton MapViewButton;
+	UiDoButtonBehavior(&m_MapViewDrag, m_UiMainViewRect, &MapViewButton);
+	if(MapViewButton.m_Hovered)
+	{
+		m_MapUiPosOffset -= m_MapViewMove;
+		if(m_MapViewZoom == 1)  ChangeZoom(m_Zoom / 1.1f);
+		if(m_MapViewZoom == -1) ChangeZoom(m_Zoom * 1.1f);
+	}
+
 	// get world view points based on neutral paramters
 	float aWorldViewRectPoints[4];
 	RenderTools()->MapScreenToWorld(0, 0, 1, 1, 0, 0, Graphics()->ScreenAspect(), 1, aWorldViewRectPoints);
@@ -826,29 +840,23 @@ void CEditor2::DoToolStuff()
 	const int MouseTy = floor(MouseWorldPos.y/TileSize);
 	const vec2 GridMousePos(MouseTx*TileSize, MouseTy*TileSize);
 
-	static CUIMouseDrag s_MapViewDrag;
-	bool FinishedDragging = UiDoMouseDragging(m_UiMainViewRect, &s_MapViewDrag);
+	bool FinishedDragging = UiDoMouseDragging(m_UiMainViewRect, &m_MapViewDrag);
 
-	const bool CanClick = s_MapViewDrag.m_Button.m_Hovered;
-
-	if(CanClick) // TODO: having this here causes a frame (frames?) delay on move since we update m_MapUiPosOffset *after* using it to render the map. Move it up?
-	{
-		m_MapUiPosOffset -= m_MapViewMove;
-		if(m_MapViewZoom == 1)  ChangeZoom(m_Zoom / 1.1f);
-		if(m_MapViewZoom == -1) ChangeZoom(m_Zoom * 1.1f);
-	}
+	const bool CanClick = m_MapViewDrag.m_Button.m_Hovered;
 
 	// TODO: kinda weird?
 	if(!CanClick)
-		s_MapViewDrag = CUIMouseDrag();
+		m_MapViewDrag = CUIMouseDrag();
 
 	const CEditorMap2::CGroup& SelectedGroup = m_Map.m_aGroups.Get(m_UiSelectedGroupID);
 
 	// TODO: switch
 	if(IsToolSelect())
-		DoToolSelect(MouseTx, MouseTy, MouseWorldPos, GridMousePos, &s_MapViewDrag, FinishedDragging);
+		DoToolSelect(MouseTx, MouseTy, MouseWorldPos, GridMousePos, &m_MapViewDrag, FinishedDragging);
 	else if(IsToolBrush())
-		DoToolBrush(MouseTx, MouseTy, MouseWorldPos, GridMousePos, &s_MapViewDrag, FinishedDragging);
+		DoToolBrush(MouseTx, MouseTy, MouseWorldPos, GridMousePos, &m_MapViewDrag, FinishedDragging);
+	else if(IsToolMagicBrush())
+		DoToolMagicBrush(MouseTx, MouseTy, MouseWorldPos, GridMousePos, &m_MapViewDrag, FinishedDragging);
 
 	if(IsToolDimension())
 	{
@@ -1047,37 +1055,39 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 				const int RectEndX = max(MouseTx, StartTX);
 				const int RectEndY = max(MouseTy, StartTY);
 
-				// automap
-				if(m_BrushAutomapRuleID >= 0)
-				{
-					// click without dragging, paint whole brush in place
-					if(StartTX == MouseTx && StartTY == MouseTy)
-						EditBrushPaintLayerAutomap(MouseTx, MouseTy, SelectedLayerID, m_BrushAutomapRuleID);
-					else // drag, fill the rectangle by repeating the brush
-					{
-						EditBrushPaintLayerFillRectAutomap(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID, m_BrushAutomapRuleID);
-					}
-				}
-				// no automap
-				else
-				{
-					// click without dragging, paint whole brush in place
-					if(StartTX == MouseTx && StartTY == MouseTy)
-						EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
-					else // drag, fill the rectangle by repeating the brush
-						EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
-				}
+				// click without dragging, paint whole brush in place
+				if(StartTX == MouseTx && StartTY == MouseTy)
+					EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
+				else // drag, fill the rectangle by repeating the brush
+					EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
 			}
 
 		}
 		else // stroke paint
 		{
 			// TODO: input last mouse position as "StartTX/Y"
-			if(pMouseDrag->m_IsDragging)
+			if(pMouseDrag->m_IsDragging) // TODO: we don't need to do this *every* frame
 				EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, false);
 			else if(FinishedDragging)
 				EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, true); // push history entry when we finish the stroke
 		}
+	}
+}
+
+void CEditor2::DoToolMagicBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging)
+{
+	if(!m_Map.m_aLayers.IsValid(m_UiSelectedLayerID))
+		return;
+
+	const int SelectedLayerID = m_UiSelectedLayerID;
+	const CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers.Get(SelectedLayerID);
+	if(!SelectedTileLayer.IsTileLayer())
+		return;
+
+	if(Input()->KeyIsPressed(KEY_SPACE) && !m_MagicBrushContext.m_IsContextPopupOpen)
+	{
+		m_MagicBrushContext.m_IsContextPopupOpen = true;
+		PushPopup(&CEditor2::RenderPopupMagicBrushContext, 0x0);
 	}
 }
 
@@ -1100,25 +1110,6 @@ void CEditor2::RenderMenuBar(CUIRect TopPanel)
 	if(UiButton(ButtonRect, "Help", &s_Help))
 	{
 
-	}
-
-	// tools
-	if(m_Page == PAGE_MAP_EDITOR)
-	{
-		TopPanel.VSplitLeft(50.0f, 0, &TopPanel);
-		static CUIButton s_ButTools[TOOL_COUNT_];
-		const char* aButName[] = {
-			"Se",
-			"Di",
-			"TB"
-		};
-
-		for(int t = 0; t < TOOL_COUNT_; t++)
-		{
-			TopPanel.VSplitLeft(25.0f, &ButtonRect, &TopPanel);
-			if(UiButtonEx(ButtonRect, aButName[t], &s_ButTools[t], m_Tool == t ? StyleColorInputSelected : StyleColorButton, m_Tool == t ? StyleColorInputSelected : StyleColorButtonHover, StyleColorButtonPressed, StyleColorButtonBorder, 10.0f, CUI::ALIGN_LEFT))
-				ChangeTool(t);
-		}
 	}
 
 	TopPanel.VSplitRight(20.0f, &TopPanel, 0);
@@ -1210,10 +1201,11 @@ void CEditor2::RenderMapEditorUI()
 	ToolColumnRect.VMargin(Margin, &ToolColumnRect);
 
 	static CUIButton s_ButTools[TOOL_COUNT_];
-	const char* aButName[] = {
+	const char* aButName[TOOL_COUNT_] = {
 		"Se",
 		"Di",
-		"TB"
+		"Tb",
+		"Mb"
 	};
 
 	for(int t = 0; t < TOOL_COUNT_; t++)
@@ -2777,45 +2769,29 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 		BrushRotate90CounterClockwise();
 	}
 
-	// Auto map
-	CUIRect RightCol = ImageRect;
-	RightCol.x = ImageRect.x + ImageRect.w + 2;
-	RightCol.w = 80;
-
-	// reset selected rule when changing image
-	if(SelectedTileLayer.m_ImageID != m_UiBrushPaletteState.m_ImageID)
-		m_BrushAutomapRuleID = -1;
-	m_UiBrushPaletteState.m_ImageID = SelectedTileLayer.m_ImageID;
-
-	CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(SelectedTileLayer.m_ImageID);
-	const float ButtonHeight = 20;
-	const float Spacing = 2;
-
-	if(pMapper)
-	{
-		const int RulesetCount = pMapper->RuleSetNum();
-		static CUIButton s_ButtonAutoMap[16];
-		 // TODO: find a better solution to this
-		dbg_assert(RulesetCount <= 16, "RulesetCount is too big");
-
-		for(int r = 0; r < RulesetCount; r++)
-		{
-			RightCol.HSplitTop(ButtonHeight, &ButtonRect, &RightCol);
-			RightCol.HSplitTop(Spacing, 0, &RightCol);
-
-			bool Selected = m_BrushAutomapRuleID == r;
-			if(UiButtonSelect(ButtonRect, pMapper->GetRuleSetName(r), &s_ButtonAutoMap[r], Selected, 10))
-			{
-				m_BrushAutomapRuleID = r;
-			}
-		}
-	}
-
 	RenderBrush(m_UiMousePos);
 
 	if((!IsToolBrush() || !Input()->KeyIsPressed(KEY_SPACE)) && m_UiBrushPaletteState.m_PopupEnabled)
 	{
 		m_UiBrushPaletteState.m_PopupEnabled = false;
+		ExitPopup();
+	}
+}
+
+void CEditor2::RenderPopupMagicBrushContext(void* pPopupData)
+{
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	DrawRect(UiScreenRect, vec4(0, 0, 0, 0.5)); // darken the background a bit
+
+	// whole screen "button" that prevents clicking on other stuff
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
+
+	if((!IsToolMagicBrush() || !Input()->KeyIsPressed(KEY_SPACE)))
+	{
+		m_MagicBrushContext.m_IsContextPopupOpen = false;
 		ExitPopup();
 	}
 }

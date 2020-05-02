@@ -75,6 +75,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	int m_UiSelectedLayerID;
 	int m_UiSelectedGroupID;
 	int m_UiSelectedImageID;
+	bool m_UiDetailPanelIsOpen;
 
 	struct CGroupUiState
 	{
@@ -91,6 +92,10 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	CPlainArray<CGroupUiState,CEditorMap2::MAX_GROUPS> m_UiGroupState;
 	CPlainArray<CLayerUiState,CEditorMap2::MAX_LAYERS> m_UiLayerState;
+
+	i8 m_MapViewZoom;
+	vec2 m_MapViewMove;
+	CUIMouseDrag m_MapViewDrag;
 
 	struct CUIBrushPalette
 	{
@@ -158,13 +163,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	CUIFileSelect m_UiFileSelectState;
 
-	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pPreviewRect = 0);
-
-	bool m_UiDetailPanelIsOpen;
-
-	i8 m_MapViewZoom;
-	vec2 m_MapViewMove;
-
 	struct CBrush
 	{
 		array2<CTile> m_aTiles;
@@ -181,7 +179,20 @@ class CEditor2: public IEditor, public CEditor2Ui
 	};
 
 	CBrush m_Brush;
-	int m_BrushAutomapRuleID;
+
+	struct CMagicBrushContext
+	{
+		int m_AutomapRuleID;
+		bool m_IsContextPopupOpen;
+
+		CMagicBrushContext()
+		{
+			m_AutomapRuleID = 0;
+			m_IsContextPopupOpen = false;
+		}
+	};
+
+	CMagicBrushContext m_MagicBrushContext;
 
 	struct CUISnapshot
 	{
@@ -227,6 +238,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 		TOOL_SELECT=0,
 		TOOL_DIMENSION,
 		TOOL_TILE_BRUSH,
+		TOOL_MAGIC_BRUSH,
 		TOOL_COUNT_
 	};
 
@@ -295,35 +307,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 	CPlainArray<CUINotification, 10> m_UiNotifications;
 	int m_UiNotificationNextID;
 
-	void RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer);
-
-	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
-		float ParallaxY);
-	vec2 CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos);
-	CUIRect CalcUiRectFromGroupWorldRect(int GroupID, float WorldWidth, float WorldHeight, CUIRect WorldRect);
-
-	static void StaticEnvelopeEval(float TimeOffset, int EnvID, float *pChannels, void *pUser);
-	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
-
-	void RenderMap();
-	void RenderMapEditorUI();
-	void RenderMenuBar(CUIRect TopPanel);
-	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
-	void RenderHistory(CUIRect NavRect);
-	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
-
-	void DoToolStuff();
-	void DoToolSelect(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
-	void DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
-
-	void RenderPopupMenuFile(void* pPopupData);
-	void RenderPopupBrushPalette(void* pPopupData);
-	void RenderPopupMapLoad(void* pPopupData);
-	void RenderPopupMapSaveAs(void* pPopupData);
-	void RenderPopupYesNo(void *pPopupData);
-	void RenderPopupMapNew(void *pPopupData);
-	void RenderPopupAddImage(void *pPopupData);
-
 	struct CUIPopupYesNo
 	{
 		bool m_Active;
@@ -386,6 +369,38 @@ class CEditor2: public IEditor, public CEditor2Ui
 	CUIPopupMapLoad m_UiPopupMapLoad;
 	CUIPopupMapNew m_UiPopupMapNew;
 
+	void RenderLayerGameEntities(const CEditorMap2::CLayer& GameLayer);
+
+	vec2 CalcGroupScreenOffset(float WorldWidth, float WorldHeight, float PosX, float PosY, float ParallaxX,
+		float ParallaxY);
+	vec2 CalcGroupWorldPosFromUiPos(int GroupID, float WorldWidth, float WorldHeight, vec2 UiPos);
+	CUIRect CalcUiRectFromGroupWorldRect(int GroupID, float WorldWidth, float WorldHeight, CUIRect WorldRect);
+
+	static void StaticEnvelopeEval(float TimeOffset, int EnvID, float *pChannels, void *pUser);
+	void EnvelopeEval(float TimeOffset, int EnvID, float *pChannels);
+
+	void RenderMap();
+	void RenderMapEditorUI();
+	void RenderMenuBar(CUIRect TopPanel);
+	void RenderMapEditorUiLayerGroups(CUIRect NavRect);
+	void RenderHistory(CUIRect NavRect);
+	void RenderMapEditorUiDetailPanel(CUIRect DetailRect);
+
+	void DoToolStuff();
+	void DoToolSelect(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
+	void DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
+	void DoToolMagicBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
+
+	void RenderPopupMenuFile(void* pPopupData);
+	void RenderPopupBrushPalette(void* pPopupData);
+	void RenderPopupMagicBrushContext(void* pPopupData);
+	void RenderPopupMapLoad(void* pPopupData);
+	void RenderPopupMapSaveAs(void* pPopupData);
+	void RenderPopupYesNo(void *pPopupData);
+	void RenderPopupMapNew(void *pPopupData);
+	void RenderPopupAddImage(void *pPopupData);
+
+	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pPreviewRect = 0);
 	bool DoPopupYesNo(CUIPopupYesNo* state);
 
 	void RenderBrush(vec2 Pos);
@@ -418,6 +433,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	inline bool IsToolSelect() const { return m_Tool == TOOL_SELECT; }
 	inline bool IsToolDimension() const { return m_Tool == TOOL_DIMENSION; }
 	inline bool IsToolBrush() const { return m_Tool == TOOL_TILE_BRUSH; }
+	inline bool IsToolMagicBrush() const { return m_Tool == TOOL_MAGIC_BRUSH; }
 
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);
