@@ -1587,7 +1587,7 @@ void CServer::DemoRecorder_HandleAutoStart()
 		char aFilename[128];
 		char aDate[20];
 		str_timestamp(aDate, sizeof(aDate));
-		str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", "auto/autorecord", aDate);
+		str_format(aFilename, sizeof(aFilename), "demos/%s_%s%s.demo", "auto/autorecord", aDate, Config()->m_SvAutoDemoSuffix);
 		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameServer()->NetVersion(), m_aCurrentMap, m_CurrentMapSha256, m_CurrentMapCrc, "server");
 		if(Config()->m_SvAutoDemoMax)
 		{
