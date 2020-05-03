@@ -1395,7 +1395,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	// bottom button
 	float ButtonWidth = (BottomView.w/6.0f)-(SpacingW*5.0)/6.0f;
-	float BackgroundWidth = s_CustomSkinMenu||(m_pSelectedSkin && (m_pSelectedSkin->m_Flags&CSkins::SKINFLAG_STANDARD) == 0) ? ButtonWidth*2.0f+SpacingW : ButtonWidth;
+	float BackgroundWidth = s_CustomSkinMenu||(m_pSelectedSkin && (m_pSelectedSkin->m_Flags&CSkins::SKINFLAG_STANDARD) == 0) ? ButtonWidth*3.0f+SpacingW : ButtonWidth;
 
 	BottomView.VSplitRight(BackgroundWidth, 0, &BottomView);
 	RenderBackgroundShadow(&BottomView, true);
@@ -1403,6 +1403,53 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
 	if(s_CustomSkinMenu)
 	{
+	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
+		static CButtonContainer s_RandomSkinButton;
+		if(DoButton_Menu(&s_RandomSkinButton, "Random", 0, &Button))
+		{
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				int Hue = random_int() % 255;
+				int Sat = random_int() % 255;
+				int Lgt = random_int() % 255;
+				int Alp = 0;
+				if (p == 1) // 1 == SKINPART_MARKING
+					Alp = random_int() % 255;
+				int NewVal = (Alp << 24) + (Hue << 16) + (Sat << 8) + Lgt;
+				*CSkins::ms_apColorVariables[p] = NewVal;
+			}
+			
+			static sorted_array<const CSkins::CSkinPart *> s_paList[6];
+			static CListBox s_ListBox;
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				s_paList[p].clear();
+				for(int i = 0; i < m_pClient->m_pSkins->NumSkinPart(p); ++i)
+				{
+					const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(p, i);
+					// no special skins
+					if((s->m_Flags&CSkins::SKINFLAG_SPECIAL) == 0 && s_ListBox.FilterMatches(s->m_aName))
+					{
+						s_paList[p].add(s);
+					}
+				}
+			}
+			
+			for(int p = 0; p < NUM_SKINPARTS; p++)
+			{
+				int rand_choice = random_int() % (m_pClient->m_pSkins->NumSkinPart(p));
+				if ((rand_choice <= m_pClient->m_pSkins->NumSkinPart(p)) && (rand_choice != 0))
+					rand_choice -= 1;
+				const CSkins::CSkinPart *s = s_paList[p][rand_choice];
+				mem_copy(CSkins::ms_apSkinVariables[p], s->m_aName, 24);
+				Config()->m_PlayerSkin[0] = 0;
+				m_SkinModified = true;
+			}
+			
+		}
+			
+		BottomView.VSplitLeft(SpacingW, 0, &BottomView);
+		
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 		static CButtonContainer s_CustomSkinSaveButton;
 		if(DoButton_Menu(&s_CustomSkinSaveButton, Localize("Save"), 0, &Button))
