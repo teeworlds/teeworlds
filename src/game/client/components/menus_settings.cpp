@@ -1395,7 +1395,11 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 
 	// bottom button
 	float ButtonWidth = (BottomView.w/6.0f)-(SpacingW*5.0)/6.0f;
-	float BackgroundWidth = s_CustomSkinMenu||(m_pSelectedSkin && (m_pSelectedSkin->m_Flags&CSkins::SKINFLAG_STANDARD) == 0) ? ButtonWidth*3.0f+SpacingW : ButtonWidth;
+	float BackgroundWidth = ButtonWidth;
+	if (s_CustomSkinMenu)
+		BackgroundWidth = ButtonWidth*3.0f+SpacingW;
+	else if (m_pSelectedSkin && (m_pSelectedSkin->m_Flags&CSkins::SKINFLAG_STANDARD) == 0)
+		BackgroundWidth = ButtonWidth*2.0f+SpacingW;
 
 	BottomView.VSplitRight(BackgroundWidth, 0, &BottomView);
 	RenderBackgroundShadow(&BottomView, true);
