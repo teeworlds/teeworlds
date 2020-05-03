@@ -346,10 +346,10 @@ void CGameClient::OnInit()
 	int64 Start = time_get();
 
 	// Render load screen at 0% to get graphics sooner.
-	// Render twice to clear front and back buffers and minimize initial flashing color.
+	// Swap again to minimize initial flashing color.
 	m_pMenus->InitLoading(1);
 	m_pMenus->RenderLoading();
-	m_pMenus->RenderLoading();
+	m_pGraphics->Swap();
 
 	// TODO: this should be different
 	// setup item sizes
