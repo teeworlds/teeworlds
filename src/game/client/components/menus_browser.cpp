@@ -1233,28 +1233,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		}
 	}
 
-	// display important messages in the middle of the screen so no user misses it
-	{
-		const char *pImportantMessage = NULL;
-		if(m_ActivePage == PAGE_INTERNET && ServerBrowser()->IsRefreshingMasters())
-			pImportantMessage = Localize("Refreshing master servers");
-		else if(SelectedFilter == -1)
-			pImportantMessage = Localize("No filter category is selected");
-		else if(ServerBrowser()->IsRefreshing() && !NumServers)
-			pImportantMessage = Localize("Fetching server info");
-		else if(!ServerBrowser()->NumServers())
-			pImportantMessage = Localize("No servers found");
-		else if(ServerBrowser()->NumServers() && !NumServers)
-			pImportantMessage = Localize("No servers match your filter criteria");
-
-		if(pImportantMessage)
-		{
-			CUIRect MsgBox = View;
-			MsgBox.y += View.h/3;
-			UI()->DoLabel(&MsgBox, pImportantMessage, 16.0f, CUI::ALIGN_CENTER);
-		}
-	}
-
 	// scrollbar
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
@@ -1363,6 +1341,32 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		UpdateServerBrowserAddress();
 		m_AddressSelection &= ~ADDR_SELECTION_UPDATE_ADDRESS;
+	}
+
+	// display important messages in the middle of the screen so no user misses it
+	if(!NumServers)
+	{
+		CUIRect MsgBox = View;
+		if(MsgBox.h < 50.0f)
+			MsgBox.h = 50.0f;
+		s_ScrollRegion.AddRect(MsgBox);
+		if(!s_ScrollRegion.IsRectClipped(MsgBox))
+		{
+			const char *pImportantMessage;
+			if(m_ActivePage == PAGE_INTERNET && ServerBrowser()->IsRefreshingMasters())
+				pImportantMessage = Localize("Refreshing master servers");
+			else if(SelectedFilter == -1)
+				pImportantMessage = Localize("No filter category is selected");
+			else if(ServerBrowser()->IsRefreshing())
+				pImportantMessage = Localize("Fetching server info");
+			else if(!ServerBrowser()->NumServers())
+				pImportantMessage = Localize("No servers found");
+			else
+				pImportantMessage = Localize("No servers match your filter criteria");
+
+			MsgBox.y += MsgBox.h/3.0f;
+			UI()->DoLabel(&MsgBox, pImportantMessage, 16.0f, CUI::ALIGN_CENTER);
+		}
 	}
 
 	s_ScrollRegion.End();
