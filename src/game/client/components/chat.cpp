@@ -708,29 +708,32 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 		m_LastWhisperFrom = ClientID; // we received a a whisper
 
 	// play sound
-	int64 Now = time_get();
-	if(ClientID < 0)
+	if(Config()->m_ClShowChat)
 	{
-		if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
+		int64 Now = time_get();
+		if(ClientID < 0)
 		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
-			m_aLastSoundPlayed[CHAT_SERVER] = Now;
+			if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
+			{
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
+				m_aLastSoundPlayed[CHAT_SERVER] = Now;
+			}
 		}
-	}
-	else if(Highlighted || Mode == CHAT_WHISPER)
-	{
-		if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
+		else if(Highlighted || Mode == CHAT_WHISPER)
 		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
-			m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
+			if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
+			{
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+				m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
+			}
 		}
-	}
-	else
-	{
-		if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
+		else
 		{
-			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
-			m_aLastSoundPlayed[CHAT_CLIENT] = Now;
+			if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
+			{
+				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
+				m_aLastSoundPlayed[CHAT_CLIENT] = Now;
+			}
 		}
 	}
 }
@@ -749,6 +752,8 @@ const char* CChat::GetCommandName(int Mode) const
 void CChat::OnRender()
 {
 	if(Client()->State() < IClient::STATE_ONLINE)
+		return;
+	if(!Config()->m_ClShowChat)
 		return;
 
 	// send pending chat messages
