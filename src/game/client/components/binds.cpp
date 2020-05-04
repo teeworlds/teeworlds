@@ -411,7 +411,7 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 			if(pSelf->m_aaaKeyBindings[i][m][0] == 0)
 				continue;
 
-			str_format(aBuffer, sizeof(aBuffer), "bind %s%s ", GetModifierName(m), pSelf->Input()->KeyName(i));
+			str_format(aBuffer, sizeof(aBuffer), "bind %s%s", GetModifierName(m), pSelf->Input()->KeyName(i));
 
 			// process the string. we need to escape some characters
 			const char *pSrc = pSelf->m_aaaKeyBindings[i][m];
@@ -437,7 +437,7 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 		if(pSelf->m_aaaKeyBindings[Key][Modifier][0] == 0)
 		{
 			// explicitly unbind keys that were unbound by the user
-			str_format(aBuffer, sizeof(aBuffer), "unbind %s%s ", GetModifierName(Modifier), pSelf->Input()->KeyName(Key));
+			str_format(aBuffer, sizeof(aBuffer), "unbind %s%s", GetModifierName(Modifier), pSelf->Input()->KeyName(Key));
 			pConfigManager->WriteLine(aBuffer);
 		}
 	}
