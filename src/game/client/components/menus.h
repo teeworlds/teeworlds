@@ -811,7 +811,7 @@ private:
 	bool CheckHotKey(int Key) const;
 
 	void RenderBackground(float Time);
-	void RenderBackgroundShadow(const CUIRect *pRect, bool TopToBottom);
+	void RenderBackgroundShadow(const CUIRect *pRect, bool TopToBottom, float Rounding = 5.0f);
 public:
 	void InitLoading(int TotalWorkAmount);
 	void RenderLoading(int WorkedAmount = 0);
