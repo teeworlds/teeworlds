@@ -1345,14 +1345,7 @@ void CMenus::RenderBackButton(CUIRect MainView)
 	}
 }
 
-int CMenus::MenuImageCountingScan(const char *pName, int IsDir, int DirType, void *pUser)
-{
-	if(!IsDir && str_endswith(pName, ".png"))
-		(*(int *)pUser)++;
-	return 0;
-}
-
-int CMenus::MenuImageLoadingScan(const char *pName, int IsDir, int DirType, void *pUser)
+int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	if(IsDir || !str_endswith(pName, ".png"))
@@ -1478,9 +1471,7 @@ void CMenus::UpdateVideoModeSettings()
 
 int CMenus::GetInitAmount() const
 {
-	int NumMenuImages = 0;
-	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/menuimages", MenuImageCountingScan, &NumMenuImages);
-
+	const int NumMenuImages = 5;
 	return 6 + 5 * NumMenuImages;
 }
 
@@ -1494,7 +1485,7 @@ void CMenus::OnInit()
 
 	// load menu images
 	m_lMenuImages.clear();
-	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/menuimages", MenuImageLoadingScan, this);
+	Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/menuimages", MenuImageScan, this);
 
 	// load filters
 	LoadFilters();
