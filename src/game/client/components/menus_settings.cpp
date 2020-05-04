@@ -1409,7 +1409,7 @@ void CMenus::RenderSettingsTee(CUIRect MainView)
 	{
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 		static CButtonContainer s_RandomSkinButton;
-		if(DoButton_Menu(&s_RandomSkinButton, "Random", 0, &Button))
+		if(DoButton_Menu(&s_RandomSkinButton, Localize("Random"), 0, &Button))
 		{
 			for(int p = 0; p < NUM_SKINPARTS; p++)
 			{
