@@ -403,7 +403,6 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 	CBinds *pSelf = (CBinds *)pUserData;
 
 	char aBuffer[512];
-	char *pEnd = aBuffer+sizeof(aBuffer)-8;
 	for(int i = 0; i < KEY_LAST; i++)
 	{
 		for(int m = 0; m < MODIFIER_COUNT; m++)
