@@ -402,7 +402,7 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
 	CBinds *pSelf = (CBinds *)pUserData;
 
-	char aBuffer[256];
+	char aBuffer[512];
 	char *pEnd = aBuffer+sizeof(aBuffer)-8;
 	for(int i = 0; i < KEY_LAST; i++)
 	{
@@ -411,21 +411,20 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 			if(pSelf->m_aaaKeyBindings[i][m][0] == 0)
 				continue;
 
-			str_format(aBuffer, sizeof(aBuffer), "bind %s%s", GetModifierName(m), pSelf->Input()->KeyName(i));
-
 			// process the string. we need to escape some characters
+			char aBind[2*BIND_LENGTH];
 			const char *pSrc = pSelf->m_aaaKeyBindings[i][m];
-			char *pDst = aBuffer + str_length(aBuffer);
-			*pDst++ = '"';
+			const char *pEnd = aBind + sizeof(aBind) - 1;
+			char *pDst = aBind;
 			while(*pSrc && pDst < pEnd)
 			{
 				if(*pSrc == '"' || *pSrc == '\\') // escape \ and "
 					*pDst++ = '\\';
 				*pDst++ = *pSrc++;
 			}
-			*pDst++ = '"';
-			*pDst++ = 0;
+			*pDst = 0;
 
+			str_format(aBuffer, sizeof(aBuffer), "bind %s%s \"%s\"", GetModifierName(m), pSelf->Input()->KeyName(i), aBind);
 			pConfigManager->WriteLine(aBuffer);
 		}
 	}
