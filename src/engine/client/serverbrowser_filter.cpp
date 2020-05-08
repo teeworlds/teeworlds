@@ -130,20 +130,33 @@ void CServerBrowserFilter::CServerFilter::Filter()
 		{
 			if(m_FilterInfo.m_aGametype[0][0])
 			{
-				Filtered = 1;
+				bool Excluded = false, DoInclude = false, Included = false;
 				for(int Index = 0; Index < CServerFilterInfo::MAX_GAMETYPES; ++Index)
 				{
 					if(!m_FilterInfo.m_aGametype[Index][0])
 						break;
-					if(!str_comp_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, m_FilterInfo.m_aGametype[Index]))
+					if(m_FilterInfo.m_aGametype[Index][0] == '-' && m_FilterInfo.m_aGametype[Index][1])
 					{
-						Filtered = 0;
-						break;
+						if(!str_comp_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, m_FilterInfo.m_aGametype[Index]+1))
+						{
+							Excluded = true;
+							break;
+						}
+					}
+					else
+					{
+						DoInclude = true;
+						if(!str_comp_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, m_FilterInfo.m_aGametype[Index]))
+						{
+							Included = true;
+							break;
+						}
 					}
 				}
+				Filtered = Excluded || (DoInclude && !Included);
 			}
 
-			if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY)
+			if(!Filtered && m_FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY)
 			{
 				Filtered = 1;
 				// match against player country
