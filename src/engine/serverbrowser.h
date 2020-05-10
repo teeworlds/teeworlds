@@ -82,6 +82,7 @@ public:
 	int m_Country;
 	int m_ServerLevel;
 	char m_aGametype[MAX_GAMETYPES][16];
+	char m_aGametypeExclusive[MAX_GAMETYPES];
 	char m_aAddress[NETADDR_MAXSTRSIZE];
 
 	void ToggleLevel(int Level)

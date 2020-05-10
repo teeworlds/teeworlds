@@ -209,12 +209,27 @@ void CMenus::LoadFilters()
 			if(rSubStart["filter_hash"].type == json_integer)
 				FilterInfo.m_SortHash = rSubStart["filter_hash"].u.integer;
 			const json_value &rGametypeEntry = rSubStart["filter_gametype"];
-			if(rGametypeEntry.type == json_array)
+			if(rGametypeEntry.type == json_array) // legacy: all entries are inclusive
 			{
 				for(unsigned j = 0; j < rGametypeEntry.u.array.length && j < CServerFilterInfo::MAX_GAMETYPES; ++j)
 				{
 					if(rGametypeEntry[j].type == json_string)
+					{
 						str_copy(FilterInfo.m_aGametype[j], rGametypeEntry[j], sizeof(FilterInfo.m_aGametype[j]));
+						FilterInfo.m_aGametypeExclusive[j] = false;
+					}
+				}
+			}
+			else if(rGametypeEntry.type == json_object)
+			{
+				for(unsigned j = 0; j < rGametypeEntry.u.object.length && j < CServerFilterInfo::MAX_GAMETYPES; ++j)
+				{
+					const json_value &rValue = *(rGametypeEntry.u.object.values[j].value);
+					if(rValue.type == json_boolean)
+					{
+						str_copy(FilterInfo.m_aGametype[j], rGametypeEntry.u.object.values[j].name, sizeof(FilterInfo.m_aGametype[j]));
+						FilterInfo.m_aGametypeExclusive[j] = rValue.u.boolean;
+					}
 				}
 			}
 			if(rSubStart["filter_ping"].type == json_integer)
@@ -294,10 +309,13 @@ void CMenus::SaveFilters()
 				Writer.WriteIntValue(FilterInfo.m_SortHash);
 
 				Writer.WriteAttribute("filter_gametype");
-				Writer.BeginArray();
+				Writer.BeginObject();
 				for(unsigned j = 0; j < CServerFilterInfo::MAX_GAMETYPES && FilterInfo.m_aGametype[j][0]; ++j)
-					Writer.WriteStrValue(FilterInfo.m_aGametype[j]);
-				Writer.EndArray();
+				{
+					Writer.WriteAttribute(FilterInfo.m_aGametype[j]);
+					Writer.WriteBoolValue(FilterInfo.m_aGametypeExclusive[j]);
+				}
+				Writer.EndObject();
 
 				Writer.WriteAttribute("filter_ping");
 				Writer.WriteIntValue(FilterInfo.m_Ping);
@@ -1864,102 +1882,138 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		UpdateFilter = true;
 	}
 
-	ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
-
-	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
-	UI()->DoLabel(&Button, Localize("Game types:"), FontSize, CUI::ALIGN_LEFT);
-	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
-	RenderTools()->DrawUIRect(&Button, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 2.0f);
-	Button.HMargin(2.0f, &Button);
-	UI()->ClipEnable(&Button);
-
-	float Length = 0.0f;
-	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+	// game types filter
 	{
-		if(FilterInfo.m_aGametype[i][0])
+		ServerFilter.HSplitTop(5.0f, 0, &ServerFilter);
+
+		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+		UI()->DoLabel(&Button, Localize("Game types:"), FontSize, CUI::ALIGN_LEFT);
+
+		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+		RenderTools()->DrawUIRect(&Button, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 2.0f);
+
+		Button.HMargin(2.0f, &Button);
+		UI()->ClipEnable(&Button);
+
+		const float Spacing = 2.0f;
+		const float IconWidth = 10.0f;
+
+		float Length = 0.0f;
+		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 		{
-			Length += TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1, -1.0f) + 14.0f;
+			if(!FilterInfo.m_aGametype[i][0])
+				break;
+			Length += TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1, -1.0f) + IconWidth + 2*Spacing;
 		}
-	}
-	static float s_ScrollValue = 0.0f;
-	bool NeedScrollbar = (Button.w - Length) < 0.0f;
-	Button.x += min(0.0f, Button.w - Length) * s_ScrollValue;
-	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
-	{
-		if(FilterInfo.m_aGametype[i][0])
+		static float s_ScrollValue = 0.0f;
+		const bool NeedScrollbar = (Button.w - Length) < 0.0f;
+		Button.x += min(0.0f, Button.w - Length) * s_ScrollValue;
+		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 		{
-			const bool IsExclusive = FilterInfo.m_aGametype[i][0] == '-' && FilterInfo.m_aGametype[i][1];
-			float CurLength = TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1, -1.0f) + 12.0f;
-			Button.VSplitLeft(CurLength, &Icon, &Button);
-			RenderTools()->DrawUIRect(&Icon, IsExclusive ? vec4(0.75f, 0.25f, 0.25f, 0.25f) : vec4(0.75f, 0.75f, 0.75f, 0.25f), CUI::CORNER_ALL, 3.0f);
-			Icon.VSplitLeft(2.0f, 0, &Icon);
-			UI()->DoLabel(&Icon, FilterInfo.m_aGametype[i], FontSize, CUI::ALIGN_LEFT);
-			Icon.VSplitRight(10.0f, 0, &Icon);
-			if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_B, &Icon))
+			if(!FilterInfo.m_aGametype[i][0])
+				break;
+			const float ItemLength = TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1, -1.0f) + IconWidth + Spacing;
+			CUIRect FilterItem;
+			Button.VSplitLeft(ItemLength, &FilterItem, &Button);
+			RenderTools()->DrawUIRect(&FilterItem, FilterInfo.m_aGametypeExclusive[i] ? vec4(0.75f, 0.25f, 0.25f, 0.25f) : vec4(0.75f, 0.75f, 0.75f, 0.25f), CUI::CORNER_ALL, 3.0f);
+			FilterItem.VSplitLeft(Spacing, 0, &FilterItem);
+			UI()->DoLabel(&FilterItem, FilterInfo.m_aGametype[i], FontSize, CUI::ALIGN_LEFT);
+			FilterItem.VSplitRight(IconWidth, 0, &FilterItem);
+			if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_B, &FilterItem))
 			{
 				// remove gametype entry
 				if((i == CServerFilterInfo::MAX_GAMETYPES - 1) || !FilterInfo.m_aGametype[i + 1][0])
+				{
 					FilterInfo.m_aGametype[i][0] = 0;
+					FilterInfo.m_aGametypeExclusive[i] = false;
+				}
 				else
 				{
 					int j = i;
 					for(; j < CServerFilterInfo::MAX_GAMETYPES - 1 && FilterInfo.m_aGametype[j + 1][0]; ++j)
+					{
 						str_copy(FilterInfo.m_aGametype[j], FilterInfo.m_aGametype[j + 1], sizeof(FilterInfo.m_aGametype[j]));
+						FilterInfo.m_aGametypeExclusive[j] = FilterInfo.m_aGametypeExclusive[j + 1];
+					}
 					FilterInfo.m_aGametype[j][0] = 0;
+					FilterInfo.m_aGametypeExclusive[j] = false;
 				}
 				UpdateFilter = true;
 			}
-			Button.VSplitLeft(2.0f, 0, &Button);
+			Button.VSplitLeft(Spacing, 0, &Button);
 		}
-	}
 
-	UI()->ClipDisable();
+		UI()->ClipDisable();
 
-	if(NeedScrollbar)
-	{
-		ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
-		s_ScrollValue = DoScrollbarH(&s_ScrollValue, &Button, s_ScrollValue);
-	}
-	else
-		ServerFilter.HSplitTop(4.f, &Button, &ServerFilter); // Leave some space in between edit boxes
-	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
-
-	Button.VSplitLeft(60.0f, &Button, &Icon);
-	ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
-	static char s_aGametype[16] = { 0 };
-	static float s_OffsetGametype = 0.0f;
-	Button.VSplitRight(Button.h, &Label, &Button);
-	DoEditBox(&s_OffsetGametype, &Label, s_aGametype, sizeof(s_aGametype), FontSize, &s_OffsetGametype, false, CUI::CORNER_L);
-	RenderTools()->DrawUIRect(&Button, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_R, 5.0f);
-	DoIcon(IMAGE_FRIENDICONS, UI()->MouseInside(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Button);
-	static CButtonContainer s_AddGametype;
-	if(s_aGametype[0] && UI()->DoButtonLogic(&s_AddGametype, &Button))
-	{
-		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+		if(NeedScrollbar)
 		{
-			if(!FilterInfo.m_aGametype[i][0])
+			ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
+			s_ScrollValue = DoScrollbarH(&s_ScrollValue, &Button, s_ScrollValue);
+		}
+		else
+			ServerFilter.HSplitTop(4.f, &Button, &ServerFilter); // Leave some space in between edit boxes
+
+		CUIRect ButtonLine;
+		ServerFilter.HSplitTop(LineSize, &ButtonLine, &ServerFilter);
+
+		CUIRect EditBox, AddIncButton, AddExlButton, ClearButton;
+		ButtonLine.VSplitRight(40.0f, &ButtonLine, &ClearButton);
+		ButtonLine.VSplitRight(10.0f, &ButtonLine, 0);
+		ButtonLine.VSplitRight(ButtonLine.h, &ButtonLine, &AddExlButton);
+		ButtonLine.VSplitRight(ButtonLine.h, &EditBox, &AddIncButton);
+
+		static char s_aGametype[16] = { 0 };
+		static float s_OffsetGametype = 0.0f;
+		DoEditBox(&s_OffsetGametype, &EditBox, s_aGametype, sizeof(s_aGametype), FontSize, &s_OffsetGametype, false, CUI::CORNER_L);
+
+		static CButtonContainer s_AddInclusiveGametype;
+		if(DoButton_Menu(&s_AddInclusiveGametype, "+", 0, &AddIncButton, 0, 0) && s_aGametype[0])
+		{
+			for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 			{
-				str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
-				UpdateFilter = true;
-				s_aGametype[0] = 0;
-				break;
+				if(!FilterInfo.m_aGametype[i][0])
+				{
+					str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
+					FilterInfo.m_aGametypeExclusive[i] = false;
+					UpdateFilter = true;
+					s_aGametype[0] = 0;
+					break;
+				}
 			}
 		}
-	}
-	Icon.VSplitLeft(10.0f, 0, &Icon);
-	Icon.VSplitLeft(40.0f, &Button, 0);
-	static CButtonContainer s_ClearGametypes;
-	if(DoButton_MenuTabTop(&s_ClearGametypes, Localize("Clear", "clear gametype filters"), false, &Button))
-	{
-		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+
+		static CButtonContainer s_AddExclusiveGametype;
+		if(DoButton_Menu(&s_AddExclusiveGametype, "-", 0, &AddExlButton, 0, CUI::CORNER_R) && s_aGametype[0])
 		{
-			FilterInfo.m_aGametype[i][0] = 0;
+			for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+			{
+				if(!FilterInfo.m_aGametype[i][0])
+				{
+					str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
+					FilterInfo.m_aGametypeExclusive[i] = true;
+					UpdateFilter = true;
+					s_aGametype[0] = 0;
+					break;
+				}
+			}
 		}
-		UpdateFilter = true;
+
+		static CButtonContainer s_ClearGametypes;
+		if(DoButton_MenuTabTop(&s_ClearGametypes, Localize("Clear", "clear gametype filters"), false, &ClearButton))
+		{
+			for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+			{
+				FilterInfo.m_aGametype[i][0] = 0;
+				FilterInfo.m_aGametypeExclusive[i] = false;
+			}
+			UpdateFilter = true;
+		}
+
+		ServerFilter.HSplitTop(3.0f, 0, &ServerFilter);
 	}
 
+	// ping
 	ServerFilter.HSplitTop(LineSize - 4.f, &Button, &ServerFilter);
-
 	{
 		int Value = FilterInfo.m_Ping, Min = 20, Max = 999;
 
