@@ -704,7 +704,7 @@ void CScoreboard::RenderNetworkQuality(float x, float w)
 	float y = 0.0f;
 
 	const int NumBars = 5;
-	int ScoreThresolds[NumBars] = {__INT_MAX__, 1000, 250, 50, -80};
+	int ScoreThresolds[NumBars] = {INT_MAX, 1000, 250, 50, -80};
 	CUIRect BarRect = {
 		x - 4.0f,
 		y + LineHeight,

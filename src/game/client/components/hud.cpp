@@ -147,7 +147,7 @@ void CHud::RenderNetworkIssueNotification()
 
 	// render network indicator when 2/5 and under
 	const int NetScore = Client()->GetInputtimeMarginStabilityScore();
-	if(1 || NetScore > 250)
+	if(NetScore > 250)
 	{
 		float Margin = 2.0f;
 		x = x-5.0f-FontSize-Margin*2;
