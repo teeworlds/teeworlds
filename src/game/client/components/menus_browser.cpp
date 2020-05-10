@@ -1888,9 +1888,11 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	{
 		if(FilterInfo.m_aGametype[i][0])
 		{
+			const bool IsExclusive = FilterInfo.m_aGametype[i][0] == '-' && FilterInfo.m_aGametype[i][1];
 			float CurLength = TextRender()->TextWidth(0, FontSize, FilterInfo.m_aGametype[i], -1, -1.0f) + 12.0f;
 			Button.VSplitLeft(CurLength, &Icon, &Button);
-			RenderTools()->DrawUIRect(&Icon, vec4(0.75, 0.75, 0.75, 0.25f), CUI::CORNER_ALL, 3.0f);
+			RenderTools()->DrawUIRect(&Icon, IsExclusive ? vec4(0.75f, 0.25f, 0.25f, 0.25f) : vec4(0.75f, 0.75f, 0.75f, 0.25f), CUI::CORNER_ALL, 3.0f);
+			Icon.VSplitLeft(2.0f, 0, &Icon);
 			UI()->DoLabel(&Icon, FilterInfo.m_aGametype[i], FontSize, CUI::ALIGN_LEFT);
 			Icon.VSplitRight(10.0f, 0, &Icon);
 			if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_B, &Icon))
