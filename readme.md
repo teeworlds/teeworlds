@@ -182,6 +182,7 @@ Run the `x64 Native Tools Command Prompt` (or `x86` for 32-bit) from the start m
     # Build bam (use make_win32_msvc.bat for 32-bit)
     cd bam
     make_win64_msvc.bat
+    copy bam ..
     cd ..
     
     # Build Teeworlds
