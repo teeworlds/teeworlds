@@ -20,7 +20,11 @@
 #include "maplayers.h"
 #include "menus.h"
 
-
+CMenus::CColumn CMenus::ms_aDemoCols[] = {
+	{COL_DEMO_ICON,		-1, " ", -1, 4*16.0f+3*2.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, "Demo",	0, 200.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_DATE,		CMenus::SORT_DATE, "Date", 1, 160.0f,  0, {0}, {0}, CUI::ALIGN_CENTER},
+};
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)
 {
@@ -349,7 +353,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	}
 }
 
-int CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser)
+int CMenus::DemolistFetchCallback(const char *pName, time_t Date, int IsDir, int StorageType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
 	if(str_comp(pName, ".") == 0
@@ -370,6 +374,7 @@ int CMenus::DemolistFetchCallback(const char *pName, int IsDir, int StorageType,
 	{
 		str_truncate(Item.m_aName, sizeof(Item.m_aName), pName, str_length(pName) - 5);
 		Item.m_InfosLoaded = false;
+		Item.m_Date = Date;
 	}
 	Item.m_IsDir = IsDir != 0;
 	Item.m_StorageType = StorageType;
@@ -383,8 +388,10 @@ void CMenus::DemolistPopulate()
 	m_lDemos.clear();
 	if(!str_comp(m_aCurrentDemoFolder, "demos"))
 		m_DemolistStorageType = IStorage::TYPE_ALL;
-	Storage()->ListDirectory(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
-	m_lDemos.sort_range();
+	Storage()->ListDirectoryInfo(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
+	m_lDemos.sort_range_by(CDemoComparator(
+		Config()->m_BrDemoSort, Config()->m_BrDemoSortOrder
+	));
 }
 
 void CMenus::DemolistOnUpdate(bool Reset)
@@ -449,8 +456,70 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	CUIRect ListBox, Button, FileIcon;
 	MainView.HSplitTop(MainView.h - BackgroundHeight - 2 * HMargin, &ListBox, &MainView);
 
+	// demo list
+
+	CUIRect Headers;
+	ListBox.HSplitTop(GetListHeaderHeight(), &Headers, &ListBox);
+
+	RenderTools()->DrawUIRect(&Headers, vec4(0.0f,0,0,0.15f), 0, 0);
+
+	int NumCols = sizeof(ms_aDemoCols)/sizeof(CColumn);
+
+	// do layout
+	for(int i = 0; i < NumCols; i++)
+	{
+		if(ms_aDemoCols[i].m_Direction == -1)
+		{
+			Headers.VSplitLeft(ms_aDemoCols[i].m_Width, &ms_aDemoCols[i].m_Rect, &Headers);
+
+			if(i+1 < NumCols)
+			{
+				//Cols[i].flags |= SPACER;
+				Headers.VSplitLeft(2, &ms_aDemoCols[i].m_Spacer, &Headers);
+			}
+		}
+	}
+
+	for(int i = NumCols-1; i >= 0; i--)
+	{
+		if(ms_aDemoCols[i].m_Direction == 1)
+		{
+			Headers.VSplitRight(ms_aDemoCols[i].m_Width, &Headers, &ms_aDemoCols[i].m_Rect);
+			Headers.VSplitRight(2, &Headers, &ms_aDemoCols[i].m_Spacer);
+		}
+	}
+
+	for(int i = 0; i < NumCols; i++)
+	{
+		if(ms_aDemoCols[i].m_Direction == 0)
+			ms_aDemoCols[i].m_Rect = Headers;
+	}
+
+	// do headers
+	for(int i = 0; i < NumCols; i++)
+	{
+		if(i == COL_DEMO_ICON)
+			continue;
+
+		if(DoButton_GridHeader(ms_aDemoCols[i].m_Caption, ms_aDemoCols[i].m_Caption, Config()->m_BrDemoSort == ms_aDemoCols[i].m_Sort, ms_aDemoCols[i].m_Align, &ms_aDemoCols[i].m_Rect))
+		{
+			if(ms_aDemoCols[i].m_Sort != -1)
+			{
+				if(Config()->m_BrDemoSort == ms_aDemoCols[i].m_Sort)
+					Config()->m_BrDemoSortOrder ^= 1;
+				else
+					Config()->m_BrDemoSortOrder = 0;
+				Config()->m_BrDemoSort = ms_aDemoCols[i].m_Sort;
+			}
+
+			DemolistPopulate();
+			DemolistOnUpdate(false);
+		}
+	}
+
 	static CListBox s_ListBox;
 	s_ListBox.DoHeader(&ListBox, Localize("Recorded"), GetListHeaderHeight());
+
 	s_ListBox.DoStart(20.0f, m_lDemos.size(), 1, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{

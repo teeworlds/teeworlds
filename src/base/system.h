@@ -1314,6 +1314,10 @@ int str_span(const char *str, const char *set);
 typedef int (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, int dir_type, void *user);
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 
+
+typedef int (*FS_LISTDIR_INFO_CALLBACK)(const char *name, time_t date, int is_dir, int dir_type, void *user);
+int fs_listdir_info(const char *dir, FS_LISTDIR_INFO_CALLBACK cb, int type, void *user);
+
 /*
 	Function: fs_makedir
 		Creates a directory
@@ -1365,6 +1369,12 @@ int fs_storage_path(const char *appname, char *path, int max);
 		Returns 1 on success, 0 on failure.
 */
 int fs_is_dir(const char *path);
+
+/*
+	Function: fs_getmtime
+		Gets the modification time of a file
+*/
+time_t fs_getmtime(const char *path);
 
 /*
 	Function: fs_chdir
