@@ -134,7 +134,7 @@ public:
 
     int OnCommand(const char *pCommand, const char *pArgs, int ClientID)
     {
-        dbg_msg("chat-command", "calling '%s' with args '%s'", pCommand, pArgs);
+        dbg_msg("chat_command", "calling '%s' with args '%s'", pCommand, pArgs);
         const CCommand *pCom = GetCommand(pCommand);
         if(!pCom)
             return 1;
