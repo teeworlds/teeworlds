@@ -25,7 +25,7 @@ Originally written by Magnus Auvinen.
 
 ---
 
-Teeworlds supports two build systems: CMake (widely used) and bam (fast build times).
+Teeworlds supports two build systems: CMake and bam.
 
 Building on Linux or macOS (CMake)
 ==========================
