@@ -48,6 +48,11 @@ class CUI
 	class ITextRender *m_pTextRender;
 
 public:
+	static const vec4 ms_DefaultTextColor;
+	static const vec4 ms_DefaultTextOutlineColor;
+	static const vec4 ms_HighlightTextColor;
+	static const vec4 ms_HighlightTextOutlineColor;
+
 	// TODO: Refactor: Fill this in
 	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class ITextRender *pTextRender) { m_pConfig = pConfig; m_pGraphics = pGraphics; m_pTextRender = pTextRender; }
 	class CConfig *Config() const { return m_pConfig; }
