@@ -67,4 +67,4 @@ public:
 /* normal allocated string */
 typedef string_base<allocator_default<char> > string;
 
-#endif // TL_FILE_STRING_HPP
+#endif // BASE_TL_STRING_H
