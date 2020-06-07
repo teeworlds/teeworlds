@@ -488,6 +488,12 @@ void CClient::EnterGame()
 	if(State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
+	if(State() == IClient::STATE_ONLINE)
+	{
+		// Don't reset everything while already in game.
+		return;
+	}
+
 	// now we will wait for two snapshots
 	// to finish the connection
 	SendEnterGame();
