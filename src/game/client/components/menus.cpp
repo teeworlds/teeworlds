@@ -1697,6 +1697,7 @@ int CMenus::Render()
 	else
 	{
 		// render full screen popup
+		char aBuf[128];
 		const char *pTitle = "";
 		const char *pExtraText = "";
 		int NumOptions = 4;
@@ -1708,14 +1709,15 @@ int CMenus::Render()
 		}
 		else if(m_Popup == POPUP_CONNECTING)
 		{
-			pTitle = Localize("Connecting to");
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
-				char aBuf[128];
 				str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Downloading map"), Client()->MapDownloadName());
 				pTitle = aBuf;
-				pExtraText = "";
 				NumOptions = 5;
+			}
+			else
+			{
+				pTitle = Localize("Connecting to");
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
@@ -1867,7 +1869,6 @@ int CMenus::Render()
 
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
-				char aBuf[128];
 				int64 Now = time_get();
 				if(Now-m_DownloadLastCheckTime >= time_freq())
 				{
