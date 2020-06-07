@@ -314,6 +314,10 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 
 	// unpack deleted stuff
 	pDeleted = pData;
+	if(pDelta->m_NumDeletedItems < 0)
+	{
+		return -1;
+	}
 	pData += pDelta->m_NumDeletedItems;
 	if(pData > pEnd)
 		return -1;
