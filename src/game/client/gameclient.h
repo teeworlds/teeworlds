@@ -117,8 +117,19 @@ public:
 	vec2 m_LocalCharacterPos;
 
 	// predicted players
-	CCharacterCore m_PredictedPrevChar;
-	CCharacterCore m_PredictedChar;
+
+	CCharacterCore m_aPredictedPrevChars[MAX_CLIENTS];
+	CCharacterCore m_aPredictedChars[MAX_CLIENTS];
+
+	CCharacterCore* PredictedLocalPrevChar() {
+		return &m_aPredictedPrevChars[m_LocalClientID];
+	}
+
+	CCharacterCore* PredictedLocalChar() {
+		return &m_aPredictedChars[m_LocalClientID];
+	}
+
+	// ---
 
 	struct CPlayerInfoItem
 	{

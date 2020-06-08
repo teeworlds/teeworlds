@@ -500,13 +500,24 @@ void CGameClient::UpdatePositions()
 	// local character position
 	if(Config()->m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		if(!m_Snap.m_pLocalCharacter ||
-			(m_Snap.m_pGameData && m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
-		{
+		if (!m_Snap.m_pLocalCharacter ||
+			(
+				m_Snap.m_pGameData &&
+				m_Snap.m_pGameData->m_GameStateFlags & (
+					GAMESTATEFLAG_PAUSED |
+					GAMESTATEFLAG_ROUNDOVER |
+					GAMESTATEFLAG_GAMEOVER
+				)
+			)
+		) {
 			// don't use predicted
+		} else {
+			m_LocalCharacterPos = mix(
+				PredictedLocalPrevChar()->m_Pos,
+				PredictedLocalChar()->m_Pos,
+				Client()->PredIntraGameTick()
+			);
 		}
-		else
-			m_LocalCharacterPos = mix(m_PredictedPrevChar.m_Pos, m_PredictedChar.m_Pos, Client()->PredIntraGameTick());
 	}
 	else if(m_Snap.m_pLocalCharacter && m_Snap.m_pLocalPrevCharacter)
 	{
@@ -1507,21 +1518,22 @@ void CGameClient::OnDemoRecSnap()
 
 void CGameClient::OnPredict()
 {
-	// store the previous values so we can detect prediction errors
-	CCharacterCore BeforePrevChar = m_PredictedPrevChar;
-	CCharacterCore BeforeChar = m_PredictedChar;
-
-	// we can't predict without our own id or own character
-	if(m_LocalClientID == -1 || !m_Snap.m_aCharacters[m_LocalClientID].m_Active)
-		return;
-
 	// don't predict anything if we are paused or round/game is over
-	if(m_Snap.m_pGameData && m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
-	{
-		if(m_Snap.m_pLocalCharacter)
-			m_PredictedChar.Read(m_Snap.m_pLocalCharacter);
-		if(m_Snap.m_pLocalPrevCharacter)
-			m_PredictedPrevChar.Read(m_Snap.m_pLocalPrevCharacter);
+	if (m_Snap.m_pGameData &&
+		m_Snap.m_pGameData->m_GameStateFlags & (
+			GAMESTATEFLAG_PAUSED |
+			GAMESTATEFLAG_ROUNDOVER |
+			GAMESTATEFLAG_GAMEOVER
+		)
+	) {
+		for (int i = 0; i < MAX_CLIENTS; i++) {
+			if (!m_Snap.m_aCharacters[i].m_Active)
+				continue;
+
+			m_aPredictedPrevChars[i].Read(&m_Snap.m_aCharacters[i].m_Prev);
+			m_aPredictedChars[i].Read(&m_Snap.m_aCharacters[i].m_Cur);
+		}
+
 		return;
 	}
 
@@ -1530,9 +1542,8 @@ void CGameClient::OnPredict()
 	World.m_Tuning = m_Tuning;
 
 	// search for players
-	for(int i = 0; i < MAX_CLIENTS; i++)
-	{
-		if(!m_Snap.m_aCharacters[i].m_Active)
+	for (int i = 0; i < MAX_CLIENTS; i++) {
+		if (!m_Snap.m_aCharacters[i].m_Active)
 			continue;
 
 		m_aClients[i].m_Predicted.Init(&World, Collision());
@@ -1541,36 +1552,40 @@ void CGameClient::OnPredict()
 	}
 
 	// predict
-	for(int Tick = Client()->GameTick()+1; Tick <= Client()->PredGameTick(); Tick++)
-	{
-		// fetch the local
-		if(Tick == Client()->PredGameTick() && World.m_apCharacters[m_LocalClientID])
-			m_PredictedPrevChar = *World.m_apCharacters[m_LocalClientID];
-
+	for (int Tick = Client()->GameTick() + 1;
+		Tick <= Client()->PredGameTick();
+		Tick++
+	) {
 		// first calculate where everyone should move
-		for(int c = 0; c < MAX_CLIENTS; c++)
-		{
+		for(int c = 0; c < MAX_CLIENTS; c++) {
 			if(!World.m_apCharacters[c])
 				continue;
 
-			mem_zero(&World.m_apCharacters[c]->m_Input, sizeof(World.m_apCharacters[c]->m_Input));
-			if(m_LocalClientID == c)
-			{
+			if (Tick == Client()->PredGameTick())
+				m_aPredictedPrevChars[c] = *World.m_apCharacters[c];
+
+			mem_zero(
+				&World.m_apCharacters[c]->m_Input,
+				sizeof(World.m_apCharacters[c]->m_Input)
+			);
+
+			if (m_LocalClientID == c) {
 				// apply player input
 				const int *pInput = Client()->GetInput(Tick);
-				if(pInput)
-					World.m_apCharacters[c]->m_Input = *((const CNetObj_PlayerInput*)pInput);
-				World.m_apCharacters[c]->Tick(true);
-			}
-			else
-				World.m_apCharacters[c]->Tick(false);
+				if (pInput)
+					World.m_apCharacters[c]->m_Input = *(
+						(const CNetObj_PlayerInput*)pInput
+					);
 
+				World.m_apCharacters[c]->Tick(true);
+			} else {
+				World.m_apCharacters[c]->Tick(false);
+			}
 		}
 
 		// move all players and quantize their data
-		for(int c = 0; c < MAX_CLIENTS; c++)
-		{
-			if(!World.m_apCharacters[c])
+		for (int c = 0; c < MAX_CLIENTS; c++) {
+			if (!World.m_apCharacters[c])
 				continue;
 
 			World.m_apCharacters[c]->Move();
@@ -1578,36 +1593,26 @@ void CGameClient::OnPredict()
 		}
 
 		// check if we want to trigger effects
-		if(Tick > m_LastNewPredictedTick)
+		if (Tick > m_LastNewPredictedTick)
 		{
 			m_LastNewPredictedTick = Tick;
 
-			if(m_LocalClientID != -1 && World.m_apCharacters[m_LocalClientID])
-				ProcessTriggeredEvents(World.m_apCharacters[m_LocalClientID]->m_TriggeredEvents, World.m_apCharacters[m_LocalClientID]->m_Pos);
+			if (m_LocalClientID != -1 &&
+				World.m_apCharacters[m_LocalClientID]
+			)
+				ProcessTriggeredEvents(
+					World.m_apCharacters[m_LocalClientID]->m_TriggeredEvents,
+					World.m_apCharacters[m_LocalClientID]->m_Pos
+				);
+
+			// TODO: `ProcessTriggeredEvents` for other players
 		}
 
-		if(Tick == Client()->PredGameTick() && World.m_apCharacters[m_LocalClientID])
-			m_PredictedChar = *World.m_apCharacters[m_LocalClientID];
-	}
-
-	if(Config()->m_Debug && Config()->m_ClPredict && m_PredictedTick == Client()->PredGameTick())
-	{
-		CNetObj_CharacterCore Before = {0}, Now = {0}, BeforePrev = {0}, NowPrev = {0};
-		BeforeChar.Write(&Before);
-		BeforePrevChar.Write(&BeforePrev);
-		m_PredictedChar.Write(&Now);
-		m_PredictedPrevChar.Write(&NowPrev);
-
-		if(mem_comp(&Before, &Now, sizeof(CNetObj_CharacterCore)) != 0)
-		{
-			Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "prediction error");
-			for(unsigned i = 0; i < sizeof(CNetObj_CharacterCore)/sizeof(int); i++)
-				if(((int *)&Before)[i] != ((int *)&Now)[i])
-				{
-					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "	%d %d %d (%d %d)", i, ((int *)&Before)[i], ((int *)&Now)[i], ((int *)&BeforePrev)[i], ((int *)&NowPrev)[i]);
-					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", aBuf);
-				}
+		if (Tick == Client()->PredGameTick()) {
+			for (int c = 0; c < MAX_CLIENTS; c++) {
+				if (World.m_apCharacters[c])
+					m_aPredictedChars[c] = *World.m_apCharacters[c];
+			}
 		}
 	}
 

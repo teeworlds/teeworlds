@@ -68,8 +68,8 @@ void CPlayers::RenderHook(
 		else
 		{
 			// apply predicted results
-			m_pClient->m_PredictedChar.Write(&Player);
-			m_pClient->m_PredictedPrevChar.Write(&Prev);
+			m_pClient->PredictedLocalChar()->Write(&Player);
+			m_pClient->PredictedLocalPrevChar()->Write(&Prev);
 			IntraTick = Client()->PredIntraGameTick();
 		}
 	}
@@ -93,8 +93,17 @@ void CPlayers::RenderHook(
 				if(Client()->State() == IClient::STATE_DEMOPLAYBACK) // only use prediction if needed
 					HookPos = vec2(m_pClient->m_LocalCharacterPos.x, m_pClient->m_LocalCharacterPos.y);
 				else
-					HookPos = mix(vec2(m_pClient->m_PredictedPrevChar.m_Pos.x, m_pClient->m_PredictedPrevChar.m_Pos.y),
-						vec2(m_pClient->m_PredictedChar.m_Pos.x, m_pClient->m_PredictedChar.m_Pos.y), Client()->PredIntraGameTick());
+					HookPos = mix(
+						vec2(
+							m_pClient->PredictedLocalPrevChar()->m_Pos.x,
+							m_pClient->PredictedLocalPrevChar()->m_Pos.y
+						),
+						vec2(
+							m_pClient->PredictedLocalChar()->m_Pos.x,
+							m_pClient->PredictedLocalChar()->m_Pos.y
+						),
+						Client()->PredIntraGameTick()
+					);
 			}
 			else if(m_pClient->m_LocalClientID == ClientID)
 			{
@@ -196,17 +205,31 @@ void CPlayers::RenderPlayer(
 	}
 
 	// use preditect players if needed
-	if(m_pClient->m_LocalClientID == ClientID && Config()->m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
-	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter ||
-			(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
-		{
-		}
-		else
-		{
+	if (Client()->State() != IClient::STATE_DEMOPLAYBACK &&
+		!(
+			m_pClient->m_Snap.m_pGameData &&
+			m_pClient->m_Snap.m_pGameData->m_GameStateFlags & (
+				GAMESTATEFLAG_PAUSED |
+				GAMESTATEFLAG_ROUNDOVER |
+				GAMESTATEFLAG_GAMEOVER
+			)
+		)
+	) {
+		if (m_pClient->m_LocalClientID == ClientID &&
+			Config()->m_ClPredict &&
+			m_pClient->m_Snap.m_pLocalCharacter
+		) {
 			// apply predicted results
-			m_pClient->m_PredictedChar.Write(&Player);
-			m_pClient->m_PredictedPrevChar.Write(&Prev);
+			m_pClient->PredictedLocalChar()->Write(&Player);
+			m_pClient->PredictedLocalPrevChar()->Write(&Prev);
+			IntraTick = Client()->PredIntraGameTick();
+		} else if (
+			m_pClient->m_LocalClientID != ClientID &&
+			Config()->m_ClPredictPlayers
+		) {
+			// apply predicted results
+			m_pClient->m_aPredictedChars[ClientID].Write(&Player);
+			m_pClient->m_aPredictedPrevChars[ClientID].Write(&Prev);
 			IntraTick = Client()->PredIntraGameTick();
 		}
 	}
