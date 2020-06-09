@@ -59,7 +59,9 @@ struct AutoMap
 		TYPE_TILESET,
 		TYPE_DOODADS,
 
-		MAX_RULES=256
+		MAX_RULES=256,
+		MAX_CONDITIONS_PER_RULE=128,
+		MAX_RULESETS=64
 	};
 
 	static const char *GetTypeName(int Type)
@@ -97,22 +99,33 @@ struct CTilesetMapper2
 		int m_Random;
 		int m_Rotation;
 
-		array<CRuleCondition> m_aConditions;
+		int m_ConditionCount;
+		CRuleCondition m_aConditions[AutoMap::MAX_CONDITIONS_PER_RULE];
+
+		CRule()
+		{
+			m_ConditionCount = 0;
+		}
 	};
 
 	struct CRuleSet
 	{
 		char m_aName[128];
 		int m_BaseTile;
+		int m_RuleCount;
+		CRule m_aRules[AutoMap::MAX_RULES];
 
-		array<CRule> m_aRules;
+		CRuleSet()
+		{
+			m_RuleCount = 0;
+		}
 	};
 
 	array<CRuleSet> m_aRuleSets;
 
-	void LoadJsonRuleSets(const json_value &rElement);
-	void AutomapLayerWhole(CTile* aLayerTiles, int LayerWidth, int LayerHeight, int RuleSetID);
-	void AutomapLayerSection(CTile* aLayerTiles, int StartTx, int StartTy, int SectionWidth, int SectionHeight, int LayerWidth, int LayerHeight, int RuleSetID);
+	bool LoadJsonRuleSets(const json_value &rElement);
+	void AutomapLayerWhole(CTile* aLayerTiles, int LayerWidth, int LayerHeight, int RuleSetID) const;
+	void AutomapLayerSection(CTile* aLayerTiles, int StartTx, int StartTy, int SectionWidth, int SectionHeight, int LayerWidth, int LayerHeight, int RuleSetID) const;
 
 	inline int RuleSetNum() const { return m_aRuleSets.size(); }
 	const char* GetRuleSetName(int Index) const;

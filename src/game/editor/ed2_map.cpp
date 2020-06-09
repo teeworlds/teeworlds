@@ -9,14 +9,14 @@
 // In editor2.cpp as well
 
 static char s_aEdMsg[256];
-#define ed_log(...)\
+#define ed_log(...) do {\
 	str_format(s_aEdMsg, sizeof(s_aEdMsg), __VA_ARGS__);\
-	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", s_aEdMsg)
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "editor", s_aEdMsg); } while(0)
 
 #ifdef CONF_DEBUG
-	#define ed_dbg(...)\
+	#define ed_dbg(...) do {\
 		str_format(s_aEdMsg, sizeof(s_aEdMsg), __VA_ARGS__);\
-		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg)
+		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", s_aEdMsg); } while(0)
 #else
 	#define ed_dbg(...)
 #endif
@@ -844,8 +844,11 @@ void CEditorMap2::AssetsLoadAutomapFileForImage(int ImgID)
 			m_Assets.m_aAutomapTileHashID.add(ImgNameHash);
 			int TileMapperArrayID = m_Assets.m_aAutomapTile.add(CTilesetMapper2());
 			CTilesetMapper2& TileMapper = m_Assets.m_aAutomapTile[TileMapperArrayID];
-			TileMapper.LoadJsonRuleSets(rTileset);
-			ed_dbg("Automap file '%s' loaded (Tileset mapper)", aAutomapFilePath);
+			bool Result = TileMapper.LoadJsonRuleSets(rTileset);
+			if(!Result)
+				ed_log("Error: failed to load automap rules for '%s'", aAutomapFilePath);
+			else
+				ed_dbg("Automap file '%s' loaded (Tileset mapper)", aAutomapFilePath);
 		}
 		else
 		{

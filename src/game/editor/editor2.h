@@ -182,13 +182,20 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	struct CMagicBrushContext
 	{
+		enum {
+			SHAPE_SIZE=16*16
+		};
+
 		int m_AutomapRuleID;
 		bool m_IsContextPopupOpen;
+		u8 m_Shape[SHAPE_SIZE];
 
 		CMagicBrushContext()
 		{
 			m_AutomapRuleID = 0;
 			m_IsContextPopupOpen = false;
+			memset(m_Shape, 0, sizeof(m_Shape));
+			m_Shape[0] = 1;
 		}
 	};
 
@@ -404,6 +411,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	bool DoPopupYesNo(CUIPopupYesNo* state);
 
 	void RenderBrush(vec2 Pos);
+	void DrawBrushGridHoverRect(vec2 Pos);
 
 	void RenderAssetManager();
 

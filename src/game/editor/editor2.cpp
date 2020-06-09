@@ -1013,10 +1013,7 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 	{
 		if(!pMouseDrag->m_IsDragging) // tile hover effect
 		{
-			const CUIRect HoverRect = {GridMousePos.x, GridMousePos.y, TileSize, TileSize};
-			vec4 HoverColor = StyleColorTileHover;
-			HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
-			DrawRect(HoverRect, HoverColor);
+			DrawBrushGridHoverRect(GridMousePos);
 		}
 
 		// get tiles from map when we're done selecting
@@ -1076,18 +1073,55 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 
 void CEditor2::DoToolMagicBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging)
 {
+// #error TODO:
+	// - Merge magic brush back with tile brush
+	// - Add automap checkbox
+	// - Select automap rule
+	// - Preview automap brush based on selection
+	// - Preview block paint automap
+
 	if(!m_Map.m_aLayers.IsValid(m_UiSelectedLayerID))
 		return;
 
 	const int SelectedLayerID = m_UiSelectedLayerID;
-	const CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers.Get(SelectedLayerID);
+	CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers.Get(SelectedLayerID);
 	if(!SelectedTileLayer.IsTileLayer())
+		return;
+
+	const CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(SelectedTileLayer.m_ImageID);
+
+	if(!pMapper) // TODO: hide magic brush button when there is no mapper available
 		return;
 
 	if(Input()->KeyIsPressed(KEY_SPACE) && !m_MagicBrushContext.m_IsContextPopupOpen)
 	{
 		m_MagicBrushContext.m_IsContextPopupOpen = true;
 		PushPopup(&CEditor2::RenderPopupMagicBrushContext, 0x0);
+	}
+
+	// TODO: copy tiles from layer to a +1 size (on each side) 'brush' based on shape size
+	TileLayerRegionToBrush(SelectedLayerID, MouseTx-1, MouseTy-1, MouseTx+1, MouseTy+1);
+
+	// fill in the middle part (the shape part)
+	m_Brush.m_aTiles[4].m_Index = 1;
+
+	// Automap the -1 inner section
+	pMapper->AutomapLayerSection(m_Brush.m_aTiles.base_ptr(), 1, 1, m_Brush.m_Width-1, m_Brush.m_Height-1, m_Brush.m_Width, m_Brush.m_Height, m_MagicBrushContext.m_AutomapRuleID);
+
+	// chisel the outer section
+	CBrush Brush;
+	Brush.m_aTiles.add_empty(1);
+	Brush.m_aTiles[0] = m_Brush.m_aTiles[4];
+	Brush.m_Width = 1;
+	Brush.m_Height = 1;
+	m_Brush = Brush;
+
+	// Draw it as a brush
+	RenderBrush(GridMousePos);
+
+	if(pMouseDrag->m_IsDragging)
+	{
+		BrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
 	}
 }
 
@@ -3401,6 +3435,14 @@ void CEditor2::RenderBrush(vec2 Pos)
 	DrawRectBorder(BrushRect, vec4(0, 0, 0, 0), 1, vec4(1, 1, 1, 1));
 
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
+}
+
+void CEditor2::DrawBrushGridHoverRect(vec2 Pos)
+{
+	const CUIRect HoverRect = {Pos.x, Pos.y, TileSize, TileSize};
+	vec4 HoverColor = StyleColorTileHover;
+	HoverColor.a += sinf(m_LocalTime * 2.0) * 0.1;
+	DrawRect(HoverRect, HoverColor);
 }
 
 struct CImageNameItem

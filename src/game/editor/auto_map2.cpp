@@ -3,7 +3,7 @@
 
 #include "auto_map2.h"
 
-void CTilesetMapper2::LoadJsonRuleSets(const json_value &rElement)
+bool CTilesetMapper2::LoadJsonRuleSets(const json_value &rElement)
 {
 	for(unsigned i = 0; i < rElement.u.array.length; ++i)
 	{
@@ -89,15 +89,32 @@ void CTilesetMapper2::LoadJsonRuleSets(const json_value &rElement)
 					else
 						Condition.m_Value = CRuleCondition::EMPTY;
 
-					NewRule.m_aConditions.add(Condition);
+					if(NewRule.m_ConditionCount >= AutoMap::MAX_CONDITIONS_PER_RULE)
+					{
+						dbg_msg("automap", "rule condition count exceeded (max=%d)", AutoMap::MAX_CONDITIONS_PER_RULE);
+						return false;
+					}
+					NewRule.m_aConditions[NewRule.m_ConditionCount++] = Condition;
 				}
 			}
 
-			NewRuleSet.m_aRules.add(NewRule);
+			if(NewRuleSet.m_RuleCount >= AutoMap::MAX_RULES)
+			{
+				dbg_msg("automap", "rule count exceeded (max=%d)", AutoMap::MAX_RULES);
+				return false;
+			}
+			NewRuleSet.m_aRules[NewRuleSet.m_RuleCount++] = NewRule;
 		}
 
+		if(m_aRuleSets.size() >= AutoMap::MAX_RULESETS)
+		{
+			dbg_msg("automap", "rule set count exceeded (max=%d)", AutoMap::MAX_RULESETS);
+			return false;
+		}
 		m_aRuleSets.add(NewRuleSet);
 	}
+
+	return true;
 }
 
 const char* CTilesetMapper2::GetRuleSetName(int Index) const
@@ -108,18 +125,18 @@ const char* CTilesetMapper2::GetRuleSetName(int Index) const
 	return m_aRuleSets[Index].m_aName;
 }
 
-void CTilesetMapper2::AutomapLayerWhole(CTile* aLayerTiles, int LayerWidth, int LayerHeight, int RuleSetID)
+void CTilesetMapper2::AutomapLayerWhole(CTile* aLayerTiles, int LayerWidth, int LayerHeight, int RuleSetID) const
 {
 	AutomapLayerSection(aLayerTiles, 0, 0, LayerWidth, LayerHeight, LayerWidth, LayerHeight, RuleSetID);
 }
 
-void CTilesetMapper2::AutomapLayerSection(CTile* aLayerTiles, int StartTx, int StartTy, int SectionWidth, int SectionHeight, int LayerWidth, int LayerHeight, int RuleSetID)
+void CTilesetMapper2::AutomapLayerSection(CTile* aLayerTiles, int StartTx, int StartTy, int SectionWidth, int SectionHeight, int LayerWidth, int LayerHeight, int RuleSetID) const
 {
 	dbg_assert(RuleSetID >= 0 && RuleSetID < m_aRuleSets.size(), "RuleSetID out of bounds");
 
-	CRuleSet *pConf = &m_aRuleSets[RuleSetID];
+	const CRuleSet *pConf = &m_aRuleSets[RuleSetID];
 
-	if(!pConf->m_aRules.size())
+	if(!pConf->m_RuleCount)
 		return;
 
 	int BaseTile = pConf->m_BaseTile;
@@ -138,12 +155,14 @@ void CTilesetMapper2::AutomapLayerSection(CTile* aLayerTiles, int StartTx, int S
 
 			pTile->m_Index = BaseTile;
 
-			for(int i = 0; i < pConf->m_aRules.size(); ++i)
+			const int RuleCount = pConf->m_RuleCount;
+			for(int i = 0; i < RuleCount; ++i)
 			{
 				bool RespectRules = true;
-				for(int j = 0; j < pConf->m_aRules[i].m_aConditions.size() && RespectRules; ++j)
+				const int ConditionCount = pConf->m_aRules[i].m_ConditionCount;
+				for(int j = 0; j < ConditionCount && RespectRules; ++j)
 				{
-					CRuleCondition *pCondition = &pConf->m_aRules[i].m_aConditions[j];
+					const CRuleCondition *pCondition = &pConf->m_aRules[i].m_aConditions[j];
 					int CheckIndex = clamp((y+pCondition->m_Y), 0, LayerHeight-1)*LayerWidth+clamp((x+pCondition->m_X), 0, LayerWidth-1);
 
 					if(CheckIndex < 0 || CheckIndex >= MaxIndex)
