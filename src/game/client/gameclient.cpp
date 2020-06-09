@@ -497,56 +497,71 @@ void CGameClient::OnReset()
 
 void CGameClient::UpdatePositions()
 {
-	// local character position
-	if(Config()->m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
-	{
-		if (!m_Snap.m_pLocalCharacter ||
-			(
-				m_Snap.m_pGameData &&
-				m_Snap.m_pGameData->m_GameStateFlags & (
-					GAMESTATEFLAG_PAUSED |
-					GAMESTATEFLAG_ROUNDOVER |
-					GAMESTATEFLAG_GAMEOVER
-				)
-			)
-		) {
-			// don't use predicted
-		} else {
-			m_LocalCharacterPos = mix(
-				PredictedLocalPrevChar()->m_Pos,
-				PredictedLocalChar()->m_Pos,
-				Client()->PredIntraGameTick()
-			);
-		}
-	}
-	else if(m_Snap.m_pLocalCharacter && m_Snap.m_pLocalPrevCharacter)
-	{
+	if (ShouldUsePredicted() && ShouldUsePredictedLocalChar()) {
+		m_LocalCharacterPos = mix(
+			PredictedLocalPrevChar()->m_Pos,
+			PredictedLocalChar()->m_Pos,
+			Client()->PredIntraGameTick()
+		);
+	} else if (m_Snap.m_pLocalCharacter && m_Snap.m_pLocalPrevCharacter) {
 		m_LocalCharacterPos = mix(
 			vec2(m_Snap.m_pLocalPrevCharacter->m_X, m_Snap.m_pLocalPrevCharacter->m_Y),
-			vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y), Client()->IntraGameTick());
+			vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y),
+			Client()->IntraGameTick()
+		);
 	}
 
 	// spectator position
-	if(m_Snap.m_SpecInfo.m_Active)
+	if (m_Snap.m_SpecInfo.m_Active)
 	{
-		if(Client()->State() == IClient::STATE_DEMOPLAYBACK && DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER &&
-			m_Snap.m_SpecInfo.m_SpectatorID != -1)
-		{
+		if (Client()->State() == IClient::STATE_DEMOPLAYBACK &&
+			DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER &&
+			m_Snap.m_SpecInfo.m_SpectatorID != -1
+		) {
 			m_Snap.m_SpecInfo.m_Position = mix(
-				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_Y),
-				vec2(m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_X, m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_Y),
-				Client()->IntraGameTick());
+				vec2(
+					m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_X,
+					m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_Y
+				),
+				vec2(
+					m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_X,
+					m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_Y
+				),
+				Client()->IntraGameTick()
+			);
 			m_LocalCharacterPos = m_Snap.m_SpecInfo.m_Position;
 			m_Snap.m_SpecInfo.m_UsePosition = true;
 		}
-		else if(m_Snap.m_pSpectatorInfo && (Client()->State() == IClient::STATE_DEMOPLAYBACK || m_Snap.m_SpecInfo.m_SpecMode != SPEC_FREEVIEW ||
-				(m_Snap.m_pLocalInfo && (m_Snap.m_pLocalInfo->m_PlayerFlags&PLAYERFLAG_DEAD) && m_Snap.m_SpecInfo.m_SpecMode != SPEC_FREEVIEW)))
-		{
-			if(m_Snap.m_pPrevSpectatorInfo)
-				m_Snap.m_SpecInfo.m_Position = mix(vec2(m_Snap.m_pPrevSpectatorInfo->m_X, m_Snap.m_pPrevSpectatorInfo->m_Y),
-													vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y), Client()->IntraGameTick());
+		else if (
+			m_Snap.m_pSpectatorInfo &&
+			(
+				Client()->State() == IClient::STATE_DEMOPLAYBACK ||
+				m_Snap.m_SpecInfo.m_SpecMode != SPEC_FREEVIEW ||
+				(
+					m_Snap.m_pLocalInfo &&
+					(m_Snap.m_pLocalInfo->m_PlayerFlags & PLAYERFLAG_DEAD) &&
+					m_Snap.m_SpecInfo.m_SpecMode != SPEC_FREEVIEW
+				)
+			)
+		) {
+			if (m_Snap.m_pPrevSpectatorInfo)
+				m_Snap.m_SpecInfo.m_Position = mix(
+					vec2(
+						m_Snap.m_pPrevSpectatorInfo->m_X,
+						m_Snap.m_pPrevSpectatorInfo->m_Y
+					),
+					vec2(
+						m_Snap.m_pSpectatorInfo->m_X,
+						m_Snap.m_pSpectatorInfo->m_Y
+					),
+					Client()->IntraGameTick()
+				);
 			else
-				m_Snap.m_SpecInfo.m_Position = vec2(m_Snap.m_pSpectatorInfo->m_X, m_Snap.m_pSpectatorInfo->m_Y);
+				m_Snap.m_SpecInfo.m_Position = vec2(
+					m_Snap.m_pSpectatorInfo->m_X,
+					m_Snap.m_pSpectatorInfo->m_Y
+				);
+
 			m_LocalCharacterPos = m_Snap.m_SpecInfo.m_Position;
 			m_Snap.m_SpecInfo.m_UsePosition = true;
 		}
@@ -1617,6 +1632,47 @@ void CGameClient::OnPredict()
 	}
 
 	m_PredictedTick = Client()->PredGameTick();
+}
+
+
+bool CGameClient::ShouldUsePredicted() {
+	return
+		Client()->State() != IClient::STATE_DEMOPLAYBACK &&
+		!(
+			m_Snap.m_pGameData &&
+			m_Snap.m_pGameData->m_GameStateFlags & (
+				GAMESTATEFLAG_PAUSED |
+				GAMESTATEFLAG_ROUNDOVER |
+				GAMESTATEFLAG_GAMEOVER
+			)
+		);
+}
+
+bool CGameClient::ShouldUsePredictedLocalChar() {
+	return Config()->m_ClPredict && m_Snap.m_pLocalCharacter;
+}
+
+bool CGameClient::ShouldUsePredictedNonLocalChars() {
+	return Config()->m_ClPredictPlayers;
+}
+
+bool CGameClient::ShouldUsePredictedChar(int ClientID) {
+	if (ClientID == m_LocalClientID) {
+		return ShouldUsePredictedLocalChar();
+	} else {
+		return ShouldUsePredictedNonLocalChars();
+	}
+}
+
+void CGameClient::UsePredictedChar(
+	CNetObj_Character *pPrevChar,
+	CNetObj_Character *pPlayerChar,
+	float *IntraTick,
+	int ClientID
+) {
+	m_aPredictedPrevChars[ClientID].Write(pPrevChar);
+	m_aPredictedChars[ClientID].Write(pPlayerChar);
+	*IntraTick = Client()->PredIntraGameTick();
 }
 
 void CGameClient::OnActivateEditor()

@@ -57,21 +57,10 @@ void CPlayers::RenderHook(
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
-
-	// use preditect players if needed
-	if(m_pClient->m_LocalClientID == ClientID && Config()->m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
-	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter ||
-			(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
-		{
-		}
-		else
-		{
-			// apply predicted results
-			m_pClient->PredictedLocalChar()->Write(&Player);
-			m_pClient->PredictedLocalPrevChar()->Write(&Prev);
-			IntraTick = Client()->PredIntraGameTick();
-		}
+	if (m_pClient->ShouldUsePredicted() &&
+		m_pClient->ShouldUsePredictedChar(ClientID)
+	) {
+		m_pClient->UsePredictedChar(&Prev, &Player, &IntraTick, ClientID);
 	}
 
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
@@ -204,34 +193,12 @@ void CPlayers::RenderPlayer(
 		g_GameClient.m_aClients[info.cid].angle = angle;*/
 	}
 
-	// use preditect players if needed
-	if (Client()->State() != IClient::STATE_DEMOPLAYBACK &&
-		!(
-			m_pClient->m_Snap.m_pGameData &&
-			m_pClient->m_Snap.m_pGameData->m_GameStateFlags & (
-				GAMESTATEFLAG_PAUSED |
-				GAMESTATEFLAG_ROUNDOVER |
-				GAMESTATEFLAG_GAMEOVER
-			)
-		)
+	if (m_pClient->ShouldUsePredicted() &&
+		m_pClient->ShouldUsePredictedChar(ClientID)
 	) {
-		if (m_pClient->m_LocalClientID == ClientID &&
-			Config()->m_ClPredict &&
-			m_pClient->m_Snap.m_pLocalCharacter
-		) {
-			// apply predicted results
-			m_pClient->PredictedLocalChar()->Write(&Player);
-			m_pClient->PredictedLocalPrevChar()->Write(&Prev);
-			IntraTick = Client()->PredIntraGameTick();
-		} else if (
-			m_pClient->m_LocalClientID != ClientID &&
-			Config()->m_ClPredictPlayers
-		) {
-			// apply predicted results
-			m_pClient->m_aPredictedChars[ClientID].Write(&Player);
-			m_pClient->m_aPredictedPrevChars[ClientID].Write(&Prev);
-			IntraTick = Client()->PredIntraGameTick();
-		}
+		m_pClient->m_aPredictedChars[ClientID].Write(&Player);
+		m_pClient->m_aPredictedPrevChars[ClientID].Write(&Prev);
+		IntraTick = Client()->PredIntraGameTick();
 	}
 
 	vec2 Direction = direction(Angle);

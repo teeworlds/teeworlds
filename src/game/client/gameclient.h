@@ -129,6 +129,33 @@ public:
 		return &m_aPredictedChars[m_LocalClientID];
 	}
 
+	bool ShouldUsePredicted();
+		// Whether we should use/render predicted entities. Depends on client
+		// and game state.
+private:
+	bool ShouldUsePredictedLocalChar();
+		// Whether we should use/render predicted entities for the local
+		// character. Depends on config and snap state. Should check
+		// `ShouldUsePredicted` before checking this.
+	bool ShouldUsePredictedNonLocalChars();
+		// Whether we should use/render predicted entities for non-local
+		// characters. Depends on config. Should check `ShouldUsePredicted`
+		// before checking this.
+public:
+	bool ShouldUsePredictedChar(int ClientID);
+		// Whether we should use/render predictions for a specific `ClientID`.
+		// Should check `ShouldUsePredicted` before checking this.
+
+	// Replace `pPrevChar`, `pPlayerChar`, and `IntraTick` with their predicted
+	// counterparts for `ClientID`. Should check `ShouldUsePredictedChar`
+	// before using this.
+	void UsePredictedChar(
+		CNetObj_Character *pPrevChar,
+		CNetObj_Character *pPlayerChar,
+		float *IntraTick,
+		int ClientID
+	);
+
 	// ---
 
 	struct CPlayerInfoItem
