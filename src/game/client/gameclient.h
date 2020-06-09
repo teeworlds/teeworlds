@@ -134,9 +134,9 @@ public:
 		// and game state.
 private:
 	bool ShouldUsePredictedLocalChar();
-		// Whether we should use/render predicted entities for the local
-		// character. Depends on config and snap state. Should check
-		// `ShouldUsePredicted` before checking this.
+		// Whether we should use/render the predicted local character. Depends
+		// on config and snap state. Should check `ShouldUsePredicted` before
+		// checking this.
 	bool ShouldUsePredictedNonLocalChars();
 		// Whether we should use/render predicted entities for non-local
 		// characters. Depends on config. Should check `ShouldUsePredicted`
@@ -152,12 +152,14 @@ public:
 		float *IntraTick,
 		int ClientID
 	);
-		// Replace `pPrevChar`, `pPlayerChar`, and `IntraTick` with their predicted
+		// Replaces `pPrevChar`, `pPlayerChar`, and `IntraTick` with their predicted
 		// counterparts for `ClientID`. Should check `ShouldUsePredictedChar`
 		// before using this.
 
 	vec2 PredictedCharPos(int ClientID);
+		// Return the interpolated, predicted position for `ClientID`
 	vec2 UnpredictedCharPos(int ClientID);
+		// Return the interpolated, unpredicted position for `ClientID`
 
 	// ---
 

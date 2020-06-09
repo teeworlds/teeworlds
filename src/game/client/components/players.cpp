@@ -80,6 +80,7 @@ void CPlayers::RenderHook(
 		vec2 HookPos;
 
 		if (pPlayerChar->m_HookedPlayer != -1) {
+			// `HookedPlayer != -1` means that a player is being hooked
 			if (m_pClient->ShouldUsePredicted() &&
 				m_pClient->ShouldUsePredictedChar(pPlayerChar->m_HookedPlayer)
 			) {
@@ -88,6 +89,7 @@ void CPlayers::RenderHook(
 				HookPos = m_pClient->UnpredictedCharPos(pPlayerChar->m_HookedPlayer);
 			}
 		} else {
+			// The hook is in the air or on a hookable tile
 			HookPos = mix(
 				vec2(Prev.m_HookX, Prev.m_HookY),
 				vec2(Player.m_HookX, Player.m_HookY),

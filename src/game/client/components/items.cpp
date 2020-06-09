@@ -193,6 +193,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 
 		if (pCurrent->m_Team == TEAM_RED) {
 			if (pCurGameDataFlag->m_FlagCarrierRed >= 0) {
+				// `FlagCarrier >= 0` means that there is a character carrying the flag
 				if (m_pClient->ShouldUsePredicted() &&
 					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierRed)
 				) {
@@ -203,6 +204,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 			}
 		} else if (pCurrent->m_Team == TEAM_BLUE) {
 			if (pCurGameDataFlag->m_FlagCarrierBlue >= 0) {
+				// `FlagCarrier >= 0` means that there is a character carrying the flag
 				if (m_pClient->ShouldUsePredicted() &&
 					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierBlue)
 				) {
