@@ -189,11 +189,29 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 			(pCurrent->m_Team == TEAM_BLUE && pPrevGameDataFlag->m_FlagCarrierBlue != pCurGameDataFlag->m_FlagCarrierBlue)))
 			Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 
-		// make sure to use predicted position if we are the carrier
-		if(m_pClient->m_LocalClientID != -1 &&
-			((pCurrent->m_Team == TEAM_RED && pCurGameDataFlag->m_FlagCarrierRed == m_pClient->m_LocalClientID) ||
-			(pCurrent->m_Team == TEAM_BLUE && pCurGameDataFlag->m_FlagCarrierBlue == m_pClient->m_LocalClientID)))
-			Pos = m_pClient->m_LocalCharacterPos;
+		// use predicted carrier position if possible
+
+		if (pCurrent->m_Team == TEAM_RED) {
+			if (pCurGameDataFlag->m_FlagCarrierRed >= 0) {
+				if (m_pClient->ShouldUsePredicted() &&
+					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierRed)
+				) {
+					Pos = m_pClient->PredictedCharPos(pCurGameDataFlag->m_FlagCarrierRed);
+				} else {
+					Pos = m_pClient->UnpredictedCharPos(pCurGameDataFlag->m_FlagCarrierRed);
+				}
+			}
+		} else if (pCurrent->m_Team == TEAM_BLUE) {
+			if (pCurGameDataFlag->m_FlagCarrierBlue >= 0) {
+				if (m_pClient->ShouldUsePredicted() &&
+					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierBlue)
+				) {
+					Pos = m_pClient->PredictedCharPos(pCurGameDataFlag->m_FlagCarrierBlue);
+				} else {
+					Pos = m_pClient->UnpredictedCharPos(pCurGameDataFlag->m_FlagCarrierBlue);
+				}
+			}
+		}
 	}
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
