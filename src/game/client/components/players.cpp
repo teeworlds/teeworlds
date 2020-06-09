@@ -183,9 +183,7 @@ void CPlayers::RenderPlayer(
 	if (m_pClient->ShouldUsePredicted() &&
 		m_pClient->ShouldUsePredictedChar(ClientID)
 	) {
-		m_pClient->m_aPredictedChars[ClientID].Write(&Player);
-		m_pClient->m_aPredictedPrevChars[ClientID].Write(&Prev);
-		IntraTick = Client()->PredIntraGameTick();
+		m_pClient->UsePredictedChar(&Prev, &Player, &IntraTick, ClientID);
 	}
 
 	vec2 Direction = direction(Angle);
