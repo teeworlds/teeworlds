@@ -146,15 +146,18 @@ public:
 		// Whether we should use/render predictions for a specific `ClientID`.
 		// Should check `ShouldUsePredicted` before checking this.
 
-	// Replace `pPrevChar`, `pPlayerChar`, and `IntraTick` with their predicted
-	// counterparts for `ClientID`. Should check `ShouldUsePredictedChar`
-	// before using this.
 	void UsePredictedChar(
 		CNetObj_Character *pPrevChar,
 		CNetObj_Character *pPlayerChar,
 		float *IntraTick,
 		int ClientID
 	);
+		// Replace `pPrevChar`, `pPlayerChar`, and `IntraTick` with their predicted
+		// counterparts for `ClientID`. Should check `ShouldUsePredictedChar`
+		// before using this.
+
+	vec2 PredictedCharPos(int ClientID);
+	vec2 UnpredictedCharPos(int ClientID);
 
 	// ---
 

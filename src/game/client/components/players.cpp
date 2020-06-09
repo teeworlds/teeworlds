@@ -63,7 +63,11 @@ void CPlayers::RenderHook(
 		m_pClient->UsePredictedChar(&Prev, &Player, &IntraTick, ClientID);
 	}
 
-	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+	vec2 Position = mix(
+		vec2(Prev.m_X, Prev.m_Y),
+		vec2(Player.m_X, Player.m_Y),
+		IntraTick
+	);
 
 	// draw hook
 	if (Prev.m_HookState>0 && Player.m_HookState>0)
@@ -75,38 +79,21 @@ void CPlayers::RenderHook(
 		vec2 Pos = Position;
 		vec2 HookPos;
 
-		if(pPlayerChar->m_HookedPlayer != -1)
-		{
-			if(m_pClient->m_LocalClientID != -1 && pPlayerChar->m_HookedPlayer == m_pClient->m_LocalClientID)
-			{
-				if(Client()->State() == IClient::STATE_DEMOPLAYBACK) // only use prediction if needed
-					HookPos = vec2(m_pClient->m_LocalCharacterPos.x, m_pClient->m_LocalCharacterPos.y);
-				else
-					HookPos = mix(
-						vec2(
-							m_pClient->PredictedLocalPrevChar()->m_Pos.x,
-							m_pClient->PredictedLocalPrevChar()->m_Pos.y
-						),
-						vec2(
-							m_pClient->PredictedLocalChar()->m_Pos.x,
-							m_pClient->PredictedLocalChar()->m_Pos.y
-						),
-						Client()->PredIntraGameTick()
-					);
+		if (pPlayerChar->m_HookedPlayer != -1) {
+			if (m_pClient->ShouldUsePredicted() &&
+				m_pClient->ShouldUsePredictedChar(pPlayerChar->m_HookedPlayer)
+			) {
+				HookPos = m_pClient->PredictedCharPos(pPlayerChar->m_HookedPlayer);
+			} else {
+				HookPos = m_pClient->UnpredictedCharPos(pPlayerChar->m_HookedPlayer);
 			}
-			else if(m_pClient->m_LocalClientID == ClientID)
-			{
-				HookPos = mix(vec2(m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_X,
-					m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_Y),
-					vec2(m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Cur.m_X,
-					m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Cur.m_Y),
-					Client()->IntraGameTick());
-			}
-			else
-				HookPos = mix(vec2(pPrevChar->m_HookX, pPrevChar->m_HookY), vec2(pPlayerChar->m_HookX, pPlayerChar->m_HookY), Client()->IntraGameTick());
+		} else {
+			HookPos = mix(
+				vec2(Prev.m_HookX, Prev.m_HookY),
+				vec2(Player.m_HookX, Player.m_HookY),
+				IntraTick
+			);
 		}
-		else
-			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
 
 		float d = distance(Pos, HookPos);
 		vec2 Dir = normalize(Pos-HookPos);

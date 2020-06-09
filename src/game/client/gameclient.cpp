@@ -498,17 +498,9 @@ void CGameClient::OnReset()
 void CGameClient::UpdatePositions()
 {
 	if (ShouldUsePredicted() && ShouldUsePredictedLocalChar()) {
-		m_LocalCharacterPos = mix(
-			PredictedLocalPrevChar()->m_Pos,
-			PredictedLocalChar()->m_Pos,
-			Client()->PredIntraGameTick()
-		);
+		m_LocalCharacterPos = PredictedCharPos(m_LocalClientID);
 	} else if (m_Snap.m_pLocalCharacter && m_Snap.m_pLocalPrevCharacter) {
-		m_LocalCharacterPos = mix(
-			vec2(m_Snap.m_pLocalPrevCharacter->m_X, m_Snap.m_pLocalPrevCharacter->m_Y),
-			vec2(m_Snap.m_pLocalCharacter->m_X, m_Snap.m_pLocalCharacter->m_Y),
-			Client()->IntraGameTick()
-		);
+		m_LocalCharacterPos = UnpredictedCharPos(m_LocalClientID);
 	}
 
 	// spectator position
@@ -518,16 +510,8 @@ void CGameClient::UpdatePositions()
 			DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER &&
 			m_Snap.m_SpecInfo.m_SpectatorID != -1
 		) {
-			m_Snap.m_SpecInfo.m_Position = mix(
-				vec2(
-					m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_X,
-					m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Prev.m_Y
-				),
-				vec2(
-					m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_X,
-					m_Snap.m_aCharacters[m_Snap.m_SpecInfo.m_SpectatorID].m_Cur.m_Y
-				),
-				Client()->IntraGameTick()
+			m_Snap.m_SpecInfo.m_Position = UnpredictedCharPos(
+				m_Snap.m_SpecInfo.m_SpectatorID
 			);
 			m_LocalCharacterPos = m_Snap.m_SpecInfo.m_Position;
 			m_Snap.m_SpecInfo.m_UsePosition = true;
@@ -1673,6 +1657,34 @@ void CGameClient::UsePredictedChar(
 	m_aPredictedPrevChars[ClientID].Write(pPrevChar);
 	m_aPredictedChars[ClientID].Write(pPlayerChar);
 	*IntraTick = Client()->PredIntraGameTick();
+}
+
+vec2 CGameClient::PredictedCharPos(int ClientID) {
+	return mix(
+		vec2(
+			m_aPredictedPrevChars[ClientID].m_Pos.x,
+			m_aPredictedPrevChars[ClientID].m_Pos.y
+		),
+		vec2(
+			m_aPredictedChars[ClientID].m_Pos.x,
+			m_aPredictedChars[ClientID].m_Pos.y
+		),
+		Client()->PredIntraGameTick()
+	);
+}
+
+vec2 CGameClient::UnpredictedCharPos(int ClientID) {
+	return mix(
+		vec2(
+			m_Snap.m_aCharacters[ClientID].m_Prev.m_X,
+			m_Snap.m_aCharacters[ClientID].m_Prev.m_Y
+		),
+		vec2(
+			m_Snap.m_aCharacters[ClientID].m_Cur.m_X,
+			m_Snap.m_aCharacters[ClientID].m_Cur.m_Y
+		),
+		Client()->IntraGameTick()
+	);
 }
 
 void CGameClient::OnActivateEditor()
