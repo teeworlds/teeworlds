@@ -121,14 +121,6 @@ public:
 	CCharacterCore m_aPredictedPrevChars[MAX_CLIENTS];
 	CCharacterCore m_aPredictedChars[MAX_CLIENTS];
 
-	CCharacterCore* PredictedLocalPrevChar() {
-		return &m_aPredictedPrevChars[m_LocalClientID];
-	}
-
-	CCharacterCore* PredictedLocalChar() {
-		return &m_aPredictedChars[m_LocalClientID];
-	}
-
 	bool ShouldUsePredicted();
 		// Whether we should use/render predicted entities. Depends on client
 		// and game state.

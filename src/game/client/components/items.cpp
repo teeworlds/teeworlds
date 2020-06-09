@@ -190,26 +190,34 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 			Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 
 		// use predicted carrier position if possible
-
-		if (pCurrent->m_Team == TEAM_RED) {
-			if (pCurGameDataFlag->m_FlagCarrierRed >= 0) {
+		if(pCurrent->m_Team == TEAM_RED)
+		{
+			if(pCurGameDataFlag->m_FlagCarrierRed >= 0)
+			{
 				// `FlagCarrier >= 0` means that there is a character carrying the flag
-				if (m_pClient->ShouldUsePredicted() &&
-					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierRed)
-				) {
+				if(m_pClient->ShouldUsePredicted() &&
+					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierRed))
+				{
 					Pos = m_pClient->PredictedCharPos(pCurGameDataFlag->m_FlagCarrierRed);
-				} else {
+				}
+				else
+				{
 					Pos = m_pClient->UnpredictedCharPos(pCurGameDataFlag->m_FlagCarrierRed);
 				}
 			}
-		} else if (pCurrent->m_Team == TEAM_BLUE) {
-			if (pCurGameDataFlag->m_FlagCarrierBlue >= 0) {
+		}
+		else if(pCurrent->m_Team == TEAM_BLUE)
+		{
+			if(pCurGameDataFlag->m_FlagCarrierBlue >= 0)
+			{
 				// `FlagCarrier >= 0` means that there is a character carrying the flag
-				if (m_pClient->ShouldUsePredicted() &&
-					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierBlue)
-				) {
+				if(m_pClient->ShouldUsePredicted() &&
+					m_pClient->ShouldUsePredictedChar(pCurGameDataFlag->m_FlagCarrierBlue))
+				{
 					Pos = m_pClient->PredictedCharPos(pCurGameDataFlag->m_FlagCarrierBlue);
-				} else {
+				}
+				else
+				{
 					Pos = m_pClient->UnpredictedCharPos(pCurGameDataFlag->m_FlagCarrierBlue);
 				}
 			}
@@ -326,7 +334,7 @@ void CItems::OnRender()
 		if(Item.m_Type == NETOBJTYPE_FLAG)
 		{
 			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
-			if (pPrev)
+			if(pPrev)
 			{
 				const void *pPrevGameDataFlag = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_GAMEDATAFLAG, m_pClient->m_Snap.m_GameDataFlagSnapID);
 				RenderFlag(static_cast<const CNetObj_Flag *>(pPrev), static_cast<const CNetObj_Flag *>(pData),

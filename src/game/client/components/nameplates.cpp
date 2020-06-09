@@ -18,11 +18,13 @@ void CNamePlates::RenderNameplate(
 	)
 {
 	vec2 Position;
-	if (m_pClient->ShouldUsePredicted() &&
-		m_pClient->ShouldUsePredictedChar(ClientID)
-	) {
+	if(m_pClient->ShouldUsePredicted() &&
+		m_pClient->ShouldUsePredictedChar(ClientID))
+	{
 		Position = m_pClient->PredictedCharPos(ClientID);
-	} else {
+	}
+	else
+	{
 		Position = m_pClient->UnpredictedCharPos(ClientID);
 	}
 
@@ -75,7 +77,7 @@ void CNamePlates::RenderNameplate(
 
 void CNamePlates::OnRender()
 {
-	if (!Config()->m_ClNameplates || Client()->State() < IClient::STATE_ONLINE)
+	if(!Config()->m_ClNameplates || Client()->State() < IClient::STATE_ONLINE)
 		return;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)

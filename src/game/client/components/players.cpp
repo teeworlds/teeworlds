@@ -57,9 +57,9 @@ void CPlayers::RenderHook(
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
-	if (m_pClient->ShouldUsePredicted() &&
-		m_pClient->ShouldUsePredictedChar(ClientID)
-	) {
+	if(m_pClient->ShouldUsePredicted() &&
+		m_pClient->ShouldUsePredictedChar(ClientID))
+	{
 		m_pClient->UsePredictedChar(&Prev, &Player, &IntraTick, ClientID);
 	}
 
@@ -70,7 +70,7 @@ void CPlayers::RenderHook(
 	);
 
 	// draw hook
-	if (Prev.m_HookState>0 && Player.m_HookState>0)
+	if(Prev.m_HookState>0 && Player.m_HookState>0)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
@@ -79,16 +79,21 @@ void CPlayers::RenderHook(
 		vec2 Pos = Position;
 		vec2 HookPos;
 
-		if (pPlayerChar->m_HookedPlayer != -1) {
+		if(pPlayerChar->m_HookedPlayer != -1)
+		{
 			// `HookedPlayer != -1` means that a player is being hooked
-			if (m_pClient->ShouldUsePredicted() &&
-				m_pClient->ShouldUsePredictedChar(pPlayerChar->m_HookedPlayer)
-			) {
+			if(m_pClient->ShouldUsePredicted() &&
+				m_pClient->ShouldUsePredictedChar(pPlayerChar->m_HookedPlayer))
+			{
 				HookPos = m_pClient->PredictedCharPos(pPlayerChar->m_HookedPlayer);
-			} else {
+			}
+			else
+			{
 				HookPos = m_pClient->UnpredictedCharPos(pPlayerChar->m_HookedPlayer);
 			}
-		} else {
+		}
+		else
+		{
 			// The hook is in the air or on a hookable tile
 			HookPos = mix(
 				vec2(Prev.m_HookX, Prev.m_HookY),
@@ -182,9 +187,9 @@ void CPlayers::RenderPlayer(
 		g_GameClient.m_aClients[info.cid].angle = angle;*/
 	}
 
-	if (m_pClient->ShouldUsePredicted() &&
-		m_pClient->ShouldUsePredictedChar(ClientID)
-	) {
+	if(m_pClient->ShouldUsePredicted() &&
+		m_pClient->ShouldUsePredictedChar(ClientID))
+	{
 		m_pClient->UsePredictedChar(&Prev, &Player, &IntraTick, ClientID);
 	}
 
