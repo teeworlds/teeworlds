@@ -279,7 +279,16 @@ public:
 	~CEditorImage();
 
 	void AnalyseTileFlags();
+	void LoadAutoMapperFile(const char *pFile);
 	void LoadAutoMapper();
+
+	static int AutoMapEntryCallback(const char *pFilename, int IsDir, int StorageType, void *pUser);
+
+	struct CAutoMapEntryCallbackUserdata
+	{
+		CEditorImage *m_pEditorImage;
+		char m_aPath[IO_MAX_PATH_LENGTH];
+	};
 
 	IGraphics::CTextureHandle m_Texture;
 	int m_External;

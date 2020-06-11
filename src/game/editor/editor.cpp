@@ -205,15 +205,10 @@ void CEditorImage::AnalyseTileFlags()
 	}
 }
 
-void CEditorImage::LoadAutoMapper()
+void CEditorImage::LoadAutoMapperFile(const char *pFilename)
 {
-	if(m_pAutoMapper)
-		return;
-
 	// read file data into buffer
-	char aBuf[IO_MAX_PATH_LENGTH];
-	str_format(aBuf, sizeof(aBuf), "editor/automap/%s.json", m_aName);
-	IOHANDLE File = m_pEditor->Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
+	IOHANDLE File = m_pEditor->Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 		return;
 	int FileSize = (int)io_length(File);
@@ -230,7 +225,7 @@ void CEditorImage::LoadAutoMapper()
 
 	if(pJsonData == 0)
 	{
-		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, aBuf, aError);
+		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
 		return;
 	}
 
@@ -238,26 +233,78 @@ void CEditorImage::LoadAutoMapper()
 	const json_value &rTileset = (*pJsonData)[(const char *)IAutoMapper::GetTypeName(IAutoMapper::TYPE_TILESET)];
 	if(rTileset.type == json_array)
 	{
-		m_pAutoMapper = new CTilesetMapper(m_pEditor);
-		m_pAutoMapper->Load(rTileset);
+		if(m_pAutoMapper && m_pAutoMapper->GetType() != IAutoMapper::TYPE_TILESET)
+		{
+			char aBuf[IO_MAX_PATH_LENGTH+64];
+			str_format(aBuf, sizeof(aBuf), "failed to load '%s' (incompatible type)", pFilename);
+			m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aBuf);
+		}
+		else
+		{
+			if(!m_pAutoMapper)
+				m_pAutoMapper = new CTilesetMapper(m_pEditor);
+			m_pAutoMapper->Load(rTileset);
+		}
 	}
 	else
 	{
 		const json_value &rDoodads = (*pJsonData)[(const char *)IAutoMapper::GetTypeName(IAutoMapper::TYPE_DOODADS)];
 		if(rDoodads.type == json_array)
 		{
-			m_pAutoMapper = new CDoodadsMapper(m_pEditor);
-			m_pAutoMapper->Load(rDoodads);
+			if(m_pAutoMapper && m_pAutoMapper->GetType() != IAutoMapper::TYPE_TILESET)
+			{
+				char aBuf[IO_MAX_PATH_LENGTH+64];
+				str_format(aBuf, sizeof(aBuf), "failed to load '%s' (incompatible type)", pFilename);
+				m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aBuf);
+			}
+			else
+			{
+				if(!m_pAutoMapper)
+					m_pAutoMapper = new CDoodadsMapper(m_pEditor);
+				m_pAutoMapper->Load(rDoodads);
+			}
 		}
 	}
 
 	// clean up
+	char aBuf[IO_MAX_PATH_LENGTH];
 	json_value_free(pJsonData);
 	if(m_pAutoMapper && m_pEditor->Config()->m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf),"loaded %s.json (%s)", m_aName, IAutoMapper::GetTypeName(m_pAutoMapper->GetType()));
 		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
 	}
+}
+
+void CEditorImage::LoadAutoMapper()
+{
+	if(m_pAutoMapper)
+		return;
+
+	char aBuf[IO_MAX_PATH_LENGTH];
+	str_format(aBuf, sizeof(aBuf), "editor/automap/%s.json", m_aName);
+	LoadAutoMapperFile(aBuf);
+	str_format(aBuf, sizeof(aBuf), "editor/automap/%s/", m_aName);
+	CAutoMapEntryCallbackUserdata Userdata;
+	Userdata.m_pEditorImage = this;
+	str_copy(Userdata.m_aPath, aBuf, sizeof(Userdata.m_aPath));
+	m_pEditor->Storage()->ListDirectory(IStorage::TYPE_ALL, aBuf, AutoMapEntryCallback, &Userdata);
+}
+
+int CEditorImage::AutoMapEntryCallback(const char *pFilename, int IsDir, int StorageType, void *pUser)
+{
+	CAutoMapEntryCallbackUserdata *pUserdata = (CAutoMapEntryCallbackUserdata *)pUser;
+	CEditorImage *pThis = pUserdata->m_pEditorImage;
+	if(!str_comp(pFilename, ".")
+		|| !str_comp(pFilename, "..")
+		|| IsDir
+		|| !str_endswith(pFilename, ".json"))
+		return 0;
+
+	char aBuf[IO_MAX_PATH_LENGTH];
+	str_format(aBuf, sizeof(aBuf), "%s%s", pUserdata->m_aPath, pFilename);
+	pThis->LoadAutoMapperFile(aBuf);
+	return 0;
 }
 
 void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pUser)
