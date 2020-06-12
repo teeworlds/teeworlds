@@ -64,6 +64,7 @@ public:
 	virtual bool IsAuthed(int ClientID) const = 0;
 	virtual bool IsBanned(int ClientID) = 0;
 	virtual void Kick(int ClientID, const char *pReason) = 0;
+	virtual void ChangeMap(const char *pMap) = 0;
 
 	virtual void DemoRecorder_HandleAutoStart() = 0;
 	virtual bool DemoRecorder_IsRecording() = 0;
@@ -91,6 +92,7 @@ public:
 	virtual void OnClientDirectInput(int ClientID, void *pInput) = 0;
 	virtual void OnClientPredictedInput(int ClientID, void *pInput) = 0;
 
+	virtual bool IsClientBot(int ClientID) const = 0;
 	virtual bool IsClientReady(int ClientID) const = 0;
 	virtual bool IsClientPlayer(int ClientID) const = 0;
 	virtual bool IsClientSpectator(int ClientID) const = 0;

@@ -205,6 +205,7 @@ static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 
 void CGameClient::OnConsoleInit()
 {
+	m_InitComplete = false;
 	m_pEngine = Kernel()->RequestInterface<IEngine>();
 	m_pClient = Kernel()->RequestInterface<IClient>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
@@ -344,8 +345,11 @@ void CGameClient::OnInit()
 
 	int64 Start = time_get();
 
-	// set the language
-	g_Localization.Load(Config()->m_ClLanguagefile, Storage(), Console());
+	// Render load screen at 0% to get graphics sooner.
+	// Swap again to minimize initial flashing color.
+	m_pMenus->InitLoading(1);
+	m_pMenus->RenderLoading();
+	m_pGraphics->Swap();
 
 	// TODO: this should be different
 	// setup item sizes
@@ -354,6 +358,14 @@ void CGameClient::OnInit()
 	static const int OLD_NUM_NETOBJTYPES = 23;
 	for(int i = 0; i < OLD_NUM_NETOBJTYPES; i++)
 		Client()->SnapSetStaticsize(i, m_NetObjHandler.GetObjSize(i));
+
+	// determine total work for loading all components
+	int TotalWorkAmount = g_pData->m_NumImages + 4 + 1 + 1 + 2; // +4=load init, +1=font, +1=localization, +2=editor
+	for(int i = m_All.m_Num-1; i >= 0; --i)
+		TotalWorkAmount += m_All.m_paComponents[i]->GetInitAmount();
+
+	m_pMenus->InitLoading(TotalWorkAmount);
+	m_pMenus->RenderLoading(4);
 
 	// load default font
 	char aFontName[IO_MAX_PATH_LENGTH];
@@ -370,17 +382,15 @@ void CGameClient::OnInit()
 			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", aBuf);
 		}
 	}
+	m_pMenus->RenderLoading(1);
 
-	// determine total work for loading all components
-	int TotalWorkAmount = g_pData->m_NumImages + 2; // +2=editor
-	for(int i = m_All.m_Num-1; i >= 0; --i)
-		TotalWorkAmount += m_All.m_paComponents[i]->GetInitAmount();
+	// set the language
+	g_Localization.Load(Config()->m_ClLanguagefile, Storage(), Console());
+	m_pMenus->RenderLoading(1);
 
-	m_pMenus->InitLoading(TotalWorkAmount);
-	m_pMenus->RenderLoading(); // render initial loading screen
 	// init all components
 	for(int i = m_All.m_Num-1; i >= 0; --i)
-		m_All.m_paComponents[i]->OnInit();
+		m_All.m_paComponents[i]->OnInit(); // this will call RenderLoading again
 
 	// load textures
 	for(int i = 0; i < g_pData->m_NumImages; i++)
@@ -393,18 +403,19 @@ void CGameClient::OnInit()
 	m_pEditor->Init();
 	m_pMenus->RenderLoading(2);
 
-	OnReset();
-
-	int64 End = time_get();
-	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "initialisation finished after %.2fms", ((End-Start)*1000)/(float)time_freq());
-	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
+	OnReset();	
 
 	m_ServerMode = SERVERMODE_PURE;
 
 	m_IsXmasDay = time_isxmasday();
 	m_IsEasterDay = time_iseasterday();
 	m_pMenus->RenderLoading();
+	m_InitComplete = true;
+
+	int64 End = time_get();
+	char aBuf[256];
+	str_format(aBuf, sizeof(aBuf), "initialisation finished after %.2fms", ((End - Start) * 1000) / (float)time_freq());
+	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "gameclient", aBuf);
 }
 
 void CGameClient::OnUpdate()
@@ -550,10 +561,43 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 	TempCore.Write(pCharacter);
 }
 
+void CGameClient::StartRendering()
+{
+	if(Config()->m_GfxClear)
+	{
+		if(m_pMenus->IsBackgroundNeeded())
+			Graphics()->Clear(0.45f, 0.45f, 0.45f);
+		else
+			Graphics()->Clear(1.0f, 1.0f, 0.0f);
+	}
+	else if(m_pMenus->IsBackgroundNeeded())
+	{
+		// render background color
+		float sw = 300 * Graphics()->ScreenAspect();
+		float sh = 300;
+		Graphics()->MapScreen(0, 0, sw, sh);
+		Graphics()->TextureClear();
+		Graphics()->QuadsBegin();
+		vec4 Bottom(0.45f, 0.45f, 0.45f, 1.0f);
+		vec4 Top(0.45f, 0.45f, 0.45f, 1.0f);
+		IGraphics::CColorVertex Array[4] = {
+			IGraphics::CColorVertex(0, Top.r, Top.g, Top.b, Top.a),
+			IGraphics::CColorVertex(1, Top.r, Top.g, Top.b, Top.a),
+			IGraphics::CColorVertex(2, Bottom.r, Bottom.g, Bottom.b, Bottom.a),
+			IGraphics::CColorVertex(3, Bottom.r, Bottom.g, Bottom.b, Bottom.a) };
+		Graphics()->SetColorVertex(Array, 4);
+		IGraphics::CQuadItem QuadItem(0, 0, sw, sh);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+	}
+}
+
 void CGameClient::OnRender()
 {
 	// update the local character and spectate position
 	UpdatePositions();
+
+	StartRendering();
 
 	// render all systems
 	for(int i = 0; i < m_All.m_Num; i++)

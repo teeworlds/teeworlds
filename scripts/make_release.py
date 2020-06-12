@@ -85,7 +85,13 @@ def clean():
 		os.remove(src_package_languages)
 		os.remove(src_package_maps)
 	except: pass
-	
+
+def shell(cmd):
+	if os.system(cmd) != 0:
+		clean()
+		print("Non zero exit code on: os.system(%s)" % cmd)
+		sys.exit(1)
+
 package = "%s-%s-%s" %(name, version, platform)
 package_dir = package
 
@@ -154,7 +160,7 @@ if use_bundle:
 			if os.path.isfile(fname):
 				to_lipo.append(fname)
 		if to_lipo:
-			os.system("lipo -create -output "+bin+" "+" ".join(to_lipo))
+			shell("lipo -create -output "+bin+" "+" ".join(to_lipo))
 
 	# create Teeworlds appfolder
 	clientbundle_content_dir = os.path.join(package_dir, "Teeworlds.app/Contents")
@@ -173,12 +179,12 @@ if use_bundle:
 	copy_tree(maps_dir, clientbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
 	shutil.copy(source_package_dir+name+exe_ext, clientbundle_bin_dir)
-	os.system("install_name_tool -change /usr/local/opt/freetype/lib/libfreetype.6.dylib @executable_path/../Frameworks/libfreetype.6.dylib " + binary_path)
-	os.system("install_name_tool -change /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib @executable_path/../Frameworks/libSDL2-2.0.0.dylib  " + binary_path)
-	os.system("cp /usr/local/opt/freetype/lib/libfreetype.6.dylib " + clientbundle_framework_dir)
-	os.system("cp /usr/local/opt/libpng/lib/libpng16.16.dylib " + clientbundle_framework_dir)
-	os.system("cp /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib " + clientbundle_framework_dir)
-	os.system("install_name_tool -change /usr/local/opt/libpng/lib/libpng16.16.dylib @executable_path/../Frameworks/libpng16.16.dylib " + freetypelib_path)
+	shell("install_name_tool -change /usr/local/opt/freetype/lib/libfreetype.6.dylib @executable_path/../Frameworks/libfreetype.6.dylib " + binary_path)
+	shell("install_name_tool -change /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib @executable_path/../Frameworks/libSDL2-2.0.0.dylib  " + binary_path)
+	shell("cp /usr/local/opt/freetype/lib/libfreetype.6.dylib " + clientbundle_framework_dir)
+	shell("cp /usr/local/opt/libpng/lib/libpng16.16.dylib " + clientbundle_framework_dir)
+	shell("cp /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib " + clientbundle_framework_dir)
+	shell("install_name_tool -change /usr/local/opt/libpng/lib/libpng16.16.dylib @executable_path/../Frameworks/libpng16.16.dylib " + freetypelib_path)
 	open(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -256,18 +262,18 @@ if use_zip:
 			zf.write(n, n)
 	#zf.printdir()
 	zf.close()
-	
+
 if use_gz:
 	print("making tar.gz archive")
-	os.system("tar czf %s.tar.gz %s" % (package, package_dir))
+	shell("tar czf %s.tar.gz %s" % (package, package_dir))
 
 if use_dmg:
 	print("making disk image")
-	os.system("rm -f %s.dmg %s_temp.dmg" % (package, package))
-	os.system("hdiutil create -srcfolder %s -volname Teeworlds -quiet %s_temp" % (package_dir, package))
-	os.system("hdiutil convert %s_temp.dmg -format UDBZ -o %s.dmg -quiet" % (package, package))
-	os.system("rm -f %s_temp.dmg" % package)
+	shell("rm -f %s.dmg %s_temp.dmg" % (package, package))
+	shell("hdiutil create -srcfolder %s -volname Teeworlds -quiet %s_temp" % (package_dir, package))
+	shell("hdiutil convert %s_temp.dmg -format UDBZ -o %s.dmg -quiet" % (package, package))
+	shell("rm -f %s_temp.dmg" % package)
 
 clean()
-	
+
 print("done")

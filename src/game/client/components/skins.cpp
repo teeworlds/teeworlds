@@ -212,7 +212,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 int CSkins::GetInitAmount() const
 {
-	return NUM_SKINPARTS*2 + 8;
+	return NUM_SKINPARTS*5 + 8;
 }
 
 void CSkins::OnInit()
@@ -265,7 +265,8 @@ void CSkins::OnInit()
 			DummySkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 			m_aaSkinParts[p].add(DummySkinPart);
 		}
-		m_pClient->m_pMenus->RenderLoading(2);
+
+		m_pClient->m_pMenus->RenderLoading(5);
 	}
 
 	// create dummy skin

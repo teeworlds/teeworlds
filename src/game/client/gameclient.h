@@ -212,6 +212,7 @@ public:
 	bool m_IsXmasDay;
 	float m_LastSkinChangeTime;
 	bool m_IsEasterDay;
+	bool m_InitComplete;
 
 	struct CGameInfo
 	{
@@ -270,6 +271,7 @@ public:
 	void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
 	bool IsXmas() const;
 	bool IsEaster() const;
+	void StartRendering();
 
 	int RacePrecision() const { return m_Snap.m_pGameDataRace ? m_Snap.m_pGameDataRace->m_Precision : 3; }
 

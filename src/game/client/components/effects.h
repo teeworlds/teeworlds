@@ -14,19 +14,18 @@ class CEffects : public CComponent
 public:
 	CEffects();
 
-	virtual void OnRender();
-
-	void BulletTrail(vec2 Pos);
-	void SmokeTrail(vec2 Pos, vec2 Vel);
-	void SkidTrail(vec2 Pos, vec2 Vel);
-	void Explosion(vec2 Pos);
-	void HammerHit(vec2 Pos);
 	void AirJump(vec2 Pos);
 	void DamageIndicator(vec2 Pos, int Amount);
+	void PowerupShine(vec2 Pos, vec2 Size);
+	void SmokeTrail(vec2 Pos, vec2 Vel);
+	void SkidTrail(vec2 Pos, vec2 Vel);
+	void BulletTrail(vec2 Pos);
 	void PlayerSpawn(vec2 Pos);
 	void PlayerDeath(vec2 Pos, int ClientID);
-	void PowerupShine(vec2 Pos, vec2 Size);
+	void Explosion(vec2 Pos);
+	void HammerHit(vec2 Pos);
 
-	void Update();
+	virtual void OnRender();
+	float GetEffectsSpeed();
 };
 #endif

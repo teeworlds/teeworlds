@@ -81,7 +81,7 @@ public:
 							pSavedTiles++;
 						}
 
-						m_DataFile.ReplaceData(pTilemap->m_Data, reinterpret_cast<char *>(pTiles));
+						m_DataFile.ReplaceData(pTilemap->m_Data, reinterpret_cast<char *>(pTiles), TilemapSize);
 					}
 				}
 			}

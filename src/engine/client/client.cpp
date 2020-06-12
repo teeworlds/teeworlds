@@ -278,8 +278,9 @@ CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotD
 
 	// map download
 	m_aMapdownloadFilename[0] = 0;
+	m_aMapdownloadFilenameTemp[0] = 0;
 	m_aMapdownloadName[0] = 0;
-	m_MapdownloadFile = 0;
+	m_MapdownloadFileTemp = 0;
 	m_MapdownloadChunk = 0;
 	m_MapdownloadSha256 = SHA256_ZEROED;
 	m_MapdownloadSha256Present = false;
@@ -571,9 +572,12 @@ void CClient::DisconnectWithReason(const char *pReason)
 
 	// disable all downloads
 	m_MapdownloadChunk = 0;
-	if(m_MapdownloadFile)
-		io_close(m_MapdownloadFile);
-	m_MapdownloadFile = 0;
+	if(m_MapdownloadFileTemp)
+	{
+		io_close(m_MapdownloadFileTemp);
+		Storage()->RemoveFile(m_aMapdownloadFilenameTemp, IStorage::TYPE_SAVE);
+	}
+	m_MapdownloadFileTemp = 0;
 	m_MapdownloadSha256 = SHA256_ZEROED;
 	m_MapdownloadSha256Present = false;
 	m_MapdownloadCrc = 0;
@@ -774,8 +778,6 @@ void CClient::Render()
 	}
 	else
 	{
-		if(Config()->m_GfxClear)
-			Graphics()->Clear(1,1,0);
 		GameClient()->OnRender();
 	}
 	DebugRender();
@@ -831,17 +833,27 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, const SHA
 }
 
 
-static void FormatMapDownloadFilename(const char *pName, const SHA256_DIGEST *pSha256, int Crc, char *pBuffer, int BufferSize)
+static void FormatMapDownloadFilename(const char *pName, const SHA256_DIGEST *pSha256, int Crc, bool Temp, char *pBuffer, int BufferSize)
 {
+	char aSuffix[32];
+	if(Temp)
+	{
+		str_format(aSuffix, sizeof(aSuffix), ".%d.tmp", pid());
+	}
+	else
+	{
+		str_copy(aSuffix, ".map", sizeof(aSuffix));
+	}
+
 	if(pSha256)
 	{
 		char aSha256[SHA256_MAXSTRSIZE];
 		sha256_str(*pSha256, aSha256, sizeof(aSha256));
-		str_format(pBuffer, BufferSize, "downloadedmaps/%s_%s.map", pName, aSha256);
+		str_format(pBuffer, BufferSize, "downloadedmaps/%s_%s%s", pName, aSha256, aSuffix);
 	}
 	else
 	{
-		str_format(pBuffer, BufferSize, "downloadedmaps/%s_%08x.map", pName, Crc);
+		str_format(pBuffer, BufferSize, "downloadedmaps/%s_%08x%s", pName, Crc, aSuffix);
 	}
 }
 
@@ -869,7 +881,7 @@ const char *CClient::LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pW
 		return pError;
 
 	// try the downloaded maps
-	FormatMapDownloadFilename(pMapName, pWantedSha256, WantedCrc, aBuf, sizeof(aBuf));
+	FormatMapDownloadFilename(pMapName, pWantedSha256, WantedCrc, false, aBuf, sizeof(aBuf));
 	pError = LoadMap(pMapName, aBuf, pWantedSha256, WantedCrc);
 	if(!pError)
 		return pError;
@@ -877,7 +889,7 @@ const char *CClient::LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pW
 	// backward compatibility with old names
 	if(pWantedSha256)
 	{
-		FormatMapDownloadFilename(pMapName, 0, WantedCrc, aBuf, sizeof(aBuf));
+		FormatMapDownloadFilename(pMapName, 0, WantedCrc, false, aBuf, sizeof(aBuf));
 		pError = LoadMap(pMapName, aBuf, 0, WantedCrc);
 		if(!pError)
 			return pError;
@@ -1158,17 +1170,22 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				}
 				else
 				{
+					if(m_MapdownloadFileTemp)
+					{
+						io_close(m_MapdownloadFileTemp);
+						Storage()->RemoveFile(m_aMapdownloadFilenameTemp, IStorage::TYPE_SAVE);
+					}
+
 					// start map download
-					FormatMapDownloadFilename(pMap, pMapSha256, MapCrc, m_aMapdownloadFilename, sizeof(m_aMapdownloadFilename));
+					FormatMapDownloadFilename(pMap, pMapSha256, MapCrc, false, m_aMapdownloadFilename, sizeof(m_aMapdownloadFilename));
+					FormatMapDownloadFilename(pMap, pMapSha256, MapCrc, true, m_aMapdownloadFilenameTemp, sizeof(m_aMapdownloadFilenameTemp));
 
 					char aBuf[256];
-					str_format(aBuf, sizeof(aBuf), "starting to download map to '%s'", m_aMapdownloadFilename);
+					str_format(aBuf, sizeof(aBuf), "starting to download map to '%s'", m_aMapdownloadFilenameTemp);
 					m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", aBuf);
 
 					str_copy(m_aMapdownloadName, pMap, sizeof(m_aMapdownloadName));
-					if(m_MapdownloadFile)
-						io_close(m_MapdownloadFile);
-					m_MapdownloadFile = Storage()->OpenFile(m_aMapdownloadFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+					m_MapdownloadFileTemp = Storage()->OpenFile(m_aMapdownloadFilenameTemp, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 					m_MapdownloadChunk = 0;
 					m_MapdownloadChunkNum = MapChunkNum;
 					m_MapDownloadChunkSize = MapChunkSize;
@@ -1189,7 +1206,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 		}
 		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_MAP_DATA)
 		{
-			if(!m_MapdownloadFile)
+			if(!m_MapdownloadFileTemp)
 				return;
 
 			int Size = min(m_MapDownloadChunkSize, m_MapdownloadTotalsize-m_MapdownloadAmount);
@@ -1197,7 +1214,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 			if(Unpacker.Error())
 				return;
 
-			io_write(m_MapdownloadFile, pData, Size);
+			io_write(m_MapdownloadFileTemp, pData, Size);
 			++m_MapdownloadChunk;
 			m_MapdownloadAmount += Size;
 
@@ -1206,11 +1223,14 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 				// map download complete
 				m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client/network", "download complete, loading map");
 
-				if(m_MapdownloadFile)
-					io_close(m_MapdownloadFile);
-				m_MapdownloadFile = 0;
+				if(m_MapdownloadFileTemp)
+					io_close(m_MapdownloadFileTemp);
+				m_MapdownloadFileTemp = 0;
 				m_MapdownloadAmount = 0;
 				m_MapdownloadTotalsize = -1;
+
+				Storage()->RemoveFile(m_aMapdownloadFilename, IStorage::TYPE_SAVE);
+				Storage()->RenameFile(m_aMapdownloadFilenameTemp, m_aMapdownloadFilename, IStorage::TYPE_SAVE);
 
 				// load map
 				const char *pError = LoadMap(m_aMapdownloadName, m_aMapdownloadFilename, m_MapdownloadSha256Present ? &m_MapdownloadSha256 : 0, m_MapdownloadCrc);
@@ -1962,12 +1982,14 @@ void CClient::Run()
 	GameClient()->OnInit();
 
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "version %s", GameClient()->NetVersion());
+	str_format(aBuf, sizeof(aBuf), "netversion %s", GameClient()->NetVersion());
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 	if(str_comp(GameClient()->NetVersionHashUsed(), GameClient()->NetVersionHashReal()))
 	{
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", "WARNING: netversion hash differs");
 	}
+	str_format(aBuf, sizeof(aBuf), "game version %s", GameClient()->Version());
+	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 
 	//
 	m_FpsGraph.Init(0.0f, 120.0f);
@@ -2452,10 +2474,16 @@ void CClient::ConchainWindowScreen(IConsole::IResult *pResult, void *pUserData, 
 		pfnCallback(pResult, pCallbackUserData);
 }
 
-void CClient::ToggleFullscreen()
+bool CClient::ToggleFullscreen()
 {
+#ifndef CONF_PLATFORM_MACOSX
 	if(Graphics()->Fullscreen(Config()->m_GfxFullscreen^1))
 		Config()->m_GfxFullscreen ^= 1;
+	return true;
+#else
+	Config()->m_GfxFullscreen ^= 1;
+	return false;
+#endif
 }
 
 void CClient::ConchainFullscreen(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
@@ -2513,7 +2541,7 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("quit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("exit", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Quit, this, "Quit Teeworlds");
 	m_pConsole->Register("minimize", "", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Minimize, this, "Minimize Teeworlds");
-	m_pConsole->Register("connect", "s[host|ip]", CFGFLAG_CLIENT, Con_Connect, this, "Connect to the specified host/ip");
+	m_pConsole->Register("connect", "s[host|ip]", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Connect, this, "Connect to the specified host/ip");
 	m_pConsole->Register("disconnect", "", CFGFLAG_CLIENT, Con_Disconnect, this, "Disconnect from the server");
 	m_pConsole->Register("ping", "", CFGFLAG_CLIENT, Con_Ping, this, "Ping the current server");
 	m_pConsole->Register("screenshot", "", CFGFLAG_CLIENT, Con_Screenshot, this, "Take a screenshot");

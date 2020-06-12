@@ -125,12 +125,12 @@ class CConsole : public IConsole
 
 	/*
 	This function will set pFormat to the next parameter (i,s,r,v,?) it contains and
-	return the parameter.
+	pNext to the command.
 	Descriptions in brackets like [file] will be skipped.
-	Returns '\0' if there is no next parameter.
+	Returns true on failure.
 	Expects pFormat to point at a parameter.
 	*/
-	char NextParam(const char *&pFormat);
+	bool NextParam(char *pNext, const char *&pFormat);
 
 	class CExecutionQueue
 	{
@@ -140,8 +140,7 @@ class CConsole : public IConsole
 		struct CQueueEntry
 		{
 			CQueueEntry *m_pNext;
-			FCommandCallback m_pfnCommandCallback;
-			void *m_pCommandUserData;
+			CCommand *m_pCommand;
 			CResult m_Result;
 		} *m_pFirst, *m_pLast;
 
@@ -197,6 +196,7 @@ public:
 	virtual void Chain(const char *pName, FChainCommandCallback pfnChainFunc, void *pUser);
 	virtual void StoreCommands(bool Store);
 
+	virtual bool ArgStringIsValid(const char *pFormat);
 	virtual bool LineIsValid(const char *pStr);
 	virtual void ExecuteLine(const char *pStr);
 	virtual void ExecuteLineFlag(const char *pStr, int FlagMask);

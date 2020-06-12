@@ -95,7 +95,8 @@ class CChat : public CComponent
 	CCommandManager m_CommandManager;
 	bool IsTypingCommand() const;
 	void HandleCommands(float x, float y, float w);
-	bool ExecuteCommand(bool Execute);
+	bool ExecuteCommand();
+	bool CompleteCommand();
 
 	static void Com_All(IConsole::IResult *pResult, void *pContext);
 	static void Com_Team(IConsole::IResult *pResult, void *pContext);

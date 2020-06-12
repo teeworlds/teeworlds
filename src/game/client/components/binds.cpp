@@ -271,7 +271,7 @@ void CBinds::OnConsoleInit()
 	Console()->Register("bind", "s[key] r[command]", CFGFLAG_CLIENT, ConBind, this, "Bind key to execute the command");
 	Console()->Register("unbind", "s[key]", CFGFLAG_CLIENT, ConUnbind, this, "Unbind key");
 	Console()->Register("unbindall", "", CFGFLAG_CLIENT, ConUnbindAll, this, "Unbind all keys");
-	Console()->Register("binds", "", CFGFLAG_CLIENT, ConBinds, this, "Show list of key bindings");
+	Console()->Register("binds", "?s[key]", CFGFLAG_CLIENT, ConBinds, this, "Show list of key bindings");
 
 	// default bindings
 	SetDefaults();
@@ -326,14 +326,43 @@ void CBinds::ConBinds(IConsole::IResult *pResult, void *pUserData)
 {
 	CBinds *pBinds = (CBinds *)pUserData;
 	char aBuf[1024];
-	for(int i = 0; i < KEY_LAST; i++)
+	if(pResult->NumArguments() == 1)
 	{
-		for(int m = 0; m < MODIFIER_COUNT; m++)
+		char aBuf[256];
+		const char *pKeyName = pResult->GetString(0);
+
+		int Modifier;
+		int KeyID = pBinds->DecodeBindString(pKeyName, &Modifier);
+		if(!KeyID)
 		{
-			if(pBinds->m_aaaKeyBindings[i][m][0] == 0)
-				continue;
-			str_format(aBuf, sizeof(aBuf), "%s%s (%d) = %s", GetModifierName(m), pBinds->Input()->KeyName(i), i, pBinds->m_aaaKeyBindings[i][m]);
+			str_format(aBuf, sizeof(aBuf), "key '%s' not found", pKeyName);
 			pBinds->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
+		}
+		else
+		{
+			if(pBinds->m_aaaKeyBindings[KeyID][Modifier][0] == 0)
+				str_format(aBuf, sizeof(aBuf), "%s (%d) is not bound", pKeyName, KeyID);
+			else
+				str_format(
+					aBuf,
+					sizeof(aBuf),
+					"%s (%d) = %s",
+					pKeyName, KeyID, pBinds->m_aaaKeyBindings[KeyID][Modifier]
+				);
+			pBinds->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
+		}
+	}
+	else if(pResult->NumArguments() == 0)
+	{
+		for(int i = 0; i < KEY_LAST; i++)
+		{
+			for(int m = 0; m < MODIFIER_COUNT; m++)
+			{
+				if(pBinds->m_aaaKeyBindings[i][m][0] == 0)
+					continue;
+				str_format(aBuf, sizeof(aBuf), "%s%s (%d) = %s", GetModifierName(m), pBinds->Input()->KeyName(i), i, pBinds->m_aaaKeyBindings[i][m]);
+				pBinds->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "binds", aBuf);
+			}
 		}
 	}
 }
@@ -402,8 +431,7 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 {
 	CBinds *pSelf = (CBinds *)pUserData;
 
-	char aBuffer[256];
-	char *pEnd = aBuffer+sizeof(aBuffer)-8;
+	char aBuffer[512];
 	for(int i = 0; i < KEY_LAST; i++)
 	{
 		for(int m = 0; m < MODIFIER_COUNT; m++)
@@ -411,21 +439,20 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 			if(pSelf->m_aaaKeyBindings[i][m][0] == 0)
 				continue;
 
-			str_format(aBuffer, sizeof(aBuffer), "bind %s%s ", GetModifierName(m), pSelf->Input()->KeyName(i));
-
 			// process the string. we need to escape some characters
+			char aBind[2*BIND_LENGTH];
 			const char *pSrc = pSelf->m_aaaKeyBindings[i][m];
-			char *pDst = aBuffer + str_length(aBuffer);
-			*pDst++ = '"';
+			const char *pEnd = aBind + sizeof(aBind) - 1;
+			char *pDst = aBind;
 			while(*pSrc && pDst < pEnd)
 			{
 				if(*pSrc == '"' || *pSrc == '\\') // escape \ and "
 					*pDst++ = '\\';
 				*pDst++ = *pSrc++;
 			}
-			*pDst++ = '"';
-			*pDst++ = 0;
+			*pDst = 0;
 
+			str_format(aBuffer, sizeof(aBuffer), "bind %s%s \"%s\"", GetModifierName(m), pSelf->Input()->KeyName(i), aBind);
 			pConfigManager->WriteLine(aBuffer);
 		}
 	}
@@ -437,7 +464,7 @@ void CBinds::ConfigSaveCallback(IConfigManager *pConfigManager, void *pUserData)
 		if(pSelf->m_aaaKeyBindings[Key][Modifier][0] == 0)
 		{
 			// explicitly unbind keys that were unbound by the user
-			str_format(aBuffer, sizeof(aBuffer), "unbind %s%s ", GetModifierName(Modifier), pSelf->Input()->KeyName(Key));
+			str_format(aBuffer, sizeof(aBuffer), "unbind %s%s", GetModifierName(Modifier), pSelf->Input()->KeyName(Key));
 			pConfigManager->WriteLine(aBuffer);
 		}
 	}

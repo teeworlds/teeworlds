@@ -221,7 +221,7 @@ int IGameController::OnCharacterDeath(CCharacter *pVictim, CPlayer *pKiller, int
 	if(!pKiller || Weapon == WEAPON_GAME)
 		return 0;
 	if(pKiller == pVictim->GetPlayer())
-		pVictim->GetPlayer()->m_Score--; // suicide
+		pVictim->GetPlayer()->m_Score--; // suicide or world
 	else
 	{
 		if(IsTeamplay() && pVictim->GetPlayer()->GetTeam() == pKiller->GetTeam())
@@ -510,8 +510,8 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		}
 		break;
 	case IGS_WARMUP_USER:
-		// user based warmup is only possible when the game or a user based warmup is running
-		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_WARMUP_USER)
+		// user based warmup is only possible when the game or any warmup is running
+		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_WARMUP_GAME || m_GameState == IGS_WARMUP_USER)
 		{
 			if(Timer != 0)
 			{
@@ -540,6 +540,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 						if(GameServer()->m_apPlayers[i])
 							GameServer()->m_apPlayers[i]->m_RespawnDisabled = false;
 				}
+				GameServer()->m_World.m_Paused = false;
 			}
 			else
 			{
@@ -582,8 +583,8 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 		}
 		break;
 	case IGS_GAME_PAUSED:
-		// only possible when game is running or paused
-		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED)
+		// only possible when game is running or paused, or when game based warmup is running
+		if(m_GameState == IGS_GAME_RUNNING || m_GameState == IGS_GAME_PAUSED || m_GameState == IGS_WARMUP_GAME)
 		{
 			if(Timer != 0)
 			{
@@ -596,7 +597,7 @@ void IGameController::SetGameState(EGameState GameState, int Timer)
 				}
 				else
 				{
-					// pauses for a specific time intervall
+					// pauses for a specific time interval
 					m_GameStateTimer = Timer*Server()->TickSpeed();
 				}
 
@@ -789,8 +790,6 @@ void IGameController::Tick()
 				// check if player ready mode was disabled and it waits that all players are ready -> end warmup
 				if(!Config()->m_SvPlayerReadyMode && m_GameStateTimer == TIMER_INFINITE)
 					SetGameState(IGS_WARMUP_USER, 0);
-				else if(m_GameStateTimer == 3 * Server()->TickSpeed())
-					StartMatch();
 				break;
 			case IGS_START_COUNTDOWN:
 			case IGS_GAME_PAUSED:
@@ -922,15 +921,8 @@ void IGameController::ChangeMap(const char *pToMap)
 	str_copy(m_aMapWish, pToMap, sizeof(m_aMapWish));
 
 	m_MatchCount = m_GameInfo.m_MatchNum-1;
-	if(m_GameState == IGS_WARMUP_GAME || m_GameState == IGS_WARMUP_USER)
-		SetGameState(IGS_GAME_RUNNING);
+	SetGameState(IGS_GAME_RUNNING);
 	EndMatch();
-
-	if(m_GameState != IGS_END_MATCH)
-	{
-		// game could not been ended, force cycle
-		CycleMap();
-	}
 }
 
 void IGameController::CycleMap()
@@ -940,7 +932,8 @@ void IGameController::CycleMap()
 		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "rotating map to %s", m_aMapWish);
 		GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-		str_copy(Config()->m_SvMap, m_aMapWish, sizeof(Config()->m_SvMap));
+		Server()->ChangeMap(m_aMapWish);
+
 		m_aMapWish[0] = 0;
 		m_MatchCount = 0;
 		return;
@@ -999,7 +992,7 @@ void IGameController::CycleMap()
 	char aBufMsg[256];
 	str_format(aBufMsg, sizeof(aBufMsg), "rotating map to %s", &aBuf[i]);
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
-	str_copy(Config()->m_SvMap, &aBuf[i], sizeof(Config()->m_SvMap));
+	Server()->ChangeMap(&aBuf[i]);
 }
 
 // spawn

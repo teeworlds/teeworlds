@@ -87,6 +87,9 @@ public:
         if(pCom)
             return 1;
 
+        if(!m_pConsole->ArgStringIsValid(pArgsFormat))
+            return 1;
+
         int Index = m_aCommands.add(CCommand(pCommand, pHelpText, pArgsFormat, pfnCallback, pContext));
         if(m_pfnNewCommandHook)
             m_pfnNewCommandHook(&m_aCommands[Index], m_pHookContext);
@@ -116,7 +119,7 @@ public:
         m_aCommands.clear();
     }
 
-    int CommandCount()
+    int CommandCount() const
     {
         return m_aCommands.size();
     }
@@ -131,7 +134,7 @@ public:
 
     int OnCommand(const char *pCommand, const char *pArgs, int ClientID)
     {
-        dbg_msg("chat-command", "calling '%s' with args '%s'", pCommand, pArgs);
+        dbg_msg("chat_command", "calling '%s' with args '%s'", pCommand, pArgs);
         const CCommand *pCom = GetCommand(pCommand);
         if(!pCom)
             return 1;
@@ -140,7 +143,7 @@ public:
         return m_pConsole->ParseCommandArgs(pArgs, pCom->m_aArgsFormat, pCom->m_pfnCallback, &Context);
     }
 
-    int Filter(array<bool> &aFilter, const char *pStr)
+    int Filter(array<bool> &aFilter, const char *pStr, bool Exact)
     {
         dbg_assert(aFilter.size() == m_aCommands.size(), "filter size must match command count");
         if(!*pStr)
@@ -151,9 +154,15 @@ public:
         }
 
         int Filtered = 0;
-        for(int i = 0; i < m_aCommands.size(); i++)
+        if(Exact)
         {
-            Filtered += (aFilter[i] = str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName);
+            for(int i = 0; i < m_aCommands.size(); i++)
+                Filtered += (aFilter[i] = str_comp(m_aCommands[i].m_aName, pStr));
+        }
+        else
+        {
+            for(int i = 0; i < m_aCommands.size(); i++)
+                Filtered += (aFilter[i] = str_find_nocase(m_aCommands[i].m_aName, pStr) != m_aCommands[i].m_aName);
         }
 
         return Filtered;
