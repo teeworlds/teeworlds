@@ -314,6 +314,10 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 
 	// unpack deleted stuff
 	pDeleted = pData;
+	if(pDelta->m_NumDeletedItems < 0)
+	{
+		return -1;
+	}
 	pData += pDelta->m_NumDeletedItems;
 	if(pData > pEnd)
 		return -1;
@@ -602,11 +606,17 @@ int CSnapshotBuilder::Finish(void *pSnapdata)
 	// get full item sizes
 	int aItemSizes[CSnapshotBuilder::MAX_ITEMS];
 
-	for(int i = 0; i < NumItems-1; i++)
+	for(int i = 0; i < NumItems; i++)
 	{
-		aItemSizes[i] = m_aOffsets[i+1] - m_aOffsets[i];
+		if(i < NumItems - 1)
+		{
+			aItemSizes[i] = m_aOffsets[i+1] - m_aOffsets[i];
+		}
+		else
+		{
+			aItemSizes[i] = m_DataSize - m_aOffsets[i];
+		}
 	}
-	aItemSizes[NumItems-1] = m_DataSize - m_aOffsets[NumItems-1];
 
 	// bubble sort by keys
 	bool Sorting = true;

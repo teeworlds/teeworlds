@@ -1697,6 +1697,7 @@ int CMenus::Render()
 	else
 	{
 		// render full screen popup
+		char aTitleBuf[128];
 		const char *pTitle = "";
 		const char *pExtraText = "";
 		int NumOptions = 4;
@@ -1711,9 +1712,8 @@ int CMenus::Render()
 			pTitle = Localize("Connecting to");
 			if(Client()->MapDownloadTotalsize() > 0)
 			{
-				char aBuf[128];
-				str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Downloading map"), Client()->MapDownloadName());
-				pTitle = aBuf;
+				str_format(aTitleBuf, sizeof(aTitleBuf), "%s: %s", Localize("Downloading map"), Client()->MapDownloadName());
+				pTitle = aTitleBuf;
 				pExtraText = "";
 				NumOptions = 5;
 			}
