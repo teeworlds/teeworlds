@@ -206,8 +206,8 @@ int CMenus::DoButton_Menu(CButtonContainer *pBC, const char *pText, int Checked,
 	UI()->DoLabel(&Text, pText, Text.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
 	if(TextFade)
 	{
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+		TextRender()->TextColor(CUI::ms_DefaultTextColor);
+		TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 	}
 	return UI()->DoButtonLogic(pBC->GetID(), pRect);
 }
@@ -224,8 +224,8 @@ void CMenus::DoButton_KeySelect(CButtonContainer *pBC, const char *pText, int Ch
 	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
 	TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+	TextRender()->TextColor(CUI::ms_DefaultTextColor);
+	TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 }
 
 int CMenus::DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners)
@@ -261,8 +261,8 @@ int CMenus::DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, int Ch
 	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, FontAlpha);
 	TextRender()->TextOutlineColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f*FontAlpha);
 	UI()->DoLabel(&Temp, pText, Temp.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+	TextRender()->TextColor(CUI::ms_DefaultTextColor);
+	TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 	return UI()->DoButtonLogic(pBC->GetID(), pRect);
 }
 
@@ -271,8 +271,8 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 	if(Checked)
 	{
 		RenderTools()->DrawUIRect(pRect, vec4(0.9f, 0.9f, 0.9f, 0.5f), CUI::CORNER_ALL, 5.0f);
-		TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
-		TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+		TextRender()->TextColor(CUI::ms_HighlightTextColor);
+		TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
 	}
 	else if(UI()->HotItem() == pID)
 	{
@@ -286,8 +286,8 @@ int CMenus::DoButton_GridHeader(const void *pID, const char *pText, int Checked,
 
 	if(Checked)
 	{
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+		TextRender()->TextColor(CUI::ms_DefaultTextColor);
+		TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 	}
 
 	return UI()->DoButtonLogic(pID, pRect);
@@ -1225,11 +1225,11 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			// make the header look like an active tab
 			RenderTools()->DrawUIRect(&Box, vec4(1.0f, 1.0f, 1.0f, 0.75f), CUI::CORNER_ALL, 5.0f);
 			Box.HMargin(2.0f, &Box);
-			TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
-			TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+			TextRender()->TextColor(CUI::ms_HighlightTextColor);
+			TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
 			UI()->DoLabel(&Box, Localize("Demos"), Box.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-			TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+			TextRender()->TextColor(CUI::ms_DefaultTextColor);
+			TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 		}
 	}
 
@@ -1279,28 +1279,30 @@ void CMenus::RenderLoading(int WorkedAmount)
 	RenderBackground((Now-s_LoadingStart)/Freq);
 
 	CUIRect Screen = *UI()->Screen();
-	float w = 700;
-	float h = 200;
-	float x = Screen.w/2-w/2;
-	float y = Screen.h/2-h/2;
-	CUIRect Rect = {x, y, w, h};
+	const float w = 700;
+	const float h = 200;
+	const float x = Screen.w/2-w/2;
+	const float y = Screen.h/2-h/2;
+	CUIRect Rect = { x, y, w, h };
 
 	Graphics()->BlendNormal();
 	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 40.0f);
 
 	Rect.y += 20;
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	TextRender()->TextColor(CUI::ms_DefaultTextColor);
+	TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 	UI()->DoLabel(&Rect, "Teeworlds", 48.0f, CUI::ALIGN_CENTER);
 
-	float Percent = m_LoadCurrent/(float)m_LoadTotal;
-	float Spacing = 40.0f;
-	float Rounding = 5.0f;
-	CUIRect FullBar = {x+Spacing, y+h-75.0f, w-2*Spacing, 25.0f};
-	RenderTools()->DrawRoundRect(&FullBar, vec4(1.0f, 1.0f, 1.0f, 0.1f), Rounding);
+	const float Percent = m_LoadCurrent/(float)m_LoadTotal;
+	const float Spacing = 40.0f;
+	const float BarRounding = 5.0f;
+
+	CUIRect FullBar = { x+Spacing, y+h-75.0f, w-2*Spacing, 25.0f };
+	RenderTools()->DrawRoundRect(&FullBar, vec4(1.0f, 1.0f, 1.0f, 0.1f), BarRounding);
+
 	CUIRect FillingBar = FullBar;
-	FillingBar.w = (FullBar.w-2*Rounding)*Percent+2*Rounding;
-	RenderTools()->DrawRoundRect(&FillingBar, vec4(1.0f, 1.0f, 1.0f, 0.75f), Rounding);
+	FillingBar.w = (FullBar.w-2*BarRounding)*Percent+2*BarRounding;
+	RenderTools()->DrawRoundRect(&FillingBar, vec4(1.0f, 1.0f, 1.0f, 0.75f), BarRounding);
 
 	if(Percent > 0.5f)
 	{
@@ -1310,6 +1312,12 @@ void CMenus::RenderLoading(int WorkedAmount)
 	char aBuf[8];
 	str_format(aBuf, sizeof(aBuf), "%d%%", (int)(100*Percent));
 	UI()->DoLabel(&FullBar, aBuf, 20.0f, CUI::ALIGN_CENTER);
+
+	if(Percent > 0.5f)
+	{
+		TextRender()->TextColor(CUI::ms_DefaultTextColor);
+		TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+	}
 
 	Graphics()->Swap();
 }
@@ -1961,22 +1969,25 @@ int CMenus::Render()
 					float OldWidth = Item.m_Rect.w;
 					Item.m_Rect.w = Item.m_Rect.h*2;
 					Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
+
 					Graphics()->TextureSet(pEntry->m_Texture);
 					Graphics()->QuadsBegin();
 					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 					IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 					Graphics()->QuadsEnd();
+
 					if(i == OldSelected)
 					{
-						TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
-						TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
-						UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, CUI::ALIGN_CENTER);
-						TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-						TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+						TextRender()->TextColor(CUI::ms_HighlightTextColor);
+						TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
 					}
-					else
-						UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, CUI::ALIGN_CENTER);
+					UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, CUI::ALIGN_CENTER);
+					if(i == OldSelected)
+					{
+						TextRender()->TextColor(CUI::ms_DefaultTextColor);
+						TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+					}
 				}
 			}
 
