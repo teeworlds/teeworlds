@@ -63,6 +63,11 @@ struct CUICheckboxYesNo
 	CUIButton m_NoBut;
 };
 
+struct CUICheckbox
+{
+	CUIButton m_But;
+};
+
 struct CUIGrabHandle: CUIMouseDrag
 {
 	bool m_IsGrabbed;
@@ -136,6 +141,7 @@ struct CEditor2Ui
 	bool UiSliderFloat(const CUIRect& Rect, float* pVal, float Min, float Max, CUIButton* pInputState,
 		const vec4* pColor = NULL);
 	bool UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYesNo* pCbyn);
+	bool UiCheckbox(const CUIRect& Rect, const char* pText, bool* pVal, CUICheckbox* pCb);
 	bool UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
 		float FontSize = 10);
 	bool UiGrabHandle(const CUIRect& Rect, CUIGrabHandle* pGrabHandle, const vec4& ColorNormal, const vec4& ColorActive); // Returns pGrabHandle->m_IsDragging

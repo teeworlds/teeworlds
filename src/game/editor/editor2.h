@@ -100,19 +100,21 @@ class CEditor2: public IEditor, public CEditor2Ui
 	struct CUIBrushPalette
 	{
 		u8 m_aTileSelected[256];
-		int m_ImageID;
 		bool m_PopupEnabled;
+		bool m_IsAutomapEnabled;
+		int m_AutoMapImageID;
+		int m_AutoMapRuleID;
 
 		CUIBrushPalette()
 		{
 			memset(m_aTileSelected, 0, sizeof(m_aTileSelected));
-			m_ImageID = -1;
 			m_PopupEnabled = false;
+			m_IsAutomapEnabled = false;
+			m_AutoMapImageID = -1;
+			m_AutoMapRuleID = 0;
 		}
 	};
-	CUIBrushPalette m_UiBrushPaletteState;
-	CUIRect m_UiPopupBrushPaletteRect;
-	CUIRect m_UiPopupBrushPaletteImageRect;
+	CUIBrushPalette m_UiBrushPalette;
 
 	struct CFileListItem
 	{
@@ -180,27 +182,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	CBrush m_Brush;
 
-	struct CMagicBrushContext
-	{
-		enum {
-			SHAPE_SIZE=16*16
-		};
-
-		int m_AutomapRuleID;
-		bool m_IsContextPopupOpen;
-		u8 m_Shape[SHAPE_SIZE];
-
-		CMagicBrushContext()
-		{
-			m_AutomapRuleID = 0;
-			m_IsContextPopupOpen = false;
-			memset(m_Shape, 0, sizeof(m_Shape));
-			m_Shape[0] = 1;
-		}
-	};
-
-	CMagicBrushContext m_MagicBrushContext;
-
 	struct CUISnapshot
 	{
 		int m_SelectedLayerID;
@@ -245,7 +226,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 		TOOL_SELECT=0,
 		TOOL_DIMENSION,
 		TOOL_TILE_BRUSH,
-		TOOL_MAGIC_BRUSH,
 		TOOL_COUNT_
 	};
 
@@ -396,11 +376,9 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void DoToolStuff();
 	void DoToolSelect(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
 	void DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
-	void DoToolMagicBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging);
 
 	void RenderPopupMenuFile(void* pPopupData);
 	void RenderPopupBrushPalette(void* pPopupData);
-	void RenderPopupMagicBrushContext(void* pPopupData);
 	void RenderPopupMapLoad(void* pPopupData);
 	void RenderPopupMapSaveAs(void* pPopupData);
 	void RenderPopupYesNo(void *pPopupData);
@@ -441,7 +419,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 	inline bool IsToolSelect() const { return m_Tool == TOOL_SELECT; }
 	inline bool IsToolDimension() const { return m_Tool == TOOL_DIMENSION; }
 	inline bool IsToolBrush() const { return m_Tool == TOOL_TILE_BRUSH; }
-	inline bool IsToolMagicBrush() const { return m_Tool == TOOL_MAGIC_BRUSH; }
 
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);

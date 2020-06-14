@@ -479,6 +479,48 @@ bool CEditor2Ui::UiCheckboxYesNo(const CUIRect& Rect, bool* pVal, CUICheckboxYes
 	return OldVal != *pVal;
 }
 
+bool CEditor2Ui::UiCheckbox(const CUIRect& Rect, const char* pText, bool* pVal, CUICheckbox* pCb)
+{
+	CUIButton& Button = pCb->m_But; // alias
+	UiDoButtonBehavior(&Button, Rect, &Button);
+
+	vec4 ColBorder = StyleColorButtonBorder;
+	if(*pVal)
+		ColBorder = StyleColorInputSelected;
+	vec4 ButtonColor = StyleColorButton;
+	if(Button.m_Pressed)
+		ButtonColor = StyleColorButtonPressed;
+	else if(Button.m_Hovered)
+		ButtonColor = StyleColorButtonHover;
+
+	DrawRectBorder(Rect, ButtonColor, 1, ColBorder);
+
+	CUIRect TextRect, IndicatorRect;
+	Rect.VSplitRight(Rect.h, &TextRect, &IndicatorRect);
+
+	DrawText(TextRect, pText, 10);
+
+	IndicatorRect.Margin(4, &IndicatorRect);
+	vec4 IndicatorBorderColor = StyleColorButtonBorder;
+	if(*pVal)
+		IndicatorBorderColor = vec4(1, 1, 1, 1);
+	DrawRectBorder(IndicatorRect, StyleColorButton, 1, vec4(1, 1, 1, 1));
+
+	if(*pVal)
+	{
+		IndicatorRect.Margin(2, &IndicatorRect);
+		DrawRect(IndicatorRect, vec4(1, 1, 1, 1));
+	}
+
+	if(Button.m_Clicked)
+	{
+		*pVal = !(*pVal);
+		return true;
+	}
+
+	return false;
+}
+
 bool CEditor2Ui::UiButtonSelect(const CUIRect& Rect, const char* pText, CUIButton* pButState, bool Selected,
 	float FontSize)
 {

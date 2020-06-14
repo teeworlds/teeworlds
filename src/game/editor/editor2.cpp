@@ -264,10 +264,10 @@ void CEditor2::Update()
 			UserMapSave();
 		}
 
-		if(IsToolBrush() && Input()->KeyIsPressed(KEY_SPACE) && !m_UiBrushPaletteState.m_PopupEnabled)
+		if(IsToolBrush() && Input()->KeyIsPressed(KEY_SPACE) && !m_UiBrushPalette.m_PopupEnabled)
 		{
-			PushPopup(&CEditor2::RenderPopupBrushPalette, &m_UiBrushPaletteState);
-			m_UiBrushPaletteState.m_PopupEnabled = true;
+			PushPopup(&CEditor2::RenderPopupBrushPalette, &m_UiBrushPalette);
+			m_UiBrushPalette.m_PopupEnabled = true;
 		}
 
 		if(IsToolBrush() && Input()->KeyPress(KEY_ESCAPE))
@@ -309,7 +309,6 @@ void CEditor2::Render()
 			vec3(1, 0.2f, 1),
 			vec3(1, 0.5f, 0.2f),
 			vec3(0.2f, 0.7f, 1),
-			vec3(1, 1, 1),
 		};
 		const vec3& ToolColor = aToolColors[m_Tool];
 		Graphics()->SetColor(ToolColor.r, ToolColor.g, ToolColor.b, 1);
@@ -855,8 +854,6 @@ void CEditor2::DoToolStuff()
 		DoToolSelect(MouseTx, MouseTy, MouseWorldPos, GridMousePos, &m_MapViewDrag, FinishedDragging);
 	else if(IsToolBrush())
 		DoToolBrush(MouseTx, MouseTy, MouseWorldPos, GridMousePos, &m_MapViewDrag, FinishedDragging);
-	else if(IsToolMagicBrush())
-		DoToolMagicBrush(MouseTx, MouseTy, MouseWorldPos, GridMousePos, &m_MapViewDrag, FinishedDragging);
 
 	if(IsToolDimension())
 	{
@@ -1069,60 +1066,12 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 				EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, true); // push history entry when we finish the stroke
 		}
 	}
-}
 
-void CEditor2::DoToolMagicBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 GridMousePos, CUIMouseDrag* pMouseDrag, bool FinishedDragging)
-{
-// #error TODO:
-	// - Merge magic brush back with tile brush
-	// - Add automap checkbox
-	// - Select automap rule
+	// TODO:
 	// - Preview automap brush based on selection
 	// - Preview block paint automap
-
-	if(!m_Map.m_aLayers.IsValid(m_UiSelectedLayerID))
-		return;
-
-	const int SelectedLayerID = m_UiSelectedLayerID;
-	CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers.Get(SelectedLayerID);
-	if(!SelectedTileLayer.IsTileLayer())
-		return;
-
-	const CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(SelectedTileLayer.m_ImageID);
-
-	if(!pMapper) // TODO: hide magic brush button when there is no mapper available
-		return;
-
-	if(Input()->KeyIsPressed(KEY_SPACE) && !m_MagicBrushContext.m_IsContextPopupOpen)
-	{
-		m_MagicBrushContext.m_IsContextPopupOpen = true;
-		PushPopup(&CEditor2::RenderPopupMagicBrushContext, 0x0);
-	}
-
-	// TODO: copy tiles from layer to a +1 size (on each side) 'brush' based on shape size
-	TileLayerRegionToBrush(SelectedLayerID, MouseTx-1, MouseTy-1, MouseTx+1, MouseTy+1);
-
-	// fill in the middle part (the shape part)
-	m_Brush.m_aTiles[4].m_Index = 1;
-
-	// Automap the -1 inner section
-	pMapper->AutomapLayerSection(m_Brush.m_aTiles.base_ptr(), 1, 1, m_Brush.m_Width-1, m_Brush.m_Height-1, m_Brush.m_Width, m_Brush.m_Height, m_MagicBrushContext.m_AutomapRuleID);
-
-	// chisel the outer section
-	CBrush Brush;
-	Brush.m_aTiles.add_empty(1);
-	Brush.m_aTiles[0] = m_Brush.m_aTiles[4];
-	Brush.m_Width = 1;
-	Brush.m_Height = 1;
-	m_Brush = Brush;
-
-	// Draw it as a brush
-	RenderBrush(GridMousePos);
-
-	if(pMouseDrag->m_IsDragging)
-	{
-		BrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
-	}
+	// - Automap influence zone: Automap borders as well as active selection.
+	// - Display influence zone
 }
 
 void CEditor2::RenderMenuBar(CUIRect TopPanel)
@@ -1239,7 +1188,6 @@ void CEditor2::RenderMapEditorUI()
 		"Se",
 		"Di",
 		"Tb",
-		"Mb"
 	};
 
 	for(int t = 0; t < TOOL_COUNT_; t++)
@@ -2567,14 +2515,24 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	static CUIButton OverlayFakeButton;
 	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
 
-	CUIRect MainRect = {0, 0, m_UiMainViewRect.h, m_UiMainViewRect.h};
-	MainRect.x += (m_UiMainViewRect.w - MainRect.w) * 0.5;
-	MainRect.Margin(50.0f, &MainRect);
-	m_UiPopupBrushPaletteRect = MainRect;
-	//DrawRect(MainRect, StyleColorBg);
+	const float POPUP_MARGIN = 30.0f;
+	const float TOP_HEIGHT = 30.0f;
+	const float PANEL_RIGHT_WIDTH = 100.0f;
 
-	CUIRect TopRow;
-	MainRect.HSplitTop(40, &TopRow, &MainRect);
+	CUIRect MainRect = m_UiMainViewRect;
+	MainRect.w = (m_UiMainViewRect.h - TOP_HEIGHT) + PANEL_RIGHT_WIDTH;
+	MainRect.x += (m_UiMainViewRect.w - MainRect.w) * 0.5; // center on x axis
+	MainRect.Margin(POPUP_MARGIN, &MainRect);
+	//DrawRect(MainRect, vec4(1, 0, 0, 1));
+
+	CUIRect TopRow, PanelRight;
+	MainRect.HSplitTop(TOP_HEIGHT, &TopRow, &MainRect);
+	MainRect.VSplitRight(PANEL_RIGHT_WIDTH, &MainRect, &PanelRight);
+
+	CUIRect ImageRect = MainRect;
+	ImageRect.w = min(ImageRect.w, ImageRect.h);
+	ImageRect.h = ImageRect.w;
+	const CUIRect UiPopupBrushPaletteImageRect = ImageRect;
 
 	const CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers.Get(m_UiSelectedLayerID);
 	dbg_assert(SelectedTileLayer.IsTileLayer(), "Selected layer is not a tile layer");
@@ -2584,11 +2542,6 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 		PaletteTexture = m_EntitiesTexture;
 	else
 		PaletteTexture = m_Map.m_Assets.m_aTextureHandle[SelectedTileLayer.m_ImageID];
-
-	CUIRect ImageRect = MainRect;
-	ImageRect.w = min(ImageRect.w, ImageRect.h);
-	ImageRect.h = ImageRect.w;
-	m_UiPopupBrushPaletteImageRect = ImageRect;
 
 	// checker background
 	Graphics()->BlendNone();
@@ -2614,7 +2567,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 
 	const float TileSize = ImageRect.w / 16.f;
 
-	CUIBrushPalette& Bps = m_UiBrushPaletteState;
+	CUIBrushPalette& Bps = m_UiBrushPalette;
 	u8* aTileSelected = Bps.m_aTileSelected;
 
 	// right click clears brush
@@ -2625,18 +2578,18 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 
 	// do mouse dragging
 	static CUIMouseDrag s_DragState;
-	bool FinishedDragging = UiDoMouseDragging(m_UiPopupBrushPaletteImageRect, &s_DragState);
+	bool FinishedDragging = UiDoMouseDragging(UiPopupBrushPaletteImageRect, &s_DragState);
 	// TODO: perhaps allow dragging from outside the popup for convenience
 
 	// finished dragging
 	if(FinishedDragging)
 	{
 		u8* aTileSelected = Bps.m_aTileSelected;
-		const float TileSize = m_UiPopupBrushPaletteImageRect.w / 16.f;
+		const float TileSize = UiPopupBrushPaletteImageRect.w / 16.f;
 		const vec2 RelMouseStartPos = s_DragState.m_StartDragPos -
-			vec2(m_UiPopupBrushPaletteImageRect.x, m_UiPopupBrushPaletteImageRect.y);
+			vec2(UiPopupBrushPaletteImageRect.x, UiPopupBrushPaletteImageRect.y);
 		const vec2 RelMouseEndPos = s_DragState.m_EndDragPos -
-			vec2(m_UiPopupBrushPaletteImageRect.x, m_UiPopupBrushPaletteImageRect.y);
+			vec2(UiPopupBrushPaletteImageRect.x, UiPopupBrushPaletteImageRect.y);
 		const int DragStartTileX = clamp(RelMouseStartPos.x / TileSize, 0.f, 15.f);
 		const int DragStartTileY = clamp(RelMouseStartPos.y / TileSize, 0.f, 15.f);
 		const int DragEndTileX = clamp(RelMouseEndPos.x / TileSize, 0.f, 15.f);
@@ -2803,29 +2756,57 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 		BrushRotate90CounterClockwise();
 	}
 
+	// RIGHT PANEL: AUTOMAP
+	CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(SelectedTileLayer.m_ImageID);
+	if(pMapper)
+	{
+		PanelRight.VSplitLeft(3, 0x0, &PanelRight);
+
+		PanelRight.HSplitTop(20, &ButtonRect, &PanelRight);
+		static CUICheckbox s_CheckboxAutomap;
+		UiCheckbox(ButtonRect, Localize("Automap"), &m_UiBrushPalette.m_IsAutomapEnabled, &s_CheckboxAutomap);
+
+		if(m_UiBrushPalette.m_IsAutomapEnabled)
+		{
+
+			// we changed image, select first rule as default
+			if(m_UiBrushPalette.m_AutoMapImageID != SelectedTileLayer.m_ImageID)
+			{
+				m_UiBrushPalette.m_AutoMapImageID = SelectedTileLayer.m_ImageID;
+				m_UiBrushPalette.m_AutoMapRuleID = 0;
+			}
+
+			const int RulesetCount = pMapper->RuleSetNum();
+			// TODO: find a better solution to this
+			// if we're going to support many rules, we need proper UI to navigate them
+			// scroll wheel to scroll items up and down perhaps?
+			static CUIButton s_ButtonAutoMap[AutoMap::MAX_RULES];
+
+			const float ButtonHeight = 20;
+			const float Spacing = 2;
+
+			PanelRight.HSplitTop(Spacing, 0, &PanelRight);
+
+			for(int r = 0; r < RulesetCount; r++)
+			{
+				PanelRight.HSplitTop(ButtonHeight, &ButtonRect, &PanelRight);
+				PanelRight.HSplitTop(Spacing, 0, &PanelRight);
+
+				bool Selected = (m_UiBrushPalette.m_AutoMapRuleID == r);
+				if(UiButtonSelect(ButtonRect, pMapper->GetRuleSetName(r), &s_ButtonAutoMap[r], Selected, 10))
+				{
+					m_UiBrushPalette.m_AutoMapRuleID = r;
+				}
+			}
+		}
+	}
+	// -------------------
+
 	RenderBrush(m_UiMousePos);
 
-	if((!IsToolBrush() || !Input()->KeyIsPressed(KEY_SPACE)) && m_UiBrushPaletteState.m_PopupEnabled)
+	if((!IsToolBrush() || !Input()->KeyIsPressed(KEY_SPACE)) && m_UiBrushPalette.m_PopupEnabled)
 	{
-		m_UiBrushPaletteState.m_PopupEnabled = false;
-		ExitPopup();
-	}
-}
-
-void CEditor2::RenderPopupMagicBrushContext(void* pPopupData)
-{
-	const CUIRect UiScreenRect = m_UiScreenRect;
-	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
-
-	DrawRect(UiScreenRect, vec4(0, 0, 0, 0.5)); // darken the background a bit
-
-	// whole screen "button" that prevents clicking on other stuff
-	static CUIButton OverlayFakeButton;
-	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
-
-	if((!IsToolMagicBrush() || !Input()->KeyIsPressed(KEY_SPACE)))
-	{
-		m_MagicBrushContext.m_IsContextPopupOpen = false;
+		m_UiBrushPalette.m_PopupEnabled = false;
 		ExitPopup();
 	}
 }
@@ -3817,7 +3798,7 @@ void CEditor2::BrushClear()
 	m_Brush.m_Width = 0;
 	m_Brush.m_Height = 0;
 	m_Brush.m_aTiles.clear();
-	mem_zero(m_UiBrushPaletteState.m_aTileSelected, sizeof(m_UiBrushPaletteState.m_aTileSelected));
+	mem_zero(m_UiBrushPalette.m_aTileSelected, sizeof(m_UiBrushPalette.m_aTileSelected));
 }
 
 void CEditor2::BrushFlipX()
@@ -4067,7 +4048,7 @@ void CEditor2::OnMapLoaded()
 	mem_zero(m_UiGroupState.data, sizeof(m_UiGroupState.data));
 	mem_zero(m_UiLayerState.data, sizeof(m_UiLayerState.data));
 	m_UiGroupState[m_Map.m_GameGroupID].m_IsOpen = true;
-	mem_zero(&m_UiBrushPaletteState, sizeof(m_UiBrushPaletteState));
+	mem_zero(&m_UiBrushPalette, sizeof(m_UiBrushPalette));
 	ResetCamera();
 	BrushClear();
 
