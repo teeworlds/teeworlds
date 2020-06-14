@@ -1072,6 +1072,8 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 	// - Preview block paint automap
 	// - Automap influence zone: Automap borders as well as active selection.
 	// - Display influence zone
+	// - Move brush functions to the brush type (so we can have multiple easily)
+
 }
 
 void CEditor2::RenderMenuBar(CUIRect TopPanel)
@@ -2628,23 +2630,33 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 		EndX++;
 		EndY++;
 
-		array2<CTile> aBrushTiles;
-		const int Width = EndX - StartX;
-		const int Height = EndY - StartY;
-		aBrushTiles.add_empty(Width * Height);
+		static array2<CTile> aBrushTiles;
+		static array2<u8> aBrushSelectionMask;
+		aBrushTiles.clear();
+		aBrushSelectionMask.clear();
+		const int BrushWidth = EndX - StartX;
+		const int BrushHeight = EndY - StartY;
+		aBrushTiles.add_empty(BrushWidth * BrushHeight);
+		aBrushSelectionMask.add_empty(BrushWidth * BrushHeight);
+		memset(aBrushSelectionMask.base_ptr(), 0, aBrushSelectionMask.size() * sizeof(aBrushSelectionMask[0])); // clear selection mask
 
 		const int LastTid = (EndY-1)*16+EndX;
 		for(int ti = (StartY*16+StartX); ti < LastTid; ti++)
 		{
 			if(aTileSelected[ti])
 			{
-				int tx = (ti & 0xF) - StartX;
-				int ty = (ti / 16) - StartY;
-				aBrushTiles[ty * Width + tx].m_Index = ti;
+				int tx = (ti & 0xF);
+				int ty = (ti / 16);
+				int btx = tx - StartX;
+				int bty = ty - StartY;
+				int btid = bty * BrushWidth + btx;
+
+				aBrushTiles[btid].m_Index = ti;
+				aBrushSelectionMask[btid] = 1;
 			}
 		}
 
-		SetNewBrush(aBrushTiles.base_ptr(), Width, Height);
+		SetNewBrush(aBrushTiles.base_ptr(), BrushWidth, BrushHeight, aBrushSelectionMask.base_ptr());
 	}
 
 	// selected overlay
@@ -3784,13 +3796,32 @@ int CEditor2::LayerCalcDragMoveOffset(int ParentGroupListIndex, int LayerListInd
 	return RelativePos;
 }
 
-void CEditor2::SetNewBrush(CTile* aTiles, int Width, int Height)
+void CEditor2::SetNewBrush(const CTile* aTiles, int Width, int Height, const u8* aSelectionMask)
 {
 	dbg_assert(Width > 0 && Height > 0, "Brush: wrong dimensions");
 	m_Brush.m_Width = Width;
 	m_Brush.m_Height = Height;
 	m_Brush.m_aTiles.clear();
 	m_Brush.m_aTiles.add(aTiles, Width*Height);
+
+	if(aSelectionMask)
+	{
+		for(int by = 0; by < Height; by++)
+		{
+			for(int bx = 0; bx < Width; bx++)
+			{
+				const int bid = by * Width + bx;
+				m_Brush.m_aTiles[bid].m_Reserved = aSelectionMask[bid]; // hacky to store this here but oh well, this is not used
+			}
+		}
+	}
+	else
+	{
+		for(int i = 0; i < Width*Height; i++)
+		{
+			m_Brush.m_aTiles[i].m_Reserved = 1;
+		}
+	}
 }
 
 void CEditor2::BrushClear()
@@ -3918,7 +3949,7 @@ void CEditor2::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 			int LayerTx = tx + PaintTX;
 			int LayerTy = ty + PaintTY;
 
-			if(LayerTx < 0 || LayerTx > LayerW-1 || LayerTy < 0 || LayerTy > LayerH-1)
+			if(LayerTx < 0 || LayerTx > LayerW-1 || LayerTy < 0 || LayerTy > LayerH-1 || !aBrushTiles[BrushTid].m_Reserved)
 				continue;
 
 			int LayerTid = LayerTy * LayerW + LayerTx;
@@ -3946,7 +3977,7 @@ void CEditor2::BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int Paint
 			int LayerTx = tx + PaintTX;
 			int LayerTy = ty + PaintTY;
 
-			if(LayerTx < 0 || LayerTx > LayerW-1 || LayerTy < 0 || LayerTy > LayerH-1)
+			if(LayerTx < 0 || LayerTx > LayerW-1 || LayerTy < 0 || LayerTy > LayerH-1 || !aBrushTiles[BrushTid].m_Reserved)
 				continue;
 
 			int LayerTid = LayerTy * LayerW + LayerTx;

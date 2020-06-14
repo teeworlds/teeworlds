@@ -404,7 +404,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	int GroupCalcDragMoveOffset(int ParentGroupListIndex, int* pRelativePos);
 	int LayerCalcDragMoveOffset(int ParentGroupListIndex, int LayerListIndex, int RelativePos);
 
-	void SetNewBrush(CTile* aTiles, int Width, int Height);
+	void SetNewBrush(const CTile* aTiles, int Width, int Height, const u8* aSelectionMask = 0x0);
 	void BrushClear();
 	void BrushFlipX();
 	void BrushFlipY();
