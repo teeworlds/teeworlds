@@ -113,6 +113,11 @@ class CEditor2: public IEditor, public CEditor2Ui
 			m_AutoMapImageID = -1;
 			m_AutoMapRuleID = 0;
 		}
+
+		void ClearSelection()
+		{
+			mem_zero(m_aTileSelected, sizeof(m_aTileSelected));
+		}
 	};
 	CUIBrushPalette m_UiBrushPalette;
 
@@ -178,6 +183,13 @@ class CEditor2: public IEditor, public CEditor2Ui
 			m_Width = 0;
 			m_Height = 0;
 		}
+
+		void Set(const CTile* aTiles, int Width, int Height, const u8* aSelectionMask = 0x0);
+		void Clear();
+		void FlipX();
+		void FlipY();
+		void Rotate90Clockwise();
+		void Rotate90CounterClockwise();
 	};
 
 	CBrush m_Brush;
@@ -404,15 +416,10 @@ class CEditor2: public IEditor, public CEditor2Ui
 	int GroupCalcDragMoveOffset(int ParentGroupListIndex, int* pRelativePos);
 	int LayerCalcDragMoveOffset(int ParentGroupListIndex, int LayerListIndex, int RelativePos);
 
-	void SetNewBrush(const CTile* aTiles, int Width, int Height, const u8* aSelectionMask = 0x0);
-	void BrushClear();
-	void BrushFlipX();
-	void BrushFlipY();
-	void BrushRotate90Clockwise();
-	void BrushRotate90CounterClockwise();
-	void BrushPaintLayer(int PaintTX, int PaintTY, int LayerID);
-	void BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID);
-	void TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY);
+	void MainBrushClear();
+	void BrushPaintLayer(const CBrush& Brush, int PaintTX, int PaintTY, int LayerID);
+	void BrushPaintLayerFillRectRepeat(const CBrush& Brush, int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID);
+	void TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY, CBrush* pOutBrush);
 
 	void CenterViewOnQuad(const CQuad& Quad);
 

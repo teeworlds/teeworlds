@@ -271,7 +271,7 @@ void CEditor2::Update()
 		}
 
 		if(IsToolBrush() && Input()->KeyPress(KEY_ESCAPE))
-			BrushClear();
+			MainBrushClear();
 	}
 }
 
@@ -1026,7 +1026,7 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 			const int EndTX = floor(EndMouseWorldPos.x/TileSize);
 			const int EndTY = floor(EndMouseWorldPos.y/TileSize);
 
-			TileLayerRegionToBrush(SelectedLayerID, StartTX, StartTY, EndTX, EndTY);
+			TileLayerRegionToBrush(SelectedLayerID, StartTX, StartTY, EndTX, EndTY, &m_Brush);
 		}
 	}
 	else
@@ -1071,9 +1071,7 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 	// - Preview automap brush based on selection
 	// - Preview block paint automap
 	// - Automap influence zone: Automap borders as well as active selection.
-	// - Display influence zone
-	// - Move brush functions to the brush type (so we can have multiple easily)
-
+	// - Display influence zone (diagonal stripes texture)
 }
 
 void CEditor2::RenderMenuBar(CUIRect TopPanel)
@@ -2575,7 +2573,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	// right click clears brush
 	if(UI()->MouseButtonClicked(1))
 	{
-		BrushClear();
+		MainBrushClear();
 	}
 
 	// do mouse dragging
@@ -2656,7 +2654,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 			}
 		}
 
-		SetNewBrush(aBrushTiles.base_ptr(), BrushWidth, BrushHeight, aBrushSelectionMask.base_ptr());
+		m_Brush.Set(aBrushTiles.base_ptr(), BrushWidth, BrushHeight, aBrushSelectionMask.base_ptr());
 	}
 
 	// selected overlay
@@ -2721,7 +2719,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	static CUIButton s_ButClear;
 	if(UiButton(ButtonRect, Localize("Clear"), &s_ButClear))
 	{
-		BrushClear();
+		MainBrushClear();
 	}
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
@@ -2730,10 +2728,10 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	static CUIButton s_ButEraser;
 	if(UiButton(ButtonRect, Localize("Eraser"), &s_ButEraser))
 	{
-		BrushClear();
+		MainBrushClear();
 		CTile TileZero;
 		mem_zero(&TileZero, sizeof(TileZero));
-		SetNewBrush(&TileZero, 1, 1);
+		m_Brush.Set(&TileZero, 1, 1);
 	}
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
@@ -2741,7 +2739,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	static CUIButton s_ButFlipX;
 	if(UiButton(ButtonRect, Localize("X/X"), &s_ButFlipX))
 	{
-		BrushFlipX();
+		m_Brush.FlipX();
 	}
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
@@ -2749,7 +2747,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	static CUIButton s_ButFlipY;
 	if(UiButton(ButtonRect, Localize("Y/Y"), &s_ButFlipY))
 	{
-		BrushFlipY();
+		m_Brush.FlipY();
 	}
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
@@ -2757,7 +2755,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	static CUIButton s_ButRotClockwise;
 	if(UiButton(ButtonRect, "90° ⟳", &s_ButRotClockwise))
 	{
-		BrushRotate90Clockwise();
+		m_Brush.Rotate90Clockwise();
 	}
 
 	TopRow.VSplitLeft(2, 0, &TopRow);
@@ -2765,7 +2763,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	static CUIButton s_ButRotCounterClockwise;
 	if(UiButton(ButtonRect, "90° ⟲", &s_ButRotCounterClockwise))
 	{
-		BrushRotate90CounterClockwise();
+		m_Brush.Rotate90CounterClockwise();
 	}
 
 	// RIGHT PANEL: AUTOMAP
@@ -2790,9 +2788,9 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 
 			const int RulesetCount = pMapper->RuleSetNum();
 			// TODO: find a better solution to this
-			// if we're going to support many rules, we need proper UI to navigate them
+			// if we're going to support many rule sets, we need proper UI to navigate them
 			// scroll wheel to scroll items up and down perhaps?
-			static CUIButton s_ButtonAutoMap[AutoMap::MAX_RULES];
+			static CUIButton s_ButtonAutoMap[AutoMap::MAX_RULESETS];
 
 			const float ButtonHeight = 20;
 			const float Spacing = 2;
@@ -3652,7 +3650,7 @@ void CEditor2::ChangeTool(int Tool)
 	if(m_Tool == Tool) return;
 
 	if(m_Tool == TOOL_TILE_BRUSH)
-		BrushClear();
+		MainBrushClear();
 
 	m_Tool = Tool;
 }
@@ -3796,150 +3794,22 @@ int CEditor2::LayerCalcDragMoveOffset(int ParentGroupListIndex, int LayerListInd
 	return RelativePos;
 }
 
-void CEditor2::SetNewBrush(const CTile* aTiles, int Width, int Height, const u8* aSelectionMask)
+void CEditor2::MainBrushClear() // TODO: weird function name, find a better one
 {
-	dbg_assert(Width > 0 && Height > 0, "Brush: wrong dimensions");
-	m_Brush.m_Width = Width;
-	m_Brush.m_Height = Height;
-	m_Brush.m_aTiles.clear();
-	m_Brush.m_aTiles.add(aTiles, Width*Height);
-
-	if(aSelectionMask)
-	{
-		for(int by = 0; by < Height; by++)
-		{
-			for(int bx = 0; bx < Width; bx++)
-			{
-				const int bid = by * Width + bx;
-				m_Brush.m_aTiles[bid].m_Reserved = aSelectionMask[bid]; // hacky to store this here but oh well, this is not used
-			}
-		}
-	}
-	else
-	{
-		for(int i = 0; i < Width*Height; i++)
-		{
-			m_Brush.m_aTiles[i].m_Reserved = 1;
-		}
-	}
+	m_Brush.Clear();
+	m_UiBrushPalette.ClearSelection();
 }
 
-void CEditor2::BrushClear()
-{
-	m_Brush.m_Width = 0;
-	m_Brush.m_Height = 0;
-	m_Brush.m_aTiles.clear();
-	mem_zero(m_UiBrushPalette.m_aTileSelected, sizeof(m_UiBrushPalette.m_aTileSelected));
-}
-
-void CEditor2::BrushFlipX()
-{
-	if(m_Brush.m_Width <= 0)
-		return;
-
-	const int BrushWidth = m_Brush.m_Width;
-	const int BrushHeight = m_Brush.m_Height;
-	array2<CTile>& aTiles = m_Brush.m_aTiles;
-	array2<CTile> aTilesCopy;
-	aTilesCopy.add(aTiles.base_ptr(), aTiles.size());
-
-	for(int ty = 0; ty < BrushHeight; ty++)
-	{
-		for(int tx = 0; tx < BrushWidth; tx++)
-		{
-			const int tid = ty * BrushWidth + tx;
-			aTiles[tid] = aTilesCopy[ty * BrushWidth + (BrushWidth-tx-1)];
-			aTiles[tid].m_Flags ^= aTiles[tid].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP:TILEFLAG_VFLIP;
-		}
-	}
-}
-
-void CEditor2::BrushFlipY()
-{
-	if(m_Brush.m_Width <= 0)
-		return;
-
-	const int BrushWidth = m_Brush.m_Width;
-	const int BrushHeight = m_Brush.m_Height;
-	array2<CTile>& aTiles = m_Brush.m_aTiles;
-	array2<CTile> aTilesCopy;
-	aTilesCopy.add(aTiles.base_ptr(), aTiles.size());
-
-	for(int ty = 0; ty < BrushHeight; ty++)
-	{
-		for(int tx = 0; tx < BrushWidth; tx++)
-		{
-			const int tid = ty * BrushWidth + tx;
-			aTiles[tid] = aTilesCopy[(BrushHeight-ty-1) * BrushWidth + tx];
-			aTiles[tid].m_Flags ^= aTiles[tid].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP:TILEFLAG_HFLIP;
-		}
-	}
-}
-
-void CEditor2::BrushRotate90Clockwise()
-{
-	if(m_Brush.m_Width <= 0)
-		return;
-
-	const int BrushWidth = m_Brush.m_Width;
-	const int BrushHeight = m_Brush.m_Height;
-	array2<CTile>& aTiles = m_Brush.m_aTiles;
-	array2<CTile> aTilesCopy;
-	aTilesCopy.add(aTiles.base_ptr(), aTiles.size());
-
-	for(int ty = 0; ty < BrushHeight; ty++)
-	{
-		for(int tx = 0; tx < BrushWidth; tx++)
-		{
-			const int tid = tx * BrushHeight + (BrushHeight-1-ty);
-			aTiles[tid] = aTilesCopy[ty * BrushWidth + tx];
-			if(aTiles[tid].m_Flags&TILEFLAG_ROTATE)
-				aTiles[tid].m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
-			aTiles[tid].m_Flags ^= TILEFLAG_ROTATE;
-		}
-	}
-
-	m_Brush.m_Width = BrushHeight;
-	m_Brush.m_Height = BrushWidth;
-}
-
-void CEditor2::BrushRotate90CounterClockwise()
-{
-	if(m_Brush.m_Width <= 0)
-		return;
-
-	const int BrushWidth = m_Brush.m_Width;
-	const int BrushHeight = m_Brush.m_Height;
-	array2<CTile>& aTiles = m_Brush.m_aTiles;
-	array2<CTile> aTilesCopy;
-	aTilesCopy.add(aTiles.base_ptr(), aTiles.size());
-
-	for(int ty = 0; ty < BrushHeight; ty++)
-	{
-		for(int tx = 0; tx < BrushWidth; tx++)
-		{
-			const int tid = (BrushWidth-1-tx) * BrushHeight + ty;
-			aTiles[tid] = aTilesCopy[ty * BrushWidth + tx];
-			if(!(aTiles[tid].m_Flags&TILEFLAG_ROTATE))
-				aTiles[tid].m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
-			aTiles[tid].m_Flags ^= TILEFLAG_ROTATE;
-		}
-	}
-
-	m_Brush.m_Width = BrushHeight;
-	m_Brush.m_Height = BrushWidth;
-}
-
-void CEditor2::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
+void CEditor2::BrushPaintLayer(const CBrush& Brush, int PaintTX, int PaintTY, int LayerID)
 {
 	CEditorMap2::CLayer& Layer = m_Map.m_aLayers.Get(LayerID);
 
-	const int BrushW = m_Brush.m_Width;
-	const int BrushH = m_Brush.m_Height;
+	const int BrushW = Brush.m_Width;
+	const int BrushH = Brush.m_Height;
 	const int LayerW = Layer.m_Width;
 	const int LayerH = Layer.m_Height;
 	array2<CTile>& aLayerTiles = Layer.m_aTiles;
-	array2<CTile>& aBrushTiles = m_Brush.m_aTiles;
+	const array2<CTile>& aBrushTiles = Brush.m_aTiles;
 
 	for(int ty = 0; ty < BrushH; ty++)
 	{
@@ -3958,16 +3828,16 @@ void CEditor2::BrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 	}
 }
 
-void CEditor2::BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID)
+void CEditor2::BrushPaintLayerFillRectRepeat(const CBrush& Brush, int PaintTX, int PaintTY, int PaintW, int PaintH, int LayerID)
 {
 	CEditorMap2::CLayer& Layer = m_Map.m_aLayers.Get(LayerID);
 
-	const int BrushW = m_Brush.m_Width;
-	const int BrushH = m_Brush.m_Height;
+	const int BrushW = Brush.m_Width;
+	const int BrushH = Brush.m_Height;
 	const int LayerW = Layer.m_Width;
 	const int LayerH = Layer.m_Height;
 	array2<CTile>& aLayerTiles = Layer.m_aTiles;
-	array2<CTile>& aBrushTiles = m_Brush.m_aTiles;
+	const array2<CTile>& aBrushTiles = Brush.m_aTiles;
 
 	for(int ty = 0; ty < PaintH; ty++)
 	{
@@ -3986,7 +3856,7 @@ void CEditor2::BrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int Paint
 	}
 }
 
-void CEditor2::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY)
+void CEditor2::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int EndTX, int EndTY, CBrush* pOutBrush)
 {
 	const CEditorMap2::CLayer& TileLayer = m_Map.m_aLayers.Get(LayerID);
 	dbg_assert(TileLayer.IsTileLayer(), "Layer is not a tile layer");
@@ -4014,7 +3884,7 @@ void CEditor2::TileLayerRegionToBrush(int LayerID, int StartTX, int StartTY, int
 			aExtractTiles[ty * Width + tx] = aLayerTiles[ti];
 	}
 
-	SetNewBrush(aExtractTiles.base_ptr(), Width, Height);
+	pOutBrush->Set(aExtractTiles.base_ptr(), Width, Height);
 }
 
 void CEditor2::CenterViewOnQuad(const CQuad &Quad)
@@ -4081,7 +3951,7 @@ void CEditor2::OnMapLoaded()
 	m_UiGroupState[m_Map.m_GameGroupID].m_IsOpen = true;
 	mem_zero(&m_UiBrushPalette, sizeof(m_UiBrushPalette));
 	ResetCamera();
-	BrushClear();
+	MainBrushClear();
 
 	// clear history
 	HistoryClear();
@@ -4258,7 +4128,7 @@ void CEditor2::RestoreUiSnapshot(CUISnapshot* pUiSnap)
 	dbg_assert(m_UiSelectedLayerID == -1 || m_Map.m_aLayers.IsValid(m_UiSelectedLayerID), "Selected layer is invalid");
 	dbg_assert(m_Map.m_aGroups.IsValid(m_UiSelectedGroupID), "Selected group is invalid");
 	m_Tool = pUiSnap->m_ToolID;
-	BrushClear(); // TODO: save brush?
+	MainBrushClear(); // TODO: save brush?
 	m_TileSelection.Deselect(); // TODO: save selection?
 }
 
@@ -4445,4 +4315,133 @@ void CEditor2::CTileSelection::FitLayer(const CEditorMap2::CLayer& TileLayer)
 	}
 	else
 		Deselect();
+}
+
+void CEditor2::CBrush::Set(const CTile* aTiles, int Width, int Height, const u8* aSelectionMask)
+{
+	dbg_assert(Width > 0 && Height > 0, "Brush: wrong dimensions");
+	m_Width = Width;
+	m_Height = Height;
+	m_aTiles.clear();
+	m_aTiles.add(aTiles, Width*Height);
+
+	if(aSelectionMask)
+	{
+		for(int by = 0; by < Height; by++)
+		{
+			for(int bx = 0; bx < Width; bx++)
+			{
+				const int bid = by * Width + bx;
+				m_aTiles[bid].m_Reserved = aSelectionMask[bid]; // hacky to store this here but oh well, this is not used
+			}
+		}
+	}
+	else
+	{
+		for(int i = 0; i < Width*Height; i++)
+		{
+			m_aTiles[i].m_Reserved = 1;
+		}
+	}
+}
+
+void CEditor2::CBrush::Clear()
+{
+	m_Width = 0;
+	m_Height = 0;
+	m_aTiles.clear();
+}
+
+void CEditor2::CBrush::FlipX()
+{
+	if(IsEmpty()) return;
+
+	const int BrushWidth = m_Width;
+	const int BrushHeight = m_Height;
+	array2<CTile>& aTiles = m_aTiles;
+	array2<CTile> aTilesCopy;
+	aTilesCopy.add(aTiles.base_ptr(), aTiles.size());
+
+	for(int ty = 0; ty < BrushHeight; ty++)
+	{
+		for(int tx = 0; tx < BrushWidth; tx++)
+		{
+			const int tid = ty * BrushWidth + tx;
+			aTiles[tid] = aTilesCopy[ty * BrushWidth + (BrushWidth-tx-1)];
+			aTiles[tid].m_Flags ^= aTiles[tid].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_HFLIP:TILEFLAG_VFLIP;
+		}
+	}
+}
+
+void CEditor2::CBrush::FlipY()
+{
+	if(IsEmpty()) return;
+
+	const int BrushWidth = m_Width;
+	const int BrushHeight = m_Height;
+	array2<CTile>& aTiles = m_aTiles;
+	array2<CTile> aTilesCopy;
+	aTilesCopy.add(aTiles.base_ptr(), aTiles.size());
+
+	for(int ty = 0; ty < BrushHeight; ty++)
+	{
+		for(int tx = 0; tx < BrushWidth; tx++)
+		{
+			const int tid = ty * BrushWidth + tx;
+			aTiles[tid] = aTilesCopy[(BrushHeight-ty-1) * BrushWidth + tx];
+			aTiles[tid].m_Flags ^= aTiles[tid].m_Flags&TILEFLAG_ROTATE ? TILEFLAG_VFLIP:TILEFLAG_HFLIP;
+		}
+	}
+}
+
+void CEditor2::CBrush::Rotate90Clockwise()
+{
+	if(IsEmpty()) return;
+
+	const int BrushWidth = m_Width;
+	const int BrushHeight = m_Height;
+	array2<CTile>& aTiles = m_aTiles;
+	array2<CTile> aTilesCopy;
+	aTilesCopy.add(aTiles.base_ptr(), aTiles.size());
+
+	for(int ty = 0; ty < BrushHeight; ty++)
+	{
+		for(int tx = 0; tx < BrushWidth; tx++)
+		{
+			const int tid = tx * BrushHeight + (BrushHeight-1-ty);
+			aTiles[tid] = aTilesCopy[ty * BrushWidth + tx];
+			if(aTiles[tid].m_Flags&TILEFLAG_ROTATE)
+				aTiles[tid].m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
+			aTiles[tid].m_Flags ^= TILEFLAG_ROTATE;
+		}
+	}
+
+	m_Width = BrushHeight;
+	m_Height = BrushWidth;
+}
+
+void CEditor2::CBrush::Rotate90CounterClockwise()
+{
+	if(IsEmpty()) return;
+
+	const int BrushWidth = m_Width;
+	const int BrushHeight = m_Height;
+	array2<CTile>& aTiles = m_aTiles;
+	array2<CTile> aTilesCopy;
+	aTilesCopy.add(aTiles.base_ptr(), aTiles.size());
+
+	for(int ty = 0; ty < BrushHeight; ty++)
+	{
+		for(int tx = 0; tx < BrushWidth; tx++)
+		{
+			const int tid = (BrushWidth-1-tx) * BrushHeight + ty;
+			aTiles[tid] = aTilesCopy[ty * BrushWidth + tx];
+			if(!(aTiles[tid].m_Flags&TILEFLAG_ROTATE))
+				aTiles[tid].m_Flags ^= (TILEFLAG_HFLIP|TILEFLAG_VFLIP);
+			aTiles[tid].m_Flags ^= TILEFLAG_ROTATE;
+		}
+	}
+
+	m_Width = BrushHeight;
+	m_Height = BrushWidth;
 }

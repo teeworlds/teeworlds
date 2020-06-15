@@ -422,11 +422,12 @@ void CEditor2::EditTileSelectionFlipX(int LayerID)
 {
 	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
 
+	static CBrush Brush;
 	TileLayerRegionToBrush(LayerID, m_TileSelection.m_StartTX, m_TileSelection.m_StartTY,
-		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY);
-	BrushFlipX();
-	BrushPaintLayer(m_TileSelection.m_StartTX, m_TileSelection.m_StartTY, LayerID);
-	BrushClear();
+		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY, &Brush);
+	Brush.FlipX();
+	BrushPaintLayer(Brush, m_TileSelection.m_StartTX, m_TileSelection.m_StartTY, LayerID);
+	Brush.Clear();
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
@@ -440,11 +441,12 @@ void CEditor2::EditTileSelectionFlipY(int LayerID)
 {
 	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
 
+	static CBrush Brush;
 	TileLayerRegionToBrush(LayerID, m_TileSelection.m_StartTX, m_TileSelection.m_StartTY,
-		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY);
-	BrushFlipY();
-	BrushPaintLayer(m_TileSelection.m_StartTX, m_TileSelection.m_StartTY, LayerID);
-	BrushClear();
+		m_TileSelection.m_EndTX, m_TileSelection.m_EndTY, &Brush);
+	Brush.FlipY();
+	BrushPaintLayer(Brush, m_TileSelection.m_StartTX, m_TileSelection.m_StartTY, LayerID);
+	Brush.Clear();
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
@@ -459,7 +461,7 @@ void CEditor2::EditBrushPaintLayer(int PaintTX, int PaintTY, int LayerID)
 	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
 	dbg_assert(m_Map.m_aLayers.Get(LayerID).IsTileLayer(), "Layer is not a tile layer");
 
-	BrushPaintLayer(PaintTX, PaintTY, LayerID);
+	BrushPaintLayer(m_Brush, PaintTX, PaintTY, LayerID);
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
@@ -475,7 +477,7 @@ void CEditor2::EditBrushPaintLayerFillRectRepeat(int PaintTX, int PaintTY, int P
 	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
 	dbg_assert(m_Map.m_aLayers.Get(LayerID).IsTileLayer(), "Layer is not a tile layer");
 
-	BrushPaintLayerFillRectRepeat(PaintTX, PaintTY, PaintW, PaintH, LayerID);
+	BrushPaintLayerFillRectRepeat(m_Brush, PaintTX, PaintTY, PaintW, PaintH, LayerID);
 
 	char aHistoryEntryAction[64];
 	char aHistoryEntryDesc[64];
@@ -491,7 +493,7 @@ void CEditor2::EditBrushPaintLayerAutomap(int PaintTX, int PaintTY, int LayerID,
 	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
 	dbg_assert(m_Map.m_aLayers.Get(LayerID).IsTileLayer(), "Layer is not a tile layer");
 
-	BrushPaintLayer(PaintTX, PaintTY, LayerID);
+	BrushPaintLayer(m_Brush, PaintTX, PaintTY, LayerID);
 
 	CEditorMap2::CLayer& Layer = m_Map.m_aLayers.Get(LayerID);
 	dbg_assert(Layer.m_ImageID >= 0 && Layer.m_ImageID < m_Map.m_Assets.m_ImageCount, "ImageID out of bounds or invalid");
@@ -517,7 +519,7 @@ void CEditor2::EditBrushPaintLayerFillRectAutomap(int PaintTX, int PaintTY, int 
 	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
 	dbg_assert(m_Map.m_aLayers.Get(LayerID).IsTileLayer(), "Layer is not a tile layer");
 
-	BrushPaintLayerFillRectRepeat(PaintTX, PaintTY, PaintW, PaintH, LayerID);
+	BrushPaintLayerFillRectRepeat(m_Brush, PaintTX, PaintTY, PaintW, PaintH, LayerID);
 
 	CEditorMap2::CLayer& Layer = m_Map.m_aLayers.Get(LayerID);
 	dbg_assert(Layer.m_ImageID >= 0 && Layer.m_ImageID < m_Map.m_Assets.m_ImageCount, "ImageID out of bounds or invalid");
@@ -880,7 +882,7 @@ void CEditor2::EditHistCondBrushPaintStrokeOnLayer(int StartTX, int StartTY, int
 	dbg_assert(m_Map.m_aLayers.Get(LayerID).IsTileLayer(), "Layer is not a tile layer");
 
 	// TODO: trace from Start to End
-	BrushPaintLayer(EndTX, EndTY, LayerID);
+	BrushPaintLayer(m_Brush, EndTX, EndTY, LayerID);
 
 	if(HistoryCondition)
 	{
