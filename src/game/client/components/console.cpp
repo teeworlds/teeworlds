@@ -258,6 +258,10 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_IsCommand = false;
 		}
 	}
+    if((m_pGameConsole->Input()->KeyIsPressed(KEY_LCTRL) || m_pGameConsole->Input()->KeyIsPressed(KEY_RCTRL)) && m_pGameConsole->Input()->KeyPress(KEY_C))
+    {
+        m_pGameConsole->Input()->SetClipboardText(m_Input.GetString());
+    }
 }
 
 void CGameConsole::CInstance::PrintLine(const char *pLine, bool Highlighted)
