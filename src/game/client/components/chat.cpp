@@ -481,6 +481,10 @@ bool CChat::OnInput(IInput::CEvent Event)
 		m_ChatBufferMode = m_Mode;
 		str_copy(m_ChatBuffer, m_Input.GetString(), sizeof(m_ChatBuffer));
 	}
+    if((Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL)) && Input()->KeyPress(KEY_C))
+    {
+        Input()->SetClipboardText(m_Input.GetString());
+    }
 	return true;
 }
 
