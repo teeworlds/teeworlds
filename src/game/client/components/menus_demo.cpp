@@ -21,9 +21,9 @@
 #include "menus.h"
 
 CMenus::CColumn CMenus::ms_aDemoCols[] = {
-	{COL_DEMO_ICON,		-1, " ", -1, 4*16.0f+3*2.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
-	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, "Demo",	0, 200.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
-	{COL_DEMO_DATE,		CMenus::SORT_DATE, "Date", 1, 160.0f,  0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_ICON,		-1, " ", -1, 0, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, Localize("Name"), 0, 200.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_DATE,		CMenus::SORT_DATE, Localize("Date"), 1, 160.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
 };
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)
@@ -552,10 +552,14 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
 			}
 			Item.m_Rect.y += 2.0f;
-			UI()->DoLabel(&Item.m_Rect, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+			UI()->DoLabel(&Item.m_Rect, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+			char aDate[64];
+			str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
+			TextRender()->TextColor(0.7f, 0.7f, 0.7f, 0.7f);
+			UI()->DoLabel(&Item.m_Rect, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
+			TextRender()->TextColor(CUI::ms_DefaultTextColor);
 			if(Item.m_Selected)
 			{
-				TextRender()->TextColor(CUI::ms_DefaultTextColor);
 				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 			}
 		}
