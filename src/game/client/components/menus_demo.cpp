@@ -555,7 +555,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			UI()->DoLabel(&Item.m_Rect, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 			char aDate[64];
 			str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
-			TextRender()->TextColor(0.7f, 0.7f, 0.7f, 0.7f);
+			TextRender()->TextColor(CUI::ms_TransparentTextColor);
 			UI()->DoLabel(&Item.m_Rect, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
 			TextRender()->TextColor(CUI::ms_DefaultTextColor);
 			if(Item.m_Selected)

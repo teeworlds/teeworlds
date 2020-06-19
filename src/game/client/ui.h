@@ -52,6 +52,7 @@ public:
 	static const vec4 ms_DefaultTextOutlineColor;
 	static const vec4 ms_HighlightTextColor;
 	static const vec4 ms_HighlightTextOutlineColor;
+	static const vec4 ms_TransparentTextColor;
 
 	// TODO: Refactor: Fill this in
 	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class ITextRender *pTextRender) { m_pConfig = pConfig; m_pGraphics = pGraphics; m_pTextRender = pTextRender; }
