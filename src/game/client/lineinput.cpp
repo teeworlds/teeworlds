@@ -32,6 +32,7 @@ void CLineInput::Set(const char *pString)
 	m_Len = str_length(m_Str);
 	m_CursorPos = m_Len;
 	m_NumChars = 0;
+	m_SelectionStart = m_CursorPos;
 	int Offset = 0;
 	while(pString[Offset])
 	{
