@@ -69,8 +69,8 @@ class CGameContext : public IGameServer
 	static void NewCommandHook(const CCommandManager::CCommand *pCommand, void *pContext);
 	static void RemoveCommandHook(const CCommandManager::CCommand *pCommand, void *pContext);
 
-	CGameContext(int Resetting);
-	void Construct(int Resetting);
+	CGameContext(bool Resetting);
+	void Construct(bool Resetting);
 
 	bool m_Resetting;
 public:
