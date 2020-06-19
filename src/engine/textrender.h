@@ -42,7 +42,7 @@ public:
 	virtual int LoadFont(const char *pFilename) = 0;
 
 	//
-	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length) = 0;
+	virtual int TextEx(CTextCursor *pCursor, const char *pText, int Length, vec4 *pBoundingBoxes = 0, int NBoundingBoxes = 0) = 0;
 	virtual void TextDeferredRenderEx(CTextCursor *pCursor, const char *pText, int Length,
 		struct CQuadChar* aQuadChar, int QuadCharMaxCount, int* out_pQuadCharCount,
 		IGraphics::CTextureHandle* pFontTexture) = 0;

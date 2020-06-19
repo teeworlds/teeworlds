@@ -976,10 +976,10 @@ void CChat::OnRender()
 			int SelectionStart = m_Input.GetSelectionStartOffset();
 			int SelectionLength = m_Input.GetSelectionLength();
 
-			// Cheat with the Y coordinate in lieu of a proper bounding box
-			CUIRect Selection = {0, Cursor.m_Y + Cursor.m_FontSize * 0.25f, 0, Cursor.m_FontSize};
 			if(SelectionStart >= m_ChatStringOffset && SelectionLength)
 			{
+				vec4 aSelectionBoxBuffer[3];
+				int SelectionBoxCount = 0;
 				if(SelectionLength < 0)
 				{
 					// render until cursor
@@ -990,18 +990,16 @@ void CChat::OnRender()
 
 					TextRender()->TextEx(&Marker, "|", -1);
 					// render selection
-					Selection.x = Cursor.m_X;
-					TextRender()->TextEx(&Cursor, m_Input.GetString() + SelectionStart, absolute(SelectionLength));
-					Selection.w = Cursor.m_X - Selection.x;
+					SelectionBoxCount = TextRender()->TextEx(&Cursor, m_Input.GetString() + SelectionStart,
+						 absolute(SelectionLength), aSelectionBoxBuffer, 3);
 				}
 				else
 				{
 					// render until selectionstart
 					TextRender()->TextEx(&Cursor, m_Input.GetString() + m_ChatStringOffset, SelectionStart - m_ChatStringOffset);
 					// render selection
-					Selection.x = Cursor.m_X;
-					TextRender()->TextEx(&Cursor, m_Input.GetString() + SelectionStart, absolute(SelectionLength));
-					Selection.w = Cursor.m_X - Selection.x;
+					SelectionBoxCount = TextRender()->TextEx(&Cursor, m_Input.GetString() + SelectionStart,
+						absolute(SelectionLength), aSelectionBoxBuffer, 3);
 
 					// render cursor
 					CTextCursor Marker = Cursor;
@@ -1013,7 +1011,13 @@ void CChat::OnRender()
 				//render rest
 				TextRender()->TextEx(&Cursor, m_Input.GetString() + SelectionStart + absolute(SelectionLength), -1);
 
-				RenderTools()->DrawUIRect(&Selection, vec4(1.0f, 1.0f, 1.0f, 0.3f), 0, 0.0f);
+				for(int i = 0; i < SelectionBoxCount; i++)
+				{
+					vec4 *pBox = &aSelectionBoxBuffer[i];
+					// Cheat with the Y coordinate in lieu of a proper bounding box
+					CUIRect sbb = {pBox->x, pBox->y + Cursor.m_FontSize * 0.25f, pBox->z, pBox->w};
+					RenderTools()->DrawUIRect(&sbb, vec4(1.0f, 0.0f, 0.0f, 0.3f), 0, 0.0f);
+				}
 			}
 			else
 			{

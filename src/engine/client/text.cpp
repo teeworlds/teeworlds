@@ -769,7 +769,7 @@ public:
 			pCursor->m_Y = DrawY;
 	}
 
-	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length)
+	virtual int TextEx(CTextCursor *pCursor, const char *pText, int Length, vec4 *pBoundingBoxes = 0, int NBoundingBoxes = 0)
 	{
 		CFont *pFont = pCursor->m_pFont;
 		CFontSizeData *pSizeData = NULL;
@@ -809,7 +809,7 @@ public:
 			pFont = m_pDefaultFont;
 
 		if(!pFont)
-			return;
+			return 0;
 
 		pSizeData = GetSize(pFont, ActualSize);
 		RenderSetup(pFont, ActualSize);
@@ -825,6 +825,7 @@ public:
 		if(pCursor->m_Flags&TEXTFLAG_RENDER)
 			i = 0;
 
+		int BoundingBoxes = 0;
 		for(;i < 2; i++)
 		{
 			const char *pCurrent = (char *)pText;
@@ -848,6 +849,7 @@ public:
 					Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);
 			}
 
+			vec4 BoundingBox(DrawX, DrawY, 0, Size);
 			while(pCurrent < pEnd && (pCursor->m_MaxLines < 1 || LineCount <= pCursor->m_MaxLines))
 			{
 				int NewLine = 0;
@@ -928,6 +930,7 @@ public:
 							Graphics()->QuadsDrawTL(&QuadItem, 1);
 						}
 
+						BoundingBox.z += Advance * Size;
 						DrawX += Advance*Size;
 						pCursor->m_GlyphCount++;
 					}
@@ -941,8 +944,17 @@ public:
 					DrawX = (int)(DrawX * FakeToScreenX) / FakeToScreenX; // realign
 					DrawY = (int)(DrawY * FakeToScreenY) / FakeToScreenY;
 					++LineCount;
+
+					if(i == 0 && pBoundingBoxes && BoundingBoxes < NBoundingBoxes)
+					{
+						pBoundingBoxes[BoundingBoxes++] = BoundingBox;
+						BoundingBox = vec4(DrawX, DrawY, 0, Size);
+					}
 				}
 			}
+
+			if(i == 0 && pBoundingBoxes && BoundingBoxes < NBoundingBoxes)
+				pBoundingBoxes[BoundingBoxes++] = BoundingBox;
 
 			if(pCursor->m_Flags&TEXTFLAG_RENDER)
 				Graphics()->QuadsEnd();
@@ -953,6 +965,8 @@ public:
 
 		if(GotNewLine)
 			pCursor->m_Y = DrawY;
+
+		return BoundingBoxes;
 	}
 
 	float TextGetLineBaseY(const CTextCursor *pCursor)
