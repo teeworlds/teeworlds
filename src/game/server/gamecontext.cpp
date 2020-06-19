@@ -22,13 +22,7 @@
 #include "gamecontext.h"
 #include "player.h"
 
-enum
-{
-	RESET,
-	NO_RESET
-};
-
-void CGameContext::Construct(int Resetting)
+void CGameContext::Construct(bool Resetting)
 {
 	m_Resetting = 0;
 	m_pServer = 0;
@@ -44,18 +38,18 @@ void CGameContext::Construct(int Resetting)
 	m_NumVoteOptions = 0;
 	m_LockTeams = 0;
 
-	if(Resetting==NO_RESET)
+	if(Resetting == false)
 		m_pVoteOptionHeap = new CHeap();
 }
 
-CGameContext::CGameContext(int Resetting)
+CGameContext::CGameContext(bool Resetting)
 {
 	Construct(Resetting);
 }
 
 CGameContext::CGameContext()
 {
-	Construct(NO_RESET);
+	Construct(false);
 }
 
 CGameContext::~CGameContext()
@@ -77,7 +71,7 @@ void CGameContext::Clear()
 	m_Resetting = true;
 	this->~CGameContext();
 	mem_zero(this, sizeof(*this));
-	new (this) CGameContext(RESET);
+	new (this) CGameContext(true);
 
 	m_pVoteOptionHeap = pVoteOptionHeap;
 	m_pVoteOptionFirst = pVoteOptionFirst;
