@@ -57,7 +57,7 @@ jobs:
       if: contains(matrix.os, 'macOS')
       run: |
         brew update
-        brew install pkg-config freetype sdl2
+        brew install pkg-config sdl2
 
     - name: Build in debug mode
       env: ${{ matrix.env }}
@@ -133,7 +133,7 @@ jobs:
       if: contains(matrix.os, 'macOS')
       run: |
         brew update
-        brew install freetype sdl2
+        brew install sdl2
         cd bam
         ./make_unix.sh
 
