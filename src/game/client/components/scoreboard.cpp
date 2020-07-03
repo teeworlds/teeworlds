@@ -258,7 +258,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		if(!NoTitle)
 		{
 			str_format(aBuf, sizeof(aBuf), " (%d)", NumPlayers);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+			TextRender()->TextColor(CUI::ms_TransparentTextColor);
 			TextRender()->Text(0, x+20.0f+tw, y+5.0f, TitleFontsize, aBuf, -1.0f);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		}
@@ -270,7 +270,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		{
 			str_format(aBuf, sizeof(aBuf), "(%d) ", NumPlayers);
 			float PlayersTextWidth = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1, -1.0f);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+			TextRender()->TextColor(CUI::ms_TransparentTextColor);
 			TextRender()->Text(0, x+w-tw-PlayersTextWidth-20.0f, y+5.0f, TitleFontsize, aBuf, -1.0f);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		}
@@ -344,7 +344,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	}
 
 	const char *pPingStr = Localize("Ping");
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+	TextRender()->TextColor(CUI::ms_TransparentTextColor);
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, pPingStr, -1, -1.0f);
 	TextRender()->Text(0, PingOffset+PingLength-tw, y+Spacing, HeadlineFontsize, pPingStr, -1.0f);
 
@@ -357,7 +357,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	if(!Race)
 	{
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+		TextRender()->TextColor(CUI::ms_TransparentTextColor);
 		tw = TextRender()->TextWidth(0, HeadlineFontsize, "K", -1, -1.0f);
 		TextRender()->Text(0, KillOffset+KillLength/2-tw/2, y+Spacing, HeadlineFontsize, "K", -1.0f);
 

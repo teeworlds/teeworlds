@@ -9,13 +9,14 @@
 
 #include "system.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #if defined(CONF_FAMILY_UNIX)
 	#include <sys/time.h>
 	#include <unistd.h>
 
 	/* unix net includes */
-	#include <sys/stat.h>
-	#include <sys/types.h>
 	#include <sys/socket.h>
 	#include <sys/ioctl.h>
 	#include <errno.h>
@@ -1471,6 +1472,60 @@ int net_init()
 	return 0;
 }
 
+
+int fs_listdir_info(const char *dir, FS_LISTDIR_INFO_CALLBACK cb, int type, void *user)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	WIN32_FIND_DATA finddata;
+	HANDLE handle;
+	char buffer[1024*2];
+	int length;
+	str_format(buffer, sizeof(buffer), "%s/*", dir);
+
+	handle = FindFirstFileA(buffer, &finddata);
+
+	if(handle == INVALID_HANDLE_VALUE)
+		return 0;
+
+	str_format(buffer, sizeof(buffer), "%s/", dir);
+	length = str_length(buffer);
+
+	/* add all the entries */
+	do
+	{
+		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
+		if(cb(finddata.cFileName, fs_getmtime(buffer), fs_is_dir(buffer), type, user))
+			break;
+	}
+	while (FindNextFileA(handle, &finddata));
+
+	FindClose(handle);
+	return 0;
+#else
+	struct dirent *entry;
+	char buffer[1024*2];
+	int length;
+	DIR *d = opendir(dir);
+
+	if(!d)
+		return 0;
+
+	str_format(buffer, sizeof(buffer), "%s/", dir);
+	length = str_length(buffer);
+
+	while((entry = readdir(d)) != NULL)
+	{
+		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
+		if(cb(entry->d_name, fs_getmtime(buffer), fs_is_dir(buffer), type, user))
+			break;
+	}
+
+	/* close the directory and return */
+	closedir(d);
+	return 0;
+#endif
+}
+
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
@@ -1645,6 +1700,15 @@ int fs_is_dir(const char *path)
 	else
 		return 0;
 #endif
+}
+
+time_t fs_getmtime(const char *path)
+{
+	struct stat sb;
+	if(stat(path, &sb) == -1)
+		return 0;
+
+	return sb.st_mtime;
 }
 
 int fs_chdir(const char *path)

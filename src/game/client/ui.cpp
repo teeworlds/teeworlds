@@ -15,6 +15,7 @@ const vec4 CUI::ms_DefaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 const vec4 CUI::ms_DefaultTextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 const vec4 CUI::ms_HighlightTextColor(0.0f, 0.0f, 0.0f, 1.0f);
 const vec4 CUI::ms_HighlightTextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+const vec4 CUI::ms_TransparentTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 
 CUI::CUI()
 {

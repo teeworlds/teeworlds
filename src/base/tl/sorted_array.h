@@ -33,6 +33,11 @@ public:
 		sort(all());
 	}
 
+	template<class R>
+	void sort_range_by(R cmp)
+	{
+		sort(all(), cmp);
+	}
 
 	/*
 		Function: all

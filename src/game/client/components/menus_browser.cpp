@@ -606,7 +606,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			if(Num < 10)
 				Button.x += RenderOffset;
 			if(!Num)
-				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+				TextRender()->TextColor(CUI::ms_TransparentTextColor);
 			UI()->DoLabel(&Button, aTemp, 12.0f, CUI::ALIGN_LEFT);
 			Button.x += TextRender()->TextWidth(0, 12.0f, aTemp, -1, -1.0f);
 		}
