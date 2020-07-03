@@ -2558,8 +2558,6 @@ void CClient::ConnectOnStart(const char *pAddress)
 
 void CClient::DoVersionSpecificActions()
 {
-	if(Config()->m_ClLastVersionPlayed <= 0x0703)
-		str_copy(Config()->m_ClMenuMap, "winter", sizeof(Config()->m_ClMenuMap));
 	Config()->m_ClLastVersionPlayed = CLIENT_VERSION;
 }
 
