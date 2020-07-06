@@ -1250,12 +1250,12 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		CBrowserFilter *pFilter = &m_lFilters[FilterIndex];
 
 		// filter header
-		CUIRect Row;
-		View.HSplitTop(20.0f, &Row, &View);
-		s_ScrollRegion.AddRect(Row);
+		CUIRect Header;
+		View.HSplitTop(20.0f, &Header, &View);
+		s_ScrollRegion.AddRect(Header);
 
 		// render header
-		RenderFilterHeader(Row, FilterIndex);
+		RenderFilterHeader(Header, FilterIndex);
 
 		if(pFilter->Extended())
 		{
@@ -1265,7 +1265,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 				// select server if address changed and match found
 				bool IsSelected = m_aSelectedFilters[BrowserType] == FilterIndex && m_aSelectedServers[BrowserType] == ServerIndex;
-				if(!(m_AddressSelection&ADDR_SELECTION_UPDATE_ADDRESS) && !str_comp(pItem->m_aAddress, pAddress))
+				if(m_AddressSelection&ADDR_SELECTION_CHANGE && !str_comp(pItem->m_aAddress, pAddress))
 				{
 					if(!IsSelected)
 					{
@@ -1282,32 +1282,25 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				{
 					ItemHeight *= 6.0f;
 				}
+				CUIRect Row;
 				View.HSplitTop(ItemHeight, &Row, &View);
-
 				s_ScrollRegion.AddRect(Row);
+
 				if(IsSelected && (m_AddressSelection&ADDR_SELECTION_REVEAL)) // new selection (hotkeys or address input)
 				{
-					s_ScrollRegion.ScrollHere(CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
+					s_ScrollRegion.ScrollHere();
 					m_AddressSelection &= ~ADDR_SELECTION_REVEAL;
 				}
 
-				// make sure that only those in view can be selected
-				if(!s_ScrollRegion.IsRectClipped(Row))
+				if(s_ScrollRegion.IsRectClipped(Row))
 				{
-					if(IsSelected)
-					{
-						CUIRect r = Row;
-						RenderTools()->DrawUIRect(&r, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 4.0f);
-					}
-				}
-				else
-				{
-					// reset active item, if not visible
-					if(UI()->CheckActiveItem(pItem))
-						UI()->SetActiveItem(0);
-
-					// don't render invisible items
+					// only those in the view are rendered and can be selected
 					continue;
+				}
+
+				if(IsSelected)
+				{
+					RenderTools()->DrawUIRect(&Row, vec4(1.0f, 1.0f, 1.0f, 0.5f), CUI::CORNER_ALL, 5.0f);
 				}
 
 				if(int ReturnValue = DoBrowserEntry(pFilter->ID(ServerIndex), Row, pItem, pFilter, IsSelected))
@@ -1324,16 +1317,19 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				}
 			}
 
-			if(m_AddressSelection&ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND)
+			if((m_AddressSelection&ADDR_SELECTION_CHANGE) && (m_AddressSelection&ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND))
 			{
 				m_aSelectedServers[BrowserType] = -1;
-				m_AddressSelection &= ~ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND;
+				m_AddressSelection &= ~(ADDR_SELECTION_CHANGE|ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND);
 			}
 		}
 
 		if(FilterIndex < m_lFilters.size()-1)
-			View.HSplitTop(SpacingH, &Row, &View);
-
+		{
+			CUIRect Space;
+			View.HSplitTop(SpacingH, &Space, &View);
+			s_ScrollRegion.AddRect(Space);
+		}
 	}
 
 	if(m_AddressSelection&ADDR_SELECTION_UPDATE_ADDRESS)
@@ -1540,15 +1536,18 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	CUIRect BottomArea;
 	const float FontSize = 10.0f;
 	static bool s_ListExtended[NUM_FRIEND_TYPES] = { 1, 1, 0 };
+	static vec3 s_ListColor[NUM_FRIEND_TYPES] = { vec3(0.5f, 1.0f, 0.5f), vec3(0.4f, 0.4f, 1.0f), vec3(1.0f, 0.5f, 0.5f) };
+	const float HeaderHeight = GetListHeaderHeight();
+	const float SpacingH = 2.0f;
 
-	View.HSplitBottom(3*GetListHeaderHeight(), &View, &BottomArea);
+	View.HSplitBottom(3*HeaderHeight+2*SpacingH, &View, &BottomArea);
 
 	// calculate friends
 	// todo: optimize this
 	m_pDeleteFriend = 0;
-	m_lFriendList[0].clear();
-	m_lFriendList[1].clear();
-	m_lFriendList[2].clear();
+	m_lFriendList[FRIEND_PLAYER_ON].clear();
+	m_lFriendList[FRIEND_CLAN_ON].clear();
+	m_lFriendList[FRIEND_OFF].clear();
 	for(int f = 0; f < m_pClient->Friends()->NumFriends(); ++f)
 	{
 		const CContactInfo *pFriendInfo = m_pClient->Friends()->GetFriend(f);
@@ -1558,7 +1557,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 		str_copy(FriendItem.m_aClan, pFriendInfo->m_aClan, sizeof(FriendItem.m_aClan));
 		FriendItem.m_FriendState = pFriendInfo->m_aName[0] ? CContactInfo::CONTACT_PLAYER : CContactInfo::CONTACT_CLAN;
 		FriendItem.m_IsPlayer = false;
-		m_lFriendList[2].add(FriendItem);
+		m_lFriendList[FRIEND_OFF].add(FriendItem);
 	}
 
 	for(int ServerIndex = 0; ServerIndex < ServerBrowser()->NumServers(); ++ServerIndex)
@@ -1579,15 +1578,15 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 			FriendItem.m_FriendState = pEntry->m_aClients[j].m_FriendState;
 			FriendItem.m_IsPlayer = !(pEntry->m_aClients[j].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC);
 
-			if(pEntry->m_aClients[j].m_FriendState == CContactInfo::CONTACT_PLAYER)
-				m_lFriendList[0].add(FriendItem);
-			else
-				m_lFriendList[1].add(FriendItem);
+			m_lFriendList[pEntry->m_aClients[j].m_FriendState == CContactInfo::CONTACT_PLAYER ? FRIEND_PLAYER_ON : FRIEND_CLAN_ON].add(FriendItem);
 
-			for(int f = 0; f < m_lFriendList[2].size(); ++f)
+			for(int f = 0; f < m_lFriendList[FRIEND_OFF].size(); ++f)
 			{
-				if((!m_lFriendList[2][f].m_aName[0] || !str_comp(m_lFriendList[2][f].m_aName, pEntry->m_aClients[j].m_aName)) && !str_comp(m_lFriendList[2][f].m_aClan, pEntry->m_aClients[j].m_aClan))
-					m_lFriendList[2].remove_index(f--);
+				if((!m_lFriendList[FRIEND_OFF][f].m_aName[0] || !str_comp(m_lFriendList[FRIEND_OFF][f].m_aName, pEntry->m_aClients[j].m_aName))
+					&& !str_comp(m_lFriendList[FRIEND_OFF][f].m_aClan, pEntry->m_aClients[j].m_aClan))
+				{
+					m_lFriendList[FRIEND_OFF].remove_index(f--);
+				}
 			}
 		}
 	}
@@ -1606,33 +1605,27 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 
 	// show lists
 	// only ~10 buttons will be displayed at once, a sliding window of 20 buttons ought to be enough
-	static CButtonContainer s_FriendJoinButtons[20];
-	const float HeaderHeight = GetListHeaderHeight();
+	static CButtonContainer s_FriendButtons[20];
 	int ButtonId = 0;
 	for(int i = 0; i < NUM_FRIEND_TYPES; ++i)
 	{
 		CUIRect Header;
 		char aBuf[64] = { 0 };
 		View.HSplitTop(HeaderHeight, &Header, &View);
+		s_ScrollRegion.AddRect(Header);
 		if(s_ListExtended[i])
 		{
 			// entries
 			for(int f = 0; f < m_lFriendList[i].size(); ++f, ++ButtonId)
 			{
-				if(i == FRIEND_OFF)
-					View.HSplitTop(8.0f + HeaderHeight, &Rect, &View);
-				else
-					View.HSplitTop(20.0f + HeaderHeight, &Rect, &View);
+				View.HSplitTop((i == FRIEND_OFF ? 8.0f : 20.0f) + HeaderHeight, &Rect, &View);
 				s_ScrollRegion.AddRect(Rect);
-				if(i == FRIEND_PLAYER_ON)
-					RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 1.0f, 0.5f, 0.30f), CUI::CORNER_ALL, 5.0f);
-				else if(i == FRIEND_CLAN_ON)
-					RenderTools()->DrawUIRect(&Rect, vec4(0.5f, 0.5f, 1.5f, 0.30f), CUI::CORNER_ALL, 5.0f);
-				else
-					RenderTools()->DrawUIRect(&Rect, vec4(1.0f, 0.5f, 0.5f, 0.30f), CUI::CORNER_ALL, 5.0f);
-				Rect.VMargin(2.0f, &Rect);
-				Rect.HMargin(2.0f, &Rect);
-				Rect.VSplitRight(45.0f, &Rect, &Icon);
+				const bool Inside = UI()->MouseInside(&Rect);
+				bool ButtonResult = UI()->DoButtonLogic(&(s_FriendButtons[ButtonId%20]), &Rect);
+				RenderTools()->DrawUIRect(&Rect, vec4(s_ListColor[i].r, s_ListColor[i].g, s_ListColor[i].b, Inside ? 0.5f : 0.3f), CUI::CORNER_ALL, 5.0f);
+				Rect.Margin(2.0f, &Rect);
+				Rect.VSplitRight(50.0f, &Rect, &Icon);
+
 				Rect.HSplitTop(20.0f, &Button, 0);
 				// name
 				Rect.HSplitTop(10.0f, &Button, &Rect);
@@ -1661,23 +1654,33 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 				if(DoButton_SpriteClean(IMAGE_TOOLICONS, SPRITE_TOOL_X_B, &Icon))
 				{
 					m_pDeleteFriend = &m_lFriendList[i][f];
+					ButtonResult = false;
 				}
-				// join button
-				Rect.VSplitRight(15.0f, &Button, 0);
-				if(m_lFriendList[i][f].m_pServerInfo)
+				// handle click and double click on item
+				if(ButtonResult && m_lFriendList[i][f].m_pServerInfo)
 				{
-					Button.Margin((Button.h - HeaderHeight + 2.0f) / 2, &Button);
-					if(DoButton_Menu(&(s_FriendJoinButtons[ButtonId%20]), Localize("Join", "Join a server"), 0, &Button) )
+					SetServerBrowserAddress(m_lFriendList[i][f].m_pServerInfo->m_aAddress);
+					m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
+					if(Input()->MouseDoubleClick())
 					{
-						SetServerBrowserAddress(m_lFriendList[i][f].m_pServerInfo->m_aAddress);
 						Client()->Connect(GetServerBrowserAddress());
 					}
 				}
+
 				if(f < m_lFriendList[i].size()-1)
-					View.HSplitTop(2.0f, 0, &View);
+				{
+					CUIRect Space;
+					View.HSplitTop(SpacingH, &Space, &View);
+					s_ScrollRegion.AddRect(Space);
+				}
 			}
 		}
-		View.HSplitTop(2.0f, 0, &View);
+
+		{
+			CUIRect Space;
+			View.HSplitTop(SpacingH, &Space, &View);
+			s_ScrollRegion.AddRect(Space);
+		}
 
 		// header
 		RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
@@ -1703,6 +1706,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 
 	// add friend
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
+	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Name"), FontSize, CUI::ALIGN_LEFT);
 	static char s_aName[MAX_NAME_LENGTH] = { 0 };
@@ -1710,6 +1714,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	DoEditBox(&s_aName, &Button, s_aName, sizeof(s_aName), Button.h*ms_FontmodHeight*0.8f, &s_OffsetName);
 
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
+	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Clan"), FontSize, CUI::ALIGN_LEFT);
 	static char s_aClan[MAX_CLAN_LENGTH] = { 0 };
