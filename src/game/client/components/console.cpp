@@ -475,7 +475,12 @@ void CGameConsole::OnRender()
 			if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_LOADING)
 			{
 				if(Client()->RconAuthed())
-					pPrompt = "rcon> ";
+				{
+					if(pConsole->m_pGameConsole->m_pConsole->ExecutionState())
+						pPrompt = "rcon if> ";
+					else
+						pPrompt = "rcon> ";
+				}
 				else
 					pPrompt = "ENTER PASSWORD> ";
 			}
