@@ -35,6 +35,8 @@ public:
 	protected:
 		unsigned m_NumArgs;
 	public:
+		int m_Value;
+		char m_aValue[128];
 		IResult() { m_NumArgs = 0; }
 		virtual ~IResult() {}
 
@@ -89,6 +91,7 @@ public:
 	virtual void ExecuteLineFlag(const char *pStr, int FlagMask) = 0;
 	virtual void ExecuteLineStroked(int Stroke, const char *pStr) = 0;
 	virtual bool ExecuteFile(const char *pFilename) = 0;
+	virtual int ExecutionState() = 0;
 
 	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData) = 0;
 	virtual void SetPrintOutputLevel(int Index, int OutputLevel) = 0;

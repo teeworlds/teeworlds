@@ -482,6 +482,11 @@ void CGameConsole::OnRender()
 			else
 				pPrompt = "NOT CONNECTED> ";
 		}
+		else if(pConsole->m_pGameConsole->m_pConsole->ExecutionState())
+		{
+			pPrompt = "if> ";
+		}
+
 		TextRender()->TextEx(&Cursor, pPrompt, -1);
 
 		x = Cursor.m_X;

@@ -34,6 +34,15 @@ class CConsole : public IConsole
 		void *m_pUserData;
 	};
 
+	enum {
+		ES_GLOBAL,
+		ES_IF_HAPPY,
+		ES_IF_SAD,
+		ES_ELSE_HAPPY,
+		ES_ELSE_SAD
+	};
+
+	int m_ExecutionState;
 	int m_FlagMask;
 	bool m_StoreCommands;
 	const char *m_paStrokeStr[2];
@@ -57,6 +66,9 @@ class CConsole : public IConsole
 	static void Con_Chain(IResult *pResult, void *pUserData);
 	static void Con_Echo(IResult *pResult, void *pUserData);
 	static void Con_Exec(IResult *pResult, void *pUserData);
+	static void Con_If(IResult *pResult, void *pUserData);
+	static void Con_Else(IResult *pResult, void *pUserData);
+	static void Con_EndIf(IResult *pResult, void *pUserData);
 	static void ConToggle(IResult *pResult, void *pUser);
 	static void ConToggleStroke(IResult *pResult, void *pUser);
 	static void ConModCommandAccess(IResult *pResult, void *pUser);
@@ -201,6 +213,7 @@ public:
 	virtual void ExecuteLine(const char *pStr);
 	virtual void ExecuteLineFlag(const char *pStr, int FlagMask);
 	virtual bool ExecuteFile(const char *pFilename);
+	virtual int ExecutionState() { return m_ExecutionState; };
 
 	virtual int RegisterPrintCallback(int OutputLevel, FPrintCallback pfnPrintCallback, void *pUserData);
 	virtual void SetPrintOutputLevel(int Index, int OutputLevel);

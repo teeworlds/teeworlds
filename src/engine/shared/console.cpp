@@ -375,6 +375,11 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 		if(!*Result.m_pCommand)
 			return;
 
+		if(m_ExecutionState == ES_IF_SAD && (str_comp_num(Result.m_pCommand, "endif", 6) && str_comp_num(Result.m_pCommand, "else", 5)))
+			return;
+		if(m_ExecutionState == ES_ELSE_SAD && str_comp_num(Result.m_pCommand, "endif", 6))
+			return;
+
 		CCommand *pCommand = FindCommand(Result.m_pCommand, m_FlagMask);
 
 		if(pCommand)
@@ -632,6 +637,7 @@ static void IntVariableCommand(IConsole::IResult *pResult, void *pUserData)
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "Value: %d", *(pData->m_pVariable));
 		pData->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+		pResult->m_Value = *(pData->m_pVariable);
 	}
 }
 
@@ -667,7 +673,53 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "Value: %s", pData->m_pStr);
 		pData->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+		str_copy(pResult->m_aValue, pData->m_pStr, sizeof(pResult->m_aValue));
 	}
+}
+
+void CConsole::Con_If(IResult *pResult, void *pUserData)
+{
+	CResult Result;
+	CCommand *pCommand = ((CConsole*)pUserData)->FindCommand(pResult->GetString(0), ((CConsole*)pUserData)->m_FlagMask);
+	char aBuf[128];
+	if(!pCommand)
+	{
+		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
+		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+		return;
+	}
+	pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
+	bool condition = false;
+	if(pCommand->m_pfnCallback == IntVariableCommand)
+		condition = Result.m_Value == atoi(pResult->GetString(2));
+	else
+		condition = !str_comp_nocase(Result.m_aValue, pResult->GetString(2));
+	if(!str_comp_num(pResult->GetString(1), "!=", 3))
+		condition = !condition;
+	else if(str_comp_num(pResult->GetString(1), "==", 3))
+		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: invalid comperator");
+	((CConsole*)pUserData)->m_ExecutionState = condition ? ES_IF_HAPPY : ES_IF_SAD;
+}
+
+void CConsole::Con_Else(IResult *pResult, void *pUserData)
+{
+	int s = ((CConsole*)pUserData)->m_ExecutionState;
+	if(s == ES_GLOBAL)
+		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: unexpected else");
+	else if(s == ES_ELSE_HAPPY || s == ES_ELSE_SAD)
+		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: unexpected else");
+	else
+		((CConsole*)pUserData)->m_ExecutionState = s == ES_IF_HAPPY ? ES_ELSE_SAD : ES_ELSE_HAPPY;
+}
+
+void CConsole::Con_EndIf(IResult *pResult, void *pUserData)
+{
+	if(((CConsole*)pUserData)->m_ExecutionState == ES_GLOBAL)
+	{
+		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: unexpected endif");
+		return;
+	}
+	((CConsole*)pUserData)->m_ExecutionState = ES_GLOBAL;
 }
 
 void CConsole::ConToggle(IConsole::IResult *pResult, void *pUser)
@@ -741,6 +793,7 @@ void CConsole::ConToggleStroke(IConsole::IResult *pResult, void *pUser)
 
 CConsole::CConsole(int FlagMask)
 {
+	m_ExecutionState = ES_GLOBAL;
 	m_FlagMask = FlagMask;
 	m_AccessLevel = ACCESS_LEVEL_ADMIN;
 	m_pRecycleList = 0;
@@ -763,6 +816,10 @@ CConsole::CConsole(int FlagMask)
 	// register some basic commands
 	Register("echo", "r[text]", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Echo, this, "Echo the text");
 	Register("exec", "r[file]", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file");
+
+	Register("if", "s[config] s[comparison] s[value]", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_If, this, "start if statement (see endif)");
+	Register("else", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Else, this, "else statement (see if)");
+	Register("endif", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_EndIf, this, "end if statement (see if)");
 
 	Register("toggle", "s[config-option] i[value1] i[value2]", CFGFLAG_SERVER|CFGFLAG_CLIENT, ConToggle, this, "Toggle config value");
 	Register("+toggle", "s[config-option] i[value1] i[value2]", CFGFLAG_CLIENT, ConToggleStroke, this, "Toggle config value via keypress");
