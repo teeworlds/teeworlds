@@ -146,6 +146,8 @@ void CSmoothTime::Init(int64 Target)
 	m_aAdjustSpeed[0] = 0.3f;
 	m_aAdjustSpeed[1] = 0.3f;
 	m_Graph.Init(0.0f, 0.5f);
+	m_SpikeCounter = 0;
+	m_BadnessScore = -100;
 }
 
 void CSmoothTime::SetAdjustSpeed(int Direction, float Value)
@@ -204,11 +206,13 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 		{
 			// ignore this ping spike
 			UpdateTimer = 0;
-			pGraph->Add(TimeLeft, 1,1,0);
+			pGraph->Add(TimeLeft, 1,1,0.3f); // yellow
+			m_BadnessScore += 10;
 		}
 		else
 		{
-			pGraph->Add(TimeLeft, 1,0,0);
+			pGraph->Add(TimeLeft, 1,0.3f,0.3f); // red
+			m_BadnessScore += 50;
 			if(m_aAdjustSpeed[AdjustDirection] < 30.0f)
 				m_aAdjustSpeed[AdjustDirection] *= 2.0f;
 		}
@@ -218,7 +222,7 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 		if(m_SpikeCounter)
 			m_SpikeCounter--;
 
-		pGraph->Add(TimeLeft, 0,1,0);
+		pGraph->Add(TimeLeft, 0.3f,1,0.3f); // green
 
 		m_aAdjustSpeed[AdjustDirection] *= 0.95f;
 		if(m_aAdjustSpeed[AdjustDirection] < 2.0f)
@@ -227,6 +231,8 @@ void CSmoothTime::Update(CGraph *pGraph, int64 Target, int TimeLeft, int AdjustD
 
 	if(UpdateTimer)
 		UpdateInt(Target);
+
+	m_BadnessScore -= 1+m_BadnessScore/100;
 }
 
 CClient::CClient() : m_DemoPlayer(&m_SnapshotDelta), m_DemoRecorder(&m_SnapshotDelta)
@@ -380,6 +386,11 @@ bool CClient::ConnectionProblems() const
 	return m_NetClient.GotProblems() != 0;
 }
 
+int CClient::GetInputtimeMarginStabilityScore()
+{
+	return m_PredictedTime.GetStabilityScore();
+}
+
 void CClient::SendInput()
 {
 	int64 Now = time_get();
@@ -487,6 +498,12 @@ void CClient::EnterGame()
 {
 	if(State() == IClient::STATE_DEMOPLAYBACK)
 		return;
+
+	if(State() == IClient::STATE_ONLINE)
+	{
+		// Don't reset everything while already in game.
+		return;
+	}
 
 	// now we will wait for two snapshots
 	// to finish the connection
@@ -801,7 +818,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, const SHA
 		char aWantedSha256[SHA256_MAXSTRSIZE];
 		sha256_str(m_pMap->Sha256(), aSha256, sizeof(aSha256));
 		sha256_str(*pWantedSha256, aWantedSha256, sizeof(aWantedSha256));
-		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. %s != %s", aSha256, aWantedSha256);
+		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. found = %s wanted = %s", aSha256, aWantedSha256);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aErrorMsg);
 		m_pMap->Unload();
 		return aErrorMsg;
@@ -810,7 +827,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, const SHA
 	// get the crc of the map
 	if(m_pMap->Crc() != WantedCrc)
 	{
-		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. %08x != %08x", m_pMap->Crc(), WantedCrc);
+		str_format(aErrorMsg, sizeof(aErrorMsg), "map differs from the server. found = %08x wanted = %08x", m_pMap->Crc(), WantedCrc);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aErrorMsg);
 		m_pMap->Unload();
 		return aErrorMsg;
@@ -2577,8 +2594,6 @@ void CClient::ConnectOnStart(const char *pAddress)
 
 void CClient::DoVersionSpecificActions()
 {
-	if(Config()->m_ClLastVersionPlayed <= 0x0703)
-		str_copy(Config()->m_ClMenuMap, "winter", sizeof(Config()->m_ClMenuMap));
 	Config()->m_ClLastVersionPlayed = CLIENT_VERSION;
 }
 

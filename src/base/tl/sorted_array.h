@@ -33,6 +33,11 @@ public:
 		sort(all());
 	}
 
+	template<class R>
+	void sort_range_by(R cmp)
+	{
+		sort(all(), cmp);
+	}
 
 	/*
 		Function: all
@@ -41,4 +46,4 @@ public:
 	range all() const { return range(parent::list, parent::list+parent::num_elements); }
 };
 
-#endif // TL_FILE_SORTED_ARRAY_HPP
+#endif // BASE_TL_SORTED_ARRAY_H

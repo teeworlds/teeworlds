@@ -727,17 +727,18 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 			Rect.HMargin(3.0f, &Rect);
 			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
 			m_pClient->m_pCountryFlags->Render(r.front().m_CountryCode, &Color, Rect.x, Rect.y, Rect.w, Rect.h, true);
-			Item.m_Rect.y += 2.0f;
 			if(Item.m_Selected)
 			{
-				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
-				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
-				UI()->DoLabel(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+				TextRender()->TextColor(CUI::ms_HighlightTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
 			}
-			else
-				UI()->DoLabel(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+			Item.m_Rect.y += 2.0f;
+			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+			if(Item.m_Selected)
+			{
+				TextRender()->TextColor(CUI::ms_DefaultTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+			}
 		}
 	}
 
@@ -803,32 +804,30 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 				Graphics()->QuadsEnd();
 			}
 
-			Item.m_Rect.y += 2.0f;
 			char aName[128];
-			if(r.front().m_Name[0])
-			{
-				if(r.front().m_HasDay && r.front().m_HasNight)
-					str_format(aName, sizeof(aName), "%s", r.front().m_Name.cstr());
-				else if(r.front().m_HasDay && !r.front().m_HasNight)
-					str_format(aName, sizeof(aName), "%s (day)", r.front().m_Name.cstr());
-				else if(!r.front().m_HasDay && r.front().m_HasNight)
-					str_format(aName, sizeof(aName), "%s (night)", r.front().m_Name.cstr());
-				else // generic
-					str_format(aName, sizeof(aName), "%s", r.front().m_Name.cstr());
-			}
-			else
+			if(!r.front().m_Name[0])
 				str_copy(aName, "(none)", sizeof(aName));
+			else if(r.front().m_HasDay && r.front().m_HasNight)
+				str_format(aName, sizeof(aName), "%s", r.front().m_Name.cstr());
+			else if(r.front().m_HasDay && !r.front().m_HasNight)
+				str_format(aName, sizeof(aName), "%s (day)", r.front().m_Name.cstr());
+			else if(!r.front().m_HasDay && r.front().m_HasNight)
+				str_format(aName, sizeof(aName), "%s (night)", r.front().m_Name.cstr());
+			else // generic
+				str_format(aName, sizeof(aName), "%s", r.front().m_Name.cstr());
 
 			if(Item.m_Selected)
 			{
-				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
-				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
-				UI()->DoLabel(&Item.m_Rect, aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+				TextRender()->TextColor(CUI::ms_HighlightTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
 			}
-			else
-				UI()->DoLabel(&Item.m_Rect, aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+			Item.m_Rect.y += 2.0f;
+			UI()->DoLabel(&Item.m_Rect, aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+			if(Item.m_Selected)
+			{
+				TextRender()->TextColor(CUI::ms_DefaultTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+			}
 		}
 	}
 
@@ -1147,22 +1146,25 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			float OldWidth = Item.m_Rect.w;
 			Item.m_Rect.w = Item.m_Rect.h*2;
 			Item.m_Rect.x += (OldWidth-Item.m_Rect.w)/ 2.0f;
+
 			Graphics()->TextureSet(pEntry->m_Texture);
 			Graphics()->QuadsBegin();
 			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 			IGraphics::CQuadItem QuadItem(Item.m_Rect.x, Item.m_Rect.y, Item.m_Rect.w, Item.m_Rect.h);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
+
 			if(Item.m_Selected)
 			{
-				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
-				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
-				UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, CUI::ALIGN_CENTER);
-				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+				TextRender()->TextColor(CUI::ms_HighlightTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
 			}
-			else
-				UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, CUI::ALIGN_CENTER);
+			UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, CUI::ALIGN_CENTER);
+			if(Item.m_Selected)
+			{
+				TextRender()->TextColor(CUI::ms_DefaultTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+			}
 		}
 	}
 
@@ -1618,19 +1620,15 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 
 			if(Item.m_Selected)
 			{
-				TextRender()->TextColor(0.0f, 0.0f, 0.0f, 1.0f);
-				TextRender()->TextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
-				Item.m_Rect.y += 2.0f;
-				UI()->DoLabel(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f,
-									CUI::ALIGN_CENTER);
-				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-				TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+				TextRender()->TextColor(CUI::ms_HighlightTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
 			}
-			else
+			Item.m_Rect.y += 2.0f;
+			UI()->DoLabel(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+			if(Item.m_Selected)
 			{
-				Item.m_Rect.y += 2.0f;
-				UI()->DoLabel(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f,
-									CUI::ALIGN_CENTER);
+				TextRender()->TextColor(CUI::ms_DefaultTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 			}
 		}
 	}

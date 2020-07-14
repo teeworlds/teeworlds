@@ -983,7 +983,7 @@ void CChat::OnRender()
 				const CCommandManager::CCommand *pCommand = m_CommandManager.GetCommand(m_SelectedCommand);
 				if(str_length(pCommand->m_aName)+1 > str_length(m_Input.GetString()))
 				{
-					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+					TextRender()->TextColor(CUI::ms_TransparentTextColor);
 					TextRender()->TextEx(&Cursor, pCommand->m_aName + str_length(m_Input.GetString())-1, -1);
 				}
 			}
@@ -994,7 +994,7 @@ void CChat::OnRender()
 				CTextCursor InfoCursor;
 				TextRender()->SetCursor(&InfoCursor, 2.0f, y+12.0f, CategoryFontSize*0.75, TEXTFLAG_RENDER);
 
-				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+				TextRender()->TextColor(CUI::ms_TransparentTextColor);
 				TextRender()->TextEx(&InfoCursor, Localize("Press Tab to cycle chat recipients. Whispers aren't encrypted and might be logged by the server."), -1);
 			}
 		}
@@ -1314,8 +1314,8 @@ void CChat::OnRender()
 			TextRender()->TextShadowed(&Cursor, pLine->m_aText, -1, ShadowOffset, ShadowColor, TextColor);
 	}
 
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+	TextRender()->TextColor(CUI::ms_DefaultTextColor);
+	TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 
 	HandleCommands(x+CategoryWidth, Height - 24.f, 200.0f-CategoryWidth);
 }

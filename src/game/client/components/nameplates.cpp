@@ -64,8 +64,8 @@ void CNamePlates::RenderNameplate(
 			TextRender()->TextEx(&Cursor, aName, -1);
 		}
 
-		TextRender()->TextColor(1,1,1,1);
-		TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+		TextRender()->TextColor(CUI::ms_DefaultTextColor);
+		TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 	}
 }
 

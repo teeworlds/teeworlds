@@ -46,35 +46,42 @@ bool CHud::IsLargeWarmupTimerShown()
 
 void CHud::RenderGameTimer()
 {
-	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
+	float x = 300.0f*Graphics()->ScreenAspect()/2.0f;
+	float FontSize = 10.0f;
 
-	if(!(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH))
+	int Time = 0;
+	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
+		Time = 0;
+	else if(m_pClient->m_GameInfo.m_TimeLimit && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_WARMUP))
 	{
-		int Time = 0;
-		if(m_pClient->m_GameInfo.m_TimeLimit && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_WARMUP))
-		{
-			Time = m_pClient->m_GameInfo.m_TimeLimit*60 - ((Client()->GameTick()-m_pClient->m_Snap.m_pGameData->m_GameStartTick)/Client()->GameTickSpeed());
+		Time = m_pClient->m_GameInfo.m_TimeLimit*60 - ((Client()->GameTick()-m_pClient->m_Snap.m_pGameData->m_GameStartTick)/Client()->GameTickSpeed());
 
-			if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
-				Time = 0;
-		}
-		else if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
-			Time = m_pClient->m_Snap.m_pGameData->m_GameStateEndTick/Client()->GameTickSpeed();
-		else
-			Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameData->m_GameStartTick)/Client()->GameTickSpeed();
+		if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
+			Time = 0;
+	}
+	else if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
+		Time = m_pClient->m_Snap.m_pGameData->m_GameStateEndTick/Client()->GameTickSpeed();
+	else
+		Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameData->m_GameStartTick)/Client()->GameTickSpeed();
 
-		char aBuf[32];
-		str_format(aBuf, sizeof(aBuf), "%d:%02d", Time/60, Time%60);
-		float FontSize = 10.0f;
-		float w = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-		// last 60 sec red, last 10 sec blink
-		if(m_pClient->m_GameInfo.m_TimeLimit && Time <= 60 && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_WARMUP))
-		{
-			float Alpha = Time <= 10 && (2*time_get()/time_freq()) % 2 ? 0.5f : 1.0f;
-			TextRender()->TextColor(1.0f, 0.25f, 0.25f, Alpha);
-		}
-		TextRender()->Text(0, Half-w/2, 2, FontSize, aBuf, -1.0f);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "%d:%02d", Time/60, Time%60);
+	float w = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
+	// last 60 sec red, last 10 sec blink
+	if(m_pClient->m_GameInfo.m_TimeLimit && Time <= 60 && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_WARMUP))
+	{
+		float Alpha = Time <= 10 && (2*time_get()/time_freq()) % 2 ? 0.5f : 1.0f;
+		TextRender()->TextColor(1.0f, 0.25f, 0.25f, Alpha);
+	}
+	TextRender()->Text(0, x-w/2, 2, FontSize, aBuf, -1.0f);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
+	{
+		const char *pText = Localize("Sudden Death");
+		FontSize = 12.0f;
+		float w = TextRender()->TextWidth(0, FontSize, pText, -1, -1.0f);
+		TextRender()->Text(0, x-w/2, 2+FontSize, FontSize, pText, -1.0f);
 	}
 }
 
@@ -133,6 +140,30 @@ void CHud::RenderStartCountdown()
 	}
 }
 
+void CHud::RenderNetworkIssueNotification()
+{
+	float x = 300.0f*Graphics()->ScreenAspect()/2.0f - 15.0f;
+	float FontSize = 10.0f;
+
+	// render network indicator when 2/5 and under
+	const int NetScore = Client()->GetInputtimeMarginStabilityScore();
+	if(NetScore > 250)
+	{
+		float Margin = 2.0f;
+		x = x-5.0f-FontSize-Margin*2;
+		Graphics()->BlendNormal();
+		CUIRect RectBox = {x, 4-Margin, FontSize+2*Margin, FontSize+2*Margin};
+		vec4 Color = vec4(0.0f, 0.0f, 0.0f, 0.3f);
+		RenderTools()->DrawUIRect(&RectBox, Color, CUI::CORNER_ALL, 1.0f);
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_NETWORKICONS].m_Id);
+		Graphics()->QuadsBegin();
+		RenderTools()->SelectSprite(SPRITE_NETWORK_BAD);
+		IGraphics::CQuadItem QuadItem(x+Margin, 4, FontSize, FontSize);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+	}
+}
+
 void CHud::RenderDeadNotification()
 {
 	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags == 0 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS &&
@@ -142,18 +173,6 @@ void CHud::RenderDeadNotification()
 		float FontSize = 16.0f;
 		float w = TextRender()->TextWidth(0, FontSize, pText, -1, -1.0f);
 		TextRender()->Text(0, 150*Graphics()->ScreenAspect() - w/2, 50, FontSize, pText, -1.0f);
-	}
-}
-
-void CHud::RenderSuddenDeath()
-{
-	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
-	{
-		float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
-		const char *pText = Localize("Sudden Death");
-		float FontSize = 12.0f;
-		float w = TextRender()->TextWidth(0, FontSize, pText, -1, -1.0f);
-		TextRender()->Text(0, Half-w/2, 2, FontSize, pText, -1.0f);
 	}
 }
 
@@ -849,8 +868,8 @@ void CHud::OnRender()
 		RenderGameTimer();
 		RenderPauseTimer();
 		RenderStartCountdown();
+		RenderNetworkIssueNotification();
 		RenderDeadNotification();
-		RenderSuddenDeath();
 		RenderScoreHud();
 		RenderWarmupTimer();
 		RenderFps();
