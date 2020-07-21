@@ -644,7 +644,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	{
 		for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 		{
-			FetchHeader(r.front());
+			if(str_comp(r.front().m_aFilename, ".."))
+				FetchHeader(r.front());
 		}
 		m_lDemos.sort_range_by(CDemoComparator(
 			Config()->m_BrDemoSort, Config()->m_BrDemoSortOrder
