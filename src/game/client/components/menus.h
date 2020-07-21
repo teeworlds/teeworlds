@@ -462,6 +462,7 @@ private:
 	enum
 	{
 		SORT_DEMONAME=0,
+		SORT_LENGTH,
 		SORT_DATE,
 	};
 
@@ -485,6 +486,14 @@ private:
 				((m_Info.m_aNumTimelineMarkers[1]<<16)&0xFF0000) |
 				((m_Info.m_aNumTimelineMarkers[2]<<8)&0xFF00) |
 				(m_Info.m_aNumTimelineMarkers[3]&0xFF);
+		}
+
+		int Length() const
+		{
+			return ((m_Info.m_aLength[0]<<24)&0xFF000000) |
+				((m_Info.m_aLength[1]<<16)&0xFF0000) |
+				((m_Info.m_aLength[2]<<8)&0xFF00) |
+				(m_Info.m_aLength[3]&0xFF);
 		}
 
 		bool operator<(const CDemoItem &Other) const
@@ -524,6 +533,8 @@ private:
 
 			if(m_Type == SORT_DEMONAME)
 				return str_comp_nocase(Left.m_aFilename, Right.m_aFilename) < 0;
+			else if(m_Type == SORT_LENGTH)
+				return Left.Length() < Right.Length();
 			else if(m_Type == SORT_DATE)
 				return Left.m_Date < Right.m_Date;
 			return false;
@@ -683,6 +694,7 @@ private:
 
 		COL_DEMO_ICON=0,
 		COL_DEMO_NAME,
+		COL_DEMO_LENGTH,
 		COL_DEMO_DATE,
 		NUM_DEMO_COLS,
 
@@ -761,6 +773,7 @@ private:
 	void UpdateMusicState();
 
 	// found in menus_demo.cpp
+	bool FetchHeader(CDemoItem &Item);
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoList(CUIRect MainView);
 	float RenderDemoDetails(CUIRect View);
