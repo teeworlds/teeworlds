@@ -764,7 +764,9 @@ static void sockaddr_to_netaddr(const struct sockaddr *src, NETADDR *dst)
 
 int net_addr_comp(const NETADDR *a, const NETADDR *b)
 {
-	return mem_comp(a, b, sizeof(NETADDR));
+	if(mem_comp(a->ip, b->ip, sizeof(a->ip)) == 0 && a->port == b->port && a->type == b->type)
+		return 0;
+	return -1;
 }
 
 void net_addr_str(const NETADDR *addr, char *string, int max_length, int add_port)
