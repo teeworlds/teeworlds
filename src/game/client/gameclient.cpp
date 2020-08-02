@@ -500,8 +500,7 @@ void CGameClient::UpdatePositions()
 	// local character position
 	if(Config()->m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
-		if(!m_Snap.m_pLocalCharacter ||
-			(m_Snap.m_pGameData && m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
+		if(!m_Snap.m_pLocalCharacter || IsWorldPaused())
 		{
 			// don't use predicted
 		}
@@ -1516,7 +1515,7 @@ void CGameClient::OnPredict()
 		return;
 
 	// don't predict anything if we are paused or round/game is over
-	if(m_Snap.m_pGameData && m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER))
+	if(IsWorldPaused())
 	{
 		if(m_Snap.m_pLocalCharacter)
 			m_PredictedChar.Read(m_Snap.m_pLocalCharacter);
