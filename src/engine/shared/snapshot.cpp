@@ -172,6 +172,8 @@ CSnapshotDelta::CSnapshotDelta()
 
 void CSnapshotDelta::SetStaticsize(int ItemType, int Size)
 {
+	if(ItemType < 0 || ItemType >= MAX_NETOBJTYPES)
+		return;
 	m_aItemSizes[ItemType] = Size;
 }
 
@@ -354,7 +356,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 			return -1;
 
 		Type = *pData++;
-		if(Type < 0)
+		if(Type < 0 || Type >= MAX_NETOBJTYPES)
 			return -1;
 		ID = *pData++;
 		if(m_aItemSizes[Type])
