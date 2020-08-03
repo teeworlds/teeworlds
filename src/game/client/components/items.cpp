@@ -37,7 +37,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	}
 
 	static float s_LastGameTickTime = Client()->GameTickTime();
-	if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+	if(!m_pClient->IsWorldPaused())
 		s_LastGameTickTime = Client()->GameTickTime();
 	float Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 	if(Ct < 0)
@@ -72,7 +72,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 		}
 		else
 		{
-			if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+			if(!m_pClient->IsWorldPaused())
 				s_Time += Client()->LocalTime()-s_LastLocalTime;
 		}
 
@@ -153,7 +153,7 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	}
 	else
 	{
-		if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+		if(!m_pClient->IsWorldPaused())
 			s_Time += Client()->LocalTime()-s_LastLocalTime;
  	}
 	Pos.x += cosf(s_Time*2.0f+Offset)*2.5f;

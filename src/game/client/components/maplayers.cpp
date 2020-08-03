@@ -333,7 +333,7 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	}
 	else if(pThis->Client()->State() != IClient::STATE_OFFLINE)
 	{
-		if(pThis->m_pClient->m_Snap.m_pGameData && !(pThis->m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+		if(pThis->m_pClient->m_Snap.m_pGameData && !pThis->m_pClient->IsWorldPaused())
 		{
 			if(pItem->m_Version < 2 || pItem->m_Synchronized)
 			{

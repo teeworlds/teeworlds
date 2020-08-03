@@ -269,11 +269,12 @@ public:
 	virtual const char *NetVersionHashReal() const;
 	virtual int ClientVersion() const;
 	void GetPlayerLabel(char* aBuf, int BufferSize, int ClientID, const char* ClientName);
-	bool IsXmas() const;
-	bool IsEaster() const;
 	void StartRendering();
 
+	bool IsXmas() const;
+	bool IsEaster() const;
 	int RacePrecision() const { return m_Snap.m_pGameDataRace ? m_Snap.m_pGameDataRace->m_Precision : 3; }
+	bool IsWorldPaused() const { return m_Snap.m_pGameData && (m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)); }
 
 	//
 	void DoEnterMessage(const char *pName, int ClientID, int Team);
