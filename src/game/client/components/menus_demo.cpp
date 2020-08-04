@@ -22,7 +22,8 @@
 
 CMenus::CColumn CMenus::ms_aDemoCols[] = {
 	{COL_DEMO_ICON,		-1, " ", -1, 0, 0, {0}, {0}, CUI::ALIGN_CENTER},
-	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, Localize("Name"), 0, 200.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, Localize("Name"), 0, 100.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_LENGTH,	CMenus::SORT_LENGTH, Localize("Length"), 1, 100.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
 	{COL_DEMO_DATE,		CMenus::SORT_DATE, Localize("Date"), 1, 160.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
 };
 
@@ -401,6 +402,18 @@ void CMenus::DemolistOnUpdate(bool Reset)
 	m_DemolistSelectedIsDir = m_DemolistSelectedIndex < 0 ? false : m_lDemos[m_DemolistSelectedIndex].m_IsDir;
 }
 
+bool CMenus::FetchHeader(CDemoItem *pItem)
+{
+	if(!pItem->m_InfosLoaded)
+	{
+		char aBuffer[IO_MAX_PATH_LENGTH];
+		str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aCurrentDemoFolder, pItem->m_aFilename);
+		pItem->m_Valid = DemoPlayer()->GetDemoInfo(Storage(), aBuffer, pItem->m_StorageType, &pItem->m_Info);
+		pItem->m_InfosLoaded = true;
+	}
+	return pItem->m_Valid;
+}
+
 void CMenus::RenderDemoList(CUIRect MainView)
 {
 	CUIRect BottomView;
@@ -425,25 +438,15 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	char aFooterLabel[128] = {0};
 	if(m_DemolistSelectedIndex >= 0)
 	{
-		CDemoItem *Item = &m_lDemos[m_DemolistSelectedIndex];
-		if(str_comp(Item->m_aFilename, "..") == 0)
+		CDemoItem *pItem = &m_lDemos[m_DemolistSelectedIndex];
+		if(str_comp(pItem->m_aFilename, "..") == 0)
 			str_copy(aFooterLabel, Localize("Parent Folder"), sizeof(aFooterLabel));
 		else if(m_DemolistSelectedIsDir)
 			str_copy(aFooterLabel, Localize("Folder"), sizeof(aFooterLabel));
+		else if(!FetchHeader(pItem))
+			str_copy(aFooterLabel, Localize("Invalid Demo"), sizeof(aFooterLabel));
 		else
-		{
-			if(!Item->m_InfosLoaded)
-			{
-				char aBuffer[IO_MAX_PATH_LENGTH];
-				str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aCurrentDemoFolder, Item->m_aFilename);
-				Item->m_Valid = DemoPlayer()->GetDemoInfo(Storage(), aBuffer, Item->m_StorageType, &Item->m_Info);
-				Item->m_InfosLoaded = true;
-			}
-			if(!Item->m_Valid)
-				str_copy(aFooterLabel, Localize("Invalid Demo"), sizeof(aFooterLabel));
-			else
-				str_copy(aFooterLabel, Localize("Demo details"), sizeof(aFooterLabel));
-		}
+			str_copy(aFooterLabel, Localize("Demo details"), sizeof(aFooterLabel));
 	}
 
 	static bool s_DemoDetailsActive = true;
@@ -511,7 +514,10 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				Config()->m_BrDemoSort = ms_aDemoCols[i].m_Sort;
 			}
 
-			DemolistPopulate();
+			// Don't rescan in order to keep fetched headers, just resort
+			m_lDemos.sort_range_by(CDemoComparator(
+				Config()->m_BrDemoSort, Config()->m_BrDemoSortOrder
+			));
 			DemolistOnUpdate(false);
 		}
 	}
@@ -545,24 +551,50 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 			DoIconColor(IMAGE_FILEICONS, DemoItem.m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon, IconColor);
 
-			if(Item.m_Selected)
+			for(int c = 0; c < NumCols; c++)
 			{
-				TextRender()->TextColor(CUI::ms_HighlightTextColor);
-				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
+				CUIRect Button;
+				Button.x = ms_aDemoCols[c].m_Rect.x + FileIcon.w + 10.0f;
+				Button.y = FileIcon.y;
+				Button.h = ms_aDemoCols[c].m_Rect.h;
+				Button.w = ms_aDemoCols[c].m_Rect.w;
+
+				int ID = ms_aDemoCols[c].m_ID;
+
+				if(Item.m_Selected)
+				{
+					TextRender()->TextColor(CUI::ms_HighlightTextColor);
+					TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
+				}
+				if(ID == COL_DEMO_NAME)
+				{
+					UI()->DoLabel(&Button, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+				}
+				else if(ID == COL_DEMO_LENGTH && !r.front().m_IsDir && r.front().m_InfosLoaded)
+				{
+					int Length = r.front().Length();
+					char aLength[32];
+					str_format(aLength, sizeof(aLength), "%d:%02d", Length/60, Length%60);
+					Button.VMargin(4.0f, &Button);
+					if(!Item.m_Selected)
+						TextRender()->TextColor(CUI::ms_TransparentTextColor);
+					UI()->DoLabel(&Button, aLength, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+				}
+				else if(ID == COL_DEMO_DATE)
+				{
+					if(!DemoItem.m_IsDir)
+					{
+						char aDate[64];
+						str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
+						if(!Item.m_Selected)
+							TextRender()->TextColor(CUI::ms_TransparentTextColor);
+						UI()->DoLabel(&Button, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+					}
+				}
+				TextRender()->TextColor(CUI::ms_DefaultTextColor);
+				if(Item.m_Selected)
+					TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 			}
-			Item.m_Rect.y += 2.0f;
-			UI()->DoLabel(&Item.m_Rect, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-			if(!DemoItem.m_IsDir)
-			{
-				char aDate[64];
-				str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
-				if(!Item.m_Selected)
-					TextRender()->TextColor(CUI::ms_TransparentTextColor);
-				UI()->DoLabel(&Item.m_Rect, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
-			}
-			TextRender()->TextColor(CUI::ms_DefaultTextColor);
-			if(Item.m_Selected)
-				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 		}
 	}
 	m_DemolistSelectedIndex = s_ListBox.DoEnd();
@@ -582,7 +614,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	}
 
 	// demo buttons
-	int NumButtons = m_DemolistSelectedIsDir ? 2 : 4;
+	int NumButtons = m_DemolistSelectedIsDir ? 3 : 5;
 	float Spacing = 3.0f;
 	float ButtonWidth = (BottomView.w/6.0f)-(Spacing*5.0)/6.0f;
 	float BackgroundWidth = ButtonWidth*(float)NumButtons+(float)(NumButtons-1)*Spacing;
@@ -629,6 +661,21 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				return;
 			}
 		}
+	}
+
+	BottomView.VSplitLeft(Spacing, 0, &BottomView);
+	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
+	static CButtonContainer s_FetchButton;
+	if(DoButton_Menu(&s_FetchButton, Localize("Fetch Info"), 0, &Button))
+	{
+		for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
+		{
+			if(str_comp(r.front().m_aFilename, ".."))
+				FetchHeader(&r.front());
+		}
+		m_lDemos.sort_range_by(CDemoComparator(
+			Config()->m_BrDemoSort, Config()->m_BrDemoSortOrder
+		));
 	}
 
 	BottomView.VSplitLeft(Spacing, 0, &BottomView);
@@ -705,8 +752,7 @@ float CMenus::RenderDemoDetails(CUIRect View)
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		int Length = ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[0]<<24)&0xFF000000) | ((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[1]<<16)&0xFF0000) |
-					((m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[2]<<8)&0xFF00) | (m_lDemos[m_DemolistSelectedIndex].m_Info.m_aLength[3]&0xFF);
+		int Length = m_lDemos[m_DemolistSelectedIndex].Length();
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%d:%02d", Length/60, Length%60);
 		DoInfoBox(&Button, Localize("Length"), aBuf);
