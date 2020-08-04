@@ -402,16 +402,16 @@ void CMenus::DemolistOnUpdate(bool Reset)
 	m_DemolistSelectedIsDir = m_DemolistSelectedIndex < 0 ? false : m_lDemos[m_DemolistSelectedIndex].m_IsDir;
 }
 
-bool CMenus::FetchHeader(CDemoItem &Item)
+bool CMenus::FetchHeader(CDemoItem *pItem)
 {
-	if(!Item.m_InfosLoaded)
+	if(!pItem->m_InfosLoaded)
 	{
 		char aBuffer[IO_MAX_PATH_LENGTH];
-		str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aCurrentDemoFolder, Item.m_aFilename);
-		Item.m_Valid = DemoPlayer()->GetDemoInfo(Storage(), aBuffer, Item.m_StorageType, &Item.m_Info);
-		Item.m_InfosLoaded = true;
+		str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aCurrentDemoFolder, pItem->m_aFilename);
+		pItem->m_Valid = DemoPlayer()->GetDemoInfo(Storage(), aBuffer, pItem->m_StorageType, &pItem->m_Info);
+		pItem->m_InfosLoaded = true;
 	}
-	return Item.m_Valid;
+	return pItem->m_Valid;
 }
 
 void CMenus::RenderDemoList(CUIRect MainView)
@@ -438,12 +438,12 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	char aFooterLabel[128] = {0};
 	if(m_DemolistSelectedIndex >= 0)
 	{
-		CDemoItem &Item = m_lDemos[m_DemolistSelectedIndex];
-		if(str_comp(Item.m_aFilename, "..") == 0)
+		CDemoItem *pItem = &m_lDemos[m_DemolistSelectedIndex];
+		if(str_comp(pItem->m_aFilename, "..") == 0)
 			str_copy(aFooterLabel, Localize("Parent Folder"), sizeof(aFooterLabel));
 		else if(m_DemolistSelectedIsDir)
 			str_copy(aFooterLabel, Localize("Folder"), sizeof(aFooterLabel));
-		else if(!FetchHeader(Item))
+		else if(!FetchHeader(pItem))
 			str_copy(aFooterLabel, Localize("Invalid Demo"), sizeof(aFooterLabel));
 		else
 			str_copy(aFooterLabel, Localize("Demo details"), sizeof(aFooterLabel));
@@ -645,7 +645,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 		{
 			if(str_comp(r.front().m_aFilename, ".."))
-				FetchHeader(r.front());
+				FetchHeader(&r.front());
 		}
 		m_lDemos.sort_range_by(CDemoComparator(
 			Config()->m_BrDemoSort, Config()->m_BrDemoSortOrder

@@ -773,7 +773,7 @@ private:
 	void UpdateMusicState();
 
 	// found in menus_demo.cpp
-	bool FetchHeader(CDemoItem &Item);
+	bool FetchHeader(CDemoItem *pItem);
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoList(CUIRect MainView);
 	float RenderDemoDetails(CUIRect View);
