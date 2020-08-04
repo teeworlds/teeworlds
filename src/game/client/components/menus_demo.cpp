@@ -551,24 +551,50 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 			DoIconColor(IMAGE_FILEICONS, DemoItem.m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_DEMO1, &FileIcon, IconColor);
 
-			if(Item.m_Selected)
+			for(int c = 0; c < NumCols; c++)
 			{
-				TextRender()->TextColor(CUI::ms_HighlightTextColor);
-				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
+				CUIRect Button;
+				Button.x = ms_aDemoCols[c].m_Rect.x + FileIcon.w + 10.0f;
+				Button.y = FileIcon.y;
+				Button.h = ms_aDemoCols[c].m_Rect.h;
+				Button.w = ms_aDemoCols[c].m_Rect.w;
+
+				int ID = ms_aDemoCols[c].m_ID;
+
+				if(Item.m_Selected)
+				{
+					TextRender()->TextColor(CUI::ms_HighlightTextColor);
+					TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
+				}
+				if(ID == COL_DEMO_NAME)
+				{
+					UI()->DoLabel(&Button, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+				}
+				else if(ID == COL_DEMO_LENGTH && !r.front().m_IsDir && r.front().m_InfosLoaded)
+				{
+					int Length = r.front().Length();
+					char aLength[32];
+					str_format(aLength, sizeof(aLength), "%d:%02d", Length/60, Length%60);
+					Button.VMargin(4.0f, &Button);
+					if(!Item.m_Selected)
+						TextRender()->TextColor(CUI::ms_TransparentTextColor);
+					UI()->DoLabel(&Button, aLength, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+				}
+				else if(ID == COL_DEMO_DATE)
+				{
+					if(!DemoItem.m_IsDir)
+					{
+						char aDate[64];
+						str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
+						if(!Item.m_Selected)
+							TextRender()->TextColor(CUI::ms_TransparentTextColor);
+						UI()->DoLabel(&Button, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+					}
+				}
+				TextRender()->TextColor(CUI::ms_DefaultTextColor);
+				if(Item.m_Selected)
+					TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 			}
-			Item.m_Rect.y += 2.0f;
-			UI()->DoLabel(&Item.m_Rect, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-			if(!DemoItem.m_IsDir)
-			{
-				char aDate[64];
-				str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
-				if(!Item.m_Selected)
-					TextRender()->TextColor(CUI::ms_TransparentTextColor);
-				UI()->DoLabel(&Item.m_Rect, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
-			}
-			TextRender()->TextColor(CUI::ms_DefaultTextColor);
-			if(Item.m_Selected)
-				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 		}
 	}
 	m_DemolistSelectedIndex = s_ListBox.DoEnd();
