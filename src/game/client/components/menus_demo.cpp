@@ -623,17 +623,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	RenderBackgroundShadow(&BottomView, true);
 
 	BottomView.HSplitTop(25.0f, &BottomView, 0);
-	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
-	static CButtonContainer s_RefreshButton;
-	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (Input()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
-	{
-		DemolistPopulate();
-		DemolistOnUpdate(false);
-	}
-
 	if(!m_DemolistSelectedIsDir)
 	{
-		BottomView.VSplitLeft(Spacing, 0, &BottomView);
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 		static CButtonContainer s_DeleteButton;
 		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &Button) || m_DeletePressed)
@@ -661,6 +652,15 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				return;
 			}
 		}
+		BottomView.VSplitLeft(Spacing, 0, &BottomView);
+	}
+
+	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
+	static CButtonContainer s_RefreshButton;
+	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (Input()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
+	{
+		DemolistPopulate();
+		DemolistOnUpdate(false);
 	}
 
 	BottomView.VSplitLeft(Spacing, 0, &BottomView);
