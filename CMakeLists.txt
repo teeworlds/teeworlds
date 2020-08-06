@@ -1148,6 +1148,9 @@ set(EXPECTED_DATA
   ui/menuimages/settings.png
   ui/no_skinpart.png
   ui/sound_icons.png
+  ui/themes/autumn.png
+  ui/themes/autumn_day.map
+  ui/themes/autumn_night.map
   ui/themes/heavens.png
   ui/themes/heavens_day.map
   ui/themes/heavens_night.map
