@@ -1265,16 +1265,23 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 				// select server if address changed and match found
 				bool IsSelected = m_aSelectedFilters[BrowserType] == FilterIndex && m_aSelectedServers[BrowserType] == ServerIndex;
-				if(m_AddressSelection&ADDR_SELECTION_CHANGE && !str_comp(pItem->m_aAddress, pAddress))
+				if(m_AddressSelection&ADDR_SELECTION_CHANGE)
 				{
-					if(!IsSelected)
+					if (!str_comp(pItem->m_aAddress, pAddress))
 					{
-						m_ShowServerDetails = true;
-						m_aSelectedFilters[BrowserType] = FilterIndex;
-						m_aSelectedServers[BrowserType] = ServerIndex;
-						IsSelected = true;
+						if(!IsSelected)
+						{
+							m_ShowServerDetails = true;
+							m_aSelectedFilters[BrowserType] = FilterIndex;
+							m_aSelectedServers[BrowserType] = ServerIndex;
+							IsSelected = true;
+						}
+						m_AddressSelection &= ~(ADDR_SELECTION_CHANGE|ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND);
 					}
-					m_AddressSelection &= ~(ADDR_SELECTION_CHANGE|ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND);
+					else
+					{
+						IsSelected = false;
+					}
 				}
 
 				float ItemHeight = HeaderHeight;
