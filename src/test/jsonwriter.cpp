@@ -4,6 +4,12 @@
 #include <engine/shared/jsonwriter.h>
 #include <limits.h>
 
+#if defined(CONF_FAMILY_WINDOWS)
+	#define LINE_ENDING "\r\n"
+#else
+	#define LINE_ENDING "\n"
+#endif
+
 class JsonWriter : public ::testing::Test
 {
 protected:
@@ -54,14 +60,14 @@ TEST_F(JsonWriter, EmptyObject)
 {
 	m_pJson->BeginObject();
 	m_pJson->EndObject();
-	Expect("{\n}\n");
+	Expect("{" LINE_ENDING "}" LINE_ENDING);
 }
 
 TEST_F(JsonWriter, EmptyArray)
 {
 	m_pJson->BeginArray();
 	m_pJson->EndArray();
-	Expect("[\n]\n");
+	Expect("[" LINE_ENDING "]" LINE_ENDING);
 }
 
 TEST_F(JsonWriter, SpecialCharacters)
@@ -73,32 +79,32 @@ TEST_F(JsonWriter, SpecialCharacters)
 	m_pJson->EndArray();
 	m_pJson->EndObject();
 	Expect(
-		"{\n"
-		"\t\"\\u0001\\\"'\\r\\n\\t\": [\n"
-		"\t\t\" \\\"'abc\\u0001\\n\"\n"
-		"\t]\n"
-		"}\n"
+		"{" LINE_ENDING
+		"\t\"\\u0001\\\"'\\r\\n\\t\": [" LINE_ENDING
+		"\t\t\" \\\"'abc\\u0001\\n\"" LINE_ENDING
+		"\t]" LINE_ENDING
+		"}" LINE_ENDING
 	);
 }
 
 TEST_F(JsonWriter, HelloWorld)
 {
 	m_pJson->WriteStrValue("hello world");
-	Expect("\"hello world\"\n");
+	Expect("\"hello world\"" LINE_ENDING);
 }
 
 TEST_F(JsonWriter, Unicode)
 {
 	m_pJson->WriteStrValue("Heizölrückstoßabdämpfung");
-	Expect("\"Heizölrückstoßabdämpfung\"\n");
+	Expect("\"Heizölrückstoßabdämpfung\"" LINE_ENDING);
 }
 
-TEST_F(JsonWriter, True) { m_pJson->WriteBoolValue(true); Expect("true\n"); }
-TEST_F(JsonWriter, False) { m_pJson->WriteBoolValue(false); Expect("false\n"); }
-TEST_F(JsonWriter, Null) { m_pJson->WriteNullValue(); Expect("null\n"); }
-TEST_F(JsonWriter, EmptyString) { m_pJson->WriteStrValue(""); Expect("\"\"\n"); }
-TEST_F(JsonWriter, Zero) { m_pJson->WriteIntValue(0); Expect("0\n"); }
-TEST_F(JsonWriter, One) { m_pJson->WriteIntValue(1); Expect("1\n"); }
-TEST_F(JsonWriter, MinusOne) { m_pJson->WriteIntValue(-1); Expect("-1\n"); }
-TEST_F(JsonWriter, Large) { m_pJson->WriteIntValue(INT_MAX); Expect("2147483647\n"); }
-TEST_F(JsonWriter, Small) { m_pJson->WriteIntValue(INT_MIN); Expect("-2147483648\n"); }
+TEST_F(JsonWriter, True) { m_pJson->WriteBoolValue(true); Expect("true" LINE_ENDING); }
+TEST_F(JsonWriter, False) { m_pJson->WriteBoolValue(false); Expect("false" LINE_ENDING); }
+TEST_F(JsonWriter, Null) { m_pJson->WriteNullValue(); Expect("null" LINE_ENDING); }
+TEST_F(JsonWriter, EmptyString) { m_pJson->WriteStrValue(""); Expect("\"\"" LINE_ENDING); }
+TEST_F(JsonWriter, Zero) { m_pJson->WriteIntValue(0); Expect("0" LINE_ENDING); }
+TEST_F(JsonWriter, One) { m_pJson->WriteIntValue(1); Expect("1" LINE_ENDING); }
+TEST_F(JsonWriter, MinusOne) { m_pJson->WriteIntValue(-1); Expect("-1" LINE_ENDING); }
+TEST_F(JsonWriter, Large) { m_pJson->WriteIntValue(INT_MAX); Expect("2147483647" LINE_ENDING); }
+TEST_F(JsonWriter, Small) { m_pJson->WriteIntValue(INT_MIN); Expect("-2147483648" LINE_ENDING); }
