@@ -1276,26 +1276,34 @@ void CGameClient::OnNewSnapshot()
 			{
 				if(Item.m_ID < MAX_CLIENTS)
 				{
+					CSnapState::CCharacterInfo *pCharInfo = &m_Snap.m_aCharacters[Item.m_ID];
 					const void *pOld = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, Item.m_ID);
-					m_Snap.m_aCharacters[Item.m_ID].m_Cur = *((const CNetObj_Character *)pData);
+					pCharInfo->m_Cur = *((const CNetObj_Character *)pData);
 
 					// clamp ammo count for non ninja weapon
-					if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Weapon != WEAPON_NINJA)
-						m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount = clamp(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount, 0, 10);
+					if(pCharInfo->m_Cur.m_Weapon != WEAPON_NINJA)
+						pCharInfo->m_Cur.m_AmmoCount = clamp(pCharInfo->m_Cur.m_AmmoCount, 0, 10);
 
 					if(pOld)
 					{
-						m_Snap.m_aCharacters[Item.m_ID].m_Active = true;
-						m_Snap.m_aCharacters[Item.m_ID].m_Prev = *((const CNetObj_Character *)pOld);
+						pCharInfo->m_Active = true;
+						pCharInfo->m_Prev = *((const CNetObj_Character *)pOld);
 
-						if(m_Snap.m_aCharacters[Item.m_ID].m_Prev.m_Tick)
-							EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Prev, Client()->PrevGameTick());
-						if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick)
-							EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick());
+						if(pCharInfo->m_Prev.m_Tick)
+						{
+							// limit evolving to 3 seconds
+							int EvolveTick = min(pCharInfo->m_Prev.m_Tick + Client()->GameTickSpeed()*3, Client()->PrevGameTick());
+							EvolveCharacter(&pCharInfo->m_Prev, EvolveTick);
+						}
+						if(pCharInfo->m_Cur.m_Tick)
+						{
+							int EvolveTick = min(pCharInfo->m_Cur.m_Tick + Client()->GameTickSpeed()*3, Client()->GameTick());
+							EvolveCharacter(&pCharInfo->m_Cur, EvolveTick);
+						}
 					}
 
 					if(Item.m_ID != m_LocalClientID || Client()->State() == IClient::STATE_DEMOPLAYBACK)
-						ProcessTriggeredEvents(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_TriggeredEvents, vec2(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_X, m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Y));
+						ProcessTriggeredEvents(pCharInfo->m_Cur.m_TriggeredEvents, vec2(pCharInfo->m_Cur.m_X, pCharInfo->m_Cur.m_Y));
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_SPECTATORINFO)
