@@ -1289,17 +1289,24 @@ void CGameClient::OnNewSnapshot()
 						pCharInfo->m_Active = true;
 						pCharInfo->m_Prev = *((const CNetObj_Character *)pOld);
 
+						// limit evolving to 3 seconds
+						int EvolvePrevTick = min(pCharInfo->m_Prev.m_Tick + Client()->GameTickSpeed()*3, Client()->PrevGameTick());
+						int EvolveCurTick = min(pCharInfo->m_Cur.m_Tick + Client()->GameTickSpeed()*3, Client()->GameTick());
+
+						// reuse the evolved char
+						if(m_aClients[Item.m_ID].m_Evolved.m_Tick == EvolvePrevTick)
+						{
+							pCharInfo->m_Prev = m_aClients[Item.m_ID].m_Evolved;
+							if(mem_comp(pData, pOld, sizeof(CNetObj_Character)) == 0)
+								pCharInfo->m_Cur = m_aClients[Item.m_ID].m_Evolved;
+						}
+
 						if(pCharInfo->m_Prev.m_Tick)
-						{
-							// limit evolving to 3 seconds
-							int EvolveTick = min(pCharInfo->m_Prev.m_Tick + Client()->GameTickSpeed()*3, Client()->PrevGameTick());
-							EvolveCharacter(&pCharInfo->m_Prev, EvolveTick);
-						}
+							EvolveCharacter(&pCharInfo->m_Prev, EvolvePrevTick);
 						if(pCharInfo->m_Cur.m_Tick)
-						{
-							int EvolveTick = min(pCharInfo->m_Cur.m_Tick + Client()->GameTickSpeed()*3, Client()->GameTick());
-							EvolveCharacter(&pCharInfo->m_Cur, EvolveTick);
-						}
+							EvolveCharacter(&pCharInfo->m_Cur, EvolveCurTick);
+						
+						m_aClients[Item.m_ID].m_Evolved = m_Snap.m_aCharacters[Item.m_ID].m_Cur;
 					}
 
 					if(Item.m_ID != m_LocalClientID || Client()->State() == IClient::STATE_DEMOPLAYBACK)
@@ -1748,6 +1755,7 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient, int ClientID)
 	m_Active = false;
 	m_ChatIgnore = false;
 	m_Friend = false;
+	m_Evolved.m_Tick = -1;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		m_SkinPartIDs[p] = 0;

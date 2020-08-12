@@ -194,6 +194,8 @@ public:
 		CTeeRenderInfo m_SkinInfo; // this is what the server reports
 		CTeeRenderInfo m_RenderInfo; // this is what we use
 
+		CNetObj_Character m_Evolved;
+
 		float m_Angle;
 		bool m_Active;
 		bool m_ChatIgnore;
