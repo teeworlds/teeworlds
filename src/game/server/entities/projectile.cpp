@@ -99,10 +99,10 @@ void CProjectile::TickPaused()
 
 void CProjectile::FillInfo(CNetObj_Projectile *pProj)
 {
-	pProj->m_X = (int)m_Pos.x;
-	pProj->m_Y = (int)m_Pos.y;
-	pProj->m_VelX = (int)(m_Direction.x*100.0f);
-	pProj->m_VelY = (int)(m_Direction.y*100.0f);
+	pProj->m_X = round_to_int(m_Pos.x);
+	pProj->m_Y = round_to_int(m_Pos.y);
+	pProj->m_VelX = round_to_int(m_Direction.x*100.0f);
+	pProj->m_VelY = round_to_int(m_Direction.y*100.0f);
 	pProj->m_StartTick = m_StartTick;
 	pProj->m_Type = m_Type;
 }
