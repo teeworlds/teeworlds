@@ -48,13 +48,13 @@ void CEmoticon::OnMessage(int MsgType, void *pRawMsg)
 {
 }
 
-bool CEmoticon::OnMouseMove(float x, float y)
+bool CEmoticon::OnCursorMove(float x, float y, int CursorType)
 {
 	if(!m_Active)
 		return false;
 
-	UI()->ConvertMouseMove(&x, &y);
-	m_SelectorMouse += vec2(x,y);
+	UI()->ConvertCursorMove(&x, &y, CursorType);
+	m_SelectorMouse += vec2(x, y);
 	return true;
 }
 

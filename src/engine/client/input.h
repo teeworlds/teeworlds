@@ -43,7 +43,8 @@ public:
 	CInput();
 	~CInput();
 
-	virtual void Init();
+	void Init();
+	int Update();
 
 	bool KeyIsPressed(int Key) const { return KeyState(Key); }
 	bool KeyPress(int Key, bool CheckCounter) const { return CheckCounter ? (m_aInputCount[Key] == m_InputCounter) : m_aInputCount[Key]; }
@@ -54,15 +55,15 @@ public:
 	const char* GetJoystickName();
 	int GetJoystickNumAxes();
 	float GetJoystickAxisValue(int Axis);
+	bool JoystickRelative(float *pX, float *pY);
 
-	virtual void MouseRelative(float *x, float *y);
-	virtual void MouseModeAbsolute();
-	virtual void MouseModeRelative();
-	virtual int MouseDoubleClick();
-	virtual const char *GetClipboardText();
-	virtual void SetClipboardText(const char *pText);
+	void MouseModeRelative();
+	void MouseModeAbsolute();
+	int MouseDoubleClick();
+	bool MouseRelative(float *pX, float *pY);
 
-	virtual int Update();
+	const char *GetClipboardText();
+	void SetClipboardText(const char *pText);
 };
 
 #endif

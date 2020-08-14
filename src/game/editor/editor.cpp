@@ -4641,12 +4641,13 @@ void CEditor::UpdateAndRender()
 	ms_pUiGotContext = 0;
 	UI()->StartCheck();
 
-	// handle mouse movement
-	float mx, my, Mwx, Mwy, Mdx, Mdy;
-	float rx = 0.0f, ry = 0.0f;
+	// handle cursor movement
 	{
-		Input()->MouseRelative(&rx, &ry);
-		UI()->ConvertMouseMove(&rx, &ry);
+		float mx, my, Mwx, Mwy, Mdx, Mdy;
+		float rx = 0.0f, ry = 0.0f;
+		int CursorType = Input()->CursorRelative(&rx, &ry);
+		UI()->ConvertCursorMove(&rx, &ry, CursorType);
+
 		m_MouseDeltaX = rx;
 		m_MouseDeltaY = ry;
 
