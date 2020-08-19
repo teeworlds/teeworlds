@@ -95,8 +95,10 @@ TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 	if(pAddr->type & NETTYPE_LINK_BROADCAST)
 		return GenerateToken(&NullAddr, Seed);
 
-	Addr = *pAddr;
-	Addr.port = 0;
+	mem_zero(&Addr, sizeof(NETADDR));
+	mem_copy(Addr.ip, pAddr->ip, sizeof(Addr.ip));
+	Addr.type = pAddr->type;
+
 	mem_copy(aBuf, &Addr, sizeof(NETADDR));
 	mem_copy(aBuf + sizeof(NETADDR), &Seed, sizeof(int64));
 
