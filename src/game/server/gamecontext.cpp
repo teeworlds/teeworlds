@@ -1217,10 +1217,11 @@ void CGameContext::ConChangeMap(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConRestart(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	if(pResult->NumArguments())
-		pSelf->m_pController->DoWarmup(clamp(pResult->GetInteger(0), -1, 1000));
+	int Seconds = pResult->NumArguments() ? clamp(pResult->GetInteger(0), -1, 1000) : 0;
+	if(Seconds < 0)
+		pSelf->m_pController->AbortWarmup();
 	else
-		pSelf->m_pController->DoWarmup(0);
+		pSelf->m_pController->DoWarmup(Seconds);
 }
 
 void CGameContext::ConSay(IConsole::IResult *pResult, void *pUserData)
@@ -1521,7 +1522,7 @@ void CGameContext::OnConsoleInit()
 
 	Console()->Register("pause", "?i[seconds]", CFGFLAG_SERVER|CFGFLAG_STORE, ConPause, this, "Pause/unpause game");
 	Console()->Register("change_map", "?r[map]", CFGFLAG_SERVER|CFGFLAG_STORE, ConChangeMap, this, "Change map");
-	Console()->Register("restart", "?i[seconds]", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "Restart in x seconds (0 = abort)");
+	Console()->Register("restart", "?i[seconds]", CFGFLAG_SERVER|CFGFLAG_STORE, ConRestart, this, "Restart in x seconds (-1 = abort)");
 	Console()->Register("say", "r[text]", CFGFLAG_SERVER, ConSay, this, "Say in chat");
 	Console()->Register("broadcast", "r[text]", CFGFLAG_SERVER, ConBroadcast, this, "Broadcast message");
 	Console()->Register("set_team", "i[id] i[team] ?i[delay]", CFGFLAG_SERVER, ConSetTeam, this, "Set team of player to team");
