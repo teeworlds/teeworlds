@@ -281,6 +281,9 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			MainView.HSplitTop(ButtonHeight, &Row, &MainView);
 			s_ScrollRegion.AddRect(Row);
 
+			if(s_ScrollRegion.IsRectClipped(Row))
+				continue;
+
 			if(Count++ % 2 == 0)
 				RenderTools()->DrawUIRect(&Row, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
