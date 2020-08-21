@@ -32,7 +32,7 @@ public:
 	CSpectator();
 
 	virtual void OnConsoleInit();
-	virtual bool OnMouseMove(float x, float y);
+	virtual bool OnCursorMove(float x, float y, int CursorType);
 	virtual void OnRender();
 	virtual void OnRelease();
 	virtual void OnReset();

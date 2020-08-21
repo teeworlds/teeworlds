@@ -420,14 +420,14 @@ void CGameClient::OnInit()
 
 void CGameClient::OnUpdate()
 {
-	// handle mouse movement
+	// handle mouse and joystick movement, prefer mouse movement
 	float x = 0.0f, y = 0.0f;
-	Input()->MouseRelative(&x, &y);
-	if(x != 0.0f || y != 0.0f)
+	int CursorType = Input()->CursorRelative(&x, &y);
+	if(CursorType != IInput::CURSOR_NONE)
 	{
 		for(int h = 0; h < m_Input.m_Num; h++)
 		{
-			if(m_Input.m_paComponents[h]->OnMouseMove(x, y))
+			if(m_Input.m_paComponents[h]->OnCursorMove(x, y, CursorType))
 				break;
 		}
 	}

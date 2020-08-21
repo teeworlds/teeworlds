@@ -168,12 +168,12 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 		{
 			NumOptions++; // joystick selection
 		}
-		NumOptions += 2; // sensitivity & tolerance
+		NumOptions += 3; // ingame sens, ui sens, tolerance
 		NumOptions += m_pClient->Input()->GetJoystickNumAxes(); // axis selection
 	}
-	float ButtonHeight = 20.0f;
-	float Spacing = 2.0f;
-	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing+Spacing;
+	const float ButtonHeight = 20.0f;
+	const float Spacing = 2.0f;
+	const float BackgroundHeight = NumOptions*(ButtonHeight+Spacing)+Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
@@ -206,7 +206,11 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 
 			View.HSplitTop(Spacing, 0, &View);
 			View.HSplitTop(ButtonHeight, &Button, &View);
-			DoScrollbarOption(&Config()->m_JoystickSens, &Config()->m_JoystickSens, &Button, Localize("Joystick sens."), 1, 500, &LogarithmicScrollbarScale);
+			DoScrollbarOption(&Config()->m_JoystickSens, &Config()->m_JoystickSens, &Button, Localize("Ingame joystick sens."), 1, 500, &LogarithmicScrollbarScale);
+
+			View.HSplitTop(Spacing, 0, &View);
+			View.HSplitTop(ButtonHeight, &Button, &View);
+			DoScrollbarOption(&Config()->m_UiJoystickSens, &Config()->m_UiJoystickSens, &Button, Localize("Menu/Editor joystick sens."), 1, 500, &LogarithmicScrollbarScale);
 
 			View.HSplitTop(Spacing, 0, &View);
 			View.HSplitTop(ButtonHeight, &Button, &View);
