@@ -703,10 +703,10 @@ private:
 		SIDEBAR_TAB_FRIEND,
 		NUM_SIDEBAR_TABS,
 
-		ADDR_SELECTION_CHANGE = 1,
-		ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND = 2,
-		ADDR_SELECTION_REVEAL = 4,
-		ADDR_SELECTION_UPDATE_ADDRESS = 8,
+		ADDR_SELECTION_CHANGE = 1, // select the server based on server address input
+		ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND = 2, // clear selection if ADDR_SELECTION_CHANGE did not match any server
+		ADDR_SELECTION_REVEAL = 4, // scroll to the selected server
+		ADDR_SELECTION_UPDATE_ADDRESS = 8, // update address input to the selected server's address
 	};
 	int m_SidebarTab;
 	bool m_SidebarActive;
