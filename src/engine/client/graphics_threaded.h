@@ -84,7 +84,6 @@ public:
 		// misc
 		CMD_VSYNC,
 		CMD_SCREENSHOT,
-		CMD_VIDEOMODES,
 
 	};
 
@@ -188,16 +187,6 @@ public:
 		CScreenshotCommand() : CCommand(CMD_SCREENSHOT) {}
 		int m_X, m_Y, m_W, m_H; // specify rectangle size, -1 if fullscreen (width/height)
 		CImageInfo *m_pImage; // processor will fill this out, the one who adds this command must free the data as well
-	};
-
-	struct CVideoModesCommand : public CCommand
-	{
-		CVideoModesCommand() : CCommand(CMD_VIDEOMODES) {}
-
-		CVideoMode *m_pModes; // processor will fill this in
-		int m_MaxModes; // maximum of modes the processor can write to the m_pModes
-		int *m_pNumModes; // processor will write to this pointer
-		int m_Screen;
 	};
 
 	struct CSwapCommand : public CCommand
@@ -328,6 +317,7 @@ public:
 	virtual bool Fullscreen(bool State) = 0;
 	virtual void SetWindowBordered(bool State) = 0;
 	virtual bool SetWindowScreen(int Index) = 0;
+	virtual int GetVideoModes(CVideoMode *pModes, int MaxModes, int Screen) = 0;
 	virtual bool GetDesktopResolution(int Index, int *pDesktopWidth, int* pDesktopHeight) = 0;
 	virtual int GetWindowScreen() = 0;
 	virtual int WindowActive() = 0;
