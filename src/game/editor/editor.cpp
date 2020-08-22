@@ -3755,7 +3755,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 				const char *paTypeName[] = {
 					"N", "L", "S", "F", "M", "B"
 					};
-				const char *pTypeName = "Invalid";
+				const char *pTypeName = "!?";
 				if(0 <= pEnvelope->m_lPoints[i].m_Curvetype
 						&& pEnvelope->m_lPoints[i].m_Curvetype < (int)(sizeof(paTypeName)/sizeof(const char *)))
 					pTypeName = paTypeName[pEnvelope->m_lPoints[i].m_Curvetype];
