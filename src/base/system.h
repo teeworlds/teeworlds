@@ -539,12 +539,30 @@ int time_timestamp();
 
 /*
 	Function: time_houroftheday
-		Retrives the hours since midnight (0..23)
+		Retrieves the hours since midnight (0..23)
 
 	Returns:
 		The current hour of the day
 */
 int time_houroftheday();
+
+
+enum
+{
+	SEASON_SPRING = 0,
+	SEASON_SUMMER,
+	SEASON_AUTUMN,
+	SEASON_WINTER
+};
+
+/*
+	Function: time_season
+		Retrieves the current season of the year.
+
+	Returns:
+		one of the SEASON_* enum literals
+*/
+int time_season();
 
 /*
 	Function: time_isxmasday

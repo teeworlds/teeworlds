@@ -28,6 +28,8 @@ class CMapLayers : public CComponent
 	void LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoints);
 	void LoadBackgroundMap();
 
+	void PlaceEasterEggs(const CLayers *pLayers);
+
 public:
 	enum
 	{
