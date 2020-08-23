@@ -583,7 +583,8 @@ int CMenus::ThemeScan(const char *pName, int IsDir, int DirType, void *pUser)
 	else
 		str_copy(aThemeName, aFullName, sizeof(aThemeName));
 
-	if(str_comp(aThemeName, "none") == 0) // "none" is reserved, disallowed for maps
+	// "none" and "auto" are reserved, disallowed for maps
+	if(str_comp(aThemeName, "none") == 0 || str_comp(aThemeName, "auto") == 0)
 		return 0;
 
 	// try to edit an existing theme
@@ -754,7 +755,6 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 
 void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 {
-	static int s_SelectedTheme = -1;
 	static CListBox s_ListBox;
 
 	if(m_lThemes.size() == 0) // not loaded yet
@@ -762,85 +762,87 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 		if(!Config()->m_ClShowMenuMap)
 			str_copy(Config()->m_ClMenuMap, "", sizeof(Config()->m_ClMenuMap)); // cl_menu_map otherwise resets to default on loading
 		m_lThemes.add(CTheme("", false, false)); // no theme
+		m_lThemes.add(CTheme("auto", false, false)); // auto theme
 		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/themes", ThemeScan, (CMenus*)this);
 		Storage()->ListDirectory(IStorage::TYPE_ALL, "ui/themes", ThemeIconScan, (CMenus*)this);
-		for(int i = 0; i < m_lThemes.size(); i++)
-			if(str_comp(m_lThemes[i].m_Name, Config()->m_ClMenuMap) == 0)
-			{
-				s_SelectedTheme = i;
-				break;
-			}
 	}
 
-	int OldSelected = s_SelectedTheme;
+	int SelectedTheme = -1;
+	for(int i = 0; i < m_lThemes.size(); i++)
+		if(str_comp(m_lThemes[i].m_Name, Config()->m_ClMenuMap) == 0)
+		{
+			SelectedTheme = i;
+			break;
+		}
+	const int OldSelected = SelectedTheme;
 
 	if(Header)
 		s_ListBox.DoHeader(&MainView, Localize("Theme"), GetListHeaderHeight());
+
 	bool IsActive = m_ActiveListBox == ACTLB_THEME;
-	s_ListBox.DoStart(20.0f, m_lThemes.size(), 1, s_SelectedTheme, Header?0:&MainView, Header, &IsActive);
+	s_ListBox.DoStart(20.0f, m_lThemes.size(), 1, SelectedTheme, Header?0:&MainView, Header, &IsActive);
 
 	for(sorted_array<CTheme>::range r = m_lThemes.all(); !r.empty(); r.pop_front())
 	{
-		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), s_SelectedTheme != -1 && !str_comp(m_lThemes[s_SelectedTheme].m_Name, r.front().m_Name), &IsActive);
+		const CTheme& Theme = r.front();
+		CListboxItem Item = s_ListBox.DoNextItem(&Theme, SelectedTheme == (&Theme-m_lThemes.base_ptr()), &IsActive);
 		if(IsActive)
 			m_ActiveListBox = ACTLB_THEME;
 
-		if(Item.m_Visible)
+		if(!Item.m_Visible)
+			continue;
+
+		CUIRect Icon;
+		Item.m_Rect.VSplitLeft(Item.m_Rect.h*2.0f, &Icon, &Item.m_Rect);
+
+		// draw icon if it exists
+		if(Theme.m_IconTexture.IsValid())
 		{
-			CUIRect Rect;
-			Item.m_Rect.VSplitLeft(Item.m_Rect.h*2.0f, &Rect, &Item.m_Rect);
-			Rect.VMargin(6.0f, &Rect);
-			Rect.HMargin(3.0f, &Rect);
-			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
+			Icon.VMargin(6.0f, &Icon);
+			Icon.HMargin(3.0f, &Icon);
+			Graphics()->TextureSet(Theme.m_IconTexture);
+			Graphics()->QuadsBegin();
+			Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+			IGraphics::CQuadItem QuadItem(Icon.x, Icon.y, Icon.w, Icon.h);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+		}
 
-			// draw icon if it exists
-			if(r.front().m_IconTexture.IsValid())
-			{
-				Graphics()->TextureSet(r.front().m_IconTexture);
-				Graphics()->QuadsBegin();
-				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-				IGraphics::CQuadItem QuadItem(Rect.x, Rect.y, Rect.w, Rect.h);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-				Graphics()->QuadsEnd();
-			}
+		char aName[128];
+		if(!Theme.m_Name[0])
+			str_copy(aName, "(none)", sizeof(aName));
+		else if(str_comp(Theme.m_Name, "auto") == 0)
+			str_copy(aName, "(automatic)", sizeof(aName));
+		else if(Theme.m_HasDay && Theme.m_HasNight)
+			str_format(aName, sizeof(aName), "%s", Theme.m_Name.cstr());
+		else if(Theme.m_HasDay && !Theme.m_HasNight)
+			str_format(aName, sizeof(aName), "%s (day)", Theme.m_Name.cstr());
+		else if(!Theme.m_HasDay && Theme.m_HasNight)
+			str_format(aName, sizeof(aName), "%s (night)", Theme.m_Name.cstr());
+		else // generic
+			str_format(aName, sizeof(aName), "%s", Theme.m_Name.cstr());
 
-			char aName[128];
-			if(!r.front().m_Name[0])
-				str_copy(aName, "(none)", sizeof(aName));
-			else if(r.front().m_HasDay && r.front().m_HasNight)
-				str_format(aName, sizeof(aName), "%s", r.front().m_Name.cstr());
-			else if(r.front().m_HasDay && !r.front().m_HasNight)
-				str_format(aName, sizeof(aName), "%s (day)", r.front().m_Name.cstr());
-			else if(!r.front().m_HasDay && r.front().m_HasNight)
-				str_format(aName, sizeof(aName), "%s (night)", r.front().m_Name.cstr());
-			else // generic
-				str_format(aName, sizeof(aName), "%s", r.front().m_Name.cstr());
-
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_HighlightTextColor);
-				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
-			}
-			Item.m_Rect.y += 2.0f;
-			UI()->DoLabel(&Item.m_Rect, aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_DefaultTextColor);
-				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
-			}
+		if(Item.m_Selected)
+		{
+			TextRender()->TextColor(CUI::ms_HighlightTextColor);
+			TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
+		}
+		Item.m_Rect.y += 2.0f;
+		UI()->DoLabel(&Item.m_Rect, aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+		if(Item.m_Selected)
+		{
+			TextRender()->TextColor(CUI::ms_DefaultTextColor);
+			TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 		}
 	}
 
-	s_SelectedTheme = s_ListBox.DoEnd();
+	SelectedTheme = s_ListBox.DoEnd();
 
-	if(OldSelected != s_SelectedTheme)
+	if(OldSelected != SelectedTheme)
 	{
 		m_ActiveListBox = ACTLB_THEME;
-		str_copy(Config()->m_ClMenuMap, m_lThemes[s_SelectedTheme].m_Name, sizeof(Config()->m_ClMenuMap));
-		if(m_lThemes[s_SelectedTheme].m_Name[0])
-			Config()->m_ClShowMenuMap = 1;
-		else
-			Config()->m_ClShowMenuMap = 0;
+		str_copy(Config()->m_ClMenuMap, m_lThemes[SelectedTheme].m_Name, sizeof(Config()->m_ClMenuMap));
+		Config()->m_ClShowMenuMap = m_lThemes[SelectedTheme].m_Name[0] ? 1 : 0;
 		m_pClient->m_pMapLayersBackGround->BackgroundMapUpdate();
 	}
 }

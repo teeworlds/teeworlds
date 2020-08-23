@@ -1871,6 +1871,36 @@ int time_houroftheday()
 	return time_info->tm_hour;
 }
 
+int time_season()
+{
+	time_t time_data;
+	struct tm *time_info;
+
+	time(&time_data);
+	time_info = localtime(&time_data);
+
+	switch(time_info->tm_mon)
+	{
+		case 11:
+		case 0:
+		case 1:
+			return SEASON_WINTER;
+		case 2:
+		case 3:
+		case 4:
+			return SEASON_SPRING;
+		case 5:
+		case 6:
+		case 7:
+			return SEASON_SUMMER;
+		case 8:
+		case 9:
+		case 10:
+			return SEASON_AUTUMN;
+	}
+	return SEASON_SPRING; // should never happen
+}
+
 int time_isxmasday()
 {
 	time_t time_data;
