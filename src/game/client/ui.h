@@ -130,8 +130,8 @@ public:
 	int DoButtonLogic(const void *pID, const CUIRect *pRect);
 	bool DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
 
-	// TODO: Refactor: Remove this?
-	void DoLabel(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
+	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
+	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor);
 };
 
 
