@@ -4,6 +4,7 @@
 #define ENGINE_TEXTRENDER_H
 #include "kernel.h"
 #include <base/vmath.h>
+#include <engine/storage.h>
 #include <engine/graphics.h>
 
 enum
@@ -39,7 +40,8 @@ class ITextRender : public IInterface
 public:
 	virtual void SetCursor(CTextCursor *pCursor, float x, float y, float FontSize, int Flags) = 0;
 
-	virtual int LoadFontCollection(const char *pFilename) = 0;
+	virtual void LoadFonts(IStorage *pStorage) = 0;
+	virtual void SetFontLanguageVariant(const char *pLanguageFile) = 0;
 
 	//
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length) = 0;
@@ -66,6 +68,7 @@ class IEngineTextRender : public ITextRender
 	MACRO_INTERFACE("enginetextrender", 0)
 public:
 	virtual void Init() = 0;
+	virtual void Shutdown() = 0;
 };
 
 extern IEngineTextRender *CreateEngineTextRender();

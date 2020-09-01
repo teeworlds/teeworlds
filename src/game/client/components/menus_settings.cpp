@@ -767,6 +767,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 	{
 		m_ActiveListBox = ACTLB_LANG;
 		str_copy(Config()->m_ClLanguagefile, s_Languages[s_SelectedLanguage].m_FileName, sizeof(Config()->m_ClLanguagefile));
+		TextRender()->SetFontLanguageVariant(Config()->m_ClLanguagefile);
 		g_Localization.Load(s_Languages[s_SelectedLanguage].m_FileName, Storage(), Console());
 	}
 }

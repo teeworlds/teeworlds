@@ -2,12 +2,9 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
 #include <base/math.h>
+#include <engine/external/json-parser/json.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
-
-#ifdef CONF_FAMILY_WINDOWS
-	#include <windows.h>
-#endif
 
 // ft2 texture
 #include <ft2build.h>
@@ -82,6 +79,14 @@ class CFont
 	}
 
 public:
+	enum FaceType
+	{
+		REPLACEMENT = -1,
+		DEFAULT = 0,
+		VARIANT,
+		FALLBACK,
+	};
+
 	CFontSizeData m_aSizes[NUM_FONT_SIZES];
 	CFont()
 	{
@@ -105,15 +110,27 @@ public:
 		return m_DefaultFace;
 	}
 
-	FT_Face GetCharFace(int Chr)
+	FaceType FindCharFace(int Chr, FT_Face *Face)
 	{
-		if (!m_DefaultFace || FT_Get_Char_Index(m_DefaultFace, (FT_ULong)Chr)) return m_DefaultFace;
-		if (m_VariantFace && FT_Get_Char_Index(m_VariantFace, (FT_ULong)Chr)) return m_VariantFace;
+		if (!m_DefaultFace || FT_Get_Char_Index(m_DefaultFace, (FT_ULong)Chr)) 
+		{
+			*Face = m_DefaultFace;
+			return DEFAULT;
+		}
+		if (m_VariantFace && FT_Get_Char_Index(m_VariantFace, (FT_ULong)Chr)) 
+		{
+			*Face = m_VariantFace;
+			return VARIANT;
+		}
 		for (int i = 0; i < m_NumFallbackFaces; ++i) {
 			if (m_aFallbackFaces[i] && FT_Get_Char_Index(m_aFallbackFaces[i], (FT_ULong)Chr))
-				return m_aFallbackFaces[i];
+			{
+				*Face = m_aFallbackFaces[i];
+				return FALLBACK;
+			}
 		}
-		return m_DefaultFace;
+		*Face = m_DefaultFace;
+		return REPLACEMENT;
 	}
 
 	int AddFace(FT_Face Face)
@@ -167,6 +184,12 @@ struct CQuadChar
 	IGraphics::CQuadItem m_QuadItem;
 };
 
+struct CFontLanguageVariant
+{
+	char m_aLanguageFile[128];
+	char m_aFamilyName[128];
+};
+
 class CTextRender : public IEngineTextRender
 {
 	IGraphics *m_pGraphics;
@@ -199,6 +222,9 @@ class CTextRender : public IEngineTextRender
 	//int m_FontTextureFormat;
 
 	CFont *m_pDefaultFont;
+	int m_NumVariants;
+	int m_CurrentVairant;
+	CFontLanguageVariant *m_paVariants;
 
 	FT_Library m_FTLibrary;
 
@@ -363,7 +389,7 @@ class CTextRender : public IEngineTextRender
 		}
 	}
 
-	int RenderGlyph(CFont *pFont, CFontSizeData *pSizeData, int Chr)
+	int RenderGlyph(CFont *pFont, CFontSizeData *pSizeData, int Chr, int ReplacingSlot = -1)
 	{
 		FT_Bitmap *pBitmap;
 		int SlotID = 0;
@@ -374,7 +400,8 @@ class CTextRender : public IEngineTextRender
 		int y = 1;
 		unsigned int px, py;
 
-		FT_Face CharFace = pFont->GetCharFace(Chr);
+		FT_Face CharFace;
+		int FaceType = pFont->FindCharFace(Chr, &CharFace);
 		FT_Set_Pixel_Sizes(CharFace, 0, pSizeData->m_FontSize);
 
 		if(FT_Load_Char(CharFace, Chr, FT_LOAD_RENDER|FT_LOAD_NO_BITMAP))
@@ -386,7 +413,11 @@ class CTextRender : public IEngineTextRender
 		pBitmap = &CharFace->glyph->bitmap; // ignore_convention
 
 		// fetch slot
-		SlotID = GetSlot(pSizeData);
+		if (ReplacingSlot >= 0)
+			SlotID = ReplacingSlot;
+		else
+			SlotID = GetSlot(pSizeData);
+	
 		if(SlotID < 0)
 			return -1;
 
@@ -456,6 +487,11 @@ class CTextRender : public IEngineTextRender
 			pFontchr->m_aUvs[1] = (SlotID/pSizeData->m_NumXChars) / (float)(pSizeData->m_NumYChars);
 			pFontchr->m_aUvs[2] = pFontchr->m_aUvs[0] + Width*Uscale;
 			pFontchr->m_aUvs[3] = pFontchr->m_aUvs[1] + Height*Vscale;
+
+			if (FaceType == CFont::VARIANT)
+				pFontchr->m_Variant = m_CurrentVairant;
+			else
+				pFontchr->m_Variant = -1;
 		}
 
 		return SlotID;
@@ -485,6 +521,10 @@ class CTextRender : public IEngineTextRender
 				pFontchr = &pSizeData->m_aCharacters[Index];
 		}
 
+		// check if we need to update the character with a different variant
+		if (pFontchr->m_Variant >=0 && pFontchr->m_Variant != m_CurrentVairant)
+			RenderGlyph(pFont, pSizeData, Chr, i);
+
 		// touch the character
 		// TODO: don't call time_get here
 		if(pFontchr)
@@ -506,35 +546,7 @@ class CTextRender : public IEngineTextRender
 		return (Kerning.x>>6);
 	}
 
-
-public:
-	CTextRender()
-	{
-		m_pGraphics = 0;
-
-		m_TextR = 1.0f;
-		m_TextG = 1.0f;
-		m_TextB = 1.0f;
-		m_TextA = 1.0f;
-		m_TextOutlineR = 0.0f;
-		m_TextOutlineG = 0.0f;
-		m_TextOutlineB = 0.0f;
-		m_TextOutlineA = 0.3f;
-
-		m_pDefaultFont = new CFont();
-
-		// GL_LUMINANCE can be good for debugging
-		//m_FontTextureFormat = GL_ALPHA;
-	}
-
-	virtual void Init()
-	{
-		m_pGraphics = Kernel()->RequestInterface<IGraphics>();
-		FT_Init_FreeType(&m_FTLibrary);
-	}
-
-
-	virtual int LoadFontCollection(const char *pFilename)
+	int LoadFontCollection(const char *pFilename)
 	{
 		FT_Face FtFace;
 
@@ -559,6 +571,144 @@ public:
 		return 0;
 	}
 
+public:
+	CTextRender()
+	{
+		m_pGraphics = 0;
+
+		m_TextR = 1.0f;
+		m_TextG = 1.0f;
+		m_TextB = 1.0f;
+		m_TextA = 1.0f;
+		m_TextOutlineR = 0.0f;
+		m_TextOutlineG = 0.0f;
+		m_TextOutlineB = 0.0f;
+		m_TextOutlineA = 0.3f;
+
+		m_pDefaultFont = 0;
+		m_NumVariants = 0;
+		m_CurrentVairant = -1;
+		m_paVariants = 0;
+
+		// GL_LUMINANCE can be good for debugging
+		//m_FontTextureFormat = GL_ALPHA;
+	}
+
+	virtual void Init()
+	{
+		m_pGraphics = Kernel()->RequestInterface<IGraphics>();
+		FT_Init_FreeType(&m_FTLibrary);
+		m_pDefaultFont = new CFont();
+	}
+
+	virtual void Shutdown()
+	{
+		if (m_pDefaultFont) delete m_pDefaultFont;
+		if (m_paVariants) mem_free(m_paVariants);
+	}
+
+	virtual void LoadFonts(IStorage *pStorage){
+		// read file data into buffer
+		const char *pFilename = "fonts/index.json";
+		IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+		if(!File)
+		{
+			dbg_msg("textrender", "couldn't open fonts index file");
+			return;
+		}
+		int FileSize = (int)io_length(File);
+		char *pFileData = (char *)mem_alloc(FileSize, 1);
+		io_read(File, pFileData, FileSize);
+		io_close(File);
+
+		// parse json data
+		json_settings JsonSettings;
+		mem_zero(&JsonSettings, sizeof(JsonSettings));
+		char aError[256];
+		json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+		mem_free(pFileData);
+
+		if(pJsonData == 0)
+		{
+			dbg_msg(pFilename, aError);
+			return;
+		}
+
+		// extract font file definitions
+		const json_value &rFiles = (*pJsonData)["font files"];
+		if(rFiles.type == json_array)
+		{
+			for(unsigned i = 0; i < rFiles.u.array.length; ++i)
+			{
+				char aFontName[IO_MAX_PATH_LENGTH];
+				str_format(aFontName, sizeof(aFontName), "fonts/%s", (const char *)rFiles[i]);
+				char aFilename[IO_MAX_PATH_LENGTH];
+				IOHANDLE File = pStorage->OpenFile(aFontName, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
+				if(File)
+				{
+					io_close(File);
+					if(LoadFontCollection(aFilename))
+					{
+						char aBuf[256];
+						str_format(aBuf, sizeof(aBuf), "failed to load font file. filename='%s'", aFontName);
+						dbg_msg("textrender", aBuf);
+					}
+				}
+			}
+		}
+
+		// extract fallback family names
+		const json_value &rFallbackFaces = (*pJsonData)["fallbacks"];
+		if(rFallbackFaces.type == json_array)
+		{
+			for(unsigned i = 0; i < rFallbackFaces.u.array.length; ++i)
+			{
+				m_pDefaultFont->AddFallbackFaceByName((const char *)rFallbackFaces[i]);
+			}
+		}
+
+		// extract language variant family names
+		const json_value &rVariant = (*pJsonData)["language variants"];
+		if(rVariant.type == json_object)
+		{
+			m_NumVariants = rVariant.u.object.length;
+			json_object_entry *Entries = rVariant.u.object.values;
+			m_paVariants = (CFontLanguageVariant *)mem_alloc(sizeof(CFontLanguageVariant)*m_NumVariants, 1);
+			for(int i = 0; i < m_NumVariants; ++i)
+			{
+				char aFileName[128];
+				str_format(aFileName, sizeof(aFileName), "languages/%s.json", (const char *)Entries[i].name);
+				strncpy(m_paVariants[i].m_aLanguageFile, aFileName, sizeof(m_paVariants[i].m_aLanguageFile));
+				
+				json_value *pFamilyName = rVariant.u.object.values[i].value;
+				if (pFamilyName->type == json_string)
+					strncpy(m_paVariants[i].m_aFamilyName, pFamilyName->u.string.ptr, sizeof(m_paVariants[i].m_aFamilyName));
+				else
+					m_paVariants[i].m_aFamilyName[0] = 0;
+			}
+		}
+
+		json_value_free(pJsonData);
+	}
+
+	virtual void SetFontLanguageVariant(const char *pLanguageFile) {
+		if (!m_pDefaultFont) return;
+		if (!m_paVariants)
+		{
+			m_pDefaultFont->SetVariantFaceByName(NULL);
+			return;
+		}
+
+		for (int i = 0; i < m_NumVariants; ++i) {
+			if (str_comp_filenames(pLanguageFile, m_paVariants[i].m_aLanguageFile) == 0) {
+				m_pDefaultFont->SetVariantFaceByName(m_paVariants[i].m_aFamilyName);
+				m_CurrentVairant = i;
+				return;
+			}
+		}
+
+		m_pDefaultFont->SetVariantFaceByName(NULL);
+	}
 
 	virtual void SetCursor(CTextCursor *pCursor, float x, float y, float FontSize, int Flags)
 	{
