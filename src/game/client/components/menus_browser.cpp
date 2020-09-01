@@ -462,10 +462,12 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 	const float TextAlpha = (pEntry->m_NumClients == pEntry->m_MaxClients) ? 0.5f : 1.0f;
 	vec4 TextBaseColor = vec4(1.0f, 1.0f, 1.0f, TextAlpha);
 	vec4 TextBaseOutlineColor = vec4(0.0, 0.0, 0.0, 0.3f);
+	vec4 ServerInfoTextBaseColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	vec4 HighlightColor = vec4(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
 	if(Selected || Inside)
 	{
 		TextBaseColor = vec4(0.0f, 0.0f, 0.0f, TextAlpha);
+		ServerInfoTextBaseColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 		TextBaseOutlineColor = vec4(0.8f, 0.8f, 0.8f, 0.25f);
 	}
 
@@ -635,16 +637,15 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 	// show server info
 	if(ShowServerInfo)
 	{
-		CUIRect Info;
 		View.HSplitTop(ms_aBrowserCols[0].m_Rect.h, 0, &View);
 
 		if(ReturnValue && UI()->MouseInside(&View))
 			ReturnValue++;
 
-		View.VSplitLeft(160.0f, &Info, &View);
-		RenderDetailInfo(Info, pEntry);
-
-		RenderDetailScoreboard(View, pEntry, 4, TextBaseColor, TextBaseOutlineColor);
+		CUIRect Info, Scoreboard;
+		View.VSplitLeft(160.0f, &Info, &Scoreboard);
+		RenderDetailInfo(Info, pEntry, ServerInfoTextBaseColor, TextBaseOutlineColor);
+		RenderDetailScoreboard(Scoreboard, pEntry, 4, ServerInfoTextBaseColor, TextBaseOutlineColor);
 	}
 
 	TextRender()->TextColor(CUI::ms_DefaultTextColor);
@@ -2012,10 +2013,13 @@ void CMenus::RenderServerbrowserInfoTab(CUIRect View)
 	}
 }
 
-void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
+void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo, const vec4 &TextColor, const vec4 &TextOutlineColor)
 {
 	const float FontSize = 10.0f;
 	const float RowHeight = 15.0f;
+
+	TextRender()->TextColor(TextColor);
+	TextRender()->TextOutlineColor(TextOutlineColor);
 
 	CUIRect ServerHeader;
 	View.HSplitTop(GetListHeaderHeight(), &ServerHeader, &View);
@@ -2077,7 +2081,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo)
 	UI()->DoLabel(&Row, s_aDifficultyLabels[pInfo->m_ServerLevel], FontSize, CUI::ALIGN_LEFT, Row.w, false);
 }
 
-void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, vec4 TextColor, vec4 TextOutlineColor)
+void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, const vec4 &TextColor, const vec4 &TextOutlineColor)
 {
 	RenderTools()->DrawUIRect(&View, vec4(0, 0, 0, 0.15f), RowCount > 0 ? CUI::CORNER_B|CUI::CORNER_TL : CUI::CORNER_B, 5.0f);
 	View.Margin(2.0f, &View);
@@ -2208,7 +2212,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 	View.HSplitTop(80.0f, &ServerDetails, &ServerScoreboard);
 
 	// server details
-	RenderDetailInfo(ServerDetails, pInfo);
+	RenderDetailInfo(ServerDetails, pInfo, CUI::ms_DefaultTextColor, CUI::ms_DefaultTextOutlineColor);
 
 	// server scoreboard
 	ServerScoreboard.HSplitTop(GetListHeaderHeight(), &ServerHeader, &ServerScoreboard);

@@ -800,8 +800,8 @@ private:
 	void RenderServerbrowserFilterTab(CUIRect View);
 	void RenderServerbrowserInfoTab(CUIRect View);
 	void RenderServerbrowserFriendList(CUIRect View);
-	void RenderDetailInfo(CUIRect View, const CServerInfo *pInfo);
-	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, vec4 TextColor, vec4 TextOutlineColor);
+	void RenderDetailInfo(CUIRect View, const CServerInfo *pInfo, const vec4 &TextColor, const vec4 &TextOutlineColor);
+	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, const vec4 &TextColor, const vec4 &TextOutlineColor);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
