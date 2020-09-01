@@ -130,14 +130,24 @@ public:
 
 	void AddFallbackFaceByName(const char *pFamilyName)
 	{
+		char aFamilyStyleName[128];
+		FT_Face Face = NULL;
 		for (int i = 0; i < m_NumFtFaces; ++i)
 		{
-			if (str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
+			str_format(aFamilyStyleName, 128, "%s %s", m_aFtFaces[i]->family_name, m_aFtFaces[i]->style_name);
+			if (str_comp(pFamilyName, aFamilyStyleName) == 0)
 			{
-				m_aFallbackFaces[m_NumFallbackFaces++] = m_aFtFaces[i];
-				return;
+				Face = m_aFtFaces[i];
+				break;
+			}
+
+			if (!Face && str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
+			{
+				Face = m_aFtFaces[i];
 			}
 		}
+
+		m_aFallbackFaces[m_NumFallbackFaces++] = Face;
 	}
 
 	bool SetVariantFaceByName(const char *pFamilyName)
