@@ -1829,6 +1829,7 @@ void CClient::InitInterfaces()
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	//m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pSound = Kernel()->RequestInterface<IEngineSound>();
+	m_pTextRender = Kernel()->RequestInterface<IEngineTextRender>();
 	m_pGameClient = Kernel()->RequestInterface<IGameClient>();
 	m_pInput = Kernel()->RequestInterface<IEngineInput>();
 	m_pMap = Kernel()->RequestInterface<IEngineMap>();
@@ -2185,6 +2186,7 @@ void CClient::Run()
 
 	m_pGraphics->Shutdown();
 	m_pSound->Shutdown();
+	m_pTextRender->Shutdown();
 
 	m_ServerBrowser.SaveServerlist();
 

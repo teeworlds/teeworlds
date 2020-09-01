@@ -595,7 +595,7 @@ public:
 
 	virtual void Shutdown()
 	{
-		if (m_pDefaultFont) delete m_pDefaultFont;
+		delete m_pDefaultFont;
 		if (m_paVariants) mem_free(m_paVariants);
 	}
 
