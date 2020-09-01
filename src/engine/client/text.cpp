@@ -531,11 +531,18 @@ class CTextRender : public IEngineTextRender
 		FT_Set_Pixel_Sizes(pFont->GetDefaultFace(), 0, size);
 	}
 
-	float Kerning(CFont *pFont, int Left, int Right)
+	vec2 Kerning(CFont *pFont, int Left, int Right)
 	{
 		FT_Vector Kerning = {0,0};
-		FT_Get_Kerning(pFont->GetDefaultFace(), Left, Right, FT_KERNING_DEFAULT, &Kerning);
-		return (Kerning.x>>6);
+		FT_Face LeftFace = pFont->GetCharFace(Left);
+		FT_Face RightFace = pFont->GetCharFace(Right);
+		if (LeftFace == RightFace)
+			FT_Get_Kerning(LeftFace, Left, Right, FT_KERNING_DEFAULT, &Kerning);
+
+		vec2 Vec;
+		Vec.x = (float)(Kerning.x>>6);
+		Vec.y = (float)(Kerning.y>>6);
+		return Vec;
 	}
 
 	int LoadFontCollection(const char *pFilename)
@@ -942,7 +949,9 @@ public:
 				CFontChar *pChr = GetChar(pFont, pSizeData, Character);
 				if(pChr)
 				{
-					float Advance = pChr->m_AdvanceX + Kerning(pFont, Character, NextCharacter)*Scale;
+					vec2 Kern = Kerning(pFont, Character, NextCharacter)*Scale;
+					DrawY += Kern.y;
+					float Advance = pChr->m_AdvanceX + Kern.x *Scale;
 					if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
 					{
 						// we hit the end of the line, no more to render or count
@@ -1132,7 +1141,9 @@ public:
 					CFontChar *pChr = GetChar(pFont, pSizeData, Character);
 					if(pChr)
 					{
-						float Advance = pChr->m_AdvanceX + Kerning(pFont, Character, NextCharacter)*Scale;
+						vec2 Kern = Kerning(pFont, Character, NextCharacter)*Scale;
+						DrawY += Kern.y;
+						float Advance = pChr->m_AdvanceX + Kern.x * Scale;
 						if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
 						{
 							// we hit the end of the line, no more to render or count
