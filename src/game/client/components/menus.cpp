@@ -797,7 +797,7 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 	pRect->VMargin(5.0f, &Rail);
 
 	// logic
-	static float OffsetY;
+	static float s_OffsetY;
 	const bool InsideHandle = UI()->MouseInside(&Handle);
 	const bool InsideRail = UI()->MouseInside(&Rail);
 	float ReturnValue = Current;
@@ -805,36 +805,37 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 
 	if(UI()->CheckActiveItem(pID))
 	{
-		if(!UI()->MouseButton(0))
+		if(UI()->MouseButton(0))
+			Grabbed = true;
+		else
 			UI()->SetActiveItem(0);
-
-		Grabbed = true;
 	}
 	else if(UI()->HotItem() == pID)
 	{
 		if(UI()->MouseButton(0))
 		{
 			UI()->SetActiveItem(pID);
-			OffsetY = UI()->MouseY()-Handle.y;
+			s_OffsetY = UI()->MouseY()-Handle.y;
 		}
 	}
-	else if(UI()->MouseButton(0) && !InsideHandle && InsideRail)
+	else if(UI()->MouseButtonClicked(0) && !InsideHandle && InsideRail)
 	{
-		bool Up = UI()->MouseY() < Handle.y + Handle.h/2;
-		OffsetY = UI()->MouseY() - Handle.y + 8 * (Up ? 1 : -1);
+		s_OffsetY = Handle.h * 0.5f;
+		UI()->SetActiveItem(pID);
 		Grabbed = true;
+	}
+	else if(InsideHandle)
+	{
+		UI()->SetHotItem(pID);
 	}
 
 	if(Grabbed)
 	{
 		const float Min = pRect->y;
 		const float Max = pRect->h-Handle.h;
-		const float Cur = UI()->MouseY()-OffsetY;
+		const float Cur = UI()->MouseY()-s_OffsetY;
 		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
 	}
-
-	if(InsideHandle)
-		UI()->SetHotItem(pID);
 
 	// render
 	RenderTools()->DrawUIRect(&Rail, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, Rail.w/2.0f);
@@ -863,7 +864,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	pRect->HMargin(5.0f, &Rail);
 
 	// logic
-	static float OffsetX;
+	static float s_OffsetX;
 	const bool InsideHandle = UI()->MouseInside(&Handle);
 	const bool InsideRail = UI()->MouseInside(&Rail);
 	float ReturnValue = Current;
@@ -871,35 +872,37 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 
 	if(UI()->CheckActiveItem(pID))
 	{
-		if(!UI()->MouseButton(0))
+		if(UI()->MouseButton(0))
+			Grabbed = true;
+		else
 			UI()->SetActiveItem(0);
-		Grabbed = true;
 	}
 	else if(UI()->HotItem() == pID)
 	{
 		if(UI()->MouseButton(0))
 		{
 			UI()->SetActiveItem(pID);
-			OffsetX = UI()->MouseX()-Handle.x;
+			s_OffsetX = UI()->MouseX()-Handle.x;
 		}
 	}
 	else if(UI()->MouseButtonClicked(0) && !InsideHandle && InsideRail)
 	{
-		OffsetX = Handle.w * 0.5f;
+		s_OffsetX = Handle.w * 0.5f;
 		UI()->SetActiveItem(pID);
 		Grabbed = true;
+	}
+	else if(InsideHandle)
+	{
+		UI()->SetHotItem(pID);
 	}
 
 	if(Grabbed)
 	{
 		const float Min = pRect->x;
 		const float Max = pRect->w-Handle.w;
-		const float Cur = UI()->MouseX()-OffsetX;
+		const float Cur = UI()->MouseX()-s_OffsetX;
 		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
 	}
-
-	if(InsideHandle)
-		UI()->SetHotItem(pID);
 
 	// render
 	RenderTools()->DrawUIRect(&Rail, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, Rail.h/2.0f);
