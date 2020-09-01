@@ -78,14 +78,6 @@ class CFont
 	}
 
 public:
-	enum FaceType
-	{
-		REPLACEMENT = -1,
-		DEFAULT = 0,
-		VARIANT,
-		FALLBACK,
-	};
-
 	CFontSizeData m_aSizes[NUM_FONT_SIZES];
 	CFont()
 	{
@@ -109,27 +101,19 @@ public:
 		return m_DefaultFace;
 	}
 
-	FaceType FindCharFace(int Chr, FT_Face *Face)
+	FT_Face GetCharFace(int Chr)
 	{
 		if (!m_DefaultFace || FT_Get_Char_Index(m_DefaultFace, (FT_ULong)Chr)) 
-		{
-			*Face = m_DefaultFace;
-			return DEFAULT;
-		}
+			return m_DefaultFace;
+
 		if (m_VariantFace && FT_Get_Char_Index(m_VariantFace, (FT_ULong)Chr)) 
-		{
-			*Face = m_VariantFace;
-			return VARIANT;
-		}
-		for (int i = 0; i < m_NumFallbackFaces; ++i) {
+			return m_VariantFace;
+
+		for (int i = 0; i < m_NumFallbackFaces; ++i)
 			if (m_aFallbackFaces[i] && FT_Get_Char_Index(m_aFallbackFaces[i], (FT_ULong)Chr))
-			{
-				*Face = m_aFallbackFaces[i];
-				return FALLBACK;
-			}
-		}
-		*Face = m_DefaultFace;
-		return REPLACEMENT;
+				return m_aFallbackFaces[i];
+
+		return m_DefaultFace;
 	}
 
 	int AddFace(FT_Face Face)
@@ -407,8 +391,7 @@ class CTextRender : public IEngineTextRender
 		int y = 1;
 		unsigned int px, py;
 
-		FT_Face CharFace;
-		int FaceType = pFont->FindCharFace(Chr, &CharFace);
+		FT_Face CharFace = pFont->GetCharFace(Chr);
 		FT_Set_Pixel_Sizes(CharFace, 0, pSizeData->m_FontSize);
 
 		if(FT_Load_Char(CharFace, Chr, FT_LOAD_RENDER|FT_LOAD_NO_BITMAP))
