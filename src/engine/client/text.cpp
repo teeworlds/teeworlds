@@ -35,8 +35,6 @@ struct CFontChar
 
 	float m_aUvs[4];
 	int64 m_TouchTime;
-	
-	int m_Variant;
 };
 
 struct CFontSizeData
@@ -56,6 +54,7 @@ struct CFontSizeData
 	CFontChar m_aCharacters[MAX_CHARACTERS*MAX_CHARACTERS];
 
 	int m_CurrentCharacter;
+	int m_LanguageVariant;
 };
 
 class CFont
@@ -156,25 +155,27 @@ public:
 		}
 	}
 
-	void SetVariantFaceByName(const char *pFamilyName)
+	bool SetVariantFaceByName(const char *pFamilyName)
 	{
-		if (pFamilyName == NULL)
+		FT_Face Face = NULL;
+		if (pFamilyName != NULL)
 		{
-			m_VariantFace = NULL;
-			return;
-		}
-
-		for (int i = 0; i < m_NumFtFaces; ++i)
-		{
-			if (str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
+			for (int i = 0; i < m_NumFtFaces; ++i)
 			{
-				m_VariantFace = m_aFtFaces[i];
-				return;
+				if (str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
+				{
+					Face = m_aFtFaces[i];
+					break;
+				}
 			}
 		}
 
-		m_VariantFace = NULL;
-		return;
+		if (m_VariantFace != Face)
+		{
+			m_VariantFace = Face;
+			return true;
+		}
+		return false;
 	}
 };
 
@@ -222,8 +223,10 @@ class CTextRender : public IEngineTextRender
 	//int m_FontTextureFormat;
 
 	CFont *m_pDefaultFont;
+
+	// support regional variant fonts
 	int m_NumVariants;
-	int m_CurrentVairant;
+	int m_CurrentVariant;
 	CFontLanguageVariant *m_paVariants;
 
 	FT_Library m_FTLibrary;
@@ -263,7 +266,7 @@ class CTextRender : public IEngineTextRender
 			}
 	}
 
-	void InitTexture(CFontSizeData *pSizeData, int CharWidth, int CharHeight, int Xchars, int Ychars)
+	void InitTexture(CFontSizeData *pSizeData, int CharWidth, int CharHeight, int Xchars, int Ychars, int LangVariant)
 	{
 		static int FontMemoryUsage = 0;
 		int Width = CharWidth*Xchars;
@@ -288,8 +291,9 @@ class CTextRender : public IEngineTextRender
 		pSizeData->m_TextureWidth = Width;
 		pSizeData->m_TextureHeight = Height;
 		pSizeData->m_CurrentCharacter = 0;
+		pSizeData->m_LanguageVariant = LangVariant;
 
-		dbg_msg("pFont", "memory usage: %d", FontMemoryUsage);
+		dbg_msg("pFont", "created texture for font size %d, memory usage: %d", pSizeData->m_FontSize, FontMemoryUsage);
 
 		mem_free(pMem);
 	}
@@ -309,7 +313,7 @@ class CTextRender : public IEngineTextRender
 			pSizeData->m_NumXChars <<= 1;
 		else
 			pSizeData->m_NumYChars <<= 1;
-		InitTexture(pSizeData, pSizeData->m_CharMaxWidth, pSizeData->m_CharMaxHeight, pSizeData->m_NumXChars, pSizeData->m_NumYChars);
+		InitTexture(pSizeData, pSizeData->m_CharMaxWidth, pSizeData->m_CharMaxHeight, pSizeData->m_NumXChars, pSizeData->m_NumYChars, pSizeData->m_LanguageVariant);
 	}
 
 	// TODO: Refactor: move this into a pFont class
@@ -325,14 +329,17 @@ class CTextRender : public IEngineTextRender
 		pSizeData->m_CharMaxWidth = GlyphSize;
 		pSizeData->m_CharMaxHeight = GlyphSize;
 
-		InitTexture(pSizeData, pSizeData->m_CharMaxWidth, pSizeData->m_CharMaxHeight, 8, 8);
+		InitTexture(pSizeData, pSizeData->m_CharMaxWidth, pSizeData->m_CharMaxHeight, 8, 8, m_CurrentVariant);
 	}
 
 	CFontSizeData *GetSize(CFont *pFont, int Pixelsize)
 	{
 		int Index = GetFontSizeIndex(Pixelsize);
-		if(pFont->m_aSizes[Index].m_FontSize != aFontSizes[Index])
+		CFontSizeData *pSizeData = &pFont->m_aSizes[Index];
+		if(pSizeData->m_FontSize != aFontSizes[Index])
 			InitIndex(pFont, Index);
+		else if(pSizeData->m_LanguageVariant != m_CurrentVariant)
+			InitTexture(pSizeData, pSizeData->m_CharMaxWidth, pSizeData->m_CharMaxHeight, pSizeData->m_NumXChars, pSizeData->m_NumYChars, m_CurrentVariant);
 		return &pFont->m_aSizes[Index];
 	}
 
@@ -487,11 +494,6 @@ class CTextRender : public IEngineTextRender
 			pFontchr->m_aUvs[1] = (SlotID/pSizeData->m_NumXChars) / (float)(pSizeData->m_NumYChars);
 			pFontchr->m_aUvs[2] = pFontchr->m_aUvs[0] + Width*Uscale;
 			pFontchr->m_aUvs[3] = pFontchr->m_aUvs[1] + Height*Vscale;
-
-			if (FaceType == CFont::VARIANT)
-				pFontchr->m_Variant = m_CurrentVairant;
-			else
-				pFontchr->m_Variant = -1;
 		}
 
 		return SlotID;
@@ -520,10 +522,6 @@ class CTextRender : public IEngineTextRender
 			if(Index >= 0)
 				pFontchr = &pSizeData->m_aCharacters[Index];
 		}
-
-		// check if we need to update the character with a different variant
-		if (pFontchr->m_Variant >=0 && pFontchr->m_Variant != m_CurrentVairant)
-			RenderGlyph(pFont, pSizeData, Chr, i);
 
 		// touch the character
 		// TODO: don't call time_get here
@@ -587,7 +585,7 @@ public:
 
 		m_pDefaultFont = 0;
 		m_NumVariants = 0;
-		m_CurrentVairant = -1;
+		m_CurrentVariant = -1;
 		m_paVariants = 0;
 
 		// GL_LUMINANCE can be good for debugging
@@ -692,22 +690,22 @@ public:
 	}
 
 	virtual void SetFontLanguageVariant(const char *pLanguageFile) {
-		if (!m_pDefaultFont) return;
-		if (!m_paVariants)
-		{
-			m_pDefaultFont->SetVariantFaceByName(NULL);
-			return;
-		}
+		if (!m_pDefaultFont) return;	
 
-		for (int i = 0; i < m_NumVariants; ++i) {
-			if (str_comp_filenames(pLanguageFile, m_paVariants[i].m_aLanguageFile) == 0) {
-				m_pDefaultFont->SetVariantFaceByName(m_paVariants[i].m_aFamilyName);
-				m_CurrentVairant = i;
-				return;
+		char *FamilyName = NULL;
+
+		if (m_paVariants)
+		{
+			for (int i = 0; i < m_NumVariants; ++i) {
+				if (str_comp_filenames(pLanguageFile, m_paVariants[i].m_aLanguageFile) == 0) {
+					FamilyName = m_paVariants[i].m_aFamilyName;
+					m_CurrentVariant = i;
+					break;
+				}
 			}
 		}
 
-		m_pDefaultFont->SetVariantFaceByName(NULL);
+		m_pDefaultFont->SetVariantFaceByName(FamilyName);
 	}
 
 	virtual void SetCursor(CTextCursor *pCursor, float x, float y, float FontSize, int Flags)
