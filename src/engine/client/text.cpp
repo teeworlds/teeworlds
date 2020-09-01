@@ -88,7 +88,8 @@ public:
 	
 		mem_zero(m_aFtFaces, sizeof(m_aFtFaces));
 
-		for (unsigned i = 0; i < NUM_FONT_SIZES; ++i) {
+		for (unsigned i = 0; i < NUM_FONT_SIZES; ++i)
+		{
 			m_aSizes[i].m_FontSize = -1;
 		}
 
@@ -588,7 +589,8 @@ public:
 		if (m_paVariants) mem_free(m_paVariants);
 	}
 
-	virtual void LoadFonts(IStorage *pStorage, IConsole *pConsole){
+	virtual void LoadFonts(IStorage *pStorage, IConsole *pConsole)
+	{
 		// read file data into buffer
 		const char *pFilename = "fonts/index.json";
 		IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
@@ -672,15 +674,18 @@ public:
 		json_value_free(pJsonData);
 	}
 
-	virtual void SetFontLanguageVariant(const char *pLanguageFile) {
+	virtual void SetFontLanguageVariant(const char *pLanguageFile)
+	{
 		if (!m_pDefaultFont) return;	
 
 		char *FamilyName = NULL;
 
 		if (m_paVariants)
 		{
-			for (int i = 0; i < m_NumVariants; ++i) {
-				if (str_comp_filenames(pLanguageFile, m_paVariants[i].m_aLanguageFile) == 0) {
+			for (int i = 0; i < m_NumVariants; ++i)
+			{
+				if (str_comp_filenames(pLanguageFile, m_paVariants[i].m_aLanguageFile) == 0)
+				{
 					FamilyName = m_paVariants[i].m_aFamilyName;
 					m_CurrentVariant = i;
 					break;
