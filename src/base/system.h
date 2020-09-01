@@ -596,6 +596,9 @@ enum
 {
 	NETADDR_MAXSTRSIZE = 1+(8*4+7)+1+1+5+1, // [XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX]:XXXXX
 
+	NETADDR_SIZE_IPV4 = 4,
+	NETADDR_SIZE_IPV6 = 16,
+
 	NETTYPE_INVALID = 0,
 	NETTYPE_IPV4 = 1,
 	NETTYPE_IPV6 = 2,
@@ -606,8 +609,9 @@ enum
 typedef struct
 {
 	unsigned int type;
-	unsigned char ip[16];
+	unsigned char ip[NETADDR_SIZE_IPV6];
 	unsigned short port;
+	unsigned short reserved;
 } NETADDR;
 
 /*
@@ -648,13 +652,14 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types);
 	Parameters:
 		a - Address to compare
 		b - Address to compare to.
+		check_port - compares port or not
 
 	Returns:
 		<0 - Address a is lesser then address b
 		0 - Address a is equal to address b
 		>0 - Address a is greater then address b
 */
-int net_addr_comp(const NETADDR *a, const NETADDR *b);
+int net_addr_comp(const NETADDR *a, const NETADDR *b, int check_port);
 
 /*
 	Function: net_addr_str

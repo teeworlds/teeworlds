@@ -762,9 +762,9 @@ static void sockaddr_to_netaddr(const struct sockaddr *src, NETADDR *dst)
 	}
 }
 
-int net_addr_comp(const NETADDR *a, const NETADDR *b)
+int net_addr_comp(const NETADDR *a, const NETADDR *b, int check_port)
 {
-	if(mem_comp(a->ip, b->ip, sizeof(a->ip)) == 0 && a->port == b->port && a->type == b->type)
+	if(a->type == b->type && mem_comp(a->ip, b->ip, a->type == NETTYPE_IPV4 ? NETADDR_SIZE_IPV4 : NETADDR_SIZE_IPV6) == 0 && (!check_port || a->port == b->port))
 		return 0;
 	return -1;
 }

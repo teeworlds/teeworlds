@@ -193,7 +193,7 @@ void AddServer(NETADDR *pInfo, ServerType Type)
 	// see if server already exists in list
 	for(int i = 0; i < m_NumServers; i++)
 	{
-		if(net_addr_comp(&m_aServers[i].m_Address, pInfo) == 0)
+		if(net_addr_comp(&m_aServers[i].m_Address, pInfo, true) == 0)
 		{
 			char aAddrStr[NETADDR_MAXSTRSIZE];
 			net_addr_str(pInfo, aAddrStr, sizeof(aAddrStr), true);
@@ -421,8 +421,8 @@ int main(int argc, const char **argv) // ignore_convention
 				// remove it from checking
 				for(int i = 0; i < m_NumCheckServers; i++)
 				{
-					if(net_addr_comp(&m_aCheckServers[i].m_Address, &Packet.m_Address) == 0 ||
-						net_addr_comp(&m_aCheckServers[i].m_AltAddress, &Packet.m_Address) == 0)
+					if(net_addr_comp(&m_aCheckServers[i].m_Address, &Packet.m_Address, true) == 0 ||
+						net_addr_comp(&m_aCheckServers[i].m_AltAddress, &Packet.m_Address, true) == 0)
 					{
 						Type = m_aCheckServers[i].m_Type;
 						m_NumCheckServers--;

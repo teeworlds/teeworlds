@@ -6,7 +6,7 @@
 
 inline int NetComp(const NETADDR *pAddr1, const NETADDR *pAddr2)
 {
-	return mem_comp(pAddr1, pAddr2, pAddr1->type==NETTYPE_IPV4 ? 8 : 20);
+	return net_addr_comp(pAddr1, pAddr2, false);
 }
 
 class CNetRange
@@ -15,12 +15,12 @@ public:
 	NETADDR m_LB;
 	NETADDR m_UB;
 
-	bool IsValid() const { return m_LB.type == m_UB.type && NetComp(&m_LB, &m_UB) < 0; }
+	bool IsValid() const { return m_LB.type == m_UB.type && mem_comp(m_LB.ip, m_UB.ip, m_LB.type==NETTYPE_IPV4 ? NETADDR_SIZE_IPV4 : NETADDR_SIZE_IPV6) < 0; }
 };
 
 inline int NetComp(const CNetRange *pRange1, const CNetRange *pRange2)
 {
-	return NetComp(&pRange1->m_LB, &pRange2->m_LB) || NetComp(&pRange1->m_UB, &pRange2->m_UB);
+	return net_addr_comp(&pRange1->m_LB, &pRange2->m_LB, false) || net_addr_comp(&pRange1->m_UB, &pRange2->m_UB, false);
 }
 
 

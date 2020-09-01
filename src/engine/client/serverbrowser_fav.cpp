@@ -63,7 +63,7 @@ bool CServerBrowserFavorites::AddFavoriteEx(const char *pHostname, const NETADDR
 			return false;
 
 		// check if hostname does not match given address
-		if(DoCheck && net_addr_comp(&m_aFavoriteServers[m_NumFavoriteServers].m_Addr, pAddr) != 0)
+		if(DoCheck && net_addr_comp(&m_aFavoriteServers[m_NumFavoriteServers].m_Addr, pAddr, true) != 0)
 			return false;
 
 		// add the server to the list
@@ -106,7 +106,7 @@ CServerBrowserFavorites::CFavoriteServer *CServerBrowserFavorites::FindFavoriteB
 {
 	for(int i = 0; i < m_NumFavoriteServers; i++)
 	{
-		if(m_aFavoriteServers[i].m_State >= FAVSTATE_ADDR && net_addr_comp(&Addr, &m_aFavoriteServers[i].m_Addr) == 0)
+		if(m_aFavoriteServers[i].m_State >= FAVSTATE_ADDR && net_addr_comp(&Addr, &m_aFavoriteServers[i].m_Addr, true) == 0)
 		{
 			if(Index)
 				*Index = i;
@@ -196,7 +196,7 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 				{
 					// address wasn't in the list yet -> add it (optional check if hostname matches given address -> drop entry on fail)
 					if(m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_State == FAVSTATE_LOOKUP ||
-						net_addr_comp(&m_aFavoriteServers[m_NumFavoriteServers].m_Addr, &m_FavLookup.m_HostLookup.m_Addr) == 0)
+						net_addr_comp(&m_aFavoriteServers[m_NumFavoriteServers].m_Addr, &m_FavLookup.m_HostLookup.m_Addr, true) == 0)
 					{
 						m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_Addr = m_FavLookup.m_HostLookup.m_Addr;
 						m_aFavoriteServers[m_FavLookup.m_FavoriteIndex].m_State = FAVSTATE_HOST;

@@ -473,7 +473,7 @@ CServerEntry *CServerBrowser::Find(int ServerlistType, const NETADDR &Addr)
 {
 	for(CServerEntry *pEntry = m_aServerlist[ServerlistType].m_aServerlistIp[AddrHash(&Addr)]; pEntry; pEntry = pEntry->m_pNextIp)
 	{
-		if(net_addr_comp(&pEntry->m_Addr, &Addr) == 0)
+		if(net_addr_comp(&pEntry->m_Addr, &Addr, true) == 0)
 			return pEntry;
 	}
 	return (CServerEntry*)0;
