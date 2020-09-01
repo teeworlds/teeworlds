@@ -377,21 +377,7 @@ void CGameClient::OnInit()
 	m_pMenus->InitLoading(TotalWorkAmount);
 	m_pMenus->RenderLoading(4);
 
-	// load default font
-	char aFontName[IO_MAX_PATH_LENGTH];
-	str_format(aFontName, sizeof(aFontName), "fonts/%s", Config()->m_ClFontfile);
-	char aFilename[IO_MAX_PATH_LENGTH];
-	IOHANDLE File = Storage()->OpenFile(aFontName, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
-	if(File)
-	{
-		io_close(File);
-		if(TextRender()->LoadFont(aFilename))
-		{
-			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "failed to load font. filename='%s'", aFontName);
-			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", aBuf);
-		}
-	}
+	LoadFonts();
 	m_pMenus->RenderLoading(1);
 
 	// set the language
@@ -584,6 +570,58 @@ void CGameClient::EvolveCharacter(CNetObj_Character *pCharacter, int Tick)
 	}
 
 	TempCore.Write(pCharacter);
+}
+
+void CGameClient::LoadFonts(){
+	// read file data into buffer
+	const char *pFilename = "fonts/index.json";
+	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	if(!File)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "gameclient", "couldn't open fonts index file");
+		return;
+	}
+	int FileSize = (int)io_length(File);
+	char *pFileData = (char *)mem_alloc(FileSize, 1);
+	io_read(File, pFileData, FileSize);
+	io_close(File);
+
+	// parse json data
+	json_settings JsonSettings;
+	mem_zero(&JsonSettings, sizeof(JsonSettings));
+	char aError[256];
+	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
+	mem_free(pFileData);
+
+	if(pJsonData == 0)
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		return;
+	}
+
+	// extract file definitions
+	const json_value &rFiles = (*pJsonData)["font files"];
+	if(rFiles.type == json_array)
+	{
+		for(unsigned i = 0; i < rFiles.u.array.length; ++i)
+		{
+			char aFontName[IO_MAX_PATH_LENGTH];
+			str_format(aFontName, sizeof(aFontName), "fonts/%s", (const char *)rFiles[i]);
+			char aFilename[IO_MAX_PATH_LENGTH];
+			IOHANDLE File = Storage()->OpenFile(aFontName, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
+			if(File)
+			{
+				io_close(File);
+				if(TextRender()->LoadFontCollection(aFilename))
+				{
+					char aBuf[256];
+					str_format(aBuf, sizeof(aBuf), "failed to load font. filename='%s'", aFontName);
+					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", aBuf);
+				}
+			}
+		}
+	}
+
 }
 
 void CGameClient::StartRendering()

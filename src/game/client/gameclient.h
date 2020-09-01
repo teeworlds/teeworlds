@@ -4,6 +4,7 @@
 #define GAME_CLIENT_GAMECLIENT_H
 
 #include <base/vmath.h>
+#include <engine/external/json-parser/json.h>
 #include <engine/client.h>
 #include <engine/console.h>
 #include <game/layers.h>
@@ -71,6 +72,8 @@ class CGameClient : public IGameClient
 	static void ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
+
+	void LoadFonts();
 
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }

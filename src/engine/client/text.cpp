@@ -16,6 +16,7 @@
 // TODO: Refactor: clean this up
 enum
 {
+	MAX_FACES = 16,
 	MAX_CHARACTERS = 64,
 };
 
@@ -37,12 +38,13 @@ struct CFontChar
 
 	float m_aUvs[4];
 	int64 m_TouchTime;
+	
+	int m_Variant;
 };
 
 struct CFontSizeData
 {
 	int m_FontSize;
-	FT_Face *m_pFace;
 
 	IGraphics::CTextureHandle m_aTextures[2];
 	int m_TextureWidth;
@@ -61,10 +63,102 @@ struct CFontSizeData
 
 class CFont
 {
+	FT_Face m_DefaultFace;
+	FT_Face m_VariantFace;
+
+	FT_Face m_aFallbackFaces[MAX_FACES];
+	int m_NumFallbackFaces;
+
+	FT_Face m_aFtFaces[MAX_FACES];
+	int m_NumFtFaces;
+
+	FT_Face GetFace(int Index)
+	{
+		if (Index < 0 || Index >= m_NumFtFaces)
+			return NULL;
+		
+		return m_aFtFaces[Index];
+		
+	}
+
 public:
-	char m_aFilename[IO_MAX_PATH_LENGTH];
-	FT_Face m_FtFace;
 	CFontSizeData m_aSizes[NUM_FONT_SIZES];
+	CFont()
+	{
+		m_DefaultFace = NULL;
+		m_VariantFace = NULL;
+
+		mem_zero(m_aFallbackFaces, sizeof(m_aFallbackFaces));
+	
+		mem_zero(m_aFtFaces, sizeof(m_aFtFaces));
+
+		for (unsigned i = 0; i < NUM_FONT_SIZES; ++i) {
+			m_aSizes[i].m_FontSize = -1;
+		}
+
+		m_NumFtFaces = 0;
+		m_NumFallbackFaces = 0;
+	}
+
+	FT_Face GetDefaultFace()
+	{
+		return m_DefaultFace;
+	}
+
+	FT_Face GetCharFace(int Chr)
+	{
+		if (!m_DefaultFace || FT_Get_Char_Index(m_DefaultFace, (FT_ULong)Chr)) return m_DefaultFace;
+		if (m_VariantFace && FT_Get_Char_Index(m_VariantFace, (FT_ULong)Chr)) return m_VariantFace;
+		for (int i = 0; i < m_NumFallbackFaces; ++i) {
+			if (m_aFallbackFaces[i] && FT_Get_Char_Index(m_aFallbackFaces[i], (FT_ULong)Chr))
+				return m_aFallbackFaces[i];
+		}
+		return m_DefaultFace;
+	}
+
+	int AddFace(FT_Face Face)
+	{
+		if (m_NumFtFaces >= MAX_FACES) 
+			return -1;
+
+		m_aFtFaces[m_NumFtFaces++] = Face;
+		if (!m_DefaultFace) m_DefaultFace = Face;
+
+		return 0; 
+	}
+
+	void AddFallbackFaceByName(const char *pFamilyName)
+	{
+		for (int i = 0; i < m_NumFtFaces; ++i)
+		{
+			if (str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
+			{
+				m_aFallbackFaces[m_NumFallbackFaces++] = m_aFtFaces[i];
+				return;
+			}
+		}
+	}
+
+	void SetVariantFaceByName(const char *pFamilyName)
+	{
+		if (pFamilyName == NULL)
+		{
+			m_VariantFace = NULL;
+			return;
+		}
+
+		for (int i = 0; i < m_NumFtFaces; ++i)
+		{
+			if (str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
+			{
+				m_VariantFace = m_aFtFaces[i];
+				return;
+			}
+		}
+
+		m_VariantFace = NULL;
+		return;
+	}
 };
 
 struct CQuadChar
@@ -118,8 +212,6 @@ class CTextRender : public IEngineTextRender
 
 		return NUM_FONT_SIZES-1;
 	}
-
-
 
 	void Grow(unsigned char *pIn, unsigned char *pOut, int w, int h)
 	{
@@ -194,42 +286,19 @@ class CTextRender : public IEngineTextRender
 		InitTexture(pSizeData, pSizeData->m_CharMaxWidth, pSizeData->m_CharMaxHeight, pSizeData->m_NumXChars, pSizeData->m_NumYChars);
 	}
 
-
 	// TODO: Refactor: move this into a pFont class
 	void InitIndex(CFont *pFont, int Index)
 	{
 		CFontSizeData *pSizeData = &pFont->m_aSizes[Index];
 
 		pSizeData->m_FontSize = aFontSizes[Index];
-		FT_Set_Pixel_Sizes(pFont->m_FtFace, 0, pSizeData->m_FontSize);
 
-		int OutlineThickness = AdjustOutlineThicknessToFontSize(1, pSizeData->m_FontSize);
+		int GlyphSize;
+		for(GlyphSize = 1; GlyphSize < pSizeData->m_FontSize << 1; GlyphSize <<= 1);
 
-		{
-			unsigned GlyphIndex;
-			int MaxH = 0;
-			int MaxW = 0;
+		pSizeData->m_CharMaxWidth = GlyphSize;
+		pSizeData->m_CharMaxHeight = GlyphSize;
 
-			int Charcode = FT_Get_First_Char(pFont->m_FtFace, &GlyphIndex);
-			while(GlyphIndex != 0)
-			{
-				// do stuff
-				FT_Load_Glyph(pFont->m_FtFace, GlyphIndex, FT_LOAD_DEFAULT);
-
-				if(pFont->m_FtFace->glyph->metrics.width > MaxW) MaxW = pFont->m_FtFace->glyph->metrics.width; // ignore_convention
-				if(pFont->m_FtFace->glyph->metrics.height > MaxH) MaxH = pFont->m_FtFace->glyph->metrics.height; // ignore_convention
-				Charcode = FT_Get_Next_Char(pFont->m_FtFace, Charcode, &GlyphIndex);
-			}
-
-			MaxW = (MaxW>>6)+2+OutlineThickness*2;
-			MaxH = (MaxH>>6)+2+OutlineThickness*2;
-
-			for(pSizeData->m_CharMaxWidth = 1; pSizeData->m_CharMaxWidth < MaxW; pSizeData->m_CharMaxWidth <<= 1);
-			for(pSizeData->m_CharMaxHeight = 1; pSizeData->m_CharMaxHeight < MaxH; pSizeData->m_CharMaxHeight <<= 1);
-		}
-
-		//dbg_msg("pFont", "init size %d, texture size %d %d", pFont->sizes[index].font_size, w, h);
-		//FT_New_Face(m_FTLibrary, "data/fonts/vera.ttf", 0, &pFont->ft_face);
 		InitTexture(pSizeData, pSizeData->m_CharMaxWidth, pSizeData->m_CharMaxHeight, 8, 8);
 	}
 
@@ -305,15 +374,16 @@ class CTextRender : public IEngineTextRender
 		int y = 1;
 		unsigned int px, py;
 
-		FT_Set_Pixel_Sizes(pFont->m_FtFace, 0, pSizeData->m_FontSize);
+		FT_Face CharFace = pFont->GetCharFace(Chr);
+		FT_Set_Pixel_Sizes(CharFace, 0, pSizeData->m_FontSize);
 
-		if(FT_Load_Char(pFont->m_FtFace, Chr, FT_LOAD_RENDER|FT_LOAD_NO_BITMAP))
+		if(FT_Load_Char(CharFace, Chr, FT_LOAD_RENDER|FT_LOAD_NO_BITMAP))
 		{
 			dbg_msg("pFont", "error loading glyph %d", Chr);
 			return -1;
 		}
 
-		pBitmap = &pFont->m_FtFace->glyph->bitmap; // ignore_convention
+		pBitmap = &CharFace->glyph->bitmap; // ignore_convention
 
 		// fetch slot
 		SlotID = GetSlot(pSizeData);
@@ -378,9 +448,9 @@ class CTextRender : public IEngineTextRender
 			pFontchr->m_ID = Chr;
 			pFontchr->m_Height = Height * Scale;
 			pFontchr->m_Width = Width * Scale;
-			pFontchr->m_OffsetX = (pFont->m_FtFace->glyph->bitmap_left-2) * Scale; // ignore_convention
-			pFontchr->m_OffsetY = (pSizeData->m_FontSize - pFont->m_FtFace->glyph->bitmap_top) * Scale; // ignore_convention
-			pFontchr->m_AdvanceX = (pFont->m_FtFace->glyph->advance.x>>6) * Scale; // ignore_convention
+			pFontchr->m_OffsetX = (CharFace->glyph->bitmap_left-2) * Scale; // ignore_convention
+			pFontchr->m_OffsetY = (pSizeData->m_FontSize - CharFace->glyph->bitmap_top) * Scale; // ignore_convention
+			pFontchr->m_AdvanceX = (CharFace->glyph->advance.x>>6) * Scale; // ignore_convention
 
 			pFontchr->m_aUvs[0] = (SlotID%pSizeData->m_NumXChars) / (float)(pSizeData->m_NumXChars);
 			pFontchr->m_aUvs[1] = (SlotID/pSizeData->m_NumXChars) / (float)(pSizeData->m_NumYChars);
@@ -426,13 +496,13 @@ class CTextRender : public IEngineTextRender
 	// must only be called from the rendering function as the pFont must be set to the correct size
 	void RenderSetup(CFont *pFont, int size)
 	{
-		FT_Set_Pixel_Sizes(pFont->m_FtFace, 0, size);
+		FT_Set_Pixel_Sizes(pFont->GetDefaultFace(), 0, size);
 	}
 
 	float Kerning(CFont *pFont, int Left, int Right)
 	{
 		FT_Vector Kerning = {0,0};
-		FT_Get_Kerning(pFont->m_FtFace, Left, Right, FT_KERNING_DEFAULT, &Kerning);
+		FT_Get_Kerning(pFont->GetDefaultFace(), Left, Right, FT_KERNING_DEFAULT, &Kerning);
 		return (Kerning.x>>6);
 	}
 
@@ -451,7 +521,7 @@ public:
 		m_TextOutlineB = 0.0f;
 		m_TextOutlineA = 0.3f;
 
-		m_pDefaultFont = 0;
+		m_pDefaultFont = new CFont();
 
 		// GL_LUMINANCE can be good for debugging
 		//m_FontTextureFormat = GL_ALPHA;
@@ -464,24 +534,27 @@ public:
 	}
 
 
-	virtual int LoadFont(const char *pFilename)
+	virtual int LoadFontCollection(const char *pFilename)
 	{
-		CFont *pFont = (CFont *)mem_alloc(sizeof(CFont), 1);
+		FT_Face FtFace;
 
-		mem_zero(pFont, sizeof(*pFont));
-		str_copy(pFont->m_aFilename, pFilename, sizeof(pFont->m_aFilename));
-
-		if(FT_New_Face(m_FTLibrary, pFont->m_aFilename, 0, &pFont->m_FtFace))
-		{
-			mem_free(pFont);
+		if(FT_New_Face(m_FTLibrary, pFilename, -1, &FtFace))
 			return -1;
+
+		int NumFaces = FtFace->num_faces;
+		FT_Done_Face(FtFace);
+
+		int i;
+		for (i = 0; i < NumFaces; ++i)
+		{
+			if(FT_New_Face(m_FTLibrary, pFilename, i, &FtFace))
+				break;
+
+			if (m_pDefaultFont->AddFace(FtFace))
+				break;
 		}
 
-		for(unsigned i = 0; i < NUM_FONT_SIZES; i++)
-			pFont->m_aSizes[i].m_FontSize = -1;
-
-		dbg_msg("textrender", "loaded pFont from '%s'", pFilename);
-		m_pDefaultFont = pFont;
+		dbg_msg("textrender", "loaded %d faces from font file '%s'", i, pFilename);
 
 		return 0;
 	}
@@ -637,7 +710,7 @@ public:
 		if(!pFont)
 			pFont = m_pDefaultFont;
 
-		if(!pFont)
+		if(!pFont || !pFont->GetDefaultFace())
 			return;
 
 		pSizeData = GetSize(pFont, ActualSize);
@@ -808,7 +881,7 @@ public:
 		if(!pFont)
 			pFont = m_pDefaultFont;
 
-		if(!pFont)
+		if(!pFont || !pFont->GetDefaultFace())
 			return;
 
 		pSizeData = GetSize(pFont, ActualSize);
@@ -978,7 +1051,7 @@ public:
 		if(!pFont)
 			pFont = m_pDefaultFont;
 
-		if(!pFont)
+		if(!pFont || !pFont->GetDefaultFace())
 			return 0;
 
 		pSizeData = GetSize(pFont, ActualSize);
