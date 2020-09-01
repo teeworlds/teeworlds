@@ -377,7 +377,7 @@ void CGameClient::OnInit()
 	m_pMenus->InitLoading(TotalWorkAmount);
 	m_pMenus->RenderLoading(4);
 
-	m_pTextRender->LoadFonts(Storage());
+	m_pTextRender->LoadFonts(Storage(), Console());
 	m_pTextRender->SetFontLanguageVariant(Config()->m_ClLanguagefile);
 	m_pMenus->RenderLoading(1);
 

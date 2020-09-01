@@ -5,6 +5,7 @@
 #include "kernel.h"
 #include <base/vmath.h>
 #include <engine/storage.h>
+#include <engine/console.h>
 #include <engine/graphics.h>
 
 enum
@@ -40,7 +41,7 @@ class ITextRender : public IInterface
 public:
 	virtual void SetCursor(CTextCursor *pCursor, float x, float y, float FontSize, int Flags) = 0;
 
-	virtual void LoadFonts(IStorage *pStorage) = 0;
+	virtual void LoadFonts(IStorage *pStorage, IConsole *pConsole) = 0;
 	virtual void SetFontLanguageVariant(const char *pLanguageFile) = 0;
 
 	//

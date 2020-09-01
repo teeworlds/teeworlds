@@ -607,13 +607,13 @@ public:
 		if (m_paVariants) mem_free(m_paVariants);
 	}
 
-	virtual void LoadFonts(IStorage *pStorage){
+	virtual void LoadFonts(IStorage *pStorage, IConsole *pConsole){
 		// read file data into buffer
 		const char *pFilename = "fonts/index.json";
 		IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 		if(!File)
 		{
-			dbg_msg("textrender", "couldn't open fonts index file");
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "textrender", "couldn't open fonts index file");
 			return;
 		}
 		int FileSize = (int)io_length(File);
@@ -630,7 +630,7 @@ public:
 
 		if(pJsonData == 0)
 		{
-			dbg_msg(pFilename, aError);
+			pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
 			return;
 		}
 
@@ -649,9 +649,9 @@ public:
 					io_close(File);
 					if(LoadFontCollection(aFilename))
 					{
-						char aBuf[256];
-						str_format(aBuf, sizeof(aBuf), "failed to load font file. filename='%s'", aFontName);
-						dbg_msg("textrender", aBuf);
+						char aBuf[256];	
+						str_format(aBuf, sizeof(aBuf), "failed to load font. filename='%s'", aFontName);	
+						pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "textrender", aBuf);
 					}
 				}
 			}
