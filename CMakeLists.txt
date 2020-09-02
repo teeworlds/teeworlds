@@ -1421,7 +1421,8 @@ if(CLIENT)
     serverbrowser_filter.h
     sound.cpp
     sound.h
-    text.cpp
+    textrender.cpp
+    textrender.h
   )
   set_src(GAME_CLIENT GLOB_RECURSE src/game/client
     animstate.cpp

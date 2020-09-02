@@ -15,7 +15,7 @@ enum
 	TEXTFLAG_STOP_AT_END=4
 };
 
-class CFont;
+class CGlyphMap;
 
 class CTextCursor
 {
@@ -31,7 +31,7 @@ public:
 	float m_LineWidth;
 	float m_X, m_Y;
 
-	CFont *m_pFont;
+	CGlyphMap *m_pFont;
 	float m_FontSize;
 };
 
