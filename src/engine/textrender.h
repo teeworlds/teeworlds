@@ -31,7 +31,6 @@ public:
 	float m_LineWidth;
 	float m_X, m_Y;
 
-	CGlyphMap *m_pFont;
 	float m_FontSize;
 };
 
@@ -69,6 +68,7 @@ class IEngineTextRender : public ITextRender
 	MACRO_INTERFACE("enginetextrender", 0)
 public:
 	virtual void Init() = 0;
+	virtual void Update() = 0;
 	virtual void Shutdown() = 0;
 };
 

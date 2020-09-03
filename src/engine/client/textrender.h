@@ -3,7 +3,7 @@
 #ifndef ENGINE_CLIENT_TEXTRENDER_H
 #define ENGINE_CLIENT_TEXTRENDER_H
 
-#include <base/tl/array.h>
+#include <base/tl/sorted_array.h>
 #include <base/vmath.h>
 #include <engine/textrender.h>
 
@@ -15,49 +15,86 @@ enum
 {
 	MAX_FACES = 16,
 	MAX_CHARACTERS = 64,
+	TEXTURE_SIZE = 2048,
+	PAGE_COUNT = 4,
 };
 
+// TODO: use SDF or MSDF font instead of multiple font sizes
 static int aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36,64};
 #define NUM_FONT_SIZES (sizeof(aFontSizes)/sizeof(int))
+#define PAGE_SIZE (TEXTURE_SIZE/PAGE_COUNT)
+
+// 32k of data used for rendering glyphs
+static unsigned char s_aGlyphData[(1024/8) * (1024/8)];
+static unsigned char s_aGlyphDataOutlined[(1024/8) * (1024/8)];
 
 struct CGlyph
 {
+	int m_FontSizeIndex;
 	int m_ID;
+	int m_AtlasIndex;
+	int m_PageID;
 
-	// these values are scaled to the pFont size
-	// width * font_size == real_size
 	float m_Width;
 	float m_Height;
 	float m_OffsetX;
 	float m_OffsetY;
 	float m_AdvanceX;
-
 	float m_aUvs[4];
-	int64 m_TouchTime;
+
+	friend bool operator ==(const CGlyph& l, const CGlyph& r)
+	{
+		return l.m_ID == r.m_ID && l.m_FontSizeIndex == r.m_FontSizeIndex;
+	};
+	friend bool operator < (const CGlyph& l, const CGlyph& r)
+	{
+		if (l.m_FontSizeIndex == r.m_FontSizeIndex) return l.m_ID < r.m_ID;
+		return l.m_FontSizeIndex < r.m_FontSizeIndex;
+	};
+	friend bool operator > (const CGlyph& l, const CGlyph& r) { return r < l; };
+	friend bool operator <=(const CGlyph& l, const CGlyph& r) { return !(l > r); };
+	friend bool operator >=(const CGlyph& l, const CGlyph& r) { return !(l < r); };
 };
 
-struct CFontSizeData
+class CAtlas
 {
-	int m_FontSize;
+    array<ivec3> m_Sections;
 
-	IGraphics::CTextureHandle m_aTextures[2];
-	int m_TextureWidth;
-	int m_TextureHeight;
+	int m_ID;
+    int m_Width;
+    int m_Height;
 
-	int m_NumXChars;
-	int m_NumYChars;
+	ivec2 m_Offset;
 
-	int m_CharMaxWidth;
-	int m_CharMaxHeight;
+	int m_LastFrameAccess;
+	int m_Access;
 
-	CGlyph m_aCharacters[MAX_CHARACTERS*MAX_CHARACTERS];
+    int TrySection(int Index, int Width, int Height);
+public:
+    void Init(int Index, int X, int Y, int Width, int Height);
 
-	int m_CurrentCharacter;
-	int m_LanguageVariant;
+    ivec2 Add(int Width, int Height);
+
+	int GetWidth() { return m_Width; }
+	int GetHeight() { return m_Height; }
+	int GetOffsetX() { return m_Offset.x; }
+	int GetOffsetY() { return m_Offset.y; }
+
+	int GetPageID() { return m_ID; }
+	void Touch() { m_Access++; }
+	int GetAccess() { return m_LastFrameAccess; }
+	void Update() { m_LastFrameAccess = m_Access; m_Access = 0; }
 };
 
 class CGlyphMap
 {
+	IGraphics *m_pGraphics;
+	IGraphics::CTextureHandle m_aTextures[2];
+	CAtlas m_aAtlasPages[PAGE_COUNT*PAGE_COUNT];
+	sorted_array<CGlyph> m_Glyphs;
+
+	int m_NumTotalPages;
+
     FT_Face m_DefaultFace;
 	FT_Face m_VariantFace;
 	FT_Face m_aFallbackFaces[MAX_FACES];
@@ -65,17 +102,32 @@ class CGlyphMap
 
 	FT_Face m_aFtFaces[MAX_FACES];
 	int m_NumFtFaces;
-    FT_Face GetFace(int Index) { return m_aFtFaces[Index]; }
 
+	int m_LanguageVariant;
+
+	int AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSize);
+
+	void Grow(unsigned char *pIn, unsigned char *pOut, int w, int h);
+	void InitTexture(int Width, int Height);
+	int FitGlyph(int Width, int Height, ivec2 *Position);
+	void UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int Height, const unsigned char *pData);
+	bool RenderGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph);
 public:
-    CFontSizeData m_aSizes[NUM_FONT_SIZES];
+    CGlyphMap(IGraphics *pGraphics);
 
-    CGlyphMap();
+	IGraphics::CTextureHandle GetTexture(int Index) { return m_aTextures[Index]; }
+
     FT_Face GetDefaultFace() { return m_DefaultFace; };
-    FT_Face GetCharFace(int Chr);
+    int GetCharGlyph(int Chr, FT_Face *pFace);
     int AddFace(FT_Face Face);
     void AddFallbackFaceByName(const char *pFamilyName);
-    bool SetVariantFaceByName(const char *pFamilyName);
+    void SetVariantFaceByName(const char *pFamilyName);
+	
+	CGlyph *GetGlyph(int Chr, int FontSizeIndex);
+	int GetFontSizeIndex(int PixelSize);
+	vec2 Kerning(int Left, int Right);
+
+	void PagesAccessReset();
 };
 
 struct CFontLanguageVariant
@@ -115,7 +167,7 @@ class CTextRender : public IEngineTextRender
 
 	//int m_FontTextureFormat;
 
-	CGlyphMap *m_pDefaultFont;
+	CGlyphMap *m_pGlyphMap;
 
 	// support regional variant fonts
 	int m_NumVariants;
@@ -124,45 +176,13 @@ class CTextRender : public IEngineTextRender
 
 	FT_Library m_FTLibrary;
 
-	int GetFontSizeIndex(int Pixelsize);
-
-	void Grow(unsigned char *pIn, unsigned char *pOut, int w, int h);
-
-	void InitTexture(CFontSizeData *pSizeData, int CharWidth, int CharHeight, int Xchars, int Ychars, int LangVariant);
-
-	int AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSize);
-
-	void IncreaseTextureSize(CFontSizeData *pSizeData);
-
-	// TODO: Refactor: move this into a pFont class
-	void InitIndex(CGlyphMap *pFont, int Index);
-
-	CFontSizeData *GetSize(CGlyphMap *pFont, int Pixelsize);
-
-
-	void UploadGlyph(CFontSizeData *pSizeData, int Texnum, int SlotID, int Chr, const void *pData);
-
-	// 32k of data used for rendering glyphs
-	unsigned char ms_aGlyphData[(1024/8) * (1024/8)];
-	unsigned char ms_aGlyphDataOutlined[(1024/8) * (1024/8)];
-
-	int GetSlot(CFontSizeData *pSizeData);
-
-	int RenderGlyph(CGlyphMap *pFont, CFontSizeData *pSizeData, int Chr, int ReplacingSlot = -1);
-
-	CGlyph *GetChar(CGlyphMap *pFont, CFontSizeData *pSizeData, int Chr);
-
-	// must only be called from the rendering function as the pFont must be set to the correct size
-	void RenderSetup(CGlyphMap *pFont, int size);
-
-	vec2 Kerning(CGlyphMap *pFont, int Left, int Right);
-
 	int LoadFontCollection(const char *pFilename);
 
 public:
 	CTextRender();
 
 	virtual void Init();
+	void Update();
 	void Shutdown();
 
 	virtual void LoadFonts(IStorage *pStorage, IConsole *pConsole);
@@ -185,6 +205,5 @@ public:
 	
     float TextGetLineBaseY(const CTextCursor *pCursor);
 };
-
 
 #endif
