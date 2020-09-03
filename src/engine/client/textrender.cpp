@@ -308,6 +308,7 @@ bool CGlyphMap::RenderGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph)
 	pGlyph->m_FontSizeIndex = FontSizeIndex;
 	pGlyph->m_AtlasIndex = AtlasIndex;
 	pGlyph->m_PageID = Page;
+	pGlyph->m_Face = CharFace;
 
 	pGlyph->m_Height = Height * Scale;
 	pGlyph->m_Width = Width * Scale;
@@ -481,16 +482,12 @@ CGlyph *CGlyphMap::GetGlyph(int Chr, int FontSizeIndex)
 	return pGlyph;
 }
 
-vec2 CGlyphMap::Kerning(int Left, int Right)
+vec2 CGlyphMap::Kerning(CGlyph *pLeft, CGlyph *pRight)
 {
 	FT_Vector Kerning = {0,0};
-	FT_Face LeftFace;
-	GetCharGlyph(Left, &LeftFace);
-	FT_Face RightFace;
-	GetCharGlyph(Right, &RightFace);
 
-	if(LeftFace == RightFace)
-		FT_Get_Kerning(LeftFace, Left, Right, FT_KERNING_DEFAULT, &Kerning);
+	if(pLeft->m_Face == pRight->m_Face)
+		FT_Get_Kerning(pLeft->m_Face, pLeft->m_ID, pRight->m_ID, FT_KERNING_DEFAULT, &Kerning);
 
 	vec2 Vec;
 	Vec.x = (float)(Kerning.x>>6);
@@ -869,40 +866,44 @@ void CTextRender::TextDeferredRenderEx(CTextCursor *pCursor, const char *pText, 
 		const char *pBatchEnd = pEnd;
 		if(pCursor->m_LineWidth > 0 && !(pCursor->m_Flags&TEXTFLAG_STOP_AT_END))
 		{
-			int Wlen = min(WordLength((char *)pCurrent), (int)(pEnd-pCurrent));
+			int WordLen = min(WordLength((char *)pCurrent), (int)(pEnd-pCurrent));
+
 			CTextCursor Compare = *pCursor;
 			Compare.m_X = DrawX;
 			Compare.m_Y = DrawY;
 			Compare.m_Flags &= ~TEXTFLAG_RENDER;
 			Compare.m_LineWidth = -1;
-			TextDeferredRenderEx(&Compare, pCurrent, Wlen, aQuadChar, QuadCharMaxCount, pQuadCharCount,
+			TextDeferredRenderEx(&Compare, pCurrent, WordLen, aQuadChar, QuadCharMaxCount, pQuadCharCount,
 									pFontTexture);
+
 
 			if(Compare.m_X-DrawX > pCursor->m_LineWidth)
 			{
 				// word can't be fitted in one line, cut it
 				CTextCursor Cutter = *pCursor;
 				Cutter.m_GlyphCount = 0;
+				Cutter.m_CharCount = 0;
 				Cutter.m_X = DrawX;
 				Cutter.m_Y = DrawY;
 				Cutter.m_Flags &= ~TEXTFLAG_RENDER;
 				Cutter.m_Flags |= TEXTFLAG_STOP_AT_END;
 
-				TextDeferredRenderEx(&Cutter, (const char *)pCurrent, Wlen, aQuadChar, QuadCharMaxCount,
+				TextDeferredRenderEx(&Cutter, (const char *)pCurrent, WordLen, aQuadChar, QuadCharMaxCount,
 										pQuadCharCount, pFontTexture);
-				Wlen = Cutter.m_GlyphCount;
+				int WordGlyphs = Cutter.m_GlyphCount;
+				WordLen = Cutter.m_CharCount;
 				NewLine = 1;
 
-				if(Wlen <= 3) // if we can't place 3 chars of the word on this line, take the next
-					Wlen = 0;
+				if(WordGlyphs <= 3) // if we can't place 3 chars of the word on this line, take the next
+					WordLen = 0;
 			}
 			else if(Compare.m_X-pCursor->m_StartX > pCursor->m_LineWidth)
 			{
 				NewLine = 1;
-				Wlen = 0;
+				WordLen = 0;
 			}
 
-			pBatchEnd = pCurrent + Wlen;
+			pBatchEnd = pCurrent + WordLen;
 		}
 
 		const char *pTmp = pCurrent;
@@ -927,9 +928,10 @@ void CTextRender::TextDeferredRenderEx(CTextCursor *pCursor, const char *pText, 
 			}
 
 			CGlyph *pChr = pFont->GetGlyph(Character, FontSizeIndex);
+			CGlyph *pNextChr = pFont->GetGlyph(NextCharacter, FontSizeIndex);
 			if(pChr)
 			{
-				vec2 Kern = pFont->Kerning(Character, NextCharacter) * Scale;
+				vec2 Kern = pFont->Kerning(pChr, pNextChr) * Scale;
 				DrawY += Kern.y;
 				float Advance = pChr->m_AdvanceX + Kern.x * Scale;
 				if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)
@@ -1057,38 +1059,41 @@ void CTextRender::TextEx(CTextCursor *pCursor, const char *pText, int Length)
 			const char *pBatchEnd = pEnd;
 			if(pCursor->m_LineWidth > 0 && !(pCursor->m_Flags&TEXTFLAG_STOP_AT_END))
 			{
-				int Wlen = min(WordLength((char *)pCurrent), (int)(pEnd-pCurrent));
+				int WordLen = min(WordLength((char *)pCurrent), (int)(pEnd-pCurrent));
+
 				CTextCursor Compare = *pCursor;
 				Compare.m_X = DrawX;
 				Compare.m_Y = DrawY;
 				Compare.m_Flags &= ~TEXTFLAG_RENDER;
 				Compare.m_LineWidth = -1;
-				TextEx(&Compare, pCurrent, Wlen);
+				TextEx(&Compare, pCurrent, WordLen);
 
 				if(Compare.m_X-DrawX > pCursor->m_LineWidth)
 				{
 					// word can't be fitted in one line, cut it
 					CTextCursor Cutter = *pCursor;
 					Cutter.m_GlyphCount = 0;
+					Cutter.m_CharCount = 0;
 					Cutter.m_X = DrawX;
 					Cutter.m_Y = DrawY;
 					Cutter.m_Flags &= ~TEXTFLAG_RENDER;
 					Cutter.m_Flags |= TEXTFLAG_STOP_AT_END;
 
-					TextEx(&Cutter, (const char *)pCurrent, Wlen);
-					Wlen = Cutter.m_GlyphCount;
+					TextEx(&Cutter, (const char *)pCurrent, WordLen);
+					int WordGlyphs = Cutter.m_GlyphCount;
+					WordLen = Cutter.m_CharCount;
 					NewLine = 1;
 
-					if(Wlen <= 3) // if we can't place 3 chars of the word on this line, take the next
-						Wlen = 0;
+					if(WordGlyphs <= 3) // if we can't place 3 chars of the word on this line, take the next
+						WordLen = 0;
 				}
 				else if(Compare.m_X-pCursor->m_StartX > pCursor->m_LineWidth)
 				{
 					NewLine = 1;
-					Wlen = 0;
+					WordLen = 0;
 				}
 
-				pBatchEnd = pCurrent + Wlen;
+				pBatchEnd = pCurrent + WordLen;
 			}
 
 			const char *pTmp = pCurrent;
@@ -1114,9 +1119,10 @@ void CTextRender::TextEx(CTextCursor *pCursor, const char *pText, int Length)
 				}
 
 				CGlyph *pChr = pFont->GetGlyph(Character, FontSizeIndex);
+				CGlyph *pNextChr = pFont->GetGlyph(NextCharacter, FontSizeIndex);
 				if(pChr)
 				{
-					vec2 Kern = pFont->Kerning(Character, NextCharacter) * Scale;
+					vec2 Kern = pFont->Kerning(pChr, pNextChr) * Scale;
 					DrawY += Kern.y;
 					float Advance = pChr->m_AdvanceX + Kern.x * Scale;
 					if(pCursor->m_Flags&TEXTFLAG_STOP_AT_END && DrawX+Advance*Size-pCursor->m_StartX > pCursor->m_LineWidth)

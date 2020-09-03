@@ -32,8 +32,10 @@ struct CGlyph
 {
 	int m_FontSizeIndex;
 	int m_ID;
+
 	int m_AtlasIndex;
 	int m_PageID;
+	FT_Face m_Face;
 
 	float m_Width;
 	float m_Height;
@@ -125,7 +127,7 @@ public:
 	
 	CGlyph *GetGlyph(int Chr, int FontSizeIndex);
 	int GetFontSizeIndex(int PixelSize);
-	vec2 Kerning(int Left, int Right);
+	vec2 Kerning(CGlyph *pLeft, CGlyph *pRight);
 
 	void PagesAccessReset();
 };
@@ -143,15 +145,15 @@ class CTextRender : public IEngineTextRender
 
 	int WordLength(const char *pText)
 	{
-		int s = 1;
+		int Length = 0;
 		while(1)
 		{
-			if(*pText == 0)
-				return s-1;
-			if(*pText == '\n' || *pText == '\t' || *pText == ' ')
-				return s;
-			pText++;
-			s++;
+			const char *pCursor = (pText + Length);
+			if(*pCursor == 0)
+				return Length;
+			if(*pCursor == '\n' || *pCursor == '\t' || *pCursor == ' ')
+				return Length+1;
+			Length = str_utf8_forward(pText, Length);
 		}
 	}
 
