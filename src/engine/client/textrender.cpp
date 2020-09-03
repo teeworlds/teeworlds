@@ -16,15 +16,15 @@ int CAtlas::TrySection(int Index, int Width, int Height)
 
 	int FitWidth = Width;
 
-	if (CurX + Width > m_Width - 1) return -1;
+	if(CurX + Width > m_Width - 1) return -1;
 
-	for (int i = Index; i < m_Sections.size(); ++i)
+	for(int i = Index; i < m_Sections.size(); ++i)
 	{
-		if (FitWidth <= 0) break;
+		if(FitWidth <= 0) break;
 
 		Section = m_Sections[i];
-		if (Section.y > CurY) CurY = Section.y;
-		if (CurY + Height > m_Height - 1) return -1;
+		if(Section.y > CurY) CurY = Section.y;
+		if(CurY + Height > m_Height - 1) return -1;
 		FitWidth -= Section.l;
 	}
 
@@ -56,14 +56,14 @@ ivec2 CAtlas::Add(int Width, int Height)
 
 	ivec2 Position;
 	
-	for (int i = 0; i < m_Sections.size(); ++i)
+	for(int i = 0; i < m_Sections.size(); ++i)
 	{
 		int y = TrySection(i, Width, Height);
-		if (y >= 0)
+		if(y >= 0)
 		{
 			ivec3 Section = m_Sections[i];
 			int NewHeight = y + Height;
-			if ((NewHeight < BestHeight) || ((NewHeight == BestHeight) && (Section.l > 0 && Section.l < BestWidth)))
+			if((NewHeight < BestHeight) || ((NewHeight == BestHeight) && (Section.l > 0 && Section.l < BestWidth)))
 			{
 				BestHeight = NewHeight;
 				BestWidth = Section.l;
@@ -74,7 +74,7 @@ ivec2 CAtlas::Add(int Width, int Height)
 		}
 	}
 
-	if (BestSectionIndex < 0)
+	if(BestSectionIndex < 0)
 	{
 		Position.x = -1;
 		Position.y = -1;
@@ -87,24 +87,24 @@ ivec2 CAtlas::Add(int Width, int Height)
 	NewSection.l = Width;
 	m_Sections.insert(NewSection, m_Sections.all().slice(BestSectionIndex, BestSectionIndex + 1));
 
-	for (int i = BestSectionIndex + 1; i < m_Sections.size(); ++i)
+	for(int i = BestSectionIndex + 1; i < m_Sections.size(); ++i)
 	{
 		ivec3 *Section = &m_Sections[i];
 		ivec3 *Previous = &m_Sections[i-1];
 
-		if (Section->x >= Previous->x + Previous->l) break;
+		if(Section->x >= Previous->x + Previous->l) break;
 		
 		int Shrink = Previous->x + Previous->l - Section->x;
 		Section->x += Shrink;
 		Section->l -= Shrink;
-		if (Section->l > 0) break;
+		if(Section->l > 0) break;
 
 		m_Sections.remove_index(i);
 		i -= 1;
 	}
 
 
-	for (int i = 0; i < m_Sections.size()-1; ++i)
+	for(int i = 0; i < m_Sections.size()-1; ++i)
 	{
 		ivec3 *Section = &m_Sections[i];
 		ivec3 *Next = &m_Sections[i+1];
@@ -142,7 +142,7 @@ void CGlyphMap::Grow(unsigned char *pIn, unsigned char *pOut, int w, int h)
 				{
 					int GetX = x+sx;
 					int GetY = y+sy;
-					if (GetX >= 0 && GetY >= 0 && GetX < w && GetY < h)
+					if(GetX >= 0 && GetY >= 0 && GetX < w && GetY < h)
 					{
 						int Index = GetY*w+GetX;
 						if(pIn[Index] > c)
@@ -158,9 +158,9 @@ void CGlyphMap::InitTexture(int Width, int Height)
 {
 	m_NumTotalPages = 0;
 
-	for (int y = 0; y < PAGE_COUNT; ++y)
+	for(int y = 0; y < PAGE_COUNT; ++y)
 	{
-		for (int x = 0; x < PAGE_COUNT; ++x)
+		for(int x = 0; x < PAGE_COUNT; ++x)
 		{
 			m_aAtlasPages[y*PAGE_COUNT+x].Init(m_NumTotalPages++, x * PAGE_SIZE, y * PAGE_SIZE, PAGE_SIZE, PAGE_SIZE);
 		}
@@ -185,20 +185,20 @@ void CGlyphMap::InitTexture(int Width, int Height)
 
 int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *Position)
 {
-	for (int i = 0; i < PAGE_COUNT*PAGE_COUNT; ++i)
+	for(int i = 0; i < PAGE_COUNT*PAGE_COUNT; ++i)
 	{
 		*Position = m_aAtlasPages[i].Add(Width, Height);
-		if (Position->x >= 0 && Position->y >= 0)
+		if(Position->x >= 0 && Position->y >= 0)
 			return i;
 	}
 	
 	// out of space, drop a page
 	int LeastAccess = INT_MAX;
 	int Atlas = 0;
-	for (int i = 0; i < PAGE_COUNT*PAGE_COUNT; ++i)
+	for(int i = 0; i < PAGE_COUNT*PAGE_COUNT; ++i)
 	{
 		int PageAccess = m_aAtlasPages[i].GetAccess();
-		if (PageAccess < LeastAccess)
+		if(PageAccess < LeastAccess)
 		{
 			LeastAccess = PageAccess;
 			Atlas = i;
@@ -323,6 +323,37 @@ bool CGlyphMap::RenderGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph)
 	return true;
 }
 
+bool CGlyphMap::SetFaceByName(FT_Face *pFace, const char *pFamilyName)
+{
+	FT_Face Face = NULL;
+	char aFamilyStyleName[128];
+
+	if(pFamilyName != NULL)
+	{
+		for(int i = 0; i < m_NumFtFaces; ++i)
+		{
+			str_format(aFamilyStyleName, 128, "%s %s", m_aFtFaces[i]->family_name, m_aFtFaces[i]->style_name);
+			if(str_comp(pFamilyName, aFamilyStyleName) == 0)
+			{
+				Face = m_aFtFaces[i];
+				break;
+			}
+
+			if(!Face && str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
+			{
+				Face = m_aFtFaces[i];
+			}
+		}
+	}
+
+	if(Face)
+	{
+		*pFace = Face;
+		return true;
+	}
+	return false;
+}
+
 CGlyphMap::CGlyphMap(IGraphics *pGraphics)
 {
 	m_pGraphics = pGraphics;
@@ -344,26 +375,29 @@ int CGlyphMap::GetCharGlyph(int Chr, FT_Face *pFace)
 	int GlyphIndex = FT_Get_Char_Index(m_DefaultFace, (FT_ULong)Chr);
 	*pFace = m_DefaultFace;
 
-	if (!m_DefaultFace || GlyphIndex)
+	if(!m_DefaultFace || GlyphIndex)
 		return GlyphIndex;
 
-	if (m_VariantFace)
+	if(m_VariantFace)
 	{
 		GlyphIndex = FT_Get_Char_Index(m_VariantFace, (FT_ULong)Chr);
-		if (GlyphIndex)
+		if(GlyphIndex)
 		{
 			*pFace = m_VariantFace;
 			return GlyphIndex;
 		}
 	}
 
-	for (int i = 0; i < m_NumFallbackFaces; ++i)
+	for(int i = 0; i < m_NumFallbackFaces; ++i)
 	{
-		if (m_aFallbackFaces[i])
+		if(m_aFallbackFaces[i])
 		{
 			GlyphIndex = FT_Get_Char_Index(m_aFallbackFaces[i], (FT_ULong)Chr);
-			*pFace = m_aFallbackFaces[i];
-			return GlyphIndex;
+			if(GlyphIndex)
+			{
+				*pFace = m_aFallbackFaces[i];
+				return GlyphIndex;
+			}
 		}
 	}
 
@@ -372,61 +406,41 @@ int CGlyphMap::GetCharGlyph(int Chr, FT_Face *pFace)
 
 int CGlyphMap::AddFace(FT_Face Face)
 {
-	if (m_NumFtFaces == MAX_FACES) 
+	if(m_NumFtFaces == MAX_FACES) 
 		return -1;
 
 	m_aFtFaces[m_NumFtFaces++] = Face;
-	if (!m_DefaultFace) m_DefaultFace = Face;
+	if(!m_DefaultFace) m_DefaultFace = Face;
 
 	return 0; 
 }
 
+void CGlyphMap::SetDefaultFaceByName(const char *pFamilyName)
+{
+	SetFaceByName(&m_DefaultFace, pFamilyName);
+}
+
 void CGlyphMap::AddFallbackFaceByName(const char *pFamilyName)
 {
-	if (m_NumFallbackFaces == MAX_FACES)
+	if(m_NumFallbackFaces == MAX_FACES)
 		return;
 
-	char aFamilyStyleName[128];
 	FT_Face Face = NULL;
-	for (int i = 0; i < m_NumFtFaces; ++i)
+	if(SetFaceByName(&Face, pFamilyName))
 	{
-		str_format(aFamilyStyleName, 128, "%s %s", m_aFtFaces[i]->family_name, m_aFtFaces[i]->style_name);
-		if (str_comp(pFamilyName, aFamilyStyleName) == 0)
-		{
-			Face = m_aFtFaces[i];
-			break;
-		}
-
-		if (!Face && str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
-		{
-			Face = m_aFtFaces[i];
-		}
+		m_aFallbackFaces[m_NumFallbackFaces++] = Face;
 	}
-
-	m_aFallbackFaces[m_NumFallbackFaces++] = Face;
 }
 
 void CGlyphMap::SetVariantFaceByName(const char *pFamilyName)
 {
 	FT_Face Face = NULL;
-	if (pFamilyName != NULL)
-	{
-		for (int i = 0; i < m_NumFtFaces; ++i)
-		{
-			if (str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
-			{
-				Face = m_aFtFaces[i];
-				break;
-			}
-		}
-	}
-
-	if (m_VariantFace != Face)
+	SetFaceByName(&Face, pFamilyName);
+	if(m_VariantFace != Face)
 	{
 		m_VariantFace = Face;
 		InitTexture(TEXTURE_SIZE, TEXTURE_SIZE);
 	}
-	return;
 }
 
 CGlyph *CGlyphMap::GetGlyph(int Chr, int FontSizeIndex)
@@ -442,7 +456,7 @@ CGlyph *CGlyphMap::GetGlyph(int Chr, int FontSizeIndex)
 	// couldn't find glyph, render a new one
 	if(r.empty())
 	{
-		if (RenderGlyph(Chr, FontSizeIndex, &Glyph))
+		if(RenderGlyph(Chr, FontSizeIndex, &Glyph))
 		{
 			int Index = m_Glyphs.add(Glyph);
 			pGlyph = &m_Glyphs[Index];
@@ -452,7 +466,7 @@ CGlyph *CGlyphMap::GetGlyph(int Chr, int FontSizeIndex)
 	{
 		pGlyph = &r.front();
 
-		if (m_aAtlasPages[pGlyph->m_AtlasIndex].GetPageID() != pGlyph->m_PageID)
+		if(m_aAtlasPages[pGlyph->m_AtlasIndex].GetPageID() != pGlyph->m_PageID)
 		{
 			// re-render glyph if the page is dropped
 			RenderGlyph(Chr, FontSizeIndex, pGlyph);
@@ -475,7 +489,7 @@ vec2 CGlyphMap::Kerning(int Left, int Right)
 	FT_Face RightFace;
 	GetCharGlyph(Right, &RightFace);
 
-	if (LeftFace == RightFace)
+	if(LeftFace == RightFace)
 		FT_Get_Kerning(LeftFace, Left, Right, FT_KERNING_DEFAULT, &Kerning);
 
 	vec2 Vec;
@@ -518,12 +532,12 @@ int CTextRender::LoadFontCollection(const char *pFilename)
 	FT_Done_Face(FtFace);
 
 	int i;
-	for (i = 0; i < NumFaces; ++i)
+	for(i = 0; i < NumFaces; ++i)
 	{
 		if(FT_New_Face(m_FTLibrary, pFilename, i, &FtFace))
 			break;
 
-		if (m_pGlyphMap->AddFace(FtFace))
+		if(m_pGlyphMap->AddFace(FtFace))
 			break;
 	}
 
@@ -563,13 +577,13 @@ void CTextRender::Init()
 
 void CTextRender::Update()
 {
-	if (m_pGlyphMap) m_pGlyphMap->PagesAccessReset();
+	if(m_pGlyphMap) m_pGlyphMap->PagesAccessReset();
 }
 
 void CTextRender::Shutdown()
 {
 	delete m_pGlyphMap;
-	if (m_paVariants) mem_free(m_paVariants);
+	if(m_paVariants) mem_free(m_paVariants);
 }
 
 void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
@@ -623,6 +637,13 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 		}
 	}
 
+	// extract default family name
+	const json_value &rDefaultFace = (*pJsonData)["default"];
+	if(rDefaultFace.type == json_string)
+	{
+		m_pGlyphMap->SetDefaultFaceByName((const char *)rDefaultFace);
+	}
+
 	// extract fallback family names
 	const json_value &rFallbackFaces = (*pJsonData)["fallbacks"];
 	if(rFallbackFaces.type == json_array)
@@ -647,7 +668,7 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 			strncpy(m_paVariants[i].m_aLanguageFile, aFileName, sizeof(m_paVariants[i].m_aLanguageFile));
 			
 			json_value *pFamilyName = rVariant.u.object.values[i].value;
-			if (pFamilyName->type == json_string)
+			if(pFamilyName->type == json_string)
 				strncpy(m_paVariants[i].m_aFamilyName, pFamilyName->u.string.ptr, sizeof(m_paVariants[i].m_aFamilyName));
 			else
 				m_paVariants[i].m_aFamilyName[0] = 0;
@@ -659,15 +680,15 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 
 void CTextRender::SetFontLanguageVariant(const char *pLanguageFile)
 {
-	if (!m_pGlyphMap) return;	
+	if(!m_pGlyphMap) return;	
 
 	char *FamilyName = NULL;
 
-	if (m_paVariants)
+	if(m_paVariants)
 	{
-		for (int i = 0; i < m_NumVariants; ++i)
+		for(int i = 0; i < m_NumVariants; ++i)
 		{
-			if (str_comp_filenames(pLanguageFile, m_paVariants[i].m_aLanguageFile) == 0)
+			if(str_comp_filenames(pLanguageFile, m_paVariants[i].m_aLanguageFile) == 0)
 			{
 				FamilyName = m_paVariants[i].m_aFamilyName;
 				m_CurrentVariant = i;
@@ -1018,13 +1039,13 @@ void CTextRender::TextEx(CTextCursor *pCursor, const char *pText, int Length)
 		if(pCursor->m_Flags&TEXTFLAG_RENDER)
 		{
 			// TODO: Make this better
-			if (i == 0)
+			if(i == 0)
 				Graphics()->TextureSet(pFont->GetTexture(1));
 			else
 				Graphics()->TextureSet(pFont->GetTexture(0));
 
 			Graphics()->QuadsBegin();
-			if (i == 0)
+			if(i == 0)
 				Graphics()->SetColor(m_TextOutlineR, m_TextOutlineG, m_TextOutlineB, m_TextOutlineA*m_TextA);
 			else
 				Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);

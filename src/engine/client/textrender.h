@@ -110,6 +110,7 @@ class CGlyphMap
 	int FitGlyph(int Width, int Height, ivec2 *Position);
 	void UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int Height, const unsigned char *pData);
 	bool RenderGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph);
+	bool SetFaceByName(FT_Face *pFace, const char *pFamilyName);
 public:
 	CGlyphMap(IGraphics *pGraphics);
 
@@ -118,6 +119,7 @@ public:
 	FT_Face GetDefaultFace() { return m_DefaultFace; };
 	int GetCharGlyph(int Chr, FT_Face *pFace);
 	int AddFace(FT_Face Face);
+	void SetDefaultFaceByName(const char *pFamilyName);
 	void AddFallbackFaceByName(const char *pFamilyName);
 	void SetVariantFaceByName(const char *pFamilyName);
 	
