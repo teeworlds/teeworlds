@@ -58,22 +58,22 @@ struct CGlyph
 
 class CAtlas
 {
-    array<ivec3> m_Sections;
+	array<ivec3> m_Sections;
 
 	int m_ID;
-    int m_Width;
-    int m_Height;
+	int m_Width;
+	int m_Height;
 
 	ivec2 m_Offset;
 
 	int m_LastFrameAccess;
 	int m_Access;
 
-    int TrySection(int Index, int Width, int Height);
+	int TrySection(int Index, int Width, int Height);
 public:
-    void Init(int Index, int X, int Y, int Width, int Height);
+	void Init(int Index, int X, int Y, int Width, int Height);
 
-    ivec2 Add(int Width, int Height);
+	ivec2 Add(int Width, int Height);
 
 	int GetWidth() { return m_Width; }
 	int GetHeight() { return m_Height; }
@@ -95,7 +95,7 @@ class CGlyphMap
 
 	int m_NumTotalPages;
 
-    FT_Face m_DefaultFace;
+	FT_Face m_DefaultFace;
 	FT_Face m_VariantFace;
 	FT_Face m_aFallbackFaces[MAX_FACES];
 	int m_NumFallbackFaces;
@@ -111,15 +111,15 @@ class CGlyphMap
 	void UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int Height, const unsigned char *pData);
 	bool RenderGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph);
 public:
-    CGlyphMap(IGraphics *pGraphics);
+	CGlyphMap(IGraphics *pGraphics);
 
 	IGraphics::CTextureHandle GetTexture(int Index) { return m_aTextures[Index]; }
 
-    FT_Face GetDefaultFace() { return m_DefaultFace; };
-    int GetCharGlyph(int Chr, FT_Face *pFace);
-    int AddFace(FT_Face Face);
-    void AddFallbackFaceByName(const char *pFamilyName);
-    void SetVariantFaceByName(const char *pFamilyName);
+	FT_Face GetDefaultFace() { return m_DefaultFace; };
+	int GetCharGlyph(int Chr, FT_Face *pFace);
+	int AddFace(FT_Face Face);
+	void AddFallbackFaceByName(const char *pFamilyName);
+	void SetVariantFaceByName(const char *pFamilyName);
 	
 	CGlyph *GetGlyph(int Chr, int FontSizeIndex);
 	int GetFontSizeIndex(int PixelSize);
@@ -190,18 +190,18 @@ public:
 
 	virtual void Text(void *pFontSetV, float x, float y, float Size, const char *pText, float LineWidth, bool MultiLine);
 	virtual float TextWidth(void *pFontSetV, float Size, const char *pText, int StrLength, float LineWidth);
-    virtual int TextLineCount(void *pFontSetV, float Size, const char *pText, float LineWidth);
-    virtual void TextColor(float r, float g, float b, float a);
+	virtual int TextLineCount(void *pFontSetV, float Size, const char *pText, float LineWidth);
+	virtual void TextColor(float r, float g, float b, float a);
 	virtual void TextOutlineColor(float r, float g, float b, float a);
 	
-    virtual void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset,
+	virtual void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset,
 							  vec4 ShadowColor, vec4 TextColor_);
 	virtual void TextDeferredRenderEx(CTextCursor *pCursor, const char *pText, int Length, CQuadChar* aQuadChar,
-                              int QuadCharMaxCount, int* pQuadCharCount,
-                              IGraphics::CTextureHandle* pFontTexture);
+							int QuadCharMaxCount, int* pQuadCharCount,
+							IGraphics::CTextureHandle* pFontTexture);
 	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length);
 	
-    float TextGetLineBaseY(const CTextCursor *pCursor);
+	float TextGetLineBaseY(const CTextCursor *pCursor);
 };
 
 #endif

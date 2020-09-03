@@ -104,17 +104,17 @@ ivec2 CAtlas::Add(int Width, int Height)
 	}
 
 
-    for (int i = 0; i < m_Sections.size()-1; ++i)
-    {
-        ivec3 *Section = &m_Sections[i];
-        ivec3 *Next = &m_Sections[i+1];
-        if( Section->y == Next->y )
-        {
-            Section->l += Next->l;
-            m_Sections.remove_index(i+1);
-            i -= 1;
-        }
-    }
+	for (int i = 0; i < m_Sections.size()-1; ++i)
+	{
+		ivec3 *Section = &m_Sections[i];
+		ivec3 *Next = &m_Sections[i+1];
+		if( Section->y == Next->y )
+		{
+			Section->l += Next->l;
+			m_Sections.remove_index(i+1);
+			i -= 1;
+		}
+	}
 
 	m_Access++;
 	return Position + m_Offset;
