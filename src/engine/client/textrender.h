@@ -103,8 +103,6 @@ class CGlyphMap
 	FT_Face m_aFtFaces[MAX_FACES];
 	int m_NumFtFaces;
 
-	int m_LanguageVariant;
-
 	int AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSize);
 
 	void Grow(unsigned char *pIn, unsigned char *pOut, int w, int h);
