@@ -4,7 +4,6 @@
 #define GAME_CLIENT_GAMECLIENT_H
 
 #include <base/vmath.h>
-#include <engine/external/json-parser/json.h>
 #include <engine/client.h>
 #include <engine/console.h>
 #include <game/layers.h>
