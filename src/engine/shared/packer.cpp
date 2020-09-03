@@ -33,36 +33,34 @@ void CPacker::AddString(const char *pStr, int Limit)
 	if(m_Error)
 		return;
 
-	//
-	if(Limit > 0)
+	if(Limit <= 0)
 	{
-		while(*pStr && Limit != 0)
-		{
-			*m_pCurrent++ = *pStr++;
-			Limit--;
-
-			if(m_pCurrent >= m_pEnd)
-			{
-				m_Error = 1;
-				break;
-			}
-		}
-		*m_pCurrent++ = 0;
+		Limit = PACKER_BUFFER_SIZE;
 	}
-	else
+	while(*pStr && Limit != 0)
 	{
-		while(*pStr)
+		int Codepoint = str_utf8_decode(&pStr);
+		if(Codepoint == -1)
 		{
-			*m_pCurrent++ = *pStr++;
-
-			if(m_pCurrent >= m_pEnd)
-			{
-				m_Error = 1;
-				break;
-			}
+			Codepoint = 0xfffd; // Unicode replacement character.
 		}
-		*m_pCurrent++ = 0;
+		char aGarbage[4];
+		int Length = str_utf8_encode(aGarbage, Codepoint);
+		if(Limit < Length)
+		{
+			break;
+		}
+		// Ensure space for the null termination.
+		if(m_pEnd - m_pCurrent < Length + 1)
+		{
+			m_Error = 1;
+			break;
+		}
+		Length = str_utf8_encode((char *)m_pCurrent, Codepoint);
+		m_pCurrent += Length;
+		Limit -= Length;
 	}
+	*m_pCurrent++ = 0;
 }
 
 void CPacker::AddRaw(const void *pData, int Size)

@@ -1736,6 +1736,7 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
     hash.cpp
     io.cpp
     jsonwriter.cpp
+    packer.cpp
     sorted_array.cpp
     storage.cpp
     str.cpp

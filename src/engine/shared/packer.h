@@ -7,11 +7,12 @@
 
 class CPacker
 {
+public:
 	enum
 	{
 		PACKER_BUFFER_SIZE=1024*2
 	};
-
+private:
 	unsigned char m_aBuffer[PACKER_BUFFER_SIZE];
 	unsigned char *m_pCurrent;
 	unsigned char *m_pEnd;
