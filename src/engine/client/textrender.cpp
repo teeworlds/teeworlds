@@ -198,7 +198,7 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *Position)
 	for (int i = 0; i < PAGE_COUNT*PAGE_COUNT; ++i)
 	{
 		int PageAccess = m_aAtlasPages[i].GetAccess();
-		if (LeastAccess < PageAccess)
+		if (PageAccess < LeastAccess)
 		{
 			LeastAccess = PageAccess;
 			Atlas = i;
@@ -217,6 +217,8 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *Position)
 
 	m_aAtlasPages[Atlas].Init(m_NumTotalPages++, X, Y, W, H);
 	*Position = m_aAtlasPages[Atlas].Add(Width, Height);
+
+	dbg_msg("pGlyphMap", "glyph map is full, dropping atlas %d", Atlas);
 	return Atlas;
 }
 
