@@ -814,8 +814,9 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 	{
 		if(UI()->MouseButton(0))
 		{
-			UI()->SetActiveItem(pID);
 			s_OffsetY = UI()->MouseY()-Handle.y;
+			UI()->SetActiveItem(pID);
+			Grabbed = true;
 		}
 	}
 	else if(UI()->MouseButtonClicked(0) && !InsideHandle && InsideRail)
@@ -824,7 +825,8 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 		UI()->SetActiveItem(pID);
 		Grabbed = true;
 	}
-	else if(InsideHandle)
+
+	if(InsideHandle)
 	{
 		UI()->SetHotItem(pID);
 	}
@@ -838,7 +840,7 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 	}
 
 	// render
-	RenderTools()->DrawUIRect(&Rail, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, Rail.w/2.0f);
+	RenderTools()->DrawRoundRect(&Rail, vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.w/2.0f);
 
 	vec4 Color;
 	if(Grabbed)
@@ -847,7 +849,7 @@ float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	else
 		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
-	RenderTools()->DrawUIRect(&Handle, Color, CUI::CORNER_ALL, Handle.w/2.0f);
+	RenderTools()->DrawRoundRect(&Handle, Color, Handle.w/2.0f);
 
 	return ReturnValue;
 }
@@ -881,8 +883,9 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	{
 		if(UI()->MouseButton(0))
 		{
-			UI()->SetActiveItem(pID);
 			s_OffsetX = UI()->MouseX()-Handle.x;
+			UI()->SetActiveItem(pID);
+			Grabbed = true;
 		}
 	}
 	else if(UI()->MouseButtonClicked(0) && !InsideHandle && InsideRail)
@@ -891,7 +894,8 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 		UI()->SetActiveItem(pID);
 		Grabbed = true;
 	}
-	else if(InsideHandle)
+
+	if(InsideHandle)
 	{
 		UI()->SetHotItem(pID);
 	}
@@ -905,7 +909,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	}
 
 	// render
-	RenderTools()->DrawUIRect(&Rail, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, Rail.h/2.0f);
+	RenderTools()->DrawRoundRect(&Rail, vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.h/2.0f);
 
 	vec4 Color;
 	if(Grabbed)
@@ -914,7 +918,7 @@ float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	else
 		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
-	RenderTools()->DrawUIRect(&Handle, Color, CUI::CORNER_ALL, Handle.h/2.0f);
+	RenderTools()->DrawRoundRect(&Handle, Color, Handle.h/2.0f);
 
 	return ReturnValue;
 }
