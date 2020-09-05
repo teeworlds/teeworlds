@@ -57,26 +57,20 @@ void CPlayers::RenderHook(
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
-
-	// use preditect players if needed
-	if(m_pClient->m_LocalClientID == ClientID && Config()->m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(m_pClient->ShouldUsePredicted() &&
+		m_pClient->ShouldUsePredictedChar(ClientID))
 	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter || m_pClient->IsWorldPaused())
-		{
-		}
-		else
-		{
-			// apply predicted results
-			m_pClient->m_PredictedChar.Write(&Player);
-			m_pClient->m_PredictedPrevChar.Write(&Prev);
-			IntraTick = Client()->PredIntraGameTick();
-		}
+		m_pClient->UsePredictedChar(&Prev, &Player, &IntraTick, ClientID);
 	}
 
-	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
+	vec2 Position = mix(
+		vec2(Prev.m_X, Prev.m_Y),
+		vec2(Player.m_X, Player.m_Y),
+		IntraTick
+	);
 
 	// draw hook
-	if (Prev.m_HookState>0 && Player.m_HookState>0)
+	if(Prev.m_HookState>0 && Player.m_HookState>0)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
@@ -87,27 +81,26 @@ void CPlayers::RenderHook(
 
 		if(pPlayerChar->m_HookedPlayer != -1)
 		{
-			if(m_pClient->m_LocalClientID != -1 && pPlayerChar->m_HookedPlayer == m_pClient->m_LocalClientID)
+			// `HookedPlayer != -1` means that a player is being hooked
+			if(m_pClient->ShouldUsePredicted() &&
+				m_pClient->ShouldUsePredictedChar(pPlayerChar->m_HookedPlayer))
 			{
-				if(Client()->State() == IClient::STATE_DEMOPLAYBACK) // only use prediction if needed
-					HookPos = vec2(m_pClient->m_LocalCharacterPos.x, m_pClient->m_LocalCharacterPos.y);
-				else
-					HookPos = mix(vec2(m_pClient->m_PredictedPrevChar.m_Pos.x, m_pClient->m_PredictedPrevChar.m_Pos.y),
-						vec2(m_pClient->m_PredictedChar.m_Pos.x, m_pClient->m_PredictedChar.m_Pos.y), Client()->PredIntraGameTick());
-			}
-			else if(m_pClient->m_LocalClientID == ClientID)
-			{
-				HookPos = mix(vec2(m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_X,
-					m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Prev.m_Y),
-					vec2(m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Cur.m_X,
-					m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Cur.m_Y),
-					Client()->IntraGameTick());
+				HookPos = m_pClient->PredictedCharPos(pPlayerChar->m_HookedPlayer);
 			}
 			else
-				HookPos = mix(vec2(pPrevChar->m_HookX, pPrevChar->m_HookY), vec2(pPlayerChar->m_HookX, pPlayerChar->m_HookY), Client()->IntraGameTick());
+			{
+				HookPos = m_pClient->UnpredictedCharPos(pPlayerChar->m_HookedPlayer);
+			}
 		}
 		else
-			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
+		{
+			// The hook is in the air or on a hookable tile
+			HookPos = mix(
+				vec2(Prev.m_HookX, Prev.m_HookY),
+				vec2(Player.m_HookX, Player.m_HookY),
+				IntraTick
+			);
+		}
 
 		float d = distance(Pos, HookPos);
 		vec2 Dir = normalize(Pos-HookPos);
@@ -194,21 +187,12 @@ void CPlayers::RenderPlayer(
 		g_GameClient.m_aClients[info.cid].angle = angle;*/
 	}
 
-	const bool WorldPaused = m_pClient->IsWorldPaused();
-	// use preditect players if needed
-	if(m_pClient->m_LocalClientID == ClientID && Config()->m_ClPredict && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	if(m_pClient->ShouldUsePredicted() &&
+		m_pClient->ShouldUsePredictedChar(ClientID))
 	{
-		if(!m_pClient->m_Snap.m_pLocalCharacter || WorldPaused)
-		{
-		}
-		else
-		{
-			// apply predicted results
-			m_pClient->m_PredictedChar.Write(&Player);
-			m_pClient->m_PredictedPrevChar.Write(&Prev);
-			IntraTick = Client()->PredIntraGameTick();
-		}
+		m_pClient->UsePredictedChar(&Prev, &Player, &IntraTick, ClientID);
 	}
+  const bool WorldPaused = m_pClient->IsWorldPaused();
 
 	vec2 Direction = direction(Angle);
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);

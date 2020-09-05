@@ -17,10 +17,16 @@ void CNamePlates::RenderNameplate(
 	int ClientID
 	)
 {
-	float IntraTick = Client()->IntraGameTick();
-
-	vec2 Position = mix(vec2(pPrevChar->m_X, pPrevChar->m_Y), vec2(pPlayerChar->m_X, pPlayerChar->m_Y), IntraTick);
-
+	vec2 Position;
+	if(m_pClient->ShouldUsePredicted() &&
+		m_pClient->ShouldUsePredictedChar(ClientID))
+	{
+		Position = m_pClient->PredictedCharPos(ClientID);
+	}
+	else
+	{
+		Position = m_pClient->UnpredictedCharPos(ClientID);
+	}
 
 	float FontSize = 18.0f + 20.0f * Config()->m_ClNameplatesSize / 100.0f;
 	// render name plate
@@ -71,7 +77,7 @@ void CNamePlates::RenderNameplate(
 
 void CNamePlates::OnRender()
 {
-	if (!Config()->m_ClNameplates || Client()->State() < IClient::STATE_ONLINE)
+	if(!Config()->m_ClNameplates || Client()->State() < IClient::STATE_ONLINE)
 		return;
 
 	for(int i = 0; i < MAX_CLIENTS; i++)
