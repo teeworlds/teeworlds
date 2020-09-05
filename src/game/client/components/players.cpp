@@ -79,17 +79,17 @@ void CPlayers::RenderHook(
 		vec2 Pos = Position;
 		vec2 HookPos;
 
-		if(pPlayerChar->m_HookedPlayer != -1 && m_pClient->m_Snap.m_aCharacters[pPlayerChar->m_HookedPlayer].m_Active)
+		if(Player.m_HookedPlayer != -1 && m_pClient->m_Snap.m_aCharacters[Player.m_HookedPlayer].m_Active)
 		{
 			// `HookedPlayer != -1` means that a player is being hooked
 			if(m_pClient->ShouldUsePredicted() &&
-				m_pClient->ShouldUsePredictedChar(pPlayerChar->m_HookedPlayer))
+				m_pClient->ShouldUsePredictedChar(Player.m_HookedPlayer))
 			{
-				HookPos = m_pClient->PredictedCharPos(pPlayerChar->m_HookedPlayer);
+				HookPos = m_pClient->PredictedCharPos(Player.m_HookedPlayer);
 			}
 			else
 			{
-				HookPos = m_pClient->UnpredictedCharPos(pPlayerChar->m_HookedPlayer);
+				HookPos = m_pClient->UnpredictedCharPos(Player.m_HookedPlayer);
 			}
 		}
 		else
