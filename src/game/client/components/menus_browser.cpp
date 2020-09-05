@@ -1151,7 +1151,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
 	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	ScrollParams.m_SliderMinHeight = 5;
-	ScrollParams.m_ScrollSpeed = 10;
+	ScrollParams.m_ScrollSpeed = 5;
 	View.w += ScrollParams.m_ScrollbarWidth;
 	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
