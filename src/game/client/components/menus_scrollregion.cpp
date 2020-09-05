@@ -93,9 +93,6 @@ void CMenus::CScrollRegion::End()
 	}
 
 	m_ScrollY = clamp(m_ScrollY, 0.0f, MaxScroll);
-
-
-
 	Slider.y += m_ScrollY/MaxScroll * MaxSlider;
 
 	bool Hovered = false;

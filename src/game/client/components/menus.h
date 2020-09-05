@@ -160,8 +160,7 @@ private:
 		int m_Flags;
 
 		enum {
-			FLAG_CONTENT_STATIC_WIDTH = 0x1,
-			FLAG_NO_SMOOTH_SCROLLING = 0x2,
+			FLAG_CONTENT_STATIC_WIDTH = 0x1
 		};
 
 		CScrollRegionParams()
