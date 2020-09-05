@@ -9,9 +9,8 @@ class CNamePlates : public CComponent
 	void RenderNameplate(
 		const CNetObj_Character *pPrevChar,
 		const CNetObj_Character *pPlayerChar,
-		const CNetObj_PlayerInfo *pPlayerInfo,
 		int ClientID
-	);
+	) const;
 
 public:
 	virtual void OnRender();
