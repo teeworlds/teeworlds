@@ -357,7 +357,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 	int OldSelected = -1;
 	s_ListBox.DoHeader(&MainView, Localize("Skins"), GetListHeaderHeight());
 	m_RefreshSkinSelector = s_ListBox.DoFilter();
-	s_ListBox.DoStart(50.0f, s_paSkinList.size(), 10, OldSelected);
+	s_ListBox.DoStart(50.0f, s_paSkinList.size(), 10, 1, OldSelected);
 
 	for(int i = 0; i < s_paSkinList.size(); ++i)
 	{
@@ -436,7 +436,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	static int OldSelected = -1;
 	s_ListBox.DoHeader(&MainView, Localize(CSkins::ms_apSkinPartNames[m_TeePartSelected]), GetListHeaderHeight());
 	s_InitSkinPartList = s_ListBox.DoFilter();
-	s_ListBox.DoStart(50.0f, s_paList[m_TeePartSelected].size(), 5, OldSelected);
+	s_ListBox.DoStart(50.0f, s_paList[m_TeePartSelected].size(), 5, 1, OldSelected);
 
 	for(int i = 0; i < s_paList[m_TeePartSelected].size(); ++i)
 	{
@@ -712,7 +712,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 	if(Header)
 		s_ListBox.DoHeader(&MainView, Localize("Language"), GetListHeaderHeight());
 	bool IsActive = m_ActiveListBox == ACTLB_LANG;
-	s_ListBox.DoStart(20.0f, s_Languages.size(), 1, s_SelectedLanguage, Header?0:&MainView, Header, &IsActive);
+	s_ListBox.DoStart(20.0f, s_Languages.size(), 1, 3, s_SelectedLanguage, Header?0:&MainView, Header, &IsActive);
 
 	for(sorted_array<CLanguage>::range r = s_Languages.all(); !r.empty(); r.pop_front())
 	{
@@ -780,7 +780,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 		s_ListBox.DoHeader(&MainView, Localize("Theme"), GetListHeaderHeight());
 
 	bool IsActive = m_ActiveListBox == ACTLB_THEME;
-	s_ListBox.DoStart(20.0f, m_lThemes.size(), 1, SelectedTheme, Header?0:&MainView, Header, &IsActive);
+	s_ListBox.DoStart(20.0f, m_lThemes.size(), 1, 3, SelectedTheme, Header?0:&MainView, Header, &IsActive);
 
 	for(sorted_array<CTheme>::range r = m_lThemes.all(); !r.empty(); r.pop_front())
 	{
@@ -1129,7 +1129,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 	static CListBox s_ListBox;
 	int OldSelected = -1;
 	s_ListBox.DoHeader(&MainView, Localize("Country"), GetListHeaderHeight());
-	s_ListBox.DoStart(40.0f, m_pClient->m_pCountryFlags->Num(), 18, OldSelected);
+	s_ListBox.DoStart(40.0f, m_pClient->m_pCountryFlags->Num(), 18, 1, OldSelected);
 
 	for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
 	{
@@ -1470,6 +1470,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	vec2 ScrollOffset(0, 0);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
+	ScrollParams.m_ScrollUnit = 40.0f; // inconsistent margin, 2 category header per scroll
 	s_ScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
 	MainView.y += ScrollOffset.y;
 
@@ -1599,7 +1600,7 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 	int OldSelected = -1;
 	char aBuf[32];
 
-	pListBox->DoStart(20.0f, lModes.size(), 1, OldSelected, pRect);
+	pListBox->DoStart(20.0f, lModes.size(), 1, 3, OldSelected, pRect);
 
 	for(int i = 0; i < lModes.size(); ++i)
 	{

@@ -1151,7 +1151,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
 	ScrollParams.m_Flags = CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 	ScrollParams.m_SliderMinHeight = 5;
-	ScrollParams.m_ScrollSpeed = 5;
+	ScrollParams.m_ScrollUnit = 60.0f; // 3 rows per scroll
 	View.w += ScrollParams.m_ScrollbarWidth;
 	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
@@ -1511,7 +1511,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
 	ScrollParams.m_ScrollbarWidth = 14;
 	ScrollParams.m_ScrollbarMargin = 5;
-	ScrollParams.m_ScrollSpeed = 15;
+	ScrollParams.m_ScrollUnit = 40.0f; // various sized content, 40 units per scroll;
 	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
@@ -2113,7 +2113,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
 	ScrollParams.m_ScrollbarWidth = 5;
 	ScrollParams.m_ScrollbarMargin = 1;
-	ScrollParams.m_ScrollSpeed = 15;
+	ScrollParams.m_ScrollUnit = 40.0f; // 2 players per scroll
 	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 	if(RowCount > 0)

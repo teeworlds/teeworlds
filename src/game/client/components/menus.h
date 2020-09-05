@@ -150,7 +150,7 @@ private:
 		float m_ScrollbarWidth;
 		float m_ScrollbarMargin;
 		float m_SliderMinHeight;
-		float m_ScrollSpeed;
+		float m_ScrollUnit;
 		vec4 m_ClipBgColor;
 		vec4 m_ScrollbarBgColor;
 		vec4 m_RailBgColor;
@@ -160,7 +160,8 @@ private:
 		int m_Flags;
 
 		enum {
-			FLAG_CONTENT_STATIC_WIDTH = 0x1
+			FLAG_CONTENT_STATIC_WIDTH = 0x1,
+			FLAG_NO_SMOOTH_SCROLLING = 0x2,
 		};
 
 		CScrollRegionParams()
@@ -168,7 +169,7 @@ private:
 			m_ScrollbarWidth = 20;
 			m_ScrollbarMargin = 5;
 			m_SliderMinHeight = 25;
-			m_ScrollSpeed = 5;
+			m_ScrollUnit = 10;
 			m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.25f);
 			m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.25f);
 			m_RailBgColor = vec4(1.0f, 1.0f, 1.0f, 0.25f);
@@ -226,7 +227,7 @@ private:
 		};
 
 		CScrollRegion();
-		void Begin(CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams = 0);
+		void Begin(CUIRect* pClipRect, vec2* pOutOffset, CScrollRegionParams* pParams = 0);
 		void End();
 		void AddRect(CUIRect Rect);
 		void ScrollHere(int Option = CScrollRegion::SCROLLHERE_KEEP_IN_VIEW);
@@ -273,7 +274,7 @@ private:
 		void DoHeader(const CUIRect *pRect, const char *pTitle, float HeaderHeight = 20.0f, float Spacing = 2.0f);
 		bool DoFilter(float FilterHeight = 20.0f, float Spacing = 2.0f);
 		void DoFooter(const char *pBottomText, float FooterHeight = 20.0f); // call before DoStart to create a footer
-		void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int SelectedIndex,
+		void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex,
 					const CUIRect *pRect = 0, bool Background = true, bool *pActive = 0);
 		CListboxItem DoNextItem(const void *pID, bool Selected = false, bool *pActive = 0);
 		int DoEnd();

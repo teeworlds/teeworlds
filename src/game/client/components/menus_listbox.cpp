@@ -74,8 +74,8 @@ void CMenus::CListBox::DoFooter(const char *pBottomText, float FooterHeight)
 	m_FooterHeight = FooterHeight;
 }
 
-void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int SelectedIndex,
-							  const CUIRect *pRect, bool Background, bool *pActive)
+void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, 
+							int SelectedIndex, const CUIRect *pRect, bool Background, bool *pActive)
 {
 	CUIRect View;
 	if(pRect)
@@ -120,7 +120,9 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 
 	// setup the scrollbar
 	m_ScrollOffset = vec2(0, 0);
-	m_ScrollRegion.Begin(&m_ListBoxView, &m_ScrollOffset);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ScrollUnit = m_ListBoxRowHeight * RowsPerScroll;
+	m_ScrollRegion.Begin(&m_ListBoxView, &m_ScrollOffset, &ScrollParams);
 	m_ListBoxView.y += m_ScrollOffset.y;
 }
 
