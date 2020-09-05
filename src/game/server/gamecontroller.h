@@ -185,6 +185,14 @@ public:
 	{
 		SetGameState(IGS_WARMUP_USER, Seconds);
 	}
+	void AbortWarmup()
+	{
+		if((m_GameState == IGS_WARMUP_GAME || m_GameState == IGS_WARMUP_USER)
+			&& m_GameStateTimer != TIMER_INFINITE)
+		{
+			SetGameState(IGS_GAME_RUNNING);
+		}
+	}
 	void SwapTeamscore();
 
 	// general

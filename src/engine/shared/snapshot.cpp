@@ -172,6 +172,8 @@ CSnapshotDelta::CSnapshotDelta()
 
 void CSnapshotDelta::SetStaticsize(int ItemType, int Size)
 {
+	if(ItemType < 0 || ItemType >= MAX_NETOBJSIZES)
+		return;
 	m_aItemSizes[ItemType] = Size;
 }
 
@@ -230,13 +232,15 @@ int CSnapshotDelta::CreateDelta(const CSnapshot *pFrom, CSnapshot *pTo, void *pD
 		pCurItem = pTo->GetItem(i); // O(1) .. O(n)
 		PastIndex = aPastIndecies[i];
 
+		bool IncludeSize = pCurItem->Type() >= MAX_NETOBJSIZES || !m_aItemSizes[pCurItem->Type()];
+
 		if(PastIndex != -1)
 		{
 			int *pItemDataDst = pData+3;
 
 			pPastItem = pFrom->GetItem(PastIndex);
 
-			if(m_aItemSizes[pCurItem->Type()])
+			if(!IncludeSize)
 				pItemDataDst = pData+2;
 
 			if(DiffItem(pPastItem->Data(), (int*)pCurItem->Data(), pItemDataDst, ItemSize/4))
@@ -244,7 +248,7 @@ int CSnapshotDelta::CreateDelta(const CSnapshot *pFrom, CSnapshot *pTo, void *pD
 
 				*pData++ = pCurItem->Type();
 				*pData++ = pCurItem->ID();
-				if(!m_aItemSizes[pCurItem->Type()])
+				if(IncludeSize)
 					*pData++ = ItemSize/4;
 				pData += ItemSize/4;
 				pDelta->m_NumUpdateItems++;
@@ -254,7 +258,7 @@ int CSnapshotDelta::CreateDelta(const CSnapshot *pFrom, CSnapshot *pTo, void *pD
 		{
 			*pData++ = pCurItem->Type();
 			*pData++ = pCurItem->ID();
-			if(!m_aItemSizes[pCurItem->Type()])
+			if(IncludeSize)
 				*pData++ = ItemSize/4;
 
 			mem_copy(pData, pCurItem->Data(), ItemSize);
@@ -314,6 +318,10 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 
 	// unpack deleted stuff
 	pDeleted = pData;
+	if(pDelta->m_NumDeletedItems < 0)
+	{
+		return -1;
+	}
 	pData += pDelta->m_NumDeletedItems;
 	if(pData > pEnd)
 		return -1;
@@ -353,7 +361,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		if(Type < 0)
 			return -1;
 		ID = *pData++;
-		if(m_aItemSizes[Type])
+		if(Type < MAX_NETOBJSIZES && m_aItemSizes[Type])
 			ItemSize = m_aItemSizes[Type];
 		else
 		{
@@ -602,11 +610,17 @@ int CSnapshotBuilder::Finish(void *pSnapdata)
 	// get full item sizes
 	int aItemSizes[CSnapshotBuilder::MAX_ITEMS];
 
-	for(int i = 0; i < NumItems-1; i++)
+	for(int i = 0; i < NumItems; i++)
 	{
-		aItemSizes[i] = m_aOffsets[i+1] - m_aOffsets[i];
+		if(i < NumItems - 1)
+		{
+			aItemSizes[i] = m_aOffsets[i+1] - m_aOffsets[i];
+		}
+		else
+		{
+			aItemSizes[i] = m_DataSize - m_aOffsets[i];
+		}
 	}
-	aItemSizes[NumItems-1] = m_DataSize - m_aOffsets[NumItems-1];
 
 	// bubble sort by keys
 	bool Sorting = true;

@@ -48,6 +48,12 @@ class CUI
 	class ITextRender *m_pTextRender;
 
 public:
+	static const vec4 ms_DefaultTextColor;
+	static const vec4 ms_DefaultTextOutlineColor;
+	static const vec4 ms_HighlightTextColor;
+	static const vec4 ms_HighlightTextOutlineColor;
+	static const vec4 ms_TransparentTextColor;
+
 	// TODO: Refactor: Fill this in
 	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class ITextRender *pTextRender) { m_pConfig = pConfig; m_pGraphics = pGraphics; m_pTextRender = pTextRender; }
 	class CConfig *Config() const { return m_pConfig; }
@@ -111,7 +117,7 @@ public:
 
 	bool MouseInside(const CUIRect *pRect) const;
 	bool MouseInsideClip() const;
-	void ConvertMouseMove(float *x, float *y) const;
+	void ConvertCursorMove(float *pX, float *pY, int CursorType) const;
 
 	CUIRect *Screen();
 	float PixelSize();
@@ -124,8 +130,8 @@ public:
 	int DoButtonLogic(const void *pID, const CUIRect *pRect);
 	bool DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
 
-	// TODO: Refactor: Remove this?
-	void DoLabel(const CUIRect *pRect, const char *pText, float Size, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
+	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
+	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor);
 };
 
 

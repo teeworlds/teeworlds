@@ -459,12 +459,20 @@ private:
 	int *m_pActiveDropdown;
 
 	// demo
+	enum
+	{
+		SORT_DEMONAME=0,
+		SORT_LENGTH,
+		SORT_DATE,
+	};
+
 	struct CDemoItem
 	{
 		char m_aFilename[128];
 		char m_aName[128];
 		bool m_IsDir;
 		int m_StorageType;
+		time_t m_Date;
 
 		bool m_InfosLoaded;
 		bool m_Valid;
@@ -480,6 +488,14 @@ private:
 				(m_Info.m_aNumTimelineMarkers[3]&0xFF);
 		}
 
+		int Length() const
+		{
+			return ((m_Info.m_aLength[0]<<24)&0xFF000000) |
+				((m_Info.m_aLength[1]<<16)&0xFF0000) |
+				((m_Info.m_aLength[2]<<8)&0xFF00) |
+				(m_Info.m_aLength[3]&0xFF);
+		}
+
 		bool operator<(const CDemoItem &Other) const
 		{
 			return !str_comp(m_aFilename, "..") ? true
@@ -487,6 +503,41 @@ private:
 				: m_IsDir && !Other.m_IsDir ? true
 				: !m_IsDir && Other.m_IsDir ? false
 				: str_comp_filenames(m_aFilename, Other.m_aFilename) < 0;
+		}
+	};
+
+	class CDemoComparator
+	{
+		int m_Type;
+		int m_Order;
+		public:
+		CDemoComparator(int Type, int Order)
+		{
+			m_Type = Type;
+			m_Order = Order;
+		}
+
+		bool operator()(const CDemoItem &Self, const CDemoItem &Other)
+		{
+			if(!str_comp(Self.m_aFilename, ".."))
+				return true;
+			if(!str_comp(Other.m_aFilename, ".."))
+				return false;
+			if(Self.m_IsDir && !Other.m_IsDir)
+				return true;
+			if(!Self.m_IsDir && Other.m_IsDir)
+				return false;
+
+			const CDemoItem &Left = m_Order ? Other : Self;
+			const CDemoItem &Right = m_Order ? Self : Other;
+
+			if(m_Type == SORT_DEMONAME)
+				return str_comp_nocase(Left.m_aFilename, Right.m_aFilename) < 0;
+			else if(m_Type == SORT_LENGTH)
+				return Left.Length() < Right.Length();
+			else if(m_Type == SORT_DATE)
+				return Left.m_Date < Right.m_Date;
+			return false;
 		}
 	};
 
@@ -501,7 +552,7 @@ private:
 
 	void DemolistOnUpdate(bool Reset);
 	void DemolistPopulate();
-	static int DemolistFetchCallback(const char *pName, int IsDir, int StorageType, void *pUser);
+	static int DemolistFetchCallback(const char *pName, time_t Date, int IsDir, int StorageType, void *pUser);
 
 	// friends
 	class CFriendItem
@@ -641,15 +692,21 @@ private:
 		COL_BROWSER_PING,
 		NUM_BROWSER_COLS,
 
+		COL_DEMO_ICON=0,
+		COL_DEMO_NAME,
+		COL_DEMO_LENGTH,
+		COL_DEMO_DATE,
+		NUM_DEMO_COLS,
+
 		SIDEBAR_TAB_INFO = 0,
 		SIDEBAR_TAB_FILTER,
 		SIDEBAR_TAB_FRIEND,
 		NUM_SIDEBAR_TABS,
 
-		ADDR_SELECTION_CHANGE = 1,
-		ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND = 2,
-		ADDR_SELECTION_REVEAL = 4,
-		ADDR_SELECTION_UPDATE_ADDRESS = 8,
+		ADDR_SELECTION_CHANGE = 1, // select the server based on server address input
+		ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND = 2, // clear selection if ADDR_SELECTION_CHANGE did not match any server
+		ADDR_SELECTION_REVEAL = 4, // scroll to the selected server
+		ADDR_SELECTION_UPDATE_ADDRESS = 8, // update address input to the selected server's address
 	};
 	int m_SidebarTab;
 	bool m_SidebarActive;
@@ -659,6 +716,7 @@ private:
 	int m_aSelectedServers[IServerBrowser::NUM_TYPES]; // -1 if none selected
 	int m_AddressSelection;
 	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
+	static CColumn ms_aDemoCols[NUM_DEMO_COLS];
 
 	CBrowserFilter* GetSelectedBrowserFilter()
 	{
@@ -715,6 +773,7 @@ private:
 	void UpdateMusicState();
 
 	// found in menus_demo.cpp
+	bool FetchHeader(CDemoItem *pItem);
 	void RenderDemoPlayer(CUIRect MainView);
 	void RenderDemoList(CUIRect MainView);
 	float RenderDemoDetails(CUIRect View);
@@ -741,14 +800,14 @@ private:
 	void RenderServerbrowserFilterTab(CUIRect View);
 	void RenderServerbrowserInfoTab(CUIRect View);
 	void RenderServerbrowserFriendList(CUIRect View);
-	void RenderDetailInfo(CUIRect View, const CServerInfo *pInfo);
-	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, vec4 TextColor, vec4 TextOutlineColor);
+	void RenderDetailInfo(CUIRect View, const CServerInfo *pInfo, const vec4 &TextColor, const vec4 &TextOutlineColor);
+	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, const vec4 &TextColor, const vec4 &TextOutlineColor);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserBottomBox(CUIRect View);
 	void RenderServerbrowserOverlay();
 	void RenderFilterHeader(CUIRect View, int FilterIndex);
 	void PopupConfirmRemoveFilter();
-	int DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected);
+	int DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected, bool ShowServerInfo);
 	void RenderServerbrowser(CUIRect MainView);
 	static void ConchainConnect(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainFriendlistUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
@@ -842,6 +901,6 @@ public:
 	virtual void OnReset();
 	virtual void OnRender();
 	virtual bool OnInput(IInput::CEvent Event);
-	virtual bool OnMouseMove(float x, float y);
+	virtual bool OnCursorMove(float x, float y, int CursorType);
 };
 #endif

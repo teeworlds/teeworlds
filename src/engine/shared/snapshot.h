@@ -70,8 +70,11 @@ public:
 	};
 
 private:
-	// TODO: strange arbitrary number
-	short m_aItemSizes[64];
+	enum
+	{
+		MAX_NETOBJSIZES=64
+	};
+	short m_aItemSizes[MAX_NETOBJSIZES];
 	int m_aSnapshotDataRate[0xffff];
 	int m_aSnapshotDataUpdates[0xffff];
 	int m_SnapshotCurrent;

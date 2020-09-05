@@ -18,6 +18,9 @@
 #undef KEYS_INCLUDE
 
 // support older SDL version (pre 2.0.6)
+#ifndef SDL_JOYSTICK_AXIS_MIN
+	#define SDL_JOYSTICK_AXIS_MIN -32768
+#endif
 #ifndef SDL_JOYSTICK_AXIS_MAX
 	#define SDL_JOYSTICK_AXIS_MAX 32767
 #endif
@@ -47,7 +50,7 @@ CInput::CInput()
 	m_pGraphics = 0;
 
 	m_InputCounter = 1;
-	m_InputGrabbed = 0;
+	m_MouseInputRelative = false;
 	m_pClipboardText = 0;
 
 	m_SelectedJoystickIndex = -1;
@@ -100,10 +103,10 @@ void CInput::InitJoysticks()
 		for(int i = 0; i < NumJoysticks; i++)
 		{
 			SDL_Joystick *pJoystick = SDL_JoystickOpen(i);
-
-			if(!pJoystick) {
+			if(!pJoystick)
+			{
 				dbg_msg("joystick", "Could not open joystick %d: %s", i, SDL_GetError());
-				return;
+				continue;
 			}
 			m_apJoysticks.add(pJoystick);
 
@@ -188,7 +191,7 @@ float CInput::GetJoystickAxisValue(int Axis)
 {
 	SDL_Joystick* pJoystick = GetActiveJoystick();
 	dbg_assert((bool)pJoystick, "Requesting joystick axis value, but no joysticks were initialized");
-	return static_cast<float>(SDL_JoystickGetAxis(pJoystick, Axis)) / (float)(SDL_JOYSTICK_AXIS_MAX+1);
+	return (SDL_JoystickGetAxis(pJoystick, Axis)-SDL_JOYSTICK_AXIS_MIN)/float(SDL_JOYSTICK_AXIS_MAX-SDL_JOYSTICK_AXIS_MIN)*2.0f - 1.0f;
 }
 
 int CInput::GetJoystickNumAxes()
@@ -198,45 +201,48 @@ int CInput::GetJoystickNumAxes()
 	return SDL_JoystickNumAxes(pJoystick);
 }
 
-void CInput::MouseRelative(float *x, float *y)
+bool CInput::JoystickRelative(float *pX, float *pY)
 {
-	if(!m_InputGrabbed)
-		return;
-
-	int nx = 0, ny = 0;
-	float MouseSens = m_pConfig->m_InpMousesens/100.0f;
-	float JoystickSens = m_pConfig->m_JoystickSens/100.0f;
-
-	SDL_GetRelativeMouseState(&nx,&ny);
-
-	vec2 j = vec2(0.0f, 0.0f);
+	if(!m_MouseInputRelative)
+		return false;
 
 	if(m_pConfig->m_JoystickEnable && GetActiveJoystick())
 	{
-		const float Max = 50.0f;
-		j = vec2(GetJoystickAxisValue(m_pConfig->m_JoystickX), GetJoystickAxisValue(m_pConfig->m_JoystickY)) * Max;
-		const float Len = length(j);
-
-		if(Len/sqrtf(2.0f) <= m_pConfig->m_JoystickTolerance)
+		const vec2 RawJoystickPos = vec2(GetJoystickAxisValue(m_pConfig->m_JoystickX), GetJoystickAxisValue(m_pConfig->m_JoystickY));
+		const float Len = length(RawJoystickPos);
+		const float DeadZone = m_pConfig->m_JoystickTolerance/50.0f;
+		if(Len > DeadZone)
 		{
-			j = vec2(0.0f, 0.0f);
-		}
-		else
-		{
-			const vec2 nj = Len > 0.0f ? j / Len : vec2(0.0f, 0.0f);
-			j = nj * min(Len, Max) - nj * m_pConfig->m_JoystickTolerance;
+			const float Factor = 0.1f * max((Len - DeadZone) / (1 - DeadZone), 0.001f) / Len;
+			*pX = RawJoystickPos.x * Factor;
+			*pY = RawJoystickPos.y * Factor;
+			return true;
 		}
 	}
+	return false;
+}
 
-	*x = nx*MouseSens + j.x*JoystickSens;
-	*y = ny*MouseSens + j.y*JoystickSens;
+bool CInput::MouseRelative(float *pX, float *pY)
+{
+	if(!m_MouseInputRelative)
+		return false;
+
+	int MouseX = 0, MouseY = 0;
+	SDL_GetRelativeMouseState(&MouseX, &MouseY);
+	if (MouseX || MouseY)
+	{
+		*pX = MouseX;
+		*pY = MouseY;
+		return true;
+	}
+	return false;
 }
 
 void CInput::MouseModeAbsolute()
 {
-	if(m_InputGrabbed)
+	if(m_MouseInputRelative)
 	{
-		m_InputGrabbed = 0;
+		m_MouseInputRelative = false;
 		SDL_ShowCursor(SDL_ENABLE);
 		SDL_SetRelativeMouseMode(SDL_FALSE);
 	}
@@ -244,9 +250,9 @@ void CInput::MouseModeAbsolute()
 
 void CInput::MouseModeRelative()
 {
-	if(!m_InputGrabbed)
+	if(!m_MouseInputRelative)
 	{
-		m_InputGrabbed = 1;
+		m_MouseInputRelative = true;
 		SDL_ShowCursor(SDL_DISABLE);
 		if(SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, m_pConfig->m_InpGrab ? "0" : "1", SDL_HINT_OVERRIDE) == SDL_FALSE)
 		{

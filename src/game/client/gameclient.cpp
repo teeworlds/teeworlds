@@ -420,14 +420,14 @@ void CGameClient::OnInit()
 
 void CGameClient::OnUpdate()
 {
-	// handle mouse movement
+	// handle mouse and joystick movement, prefer mouse movement
 	float x = 0.0f, y = 0.0f;
-	Input()->MouseRelative(&x, &y);
-	if(x != 0.0f || y != 0.0f)
+	int CursorType = Input()->CursorRelative(&x, &y);
+	if(CursorType != IInput::CURSOR_NONE)
 	{
 		for(int h = 0; h < m_Input.m_Num; h++)
 		{
-			if(m_Input.m_paComponents[h]->OnMouseMove(x, y))
+			if(m_Input.m_paComponents[h]->OnCursorMove(x, y, CursorType))
 				break;
 		}
 	}
@@ -1290,26 +1290,41 @@ void CGameClient::OnNewSnapshot()
 			{
 				if(Item.m_ID < MAX_CLIENTS)
 				{
+					CSnapState::CCharacterInfo *pCharInfo = &m_Snap.m_aCharacters[Item.m_ID];
 					const void *pOld = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_CHARACTER, Item.m_ID);
-					m_Snap.m_aCharacters[Item.m_ID].m_Cur = *((const CNetObj_Character *)pData);
+					pCharInfo->m_Cur = *((const CNetObj_Character *)pData);
 
 					// clamp ammo count for non ninja weapon
-					if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Weapon != WEAPON_NINJA)
-						m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount = clamp(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_AmmoCount, 0, 10);
+					if(pCharInfo->m_Cur.m_Weapon != WEAPON_NINJA)
+						pCharInfo->m_Cur.m_AmmoCount = clamp(pCharInfo->m_Cur.m_AmmoCount, 0, 10);
 
 					if(pOld)
 					{
-						m_Snap.m_aCharacters[Item.m_ID].m_Active = true;
-						m_Snap.m_aCharacters[Item.m_ID].m_Prev = *((const CNetObj_Character *)pOld);
+						pCharInfo->m_Active = true;
+						pCharInfo->m_Prev = *((const CNetObj_Character *)pOld);
 
-						if(m_Snap.m_aCharacters[Item.m_ID].m_Prev.m_Tick)
-							EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Prev, Client()->PrevGameTick());
-						if(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Tick)
-							EvolveCharacter(&m_Snap.m_aCharacters[Item.m_ID].m_Cur, Client()->GameTick());
+						// limit evolving to 3 seconds
+						int EvolvePrevTick = min(pCharInfo->m_Prev.m_Tick + Client()->GameTickSpeed()*3, Client()->PrevGameTick());
+						int EvolveCurTick = min(pCharInfo->m_Cur.m_Tick + Client()->GameTickSpeed()*3, Client()->GameTick());
+
+						// reuse the evolved char
+						if(m_aClients[Item.m_ID].m_Evolved.m_Tick == EvolvePrevTick)
+						{
+							pCharInfo->m_Prev = m_aClients[Item.m_ID].m_Evolved;
+							if(mem_comp(pData, pOld, sizeof(CNetObj_Character)) == 0)
+								pCharInfo->m_Cur = m_aClients[Item.m_ID].m_Evolved;
+						}
+
+						if(pCharInfo->m_Prev.m_Tick)
+							EvolveCharacter(&pCharInfo->m_Prev, EvolvePrevTick);
+						if(pCharInfo->m_Cur.m_Tick)
+							EvolveCharacter(&pCharInfo->m_Cur, EvolveCurTick);
+						
+						m_aClients[Item.m_ID].m_Evolved = m_Snap.m_aCharacters[Item.m_ID].m_Cur;
 					}
 
 					if(Item.m_ID != m_LocalClientID || Client()->State() == IClient::STATE_DEMOPLAYBACK)
-						ProcessTriggeredEvents(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_TriggeredEvents, vec2(m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_X, m_Snap.m_aCharacters[Item.m_ID].m_Cur.m_Y));
+						ProcessTriggeredEvents(pCharInfo->m_Cur.m_TriggeredEvents, vec2(pCharInfo->m_Cur.m_X, pCharInfo->m_Cur.m_Y));
 				}
 			}
 			else if(Item.m_Type == NETOBJTYPE_SPECTATORINFO)
@@ -1527,12 +1542,7 @@ void CGameClient::OnPredict()
 	// (predicting) what will happen between `GameTick` and `PredGameTick`.
 
 	// don't predict anything if we are paused or round/game is over
-	if(m_Snap.m_pGameData &&
-		m_Snap.m_pGameData->m_GameStateFlags & (
-			GAMESTATEFLAG_PAUSED |
-			GAMESTATEFLAG_ROUNDOVER |
-			GAMESTATEFLAG_GAMEOVER
-		))
+	if(IsWorldPaused())
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -1609,6 +1619,8 @@ void CGameClient::OnPredict()
 			if (!World.m_apCharacters[c])
 				continue;
 
+			World.m_apCharacters[c]->AddDragVelocity();
+			World.m_apCharacters[c]->ResetDragVelocity();
 			World.m_apCharacters[c]->Move();
 			World.m_apCharacters[c]->Quantize();
 		}
@@ -1863,6 +1875,7 @@ void CGameClient::CClientData::Reset(CGameClient *pGameClient, int ClientID)
 	m_Active = false;
 	m_ChatIgnore = false;
 	m_Friend = false;
+	m_Evolved.m_Tick = -1;
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
 		m_SkinPartIDs[p] = 0;

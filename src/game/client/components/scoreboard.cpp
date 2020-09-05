@@ -1,5 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <limits.h>
+
 #include <engine/demo.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
@@ -256,7 +258,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		if(!NoTitle)
 		{
 			str_format(aBuf, sizeof(aBuf), " (%d)", NumPlayers);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+			TextRender()->TextColor(CUI::ms_TransparentTextColor);
 			TextRender()->Text(0, x+20.0f+tw, y+5.0f, TitleFontsize, aBuf, -1.0f);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		}
@@ -268,7 +270,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		{
 			str_format(aBuf, sizeof(aBuf), "(%d) ", NumPlayers);
 			float PlayersTextWidth = TextRender()->TextWidth(0, TitleFontsize, aBuf, -1, -1.0f);
-			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+			TextRender()->TextColor(CUI::ms_TransparentTextColor);
 			TextRender()->Text(0, x+w-tw-PlayersTextWidth-20.0f, y+5.0f, TitleFontsize, aBuf, -1.0f);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		}
@@ -342,7 +344,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	}
 
 	const char *pPingStr = Localize("Ping");
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+	TextRender()->TextColor(CUI::ms_TransparentTextColor);
 	tw = TextRender()->TextWidth(0, HeadlineFontsize, pPingStr, -1, -1.0f);
 	TextRender()->Text(0, PingOffset+PingLength-tw, y+Spacing, HeadlineFontsize, pPingStr, -1.0f);
 
@@ -355,7 +357,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	if(!Race)
 	{
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+		TextRender()->TextColor(CUI::ms_TransparentTextColor);
 		tw = TextRender()->TextWidth(0, HeadlineFontsize, "K", -1, -1.0f);
 		TextRender()->Text(0, KillOffset+KillLength/2-tw/2, y+Spacing, HeadlineFontsize, "K", -1.0f);
 
@@ -650,19 +652,19 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			y += LineHeight;
 		}
 	}
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+	TextRender()->TextColor(CUI::ms_DefaultTextColor);
+	TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
 
 	return HeadlineHeight+LineHeight*(PlayerLines+1);
 }
 
-void CScoreboard::RenderRecordingNotification(float x)
+void CScoreboard::RenderRecordingNotification(float x, float w)
 {
 	if(!m_pClient->DemoRecorder()->IsRecording())
 		return;
 
 	//draw the box
-	CUIRect RectBox = {x, 0.0f, 180.0f, 50.0f};
+	CUIRect RectBox = {x, 0.0f, w, 50.0f};
 	vec4 Color = vec4(0.0f, 0.0f, 0.0f, 0.4f);
 	Graphics()->BlendNormal();
 	RenderTools()->DrawUIRect(&RectBox, Color, CUI::CORNER_B, 15.0f);
@@ -677,6 +679,47 @@ void CScoreboard::RenderRecordingNotification(float x)
 	int Seconds = m_pClient->DemoRecorder()->Length();
 	str_format(aBuf, sizeof(aBuf), Localize("REC %3d:%02d"), Seconds/60, Seconds%60);
 	TextRender()->Text(0, x+50.0f, 10.0f, 20.0f, aBuf, -1.0f);
+}
+
+void CScoreboard::RenderNetworkQuality(float x, float w)
+{
+	//draw the box
+	CUIRect RectBox = {x, 0.0f, w, 50.0f};
+	vec4 Color = vec4(0.0f, 0.0f, 0.0f, 0.4f);
+	const float LineHeight = 17.0f;
+	int Score = Client()->GetInputtimeMarginStabilityScore();
+
+	Graphics()->BlendNormal();
+	RenderTools()->DrawUIRect(&RectBox, Color, CUI::CORNER_B, 15.0f);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_NETWORKICONS].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(SPRITE_NETWORK_GOOD);
+	IGraphics::CQuadItem QuadItem(x+20.0f, 12.5f, 25.0f, 25.0f);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	x += 50.0f;
+	TextRender()->Text(0, x, 10.0f, 20.0f, "NET", -1.0f);
+	x += 50.0f;
+	float y = 0.0f;
+
+	const int NumBars = 5;
+	int ScoreThresolds[NumBars] = {INT_MAX, 1000, 250, 50, -80};
+	CUIRect BarRect = {
+		x - 4.0f,
+		y + LineHeight,
+		6.0f,
+		LineHeight
+	};
+
+	for(int Bar = 0; Bar < NumBars && Score <= ScoreThresolds[Bar]; Bar++)
+	{
+		BarRect.x += BarRect.w + 3.0f;
+		CUIRect LocalBarRect = BarRect;
+		LocalBarRect.h = BarRect.h*(Bar+2)/(float)NumBars+1.0f;
+		LocalBarRect.y = BarRect.y + BarRect.h - LocalBarRect.h;
+		RenderTools()->DrawUIRect(&LocalBarRect, vec4(0.9f,0.9f,0.9f,1.0f), 0, 0);
+	}
 }
 
 void CScoreboard::OnRender()
@@ -771,7 +814,8 @@ void CScoreboard::OnRender()
 		}
 	}
 
-	RenderRecordingNotification((Width/7)*4);
+	RenderRecordingNotification((Width/7.0f)*4, 180.0f);
+	RenderNetworkQuality((Width/7.0f)*4 + 180.0f + 90.0f, 170.0f); 
 }
 
 bool CScoreboard::IsActive() const

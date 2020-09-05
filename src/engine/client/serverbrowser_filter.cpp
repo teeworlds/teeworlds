@@ -32,7 +32,10 @@ CServerBrowserFilter::CServerFilter::CServerFilter()
 	m_FilterInfo.m_Country = 0;
 	m_FilterInfo.m_ServerLevel = 0;
 	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+	{
 		m_FilterInfo.m_aGametype[i][0] = 0;
+		m_FilterInfo.m_aGametypeExclusive[i] = false;
+	}
 	m_FilterInfo.m_aAddress[0] = 0;
 
 	m_NumSortedPlayers = 0;
@@ -60,9 +63,15 @@ CServerBrowserFilter::CServerFilter& CServerBrowserFilter::CServerFilter::operat
 		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 		{
 			if(Other.m_FilterInfo.m_aGametype[i][0])
+			{
 				str_copy(m_FilterInfo.m_aGametype[i], Other.m_FilterInfo.m_aGametype[i], sizeof(m_FilterInfo.m_aGametype[i]));
+				m_FilterInfo.m_aGametypeExclusive[i] = Other.m_FilterInfo.m_aGametypeExclusive[i];
+			}
 			else
+			{
 				m_FilterInfo.m_aGametype[i][0] = 0;
+				m_FilterInfo.m_aGametypeExclusive[i] = false;
+			}
 		}
 		str_copy(m_FilterInfo.m_aAddress, Other.m_FilterInfo.m_aAddress, sizeof(m_FilterInfo.m_aAddress));
 
@@ -130,20 +139,33 @@ void CServerBrowserFilter::CServerFilter::Filter()
 		{
 			if(m_FilterInfo.m_aGametype[0][0])
 			{
-				Filtered = 1;
+				bool Excluded = false, DoInclude = false, Included = false;
 				for(int Index = 0; Index < CServerFilterInfo::MAX_GAMETYPES; ++Index)
 				{
 					if(!m_FilterInfo.m_aGametype[Index][0])
 						break;
-					if(!str_comp_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, m_FilterInfo.m_aGametype[Index]))
+					if(m_FilterInfo.m_aGametypeExclusive[Index])
 					{
-						Filtered = 0;
-						break;
+						if(!str_comp_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, m_FilterInfo.m_aGametype[Index]))
+						{
+							Excluded = true;
+							break;
+						}
+					}
+					else
+					{
+						DoInclude = true;
+						if(!str_comp_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, m_FilterInfo.m_aGametype[Index]))
+						{
+							Included = true;
+							break;
+						}
 					}
 				}
+				Filtered = Excluded || (DoInclude && !Included);
 			}
 
-			if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY)
+			if(!Filtered && m_FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY)
 			{
 				Filtered = 1;
 				// match against player country
@@ -373,7 +395,10 @@ int CServerBrowserFilter::AddFilter(const CServerFilterInfo *pFilterInfo)
 	Filter.m_FilterInfo.m_Country = pFilterInfo->m_Country;
 	Filter.m_FilterInfo.m_ServerLevel = pFilterInfo->m_ServerLevel;
 	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+	{
 		str_copy(Filter.m_FilterInfo.m_aGametype[i], pFilterInfo->m_aGametype[i], sizeof(Filter.m_FilterInfo.m_aGametype[i]));
+		Filter.m_FilterInfo.m_aGametypeExclusive[i] = pFilterInfo->m_aGametypeExclusive[i];
+	}
 	str_copy(Filter.m_FilterInfo.m_aAddress, pFilterInfo->m_aAddress, sizeof(Filter.m_FilterInfo.m_aAddress));
 	Filter.m_pSortedServerlist = 0;
 	Filter.m_NumSortedPlayers = 0;
@@ -393,7 +418,10 @@ void CServerBrowserFilter::GetFilter(int Index, CServerFilterInfo *pFilterInfo) 
 	pFilterInfo->m_Country = pFilter->m_FilterInfo.m_Country;
 	pFilterInfo->m_ServerLevel = pFilter->m_FilterInfo.m_ServerLevel;
 	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+	{
 		str_copy(pFilterInfo->m_aGametype[i], pFilter->m_FilterInfo.m_aGametype[i], sizeof(pFilterInfo->m_aGametype[i]));
+		pFilterInfo->m_aGametypeExclusive[i] = pFilter->m_FilterInfo.m_aGametypeExclusive[i];
+	}
 	str_copy(pFilterInfo->m_aAddress, pFilter->m_FilterInfo.m_aAddress, sizeof(pFilterInfo->m_aAddress));
 }
 
@@ -405,7 +433,10 @@ void CServerBrowserFilter::SetFilter(int Index, const CServerFilterInfo *pFilter
 	pFilter->m_FilterInfo.m_Country = pFilterInfo->m_Country;
 	pFilter->m_FilterInfo.m_ServerLevel = pFilterInfo->m_ServerLevel;
 	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+	{
 		str_copy(pFilter->m_FilterInfo.m_aGametype[i], pFilterInfo->m_aGametype[i], sizeof(pFilter->m_FilterInfo.m_aGametype[i]));
+		pFilter->m_FilterInfo.m_aGametypeExclusive[i] = pFilterInfo->m_aGametypeExclusive[i];
+	}
 	str_copy(pFilter->m_FilterInfo.m_aAddress, pFilterInfo->m_aAddress, sizeof(pFilter->m_FilterInfo.m_aAddress));
 
 	pFilter->Sort();

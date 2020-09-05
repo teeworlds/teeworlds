@@ -27,8 +27,8 @@ class CHud : public CComponent
 	void RenderGameTimer();
 	void RenderPauseTimer();
 	void RenderStartCountdown();
+	void RenderNetworkIssueNotification();
 	void RenderDeadNotification();
-	void RenderSuddenDeath();
 	void RenderScoreHud();
 	void RenderSpectatorHud();
 	void RenderSpectatorNotification();

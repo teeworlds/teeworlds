@@ -269,7 +269,10 @@ if gen_network_source:
 	lines += ['\t{']
 
 	for item in network.Objects:
-		for line in item.emit_validate():
+		base_item = None
+		if item.base:
+			base_item = next(i for i in network.Objects if i.name == item.base)
+		for line in item.emit_validate(base_item):
 			lines += ["\t" + line]
 		lines += ['\t']
 	lines += ['\t}']

@@ -9,13 +9,14 @@
 
 #include "system.h"
 
+#include <sys/types.h>
+#include <sys/stat.h>
+
 #if defined(CONF_FAMILY_UNIX)
 	#include <sys/time.h>
 	#include <unistd.h>
 
 	/* unix net includes */
-	#include <sys/stat.h>
-	#include <sys/types.h>
 	#include <sys/socket.h>
 	#include <sys/ioctl.h>
 	#include <errno.h>
@@ -761,9 +762,11 @@ static void sockaddr_to_netaddr(const struct sockaddr *src, NETADDR *dst)
 	}
 }
 
-int net_addr_comp(const NETADDR *a, const NETADDR *b)
+int net_addr_comp(const NETADDR *a, const NETADDR *b, int check_port)
 {
-	return mem_comp(a, b, sizeof(NETADDR));
+	if(a->type == b->type && mem_comp(a->ip, b->ip, a->type == NETTYPE_IPV4 ? NETADDR_SIZE_IPV4 : NETADDR_SIZE_IPV6) == 0 && (!check_port || a->port == b->port))
+		return 0;
+	return -1;
 }
 
 void net_addr_str(const NETADDR *addr, char *string, int max_length, int add_port)
@@ -1471,6 +1474,60 @@ int net_init()
 	return 0;
 }
 
+
+int fs_listdir_info(const char *dir, FS_LISTDIR_INFO_CALLBACK cb, int type, void *user)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	WIN32_FIND_DATA finddata;
+	HANDLE handle;
+	char buffer[1024*2];
+	int length;
+	str_format(buffer, sizeof(buffer), "%s/*", dir);
+
+	handle = FindFirstFileA(buffer, &finddata);
+
+	if(handle == INVALID_HANDLE_VALUE)
+		return 0;
+
+	str_format(buffer, sizeof(buffer), "%s/", dir);
+	length = str_length(buffer);
+
+	/* add all the entries */
+	do
+	{
+		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
+		if(cb(finddata.cFileName, fs_getmtime(buffer), fs_is_dir(buffer), type, user))
+			break;
+	}
+	while (FindNextFileA(handle, &finddata));
+
+	FindClose(handle);
+	return 0;
+#else
+	struct dirent *entry;
+	char buffer[1024*2];
+	int length;
+	DIR *d = opendir(dir);
+
+	if(!d)
+		return 0;
+
+	str_format(buffer, sizeof(buffer), "%s/", dir);
+	length = str_length(buffer);
+
+	while((entry = readdir(d)) != NULL)
+	{
+		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
+		if(cb(entry->d_name, fs_getmtime(buffer), fs_is_dir(buffer), type, user))
+			break;
+	}
+
+	/* close the directory and return */
+	closedir(d);
+	return 0;
+#endif
+}
+
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
@@ -1647,6 +1704,15 @@ int fs_is_dir(const char *path)
 #endif
 }
 
+time_t fs_getmtime(const char *path)
+{
+	struct stat sb;
+	if(stat(path, &sb) == -1)
+		return 0;
+
+	return sb.st_mtime;
+}
+
 int fs_chdir(const char *path)
 {
 	if(fs_is_dir(path))
@@ -1803,6 +1869,36 @@ int time_houroftheday()
 	time(&time_data);
 	time_info = localtime(&time_data);
 	return time_info->tm_hour;
+}
+
+int time_season()
+{
+	time_t time_data;
+	struct tm *time_info;
+
+	time(&time_data);
+	time_info = localtime(&time_data);
+
+	switch(time_info->tm_mon)
+	{
+		case 11:
+		case 0:
+		case 1:
+			return SEASON_WINTER;
+		case 2:
+		case 3:
+		case 4:
+			return SEASON_SPRING;
+		case 5:
+		case 6:
+		case 7:
+			return SEASON_SUMMER;
+		case 8:
+		case 9:
+		case 10:
+			return SEASON_AUTUMN;
+	}
+	return SEASON_SPRING; // should never happen
 }
 
 int time_isxmasday()

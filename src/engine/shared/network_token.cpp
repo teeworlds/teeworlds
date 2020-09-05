@@ -95,8 +95,10 @@ TOKEN CNetTokenManager::GenerateToken(const NETADDR *pAddr, int64 Seed)
 	if(pAddr->type & NETTYPE_LINK_BROADCAST)
 		return GenerateToken(&NullAddr, Seed);
 
-	Addr = *pAddr;
-	Addr.port = 0;
+	mem_zero(&Addr, sizeof(NETADDR));
+	mem_copy(Addr.ip, pAddr->ip, sizeof(Addr.ip));
+	Addr.type = pAddr->type;
+
 	mem_copy(aBuf, &Addr, sizeof(NETADDR));
 	mem_copy(aBuf + sizeof(NETADDR), &Seed, sizeof(int64));
 
@@ -235,7 +237,7 @@ TOKEN CNetTokenCache::GetToken(const NETADDR *pAddr)
 	CAddressInfo *pInfo = m_TokenCache.Last();
 	while(pInfo)
 	{
-		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0)
+		if(net_addr_comp(&pInfo->m_Addr, pAddr, true) == 0)
 			return pInfo->m_Token;
 		pInfo = m_TokenCache.Prev(pInfo);
 	}
@@ -261,8 +263,7 @@ void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token, int TokenFLag)
 	{
 		NETADDR NullAddr = { 0 };
 		NullAddr.type = 7;	// cover broadcasts
-		NullAddr.port = pAddr->port;
-		if(net_addr_comp(&pInfo->m_Addr, pAddr) == 0 || ((TokenFLag&NET_TOKENFLAG_ALLOWBROADCAST) && net_addr_comp(&pInfo->m_Addr, &NullAddr) == 0))
+		if(net_addr_comp(&pInfo->m_Addr, pAddr, true) == 0 || ((TokenFLag&NET_TOKENFLAG_ALLOWBROADCAST) && net_addr_comp(&pInfo->m_Addr, &NullAddr, false) == 0))
 		{
 			// notify the user that the packet gets delivered
 			if(pInfo->m_pfnCallback)

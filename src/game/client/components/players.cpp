@@ -192,6 +192,7 @@ void CPlayers::RenderPlayer(
 	{
 		m_pClient->UsePredictedChar(&Prev, &Player, &IntraTick, ClientID);
 	}
+  const bool WorldPaused = m_pClient->IsWorldPaused();
 
 	vec2 Direction = direction(Angle);
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
@@ -223,7 +224,7 @@ void CPlayers::RenderPlayer(
 		State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
 
 	static float s_LastGameTickTime = Client()->GameTickTime();
-	if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+	if(!WorldPaused)
 		s_LastGameTickTime = Client()->GameTickTime();
 	if (Player.m_Weapon == WEAPON_HAMMER)
 	{
@@ -315,7 +316,7 @@ void CPlayers::RenderPlayer(
 				}
 				else
 				{
-					if(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+					if(WorldPaused)
 						IteX = s_LastIteX;
 					else
 						s_LastIteX = IteX;
@@ -341,7 +342,7 @@ void CPlayers::RenderPlayer(
 			// TODO: should be an animation
 			Recoil = 0;
 			static float s_LastIntraTick = IntraTick;
-			if(m_pClient->m_Snap.m_pGameData && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED))
+			if(!WorldPaused)
 				s_LastIntraTick = IntraTick;
 
 			float a = (Client()->GameTick()-Player.m_AttackTick+s_LastIntraTick)/5.0f;
@@ -377,7 +378,7 @@ void CPlayers::RenderPlayer(
 				}
 				else
 				{
-					if(m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_PAUSED)
+					if(WorldPaused)
 						IteX = s_LastIteX;
 					else
 						s_LastIteX = IteX;

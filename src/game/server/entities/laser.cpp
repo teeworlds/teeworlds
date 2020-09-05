@@ -106,9 +106,9 @@ void CLaser::Snap(int SnappingClient)
 	if(!pObj)
 		return;
 
-	pObj->m_X = (int)m_Pos.x;
-	pObj->m_Y = (int)m_Pos.y;
-	pObj->m_FromX = (int)m_From.x;
-	pObj->m_FromY = (int)m_From.y;
+	pObj->m_X = round_to_int(m_Pos.x);
+	pObj->m_Y = round_to_int(m_Pos.y);
+	pObj->m_FromX = round_to_int(m_From.x);
+	pObj->m_FromY = round_to_int(m_From.y);
 	pObj->m_StartTick = m_EvalTick;
 }

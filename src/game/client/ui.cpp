@@ -5,11 +5,18 @@
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+#include <engine/input.h>
 #include "ui.h"
 
 /********************************************************
  UI
 *********************************************************/
+
+const vec4 CUI::ms_DefaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
+const vec4 CUI::ms_DefaultTextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
+const vec4 CUI::ms_HighlightTextColor(0.0f, 0.0f, 0.0f, 1.0f);
+const vec4 CUI::ms_HighlightTextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
+const vec4 CUI::ms_TransparentTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 
 CUI::CUI()
 {
@@ -61,11 +68,20 @@ bool CUI::MouseInsideClip() const
 	return !IsClipped() || MouseInside(ClipArea());
 }
 
-void CUI::ConvertMouseMove(float *x, float *y) const
+void CUI::ConvertCursorMove(float *pX, float *pY, int CursorType) const
 {
-	float Fac = (float)(m_pConfig->m_UiMousesens)/m_pConfig->m_InpMousesens;
-	*x = *x*Fac;
-	*y = *y*Fac;
+	float Factor = 1.0f;
+	switch(CursorType)
+	{
+		case IInput::CURSOR_MOUSE:
+			Factor = Config()->m_UiMousesens/100.0f;
+			break;
+		case IInput::CURSOR_JOYSTICK:
+			Factor = Config()->m_UiJoystickSens/100.0f;
+			break;
+	}
+	*pX *= Factor;
+	*pY *= Factor;
 }
 
 CUIRect *CUI::Screen()
@@ -363,28 +379,44 @@ bool CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float 
 	return true;
 }
 
-void CUI::DoLabel(const CUIRect *r, const char *pText, float Size, EAlignment Align, float LineWidth, bool MultiLine)
+void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlignment Align, float LineWidth, bool MultiLine)
 {
 	// TODO: FIX ME!!!!
 	//Graphics()->BlendNormal();
+
+	float TextX = pRect->x;
 	switch(Align)
 	{
 	case ALIGN_CENTER:
-	{
-		float tw = TextRender()->TextWidth(0, Size, pText, -1, LineWidth);
-		TextRender()->Text(0, r->x + r->w/2-tw/2, r->y - Size/10, Size, pText, LineWidth, MultiLine);
+		TextX += pRect->w/2.0f - TextRender()->TextWidth(0, FontSize, pText, -1, LineWidth)/2.0f;
 		break;
-	}
 	case ALIGN_LEFT:
-	{
-		TextRender()->Text(0, r->x, r->y - Size/10, Size, pText, LineWidth, MultiLine);
+		// default is left aligned
 		break;
-	}
 	case ALIGN_RIGHT:
-	{
-		float tw = TextRender()->TextWidth(0, Size, pText, -1, LineWidth);
-		TextRender()->Text(0, r->x + r->w-tw, r->y - Size/10, Size, pText, LineWidth, MultiLine);
+		TextX += pRect->w - TextRender()->TextWidth(0, FontSize, pText, -1, LineWidth);
 		break;
 	}
+
+	TextRender()->Text(0, TextX, pRect->y - FontSize/10.0f, FontSize, pText, LineWidth, MultiLine);
+}
+
+void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor)
+{
+	CTextCursor Cursor;
+	TextRender()->SetCursor(&Cursor, pRect->x, pRect->y, FontSize, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
+	Cursor.m_LineWidth = pRect->w;
+
+	TextRender()->TextColor(TextColor);
+	const char *pMatch = pHighlighted && pHighlighted[0] ? str_find_nocase(pText, pHighlighted) : 0;
+	if(pMatch)
+	{
+		TextRender()->TextEx(&Cursor, pText, (int)(pMatch - pText));
+		TextRender()->TextColor(HighlightColor);
+		TextRender()->TextEx(&Cursor, pMatch, str_length(pHighlighted));
+		TextRender()->TextColor(TextColor);
+		TextRender()->TextEx(&Cursor, pMatch + str_length(pHighlighted), -1);
 	}
+	else
+		TextRender()->TextEx(&Cursor, pText, -1);
 }

@@ -14,4 +14,4 @@ public:
 	static void free_array(T *p) { delete [] p; }
 };
 
-#endif // TL_FILE_ALLOCATOR_HPP
+#endif // BASE_TL_ALLOCATOR_H

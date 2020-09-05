@@ -108,35 +108,37 @@ void CMenus::CScrollRegion::End()
 
 		Hovered = true;
 	}
-	else if(InsideRail && m_pUI->MouseButton(0))
+	else if(InsideRail && m_pUI->MouseButtonClicked(0))
 	{
-		const float SliderDistance = m_pUI->MouseY() - (Slider.y+Slider.h/2);
-		m_ScrollY += sign(SliderDistance) * log(abs(SliderDistance)); // slow down to reasonable scroll speed; keep sign with logarithm
+		m_ScrollY += m_pUI->MouseY() - (Slider.y+Slider.h/2);
+		m_pUI->SetActiveItem(pID);
+		m_MouseGrabStart.y = m_pUI->MouseY();
 		Hovered = true;
 	}
-
-	if(m_pUI->CheckActiveItem(pID) && !m_pUI->MouseButton(0))
+	else if(m_pUI->CheckActiveItem(pID) && !m_pUI->MouseButton(0))
+	{
 		m_pUI->SetActiveItem(0);
+	}
 
 	// move slider
 	if(m_pUI->CheckActiveItem(pID) && m_pUI->MouseButton(0))
 	{
-		float my = m_pUI->MouseY();
-		m_ScrollY += my - m_MouseGrabStart.y;
-		m_MouseGrabStart.y = my;
-
+		float MouseY = m_pUI->MouseY();
+		m_ScrollY += MouseY - m_MouseGrabStart.y;
+		m_MouseGrabStart.y = MouseY;
 		Grabbed = true;
 	}
 
 	m_ScrollY = clamp(m_ScrollY, 0.0f, MaxScroll);
 	m_ContentScrollOff.y = -m_ScrollY/MaxScroll * (m_ContentH - m_ClipRect.h);
 
-	vec4 SliderColor = m_Params.m_SliderColor;
+	vec4 SliderColor;
 	if(Grabbed)
 		SliderColor = m_Params.m_SliderColorGrabbed;
 	else if(Hovered)
 		SliderColor = m_Params.m_SliderColorHover;
-
+	else
+		SliderColor = m_Params.m_SliderColor;
 	m_pRenderTools->DrawRoundRect(&Slider, SliderColor, Slider.w/2.0f);
 }
 

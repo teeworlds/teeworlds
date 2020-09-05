@@ -66,7 +66,7 @@ int CNetConsole::AcceptClient(NETSOCKET Socket, const NETADDR *pAddr)
 			FreeSlot = i;
 		if(m_aSlots[i].m_Connection.State() != NET_CONNSTATE_OFFLINE)
 		{
-			if(net_addr_comp(pAddr, m_aSlots[i].m_Connection.PeerAddress()) == 0)
+			if(net_addr_comp(pAddr, m_aSlots[i].m_Connection.PeerAddress(), true) == 0)
 			{
 				str_copy(aError, "only one client per IP allowed", sizeof(aError));
 				break;

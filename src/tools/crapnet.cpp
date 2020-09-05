@@ -81,7 +81,7 @@ void Run(unsigned short Port, NETADDR Dest)
 			// create new packet
 			CPacket *p = (CPacket *)mem_alloc(sizeof(CPacket)+Bytes, 1);
 
-			if(net_addr_comp(&From, &Dest) == 0)
+			if(net_addr_comp(&From, &Dest, true) == 0)
 				p->m_SendTo = Src; // from the server
 			else
 			{

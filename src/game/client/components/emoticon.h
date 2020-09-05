@@ -26,7 +26,7 @@ public:
 	virtual void OnRender();
 	virtual void OnRelease();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
-	virtual bool OnMouseMove(float x, float y);
+	virtual bool OnCursorMove(float x, float y, int CursorType);
 
 	void Emote(int Emoticon);
 };

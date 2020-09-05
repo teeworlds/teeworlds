@@ -539,12 +539,30 @@ int time_timestamp();
 
 /*
 	Function: time_houroftheday
-		Retrives the hours since midnight (0..23)
+		Retrieves the hours since midnight (0..23)
 
 	Returns:
 		The current hour of the day
 */
 int time_houroftheday();
+
+
+enum
+{
+	SEASON_SPRING = 0,
+	SEASON_SUMMER,
+	SEASON_AUTUMN,
+	SEASON_WINTER
+};
+
+/*
+	Function: time_season
+		Retrieves the current season of the year.
+
+	Returns:
+		one of the SEASON_* enum literals
+*/
+int time_season();
 
 /*
 	Function: time_isxmasday
@@ -578,6 +596,9 @@ enum
 {
 	NETADDR_MAXSTRSIZE = 1+(8*4+7)+1+1+5+1, // [XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX:XXXX]:XXXXX
 
+	NETADDR_SIZE_IPV4 = 4,
+	NETADDR_SIZE_IPV6 = 16,
+
 	NETTYPE_INVALID = 0,
 	NETTYPE_IPV4 = 1,
 	NETTYPE_IPV6 = 2,
@@ -588,8 +609,9 @@ enum
 typedef struct
 {
 	unsigned int type;
-	unsigned char ip[16];
+	unsigned char ip[NETADDR_SIZE_IPV6];
 	unsigned short port;
+	unsigned short reserved;
 } NETADDR;
 
 /*
@@ -630,13 +652,14 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types);
 	Parameters:
 		a - Address to compare
 		b - Address to compare to.
+		check_port - compares port or not
 
 	Returns:
 		<0 - Address a is lesser then address b
 		0 - Address a is equal to address b
 		>0 - Address a is greater then address b
 */
-int net_addr_comp(const NETADDR *a, const NETADDR *b);
+int net_addr_comp(const NETADDR *a, const NETADDR *b, int check_port);
 
 /*
 	Function: net_addr_str
@@ -1314,6 +1337,10 @@ int str_span(const char *str, const char *set);
 typedef int (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, int dir_type, void *user);
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 
+
+typedef int (*FS_LISTDIR_INFO_CALLBACK)(const char *name, time_t date, int is_dir, int dir_type, void *user);
+int fs_listdir_info(const char *dir, FS_LISTDIR_INFO_CALLBACK cb, int type, void *user);
+
 /*
 	Function: fs_makedir
 		Creates a directory
@@ -1365,6 +1392,12 @@ int fs_storage_path(const char *appname, char *path, int max);
 		Returns 1 on success, 0 on failure.
 */
 int fs_is_dir(const char *path);
+
+/*
+	Function: fs_getmtime
+		Gets the modification time of a file
+*/
+time_t fs_getmtime(const char *path);
 
 /*
 	Function: fs_chdir

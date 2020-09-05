@@ -207,14 +207,23 @@ void CControls::OnRender()
 		m_TargetPos = m_MousePos;
 }
 
-bool CControls::OnMouseMove(float x, float y)
+bool CControls::OnCursorMove(float x, float y, int CursorType)
 {
-	if((m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)) ||
-		(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_pChat->IsActive()))
+	if(m_pClient->IsWorldPaused() || (m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_pChat->IsActive()))
 		return false;
 
-	m_MousePos += vec2(x, y); // TODO: ugly
+	float Factor = 1.0f;
+	switch(CursorType)
+	{
+		case IInput::CURSOR_MOUSE:
+			Factor = Config()->m_InpMousesens/100.0f;
+			break;
+		case IInput::CURSOR_JOYSTICK:
+			Factor = Config()->m_JoystickSens/100.0f;
+			break;
+	}
 
+	m_MousePos += vec2(x, y) * Factor;
 	return true;
 }
 
