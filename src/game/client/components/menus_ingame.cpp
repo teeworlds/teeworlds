@@ -235,7 +235,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
 	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
-	ScrollParams.m_ScrollSpeed = 15;
+	ScrollParams.m_ScrollUnit = ButtonHeight * 3; // 3 players per scroll
 	if(s_ScrollRegion.IsScrollbarShown())
 		Row.VSplitRight(ScrollParams.m_ScrollbarWidth, &Row, 0);
 
@@ -508,7 +508,7 @@ bool CMenus::RenderServerControlServer(CUIRect MainView)
 	static CListBox s_ListBox;
 	CUIRect List = MainView;
 	s_ListBox.DoHeader(&List, Localize("Option"), GetListHeaderHeight());
-	s_ListBox.DoStart(20.0f, m_pClient->m_pVoting->m_NumVoteOptions, 1, m_CallvoteSelectedOption, 0, true);
+	s_ListBox.DoStart(20.0f, m_pClient->m_pVoting->m_NumVoteOptions, 1, 3, m_CallvoteSelectedOption, 0, true);
 
 	for(CVoteOptionClient *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext)
 	{
@@ -556,7 +556,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 	static CListBox s_ListBox;
 	CUIRect List = MainView;
 	s_ListBox.DoHeader(&List, Localize("Player"), GetListHeaderHeight());
-	s_ListBox.DoStart(20.0f, NumOptions, 1, Selected, 0, true);
+	s_ListBox.DoStart(20.0f, NumOptions, 1, 3, Selected, 0, true);
 
 	for(int i = 0; i < NumOptions; i++)
 	{

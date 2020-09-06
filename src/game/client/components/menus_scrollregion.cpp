@@ -21,7 +21,7 @@ CMenus::CScrollRegion::CScrollRegion()
 	m_Params = CScrollRegionParams();
 }
 
-void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, const CScrollRegionParams* pParams)
+void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, CScrollRegionParams* pParams)
 {
 	if(pParams)
 		m_Params = *pParams;
@@ -66,12 +66,15 @@ void CMenus::CScrollRegion::End()
 	// scroll wheel
 	CUIRect RegionRect = m_ClipRect;
 	RegionRect.w += m_Params.m_ScrollbarWidth;
+
+	const bool isPageScroll = m_pInput->KeyIsPressed(KEY_LALT) || m_pInput->KeyIsPressed(KEY_RALT);
 	if(m_pUI->MouseInside(&RegionRect))
-	{
+	{	
+		float ScrollUnit = isPageScroll ? m_ClipRect.h : m_Params.m_ScrollUnit;
 		if(m_pInput->KeyPress(KEY_MOUSE_WHEEL_UP))
-			m_ScrollY -= m_Params.m_ScrollSpeed;
+			m_ScrollY -= ScrollUnit;
 		else if(m_pInput->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-			m_ScrollY += m_Params.m_ScrollSpeed;
+			m_ScrollY += ScrollUnit;
 	}
 
 	const float SliderHeight = max(m_Params.m_SliderMinHeight,
@@ -79,16 +82,18 @@ void CMenus::CScrollRegion::End()
 
 	CUIRect Slider = m_RailRect;
 	Slider.h = SliderHeight;
-	const float MaxScroll = m_RailRect.h - SliderHeight;
+	
+	const float MaxSlider = m_RailRect.h - SliderHeight;
+	const float MaxScroll = m_ContentH - m_ClipRect.h;
 
 	if(m_RequestScrollY >= 0)
 	{
-		m_ScrollY = m_RequestScrollY/(m_ContentH - m_ClipRect.h) * MaxScroll;
+		m_ScrollY = m_RequestScrollY;
 		m_RequestScrollY = -1;
 	}
 
 	m_ScrollY = clamp(m_ScrollY, 0.0f, MaxScroll);
-	Slider.y += m_ScrollY;
+	Slider.y += m_ScrollY/MaxScroll * MaxSlider;
 
 	bool Hovered = false;
 	bool Grabbed = false;
@@ -96,23 +101,29 @@ void CMenus::CScrollRegion::End()
 	const bool InsideSlider = m_pUI->MouseInside(&Slider);
 	const bool InsideRail = m_pUI->MouseInside(&m_RailRect);
 
-	if(InsideSlider)
+	if(m_pUI->CheckActiveItem(pID) && m_pUI->MouseButton(0))
+	{
+		float MouseY = m_pUI->MouseY();
+		m_ScrollY += (MouseY - (Slider.y + m_SliderGrabPos.y)) / MaxSlider * MaxScroll;
+		m_SliderGrabPos.y = clamp(m_SliderGrabPos.y, 0.0f, SliderHeight);
+		Grabbed = true;
+	}
+	else if(InsideSlider)
 	{
 		m_pUI->SetHotItem(pID);
 
 		if(!m_pUI->CheckActiveItem(pID) && m_pUI->MouseButtonClicked(0))
 		{
 			m_pUI->SetActiveItem(pID);
-			m_MouseGrabStart.y = m_pUI->MouseY();
+			m_SliderGrabPos.y = m_pUI->MouseY() - Slider.y;
 		}
-
 		Hovered = true;
 	}
 	else if(InsideRail && m_pUI->MouseButtonClicked(0))
 	{
-		m_ScrollY += m_pUI->MouseY() - (Slider.y+Slider.h/2);
+		m_ScrollY += (m_pUI->MouseY() - (Slider.y+Slider.h/2)) / MaxSlider * MaxScroll;
 		m_pUI->SetActiveItem(pID);
-		m_MouseGrabStart.y = m_pUI->MouseY();
+		m_SliderGrabPos.y = Slider.h/2;
 		Hovered = true;
 	}
 	else if(m_pUI->CheckActiveItem(pID) && !m_pUI->MouseButton(0))
@@ -120,17 +131,8 @@ void CMenus::CScrollRegion::End()
 		m_pUI->SetActiveItem(0);
 	}
 
-	// move slider
-	if(m_pUI->CheckActiveItem(pID) && m_pUI->MouseButton(0))
-	{
-		float MouseY = m_pUI->MouseY();
-		m_ScrollY += MouseY - m_MouseGrabStart.y;
-		m_MouseGrabStart.y = MouseY;
-		Grabbed = true;
-	}
-
 	m_ScrollY = clamp(m_ScrollY, 0.0f, MaxScroll);
-	m_ContentScrollOff.y = -m_ScrollY/MaxScroll * (m_ContentH - m_ClipRect.h);
+	m_ContentScrollOff.y = -m_ScrollY;
 
 	vec4 SliderColor;
 	if(Grabbed)
