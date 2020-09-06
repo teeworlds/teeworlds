@@ -108,10 +108,10 @@ void CMenus::CScrollRegion::End()
 
 	m_AnimTargetScrollY = clamp(m_AnimTargetScrollY, 0.0f, MaxScroll);
 
-	if (abs(m_AnimInitScrollY - m_AnimTargetScrollY) < 0.5f)
+	if(absolute(m_AnimInitScrollY - m_AnimTargetScrollY) < 0.5f)
 		m_AnimTime = 0;
 
-	if (m_AnimTime > 0)
+	if(m_AnimTime > 0)
 	{
 		m_AnimTime -= m_pMenus->Client()->RenderFrameTime();
 		float AnimProgress = (1 - pow(m_AnimTime / AnimationDuration, 3)); // cubic ease out
