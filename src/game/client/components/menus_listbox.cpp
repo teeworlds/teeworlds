@@ -191,7 +191,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 		CUIRect r = Item.m_Rect;
 		m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f), CUI::CORNER_ALL, 5.0f);
 	}
-	/*else*/ if(m_pUI->HotItem() == pId)
+	/*else*/ if(m_pUI->HotItem() == pId && !m_ScrollRegion.IsAnimating())
 	{
 		CUIRect r = Item.m_Rect;
 		m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, 0.33f), CUI::CORNER_ALL, 5.0f);

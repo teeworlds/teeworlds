@@ -70,7 +70,7 @@ void CMenus::CScrollRegion::End()
 	CUIRect RegionRect = m_ClipRect;
 	RegionRect.w += m_Params.m_ScrollbarWidth;
 
-	float AnimationDuration = 0.3f;
+	float AnimationDuration = 0.5f;
 
 	const bool isPageScroll = m_pInput->KeyIsPressed(KEY_LALT) || m_pInput->KeyIsPressed(KEY_RALT);
 	if(m_pUI->MouseInside(&RegionRect))
@@ -223,4 +223,9 @@ bool CMenus::CScrollRegion::IsRectClipped(const CUIRect& Rect) const
 bool CMenus::CScrollRegion::IsScrollbarShown() const
 {
 	return m_ContentH > m_ClipRect.h;
+}
+
+bool CMenus::CScrollRegion::IsAnimating() const
+{
+	return m_AnimTime > 0;
 }
