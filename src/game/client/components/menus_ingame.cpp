@@ -780,8 +780,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			// clear button
 			{
 				static CButtonContainer s_ClearButton;
-				float Fade = ButtonFade(&s_ClearButton, 0.6f);
-				RenderTools()->DrawUIRect(&ClearButton, vec4(1.0f, 1.0f, 1.0f, 0.33f+(Fade/0.6f)*0.165f), CUI::CORNER_R, 3.0f);
+				RenderTools()->DrawUIRect(&ClearButton, vec4(1.0f, 1.0f, 1.0f, 0.33f+s_ClearButton.GetFade()*0.165f), CUI::CORNER_R, 3.0f);
 				Label = ClearButton;
 				Label.y += 2.0f;
 				UI()->DoLabel(&Label, "x", Label.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);

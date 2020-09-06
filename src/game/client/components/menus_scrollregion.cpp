@@ -67,10 +67,10 @@ void CMenus::CScrollRegion::End()
 	CUIRect RegionRect = m_ClipRect;
 	RegionRect.w += m_Params.m_ScrollbarWidth;
 
-	const bool isPageScroll = m_pInput->KeyIsPressed(KEY_LALT) || m_pInput->KeyIsPressed(KEY_RALT);
-	if(m_pUI->MouseInside(&RegionRect))
-	{	
-		float ScrollUnit = isPageScroll ? m_ClipRect.h : m_Params.m_ScrollUnit;
+	const bool IsPageScroll = m_pInput->KeyIsPressed(KEY_LALT) || m_pInput->KeyIsPressed(KEY_RALT);
+	if(m_pUI->MouseHovered(&RegionRect))
+	{
+		const float ScrollUnit = IsPageScroll ? m_ClipRect.h : m_Params.m_ScrollUnit;
 		if(m_pInput->KeyPress(KEY_MOUSE_WHEEL_UP))
 			m_ScrollY -= ScrollUnit;
 		else if(m_pInput->KeyPress(KEY_MOUSE_WHEEL_DOWN))
@@ -98,8 +98,8 @@ void CMenus::CScrollRegion::End()
 	bool Hovered = false;
 	bool Grabbed = false;
 	const void* pID = &m_ScrollY;
-	const bool InsideSlider = m_pUI->MouseInside(&Slider);
-	const bool InsideRail = m_pUI->MouseInside(&m_RailRect);
+	const bool InsideSlider = m_pUI->MouseHovered(&Slider);
+	const bool InsideRail = m_pUI->MouseHovered(&m_RailRect);
 
 	if(m_pUI->CheckActiveItem(pID) && m_pUI->MouseButton(0))
 	{
