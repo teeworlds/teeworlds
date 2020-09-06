@@ -428,11 +428,13 @@ void CMenus::SetOverlay(int Type, float x, float y, const void *pData)
 }
 
 // 1 = browser entry click, 2 = server info click
-int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected, bool ShowServerInfo)
+int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEntry, const CBrowserFilter *pFilter, bool Selected, bool ShowServerInfo, CScrollRegion *pScroll)
 {
 	// logic
 	int ReturnValue = 0;
+
 	const bool Hovered = UI()->MouseHovered(&View);
+	bool Highlighted = Hovered && (!pScroll || !pScroll->IsAnimating());
 
 	if(UI()->CheckActiveItem(pID))
 	{
@@ -449,7 +451,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			UI()->SetActiveItem(pID);
 	}
 
-	if(Hovered)
+	if(Highlighted)
 	{
 		UI()->SetHotItem(pID);
 		RenderTools()->DrawRoundRect(&View, vec4(1.0f, 1.0f, 1.0f, 0.5f), 5.0f);
@@ -465,7 +467,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 	vec4 TextBaseOutlineColor = vec4(0.0, 0.0, 0.0, 0.3f);
 	vec4 ServerInfoTextBaseColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
 	vec4 HighlightColor = vec4(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
-	if(Selected || Hovered)
+	if(Selected || Highlighted)
 	{
 		TextBaseColor = vec4(0.0f, 0.0f, 0.0f, TextAlpha);
 		ServerInfoTextBaseColor = vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -587,7 +589,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			int Ping = pEntry->m_Latency;
 
 			vec4 Color;
-			if(Selected || Hovered)
+			if(Selected || Highlighted)
 			{
 				Color = TextBaseColor;
 			}
@@ -1216,7 +1218,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 				// Prevent flickering entry background and text by drawing it as selected for one more frame after the selection has changed
 				const bool WasSelected = LastSelectedFilter >= 0 && LastSelectedServer >= 0 && FilterIndex == LastSelectedFilter && ServerIndex == LastSelectedServer;
-				if(int ReturnValue = DoBrowserEntry(pFilter->ID(ServerIndex), Row, pItem, pFilter, IsSelected || WasSelected, ShowServerInfo))
+				if(int ReturnValue = DoBrowserEntry(pFilter->ID(ServerIndex), Row, pItem, pFilter, IsSelected || WasSelected, ShowServerInfo, &s_ScrollRegion))
 				{
 					m_ShowServerDetails = !m_ShowServerDetails || ReturnValue == 2 || m_aSelectedServers[BrowserType] != ServerIndex; // click twice on line => fold server details
 					m_aSelectedFilters[BrowserType] = FilterIndex;
@@ -2115,7 +2117,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
 	ScrollParams.m_ScrollbarWidth = 5;
 	ScrollParams.m_ScrollbarMargin = 1;
-	ScrollParams.m_ScrollUnit = 40.0f; // 2 players per scroll
+	ScrollParams.m_ScrollUnit = 60.0f; // 3 players per scroll
 	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 	if(RowCount > 0)
