@@ -2113,7 +2113,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
 	ScrollParams.m_ScrollbarWidth = 5;
 	ScrollParams.m_ScrollbarMargin = 1;
-	ScrollParams.m_ScrollUnit = 40.0f; // 2 players per scroll
+	ScrollParams.m_ScrollUnit = 60.0f; // 3 players per scroll
 	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 	if(RowCount > 0)

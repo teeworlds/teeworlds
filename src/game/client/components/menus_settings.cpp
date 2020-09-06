@@ -1486,7 +1486,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	vec2 ScrollOffset(0, 0);
 	CScrollRegionParams ScrollParams;
 	ScrollParams.m_ClipBgColor = vec4(0,0,0,0);
-	ScrollParams.m_ScrollUnit = 40.0f; // inconsistent margin, 2 category header per scroll
+	ScrollParams.m_ScrollUnit = 60.0f; // inconsistent margin, 3 category header per scroll
 	s_ScrollRegion.Begin(&MainView, &ScrollOffset, &ScrollParams);
 	MainView.y += ScrollOffset.y;
 

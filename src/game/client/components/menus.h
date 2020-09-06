@@ -211,6 +211,11 @@ private:
 		float m_ScrollY;
 		float m_ContentH;
 		float m_RequestScrollY; // [0, ContentHeight]
+
+		float m_AnimTime;
+		float m_AnimInitScrollY;
+		float m_AnimTargetScrollY;
+
 		CUIRect m_ClipRect;
 		CUIRect m_RailRect;
 		CUIRect m_LastAddedRect; // saved for ScrollHere()
