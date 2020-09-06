@@ -39,7 +39,7 @@ jobs:
             LDFLAGS: /WX
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@master
     - name: Checkout submodules
       shell: bash
       run: |
@@ -106,7 +106,7 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@master
     - name: Checkout submodules
       shell: bash
       run: |
@@ -115,7 +115,7 @@ jobs:
         git -c "http.extraheader=$auth_header" -c protocol.version=2 submodule update --init --force --recursive --depth=1
 
     - name: Checkout bam
-      uses: actions/checkout@v2
+      uses: actions/checkout@master
       with:
         repository: matricks/bam
         ref: 07fbb5543c692f6b9a7f09e48c64e2368349a3a8
