@@ -172,7 +172,7 @@ public:
 	};
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num) = 0;
 	virtual void SetColor(float r, float g, float b, float a) = 0;
-	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight) = 0;
+	virtual void SetColor4(const vec4 &TopLeft, const vec4 &TopRight, const vec4 &BottomLeft, const vec4 &BottomRight) = 0;
 
 	virtual void ReadBackbuffer(unsigned char **ppPixels, int x, int y, int w, int h) = 0;
 	virtual void TakeScreenshot(const char *pFilename) = 0;

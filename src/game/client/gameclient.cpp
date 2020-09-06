@@ -340,7 +340,7 @@ void CGameClient::OnInit()
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 
 	// propagate pointers
-	m_UI.Init(Config(), Graphics(), TextRender());
+	m_UI.Init(Config(), Graphics(), Input(), TextRender());
 	m_RenderTools.Init(Config(), Graphics(), UI());
 
 	int64 Start = time_get();

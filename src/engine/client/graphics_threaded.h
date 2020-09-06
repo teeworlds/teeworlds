@@ -424,7 +424,7 @@ public:
 
 	virtual void SetColorVertex(const CColorVertex *pArray, int Num);
 	virtual void SetColor(float r, float g, float b, float a);
-	virtual void SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight);
+	virtual void SetColor4(const vec4 &TopLeft, const vec4 &TopRight, const vec4 &BottomLeft, const vec4 &BottomRight);
 
 	void TilesetFallbackSystem(int TextureIndex);
 	virtual void QuadsSetSubset(float TlU, float TlV, float BrU, float BrV, int TextureIndex = -1);
