@@ -53,15 +53,14 @@ void CMenus::DoPopupMenu()
 {
 	if(m_PopupActive)
 	{
-		bool Inside = UI()->MouseInside(&s_Popups.m_Rect);
 		UI()->SetHotItem(&s_Popups.m_pId);
 
 		if(UI()->CheckActiveItem(&s_Popups.m_pId))
 		{
 			if(!UI()->MouseButton(0))
 			{
-				if(!Inside)
-				m_PopupActive = false;
+				if(!UI()->MouseHovered(&s_Popups.m_Rect))
+					m_PopupActive = false;
 				UI()->SetActiveItem(0);
 			}
 		}

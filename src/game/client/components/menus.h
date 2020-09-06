@@ -84,54 +84,6 @@ public:
 class CMenus : public CComponent
 {
 public:
-	class CButtonContainer
-	{
-	public:
-		float m_FadeStartTime;
-
-		const void *GetID() const { return &m_FadeStartTime; }
-	};
-
-private:
-	typedef float (CMenus::*FDropdownCallback)(CUIRect View);
-
-	float ButtonFade(CButtonContainer *pBC, float Seconds, int Checked=0);
-
-	int DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners=CUI::CORNER_ALL, float r=5.0f, bool Fade=true);
-	int DoButton_SpriteClean(int ImageID, int SpriteID, const CUIRect *pRect);
-	int DoButton_SpriteCleanID(const void *pID, int ImageID, int SpriteID, const CUIRect *pRect, bool Blend=true);
-	int DoButton_Toggle(const void *pID, int Checked, const CUIRect *pRect, bool Active);
-	int DoButton_Menu(CButtonContainer *pBC, const char *pText, int Checked, const CUIRect *pRect, const char *pImageName=0, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f, vec4 ColorHot=vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade=true);
-	int DoButton_MenuTab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Corners);
-	int DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, int Checked, const CUIRect *pRect, float Alpha=1.0f, float FontAlpha=1.0f, int Corners=CUI::CORNER_ALL, float r=5.0f, float FontFactor=0.0f);
-	int DoButton_Customize(CButtonContainer *pBC, IGraphics::CTextureHandle Texture, int SpriteID, const CUIRect *pRect, float ImageRatio);
-
-	int DoButton_CheckBox_Common(const void *pID, const char *pText, const char *pBoxText, const CUIRect *pRect, bool Checked=false, bool Locked=false);
-	int DoButton_CheckBox(const void *pID, const char *pText, int Checked, const CUIRect *pRect, bool Locked=false);
-	int DoButton_CheckBox_Number(const void *pID, const char *pText, int SelectedNumber, const CUIRect *pRect);
-
-	int DoButton_MouseOver(int ImageID, int SpriteID, const CUIRect *pRect);
-
-	int DoIcon(int ImageId, int SpriteId, const CUIRect *pRect);
-	void DoIconColor(int ImageId, int SpriteId, const CUIRect *pRect, const vec4& Color);
-	int DoButton_GridHeader(const void *pID, const char *pText, int Checked, CUI::EAlignment Align, const CUIRect *pRect);
-
-	bool DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
-	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden=false);
-	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite=false);
-	void DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char* aLabels[], int Num, IScrollbarScale *pScale = &LinearScrollbarScale);
-	float DoDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback);
-	float DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool* pActive);
-	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
-
-	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
-	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
-	void DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);
-	void DoButton_KeySelect(CButtonContainer *pBC, const char *pText, int Checked, const CUIRect *pRect);
-	int DoKeyReader(CButtonContainer *pPC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier);
-	void UiDoGetButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spacing);
-
-
 	class CUIElementBase
 	{
 	protected:
@@ -139,10 +91,48 @@ private:
 		static CRenderTools *m_pRenderTools;
 		static CUI *m_pUI;
 		static IInput *m_pInput;
+		static IClient *m_pClient;
 
 	public:
-		static void Init(CMenus *pMenus) { m_pMenus = pMenus; m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); };
+		static void Init(CMenus *pMenus) { m_pMenus = pMenus; m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); };
 	};
+
+	class CButtonContainer : public CUIElementBase
+	{
+		bool m_CleanBackground;
+		float m_FadeStartTime;
+	public:
+		CButtonContainer(bool CleanBackground = false) { m_CleanBackground = CleanBackground; }
+		const void *GetID() const { return &m_FadeStartTime; }
+		float GetFade(bool Checked = false, float Seconds = 0.6f);
+		bool IsCleanBackground() const { return m_CleanBackground; }
+	};
+
+private:
+	typedef float (CMenus::*FDropdownCallback)(CUIRect View);
+
+	bool DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners = CUI::CORNER_ALL, float Rounding = 5.0f, bool Fade = true);
+	bool DoButton_Toggle(const void *pID, bool Checked, const CUIRect *pRect, bool Active);
+	bool DoButton_Menu(CButtonContainer *pBC, const char *pText, bool Checked, const CUIRect *pRect, const char *pImageName = 0, int Corners = CUI::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, vec4 ColorHot = vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade = true);
+	bool DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, bool Checked, const CUIRect *pRect, float Alpha = 1.0f, float FontAlpha = 1.0f, int Corners = CUI::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f);
+
+	bool DoButton_CheckBox(const void *pID, const char *pText, bool Checked, const CUIRect *pRect, bool Locked = false);
+
+	void DoIcon(int ImageId, int SpriteId, const CUIRect *pRect, const vec4 *pColor = 0);
+	bool DoButton_GridHeader(const void *pID, const char *pText, bool Checked, CUI::EAlignment Align, const CUIRect *pRect);
+
+	bool DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUI::CORNER_ALL);
+	void DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden = false);
+	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite = false);
+	void DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int Num, IScrollbarScale *pScale = &LinearScrollbarScale);
+	float DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool *pActive);
+	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
+
+	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
+	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
+	void DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);
+	void DoButton_KeySelect(CButtonContainer *pBC, const char *pText, const CUIRect *pRect);
+	int DoKeyReader(CButtonContainer *pPC, const CUIRect *pRect, int Key, int Modifier, int *pNewModifier);
 
 	// Scroll region : found in menus_scrollregion.cpp
 	struct CScrollRegionParams
@@ -335,7 +325,6 @@ private:
 	int m_MenuPage;
 	int m_MenuPageOld;
 	bool m_MenuActive;
-	bool m_UseMouseButtons;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
 	bool m_CursorActive;
@@ -623,7 +612,9 @@ private:
 
 		// buttons var
 		int m_SwitchButton;
-		int m_aButtonID[3];
+		CButtonContainer m_DeleteButtonContainer;
+		CButtonContainer m_UpButtonContainer;
+		CButtonContainer m_DownButtonContainer;
 
 		CBrowserFilter() {}
 		CBrowserFilter(int Custom, const char* pName, IServerBrowser *pServerBrowser);
@@ -859,6 +850,7 @@ private:
 	float RenderSettingsControlsScoreboard(CUIRect View);
 	float RenderSettingsControlsStats(CUIRect View);
 	float RenderSettingsControlsMisc(CUIRect View);
+	void DoSettingsControlsButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spacing);
 
 	void DoJoystickAxisPicker(CUIRect View);
 
@@ -889,8 +881,6 @@ public:
 		int m_TimeLeft;
 	};
 	void GetSwitchTeamInfo(CSwitchTeamInfo *pInfo);
-
-	void UseMouseButtons(bool Use) { m_UseMouseButtons = Use; }
 
 	static CMenusKeyBinder m_Binder;
 

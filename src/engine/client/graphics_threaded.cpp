@@ -566,7 +566,7 @@ void CGraphics_Threaded::SetColor(float r, float g, float b, float a)
 	SetColorVertex(Array, 4);
 }
 
-void CGraphics_Threaded::SetColor4(vec4 TopLeft, vec4 TopRight, vec4 BottomLeft, vec4 BottomRight)
+void CGraphics_Threaded::SetColor4(const vec4 &TopLeft, const vec4 &TopRight, const vec4 &BottomLeft, const vec4 &BottomRight)
 {
 	dbg_assert(m_Drawing != 0, "called Graphics()->SetColor without begin");
 	CColorVertex Array[4] = {
