@@ -357,7 +357,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 	int OldSelected = -1;
 	s_ListBox.DoHeader(&MainView, Localize("Skins"), GetListHeaderHeight());
 	m_RefreshSkinSelector = s_ListBox.DoFilter();
-	s_ListBox.DoStart(50.0f, s_paSkinList.size(), 10, OldSelected);
+	s_ListBox.DoStart(60.0f, s_paSkinList.size(), 10, OldSelected);
 
 	for(int i = 0; i < s_paSkinList.size(); ++i)
 	{
@@ -391,6 +391,22 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 			Info.m_Size = 50.0f;
 			Item.m_Rect.HSplitTop(5.0f, 0, &Item.m_Rect); // some margin from the top
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, 0, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
+		
+			CUIRect Label;
+			Item.m_Rect.Margin(5.0f, &Item.m_Rect);
+			Item.m_Rect.HSplitBottom(10.0f, &Item.m_Rect, &Label);
+
+			if(Item.m_Selected)
+			{
+				TextRender()->TextColor(CUI::ms_HighlightTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
+			}
+			UI()->DoLabel(&Label, s->m_aName, 10.0f, CUI::ALIGN_CENTER);
+			if(Item.m_Selected)
+			{
+				TextRender()->TextColor(CUI::ms_DefaultTextColor);
+				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+			}
 		}
 	}
 
