@@ -101,36 +101,34 @@ void CMenus::CScrollRegion::End()
 	const bool InsideSlider = m_pUI->MouseInside(&Slider);
 	const bool InsideRail = m_pUI->MouseInside(&m_RailRect);
 
-	if(InsideSlider)
+	if(m_pUI->CheckActiveItem(pID) && m_pUI->MouseButton(0))
+	{
+		float MouseY = m_pUI->MouseY();
+		m_ScrollY += (MouseY - (Slider.y + m_SliderGrabPos.y)) / MaxSlider * MaxScroll;
+		m_SliderGrabPos.y = clamp(m_SliderGrabPos.y, 0.0f, SliderHeight);
+		Grabbed = true;
+	}
+	else if(InsideSlider)
 	{
 		m_pUI->SetHotItem(pID);
 
 		if(!m_pUI->CheckActiveItem(pID) && m_pUI->MouseButtonClicked(0))
 		{
 			m_pUI->SetActiveItem(pID);
-			m_MouseGrabStart.y = m_pUI->MouseY();
+			m_SliderGrabPos.y = m_pUI->MouseY() - Slider.y;
 		}
 		Hovered = true;
 	}
 	else if(InsideRail && m_pUI->MouseButtonClicked(0))
 	{
-		m_ScrollY += m_pUI->MouseY() - (Slider.y+Slider.h/2);
+		m_ScrollY += (m_pUI->MouseY() - (Slider.y+Slider.h/2)) / MaxSlider * MaxScroll;
 		m_pUI->SetActiveItem(pID);
-		m_MouseGrabStart.y = m_pUI->MouseY();
+		m_SliderGrabPos.y = Slider.h/2;
 		Hovered = true;
 	}
 	else if(m_pUI->CheckActiveItem(pID) && !m_pUI->MouseButton(0))
 	{
 		m_pUI->SetActiveItem(0);
-	}
-
-	// move slider
-	if(m_pUI->CheckActiveItem(pID) && m_pUI->MouseButton(0))
-	{
-		float MouseY = m_pUI->MouseY();
-		m_ScrollY += (MouseY - m_MouseGrabStart.y) / MaxSlider * MaxScroll;
-		m_MouseGrabStart.y = MouseY;
-		Grabbed = true;
 	}
 
 	m_ScrollY = clamp(m_ScrollY, 0.0f, MaxScroll);

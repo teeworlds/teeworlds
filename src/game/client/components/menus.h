@@ -214,7 +214,7 @@ private:
 		CUIRect m_ClipRect;
 		CUIRect m_RailRect;
 		CUIRect m_LastAddedRect; // saved for ScrollHere()
-		vec2 m_MouseGrabStart;
+		vec2 m_SliderGrabPos; // where did user grab the slider
 		vec2 m_ContentScrollOff;
 		CScrollRegionParams m_Params;
 

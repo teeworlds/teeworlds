@@ -1511,7 +1511,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	ScrollParams.m_ScrollbarBgColor = vec4(0,0,0,0);
 	ScrollParams.m_ScrollbarWidth = 14;
 	ScrollParams.m_ScrollbarMargin = 5;
-	ScrollParams.m_ScrollUnit = 40.0f; // various sized content, 40 units per scroll;
+	ScrollParams.m_ScrollUnit = 40.0f; // various sized content, 40 units per scroll
 	s_ScrollRegion.Begin(&View, &ScrollOffset, &ScrollParams);
 	View.y += ScrollOffset.y;
 
