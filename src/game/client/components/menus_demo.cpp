@@ -201,7 +201,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 				for(int i = 0; i < pInfo->m_NumTimelineMarkers; i++)
 				{
 					const int MarkerTick = pInfo->m_aTimelineMarkers[i]-pInfo->m_FirstTick;
-					if(abs(MarkerTick-CurrentTick) < Threshold)
+					if(absolute(MarkerTick-CurrentTick) < Threshold)
 					{
 						if(i+1 < pInfo->m_NumTimelineMarkers)
 							DesiredTick = pInfo->m_aTimelineMarkers[i+1]-pInfo->m_FirstTick;
@@ -220,7 +220,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 				for(int i = pInfo->m_NumTimelineMarkers-1; i >= 0; i--)
 				{
 					const int MarkerTick = pInfo->m_aTimelineMarkers[i]-pInfo->m_FirstTick;
-					if(abs(MarkerTick-CurrentTick) < Threshold)
+					if(absolute(MarkerTick-CurrentTick) < Threshold)
 					{
 						if(i > 0)
 							DesiredTick = pInfo->m_aTimelineMarkers[i-1]-pInfo->m_FirstTick;
