@@ -35,6 +35,8 @@ public:
 	protected:
 		unsigned m_NumArgs;
 	public:
+		int m_Value;
+		char m_aValue[128];
 		IResult() { m_NumArgs = 0; }
 		virtual ~IResult() {}
 
