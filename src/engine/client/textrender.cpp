@@ -459,24 +459,26 @@ CGlyph *CGlyphMap::GetGlyph(int Chr, int FontSizeIndex)
 	{
 		if(RenderGlyph(Chr, FontSizeIndex, &Glyph))
 		{
-			int Index = m_Glyphs.add(Glyph);
-			pGlyph = &m_Glyphs[Index];
-		}
-	}
-	else
-	{
-		pGlyph = &r.front();
-
-		if(m_aAtlasPages[pGlyph->m_AtlasIndex].GetPageID() != pGlyph->m_PageID)
-		{
-			// re-render glyph if the page is dropped
-			RenderGlyph(Chr, FontSizeIndex, pGlyph);
+			m_Glyphs.add(Glyph);
+			r = ::find_binary(m_Glyphs.all(), Glyph);
 		}
 		else
 		{
-			// otherwise touch the page
-			m_aAtlasPages[pGlyph->m_AtlasIndex].Touch();
+			return NULL;
 		}
+	}
+
+	pGlyph = &r.front();
+
+	if(m_aAtlasPages[pGlyph->m_AtlasIndex].GetPageID() != pGlyph->m_PageID)
+	{
+		// re-render glyph if the page is dropped
+		RenderGlyph(Chr, FontSizeIndex, pGlyph);
+	}
+	else
+	{
+		// otherwise touch the page
+		m_aAtlasPages[pGlyph->m_AtlasIndex].Touch();
 	}
 
 	return pGlyph;
