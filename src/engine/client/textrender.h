@@ -111,7 +111,7 @@ class CGlyphMap
 	void InitTexture(int Width, int Height);
 	int FitGlyph(int Width, int Height, ivec2 *Position);
 	void UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int Height, const unsigned char *pData);
-	bool RenderGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph);
+	bool RenderGlyph(CGlyph *pGlyph);
 	bool SetFaceByName(FT_Face *pFace, const char *pFamilyName);
 public:
 	CGlyphMap(IGraphics *pGraphics);
@@ -125,7 +125,7 @@ public:
 	void AddFallbackFaceByName(const char *pFamilyName);
 	void SetVariantFaceByName(const char *pFamilyName);
 	
-	CGlyph *GetGlyph(int Chr, int FontSizeIndex);
+	void GetGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph);
 	int GetFontSizeIndex(int PixelSize);
 	vec2 Kerning(CGlyph *pLeft, CGlyph *pRight);
 
