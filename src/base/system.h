@@ -655,9 +655,8 @@ int net_host_lookup(const char *hostname, NETADDR *addr, int types);
 		check_port - compares port or not
 
 	Returns:
-		<0 - Address a is lesser then address b
 		0 - Address a is equal to address b
-		>0 - Address a is greater then address b
+		-1 - Address a differs from address b
 */
 int net_addr_comp(const NETADDR *a, const NETADDR *b, int check_port);
 
