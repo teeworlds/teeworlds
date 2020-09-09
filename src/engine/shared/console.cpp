@@ -674,8 +674,6 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 
 void CConsole::Con_EvalIf(IResult *pResult, void *pUserData)
 {
-	CResult Result;
-	CConsole* pConsole = static_cast<CConsole *>(pUserData);
 	CCommand *pCommand = ((CConsole*)pUserData)->FindCommand(pResult->GetString(0), ((CConsole*)pUserData)->m_FlagMask);
 	char aBuf[128];
 	if(!pCommand)
@@ -684,31 +682,33 @@ void CConsole::Con_EvalIf(IResult *pResult, void *pUserData)
 		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 		return;
 	}
+	CResult Result;
 	pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
-	bool condition = false;
+	bool Condition = false;
 	if(pCommand->m_pfnCallback == IntVariableCommand)
-		condition = Result.m_Value == atoi(pResult->GetString(2));
+		Condition = Result.m_Value == atoi(pResult->GetString(2));
 	else
-		condition = !str_comp_nocase(Result.m_aValue, pResult->GetString(2));
+		Condition = !str_comp_nocase(Result.m_aValue, pResult->GetString(2));
 	if(!str_comp_num(pResult->GetString(1), "!=", 3))
-		condition = !condition;
+		Condition = !Condition;
 	else if(str_comp_num(pResult->GetString(1), "==", 3) && pCommand->m_pfnCallback == StrVariableCommand)
 		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: invalid comperator for type string");
 	else if(!str_comp_num(pResult->GetString(1), ">", 2))
-		condition = Result.m_Value > atoi(pResult->GetString(2));
+		Condition = Result.m_Value > atoi(pResult->GetString(2));
 	else if(!str_comp_num(pResult->GetString(1), "<", 2))
-		condition = Result.m_Value < atoi(pResult->GetString(2));
+		Condition = Result.m_Value < atoi(pResult->GetString(2));
 	else if(!str_comp_num(pResult->GetString(1), "<=", 3))
-		condition = Result.m_Value <= atoi(pResult->GetString(2));
+		Condition = Result.m_Value <= atoi(pResult->GetString(2));
 	else if(!str_comp_num(pResult->GetString(1), ">=", 3))
-		condition = Result.m_Value >= atoi(pResult->GetString(2));
+		Condition = Result.m_Value >= atoi(pResult->GetString(2));
 	else if(str_comp_num(pResult->GetString(1), "==", 3))
 		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: invalid comperator for type integer");
 
 	if(pResult->NumArguments() > 4 && str_comp_num(pResult->GetString(4), "else", 5))
 		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: expected else");
 
-	if(condition)
+	CConsole* pConsole = static_cast<CConsole *>(pUserData);
+	if(Condition)
 		pConsole->ExecuteLine(pResult->GetString(3));
 	else if(pResult->NumArguments() == 6)
 		pConsole->ExecuteLine(pResult->GetString(5));
