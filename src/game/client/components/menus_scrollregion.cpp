@@ -76,13 +76,13 @@ void CMenus::CScrollRegion::End()
 	if(m_pUI->MouseHovered(&RegionRect))
 	{
 		const float ScrollUnit = IsPageScroll ? m_ClipRect.h : m_Params.m_ScrollUnit;
-		if(m_pInput->KeyPress(KEY_MOUSE_WHEEL_UP))
+		if(m_pUI->KeyPress(KEY_MOUSE_WHEEL_UP))
 		{
 			m_AnimTime = AnimationDuration;
 			m_AnimInitScrollY = m_ScrollY;
 			m_AnimTargetScrollY -= ScrollUnit;
 		}
-		else if(m_pInput->KeyPress(KEY_MOUSE_WHEEL_DOWN))
+		else if(m_pUI->KeyPress(KEY_MOUSE_WHEEL_DOWN))
 		{
 			m_AnimTime = AnimationDuration;
 			m_AnimInitScrollY = m_ScrollY;

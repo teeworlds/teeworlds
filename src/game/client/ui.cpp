@@ -32,7 +32,7 @@ CUI::CUI()
 	m_MouseWorldY = 0;
 	m_MouseButtons = 0;
 	m_LastMouseButtons = 0;
-	m_UseMouseButtons = true;
+	m_Enabled = true;
 
 	m_Screen.x = 0;
 	m_Screen.y = 0;
@@ -43,7 +43,7 @@ CUI::CUI()
 void CUI::Update(float MouseX, float MouseY, float MouseWorldX, float MouseWorldY)
 {
 	unsigned MouseButtons = 0;
-	if(m_UseMouseButtons)
+	if(Enabled())
 	{
 		if(Input()->KeyIsPressed(KEY_MOUSE_1)) MouseButtons |= 1;
 		if(Input()->KeyIsPressed(KEY_MOUSE_2)) MouseButtons |= 2;
@@ -60,6 +60,16 @@ void CUI::Update(float MouseX, float MouseY, float MouseWorldX, float MouseWorld
 	if(m_pActiveItem)
 		m_pHotItem = m_pActiveItem;
 	m_pBecommingHotItem = 0;
+}
+
+bool CUI::KeyPress(int Key) const
+{
+	return Enabled() && Input()->KeyPress(Key);
+}
+
+bool CUI::KeyIsPressed(int Key) const
+{
+	return Enabled() && Input()->KeyIsPressed(Key);
 }
 
 void CUI::ConvertCursorMove(float *pX, float *pY, int CursorType) const

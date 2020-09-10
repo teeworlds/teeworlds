@@ -83,7 +83,7 @@ void CMenus::DoPopupMenu()
 		if(s_Popups.m_pfnFunc(this, r))
 			m_PopupActive = false;
 
-		if(Input()->KeyPress(KEY_ESCAPE))
+		if(UI()->KeyPress(KEY_ESCAPE))
 			m_PopupActive = false;
 	}
 }
