@@ -543,7 +543,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	Hint.m_GlyphCount = 0;
 	Hint.m_EffectiveAdvanceX = pCursor->m_Advance.x;
 	Hint.m_EndsWithNewline = false;
-	Hint.m_EndsWithSpace = false;
+	Hint.m_EndOfWord = false;
 	Hint.m_IsBroken = false;
 
 	float WordStartAdvance = pCursor->m_Advance.x;
@@ -573,7 +573,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		float AdvanceX = (Glyph.m_AdvanceX + Kerning.x) * Size;
 
 		bool IsSpace = Chr == '\n' || Chr == '\t' || Chr == ' ';
-		if(!IsSpace && pCursor->m_Advance.x + AdvanceX - WordStartAdvance > LineWidth)
+		if(!IsSpace && pCursor->m_StartOfLine && pCursor->m_Advance.x + AdvanceX > LineWidth)
 		{
 			Hint.m_CharCount--;
 			Hint.m_IsBroken = true;
@@ -596,14 +596,17 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 
 		if (IsSpace)
 		{
-			Hint.m_EndsWithSpace = true;
+			Hint.m_EndOfWord = true;
 			Hint.m_EndsWithNewline = Chr == '\n';
 			break;
 		}
 
 		Hint.m_EffectiveAdvanceX = pCursor->m_Advance.x;
 		if(!isWestern(Chr))
+		{
+			Hint.m_EndOfWord = true;
 			break;
+		}
 	}
 
 	return Hint;
@@ -800,6 +803,7 @@ void CTextRender::SetCursor(CTextCursor *pCursor, float x, float y, int Flags)
 	pCursor->m_GlyphCount = 0;
 	pCursor->m_PageCountWhenDrawn = -1;
 	pCursor->m_Truncated = false;
+	pCursor->m_StartOfLine = true;
 
 	pCursor->m_Glyphs.set_size(0);
 }
@@ -926,7 +930,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 			int NumGlyphs = pCursor->m_Glyphs.size();
 			int WordStartGlyphIndex = NumGlyphs - WordWidth.m_GlyphCount;
 			// Do not let space create new line.
-			if(WordWidth.m_GlyphCount == 1 && WordWidth.m_EndsWithSpace)
+			if(WordWidth.m_GlyphCount == 1 && (*pCur == ' ' || *pCur == '\n' || *pCur == '\t'))
 			{
 				pCursor->m_Glyphs.remove_index(NumGlyphs-1);
 				pCursor->m_Advance.x = WordStartAdvanceX;
@@ -955,6 +959,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 				}
 
 				WordWidth.m_EffectiveAdvanceX -= WordStartAdvanceX;
+				pCursor->m_StartOfLine = false;
 			}
 		}
 
@@ -964,6 +969,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 			pCursor->m_LineCount++;
 			pCursor->m_Advance.y += Size;
 			pCursor->m_Advance.x = 0;
+			pCursor->m_StartOfLine = true;
 		}
 
 		BoundingBox.m_Max.x = max(WordWidth.m_EffectiveAdvanceX, BoundingBox.m_Max.x);
@@ -1017,6 +1023,7 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor)
 	CTextBoundingBox AlignedBox = pCursor->AlignedBoundingBox();
 	float BoxWidth = AlignedBox.Width();
 
+	vec4 LastColor = vec4(-1, -1, -1, -1);
 	for(int pass = 0; pass < 2; ++pass)
 	{
 		Graphics()->TextureSet(m_pGlyphMap->GetTexture(1-pass));
@@ -1027,11 +1034,18 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor)
 		for(int i = NumQuads - 1; i >= 0; --i)
 		{
 			const CQuadGlyph& Quad = pCursor->m_Glyphs[i];
+			vec4 Color;
 			if(pass == 0)
-				Graphics()->SetColor(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a * Quad.m_TextColor.a);
+				Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a * Quad.m_TextColor.a);
 			else
-				Graphics()->SetColor(Quad.m_TextColor.r, Quad.m_TextColor.g, Quad.m_TextColor.b, Quad.m_TextColor.a);
-		
+				Color = vec4(Quad.m_TextColor.r, Quad.m_TextColor.g, Quad.m_TextColor.b, Quad.m_TextColor.a);
+
+			if(Color != LastColor)
+			{
+				Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+				LastColor = Color;
+			}
+
 			if(Line != Quad.m_Line)
 			{
 				Line = Quad.m_Line;
@@ -1068,10 +1082,17 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
 
 	int Line = -1;
 	vec2 LineOffset = vec2(0, 0);
+	vec4 LastColor = vec4(-1, -1, -1, -1);
 	for(int i = NumQuads - 1; i >= 0; --i)
 	{
 		const CQuadGlyph& Quad = pCursor->m_Glyphs[i];
-		Graphics()->SetColor(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
+		vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
+		if (Color != LastColor)
+		{
+			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+			LastColor = Color;
+		}
+		
 		if(Line != Quad.m_Line)
 		{
 			Line = Quad.m_Line;
@@ -1095,7 +1116,12 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
 	for(int i = NumQuads - 1; i >= 0; --i)
 	{
 		const CQuadGlyph& Quad = pCursor->m_Glyphs[i];
-		Graphics()->SetColor(Quad.m_TextColor.r, Quad.m_TextColor.g, Quad.m_TextColor.b, Quad.m_TextColor.a);
+		vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
+		if (Color != LastColor)
+		{
+			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+			LastColor = Color;
+		}
 		if(Line != Quad.m_Line)
 		{
 			Line = Quad.m_Line;

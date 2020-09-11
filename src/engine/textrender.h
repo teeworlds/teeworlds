@@ -90,6 +90,7 @@ class CTextCursor
 	// Deferred: everything is top left aligned
 	//           alignments only happen during drawing
 	vec2 m_Advance;
+	bool m_StartOfLine;
 	CTextBoundingBox m_BoundingBox; 
 	array<CQuadGlyph> m_Glyphs;
 
