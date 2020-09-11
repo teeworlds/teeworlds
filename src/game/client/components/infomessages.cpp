@@ -170,16 +170,12 @@ void CInfoMessages::OnRender()
 void CInfoMessages::RenderKillMsg(const CInfoMsg *pInfoMsg, float x, float y) const
 {
 	float FontSize = 36.0f;
-	float KillerNameW = TextRender()->TextWidth(0, FontSize, pInfoMsg->m_aPlayer2Name, -1, -1.0f) + RenderTools()->GetClientIdRectSize(FontSize);
-	float VictimNameW = TextRender()->TextWidth(0, FontSize, pInfoMsg->m_aPlayer1Name, -1, -1.0f) + RenderTools()->GetClientIdRectSize(FontSize);
+	float KillerNameW = 0;
+	float VictimNameW = 0;
 
 	// render victim name
 	x -= VictimNameW;
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
-
-	RenderTools()->DrawClientID(TextRender(), &Cursor, pInfoMsg->m_Player1ID);
-	TextRender()->TextEx(&Cursor, pInfoMsg->m_aPlayer1Name, -1);
+	// TODO: ADDBACK: draw name
 
 	// render victim tee
 	x -= 24.0f;
@@ -250,11 +246,7 @@ void CInfoMessages::RenderKillMsg(const CInfoMsg *pInfoMsg, float x, float y) co
 		{
 			// render killer name
 			x -= KillerNameW;
-			TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
-
-			RenderTools()->DrawClientID(TextRender(), &Cursor, pInfoMsg->m_Player2ID);
-
-			TextRender()->TextEx(&Cursor, pInfoMsg->m_aPlayer2Name, -1);
+			// TODO: ADDBACK: draw name
 		}
 	}
 }
@@ -262,39 +254,18 @@ void CInfoMessages::RenderKillMsg(const CInfoMsg *pInfoMsg, float x, float y) co
 void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) const
 {
 	float FontSize = 36.0f;
-	float PlayerNameW = TextRender()->TextWidth(0, FontSize, pInfoMsg->m_aPlayer1Name, -1, -1.0f) + RenderTools()->GetClientIdRectSize(FontSize);
-
+	float PlayerNameW = 0;
+	
 	// render diff
 	if(pInfoMsg->m_Diff != 0)
 	{
-		char aBuf[32];
-		char aDiff[32];
-		FormatTimeDiff(aDiff, sizeof(aDiff), pInfoMsg->m_Diff, m_pClient->RacePrecision());
-		str_format(aBuf, sizeof(aBuf), "(%s)", aDiff);
-		float DiffW = TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f);
-
-		x -= DiffW;
-		if(pInfoMsg->m_Diff < 0)
-			TextRender()->TextColor(0.5f, 1.0f, 0.5f, 1.0f);
-		else
-			TextRender()->TextColor(1.0f, 0.5f, 0.5f, 1.0f);
-		TextRender()->Text(0, x, y, FontSize, aBuf, -1);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		// TODO: ADDBACK: draw diff
 
 		x -= 16.0f;
 	}
 
 	// render time
-	char aTime[32];
-	FormatTime(aTime, sizeof(aTime), pInfoMsg->m_Time, m_pClient->RacePrecision());
-	float TimeW = TextRender()->TextWidth(0, FontSize, aTime, -1, -1.0f);
-
-	x -= TimeW;
-	if(pInfoMsg->m_RecordServer)
-		TextRender()->TextColor(1.0f, 0.5f, 0.0f, 1.0f);
-	else if(pInfoMsg->m_RecordPersonal)
-		TextRender()->TextColor(0.2f, 0.6f, 1.0f, 1.0f);
-	TextRender()->Text(0, x, y, FontSize, aTime, -1);
+	// TODO: ADDBACK: draw time
 
 	x -= 52.0f + 10.0f;
 
@@ -309,12 +280,7 @@ void CInfoMessages::RenderFinishMsg(const CInfoMsg *pInfoMsg, float x, float y) 
 
 	// render player name
 	x -= PlayerNameW;
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, x, y, FontSize, TEXTFLAG_RENDER);
-
-	RenderTools()->DrawClientID(TextRender(), &Cursor, pInfoMsg->m_Player1ID);
-	TextRender()->TextEx(&Cursor, pInfoMsg->m_aPlayer1Name, -1);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	// TODO: ADDBACK: draw player name
 
 	x -= 28.0f;
 

@@ -52,11 +52,8 @@ void CMotd::OnRender()
 
 	Rect.Margin(30.0f, &Rect);
 	float TextSize = 32.0f;
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, Rect.x, Rect.y, TextSize, TEXTFLAG_RENDER);
-	Cursor.m_LineWidth = Rect.w;
-	Cursor.m_MaxLines = ceil(Rect.h/TextSize);
-	TextRender()->TextEx(&Cursor, m_aServerMotd, -1);
+
+	// TODO: ADDBACK: draw motd
 }
 
 void CMotd::OnMessage(int MsgType, void *pRawMsg)

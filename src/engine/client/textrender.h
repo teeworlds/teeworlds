@@ -15,8 +15,8 @@ enum
 {
 	MAX_FACES = 16,
 	MAX_CHARACTERS = 64,
-	TEXTURE_SIZE = 1024,
-	PAGE_COUNT = 2,
+	TEXTURE_SIZE = 512,
+	PAGE_COUNT = 4,
 };
 
 // TODO: use SDF or MSDF font instead of multiple font sizes
@@ -37,10 +37,10 @@ struct CGlyph
 	int m_PageID;
 	FT_Face m_Face;
 
+	bool m_Rendered;
 	float m_Width;
 	float m_Height;
-	float m_OffsetX;
-	float m_OffsetY;
+	vec2 m_Offset;
 	float m_AdvanceX;
 	float m_aUvs[4];
 
@@ -95,7 +95,7 @@ class CGlyphMap
 	CAtlas m_aAtlasPages[PAGE_COUNT*PAGE_COUNT];
 	sorted_array<CGlyph> m_Glyphs;
 
-	int m_NumTotalPages;
+	unsigned int m_NumTotalPages;
 
 	FT_Face m_DefaultFace;
 	FT_Face m_VariantFace;
@@ -111,24 +111,24 @@ class CGlyphMap
 	void InitTexture(int Width, int Height);
 	int FitGlyph(int Width, int Height, ivec2 *Position);
 	void UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int Height, const unsigned char *pData);
-	bool RenderGlyph(CGlyph *pGlyph);
+	bool RenderGlyph(CGlyph *pGlyph, bool Render);
 	bool SetFaceByName(FT_Face *pFace, const char *pFamilyName);
+	int GetCharGlyph(int Chr, FT_Face *pFace);
 public:
 	CGlyphMap(IGraphics *pGraphics);
 
 	IGraphics::CTextureHandle GetTexture(int Index) { return m_aTextures[Index]; }
-
 	FT_Face GetDefaultFace() { return m_DefaultFace; };
-	int GetCharGlyph(int Chr, FT_Face *pFace);
 	int AddFace(FT_Face Face);
 	void SetDefaultFaceByName(const char *pFamilyName);
 	void AddFallbackFaceByName(const char *pFamilyName);
 	void SetVariantFaceByName(const char *pFamilyName);
 	
-	void GetGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph);
+	void GetGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph, bool Render);
 	int GetFontSizeIndex(int PixelSize);
-	vec2 Kerning(CGlyph *pLeft, CGlyph *pRight);
+	vec2 Kerning(CGlyph *pLeft, CGlyph *pRight, int PixelSize);
 
+	int NumTotalPages() { return m_NumTotalPages; }
 	void PagesAccessReset();
 };
 
@@ -138,36 +138,30 @@ struct CFontLanguageVariant
 	char m_aFamilyName[128];
 };
 
+struct CWordWidthHint
+{
+	float m_EffectiveAdvanceX;
+	int m_CharCount;
+	int m_GlyphCount;
+	bool m_EndsWithSpace;
+	bool m_EndsWithNewline;
+	bool m_IsBroken;
+};
+
 class CTextRender : public IEngineTextRender
 {
 	IGraphics *m_pGraphics;
 	IGraphics *Graphics() { return m_pGraphics; }
-
-	int WordLength(const char *pText)
-	{
-		int Length = 0;
-		while(1)
-		{
-			const char *pCursor = (pText + Length);
-			if(*pCursor == 0)
-				return Length;
-			if(*pCursor == '\n' || *pCursor == '\t' || *pCursor == ' ')
-				return Length+1;
-			Length = str_utf8_forward(pText, Length);
-		}
-	}
 
 	float m_TextR;
 	float m_TextG;
 	float m_TextB;
 	float m_TextA;
 
-	float m_TextOutlineR;
-	float m_TextOutlineG;
-	float m_TextOutlineB;
-	float m_TextOutlineA;
-
-	//int m_FontTextureFormat;
+	float m_TextSecondaryR;
+	float m_TextSecondaryG;
+	float m_TextSecondaryB;
+	float m_TextSecondaryA;
 
 	CGlyphMap *m_pGlyphMap;
 
@@ -180,32 +174,38 @@ class CTextRender : public IEngineTextRender
 
 	int LoadFontCollection(const char *pFilename);
 
+	bool isWestern(int Chr)
+	{
+		if(Chr >= 0x0020 && Chr <= 0x218F)
+			return true;
+		return false;
+	}
+
+	CWordWidthHint MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, int FontSizeIndex, float Size, int PixelSize);
+
+
 public:
 	CTextRender();
 
-	virtual void Init();
+	void Init();
 	void Update();
 	void Shutdown();
 
-	virtual void LoadFonts(IStorage *pStorage, IConsole *pConsole);
-	virtual void SetFontLanguageVariant(const char *pLanguageFile);
+	void LoadFonts(IStorage *pStorage, IConsole *pConsole);
+	void SetFontLanguageVariant(const char *pLanguageFile);
 
-	virtual void SetCursor(CTextCursor *pCursor, float x, float y, float FontSize, int Flags);
+	void SetCursor(CTextCursor *pCursor, float x, float y, int Flags = 0);
 
-	virtual void Text(void *pFontSetV, float x, float y, float Size, const char *pText, float LineWidth, bool MultiLine);
-	virtual float TextWidth(void *pFontSetV, float Size, const char *pText, int StrLength, float LineWidth);
-	virtual int TextLineCount(void *pFontSetV, float Size, const char *pText, float LineWidth);
-	virtual void TextColor(float r, float g, float b, float a);
-	virtual void TextOutlineColor(float r, float g, float b, float a);
-	
-	virtual void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset,
-							  vec4 ShadowColor, vec4 TextColor_);
-	virtual void TextDeferredRenderEx(CTextCursor *pCursor, const char *pText, int Length, CQuadChar* aQuadChar,
-							int QuadCharMaxCount, int* pQuadCharCount,
-							IGraphics::CTextureHandle* pFontTexture);
-	virtual void TextEx(CTextCursor *pCursor, const char *pText, int Length);
-	
-	float TextGetLineBaseY(const CTextCursor *pCursor);
+	void TextColor(float r, float g, float b, float a);
+	void TextSecondaryColor(float r, float g, float b, float a);
+
+	float TextWidth(float FontSize, const char *pText, int Length);
+	void TextDeferred(CTextCursor *pCursor, const char *pText, int Length);
+	void TextOutlined(CTextCursor *pCursor, const char *pText, int Length);
+	void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset);
+
+	void DrawTextOutlined(CTextCursor *pCursor);
+	void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset);
 };
 
 #endif

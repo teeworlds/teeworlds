@@ -635,45 +635,7 @@ void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, 
 {
 	if(!m_pConfig->m_ClShowUserId) return;
 
-	char aBuff[4];
-	str_format(aBuff, sizeof(aBuff), "%2d ", ID);
-
-	const float LinebaseY = pTextRender->TextGetLineBaseY(pCursor);
-
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-	float FakeToScreenY = (Graphics()->ScreenHeight()/(ScreenY1-ScreenY0));
-	float FontSize = (int)(pCursor->m_FontSize * FakeToScreenY)/FakeToScreenY;
-	const float Width = 1.4f * FontSize;
-	float OffsetY = 0.0f;
-
-	// jump to the next line when reaching the line width
-	if((pCursor->m_Flags & (TEXTFLAG_ALLOW_NEWLINE|TEXTFLAG_STOP_AT_END)) && pCursor->m_LineWidth > 0.0f && pCursor->m_LineWidth + pCursor->m_StartX < pCursor->m_X + Width)
-	{
-		pCursor->m_X = pCursor->m_StartX;
-		pCursor->m_Y += FontSize;
-		pCursor->m_LineCount += 1;
-		OffsetY += FontSize;
-	}
-
-	// abort when exceeding the maximum numbers of lines
-	if(pCursor->m_MaxLines > 0 && pCursor->m_LineCount > pCursor->m_MaxLines)
-		return;
-
-	CUIRect Rect;
-	Rect.x = pCursor->m_X;
-	Rect.y = LinebaseY - FontSize + 0.025f * FontSize + OffsetY;
-	Rect.w = Width;
-	Rect.h = FontSize;
-	DrawRoundRect(&Rect, BgColor, 0.25f * FontSize);
-
-	const float PrevX = pCursor->m_X;
-	pCursor->m_X += (ID < 10 ? 0.04f: 0.0f) * FontSize;
-
-	// TODO: make a simple text one (no shadow)
-	pTextRender->TextShadowed(pCursor, aBuff, -1, vec2(0,0), vec4(0,0,0,0), TextColor);
-
-	pCursor->m_X = PrevX + Rect.w + 0.2f * FontSize;
+	// TODO: ADDBACK: draw client ID
 }
 
 float CRenderTools::GetClientIdRectSize(float FontSize)

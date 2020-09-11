@@ -29,37 +29,10 @@ void CNamePlates::RenderNameplate(
 		a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
 
 
-	char aName[64];
-	str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? pClientData->m_aName: "");
+		// TODO: ADDBACK: draw nameplate
 
-	CTextCursor Cursor;
-	float tw = TextRender()->TextWidth(0, FontSize, aName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(FontSize);
-	TextRender()->SetCursor(&Cursor, Position.x-tw/2.0f, Position.y-FontSize-38.0f, FontSize, TEXTFLAG_RENDER);
-
-	TextRender()->TextOutlineColor(0.0f, 0.0f, 0.0f, 0.5f*a);
-	TextRender()->TextColor(1.0f, 1.0f, 1.0f, a);
-	if(Config()->m_ClNameplatesTeamcolors && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
-	{
-		if(pClientData->m_Team == TEAM_RED)
-			TextRender()->TextColor(1.0f, 0.5f, 0.5f, a);
-		else if(pClientData->m_Team == TEAM_BLUE)
-			TextRender()->TextColor(0.7f, 0.7f, 1.0f, a);
-	}
-
-	const vec4 IdTextColor(0.1f, 0.1f, 0.1f, a);
-	vec4 BgIdColor(1.0f, 1.0f, 1.0f, a * 0.5f);
-	if(Config()->m_ClNameplatesTeamcolors && m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
-	{
-		if(pClientData->m_Team == TEAM_RED)
-			BgIdColor = vec4(1.0f, 0.5f, 0.5f, a * 0.5f);
-		else if(pClientData->m_Team == TEAM_BLUE)
-			BgIdColor = vec4(0.7f, 0.7f, 1.0f, a * 0.5f);
-	}
-
-	if(a > 0.001f)
-	{
-		RenderTools()->DrawClientID(TextRender(), &Cursor, ClientID, BgIdColor, IdTextColor);
-		TextRender()->TextEx(&Cursor, aName, -1);
+		TextRender()->TextColor(CUI::ms_DefaultTextColor);
+		TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 	}
 
 	TextRender()->TextColor(CUI::ms_DefaultTextColor);

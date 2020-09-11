@@ -380,41 +380,50 @@ bool CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float 
 void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlignment Align, float LineWidth, bool MultiLine)
 {
 	// TODO: FIX ME!!!!
-	//Graphics()->BlendNormal();
+	// Graphics()->BlendNormal();
 
-	float TextX = pRect->x;
+	CTextCursor Cursor(FontSize);
+	if (MultiLine)
+		Cursor.m_MaxLines = -1;
+	Cursor.m_MaxWidth = LineWidth;
+	Cursor.m_Align = Align;
+
 	switch(Align)
 	{
-	case ALIGN_CENTER:
-		TextX += pRect->w/2.0f - TextRender()->TextWidth(0, FontSize, pText, -1, LineWidth)/2.0f;
+	case CUI::ALIGN_LEFT:
+		Cursor.m_Align = TEXTALIGN_LEFT;
+		TextRender()->SetCursor(&Cursor, pRect->x, pRect->y);
 		break;
-	case ALIGN_LEFT:
-		// default is left aligned
+	case CUI::ALIGN_CENTER:
+		Cursor.m_Align = TEXTALIGN_CENTER;
+		TextRender()->SetCursor(&Cursor, pRect->x + pRect->w / 2.0f, pRect->y);
 		break;
-	case ALIGN_RIGHT:
-		TextX += pRect->w - TextRender()->TextWidth(0, FontSize, pText, -1, LineWidth);
+	case CUI::ALIGN_RIGHT:
+		Cursor.m_Align = TEXTALIGN_RIGHT;
+		TextRender()->SetCursor(&Cursor, pRect->x + pRect->w, pRect->y);
 		break;
 	}
-
-	TextRender()->Text(0, TextX, pRect->y - FontSize/10.0f, FontSize, pText, LineWidth, MultiLine);
+	TextRender()->TextOutlined(&Cursor, pText, -1);
 }
 
 void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor)
 {
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, pRect->x, pRect->y, FontSize, TEXTFLAG_RENDER | TEXTFLAG_STOP_AT_END);
-	Cursor.m_LineWidth = pRect->w;
+	CTextCursor Cursor(FontSize);
+	TextRender()->SetCursor(&Cursor, pRect->x, pRect->y);
+	Cursor.m_MaxWidth = pRect->w;
 
 	TextRender()->TextColor(TextColor);
 	const char *pMatch = pHighlighted && pHighlighted[0] ? str_find_nocase(pText, pHighlighted) : 0;
 	if(pMatch)
 	{
-		TextRender()->TextEx(&Cursor, pText, (int)(pMatch - pText));
+		TextRender()->TextDeferred(&Cursor, pText, (int)(pMatch - pText));
 		TextRender()->TextColor(HighlightColor);
-		TextRender()->TextEx(&Cursor, pMatch, str_length(pHighlighted));
+		TextRender()->TextDeferred(&Cursor, pMatch, str_length(pHighlighted));
 		TextRender()->TextColor(TextColor);
-		TextRender()->TextEx(&Cursor, pMatch + str_length(pHighlighted), -1);
+		TextRender()->TextDeferred(&Cursor, pMatch + str_length(pHighlighted), -1);
 	}
 	else
-		TextRender()->TextEx(&Cursor, pText, -1);
+		TextRender()->TextDeferred(&Cursor, pText, -1);
+
+	TextRender()->DrawTextOutlined(&Cursor);
 }

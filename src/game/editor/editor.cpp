@@ -284,160 +284,8 @@ void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pU
 
 int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden, int Corners)
 {
-	bool Inside = UI()->MouseInside(pRect);
-	bool ReturnValue = false;
-	bool UpdateOffset = false;
-	static int s_AtIndex = 0;
-	static bool s_DoScroll = false;
-	static float s_ScrollStart = 0.0f;
-
-	if(UI()->LastActiveItem() == pID)
-	{
-		m_EditBoxActive = 2;
-		int Len = str_length(pStr);
-		if(Len == 0)
-			s_AtIndex = 0;
-
-		if(Inside && UI()->MouseButton(0))
-		{
-			s_DoScroll = true;
-			s_ScrollStart = UI()->MouseX();
-			int MxRel = (int)(UI()->MouseX() - pRect->x);
-
-			for(int i = 1; i <= Len; i++)
-			{
-				if(TextRender()->TextWidth(0, FontSize, pStr, i, -1.0f) - *Offset > MxRel)
-				{
-					s_AtIndex = i - 1;
-					break;
-				}
-
-				if(i == Len)
-					s_AtIndex = Len;
-			}
-		}
-		else if(!UI()->MouseButton(0))
-			s_DoScroll = false;
-		else if(s_DoScroll)
-		{
-			// do scrolling
-			if(UI()->MouseX() < pRect->x && s_ScrollStart-UI()->MouseX() > 10.0f)
-			{
-				s_AtIndex = max(0, s_AtIndex-1);
-				s_ScrollStart = UI()->MouseX();
-				UpdateOffset = true;
-			}
-			else if(UI()->MouseX() > pRect->x+pRect->w && UI()->MouseX()-s_ScrollStart > 10.0f)
-			{
-				s_AtIndex = min(Len, s_AtIndex+1);
-				s_ScrollStart = UI()->MouseX();
-				UpdateOffset = true;
-			}
-		}
-		else if(!Inside && UI()->MouseButton(0))
-		{
-			s_AtIndex = min(s_AtIndex, str_length(pStr));
-			s_DoScroll = false;
-			UI()->SetActiveItem(0);
-			UI()->ClearLastActiveItem();
-		}
-
-		if(UI()->LastActiveItem() == pID)
-		{
-			for(int i = 0; i < Input()->NumEvents(); i++)
-			{
-				Len = str_length(pStr);
-				int NumChars = Len;
-				ReturnValue |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars, Input());
-			}
-		}
-	}
-
-	bool JustGotActive = false;
-
-	if(UI()->CheckActiveItem(pID))
-	{
-		if(!UI()->MouseButton(0))
-		{
-			s_AtIndex = min(s_AtIndex, str_length(pStr));
-			s_DoScroll = false;
-			UI()->SetActiveItem(0);
-		}
-	}
-	else if(UI()->HotItem() == pID)
-	{
-		if(UI()->MouseButton(0))
-		{
-			if (UI()->LastActiveItem() != pID)
-				JustGotActive = true;
-			UI()->SetActiveItem(pID);
-		}
-	}
-
-	if(Inside)
-		UI()->SetHotItem(pID);
-
-	CUIRect Textbox = *pRect;
-	RenderTools()->DrawUIRect(&Textbox, vec4(1, 1, 1, 0.5f), Corners, 3.0f);
-	Textbox.VMargin(2.0f, &Textbox);
-
-	const char *pDisplayStr = pStr;
-	char aStars[128];
-
-	if(Hidden)
-	{
-		unsigned s = str_length(pStr);
-		if(s >= sizeof(aStars))
-			s = sizeof(aStars)-1;
-		for(unsigned int i = 0; i < s; ++i)
-			aStars[i] = '*';
-		aStars[s] = 0;
-		pDisplayStr = aStars;
-	}
-
-	// check if the text has to be moved
-	if(UI()->LastActiveItem() == pID && !JustGotActive && (UpdateOffset || Input()->NumEvents()))
-	{
-		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex, -1.0f);
-		if(w-*Offset > Textbox.w)
-		{
-			// move to the left
-			float wt = TextRender()->TextWidth(0, FontSize, pDisplayStr, -1, -1.0f);
-			do
-			{
-				*Offset += min(wt-*Offset-Textbox.w, Textbox.w/3);
-			}
-			while(w-*Offset > Textbox.w);
-		}
-		else if(w-*Offset < 0.0f)
-		{
-			// move to the right
-			do
-			{
-				*Offset = max(0.0f, *Offset-Textbox.w/3);
-			}
-			while(w-*Offset < 0.0f);
-		}
-	}
-	UI()->ClipEnable(pRect);
-	Textbox.x -= *Offset;
-
-	UI()->DoLabel(&Textbox, pDisplayStr, FontSize, CUI::ALIGN_LEFT);
-
-	// render the cursor
-	if(UI()->LastActiveItem() == pID && !JustGotActive)
-	{
-		float w = TextRender()->TextWidth(0, FontSize, pDisplayStr, s_AtIndex, -1.0f);
-		Textbox = *pRect;
-		Textbox.VSplitLeft(2.0f, 0, &Textbox);
-		Textbox.x += (w-*Offset-TextRender()->TextWidth(0, FontSize, "|", -1, -1.0f)/2);
-
-		if((2*time_get()/time_freq()) % 2)	// make it blink
-			UI()->DoLabel(&Textbox, "|", FontSize, CUI::ALIGN_LEFT);
-	}
-	UI()->ClipDisable();
-
-	return ReturnValue;
+	// TODO: ADDBACK: redo edit box
+	return false;
 }
 
 vec4 CEditor::ButtonColorMul(const void *pID)
@@ -546,11 +394,8 @@ int CEditor::DoButton_Editor(const void *pID, const char *pText, int Checked, co
 	RenderTools()->DrawUIRect(pRect, GetButtonColor(pID, Checked), CUI::CORNER_ALL, 3.0f);
 	CUIRect NewRect = *pRect;
 	NewRect.y += NewRect.h/2.0f-7.0f;
-	float tw = min(TextRender()->TextWidth(0, 10.0f, pText, -1, -1.0f), NewRect.w);
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f, 10.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-	Cursor.m_LineWidth = NewRect.w;
-	TextRender()->TextEx(&Cursor, pText, -1);
+
+	// TODO: ADDBACK: draw editor button
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -564,11 +409,8 @@ int CEditor::DoButton_Image(const void *pID, const char *pText, int Checked, con
 	RenderTools()->DrawUIRect(pRect, ButtonColor, CUI::CORNER_ALL, 3.0f);
 	CUIRect NewRect = *pRect;
 	NewRect.y += NewRect.h/2.0f-7.0f;
-	float tw = min(TextRender()->TextWidth(0, 10.0f, pText, -1, -1.0f), NewRect.w);
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f, 10.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-	Cursor.m_LineWidth = NewRect.w;
-	TextRender()->TextEx(&Cursor, pText, -1);
+
+	// TODO: ADDBACK: draw image button
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -603,10 +445,9 @@ int CEditor::DoButton_MenuItem(const void *pID, const char *pText, int Checked, 
 
 	CUIRect t = *pRect;
 	t.VMargin(5.0f, &t);
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, t.x, t.y - 1.0f, 10.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-	Cursor.m_LineWidth = t.w;
-	TextRender()->TextEx(&Cursor, pText, -1);
+
+	// TODO: ADDBACK: draw menu item
+
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -2636,8 +2477,9 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 
 				str_format(aBuf, sizeof(aBuf),"#%d %s", g, m_Map.m_lGroups[g]->m_aName);
 				float FontSize = 10.0f;
-				while(TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f) > Slot.w)
-					FontSize--;
+
+				// TODO: ADDBACK: auto font size
+
 				if(int Result = DoButton_Ex(&m_Map.m_lGroups[g], aBuf, g==m_SelectedGroup, &Slot,
 					BUTTON_CONTEXT, m_Map.m_lGroups[g]->m_Collapse ? "Select group. Double click to expand." : "Select group. Double click to collapse.", 0, FontSize))
 				{
@@ -2689,8 +2531,9 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 					str_copy(aBuf, "Quads", sizeof(aBuf));
 
 				float FontSize = 10.0f;
-				while(TextRender()->TextWidth(0, FontSize, aBuf, -1, -1.0f) > Button.w)
-					FontSize--;
+				
+				// TODO: ADDBACK: auto font size
+
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
 					BUTTON_CONTEXT, "Select layer.", 0, FontSize))
 				{
@@ -4279,20 +4122,7 @@ void CEditor::Render()
 	if(Config()->m_EdShowkeys)
 	{
 		Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
-		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, View.x+10, View.y+View.h-24-10, 24.0f, TEXTFLAG_RENDER);
-
-		int NKeys = 0;
-		for(int i = 0; i < KEY_LAST; i++)
-		{
-			if(Input()->KeyIsPressed(i))
-			{
-				if(NKeys)
-					TextRender()->TextEx(&Cursor, " + ", -1);
-				TextRender()->TextEx(&Cursor, Input()->KeyName(i), -1);
-				NKeys++;
-			}
-		}
+		// TODO: ADDBACK: show key
 	}
 
 	if(m_ShowMousePointer)

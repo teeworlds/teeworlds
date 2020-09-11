@@ -226,7 +226,7 @@ void CBroadcast::RenderServerBroadcast()
 	}
 
 	TextRender()->TextColor(1, 1, 1, 1);
-	TextRender()->TextOutlineColor(0, 0, 0, 0.3f);
+	TextRender()->TextSecondaryColor(0, 0, 0, 0.3f);
 }
 
 void CBroadcast::RenderClientBroadcast()
@@ -254,13 +254,8 @@ CBroadcast::CBroadcast()
 
 void CBroadcast::DoClientBroadcast(const char *pText)
 {
+	// TODO: ADDBACK: do broadcast
 	str_copy(m_aBroadcastText, pText, sizeof(m_aBroadcastText));
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, 0, 0, 12.0f, TEXTFLAG_STOP_AT_END);
-	Cursor.m_LineWidth = 300*Graphics()->ScreenAspect();
-	TextRender()->TextEx(&Cursor, m_aBroadcastText, -1);
-	m_BroadcastRenderOffset = 150*Graphics()->ScreenAspect()-Cursor.m_X/2;
-	m_BroadcastTime = Client()->LocalTime() + 10.0f;
 }
 
 void CBroadcast::OnReset()
@@ -358,6 +353,7 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 			UserLines[UserLineCount++] = Line;
 	}
 
+<<<<<<< HEAD
 	const float Height = 300;
 	const float Width = Height*Graphics()->ScreenAspect();
 	const float LineMaxWidth = Width * 0.5f - 10.0f;
@@ -434,6 +430,19 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 			CBcLineInfo Line = { UserLines[i].m_pStrStart, StrLen, TextWidth };
 			m_aSrvBroadcastLines[m_SrvBroadcastLineCount++] = Line;
 		}
+=======
+		Graphics()->MapScreen(0, 0, Width, Height);
+
+		// one line == big font
+		// 2+ lines == small font
+		m_SrvBroadcastLineCount = 0;
+		float FontSize = BROADCAST_FONTSIZE_BIG;
+		CTextCursor Cursor(FontSize);
+
+		// TODO: ADDBACK: broadcast lines
+
+		m_SrvBroadcastFontSize = FontSize;
+>>>>>>> 105e4e67... initial rewrite
 	}
 
 	m_SrvBroadcastFontSize = FontSize;
@@ -445,5 +454,19 @@ void CBroadcast::OnRender()
 		return;
 
 	RenderServerBroadcast();
+<<<<<<< HEAD
 	RenderClientBroadcast();
+=======
+
+	// client broadcast
+	if(m_pClient->m_pScoreboard->IsActive() || m_pClient->m_pMotd->IsActive())
+		return;
+
+	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
+
+	if(Client()->LocalTime() < m_BroadcastTime)
+	{
+		// TODO: ADDBACK: render broadcast
+	}
+>>>>>>> 105e4e67... initial rewrite
 }
