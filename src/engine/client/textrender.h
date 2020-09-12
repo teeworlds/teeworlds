@@ -16,7 +16,7 @@ enum
 	MAX_FACES = 16,
 	MAX_CHARACTERS = 64,
 	TEXTURE_SIZE = 512,
-	PAGE_COUNT = 4,
+	PAGE_COUNT = 2,
 };
 
 // TODO: use SDF or MSDF font instead of multiple font sizes
@@ -73,6 +73,7 @@ class CAtlas
 
 	int TrySection(int Index, int Width, int Height);
 public:
+	CAtlas() { m_LastFrameAccess = 0; m_Access = 0; }
 	void Init(int Index, int X, int Y, int Width, int Height);
 
 	ivec2 Add(int Width, int Height);
@@ -93,9 +94,10 @@ class CGlyphMap
 	IGraphics *m_pGraphics;
 	IGraphics::CTextureHandle m_aTextures[2];
 	CAtlas m_aAtlasPages[PAGE_COUNT*PAGE_COUNT];
+	int m_ActiveAtlasIndex;
 	sorted_array<CGlyph> m_Glyphs;
 
-	unsigned int m_NumTotalPages;
+	int m_NumTotalPages;
 
 	FT_Face m_DefaultFace;
 	FT_Face m_VariantFace;
@@ -182,7 +184,7 @@ class CTextRender : public IEngineTextRender
 	}
 
 	CWordWidthHint MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, int FontSizeIndex, float Size, int PixelSize);
-
+	void TextRefreshGlyphs(CTextCursor *pCursor);
 
 public:
 	CTextRender();
@@ -194,13 +196,14 @@ public:
 	void LoadFonts(IStorage *pStorage, IConsole *pConsole);
 	void SetFontLanguageVariant(const char *pLanguageFile);
 
-	void SetCursor(CTextCursor *pCursor, float x, float y, int Flags = 0);
+	// void SetCursor(CTextCursor *pCursor, float x, float y, int Flags = 0);
 
 	void TextColor(float r, float g, float b, float a);
 	void TextSecondaryColor(float r, float g, float b, float a);
 
 	float TextWidth(float FontSize, const char *pText, int Length);
 	void TextDeferred(CTextCursor *pCursor, const char *pText, int Length);
+	void TextNewline(CTextCursor *pCursor);
 	void TextOutlined(CTextCursor *pCursor, const char *pText, int Length);
 	void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset);
 

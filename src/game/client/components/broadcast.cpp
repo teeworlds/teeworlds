@@ -2,7 +2,6 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
-#include <engine/textrender.h>
 #include <generated/protocol.h>
 #include <generated/client_data.h>
 
@@ -254,8 +253,17 @@ CBroadcast::CBroadcast()
 
 void CBroadcast::DoClientBroadcast(const char *pText)
 {
-	// TODO: ADDBACK: do broadcast
 	str_copy(m_aBroadcastText, pText, sizeof(m_aBroadcastText));
+	// m_Cursor.Clear();
+	
+	// m_Cursor.m_Align = TEXTALIGN_BC;
+	// m_Cursor.m_FontSize = BIG
+	// CTextCursor Cursor;
+	// TextRender()->SetCursor(&Cursor, 0, 0, 12.0f, TEXTFLAG_STOP_AT_END);
+	// Cursor.m_LineWidth = 300*Graphics()->ScreenAspect();
+	// TextRender()->TextEx(&Cursor, m_aBroadcastText, -1);
+	// m_BroadcastRenderOffset = 150*Graphics()->ScreenAspect()-Cursor.m_X/2;
+	// m_BroadcastTime = Client()->LocalTime() + 10.0f;
 }
 
 void CBroadcast::OnReset()

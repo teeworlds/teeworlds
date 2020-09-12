@@ -3,11 +3,13 @@
 #ifndef GAME_CLIENT_COMPONENTS_BROADCAST_H
 #define GAME_CLIENT_COMPONENTS_BROADCAST_H
 #include <game/client/component.h>
+#include <engine/textrender.h>
 
 class CBroadcast : public CComponent
 {
 	// client broadcast
 	char m_aBroadcastText[128];
+	CTextCursor m_Cursor;
 	float m_BroadcastTime;
 	float m_BroadcastRenderOffset;
 

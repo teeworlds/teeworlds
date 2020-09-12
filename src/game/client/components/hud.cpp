@@ -113,12 +113,97 @@ void CHud::RenderScoreHud()
 
 void CHud::RenderWarmupTimer()
 {
-	// TODO: ADDBACK: render warmup
+	static CTextCursor s_Cursor;
+	s_Cursor.m_Flags = TEXTFLAG_RENDER;
+	s_Cursor.m_MaxLines = 2;
+
+	// render warmup timer
+	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_WARMUP)
+	{
+		char aBuf[256];
+		const char *pText = Localize("Warmup");
+		const bool LargeTimer = IsLargeWarmupTimerShown();
+
+		if(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0)
+		{
+			const int CursorVersion = g_Localization.Version() << 9 | m_pClient->m_Snap.m_NotReadyCount << 1 | LargeTimer;
+			if(m_pClient->m_Snap.m_NotReadyCount == 1)
+			{
+				str_format(aBuf, sizeof(aBuf), Localize("%d player not ready"), m_pClient->m_Snap.m_NotReadyCount);
+				RenderReadyUpNotification();
+			}
+			else if(m_pClient->m_Snap.m_NotReadyCount > 1)
+			{
+				str_format(aBuf, sizeof(aBuf), Localize("%d players not ready"), m_pClient->m_Snap.m_NotReadyCount);
+				RenderReadyUpNotification();
+			}
+			else
+			{
+				str_format(aBuf, sizeof(aBuf), Localize("wait for more players"));
+				if(m_WarmupHideTick == 0)
+					m_WarmupHideTick = time_get();
+			}
+			s_Cursor.ClearIfChanged(CursorVersion);
+		}
+		else
+		{
+			float Seconds = static_cast<float>(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick-Client()->GameTick())/SERVER_TICK_SPEED;
+			if(Seconds < 5)
+				str_format(aBuf, sizeof(aBuf), "%.1f", Seconds);
+			else
+				str_format(aBuf, sizeof(aBuf), "%d", round_to_int(Seconds));
+			s_Cursor.Clear();
+		}
+
+		if(LargeTimer)
+		{
+			s_Cursor.MoveTo(150 * Graphics()->ScreenAspect(), 50);
+			s_Cursor.m_Align = TEXTALIGN_TC;
+			s_Cursor.m_LineSpacing = 5.0f;
+
+			s_Cursor.m_FontSize = 20.0f;
+			TextRender()->TextDeferred(&s_Cursor, pText, -1);
+			TextRender()->TextNewline(&s_Cursor);
+			s_Cursor.m_FontSize = 16.0f;
+			TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
+			TextRender()->DrawTextOutlined(&s_Cursor);
+		}
+		else
+		{
+			s_Cursor.MoveTo(10, 45);
+			s_Cursor.m_Align = TEXTALIGN_TL;
+			s_Cursor.m_LineSpacing = 1.0f;
+			
+			TextRender()->TextColor(1, 1, 0.5f, 1);
+			s_Cursor.m_FontSize = 8.0f;
+			TextRender()->TextDeferred(&s_Cursor, pText, -1);
+			TextRender()->TextNewline(&s_Cursor);
+			s_Cursor.m_FontSize = 6.0f;
+			TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
+			TextRender()->DrawTextOutlined(&s_Cursor);
+			TextRender()->TextColor(1, 1, 1, 1);
+		}
+	}
+	else if((m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0 && m_pClient->m_Snap.m_NotReadyCount > 0) || m_pClient->m_Snap.m_pGameData->m_GameStateEndTick != 0)
+		m_WarmupHideTick = 0;
 }
 
 void CHud::RenderFps()
 {
-	// TODO: ADDBACK: Render fps
+	if(Config()->m_ClShowfps)
+	{
+		static CTextCursor s_Cursor(12, m_Width-10, 5, TEXTFLAG_RENDER);
+		s_Cursor.m_Align = TEXTALIGN_TR;
+
+		// calculate avg. fps
+		float FPS = 1.0f / Client()->RenderFrameTime();
+		m_AverageFPS = (m_AverageFPS*(1.0f-(1.0f/m_AverageFPS))) + (FPS*(1.0f/m_AverageFPS));
+		char aBuf[32];
+		str_format(aBuf, sizeof(aBuf), "%d", (int)m_AverageFPS);
+
+		s_Cursor.Clear();
+		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+	}
 }
 
 void CHud::RenderConnectionWarning()

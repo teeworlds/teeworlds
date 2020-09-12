@@ -15,26 +15,14 @@
 // TextRender Features
 enum
 {
+	TEXTFLAG_RENDER=1,
+
 	// Allow using '\\n' to linebreak
 	// If unset, '\\n' will be replaced with space
-	TEXTFLAG_ALLOW_NEWLINE=1,
+	TEXTFLAG_ALLOW_NEWLINE=2,
 
 	// Display "…" when the text is truncated
-	TEXTFLAG_ELLIPSIS=2,
-
-	// Auto scale fontsize to width
-	//		Make sure you set a m_MinFontSize in Cursor
-	//      Default value for m_MinFontSize is 5.0f
-	//		This unset TEXTFLAG_ALLOW_NEWLINE, which can not be used together
-	TEXTFLAG_FIT_FONTSIZE=4,
-
-	// If set, deferred quads will not be cleared when the SetCursor is called.
-	// 		Render methods: TextOutlined/TextShadowed will not render quads
-	//						after the second SetCursor is called.
-	// You should set this flag if:
-	// 		Your TextCursor is preserved for more than one frame, AND
-	// 		Your text does not change.
-	TEXTFLAG_STATIC=8
+	TEXTFLAG_ELLIPSIS=4,
 };
 
 enum ETextAlignment
@@ -60,6 +48,8 @@ enum ETextAlignment
 class CQuadGlyph
 {
 public:
+	int m_Chr;
+	int m_FontSizeIndex;
 	vec2 m_Offset;
 	float m_aUvs[4];
 	float m_Width;
@@ -81,25 +71,21 @@ public:
 class CTextCursor
 {
 	friend class CTextRender;
-
-	float m_FontSize;
-	float m_MinFontSize;
-	int m_Flags;
 	vec2 m_CursorPos;
 
 	// Deferred: everything is top left aligned
 	//           alignments only happen during drawing
 	vec2 m_Advance;
 	bool m_StartOfLine;
+	bool m_SkipTextRender;
 	CTextBoundingBox m_BoundingBox; 
 	array<CQuadGlyph> m_Glyphs;
+	int m_StringVersion;
 
 	// Stats
-	unsigned int m_PageCountWhenDrawn;
+	int m_PageCountWhenDrawn;
 	int m_LineCount;
 	bool m_Truncated;
-
-	// HACKTODO: probably don't need these
 	int m_GlyphCount;
 	int m_CharCount;
 
@@ -131,18 +117,65 @@ class CTextCursor
 	}
 
 public:
+	float m_FontSize;
 	int m_MaxLines;
 	float m_MaxWidth;
 	int m_Align;
+	int m_Flags;
+	float m_LineSpacing;
 
-	// Default Params: Top left single line no width limit
-	CTextCursor(float FontSize)
+	void Clear()
 	{
-		m_FontSize = FontSize;
+		m_BoundingBox.m_Max = vec2(0, 0);
+		m_BoundingBox.m_Min = vec2(0, 0);
+		m_Advance = vec2(0, 0);
+		m_LineCount = 1;
+		m_CharCount = 0;
+		m_GlyphCount = 0;
+		m_PageCountWhenDrawn = -1;
+		m_StringVersion = -1;
+		m_Truncated = false;
+		m_StartOfLine = true;
+		m_SkipTextRender = false;
+		m_Glyphs.set_size(0);
+	}
+
+	// TODO: need better name
+	void ClearIfChanged(int StringVersion)
+	{
+		if (m_StringVersion != StringVersion)
+		{
+			Clear();
+			m_StringVersion = StringVersion;
+		}
+		else
+			m_SkipTextRender = true;
+	}
+
+	void MoveTo(float x, float y) { m_CursorPos = vec2(x, y); }
+
+	// Default Params: Top left single line no width/height limit
+	CTextCursor()
+	{
+		m_FontSize = 10.0f;
 		m_MaxLines = 1;
 		m_MaxWidth = -1.0f;
-		m_MinFontSize = 5.0f;
+		m_CursorPos = vec2(0, 0);
+		m_LineSpacing = 0.0f;
 		m_Align = (ETextAlignment)0; // Top Left
+		m_Flags = 0;
+		Clear();
+	}
+
+	CTextCursor(float FontSize, int Flags = 0) : CTextCursor()
+	{
+		m_FontSize = FontSize;
+		m_Flags = Flags;
+	}
+
+	CTextCursor(float FontSize, float x, float y, int Flags = 0) : CTextCursor(FontSize, Flags)
+	{
+		m_CursorPos = vec2(x, y);
 	}
 
 	// Exposed Bounding Box, converted to screen coord.
@@ -164,13 +197,10 @@ public:
 
 	virtual void TextColor(float r, float g, float b, float a) = 0;
 	virtual void TextSecondaryColor(float r, float g, float b, float a) = 0;
-
-	virtual void SetCursor(CTextCursor *pCursor, float x, float y, int Flags = 0) = 0;
-	inline void SetCursor(CTextCursor *pCursor, int Flags = 0) { SetCursor(pCursor, 0, 0, Flags); }
-	// virtual void MoveCursor(CTextCursor *pCursor, float x, float y) = 0;
 	
 	virtual float TextWidth(float FontSize, const char *pText, int Length) = 0;
 	virtual void TextDeferred(CTextCursor *pCursor, const char *pText, int Length) = 0;
+	virtual void TextNewline(CTextCursor *pCursor) = 0;
 	virtual void TextOutlined(CTextCursor *pCursor, const char *pText, int Length) = 0;
 	virtual void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset) = 0;
 

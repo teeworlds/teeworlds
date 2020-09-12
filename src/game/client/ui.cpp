@@ -382,7 +382,7 @@ void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlig
 	// TODO: FIX ME!!!!
 	// Graphics()->BlendNormal();
 
-	CTextCursor Cursor(FontSize);
+	CTextCursor Cursor(FontSize, TEXTFLAG_RENDER);
 	if (MultiLine)
 		Cursor.m_MaxLines = -1;
 	Cursor.m_MaxWidth = LineWidth;
@@ -392,15 +392,15 @@ void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlig
 	{
 	case CUI::ALIGN_LEFT:
 		Cursor.m_Align = TEXTALIGN_LEFT;
-		TextRender()->SetCursor(&Cursor, pRect->x, pRect->y);
+		Cursor.MoveTo(pRect->x, pRect->y);
 		break;
 	case CUI::ALIGN_CENTER:
 		Cursor.m_Align = TEXTALIGN_CENTER;
-		TextRender()->SetCursor(&Cursor, pRect->x + pRect->w / 2.0f, pRect->y);
+		Cursor.MoveTo(pRect->x + pRect->w / 2.0f, pRect->y);
 		break;
 	case CUI::ALIGN_RIGHT:
 		Cursor.m_Align = TEXTALIGN_RIGHT;
-		TextRender()->SetCursor(&Cursor, pRect->x + pRect->w, pRect->y);
+		Cursor.MoveTo(pRect->x + pRect->w, pRect->y);
 		break;
 	}
 	TextRender()->TextOutlined(&Cursor, pText, -1);
@@ -408,8 +408,7 @@ void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlig
 
 void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor)
 {
-	CTextCursor Cursor(FontSize);
-	TextRender()->SetCursor(&Cursor, pRect->x, pRect->y);
+	CTextCursor Cursor(FontSize, pRect->x, pRect->y, TEXTFLAG_RENDER);
 	Cursor.m_MaxWidth = pRect->w;
 
 	TextRender()->TextColor(TextColor);
