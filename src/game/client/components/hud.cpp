@@ -143,7 +143,7 @@ void CHud::RenderWarmupTimer()
 				if(m_WarmupHideTick == 0)
 					m_WarmupHideTick = time_get();
 			}
-			s_Cursor.ClearIfChanged(CursorVersion);
+			s_Cursor.Reset(CursorVersion);
 		}
 		else
 		{
@@ -152,7 +152,7 @@ void CHud::RenderWarmupTimer()
 				str_format(aBuf, sizeof(aBuf), "%.1f", Seconds);
 			else
 				str_format(aBuf, sizeof(aBuf), "%d", round_to_int(Seconds));
-			s_Cursor.Clear();
+			s_Cursor.Reset();
 		}
 
 		if(LargeTimer)
@@ -163,8 +163,8 @@ void CHud::RenderWarmupTimer()
 
 			s_Cursor.m_FontSize = 20.0f;
 			TextRender()->TextDeferred(&s_Cursor, pText, -1);
-			TextRender()->TextNewline(&s_Cursor);
 			s_Cursor.m_FontSize = 16.0f;
+			TextRender()->TextNewline(&s_Cursor);
 			TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
 			TextRender()->DrawTextOutlined(&s_Cursor);
 		}
@@ -177,8 +177,8 @@ void CHud::RenderWarmupTimer()
 			TextRender()->TextColor(1, 1, 0.5f, 1);
 			s_Cursor.m_FontSize = 8.0f;
 			TextRender()->TextDeferred(&s_Cursor, pText, -1);
-			TextRender()->TextNewline(&s_Cursor);
 			s_Cursor.m_FontSize = 6.0f;
+			TextRender()->TextNewline(&s_Cursor);
 			TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
 			TextRender()->DrawTextOutlined(&s_Cursor);
 			TextRender()->TextColor(1, 1, 1, 1);
@@ -201,7 +201,7 @@ void CHud::RenderFps()
 		char aBuf[32];
 		str_format(aBuf, sizeof(aBuf), "%d", (int)m_AverageFPS);
 
-		s_Cursor.Clear();
+		s_Cursor.Reset();
 		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 	}
 }

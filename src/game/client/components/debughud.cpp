@@ -22,7 +22,69 @@ void CDebugHud::RenderNetCorrections()
 	if(!Config()->m_Debug || Config()->m_DbgGraphs || !m_pClient->m_Snap.m_pLocalCharacter || !m_pClient->m_Snap.m_pLocalPrevCharacter)
 		return;
 
-	// TODO: ADDBACK: Net Corrections
+	float Width = 300*Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0, 0, Width, 300);
+
+	/*float speed = distance(vec2(netobjects.local_prev_character->x, netobjects.local_prev_character->y),
+		vec2(netobjects.local_character->x, netobjects.local_character->y));*/
+
+	float Velspeed = length(vec2(m_pClient->m_Snap.m_pLocalCharacter->m_VelX/256.0f, m_pClient->m_Snap.m_pLocalCharacter->m_VelY/256.0f))*50;
+	float Ramp = VelocityRamp(Velspeed, m_pClient->m_Tuning.m_VelrampStart, m_pClient->m_Tuning.m_VelrampRange, m_pClient->m_Tuning.m_VelrampCurvature);
+
+	const char *paStrings[] = {"velspeed:", "velspeed*ramp:", "ramp:", "Pos", " x:", " y:", "netmsg failed on:", "netobj num failures:", "netobj failed on:"};
+	const int Num = sizeof(paStrings)/sizeof(char *);
+
+	static CTextCursor s_CursorLabels(5.0f, Width-100.0f, 50.0f, TEXTFLAG_RENDER);
+	static CTextCursor s_CursorValues(5.0f, Width-10.0f, 50.0f, TEXTFLAG_RENDER);
+	s_CursorLabels.m_MaxLines = -1;
+	s_CursorLabels.m_LineSpacing = 1.0f;
+	s_CursorValues.m_MaxLines = -1;
+	s_CursorValues.m_LineSpacing = 1.0f;
+	s_CursorValues.m_Align = TEXTALIGN_TR;
+
+	s_CursorLabels.Reset(0);
+	s_CursorValues.Reset();
+
+	for(int i = 0; i < Num; ++i)
+	{
+		TextRender()->TextDeferred(&s_CursorLabels, paStrings[i], -1);
+		TextRender()->TextNewline(&s_CursorLabels);
+	}
+
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "%.0f", Velspeed/32);
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
+	str_format(aBuf, sizeof(aBuf), "%.0f", Velspeed/32*Ramp);
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
+	str_format(aBuf, sizeof(aBuf), "%.2f", Ramp);
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+	TextRender()->TextNewline(&s_CursorValues);
+
+	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_X/32);
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
+	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_Y/32);
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+	
+
+	TextRender()->TextDeferred(&s_CursorValues, m_pClient->NetmsgFailedOn(), -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
+	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->NetobjNumFailures());
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
+	TextRender()->TextDeferred(&s_CursorValues, m_pClient->NetobjFailedOn(), -1);
+
+	TextRender()->DrawTextOutlined(&s_CursorLabels);
+	TextRender()->DrawTextOutlined(&s_CursorValues);
 }
 
 void CDebugHud::RenderTuning()
@@ -35,8 +97,21 @@ void CDebugHud::RenderTuning()
 
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
 
-	float y = 50.0f;
-	int Count = 0;
+	static CTextCursor s_CursorStandard(5.0f, 25.0f, 50.0f, TEXTFLAG_RENDER);
+	static CTextCursor s_CursorCurrent(5.0f, 50.0f, 50.0f, TEXTFLAG_RENDER);
+	static CTextCursor s_CursorLabels(5.0f, 55.0f, 50.0f, TEXTFLAG_RENDER);
+	s_CursorStandard.m_MaxLines = -1;
+	s_CursorStandard.m_LineSpacing = 1.0f;
+	s_CursorStandard.m_Align = TEXTALIGN_TR;
+	s_CursorStandard.Reset();
+	s_CursorCurrent.m_MaxLines = -1;
+	s_CursorCurrent.m_LineSpacing = 1.0f;
+	s_CursorCurrent.m_Align = TEXTALIGN_TR;
+	s_CursorCurrent.Reset();
+	s_CursorLabels.m_MaxLines = -1;
+	s_CursorLabels.m_LineSpacing = 1.0f;
+	s_CursorLabels.Reset(0);
+
 	for(int i = 0; i < m_pClient->m_Tuning.Num(); i++)
 	{
 		char aBuf[128];
@@ -49,15 +124,24 @@ void CDebugHud::RenderTuning()
 		else
 			TextRender()->TextColor(1,0.25f,0.25f,1.0f);
 
-		float w;
-		float x = 5.0f;
+		str_format(aBuf, sizeof(aBuf), "%.2f", Standard);
+		TextRender()->TextDeferred(&s_CursorStandard, aBuf, -1);
 
-		// TODO: ADDBACK: render tunning
+		str_format(aBuf, sizeof(aBuf), "%.2f", Current);
+		TextRender()->TextDeferred(&s_CursorCurrent, aBuf, -1);
 
-		Count++;
+		TextRender()->TextDeferred(&s_CursorLabels, m_pClient->m_Tuning.m_apNames[i], -1);
+
+		TextRender()->TextNewline(&s_CursorStandard);
+		TextRender()->TextNewline(&s_CursorCurrent);
+		TextRender()->TextNewline(&s_CursorLabels);
 	}
 
-	y = y+Count*6;
+	TextRender()->DrawTextOutlined(&s_CursorStandard);
+	TextRender()->DrawTextOutlined(&s_CursorCurrent);
+	TextRender()->DrawTextOutlined(&s_CursorLabels);
+
+	float y = 50.0f+m_pClient->m_Tuning.Num()*6;
 
 	Graphics()->TextureClear();
 	Graphics()->BlendNormal();

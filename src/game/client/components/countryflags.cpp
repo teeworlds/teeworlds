@@ -190,6 +190,9 @@ void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y
 	}
 	else
 	{
-		// TODO: ADDBACK: render country flag
+		CTextCursor Cursor(10.0f, x+w/2, y+h/2, TEXTFLAG_RENDER);
+		Cursor.m_MaxLines = w;
+		Cursor.m_Align = TEXTALIGN_MC;
+		TextRender()->TextOutlined(&Cursor, pFlag->m_aCountryCodeString, -1);
 	}
 }

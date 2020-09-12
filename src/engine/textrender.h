@@ -78,7 +78,8 @@ class CTextCursor
 	vec2 m_Advance;
 	bool m_StartOfLine;
 	bool m_SkipTextRender;
-	CTextBoundingBox m_BoundingBox; 
+	CTextBoundingBox m_BoundingBox;
+	float m_NextLineAdvanceY;
 	array<CQuadGlyph> m_Glyphs;
 	int m_StringVersion;
 
@@ -124,32 +125,28 @@ public:
 	int m_Flags;
 	float m_LineSpacing;
 
-	void Clear()
+	void Reset(int StringVersion = -1)
 	{
-		m_BoundingBox.m_Max = vec2(0, 0);
-		m_BoundingBox.m_Min = vec2(0, 0);
-		m_Advance = vec2(0, 0);
-		m_LineCount = 1;
-		m_CharCount = 0;
-		m_GlyphCount = 0;
-		m_PageCountWhenDrawn = -1;
-		m_StringVersion = -1;
-		m_Truncated = false;
-		m_StartOfLine = true;
-		m_SkipTextRender = false;
-		m_Glyphs.set_size(0);
-	}
-
-	// TODO: need better name
-	void ClearIfChanged(int StringVersion)
-	{
-		if (m_StringVersion != StringVersion)
+		if (StringVersion < 0 || m_StringVersion != StringVersion)
 		{
-			Clear();
+			m_BoundingBox.m_Max = vec2(0, 0);
+			m_BoundingBox.m_Min = vec2(0, 0);
+			m_NextLineAdvanceY = 0;
+			m_Advance = vec2(0, 0);
+			m_LineCount = 1;
+			m_CharCount = 0;
+			m_GlyphCount = 0;
+			m_PageCountWhenDrawn = -1;
+			m_Truncated = false;
+			m_StartOfLine = true;
+			m_Glyphs.set_size(0);
 			m_StringVersion = StringVersion;
+			m_SkipTextRender = false;
 		}
 		else
+		{
 			m_SkipTextRender = true;
+		}
 	}
 
 	void MoveTo(float x, float y) { m_CursorPos = vec2(x, y); }
@@ -164,7 +161,7 @@ public:
 		m_LineSpacing = 0.0f;
 		m_Align = (ETextAlignment)0; // Top Left
 		m_Flags = 0;
-		Clear();
+		Reset();
 	}
 
 	CTextCursor(float FontSize, int Flags = 0) : CTextCursor()
