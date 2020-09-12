@@ -1262,7 +1262,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		s_ScrollRegion.AddRect(MsgBox);
 		if(!s_ScrollRegion.IsRectClipped(MsgBox))
 		{
-			const char *pImportantMessage;
+			char aBuf[128];
+			const char *pImportantMessage = 0;
 			if(m_ActivePage == PAGE_INTERNET && ServerBrowser()->IsRefreshingMasters())
 				pImportantMessage = Localize("Refreshing master servers");
 			else if(SelectedFilter == -1)
@@ -1270,12 +1271,23 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 			else if(ServerBrowser()->IsRefreshing())
 				pImportantMessage = Localize("Fetching server info");
 			else if(!ServerBrowser()->NumServers())
-				pImportantMessage = Localize("No servers found");
+			{
+				if(BrowserType == IServerBrowser::TYPE_INTERNET)
+					pImportantMessage = Localize("No servers found");
+				else if(BrowserType == IServerBrowser::TYPE_LAN)
+				{
+					str_format(aBuf, sizeof(aBuf), Localize("No local servers found (ports %d–%d)"), IServerBrowser::LAN_PORT_BEGIN, IServerBrowser::LAN_PORT_END);
+					pImportantMessage = aBuf;
+				}
+			}
 			else
 				pImportantMessage = Localize("No servers match your filter criteria");
 
-			MsgBox.y += MsgBox.h/3.0f;
-			UI()->DoLabel(&MsgBox, pImportantMessage, 16.0f, CUI::ALIGN_CENTER);
+			if(pImportantMessage)
+			{
+				MsgBox.y += MsgBox.h/3.0f;
+				UI()->DoLabel(&MsgBox, pImportantMessage, 16.0f, CUI::ALIGN_CENTER);
+			}
 		}
 	}
 
