@@ -549,7 +549,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	Hint.m_EndOfWord = false;
 	Hint.m_IsBroken = false;
 
-	if(*pText == '\0')
+	if(*pText == '\0' || pCur > pEnd)
 	{
 		Hint.m_CharCount = -1;
 		return Hint;
@@ -903,7 +903,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	CWordWidthHint WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize);
 	const char *pWordEnd = pCur + WordWidth.m_CharCount;
 
-	while(WordWidth.m_CharCount >= 0)
+	while(pWordEnd <= pEnd && WordWidth.m_CharCount >= 0)
 	{
 		float NextAdvanceY = pCursor->m_Advance.y + pCursor->m_FontSize;
 		NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;

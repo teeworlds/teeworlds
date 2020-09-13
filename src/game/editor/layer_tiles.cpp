@@ -229,8 +229,8 @@ void CLayerTiles::BrushSelecting(CUIRect Rect)
 	m_pEditor->Graphics()->QuadsEnd();
 	char aBuf[16];
 	str_format(aBuf, sizeof(aBuf), "%d,%d", ConvertX(Rect.w), ConvertY(Rect.h));
-	
-	// TODO: ADDBACK: do brush select
+	CTextCursor Cursor(m_pEditor->m_ShowTilePicker?15.0f:15.0f*m_pEditor->m_WorldZoom, Rect.x+3.0f, Rect.y+3.0f);
+	TextRender()->TextOutlined(&Cursor, aBuf, -1);
 }
 
 static int s_lastBrushX = -1, s_lastBrushY = -1;
