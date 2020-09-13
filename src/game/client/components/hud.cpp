@@ -47,7 +47,6 @@ bool CHud::IsLargeWarmupTimerShown()
 void CHud::RenderGameTimer()
 {
 	float x = 300.0f*Graphics()->ScreenAspect()/2.0f;
-	float FontSize = 10.0f;
 
 	int Time = 0;
 	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
@@ -64,12 +63,74 @@ void CHud::RenderGameTimer()
 	else
 		Time = (Client()->GameTick()-m_pClient->m_Snap.m_pGameData->m_GameStartTick)/Client()->GameTickSpeed();
 
-	// TODO: ADDBACK: render timer
+	static CTextCursor s_Cursor(10.0f);
+	s_Cursor.MoveTo(x, 2.0f);
+	s_Cursor.m_Align = TEXTALIGN_TC;
+	s_Cursor.Reset(Time);
+
+	char aBuf[32];
+	str_format(aBuf, sizeof(aBuf), "%d:%02d", Time/60, Time%60);
+
+	// last 60 sec red, last 10 sec blink
+	float Alpha = 1.0f;
+	if(m_pClient->m_GameInfo.m_TimeLimit && Time <= 60 && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_WARMUP))
+	{
+		Alpha = Time <= 10 && (2*time_get()/time_freq()) % 2 ? 0.5f : 1.0f;
+		TextRender()->TextColor(1.0f, 0.25f, 0.25f, 1.0f);
+	}
+	TextRender()->TextDeferred(&s_Cursor, aBuf, -1.0f);
+	TextRender()->DrawTextOutlined(&s_Cursor, Alpha);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_SUDDENDEATH)
+	{
+		static CTextCursor s_SuddenDeathCursor(12.0f);
+		s_SuddenDeathCursor.MoveTo(x, 14.0f);
+		s_SuddenDeathCursor.m_Align = TEXTALIGN_TC;
+		s_SuddenDeathCursor.Reset(g_Localization.Version());
+		const char *pText = Localize("Sudden Death");
+		TextRender()->TextOutlined(&s_SuddenDeathCursor, pText, -1);
+	}
 }
 
 void CHud::RenderPauseTimer()
 {
-	// TODO: ADDBACK: render timer
+	if((m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED)) == GAMESTATEFLAG_PAUSED)
+	{
+		char aBuf[256];
+		const char *pText = Localize("Game paused");
+		static CTextCursor s_GamePausedCursor;
+		s_GamePausedCursor.MoveTo(150 * Graphics()->ScreenAspect(), 50);
+		s_GamePausedCursor.m_Align = TEXTALIGN_TC;
+		s_GamePausedCursor.m_FontSize = 20.0f;
+		s_GamePausedCursor.Reset(g_Localization.Version());
+		TextRender()->TextOutlined(&s_GamePausedCursor, pText, -1);
+
+		if(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0)
+		{
+			if(m_pClient->m_Snap.m_NotReadyCount == 1)
+				str_format(aBuf, sizeof(aBuf), Localize("%d player not ready"), m_pClient->m_Snap.m_NotReadyCount);
+			else if(m_pClient->m_Snap.m_NotReadyCount > 1)
+				str_format(aBuf, sizeof(aBuf), Localize("%d players not ready"), m_pClient->m_Snap.m_NotReadyCount);
+			else
+				return;
+			RenderReadyUpNotification();
+		}
+		else
+		{
+			float Seconds = static_cast<float>(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick-Client()->GameTick())/SERVER_TICK_SPEED;
+			if(Seconds < 5)
+				str_format(aBuf, sizeof(aBuf), "%.1f", Seconds);
+			else
+				str_format(aBuf, sizeof(aBuf), "%d", round_to_int(Seconds));
+		}
+		static CTextCursor s_Cursor;
+		s_Cursor.MoveTo(150 * Graphics()->ScreenAspect(), 75);
+		s_Cursor.m_Align = TEXTALIGN_TC;
+		s_Cursor.m_FontSize = 16.0f;
+		s_Cursor.Reset();
+		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+	}
 }
 
 void CHud::RenderStartCountdown()
@@ -125,7 +186,7 @@ void CHud::RenderWarmupTimer()
 
 		if(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0)
 		{
-			const int CursorVersion = g_Localization.Version() << 9 | m_pClient->m_Snap.m_NotReadyCount << 1 | LargeTimer;
+			const int64 CursorVersion = g_Localization.Version() << 9 | m_pClient->m_Snap.m_NotReadyCount << 1 | LargeTimer;
 			if(m_pClient->m_Snap.m_NotReadyCount == 1)
 			{
 				str_format(aBuf, sizeof(aBuf), Localize("%d player not ready"), m_pClient->m_Snap.m_NotReadyCount);

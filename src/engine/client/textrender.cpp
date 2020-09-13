@@ -237,7 +237,11 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	int FontSize = aFontSizes[pGlyph->m_FontSizeIndex];
 	FT_Set_Pixel_Sizes(GlyphFace, 0, FontSize);
 
-	if(FT_Load_Glyph(GlyphFace, GlyphIndex, (Render ? FT_LOAD_RENDER : FT_LOAD_BITMAP_METRICS_ONLY)|FT_LOAD_NO_BITMAP))
+	int FtFlags = FT_LOAD_NO_BITMAP;
+	if (Render)
+	 	FtFlags |= FT_LOAD_RENDER;
+
+	if(FT_Load_Glyph(GlyphFace, GlyphIndex, FtFlags))
 	{
 		dbg_msg("pGlyphMap", "error loading glyph %d", pGlyph->m_ID);
 		return false;
@@ -317,8 +321,8 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	pGlyph->m_Face = GlyphFace;
 	pGlyph->m_Height = (Height - Spacing * 2) * Scale;
 	pGlyph->m_Width = (Width - Spacing * 2) * Scale;
-	float OffsetX = (GlyphFace->glyph->bitmap_left - 2) * Scale; // ignore_convention
-	float OffsetY = (FontSize - GlyphFace->glyph->bitmap_top) * Scale; // ignore_convention
+	float OffsetX = (GlyphFace->glyph->metrics.horiBearingX >> 6) * Scale; // ignore_convention
+	float OffsetY = (FontSize - (GlyphFace->glyph->metrics.horiBearingY >> 6)) * Scale; // ignore_convention
 	pGlyph->m_Offset = vec2(OffsetX, OffsetY);
 	pGlyph->m_AdvanceX = (GlyphFace->glyph->advance.x>>6) * Scale; // ignore_convention
 	pGlyph->m_Rendered = Render;
@@ -521,7 +525,8 @@ void CGlyphMap::PagesAccessReset()
 		m_aAtlasPages[i].Update();
 }
 
-CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, int FontSizeIndex, float Size, int PixelSize)
+CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, 
+								int FontSizeIndex, float Size, int PixelSize, vec2 ScreenScale)
 {
 	bool Render = !(pCursor->m_Flags & TEXTFLAG_NO_RENDER);
 	bool BreakWord = !(pCursor->m_Flags & TEXTFLAG_WORD_WRAP);
@@ -554,8 +559,6 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		Hint.m_CharCount = -1;
 		return Hint;
 	}
-
-	float WordStartAdvance = pCursor->m_Advance.x;
 
 	while(1)
 	{
@@ -607,6 +610,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		}
 
 		pCursor->m_Advance.x += AdvanceX;
+		pCursor->m_Advance.x = (int)(pCursor->m_Advance.x * ScreenScale.x) / ScreenScale.x;
 		Hint.m_GlyphCount++;
 		pCursor->m_GlyphCount++;
 
@@ -900,7 +904,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	const char *pEnd = (char *)pText + Length;
 
 	float WordStartAdvanceX = pCursor->m_Advance.x;
-	CWordWidthHint WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize);
+	CWordWidthHint WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize, ScreenScale);
 	const char *pWordEnd = pCur + WordWidth.m_CharCount;
 
 	while(pWordEnd <= pEnd && WordWidth.m_CharCount >= 0)
@@ -928,6 +932,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 				float AdvanceY = pCursor->m_Advance.y;
 				pCursor->m_Advance.y = pCursor->m_LineSpacing + pCursor->m_NextLineAdvanceY;
 				pCursor->m_Advance.x -= WordStartAdvanceX;
+				pCursor->m_Advance.x = (int)(pCursor->m_Advance.x * ScreenScale.x) / ScreenScale.x;
 
 				if(pCursor->m_LineCount > MaxLines)
 				{
@@ -967,7 +972,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 		WordStartAdvanceX = pCursor->m_Advance.x;
 
 		pCur = pWordEnd;
-		WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize);
+		WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize, ScreenScale);
 		pWordEnd = pWordEnd + WordWidth.m_CharCount;
 		pCursor->m_StartOfLine = false;
 
@@ -1051,16 +1056,16 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 void CTextRender::TextOutlined(CTextCursor *pCursor, const char *pText, int Length)
 {
 	TextDeferred(pCursor, pText, Length);
-	DrawTextOutlined(pCursor);
+	DrawTextOutlined(pCursor, 1.0f);
 }
 
 void CTextRender::TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset)
 {
 	TextDeferred(pCursor, pText, Length);
-	DrawTextShadowed(pCursor, ShadowOffset);
+	DrawTextShadowed(pCursor, ShadowOffset, 1.0f);
 }
 
-void CTextRender::DrawTextOutlined(CTextCursor *pCursor)
+void CTextRender::DrawTextOutlined(CTextCursor *pCursor, float Alpha)
 {
 	int NumQuads = pCursor->m_Glyphs.size();
 	if(NumQuads <= 0)
@@ -1102,7 +1107,7 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor)
 
 			if(Color != LastColor)
 			{
-				Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+				Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
 				LastColor = Color;
 			}
 
@@ -1128,7 +1133,7 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor)
 	}
 }
 
-void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
+void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha)
 {
 	int NumQuads = pCursor->m_Glyphs.size();
 
@@ -1164,7 +1169,7 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
 		vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
 		if (Color != LastColor)
 		{
-			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
 			LastColor = Color;
 		}
 
@@ -1196,7 +1201,7 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
 		vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
 		if (Color != LastColor)
 		{
-			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
+			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
 			LastColor = Color;
 		}
 		if(Line != Quad.m_Line)

@@ -201,8 +201,8 @@ public:
 
 	// These should be only called after TextDeferred, TextOutlined or TextShadowed
 	// TODO: need better names
-	virtual void DrawTextOutlined(CTextCursor *pCursor) = 0;
-	virtual void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset) = 0;
+	virtual void DrawTextOutlined(CTextCursor *pCursor, float Alpha = 1.0f) = 0;
+	virtual void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha = 1.0f) = 0;
 	// TODO: allow changing quad colors
 };
 

@@ -183,7 +183,8 @@ class CTextRender : public IEngineTextRender
 		return false;
 	}
 
-	CWordWidthHint MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, int FontSizeIndex, float Size, int PixelSize);
+	CWordWidthHint MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, 
+						int FontSizeIndex, float Size, int PixelSize, vec2 ScreenScale);
 	void TextRefreshGlyphs(CTextCursor *pCursor);
 
 public:
@@ -207,8 +208,8 @@ public:
 	void TextOutlined(CTextCursor *pCursor, const char *pText, int Length);
 	void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset);
 
-	void DrawTextOutlined(CTextCursor *pCursor);
-	void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset);
+	void DrawTextOutlined(CTextCursor *pCursor, float Alpha);
+	void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha);
 };
 
 #endif
