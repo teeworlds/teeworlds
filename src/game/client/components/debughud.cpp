@@ -34,15 +34,17 @@ void CDebugHud::RenderNetCorrections()
 	const char *paStrings[] = {"velspeed:", "velspeed*ramp:", "ramp:", "Pos", " x:", " y:", "netmsg failed on:", "netobj num failures:", "netobj failed on:"};
 	const int Num = sizeof(paStrings)/sizeof(char *);
 
-	static CTextCursor s_CursorLabels(5.0f, Width-100.0f, 50.0f);
-	static CTextCursor s_CursorValues(5.0f, Width-10.0f, 50.0f);
+	static CTextCursor s_CursorLabels(5.0f);
+	s_CursorLabels.MoveTo(Width-100.0f, 50.0f);
 	s_CursorLabels.m_MaxLines = -1;
 	s_CursorLabels.m_LineSpacing = 1.0f;
+	s_CursorLabels.Reset(0);
+
+	static CTextCursor s_CursorValues(5.0f);
+	s_CursorValues.MoveTo(Width-10.0f, 50.0f);
 	s_CursorValues.m_MaxLines = -1;
 	s_CursorValues.m_LineSpacing = 1.0f;
 	s_CursorValues.m_Align = TEXTALIGN_TR;
-
-	s_CursorLabels.Reset(0);
 	s_CursorValues.Reset();
 
 	for(int i = 0; i < Num; ++i)

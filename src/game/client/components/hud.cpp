@@ -191,7 +191,8 @@ void CHud::RenderFps()
 {
 	if(Config()->m_ClShowfps)
 	{
-		static CTextCursor s_Cursor(12, m_Width-34, 5);
+		static CTextCursor s_Cursor(12);
+		s_Cursor.MoveTo(m_Width-34, 5);
 
 		// calculate avg. fps
 		float FPS = 1.0f / Client()->RenderFrameTime();
@@ -388,7 +389,40 @@ void CHud::RenderSpectatorHud()
 	str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : "");
 	char aBuf[128];
 
-	// TODO: ADDBACK: draw spectator hud
+	static CTextCursor s_SpectateLabelCursor(8.0f);
+	s_SpectateLabelCursor.MoveTo(m_Width-Width+6.0f, m_Height-13.0f);
+	s_SpectateLabelCursor.Reset(g_Localization.Version());
+	str_format(aBuf, sizeof(aBuf), "%s: ", Localize("Spectate"));
+	TextRender()->TextOutlined(&s_SpectateLabelCursor, aBuf, -1);
+
+	static CTextCursor s_SpectateTargetCursor(8.0f);
+	s_SpectateTargetCursor.MoveTo(s_SpectateLabelCursor.BoundingBox().m_Max.x+3.0f, m_Height-13.0f);
+	s_SpectateTargetCursor.Reset();
+
+	switch(SpecMode)
+	{
+	case SPEC_FREEVIEW:
+		str_format(aBuf, sizeof(aBuf), "%s", Localize("Free-View"));
+		break;
+	case SPEC_PLAYER:
+		str_format(aBuf, sizeof(aBuf), "%s", aName);
+		break;
+	case SPEC_FLAGRED:
+	case SPEC_FLAGBLUE:
+		char aFlag[64];
+		str_format(aFlag, sizeof(aFlag), SpecMode == SPEC_FLAGRED ? Localize("Red Flag") : Localize("Blue Flag"));
+
+		if(SpecID != -1)
+			str_format(aBuf, sizeof(aBuf), "%s (%s)", aFlag, aName);
+		else
+			str_format(aBuf, sizeof(aBuf), "%s", aFlag);
+		break;
+	}
+
+	if(SpecMode == SPEC_PLAYER || SpecID != -1)
+		RenderTools()->DrawClientID(TextRender(), &s_SpectateTargetCursor, SpecID);
+
+	TextRender()->TextOutlined(&s_SpectateTargetCursor, aBuf, -1);
 }
 
 void CHud::RenderSpectatorNotification()

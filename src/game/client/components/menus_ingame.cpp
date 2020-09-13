@@ -491,7 +491,8 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	s_ScrollRegion.Begin(&Motd, &ScrollOffset, &ScrollParams);
 	Motd.y += ScrollOffset.y;
 
-	static CTextCursor s_MenuMotdCursor(ButtonHeight*ms_FontmodHeight*0.8f);
+	static CTextCursor s_MenuMotdCursor;
+	s_MenuMotdCursor.m_FontSize = ButtonHeight*ms_FontmodHeight*0.8f;
 	s_MenuMotdCursor.MoveTo(Motd.x, Motd.y);
 	s_MenuMotdCursor.m_MaxWidth = Motd.w;
 	s_MenuMotdCursor.m_MaxLines = -1;
