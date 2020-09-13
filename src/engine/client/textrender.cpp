@@ -854,7 +854,7 @@ void CTextRender::TextSecondaryColor(float r, float g, float b, float a)
 
 float CTextRender::TextWidth(float FontSize, const char *pText, int Length)
 {
-	CTextCursor Cursor(FontSize, 0, 0);
+	CTextCursor Cursor(FontSize, 0, 0, TEXTFLAG_NO_RENDER);
 	TextDeferred(&Cursor, pText, Length);
 	return Cursor.m_BoundingBox.Width();
 }
