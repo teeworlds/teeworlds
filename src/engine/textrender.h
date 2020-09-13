@@ -75,6 +75,13 @@ class CTextCursor
 {
 	friend class CTextRender;
 
+	// Stats
+	int m_PageCountWhenDrawn;
+	int m_LineCount;
+	bool m_Truncated;
+	int m_GlyphCount;
+	int m_CharCount;
+
 	// Deferred: everything is top left aligned
 	//           alignments only happen during drawing
 	vec2 m_Advance;
@@ -112,6 +119,17 @@ class CTextCursor
 		return Box;
 	}
 
+	void Set(float FontSize, float x, float y, int Flags)
+	{
+		m_FontSize = FontSize;
+		m_MaxLines = 1;
+		m_MaxWidth = -1.0f;
+		m_CursorPos = vec2(x, y);
+		m_LineSpacing = 0.0f;
+		m_Align = 0; // Top Left
+		m_Flags = Flags;
+	}
+
 public:
 	vec2 m_CursorPos;
 	float m_FontSize;
@@ -120,13 +138,6 @@ public:
 	int m_Align;
 	int m_Flags;
 	float m_LineSpacing;
-
-	// Stats
-	int m_PageCountWhenDrawn;
-	int m_LineCount;
-	bool m_Truncated;
-	int m_GlyphCount;
-	int m_CharCount;
 
 	void Reset(int64 StringVersion = -1)
 	{
@@ -154,29 +165,10 @@ public:
 
 	void MoveTo(float x, float y) { m_CursorPos = vec2(x, y); }
 
-	// Default Params: Top left single line no width/height limit
-	CTextCursor()
-	{
-		m_FontSize = 10.0f;
-		m_MaxLines = 1;
-		m_MaxWidth = -1.0f;
-		m_CursorPos = vec2(0, 0);
-		m_LineSpacing = 0.0f;
-		m_Align = (ETextAlignment)0; // Top Left
-		m_Flags = 0;
-		Reset();
-	}
-
-	CTextCursor(float FontSize, int Flags = 0) : CTextCursor()
-	{
-		m_FontSize = FontSize;
-		m_Flags = Flags;
-	}
-
-	CTextCursor(float FontSize, float x, float y, int Flags = 0) : CTextCursor(FontSize, Flags)
-	{
-		m_CursorPos = vec2(x, y);
-	}
+	// Default Cursor: Top left single line no width limit
+	CTextCursor() { Set(10.0f, 0, 0, 0); Reset(); }
+	CTextCursor(float FontSize, int Flags = 0) { Set(FontSize, 0, 0, Flags); Reset(); }
+	CTextCursor(float FontSize, float x, float y, int Flags = 0) { Set(FontSize, x, y, Flags); Reset(); }
 
 	// Exposed Bounding Box, converted to screen coord.
 	CTextBoundingBox BoundingBox()
