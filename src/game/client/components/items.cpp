@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/graphics.h>
 #include <engine/demo.h>
+#include <engine/shared/config.h>
 #include <generated/protocol.h>
 #include <generated/client_data.h>
 
@@ -39,7 +40,12 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	static float s_LastGameTickTime = Client()->GameTickTime();
 	if(!m_pClient->IsWorldPaused())
 		s_LastGameTickTime = Client()->GameTickTime();
-	float Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
+	
+	float Ct;
+	if(m_pClient->ShouldUsePredicted() && Config()->m_ClPredictProjectiles)
+		Ct = ((float)(Client()->PredGameTick() - 1 - pCurrent->m_StartTick) + Client()->PredIntraGameTick())/(float)SERVER_TICK_SPEED;
+	else
+		Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 	if(Ct < 0)
 		return; // projectile haven't been shot yet
 
