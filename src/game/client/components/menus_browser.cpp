@@ -1920,7 +1920,8 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		Button.VMargin(4.0f, &Button);
 		static int s_BrFilterPing = 0;
 		Value = LogarithmicScrollbarScale.ToAbsolute(DoScrollbarH(&s_BrFilterPing, &Button, LogarithmicScrollbarScale.ToRelative(Value, Min, Max)), Min, Max);
-		if(Value != FilterInfo.m_Ping) {
+		if(Value != FilterInfo.m_Ping)
+		{
 			FilterInfo.m_Ping = Value;
 			UpdateFilter = true;
 		}

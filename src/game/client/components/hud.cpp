@@ -114,7 +114,6 @@ void CHud::RenderScoreHud()
 void CHud::RenderWarmupTimer()
 {
 	static CTextCursor s_Cursor;
-	s_Cursor.m_Flags = TEXTFLAG_RENDER;
 	s_Cursor.m_MaxLines = 2;
 
 	// render warmup timer
@@ -192,8 +191,7 @@ void CHud::RenderFps()
 {
 	if(Config()->m_ClShowfps)
 	{
-		static CTextCursor s_Cursor(12, m_Width-10, 5, TEXTFLAG_RENDER);
-		s_Cursor.m_Align = TEXTALIGN_TR;
+		static CTextCursor s_Cursor(12, m_Width-34, 5);
 
 		// calculate avg. fps
 		float FPS = 1.0f / Client()->RenderFrameTime();

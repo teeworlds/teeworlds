@@ -34,8 +34,8 @@ void CDebugHud::RenderNetCorrections()
 	const char *paStrings[] = {"velspeed:", "velspeed*ramp:", "ramp:", "Pos", " x:", " y:", "netmsg failed on:", "netobj num failures:", "netobj failed on:"};
 	const int Num = sizeof(paStrings)/sizeof(char *);
 
-	static CTextCursor s_CursorLabels(5.0f, Width-100.0f, 50.0f, TEXTFLAG_RENDER);
-	static CTextCursor s_CursorValues(5.0f, Width-10.0f, 50.0f, TEXTFLAG_RENDER);
+	static CTextCursor s_CursorLabels(5.0f, Width-100.0f, 50.0f);
+	static CTextCursor s_CursorValues(5.0f, Width-10.0f, 50.0f);
 	s_CursorLabels.m_MaxLines = -1;
 	s_CursorLabels.m_LineSpacing = 1.0f;
 	s_CursorValues.m_MaxLines = -1;
@@ -97,13 +97,13 @@ void CDebugHud::RenderTuning()
 
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
 
-	static CTextCursor s_CursorStandard(5.0f, 25.0f, 50.0f, TEXTFLAG_RENDER);
-	static CTextCursor s_CursorCurrent(5.0f, 50.0f, 50.0f, TEXTFLAG_RENDER);
-	static CTextCursor s_CursorLabels(5.0f, 55.0f, 50.0f, TEXTFLAG_RENDER);
+	static CTextCursor s_CursorStandard(5.0f, 25.0f, 50.0f);
+	static CTextCursor s_CursorCurrent(5.0f, 50.0f, 50.0f);
+	static CTextCursor s_CursorLabels(5.0f, 55.0f, 50.0f);
 	s_CursorStandard.m_MaxLines = -1;
 	s_CursorStandard.m_LineSpacing = 1.0f;
 	s_CursorStandard.m_Align = TEXTALIGN_TR;
-	s_CursorStandard.Reset();
+	s_CursorStandard.Reset(0);
 	s_CursorCurrent.m_MaxLines = -1;
 	s_CursorCurrent.m_LineSpacing = 1.0f;
 	s_CursorCurrent.m_Align = TEXTALIGN_TR;

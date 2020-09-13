@@ -15,8 +15,8 @@ enum
 {
 	MAX_FACES = 16,
 	MAX_CHARACTERS = 64,
-	TEXTURE_SIZE = 512,
-	PAGE_COUNT = 2,
+	TEXTURE_SIZE = 2048,
+	PAGE_COUNT = 4,
 };
 
 // TODO: use SDF or MSDF font instead of multiple font sizes

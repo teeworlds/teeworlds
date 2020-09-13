@@ -230,8 +230,6 @@ void CGlyphMap::UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int
 bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 {
 	FT_Bitmap *pBitmap;
-	int x = 1;
-	int y = 1;
 	unsigned int px, py;
 
 	FT_Face GlyphFace;
@@ -249,11 +247,11 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 
 	// adjust spacing
 	int OutlineThickness = AdjustOutlineThicknessToFontSize(1, FontSize);
-	x += OutlineThickness;
-	y += OutlineThickness;
+	int Spacing = 1;
+	int Offset = OutlineThickness + Spacing;
 
-	unsigned int Width = pBitmap->width + x * 2;
-	unsigned int Height = pBitmap->rows + y * 2;
+	unsigned int Width = pBitmap->width + Offset * 2;
+	unsigned int Height = pBitmap->rows + Offset * 2;
 
 	int AtlasIndex = -1;
 	int Page = -1;
@@ -269,7 +267,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 		{
 			for(py = 0; py < pBitmap->rows; py++) // ignore_convention
 				for(px = 0; px < pBitmap->width; px++) // ignore_convention
-					s_aGlyphData[(py+y)*Width+px+x] = pBitmap->buffer[py*pBitmap->width+px]; // ignore_convention
+					s_aGlyphData[(py+Offset)*Width+px+Offset] = pBitmap->buffer[py*pBitmap->width+px]; // ignore_convention
 		}
 		else if(pBitmap->pixel_mode == FT_PIXEL_MODE_MONO) // ignore_convention
 		{
@@ -277,7 +275,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 				for(px = 0; px < pBitmap->width; px++) // ignore_convention
 				{
 					if(pBitmap->buffer[py*pBitmap->width+px/8]&(1<<(7-(px%8)))) // ignore_convention
-						s_aGlyphData[(py+y)*Width+px+x] = 255;
+						s_aGlyphData[(py+Offset)*Width+px+Offset] = 255;
 				}
 		}
 
@@ -305,12 +303,11 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 
 		m_aAtlasPages[AtlasIndex].Touch();
 
-		float Uscale = 1.0f / TEXTURE_SIZE;
-		float Vscale = 1.0f / TEXTURE_SIZE;
-		pGlyph->m_aUvs[0] = Position.x * Uscale;
-		pGlyph->m_aUvs[1] = Position.y * Vscale;
-		pGlyph->m_aUvs[2] = pGlyph->m_aUvs[0] + Width * Uscale;
-		pGlyph->m_aUvs[3] = pGlyph->m_aUvs[1] + Height * Vscale;
+		float UVscale = 1.0f / TEXTURE_SIZE;
+		pGlyph->m_aUvs[0] = (Position.x + Spacing) * UVscale;
+		pGlyph->m_aUvs[1] = (Position.y + Spacing) * UVscale;
+		pGlyph->m_aUvs[2] = (Position.x + Width - Spacing) * UVscale;
+		pGlyph->m_aUvs[3] = (Position.y + Height - Spacing) * UVscale;
 	}
 
 	float Scale = 1.0f / FontSize;
@@ -318,12 +315,11 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	pGlyph->m_AtlasIndex = AtlasIndex;
 	pGlyph->m_PageID = Page;
 	pGlyph->m_Face = GlyphFace;
-
-	pGlyph->m_Height = Height * Scale;
-	pGlyph->m_Width = Width * Scale;
-	float OffsetX = (GlyphFace->glyph->metrics.horiBearingX >> 6);
-	float OffsetY = FontSize-(GlyphFace->glyph->metrics.horiBearingY >> 6);
-	pGlyph->m_Offset = vec2(OffsetX, OffsetY) * Scale; // ignore_convention
+	pGlyph->m_Height = (Height - Spacing * 2) * Scale;
+	pGlyph->m_Width = (Width - Spacing * 2) * Scale;
+	float OffsetX = (GlyphFace->glyph->bitmap_left - 2) * Scale; // ignore_convention
+	float OffsetY = (FontSize - GlyphFace->glyph->bitmap_top) * Scale; // ignore_convention
+	pGlyph->m_Offset = vec2(OffsetX, OffsetY);
 	pGlyph->m_AdvanceX = (GlyphFace->glyph->advance.x>>6) * Scale; // ignore_convention
 	pGlyph->m_Rendered = Render;
 
@@ -527,7 +523,7 @@ void CGlyphMap::PagesAccessReset()
 
 CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, int FontSizeIndex, float Size, int PixelSize)
 {
-	bool Render = pCursor->m_Flags & TEXTFLAG_RENDER;
+	bool Render = !(pCursor->m_Flags & TEXTFLAG_NO_RENDER);
 	CWordWidthHint Hint;
 	const char *pCur = pText;
 	int NextChr = str_utf8_decode(&pCur);
@@ -865,7 +861,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 
 	int NumTotalPages = m_pGlyphMap->NumTotalPages();
 
-	bool Render = pCursor->m_Flags & TEXTFLAG_RENDER;
+	bool Render = !(pCursor->m_Flags & TEXTFLAG_NO_RENDER);
 
 	// Sizes
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
@@ -891,9 +887,6 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 
 	if(Length < 0)
 		Length = str_length(pText);
-
-	if (Render)
-		pCursor->m_Glyphs.hint_size(Length); // Reduce allocation
 
 	const char *pCur = (char *)pText;
 	const char *pEnd = (char *)pText + Length;
@@ -1065,6 +1058,13 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor)
 		pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
 	}
 
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	int ScreenWidth = Graphics()->ScreenWidth();
+	int ScreenHeight = Graphics()->ScreenHeight();
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
+
 	int HorizontalAlign = pCursor->m_Align & TEXTALIGN_MASK_HORI;
 	CTextBoundingBox AlignedBox = pCursor->AlignedBoundingBox();
 	float BoxWidth = AlignedBox.Width();
@@ -1104,7 +1104,8 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor)
 			}
 			Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
 
-			vec2 QuadPosition = pCursor->m_CursorPos + Quad.m_Offset + AlignedBox.m_Min + LineOffset;
+			vec2 QuadPosition = (pCursor->m_CursorPos + Quad.m_Offset + AlignedBox.m_Min + LineOffset) * ScreenScale;
+			QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
 			IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 		}
@@ -1124,6 +1125,13 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
 		TextRefreshGlyphs(pCursor);
 		pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
 	}
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	int ScreenWidth = Graphics()->ScreenWidth();
+	int ScreenHeight = Graphics()->ScreenHeight();
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
 
 	int HorizontalAlign = pCursor->m_Align & TEXTALIGN_MASK_HORI;
 	CTextBoundingBox AlignedBox = pCursor->AlignedBoundingBox();
@@ -1157,7 +1165,8 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
 		}
 		Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
 
-		vec2 QuadPosition = pCursor->m_CursorPos + Quad.m_Offset + AlignedBox.m_Min + LineOffset + ShadowOffset;
+		vec2 QuadPosition = (pCursor->m_CursorPos + Quad.m_Offset + AlignedBox.m_Min + LineOffset + ShadowOffset) * ScreenScale;
+		QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
 		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	}
@@ -1186,7 +1195,8 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
 		}
 		Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
 
-		vec2 QuadPosition = pCursor->m_CursorPos + Quad.m_Offset + AlignedBox.m_Min + LineOffset;
+		vec2 QuadPosition = (pCursor->m_CursorPos + Quad.m_Offset + AlignedBox.m_Min + LineOffset) * ScreenScale;
+		QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
 		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	}

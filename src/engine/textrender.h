@@ -15,7 +15,7 @@
 // TextRender Features
 enum
 {
-	TEXTFLAG_RENDER=1,
+	TEXTFLAG_NO_RENDER=1,
 
 	// Allow using '\\n' to linebreak
 	// If unset, '\\n' will be replaced with space
@@ -71,7 +71,6 @@ public:
 class CTextCursor
 {
 	friend class CTextRender;
-	vec2 m_CursorPos;
 
 	// Deferred: everything is top left aligned
 	//           alignments only happen during drawing
@@ -82,13 +81,6 @@ class CTextCursor
 	float m_NextLineAdvanceY;
 	array<CQuadGlyph> m_Glyphs;
 	int m_StringVersion;
-
-	// Stats
-	int m_PageCountWhenDrawn;
-	int m_LineCount;
-	bool m_Truncated;
-	int m_GlyphCount;
-	int m_CharCount;
 
 	CTextBoundingBox AlignedBoundingBox()
 	{
@@ -118,12 +110,20 @@ class CTextCursor
 	}
 
 public:
+	vec2 m_CursorPos;
 	float m_FontSize;
 	int m_MaxLines;
 	float m_MaxWidth;
 	int m_Align;
 	int m_Flags;
 	float m_LineSpacing;
+
+	// Stats
+	int m_PageCountWhenDrawn;
+	int m_LineCount;
+	bool m_Truncated;
+	int m_GlyphCount;
+	int m_CharCount;
 
 	void Reset(int StringVersion = -1)
 	{
