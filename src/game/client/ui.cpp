@@ -308,30 +308,33 @@ bool CUIRect::Inside(float x, float y) const
 		&& y < this->y + this->h;
 }
 
-bool CUI::DoButtonLogic(const void *pID, const CUIRect *pRect)
+bool CUI::DoButtonLogic(const void *pID, const CUIRect *pRect, int Button)
 {
 	// logic
 	bool Clicked = false;
+	static int s_LastButton = -1;
 	const bool Hovered = MouseHovered(pRect);
 
 	if(CheckActiveItem(pID))
 	{
-		if(!MouseButton(0))
+		if(s_LastButton == Button && !MouseButton(s_LastButton))
 		{
 			if(Hovered)
 				Clicked = true;
 			SetActiveItem(0);
+			s_LastButton = -1;
 		}
 	}
 	else if(HotItem() == pID)
 	{
-		if(MouseButton(0))
+		if(MouseButton(Button))
 		{
 			SetActiveItem(pID);
+			s_LastButton = Button;
 		}
 	}
 
-	if(Hovered && !MouseButton(0))
+	if(Hovered && !MouseButton(Button))
 		SetHotItem(pID);
 
 	return Clicked;
