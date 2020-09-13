@@ -385,8 +385,7 @@ void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlig
 	static CTextCursor s_Cursor;
 	s_Cursor.Reset();
 	s_Cursor.m_FontSize = FontSize;
-	if (MultiLine)
-		s_Cursor.m_MaxLines = -1;
+	s_Cursor.m_MaxLines = MultiLine ? -1 : 1;
 	s_Cursor.m_MaxWidth = LineWidth;
 	s_Cursor.m_Align = Align;
 

@@ -484,10 +484,25 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 
 	static CScrollRegion s_ScrollRegion;
 	vec2 ScrollOffset(0, 0);
-	s_ScrollRegion.Begin(&Motd, &ScrollOffset);
+
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ScrollUnit = ButtonHeight*ms_FontmodHeight*0.8f*3; // 3 rows per scroll
+
+	s_ScrollRegion.Begin(&Motd, &ScrollOffset, &ScrollParams);
 	Motd.y += ScrollOffset.y;
 
-	// TODO: ADDBACK: draw motd
+	static CTextCursor s_MenuMotdCursor(ButtonHeight*ms_FontmodHeight*0.8f);
+	s_MenuMotdCursor.MoveTo(Motd.x, Motd.y);
+	s_MenuMotdCursor.m_MaxWidth = Motd.w;
+	s_MenuMotdCursor.m_MaxLines = -1;
+	s_MenuMotdCursor.m_Flags = TEXTFLAG_ALLOW_NEWLINE | TEXTFLAG_WORD_WRAP;
+	s_MenuMotdCursor.Reset();
+	TextRender()->TextOutlined(&s_MenuMotdCursor, m_pClient->m_pMotd->GetMotd(), -1);
+
+	// define the MOTD text area and make it scrollable
+	CUIRect MotdTextArea;
+	Motd.HSplitTop(s_MenuMotdCursor.BoundingBox().m_Max.y-Motd.y+ButtonHeight*ms_FontmodHeight*0.8f+5.0f, &MotdTextArea, &Motd);
+	s_ScrollRegion.AddRect(MotdTextArea);
 
 	s_ScrollRegion.End();
 }

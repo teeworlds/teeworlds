@@ -23,6 +23,9 @@ enum
 
 	// Display "…" when the text is truncated
 	TEXTFLAG_ELLIPSIS=4,
+
+	// If set, newline will try not to break words
+	TEXTFLAG_WORD_WRAP=8,
 };
 
 enum ETextAlignment
@@ -80,7 +83,7 @@ class CTextCursor
 	CTextBoundingBox m_BoundingBox;
 	float m_NextLineAdvanceY;
 	array<CQuadGlyph> m_Glyphs;
-	int m_StringVersion;
+	int64 m_StringVersion;
 
 	CTextBoundingBox AlignedBoundingBox()
 	{
@@ -125,7 +128,7 @@ public:
 	int m_GlyphCount;
 	int m_CharCount;
 
-	void Reset(int StringVersion = -1)
+	void Reset(int64 StringVersion = -1)
 	{
 		if (StringVersion < 0 || m_StringVersion != StringVersion)
 		{

@@ -524,6 +524,7 @@ void CGlyphMap::PagesAccessReset()
 CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, int FontSizeIndex, float Size, int PixelSize)
 {
 	bool Render = !(pCursor->m_Flags & TEXTFLAG_NO_RENDER);
+	bool BreakWord = !(pCursor->m_Flags & TEXTFLAG_WORD_WRAP);
 	CWordWidthHint Hint;
 	const char *pCur = pText;
 	int NextChr = str_utf8_decode(&pCur);
@@ -547,6 +548,12 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	Hint.m_EndsWithNewline = false;
 	Hint.m_EndOfWord = false;
 	Hint.m_IsBroken = false;
+
+	if(*pText == '\0')
+	{
+		Hint.m_CharCount = -1;
+		return Hint;
+	}
 
 	float WordStartAdvance = pCursor->m_Advance.x;
 
@@ -575,7 +582,8 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		float AdvanceX = (Glyph.m_AdvanceX + Kerning.x) * Size;
 
 		bool IsSpace = Chr == '\n' || Chr == '\t' || Chr == ' ';
-		if(!IsSpace && pCursor->m_StartOfLine && pCursor->m_Advance.x + AdvanceX > MaxWidth)
+		bool CanBreak = !IsSpace && (BreakWord || pCursor->m_StartOfLine);
+		if(CanBreak && pCursor->m_Advance.x + AdvanceX > MaxWidth)
 		{
 			Hint.m_CharCount--;
 			Hint.m_IsBroken = true;
@@ -895,9 +903,11 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	CWordWidthHint WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize);
 	const char *pWordEnd = pCur + WordWidth.m_CharCount;
 
-	while(pWordEnd <= pEnd && WordWidth.m_CharCount > 0)
+	while(WordWidth.m_CharCount >= 0)
 	{
-		pCursor->m_NextLineAdvanceY = max(pCursor->m_Advance.y + Size, pCursor->m_NextLineAdvanceY);
+		float NextAdvanceY = pCursor->m_Advance.y + pCursor->m_FontSize;
+		NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
+		pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
 
 		if(WordWidth.m_EffectiveAdvanceX > MaxWidth)
 		{
@@ -915,6 +925,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 			else
 			{
 				pCursor->m_LineCount++;
+				float AdvanceY = pCursor->m_Advance.y;
 				pCursor->m_Advance.y = pCursor->m_LineSpacing + pCursor->m_NextLineAdvanceY;
 				pCursor->m_Advance.x -= WordStartAdvanceX;
 
@@ -933,7 +944,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 					for(int i = NumGlyphs - 1; i >= WordStartGlyphIndex; --i)
 					{
 						pCursor->m_Glyphs[i].m_Offset.x -= WordStartAdvanceX;
-						pCursor->m_Glyphs[i].m_Offset.y = pCursor->m_LineSpacing + pCursor->m_NextLineAdvanceY;
+						pCursor->m_Glyphs[i].m_Offset.y += pCursor->m_Advance.y - AdvanceY;
 						pCursor->m_Glyphs[i].m_Line = pCursor->m_LineCount - 1;
 					}
 				}
@@ -958,6 +969,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 		pCur = pWordEnd;
 		WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize);
 		pWordEnd = pWordEnd + WordWidth.m_CharCount;
+		pCursor->m_StartOfLine = false;
 
 		if(pCursor->m_LineCount > MaxLines)
 		{
@@ -1021,7 +1033,9 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 	pCursor->m_Advance.y = pCursor->m_LineSpacing + pCursor->m_NextLineAdvanceY;
 	pCursor->m_Advance.x = 0;
 	pCursor->m_StartOfLine = true;
-	pCursor->m_NextLineAdvanceY = pCursor->m_Advance.y + Size;
+	float NextAdvanceY = pCursor->m_Advance.y + pCursor->m_FontSize;
+	NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
+	pCursor->m_NextLineAdvanceY = NextAdvanceY;
 
 	int MaxLines = pCursor->m_MaxLines;
 	if(MaxLines < 0)
@@ -1104,8 +1118,9 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor)
 			}
 			Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
 
-			vec2 QuadPosition = (pCursor->m_CursorPos + Quad.m_Offset + AlignedBox.m_Min + LineOffset) * ScreenScale;
+			vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
 			QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
+			QuadPosition += Quad.m_Offset;
 			IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 		}
@@ -1165,8 +1180,9 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
 		}
 		Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
 
-		vec2 QuadPosition = (pCursor->m_CursorPos + Quad.m_Offset + AlignedBox.m_Min + LineOffset + ShadowOffset) * ScreenScale;
+		vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
 		QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
+		QuadPosition += Quad.m_Offset;
 		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	}
@@ -1195,8 +1211,9 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset)
 		}
 		Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
 
-		vec2 QuadPosition = (pCursor->m_CursorPos + Quad.m_Offset + AlignedBox.m_Min + LineOffset) * ScreenScale;
+		vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
 		QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
+		QuadPosition += Quad.m_Offset;
 		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	}
