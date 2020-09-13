@@ -186,7 +186,7 @@ void CHud::RenderWarmupTimer()
 
 		if(m_pClient->m_Snap.m_pGameData->m_GameStateEndTick == 0)
 		{
-			const int64 CursorVersion = g_Localization.Version() << 9 | m_pClient->m_Snap.m_NotReadyCount << 1 | LargeTimer;
+			const int64 CursorVersion = g_Localization.Version() << 9 | m_pClient->m_Snap.m_NotReadyCount << 1 | (LargeTimer ? 1 : 0);
 			if(m_pClient->m_Snap.m_NotReadyCount == 1)
 			{
 				str_format(aBuf, sizeof(aBuf), Localize("%d player not ready"), m_pClient->m_Snap.m_NotReadyCount);
@@ -253,7 +253,8 @@ void CHud::RenderFps()
 	if(Config()->m_ClShowfps)
 	{
 		static CTextCursor s_Cursor(12);
-		s_Cursor.MoveTo(m_Width-34, 5);
+		s_Cursor.m_Align = TEXTALIGN_RIGHT;
+		s_Cursor.MoveTo(m_Width-10, 5);
 
 		// calculate avg. fps
 		float FPS = 1.0f / Client()->RenderFrameTime();
@@ -263,6 +264,7 @@ void CHud::RenderFps()
 
 		s_Cursor.Reset();
 		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+		dbg_msg("Test", "%d, %.2f", (int)m_AverageFPS, s_Cursor.BoundingBox().Width());
 	}
 }
 

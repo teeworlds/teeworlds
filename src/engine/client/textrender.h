@@ -32,7 +32,6 @@ struct CGlyph
 {
 	int m_FontSizeIndex;
 	int m_ID;
-
 	int m_AtlasIndex;
 	int m_PageID;
 	FT_Face m_Face;
@@ -43,19 +42,26 @@ struct CGlyph
 	vec2 m_Offset;
 	float m_AdvanceX;
 	float m_aUvs[4];
+};
 
-	friend bool operator ==(const CGlyph& l, const CGlyph& r)
+struct CGlyphIndex
+{
+	int m_FontSizeIndex;
+	int m_ID;
+	CGlyph *m_pGlyph;
+
+	friend bool operator ==(const CGlyphIndex& l, const CGlyphIndex& r)
 	{
 		return l.m_ID == r.m_ID && l.m_FontSizeIndex == r.m_FontSizeIndex;
 	};
-	friend bool operator < (const CGlyph& l, const CGlyph& r)
+	friend bool operator < (const CGlyphIndex& l, const CGlyphIndex& r)
 	{
 		if (l.m_FontSizeIndex == r.m_FontSizeIndex) return l.m_ID < r.m_ID;
 		return l.m_FontSizeIndex < r.m_FontSizeIndex;
 	};
-	friend bool operator > (const CGlyph& l, const CGlyph& r) { return r < l; };
-	friend bool operator <=(const CGlyph& l, const CGlyph& r) { return !(l > r); };
-	friend bool operator >=(const CGlyph& l, const CGlyph& r) { return !(l < r); };
+	friend bool operator > (const CGlyphIndex& l, const CGlyphIndex& r) { return r < l; };
+	friend bool operator <=(const CGlyphIndex& l, const CGlyphIndex& r) { return !(l > r); };
+	friend bool operator >=(const CGlyphIndex& l, const CGlyphIndex& r) { return !(l < r); };
 };
 
 class CAtlas
@@ -95,7 +101,7 @@ class CGlyphMap
 	IGraphics::CTextureHandle m_aTextures[2];
 	CAtlas m_aAtlasPages[PAGE_COUNT*PAGE_COUNT];
 	int m_ActiveAtlasIndex;
-	sorted_array<CGlyph> m_Glyphs;
+	sorted_array<CGlyphIndex> m_Glyphs;
 
 	int m_NumTotalPages;
 
@@ -113,11 +119,11 @@ class CGlyphMap
 	void InitTexture(int Width, int Height);
 	int FitGlyph(int Width, int Height, ivec2 *Position);
 	void UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int Height, const unsigned char *pData);
-	bool RenderGlyph(CGlyph *pGlyph, bool Render);
 	bool SetFaceByName(FT_Face *pFace, const char *pFamilyName);
 	int GetCharGlyph(int Chr, FT_Face *pFace);
 public:
 	CGlyphMap(IGraphics *pGraphics);
+	~CGlyphMap();
 
 	IGraphics::CTextureHandle GetTexture(int Index) { return m_aTextures[Index]; }
 	FT_Face GetDefaultFace() { return m_DefaultFace; };
@@ -126,7 +132,8 @@ public:
 	void AddFallbackFaceByName(const char *pFamilyName);
 	void SetVariantFaceByName(const char *pFamilyName);
 	
-	void GetGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph, bool Render);
+	bool RenderGlyph(CGlyph *pGlyph, bool Render);
+	CGlyph *GetGlyph(int Chr, int FontSizeIndex, bool Render);
 	int GetFontSizeIndex(int PixelSize);
 	vec2 Kerning(CGlyph *pLeft, CGlyph *pRight, int PixelSize);
 

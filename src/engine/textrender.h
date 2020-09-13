@@ -48,17 +48,16 @@ enum ETextAlignment
 	TEXTALIGN_BR = TEXTALIGN_BOTTOM | TEXTALIGN_RIGHT
 };
 
-class CQuadGlyph
+struct CGlyph;
+
+class CScaledGlyph
 {
 public:
-	int m_Chr;
-	int m_FontSizeIndex;
-	vec2 m_Offset;
-	float m_aUvs[4];
-	float m_Width;
-	float m_Height;
+	CGlyph *m_pGlyph;
+	float m_Size;
 	int m_NumChars;
 	int m_Line;
+	vec2 m_Advance;
 	vec4 m_TextColor;
 	vec4 m_SecondaryColor;
 };
@@ -89,7 +88,7 @@ class CTextCursor
 	bool m_SkipTextRender;
 	CTextBoundingBox m_BoundingBox;
 	float m_NextLineAdvanceY;
-	array<CQuadGlyph> m_Glyphs;
+	array<CScaledGlyph> m_Glyphs;
 	int64 m_StringVersion;
 
 	CTextBoundingBox AlignedBoundingBox()

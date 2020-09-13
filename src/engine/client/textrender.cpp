@@ -176,7 +176,7 @@ void CGlyphMap::InitTexture(int Width, int Height)
 
 		m_aTextures[i] = m_pGraphics->LoadTextureRaw(Width, Height, CImageInfo::FORMAT_ALPHA, pMem, CImageInfo::FORMAT_ALPHA, IGraphics::TEXLOAD_NOMIPMAPS);
 	}
-	dbg_msg("pGlyphMap", "memory usage: %d", TextureSize);
+	dbg_msg("textrender", "memory usage: %d", TextureSize);
 	mem_free(pMem);
 }
 
@@ -217,7 +217,7 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *Position)
 	*Position = m_aAtlasPages[Atlas].Add(Width, Height);
 	m_ActiveAtlasIndex = Atlas;
 
-	dbg_msg("pGlyphMap", "atlas is full, dropping atlas %d, total pages: %u", Atlas, m_NumTotalPages);
+	dbg_msg("textrender", "atlas is full, dropping atlas %d, total pages: %u", Atlas, m_NumTotalPages);
 	return Atlas;
 }
 
@@ -227,8 +227,141 @@ void CGlyphMap::UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int
 		Width, Height, CImageInfo::FORMAT_ALPHA, pData);
 }
 
+bool CGlyphMap::SetFaceByName(FT_Face *pFace, const char *pFamilyName)
+{
+	FT_Face Face = NULL;
+	char aFamilyStyleName[128];
+
+	if(pFamilyName != NULL)
+	{
+		for(int i = 0; i < m_NumFtFaces; ++i)
+		{
+			str_format(aFamilyStyleName, 128, "%s %s", m_aFtFaces[i]->family_name, m_aFtFaces[i]->style_name);
+			if(str_comp(pFamilyName, aFamilyStyleName) == 0)
+			{
+				Face = m_aFtFaces[i];
+				break;
+			}
+
+			if(!Face && str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
+			{
+				Face = m_aFtFaces[i];
+			}
+		}
+	}
+
+	if(Face)
+	{
+		*pFace = Face;
+		return true;
+	}
+	return false;
+}
+
+CGlyphMap::CGlyphMap(IGraphics *pGraphics)
+{
+	m_pGraphics = pGraphics;
+
+	m_DefaultFace = NULL;
+	m_VariantFace = NULL;
+
+	mem_zero(m_aFallbackFaces, sizeof(m_aFallbackFaces));
+	mem_zero(m_aFtFaces, sizeof(m_aFtFaces));
+
+	m_NumFtFaces = 0;
+	m_NumFallbackFaces = 0;
+	m_NumTotalPages = 0;
+
+	InitTexture(TEXTURE_SIZE, TEXTURE_SIZE);
+}
+
+CGlyphMap::~CGlyphMap()
+{
+	for(int i = 0; i < m_Glyphs.size(); ++i)
+		delete m_Glyphs[i].m_pGlyph;
+}
+
+int CGlyphMap::GetCharGlyph(int Chr, FT_Face *pFace)
+{
+	int GlyphIndex = FT_Get_Char_Index(m_DefaultFace, (FT_ULong)Chr);
+	*pFace = m_DefaultFace;
+
+	if(!m_DefaultFace || GlyphIndex)
+		return GlyphIndex;
+
+	if(m_VariantFace)
+	{
+		GlyphIndex = FT_Get_Char_Index(m_VariantFace, (FT_ULong)Chr);
+		if(GlyphIndex)
+		{
+			*pFace = m_VariantFace;
+			return GlyphIndex;
+		}
+	}
+
+	for(int i = 0; i < m_NumFallbackFaces; ++i)
+	{
+		if(m_aFallbackFaces[i])
+		{
+			GlyphIndex = FT_Get_Char_Index(m_aFallbackFaces[i], (FT_ULong)Chr);
+			if(GlyphIndex)
+			{
+				*pFace = m_aFallbackFaces[i];
+				return GlyphIndex;
+			}
+		}
+	}
+
+	return 0;
+}
+
+int CGlyphMap::AddFace(FT_Face Face)
+{
+	if(m_NumFtFaces == MAX_FACES) 
+		return -1;
+
+	m_aFtFaces[m_NumFtFaces++] = Face;
+	if(!m_DefaultFace) m_DefaultFace = Face;
+
+	return 0; 
+}
+
+void CGlyphMap::SetDefaultFaceByName(const char *pFamilyName)
+{
+	SetFaceByName(&m_DefaultFace, pFamilyName);
+}
+
+void CGlyphMap::AddFallbackFaceByName(const char *pFamilyName)
+{
+	if(m_NumFallbackFaces == MAX_FACES)
+		return;
+
+	FT_Face Face = NULL;
+	if(SetFaceByName(&Face, pFamilyName))
+	{
+		m_aFallbackFaces[m_NumFallbackFaces++] = Face;
+	}
+}
+
+void CGlyphMap::SetVariantFaceByName(const char *pFamilyName)
+{
+	FT_Face Face = NULL;
+	SetFaceByName(&Face, pFamilyName);
+	if(m_VariantFace != Face)
+	{
+		m_VariantFace = Face;
+		InitTexture(TEXTURE_SIZE, TEXTURE_SIZE);
+	}
+}
+
 bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 {
+	if(Render && pGlyph->m_Rendered && m_aAtlasPages[pGlyph->m_AtlasIndex].GetPageID() == pGlyph->m_PageID)
+	{
+		m_aAtlasPages[pGlyph->m_AtlasIndex].Touch();
+		return true;
+	}
+
 	FT_Bitmap *pBitmap;
 	unsigned int px, py;
 
@@ -243,7 +376,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 
 	if(FT_Load_Glyph(GlyphFace, GlyphIndex, FtFlags))
 	{
-		dbg_msg("pGlyphMap", "error loading glyph %d", pGlyph->m_ID);
+		dbg_msg("textrender", "error loading glyph %d", pGlyph->m_ID);
 		return false;
 	}
 
@@ -330,166 +463,33 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	return true;
 }
 
-bool CGlyphMap::SetFaceByName(FT_Face *pFace, const char *pFamilyName)
+CGlyph *CGlyphMap::GetGlyph(int Chr, int FontSizeIndex, bool Render)
 {
-	FT_Face Face = NULL;
-	char aFamilyStyleName[128];
+	CGlyphIndex Index;
+	Index.m_FontSizeIndex = FontSizeIndex;
+	Index.m_ID = Chr;
 
-	if(pFamilyName != NULL)
-	{
-		for(int i = 0; i < m_NumFtFaces; ++i)
-		{
-			str_format(aFamilyStyleName, 128, "%s %s", m_aFtFaces[i]->family_name, m_aFtFaces[i]->style_name);
-			if(str_comp(pFamilyName, aFamilyStyleName) == 0)
-			{
-				Face = m_aFtFaces[i];
-				break;
-			}
-
-			if(!Face && str_comp(pFamilyName, m_aFtFaces[i]->family_name) == 0)
-			{
-				Face = m_aFtFaces[i];
-			}
-		}
-	}
-
-	if(Face)
-	{
-		*pFace = Face;
-		return true;
-	}
-	return false;
-}
-
-CGlyphMap::CGlyphMap(IGraphics *pGraphics)
-{
-	m_pGraphics = pGraphics;
-
-	m_DefaultFace = NULL;
-	m_VariantFace = NULL;
-
-	mem_zero(m_aFallbackFaces, sizeof(m_aFallbackFaces));
-	mem_zero(m_aFtFaces, sizeof(m_aFtFaces));
-
-	m_NumFtFaces = 0;
-	m_NumFallbackFaces = 0;
-	m_NumTotalPages = 0;
-
-	InitTexture(TEXTURE_SIZE, TEXTURE_SIZE);
-}
-
-int CGlyphMap::GetCharGlyph(int Chr, FT_Face *pFace)
-{
-	int GlyphIndex = FT_Get_Char_Index(m_DefaultFace, (FT_ULong)Chr);
-	*pFace = m_DefaultFace;
-
-	if(!m_DefaultFace || GlyphIndex)
-		return GlyphIndex;
-
-	if(m_VariantFace)
-	{
-		GlyphIndex = FT_Get_Char_Index(m_VariantFace, (FT_ULong)Chr);
-		if(GlyphIndex)
-		{
-			*pFace = m_VariantFace;
-			return GlyphIndex;
-		}
-	}
-
-	for(int i = 0; i < m_NumFallbackFaces; ++i)
-	{
-		if(m_aFallbackFaces[i])
-		{
-			GlyphIndex = FT_Get_Char_Index(m_aFallbackFaces[i], (FT_ULong)Chr);
-			if(GlyphIndex)
-			{
-				*pFace = m_aFallbackFaces[i];
-				return GlyphIndex;
-			}
-		}
-	}
-
-	return 0;
-}
-
-int CGlyphMap::AddFace(FT_Face Face)
-{
-	if(m_NumFtFaces == MAX_FACES) 
-		return -1;
-
-	m_aFtFaces[m_NumFtFaces++] = Face;
-	if(!m_DefaultFace) m_DefaultFace = Face;
-
-	return 0; 
-}
-
-void CGlyphMap::SetDefaultFaceByName(const char *pFamilyName)
-{
-	SetFaceByName(&m_DefaultFace, pFamilyName);
-}
-
-void CGlyphMap::AddFallbackFaceByName(const char *pFamilyName)
-{
-	if(m_NumFallbackFaces == MAX_FACES)
-		return;
-
-	FT_Face Face = NULL;
-	if(SetFaceByName(&Face, pFamilyName))
-	{
-		m_aFallbackFaces[m_NumFallbackFaces++] = Face;
-	}
-}
-
-void CGlyphMap::SetVariantFaceByName(const char *pFamilyName)
-{
-	FT_Face Face = NULL;
-	SetFaceByName(&Face, pFamilyName);
-	if(m_VariantFace != Face)
-	{
-		m_VariantFace = Face;
-		InitTexture(TEXTURE_SIZE, TEXTURE_SIZE);
-	}
-}
-
-void CGlyphMap::GetGlyph(int Chr, int FontSizeIndex, CGlyph *pGlyph, bool Render)
-{
-	CGlyph Glyph;
-	Glyph.m_FontSizeIndex = FontSizeIndex;
-	Glyph.m_ID = Chr;
-
-	sorted_array<CGlyph>::range r = ::find_binary(m_Glyphs.all(), Glyph);
+	sorted_array<CGlyphIndex>::range r = ::find_binary(m_Glyphs.all(), Index);
 
 	// couldn't find glyph, render a new one
 	if(r.empty())
 	{
-		if(RenderGlyph(&Glyph, Render))
+		Index.m_pGlyph = new CGlyph();
+		Index.m_pGlyph->m_Rendered = false;
+		Index.m_pGlyph->m_ID = Chr;
+		Index.m_pGlyph->m_FontSizeIndex = FontSizeIndex;
+		if(RenderGlyph(Index.m_pGlyph, Render))
 		{
-			m_Glyphs.add(Glyph);
-			mem_copy(pGlyph, &Glyph, sizeof(*pGlyph));
-			return;
+			m_Glyphs.add(Index);
+			return Index.m_pGlyph;
 		}
-		pGlyph->m_ID = -1;
-		return;
+		return NULL;
 	}
 
-	CGlyph *pMatch = &r.front();
-
+	CGlyph *pMatch = r.front().m_pGlyph;
 	if(Render)
-	{
-		if(!pMatch->m_Rendered || m_aAtlasPages[pMatch->m_AtlasIndex].GetPageID() != pMatch->m_PageID)
-		{
-			// render the glyph if it haven't yet
-			// or, re-render glyph if the page is dropped
-			RenderGlyph(pMatch, true);
-		}
-		else
-		{
-			// otherwise touch the page
-			m_aAtlasPages[pMatch->m_AtlasIndex].Touch();
-		}
-	}
-
-	mem_copy(pGlyph, pMatch, sizeof(*pGlyph));
+		RenderGlyph(pMatch, true);
+	return pMatch;
 }
 
 vec2 CGlyphMap::Kerning(CGlyph *pLeft, CGlyph *pRight, int PixelSize)
@@ -533,14 +533,12 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	CWordWidthHint Hint;
 	const char *pCur = pText;
 	int NextChr = str_utf8_decode(&pCur);
-	CGlyph NextGlyph;
+	CGlyph *pNextGlyph = NULL;
 	if(NextChr)
 		if (NextChr == '\n' || NextChr == '\t')
-			m_pGlyphMap->GetGlyph(' ', FontSizeIndex, &NextGlyph, Render);
+			pNextGlyph = m_pGlyphMap->GetGlyph(' ', FontSizeIndex, Render);
 		else
-			m_pGlyphMap->GetGlyph(NextChr, FontSizeIndex, &NextGlyph, Render);
-	else
-		NextGlyph.m_Face = NULL;
+			pNextGlyph = m_pGlyphMap->GetGlyph(NextChr, FontSizeIndex, Render);
 
 	float Scale = 1.0f/PixelSize;
 	float MaxWidth = pCursor->m_MaxWidth;
@@ -563,7 +561,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	while(1)
 	{
 		int Chr = NextChr;
-		CGlyph Glyph = NextGlyph;
+		CGlyph *pGlyph = pNextGlyph;
 		Hint.m_CharCount = pCur - pText;
 
 		if(Chr <= 0 || pCur > pEnd)
@@ -572,17 +570,22 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 			break;
 		}
 
+		if(!pGlyph)
+		{
+			Hint.m_CharCount = -1;
+			return Hint;
+		}
+
 		NextChr = str_utf8_decode(&pCur);
+		pNextGlyph = NULL;
 		if(NextChr)
 			if (NextChr == '\n' || NextChr == '\t')
-				m_pGlyphMap->GetGlyph(' ', FontSizeIndex, &NextGlyph, Render);
+				pNextGlyph = m_pGlyphMap->GetGlyph(' ', FontSizeIndex, Render);
 			else
-				m_pGlyphMap->GetGlyph(NextChr, FontSizeIndex, &NextGlyph, Render);
-		else
-			NextGlyph.m_Face = NULL;
+				pNextGlyph = m_pGlyphMap->GetGlyph(NextChr, FontSizeIndex, Render);
 
-		vec2 Kerning = m_pGlyphMap->Kerning(&Glyph, &NextGlyph, PixelSize) * Scale;
-		float AdvanceX = (Glyph.m_AdvanceX + Kerning.x) * Size;
+		vec2 Kerning = m_pGlyphMap->Kerning(pGlyph, pNextGlyph, PixelSize) * Scale;
+		float AdvanceX = (pGlyph->m_AdvanceX + Kerning.x) * Size;
 
 		bool IsSpace = Chr == '\n' || Chr == '\t' || Chr == ' ';
 		bool CanBreak = !IsSpace && (BreakWord || pCursor->m_StartOfLine);
@@ -595,18 +598,14 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 
 		if(Render)
 		{
-			CQuadGlyph QuadGlyph;
-			mem_copy(QuadGlyph.m_aUvs, Glyph.m_aUvs, sizeof(QuadGlyph.m_aUvs));
-			QuadGlyph.m_Chr = Chr;
-			QuadGlyph.m_FontSizeIndex = FontSizeIndex;
-			QuadGlyph.m_Offset = pCursor->m_Advance + Glyph.m_Offset * Size;
-			QuadGlyph.m_Width = Glyph.m_Width * Size;
-			QuadGlyph.m_Height = Glyph.m_Height * Size;
-			QuadGlyph.m_Line = pCursor->m_LineCount - 1;
-			QuadGlyph.m_TextColor = vec4(m_TextR, m_TextG, m_TextB, m_TextA);
-			QuadGlyph.m_SecondaryColor = vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA);
-
-			pCursor->m_Glyphs.add(QuadGlyph);
+			CScaledGlyph Scaled;
+			Scaled.m_pGlyph = pGlyph;
+			Scaled.m_Advance = pCursor->m_Advance;
+			Scaled.m_Size = Size;
+			Scaled.m_Line = pCursor->m_LineCount - 1;
+			Scaled.m_TextColor = vec4(m_TextR, m_TextG, m_TextB, m_TextA);
+			Scaled.m_SecondaryColor = vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA);
+			pCursor->m_Glyphs.add(Scaled);
 		}
 
 		pCursor->m_Advance.x += AdvanceX;
@@ -636,28 +635,20 @@ void CTextRender::TextRefreshGlyphs(CTextCursor *pCursor)
 {
 	int NumTotalPages = m_pGlyphMap->NumTotalPages();
 	for (int i = 0; i < pCursor->m_Glyphs.size(); ++i)
-	{
-		CGlyph Glyph;
-		m_pGlyphMap->GetGlyph(pCursor->m_Glyphs[i].m_Chr, pCursor->m_Glyphs[i].m_FontSizeIndex, &Glyph, true);
-		mem_copy(pCursor->m_Glyphs[i].m_aUvs, Glyph.m_aUvs, sizeof(Glyph.m_aUvs));
-	}
+		m_pGlyphMap->RenderGlyph(pCursor->m_Glyphs[i].m_pGlyph, true);
 
 	if(NumTotalPages != m_pGlyphMap->NumTotalPages())
 	{
 		NumTotalPages = m_pGlyphMap->NumTotalPages();
 		// A page is dropped, rerender glyphs
 		for(int i = 0; i < pCursor->m_Glyphs.size(); ++i)
-		{
-			CGlyph Glyph;
-			m_pGlyphMap->GetGlyph(pCursor->m_Glyphs[i].m_Chr, pCursor->m_Glyphs[i].m_FontSizeIndex, &Glyph, true);
-			mem_copy(pCursor->m_Glyphs[i].m_aUvs, Glyph.m_aUvs, sizeof(Glyph.m_aUvs));
-		}
+			m_pGlyphMap->RenderGlyph(pCursor->m_Glyphs[i].m_pGlyph, true);
 	}
 
 	pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
 	if(NumTotalPages != pCursor->m_PageCountWhenDrawn)
 	{
-		dbg_msg("%s", "Page mistach, atlas might be too small.");
+		dbg_msg("textrender", "page %d mismatch after refresh, atlas might be too small.", NumTotalPages);
 	}
 }
 
@@ -948,8 +939,8 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 				{
 					for(int i = NumGlyphs - 1; i >= WordStartGlyphIndex; --i)
 					{
-						pCursor->m_Glyphs[i].m_Offset.x -= WordStartAdvanceX;
-						pCursor->m_Glyphs[i].m_Offset.y += pCursor->m_Advance.y - AdvanceY;
+						pCursor->m_Glyphs[i].m_Advance.x -= WordStartAdvanceX;
+						pCursor->m_Glyphs[i].m_Advance.y += pCursor->m_Advance.y - AdvanceY;
 						pCursor->m_Glyphs[i].m_Line = pCursor->m_LineCount - 1;
 					}
 				}
@@ -1004,17 +995,13 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 		NumTotalPages = m_pGlyphMap->NumTotalPages();
 		// A page is dropped, rerender glyphs
 		for(int i = 0; i < pCursor->m_Glyphs.size(); ++i)
-		{
-			CGlyph Glyph;
-			m_pGlyphMap->GetGlyph(pCursor->m_Glyphs[i].m_Chr, pCursor->m_Glyphs[i].m_FontSizeIndex, &Glyph, true);
-			mem_copy(pCursor->m_Glyphs[i].m_aUvs, Glyph.m_aUvs, sizeof(Glyph.m_aUvs));
-		}
+			m_pGlyphMap->RenderGlyph(pCursor->m_Glyphs[i].m_pGlyph, true);
 	}
 
 	pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
 	if(NumTotalPages != pCursor->m_PageCountWhenDrawn)
 	{
-		dbg_msg("%s", "Page mistach, atlas might be too small.");
+		dbg_msg("textrender", "page %d mismatch after refresh, atlas might be too small.", NumTotalPages);
 	}
 }
 
@@ -1098,12 +1085,13 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor, float Alpha)
 		vec2 LineOffset = vec2(0, 0);
 		for(int i = NumQuads - 1; i >= 0; --i)
 		{
-			const CQuadGlyph& Quad = pCursor->m_Glyphs[i];
+			const CScaledGlyph& rScaled = pCursor->m_Glyphs[i];
+			const CGlyph *pGlyph = rScaled.m_pGlyph;
 			vec4 Color;
 			if(pass == 0)
-				Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a * Quad.m_TextColor.a);
+				Color = vec4(rScaled.m_SecondaryColor.r, rScaled.m_SecondaryColor.g, rScaled.m_SecondaryColor.b, rScaled.m_SecondaryColor.a * rScaled.m_TextColor.a);
 			else
-				Color = vec4(Quad.m_TextColor.r, Quad.m_TextColor.g, Quad.m_TextColor.b, Quad.m_TextColor.a);
+				Color = vec4(rScaled.m_TextColor.r, rScaled.m_TextColor.g, rScaled.m_TextColor.b, rScaled.m_TextColor.a);
 
 			if(Color != LastColor)
 			{
@@ -1111,22 +1099,22 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor, float Alpha)
 				LastColor = Color;
 			}
 
-			if(Line != Quad.m_Line)
+			if(Line != rScaled.m_Line)
 			{
-				Line = Quad.m_Line;
+				Line = rScaled.m_Line;
 				if(HorizontalAlign == TEXTALIGN_RIGHT)
-					LineOffset.x = BoxWidth - (Quad.m_Offset.x + Quad.m_Width);
+					LineOffset.x = BoxWidth - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size);
 				else if(HorizontalAlign == TEXTALIGN_CENTER)
-					LineOffset.x = (BoxWidth - (Quad.m_Offset.x + Quad.m_Width)) / 2.0f;
+					LineOffset.x = (BoxWidth - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size)) / 2.0f;
 				else
 					LineOffset.x = 0;
 			}
-			Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
+			Graphics()->QuadsSetSubset(pGlyph->m_aUvs[0], pGlyph->m_aUvs[1], pGlyph->m_aUvs[2], pGlyph->m_aUvs[3]);
 
-			vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
+			vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset + rScaled.m_Advance) * ScreenScale;
 			QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
-			QuadPosition += Quad.m_Offset;
-			IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
+			QuadPosition += pGlyph->m_Offset * rScaled.m_Size;
+			IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, pGlyph->m_Width * rScaled.m_Size, pGlyph->m_Height * rScaled.m_Size);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 		}
 		Graphics()->QuadsEnd();
@@ -1135,94 +1123,94 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor, float Alpha)
 
 void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha)
 {
-	int NumQuads = pCursor->m_Glyphs.size();
+	// int NumQuads = pCursor->m_Glyphs.size();
 
-	if(NumQuads <= 0)
-		return;
+	// if(NumQuads <= 0)
+	// 	return;
 
-	if (m_pGlyphMap->NumTotalPages() != pCursor->m_PageCountWhenDrawn)
-	{
-		TextRefreshGlyphs(pCursor);
-		pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
-	}
+	// if (m_pGlyphMap->NumTotalPages() != pCursor->m_PageCountWhenDrawn)
+	// {
+	// 	TextRefreshGlyphs(pCursor);
+	// 	pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
+	// }
 
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	int ScreenWidth = Graphics()->ScreenWidth();
-	int ScreenHeight = Graphics()->ScreenHeight();
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+	// float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	// int ScreenWidth = Graphics()->ScreenWidth();
+	// int ScreenHeight = Graphics()->ScreenHeight();
+	// Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
 
-	vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
+	// vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
 
-	int HorizontalAlign = pCursor->m_Align & TEXTALIGN_MASK_HORI;
-	CTextBoundingBox AlignedBox = pCursor->AlignedBoundingBox();
-	float BoxWidth = AlignedBox.Width();
+	// int HorizontalAlign = pCursor->m_Align & TEXTALIGN_MASK_HORI;
+	// CTextBoundingBox AlignedBox = pCursor->AlignedBoundingBox();
+	// float BoxWidth = AlignedBox.Width();
 
-	Graphics()->TextureSet(m_pGlyphMap->GetTexture(0));
-	Graphics()->QuadsBegin();
+	// Graphics()->TextureSet(m_pGlyphMap->GetTexture(0));
+	// Graphics()->QuadsBegin();
 
-	int Line = -1;
-	vec2 LineOffset = vec2(0, 0);
-	vec4 LastColor = vec4(-1, -1, -1, -1);
-	for(int i = NumQuads - 1; i >= 0; --i)
-	{
-		const CQuadGlyph& Quad = pCursor->m_Glyphs[i];
-		vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
-		if (Color != LastColor)
-		{
-			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
-			LastColor = Color;
-		}
+	// int Line = -1;
+	// vec2 LineOffset = vec2(0, 0);
+	// vec4 LastColor = vec4(-1, -1, -1, -1);
+	// for(int i = NumQuads - 1; i >= 0; --i)
+	// {
+	// 	const CScaledGlyph& Quad = pCursor->m_Glyphs[i];
+	// 	vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
+	// 	if (Color != LastColor)
+	// 	{
+	// 		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
+	// 		LastColor = Color;
+	// 	}
 
-		if(Line != Quad.m_Line)
-		{
-			Line = Quad.m_Line;
-			if(HorizontalAlign == TEXTALIGN_RIGHT)
-				LineOffset.x = BoxWidth - (Quad.m_Offset.x + Quad.m_Width);
-			else if(HorizontalAlign == TEXTALIGN_CENTER)
-				LineOffset.x = (BoxWidth - (Quad.m_Offset.x + Quad.m_Width)) / 2.0f;
-			else
-				LineOffset.x = 0;
-		}
-		Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
+	// 	if(Line != Quad.m_Line)
+	// 	{
+	// 		Line = Quad.m_Line;
+	// 		if(HorizontalAlign == TEXTALIGN_RIGHT)
+	// 			LineOffset.x = BoxWidth - (Quad.m_Offset.x + Quad.m_Width);
+	// 		else if(HorizontalAlign == TEXTALIGN_CENTER)
+	// 			LineOffset.x = (BoxWidth - (Quad.m_Offset.x + Quad.m_Width)) / 2.0f;
+	// 		else
+	// 			LineOffset.x = 0;
+	// 	}
+	// 	Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
 
-		vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
-		QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
-		QuadPosition += Quad.m_Offset;
-		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-	}
+	// 	vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
+	// 	QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
+	// 	QuadPosition += Quad.m_Offset;
+	// 	IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
+	// 	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	// }
 
-	Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);
-	Line = -1;
-	LineOffset = vec2(0, 0);
-	for(int i = NumQuads - 1; i >= 0; --i)
-	{
-		const CQuadGlyph& Quad = pCursor->m_Glyphs[i];
-		vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
-		if (Color != LastColor)
-		{
-			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
-			LastColor = Color;
-		}
-		if(Line != Quad.m_Line)
-		{
-			Line = Quad.m_Line;
-			if(HorizontalAlign == TEXTALIGN_RIGHT)
-				LineOffset.x = BoxWidth - (Quad.m_Offset.x + Quad.m_Width);
-			else if(HorizontalAlign == TEXTALIGN_CENTER)
-				LineOffset.x = (BoxWidth - (Quad.m_Offset.x + Quad.m_Width)) / 2.0f;
-			else
-				LineOffset.x = 0;
-		}
-		Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
+	// Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);
+	// Line = -1;
+	// LineOffset = vec2(0, 0);
+	// for(int i = NumQuads - 1; i >= 0; --i)
+	// {
+	// 	const CScaledGlyph& Quad = pCursor->m_Glyphs[i];
+	// 	vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
+	// 	if (Color != LastColor)
+	// 	{
+	// 		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
+	// 		LastColor = Color;
+	// 	}
+	// 	if(Line != Quad.m_Line)
+	// 	{
+	// 		Line = Quad.m_Line;
+	// 		if(HorizontalAlign == TEXTALIGN_RIGHT)
+	// 			LineOffset.x = BoxWidth - (Quad.m_Offset.x + Quad.m_Width);
+	// 		else if(HorizontalAlign == TEXTALIGN_CENTER)
+	// 			LineOffset.x = (BoxWidth - (Quad.m_Offset.x + Quad.m_Width)) / 2.0f;
+	// 		else
+	// 			LineOffset.x = 0;
+	// 	}
+	// 	Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
 
-		vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
-		QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
-		QuadPosition += Quad.m_Offset;
-		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
-		Graphics()->QuadsDrawTL(&QuadItem, 1);
-	}
-	Graphics()->QuadsEnd();
+	// 	vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
+	// 	QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
+	// 	QuadPosition += Quad.m_Offset;
+	// 	IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
+	// 	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	// }
+	// Graphics()->QuadsEnd();
 }
 
 IEngineTextRender *CreateEngineTextRender() { return new CTextRender; }
