@@ -534,7 +534,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	const char *pCur = pText;
 	int NextChr = str_utf8_decode(&pCur);
 	CGlyph *pNextGlyph = NULL;
-	if(NextChr)
+	if(NextChr > 0)
 		if (NextChr == '\n' || NextChr == '\t')
 			pNextGlyph = m_pGlyphMap->GetGlyph(' ', FontSizeIndex, Render);
 		else
@@ -564,13 +564,13 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		CGlyph *pGlyph = pNextGlyph;
 		Hint.m_CharCount = pCur - pText;
 
-		if(Chr <= 0 || pCur > pEnd)
+		if(Chr == 0 || pCur > pEnd)
 		{
 			Hint.m_CharCount--;
 			break;
 		}
 
-		if(!pGlyph)
+		if(!pGlyph || Chr < 0)
 		{
 			Hint.m_CharCount = -1;
 			return Hint;
