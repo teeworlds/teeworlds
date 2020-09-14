@@ -264,7 +264,6 @@ void CHud::RenderFps()
 
 		s_Cursor.Reset();
 		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
-		dbg_msg("Test", "%d, %.2f", (int)m_AverageFPS, s_Cursor.BoundingBox().Width());
 	}
 }
 

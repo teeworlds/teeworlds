@@ -128,30 +128,6 @@ int CGlyphMap::AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSi
 	return OutlineThickness;
 }
 
-void CGlyphMap::Grow(unsigned char *pIn, unsigned char *pOut, int w, int h)
-{
-	for(int y = 0; y < h; y++)
-		for(int x = 0; x < w; x++)
-		{
-			int c = pIn[y*w+x];
-
-			for(int sy = -1; sy <= 1; sy++)
-				for(int sx = -1; sx <= 1; sx++)
-				{
-					int GetX = x+sx;
-					int GetY = y+sy;
-					if(GetX >= 0 && GetY >= 0 && GetX < w && GetY < h)
-					{
-						int Index = GetY*w+GetX;
-						if(pIn[Index] > c)
-							c = pIn[Index];
-					}
-				}
-
-			pOut[y*w+x] = c;
-		}
-}
-
 void CGlyphMap::InitTexture(int Width, int Height)
 {
 	for(int y = 0; y < PAGE_COUNT; ++y)
@@ -258,9 +234,11 @@ bool CGlyphMap::SetFaceByName(FT_Face *pFace, const char *pFamilyName)
 	return false;
 }
 
-CGlyphMap::CGlyphMap(IGraphics *pGraphics)
+CGlyphMap::CGlyphMap(IGraphics *pGraphics, FT_Library FtLibrary)
 {
 	m_pGraphics = pGraphics;
+
+	FT_Stroker_New(FtLibrary, &m_FtStroker);
 
 	m_DefaultFace = NULL;
 	m_VariantFace = NULL;
@@ -279,6 +257,8 @@ CGlyphMap::~CGlyphMap()
 {
 	for(int i = 0; i < m_Glyphs.size(); ++i)
 		delete m_Glyphs[i].m_pGlyph;
+
+	FT_Stroker_Done(m_FtStroker);
 }
 
 int CGlyphMap::GetCharGlyph(int Chr, FT_Face *pFace)
@@ -370,11 +350,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	int FontSize = aFontSizes[pGlyph->m_FontSizeIndex];
 	FT_Set_Pixel_Sizes(GlyphFace, 0, FontSize);
 
-	int FtFlags = FT_LOAD_NO_BITMAP;
-	if (Render)
-	 	FtFlags |= FT_LOAD_RENDER;
-
-	if(FT_Load_Glyph(GlyphFace, GlyphIndex, FtFlags))
+	if(FT_Load_Glyph(GlyphFace, GlyphIndex, FT_LOAD_NO_BITMAP))
 	{
 		dbg_msg("textrender", "error loading glyph %d", pGlyph->m_ID);
 		return false;
@@ -387,64 +363,54 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	int Spacing = 1;
 	int Offset = OutlineThickness + Spacing;
 
-	unsigned int Width = pBitmap->width + Offset * 2;
-	unsigned int Height = pBitmap->rows + Offset * 2;
+	int BitmapWidth = pBitmap->width;
+	int BitmapHeight = pBitmap->rows;
+
+	int OutlinedWidth = BitmapWidth + OutlineThickness * 2;
+	int OutlinedHeight = BitmapHeight + OutlineThickness * 2;
+
+	int Width = OutlinedWidth + Spacing * 2;
+	int Height = OutlinedHeight + Spacing * 2;
 
 	int AtlasIndex = -1;
 	int Page = -1;
 
 	if(Render)
 	{
-		int BitmapSize = Width * Height;
-
-		// prepare glyph data
-		mem_zero(s_aGlyphData, BitmapSize);
-
-		if(pBitmap->pixel_mode == FT_PIXEL_MODE_GRAY) // ignore_convention
-		{
-			for(py = 0; py < pBitmap->rows; py++) // ignore_convention
-				for(px = 0; px < pBitmap->width; px++) // ignore_convention
-					s_aGlyphData[(py+Offset)*Width+px+Offset] = pBitmap->buffer[py*pBitmap->width+px]; // ignore_convention
-		}
-		else if(pBitmap->pixel_mode == FT_PIXEL_MODE_MONO) // ignore_convention
-		{
-			for(py = 0; py < pBitmap->rows; py++) // ignore_convention
-				for(px = 0; px < pBitmap->width; px++) // ignore_convention
-				{
-					if(pBitmap->buffer[py*pBitmap->width+px/8]&(1<<(7-(px%8)))) // ignore_convention
-						s_aGlyphData[(py+Offset)*Width+px+Offset] = 255;
-				}
-		}
-
 		// find space in atlas
 		ivec2 Position;
 		AtlasIndex = FitGlyph(Width, Height, &Position);
 		Page = m_aAtlasPages[AtlasIndex].GetPageID();
 
-		UploadGlyph(0, Position.x, Position.y, (int)Width, (int)Height, s_aGlyphData);
+		FT_BitmapGlyph Glyph;
+		FT_Get_Glyph(GlyphFace->glyph, (FT_Glyph *)&Glyph);
+		FT_Glyph_To_Bitmap((FT_Glyph *)&Glyph, FT_RENDER_MODE_NORMAL, 0, true);
+		pBitmap = &Glyph->bitmap;
+		int BitmapLeft = Glyph->left;
+		int BitmapTop = Glyph->top;
 
-		if(OutlineThickness == 1)
-		{
-			Grow(s_aGlyphData, s_aGlyphDataOutlined, Width, Height);
-			UploadGlyph(1, Position.x, Position.y, (int)Width, (int)Height, s_aGlyphDataOutlined);
-		}
-		else
-		{
-			for(int i = OutlineThickness; i > 0; i-=2)
-			{
-				Grow(s_aGlyphData, s_aGlyphDataOutlined, Width, Height);
-				Grow(s_aGlyphDataOutlined, s_aGlyphData, Width, Height);
-			}
-			UploadGlyph(1, Position.x, Position.y, (int)Width, (int)Height, s_aGlyphData);
-		}
+		int BitmapSize = Width * Height;
+
+		UploadGlyph(0, Position.x + Offset, Position.y + Offset, BitmapWidth, BitmapHeight, pBitmap->buffer);
+	
+		// create outline
+		FT_Stroker_Set(m_FtStroker, (OutlineThickness) * 64, FT_STROKER_LINECAP_SQUARE, FT_STROKER_LINEJOIN_MITER_FIXED, 10000);
+		FT_Get_Glyph(GlyphFace->glyph, (FT_Glyph *)&Glyph);
+		FT_Glyph_Stroke((FT_Glyph *)&Glyph, m_FtStroker, true);
+		FT_Glyph_To_Bitmap((FT_Glyph *)&Glyph, FT_RENDER_MODE_NORMAL, 0, true);
+		pBitmap = &Glyph->bitmap;
+		
+		int OutlinedPositionX = Position.x + (Glyph->left - BitmapLeft) + Offset;
+		int OutlinedPositionY = Position.y + (BitmapTop - Glyph->top) + Offset;
+		UploadGlyph(1, OutlinedPositionX, OutlinedPositionY, pBitmap->width, pBitmap->rows, pBitmap->buffer);
 
 		m_aAtlasPages[AtlasIndex].Touch();
 
 		float UVscale = 1.0f / TEXTURE_SIZE;
 		pGlyph->m_aUvs[0] = (Position.x + Spacing) * UVscale;
 		pGlyph->m_aUvs[1] = (Position.y + Spacing) * UVscale;
-		pGlyph->m_aUvs[2] = (Position.x + Width - Spacing) * UVscale;
-		pGlyph->m_aUvs[3] = (Position.y + Height - Spacing) * UVscale;
+		pGlyph->m_aUvs[2] = pGlyph->m_aUvs[0] + OutlinedWidth * UVscale;
+		pGlyph->m_aUvs[3] = pGlyph->m_aUvs[1] + OutlinedHeight * UVscale;
 	}
 
 	float Scale = 1.0f / FontSize;
@@ -452,10 +418,10 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	pGlyph->m_AtlasIndex = AtlasIndex;
 	pGlyph->m_PageID = Page;
 	pGlyph->m_Face = GlyphFace;
-	pGlyph->m_Height = (Height - Spacing * 2) * Scale;
-	pGlyph->m_Width = (Width - Spacing * 2) * Scale;
-	float OffsetX = (GlyphFace->glyph->metrics.horiBearingX >> 6) * Scale; // ignore_convention
-	float OffsetY = (FontSize - (GlyphFace->glyph->metrics.horiBearingY >> 6)) * Scale; // ignore_convention
+	pGlyph->m_Height = OutlinedHeight * Scale;
+	pGlyph->m_Width = OutlinedWidth * Scale;
+	float OffsetX = (GlyphFace->glyph->bitmap_left) * Scale; // ignore_convention
+	float OffsetY = (FontSize - GlyphFace->glyph->bitmap_top) * Scale; // ignore_convention
 	pGlyph->m_Offset = vec2(OffsetX, OffsetY);
 	pGlyph->m_AdvanceX = (GlyphFace->glyph->advance.x>>6) * Scale; // ignore_convention
 	pGlyph->m_Rendered = Render;
@@ -703,7 +669,7 @@ void CTextRender::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	FT_Init_FreeType(&m_FTLibrary);
-	m_pGlyphMap = new CGlyphMap(m_pGraphics);
+	m_pGlyphMap = new CGlyphMap(m_pGraphics, m_FTLibrary);
 }
 
 void CTextRender::Update()

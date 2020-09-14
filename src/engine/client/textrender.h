@@ -10,6 +10,7 @@
 // ft2 texture
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_STROKER_H
 
 enum
 {
@@ -23,10 +24,6 @@ enum
 static int aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36,64};
 #define NUM_FONT_SIZES (sizeof(aFontSizes)/sizeof(int))
 #define PAGE_SIZE (TEXTURE_SIZE/PAGE_COUNT)
-
-// 32k of data used for rendering glyphs
-static unsigned char s_aGlyphData[(1024/8) * (1024/8)];
-static unsigned char s_aGlyphDataOutlined[(1024/8) * (1024/8)];
 
 struct CGlyph
 {
@@ -98,6 +95,7 @@ public:
 class CGlyphMap
 {
 	IGraphics *m_pGraphics;
+	FT_Stroker m_FtStroker;
 	IGraphics::CTextureHandle m_aTextures[2];
 	CAtlas m_aAtlasPages[PAGE_COUNT*PAGE_COUNT];
 	int m_ActiveAtlasIndex;
@@ -115,14 +113,13 @@ class CGlyphMap
 
 	int AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSize);
 
-	void Grow(unsigned char *pIn, unsigned char *pOut, int w, int h);
 	void InitTexture(int Width, int Height);
 	int FitGlyph(int Width, int Height, ivec2 *Position);
 	void UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int Height, const unsigned char *pData);
 	bool SetFaceByName(FT_Face *pFace, const char *pFamilyName);
 	int GetCharGlyph(int Chr, FT_Face *pFace);
 public:
-	CGlyphMap(IGraphics *pGraphics);
+	CGlyphMap(IGraphics *pGraphics, FT_Library FtLibrary);
 	~CGlyphMap();
 
 	IGraphics::CTextureHandle GetTexture(int Index) { return m_aTextures[Index]; }
