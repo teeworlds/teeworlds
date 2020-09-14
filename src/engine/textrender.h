@@ -65,8 +65,8 @@ public:
 struct CTextBoundingBox
 {
 	float x, y, w, h;
-	float BoundRight() { return x + w; }
-	float BoundBottom() { return y + h; }
+	float Right() { return x + w; }
+	float Bottom() { return y + h; }
 };
 
 class CTextCursor
@@ -187,6 +187,7 @@ public:
 	virtual float TextWidth(float FontSize, const char *pText, int Length) = 0;
 	virtual void TextDeferred(CTextCursor *pCursor, const char *pText, int Length) = 0;
 	virtual void TextNewline(CTextCursor *pCursor) = 0;
+	virtual void TextPlain(CTextCursor *pCursor, const char *pText, int Length) = 0;
 	virtual void TextOutlined(CTextCursor *pCursor, const char *pText, int Length) = 0;
 	virtual void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset) = 0;
 
@@ -195,6 +196,7 @@ public:
 
 	// These should be only called after TextDeferred, TextOutlined or TextShadowed
 	// TODO: need better names
+	virtual void DrawTextPlain(CTextCursor *pCursor, float Alpha = 1.0f) = 0;
 	virtual void DrawTextOutlined(CTextCursor *pCursor, float Alpha = 1.0f) = 0;
 	virtual void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha = 1.0f) = 0;
 	// TODO: allow changing quad colors

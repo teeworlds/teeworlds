@@ -600,20 +600,21 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 
 void CTextRender::TextRefreshGlyphs(CTextCursor *pCursor)
 {
-	int NumTotalPages = m_pGlyphMap->NumTotalPages();
-	for (int i = 0; i < pCursor->m_Glyphs.size(); ++i)
-		m_pGlyphMap->RenderGlyph(pCursor->m_Glyphs[i].m_pGlyph, true);
+	int NumQuads = pCursor->m_Glyphs.size();
+	if(NumQuads <= 0)
+		return;
 
-	if(NumTotalPages != m_pGlyphMap->NumTotalPages())
+	int NumTotalPages = m_pGlyphMap->NumTotalPages();
+
+	if(NumTotalPages != pCursor->m_PageCountWhenDrawn)
 	{
-		NumTotalPages = m_pGlyphMap->NumTotalPages();
-		// A page is dropped, rerender glyphs
+		// pages were dropped, rerender glyphs
 		for(int i = 0; i < pCursor->m_Glyphs.size(); ++i)
 			m_pGlyphMap->RenderGlyph(pCursor->m_Glyphs[i].m_pGlyph, true);
+		pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
 	}
 
-	pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
-	if(NumTotalPages != pCursor->m_PageCountWhenDrawn)
+	if(NumTotalPages != m_pGlyphMap->NumTotalPages())
 	{
 		dbg_msg("textrender", "page %d mismatch after refresh, atlas might be too small.", NumTotalPages);
 	}
@@ -964,19 +965,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	pCursor->m_Height = pCursor->m_NextLineAdvanceY + Size / 2.0f;
 	pCursor->m_CharCount = pCur - pText;
 
-	if(NumTotalPages != m_pGlyphMap->NumTotalPages())
-	{
-		NumTotalPages = m_pGlyphMap->NumTotalPages();
-		// A page is dropped, rerender glyphs
-		for(int i = 0; i < pCursor->m_Glyphs.size(); ++i)
-			m_pGlyphMap->RenderGlyph(pCursor->m_Glyphs[i].m_pGlyph, true);
-	}
-
-	pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
-	if(NumTotalPages != pCursor->m_PageCountWhenDrawn)
-	{
-		dbg_msg("textrender", "page %d mismatch after refresh, atlas might be too small.", NumTotalPages);
-	}
+	TextRefreshGlyphs(pCursor);
 }
 
 void CTextRender::TextNewline(CTextCursor *pCursor)
@@ -1014,6 +1003,75 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 	}
 }
 
+void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool IsSecondary, float Alpha)
+{
+	int NumQuads = pCursor->m_Glyphs.size();
+	if(NumQuads <= 0)
+		return;
+
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	int ScreenWidth = Graphics()->ScreenWidth();
+	int ScreenHeight = Graphics()->ScreenHeight();
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
+
+	int HorizontalAlign = pCursor->m_Align & TEXTALIGN_MASK_HORI;
+	CTextBoundingBox AlignBox = pCursor->AlignedBoundingBox();
+	vec2 AlignOffset = vec2(AlignBox.x, AlignBox.y);
+	float BoxWidth = (int)(pCursor->m_Width * ScreenScale.x) / ScreenScale.x;
+
+	vec4 LastColor = vec4(-1, -1, -1, -1);
+	Graphics()->TextureSet(m_pGlyphMap->GetTexture(Texture));
+	Graphics()->QuadsBegin();
+
+	int Line = -1;
+	vec2 LineOffset = vec2(0, 0);
+	vec2 Anchor = (pCursor->m_CursorPos + AlignOffset + Offset) * ScreenScale;
+	Anchor.x = (int)Anchor.x / ScreenScale.x;
+	Anchor.y = (int)Anchor.y / ScreenScale.y;
+	for(int i = NumQuads - 1; i >= 0; --i)
+	{
+		const CScaledGlyph& rScaled = pCursor->m_Glyphs[i];
+		const CGlyph *pGlyph = rScaled.m_pGlyph;
+
+		vec4 Color;
+		if(IsSecondary)
+			Color = vec4(rScaled.m_SecondaryColor.r, rScaled.m_SecondaryColor.g, rScaled.m_SecondaryColor.b, rScaled.m_SecondaryColor.a);
+		else
+			Color = vec4(rScaled.m_TextColor.r, rScaled.m_TextColor.g, rScaled.m_TextColor.b, rScaled.m_TextColor.a);
+
+		if(Color != LastColor)
+		{
+			Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
+			LastColor = Color;
+		}
+
+		if(Line != rScaled.m_Line)
+		{
+			Line = rScaled.m_Line;
+			if(HorizontalAlign == TEXTALIGN_RIGHT)
+				LineOffset.x = BoxWidth - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size);
+			else if(HorizontalAlign == TEXTALIGN_CENTER)
+				LineOffset.x = (BoxWidth - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size)) / 2.0f;
+			else
+				LineOffset.x = 0;
+		}
+		Graphics()->QuadsSetSubset(pGlyph->m_aUvs[0], pGlyph->m_aUvs[1], pGlyph->m_aUvs[2], pGlyph->m_aUvs[3]);
+
+		vec2 QuadPosition = Anchor + LineOffset + rScaled.m_Advance + pGlyph->m_Offset * rScaled.m_Size;
+		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, pGlyph->m_Width * rScaled.m_Size, pGlyph->m_Height * rScaled.m_Size);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+	}
+	Graphics()->QuadsEnd();
+}
+
+void CTextRender::TextPlain(CTextCursor *pCursor, const char *pText, int Length)
+{
+	TextDeferred(pCursor, pText, Length);
+	DrawTextPlain(pCursor, 1.0f);
+}
+
 void CTextRender::TextOutlined(CTextCursor *pCursor, const char *pText, int Length)
 {
 	TextDeferred(pCursor, pText, Length);
@@ -1026,164 +1084,24 @@ void CTextRender::TextShadowed(CTextCursor *pCursor, const char *pText, int Leng
 	DrawTextShadowed(pCursor, ShadowOffset, 1.0f);
 }
 
+void CTextRender::DrawTextPlain(CTextCursor *pCursor, float Alpha)
+{
+	TextRefreshGlyphs(pCursor);
+	DrawText(pCursor, vec2(0, 0), 0, false, Alpha);
+}
+
 void CTextRender::DrawTextOutlined(CTextCursor *pCursor, float Alpha)
 {
-	int NumQuads = pCursor->m_Glyphs.size();
-	if(NumQuads <= 0)
-		return;
-
-	if (m_pGlyphMap->NumTotalPages() != pCursor->m_PageCountWhenDrawn)
-	{
-		TextRefreshGlyphs(pCursor);
-		pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
-	}
-
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	int ScreenWidth = Graphics()->ScreenWidth();
-	int ScreenHeight = Graphics()->ScreenHeight();
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-
-	vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
-
-	int HorizontalAlign = pCursor->m_Align & TEXTALIGN_MASK_HORI;
-	CTextBoundingBox AlignBox = pCursor->AlignedBoundingBox();
-	vec2 AlignOffset = vec2(AlignBox.x, AlignBox.y);
-	float BoxWidth = pCursor->m_Width;
-
-	vec4 LastColor = vec4(-1, -1, -1, -1);
-	for(int Pass = 0; Pass < 2; ++Pass)
-	{
-		Graphics()->TextureSet(m_pGlyphMap->GetTexture(1-Pass));
-		Graphics()->QuadsBegin();
-
-		int Line = -1;
-		vec2 LineOffset = vec2(0, 0);
-		for(int i = NumQuads - 1; i >= 0; --i)
-		{
-			const CScaledGlyph& rScaled = pCursor->m_Glyphs[i];
-			const CGlyph *pGlyph = rScaled.m_pGlyph;
-			vec4 Color;
-			if(Pass == 0)
-				Color = vec4(rScaled.m_SecondaryColor.r, rScaled.m_SecondaryColor.g, rScaled.m_SecondaryColor.b, rScaled.m_SecondaryColor.a * rScaled.m_TextColor.a);
-			else
-				Color = vec4(rScaled.m_TextColor.r, rScaled.m_TextColor.g, rScaled.m_TextColor.b, rScaled.m_TextColor.a);
-
-			if(Color != LastColor)
-			{
-				Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
-				LastColor = Color;
-			}
-
-			if(Line != rScaled.m_Line)
-			{
-				Line = rScaled.m_Line;
-				if(HorizontalAlign == TEXTALIGN_RIGHT)
-					LineOffset.x = BoxWidth - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size);
-				else if(HorizontalAlign == TEXTALIGN_CENTER)
-					LineOffset.x = (BoxWidth - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size)) / 2.0f;
-				else
-					LineOffset.x = 0;
-			}
-			Graphics()->QuadsSetSubset(pGlyph->m_aUvs[0], pGlyph->m_aUvs[1], pGlyph->m_aUvs[2], pGlyph->m_aUvs[3]);
-
-			vec2 QuadPosition = pCursor->m_CursorPos + AlignOffset + LineOffset + rScaled.m_Advance + pGlyph->m_Offset * rScaled.m_Size;
-			IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, pGlyph->m_Width * rScaled.m_Size, pGlyph->m_Height * rScaled.m_Size);
-			Graphics()->QuadsDrawTL(&QuadItem, 1);
-		}
-		Graphics()->QuadsEnd();
-	}
+	TextRefreshGlyphs(pCursor);
+	DrawText(pCursor, vec2(0, 0), 1, true, Alpha);
+	DrawText(pCursor, vec2(0, 0), 0, false, Alpha);
 }
 
 void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha)
 {
-	// int NumQuads = pCursor->m_Glyphs.size();
-
-	// if(NumQuads <= 0)
-	// 	return;
-
-	// if (m_pGlyphMap->NumTotalPages() != pCursor->m_PageCountWhenDrawn)
-	// {
-	// 	TextRefreshGlyphs(pCursor);
-	// 	pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
-	// }
-
-	// float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	// int ScreenWidth = Graphics()->ScreenWidth();
-	// int ScreenHeight = Graphics()->ScreenHeight();
-	// Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-
-	// vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
-
-	// int HorizontalAlign = pCursor->m_Align & TEXTALIGN_MASK_HORI;
-	// CTextBoundingBox AlignedBox = pCursor->AlignedBoundingBox();
-	// float BoxWidth = AlignedBox.Width();
-
-	// Graphics()->TextureSet(m_pGlyphMap->GetTexture(0));
-	// Graphics()->QuadsBegin();
-
-	// int Line = -1;
-	// vec2 LineOffset = vec2(0, 0);
-	// vec4 LastColor = vec4(-1, -1, -1, -1);
-	// for(int i = NumQuads - 1; i >= 0; --i)
-	// {
-	// 	const CScaledGlyph& Quad = pCursor->m_Glyphs[i];
-	// 	vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
-	// 	if (Color != LastColor)
-	// 	{
-	// 		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
-	// 		LastColor = Color;
-	// 	}
-
-	// 	if(Line != Quad.m_Line)
-	// 	{
-	// 		Line = Quad.m_Line;
-	// 		if(HorizontalAlign == TEXTALIGN_RIGHT)
-	// 			LineOffset.x = BoxWidth - (Quad.m_Offset.x + Quad.m_Width);
-	// 		else if(HorizontalAlign == TEXTALIGN_CENTER)
-	// 			LineOffset.x = (BoxWidth - (Quad.m_Offset.x + Quad.m_Width)) / 2.0f;
-	// 		else
-	// 			LineOffset.x = 0;
-	// 	}
-	// 	Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
-
-	// 	vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
-	// 	QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
-	// 	QuadPosition += Quad.m_Offset;
-	// 	IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
-	// 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	// }
-
-	// Graphics()->SetColor(m_TextR, m_TextG, m_TextB, m_TextA);
-	// Line = -1;
-	// LineOffset = vec2(0, 0);
-	// for(int i = NumQuads - 1; i >= 0; --i)
-	// {
-	// 	const CScaledGlyph& Quad = pCursor->m_Glyphs[i];
-	// 	vec4 Color = vec4(Quad.m_SecondaryColor.r, Quad.m_SecondaryColor.g, Quad.m_SecondaryColor.b, Quad.m_SecondaryColor.a);
-	// 	if (Color != LastColor)
-	// 	{
-	// 		Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a * Alpha);
-	// 		LastColor = Color;
-	// 	}
-	// 	if(Line != Quad.m_Line)
-	// 	{
-	// 		Line = Quad.m_Line;
-	// 		if(HorizontalAlign == TEXTALIGN_RIGHT)
-	// 			LineOffset.x = BoxWidth - (Quad.m_Offset.x + Quad.m_Width);
-	// 		else if(HorizontalAlign == TEXTALIGN_CENTER)
-	// 			LineOffset.x = (BoxWidth - (Quad.m_Offset.x + Quad.m_Width)) / 2.0f;
-	// 		else
-	// 			LineOffset.x = 0;
-	// 	}
-	// 	Graphics()->QuadsSetSubset(Quad.m_aUvs[0], Quad.m_aUvs[1], Quad.m_aUvs[2], Quad.m_aUvs[3]);
-
-	// 	vec2 QuadPosition = (pCursor->m_CursorPos + AlignedBox.m_Min + LineOffset) * ScreenScale;
-	// 	QuadPosition = vec2((int)QuadPosition.x/ScreenScale.x, (int)QuadPosition.y/ScreenScale.y);
-	// 	QuadPosition += Quad.m_Offset;
-	// 	IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, Quad.m_Width, Quad.m_Height);
-	// 	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	// }
-	// Graphics()->QuadsEnd();
+	TextRefreshGlyphs(pCursor);
+	DrawText(pCursor, ShadowOffset, 0, false, Alpha);
+	DrawText(pCursor, vec2(0, 0), 0, false, Alpha);
 }
 
 IEngineTextRender *CreateEngineTextRender() { return new CTextRender; }

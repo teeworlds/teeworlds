@@ -192,6 +192,8 @@ class CTextRender : public IEngineTextRender
 						int FontSizeIndex, float Size, int PixelSize, vec2 ScreenScale);
 	void TextRefreshGlyphs(CTextCursor *pCursor);
 
+	void DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool IsSecondary, float Alpha);
+
 public:
 	CTextRender();
 	~CTextRender();
@@ -211,9 +213,11 @@ public:
 	float TextWidth(float FontSize, const char *pText, int Length);
 	void TextDeferred(CTextCursor *pCursor, const char *pText, int Length);
 	void TextNewline(CTextCursor *pCursor);
+	void TextPlain(CTextCursor *pCursor, const char *pText, int Length);
 	void TextOutlined(CTextCursor *pCursor, const char *pText, int Length);
 	void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset);
 
+	void DrawTextPlain(CTextCursor *pCursor, float Alpha);
 	void DrawTextOutlined(CTextCursor *pCursor, float Alpha);
 	void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha);
 };
