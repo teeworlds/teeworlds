@@ -202,8 +202,8 @@ void CInfoMessages::OnRender()
 void CInfoMessages::RenderKillMsg(CInfoMsg *pInfoMsg, float x, float y) const
 {
 	float FontSize = 36.0f;
-	float KillerNameW = pInfoMsg->m_Player2NameCursor.BoundingBox().Width() + RenderTools()->GetClientIdRectSize(FontSize);
-	float VictimNameW = pInfoMsg->m_Player1NameCursor.BoundingBox().Width() + RenderTools()->GetClientIdRectSize(FontSize);
+	float KillerNameW = pInfoMsg->m_Player2NameCursor.m_Width + RenderTools()->GetClientIdRectSize(FontSize);
+	float VictimNameW = pInfoMsg->m_Player1NameCursor.m_Width + RenderTools()->GetClientIdRectSize(FontSize);
 
 	// render victim name
 	x -= VictimNameW;
@@ -290,12 +290,12 @@ void CInfoMessages::RenderKillMsg(CInfoMsg *pInfoMsg, float x, float y) const
 void CInfoMessages::RenderFinishMsg(CInfoMsg *pInfoMsg, float x, float y) const
 {
 	float FontSize = 36.0f;
-	float PlayerNameW = pInfoMsg->m_Player1NameCursor.BoundingBox().Width() + RenderTools()->GetClientIdRectSize(FontSize);
+	float PlayerNameW = pInfoMsg->m_Player1NameCursor.m_Width + RenderTools()->GetClientIdRectSize(FontSize);
 	
 	// render diff
 	if(pInfoMsg->m_Diff != 0)
 	{
-		float DiffW = pInfoMsg->m_DiffCursor.BoundingBox().Width();
+		float DiffW = pInfoMsg->m_DiffCursor.m_Width;
 
 		x -= DiffW;
 
@@ -306,7 +306,7 @@ void CInfoMessages::RenderFinishMsg(CInfoMsg *pInfoMsg, float x, float y) const
 	}
 
 	// render time
-	float TimeW = pInfoMsg->m_TimeCursor.BoundingBox().Width();
+	float TimeW = pInfoMsg->m_TimeCursor.m_Width;
 	x -= TimeW;
 	pInfoMsg->m_TimeCursor.MoveTo(x, y);
 	TextRender()->DrawTextOutlined(&pInfoMsg->m_TimeCursor);

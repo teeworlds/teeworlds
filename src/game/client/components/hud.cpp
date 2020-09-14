@@ -263,7 +263,12 @@ void CHud::RenderFps()
 		str_format(aBuf, sizeof(aBuf), "%d", (int)m_AverageFPS);
 
 		s_Cursor.Reset();
-		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+		TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
+
+		CTextBoundingBox Box = s_Cursor.BoundingBox();
+		RenderTools()->DrawRoundRect((CUIRect *)&Box, vec4(0,0,0,0.5), 2);
+		
+		TextRender()->DrawTextOutlined(&s_Cursor);
 	}
 }
 
@@ -458,7 +463,7 @@ void CHud::RenderSpectatorHud()
 	TextRender()->TextOutlined(&s_SpectateLabelCursor, aBuf, -1);
 
 	static CTextCursor s_SpectateTargetCursor(8.0f);
-	s_SpectateTargetCursor.MoveTo(s_SpectateLabelCursor.BoundingBox().m_Max.x+3.0f, m_Height-13.0f);
+	s_SpectateTargetCursor.MoveTo(s_SpectateLabelCursor.BoundingBox().BoundRight()+3.0f, m_Height-13.0f);
 	s_SpectateTargetCursor.Reset();
 
 	switch(SpecMode)

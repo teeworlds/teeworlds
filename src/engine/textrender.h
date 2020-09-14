@@ -62,12 +62,11 @@ public:
 	vec4 m_SecondaryColor;
 };
 
-class CTextBoundingBox
+struct CTextBoundingBox
 {
-public:
-	vec2 m_Min, m_Max;
-	float Width() { return m_Max.x - m_Min.x; }
-	float Height() { return m_Max.y - m_Min.y; }
+	float x, y, w, h;
+	float BoundRight() { return x + w; }
+	float BoundBottom() { return y + h; }
 };
 
 class CTextCursor
@@ -86,35 +85,29 @@ class CTextCursor
 	vec2 m_Advance;
 	bool m_StartOfLine;
 	bool m_SkipTextRender;
-	CTextBoundingBox m_BoundingBox;
 	float m_NextLineAdvanceY;
 	array<CScaledGlyph> m_Glyphs;
 	int64 m_StringVersion;
 
 	CTextBoundingBox AlignedBoundingBox()
 	{
-		CTextBoundingBox Box = m_BoundingBox;
+		CTextBoundingBox Box;
 		if((m_Align & TEXTALIGN_MASK_HORI) == TEXTALIGN_RIGHT)
-		{
-			Box.m_Min.x = -Box.m_Max.x;
-			Box.m_Max.x = 0;
-		}
+			Box.x = -m_Width;
 		else if((m_Align & TEXTALIGN_MASK_HORI) == TEXTALIGN_CENTER)
-		{
-			Box.m_Max.x = Box.m_Max.x / 2.0f;
-			Box.m_Min.x = -Box.m_Max.x;
-		}
+			Box.x = -m_Width / 2.0f;
+		else
+			Box.x = 0.0f;
 		
 		if((m_Align & TEXTALIGN_MASK_VERT) == TEXTALIGN_BOTTOM)
-		{
-			Box.m_Min.y = -Box.m_Max.y;
-			Box.m_Max.y = 0;
-		}
+			Box.y = -m_Height;
 		else if((m_Align & TEXTALIGN_MASK_VERT) == TEXTALIGN_MIDDLE)
-		{
-			Box.m_Max.y = Box.m_Max.y / 2.0f;
-			Box.m_Min.y = -Box.m_Max.y;
-		}
+			Box.y = -m_Height / 2.0f;
+		else
+			Box.y = 0.0f;
+	
+		Box.w = m_Width;
+		Box.h = m_Height;
 		return Box;
 	}
 
@@ -137,13 +130,15 @@ public:
 	int m_Align;
 	int m_Flags;
 	float m_LineSpacing;
+	float m_Width;
+	float m_Height;
 
 	void Reset(int64 StringVersion = -1)
 	{
 		if (StringVersion < 0 || m_StringVersion != StringVersion)
 		{
-			m_BoundingBox.m_Max = vec2(0, 0);
-			m_BoundingBox.m_Min = vec2(0, 0);
+			m_Width = 0;
+			m_Height = 0;
 			m_NextLineAdvanceY = 0;
 			m_Advance = vec2(0, 0);
 			m_LineCount = 1;
@@ -173,8 +168,8 @@ public:
 	CTextBoundingBox BoundingBox()
 	{
 		CTextBoundingBox Box = AlignedBoundingBox();
-		Box.m_Min = m_CursorPos + Box.m_Min;
-		Box.m_Max = m_CursorPos + Box.m_Max;
+		Box.x += m_CursorPos.x;
+		Box.y += m_CursorPos.y;
 		return Box;
 	}
 };

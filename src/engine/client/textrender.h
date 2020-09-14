@@ -16,8 +16,8 @@ enum
 {
 	MAX_FACES = 16,
 	MAX_CHARACTERS = 64,
-	TEXTURE_SIZE = 2048,
-	PAGE_COUNT = 4,
+	TEXTURE_SIZE = 1024,
+	PAGE_COUNT = 2,
 };
 
 // TODO: use SDF or MSDF font instead of multiple font sizes
@@ -170,6 +170,7 @@ class CTextRender : public IEngineTextRender
 	float m_TextSecondaryA;
 
 	CGlyphMap *m_pGlyphMap;
+	void *m_apFontData[MAX_FACES];
 
 	// support regional variant fonts
 	int m_NumVariants;
@@ -178,7 +179,7 @@ class CTextRender : public IEngineTextRender
 
 	FT_Library m_FTLibrary;
 
-	int LoadFontCollection(const char *pFilename);
+	int LoadFontCollection(const void *pFilename, const void *pBuf, long FileSize);
 
 	bool isWestern(int Chr)
 	{
@@ -193,6 +194,7 @@ class CTextRender : public IEngineTextRender
 
 public:
 	CTextRender();
+	~CTextRender();
 
 	void Init();
 	void Update();
