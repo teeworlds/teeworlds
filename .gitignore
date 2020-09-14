@@ -63,6 +63,7 @@ CPackSourceConfig.cmake
 Debug
 Makefile
 Release
+RelWithDebInfo
 _CPack_Packages/
 build.ninja
 cmake_install.cmake
