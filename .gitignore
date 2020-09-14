@@ -62,8 +62,8 @@ CPackConfig.cmake
 CPackSourceConfig.cmake
 Debug
 Makefile
-Release
 RelWithDebInfo
+Release
 _CPack_Packages/
 build.ninja
 cmake_install.cmake
