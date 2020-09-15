@@ -113,7 +113,7 @@ public:
 		SORT_GAMETYPE - Sort by game type. DM, TDM etc.
 		SORT_NUMPLAYERS - Sort after how many players there are on the server.
 	*/
-	enum{
+	enum {
 		SORT_NAME=0,
 		SORT_PING,
 		SORT_MAP,
@@ -131,6 +131,9 @@ public:
 
 		REFRESHFLAG_INTERNET=1,
 		REFRESHFLAG_LAN=2,
+
+		LAN_PORT_BEGIN = 8303,
+		LAN_PORT_END = 8310,
 
 		FLAG_PASSWORD=1,
 		FLAG_PURE=2,
