@@ -194,6 +194,9 @@ public:
 	inline void TextColor(const vec4 &Color) { TextColor(Color.r, Color.g, Color.b, Color.a); }
 	inline void TextSecondaryColor(const vec4 &Color) { TextSecondaryColor(Color.r, Color.g, Color.b, Color.a); }
 
+	virtual vec4 GetColor() = 0;
+	virtual vec4 GetSecondaryColor() = 0;
+
 	// These should be only called after TextDeferred, TextOutlined or TextShadowed
 	// TODO: need better names
 	virtual void DrawTextPlain(CTextCursor *pCursor, float Alpha = 1.0f) = 0;

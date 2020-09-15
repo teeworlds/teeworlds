@@ -635,7 +635,32 @@ void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, 
 {
 	if(!m_pConfig->m_ClShowUserId) return;
 
-	// TODO: ADDBACK: draw client ID
+	char aBuf[4];
+	str_format(aBuf, sizeof(aBuf), "%d", ID);
+
+	const float LinebaseY = pCursor->BoundingBox().Bottom();
+	float FontSize = pCursor->m_FontSize;
+	const float Width = 1.4f * FontSize;
+
+	CUIRect Rect;
+	Rect.x = pCursor->m_CursorPos.x;
+	Rect.y = LinebaseY - FontSize + 0.025f * FontSize;
+	Rect.w = Width;
+	Rect.h = FontSize;
+	DrawRoundRect(&Rect, BgColor, 0.25f * FontSize);
+
+	static CTextCursor s_Cursor;
+	s_Cursor.Reset();
+	s_Cursor.m_FontSize = FontSize;
+	s_Cursor.m_Align = TEXTALIGN_CENTER;
+	s_Cursor.MoveTo(Rect.x + Rect.w / 2.0f, pCursor->m_CursorPos.y);
+
+	vec4 OldColor= pTextRender->GetColor();
+	pTextRender->TextColor(TextColor);
+	pTextRender->TextPlain(&s_Cursor, aBuf, -1);
+	pTextRender->TextColor(OldColor);
+
+	pCursor->MoveTo(pCursor->m_CursorPos.x + Rect.w + 0.2f * FontSize, pCursor->m_CursorPos.y);
 }
 
 float CRenderTools::GetClientIdRectSize(float FontSize)

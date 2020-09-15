@@ -343,7 +343,6 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	}
 
 	FT_Bitmap *pBitmap;
-	unsigned int px, py;
 
 	FT_Face GlyphFace;
 	int GlyphIndex = GetCharGlyph(pGlyph->m_ID, &GlyphFace);
@@ -422,9 +421,8 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	pGlyph->m_Face = GlyphFace;
 	pGlyph->m_Height = OutlinedHeight * Scale;
 	pGlyph->m_Width = OutlinedWidth * Scale;
-	float OffsetX = (GlyphFace->glyph->bitmap_left) * Scale; // ignore_convention
-	float OffsetY = (FontSize - GlyphFace->glyph->bitmap_top) * Scale; // ignore_convention
-	pGlyph->m_Offset = vec2(OffsetX, OffsetY);
+	pGlyph->m_BearingX = (GlyphFace->glyph->bitmap_left-OutlineThickness/2.0f) * Scale; // ignore_convention
+	pGlyph->m_BearingY = (FontSize - GlyphFace->glyph->bitmap_top) * Scale; // ignore_convention
 	pGlyph->m_AdvanceX = (GlyphFace->glyph->advance.x>>6) * Scale; // ignore_convention
 	pGlyph->m_Rendered = Render;
 
@@ -575,7 +573,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 			Scaled.m_SecondaryColor = vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA);
 			pCursor->m_Glyphs.add(Scaled);
 		}
-
+		
 		pCursor->m_Advance.x += AdvanceX;
 		Hint.m_GlyphCount++;
 		pCursor->m_GlyphCount++;
@@ -855,15 +853,16 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	int PixelSize = (int)(Size * ScreenScale.y);
 	Size = PixelSize / ScreenScale.y;
 	int FontSizeIndex = m_pGlyphMap->GetFontSizeIndex(PixelSize);
+	CGlyph *pSpace = m_pGlyphMap->GetGlyph(' ', FontSizeIndex, false);
 
 	// Cursor current states
 	int Flags = pCursor->m_Flags;
 	float MaxWidth = pCursor->m_MaxWidth;
 	if(MaxWidth < 0)
-		MaxWidth = INFINITY;
+		MaxWidth = (ScreenX1-ScreenX0);
 	int MaxLines = pCursor->m_MaxLines;
 	if(MaxLines < 0)
-		MaxLines = INT32_MAX;
+		MaxLines = (ScreenY1-ScreenY0) / pCursor->m_FontSize;
 
 	if(Length < 0)
 		Length = str_length(pText);
@@ -880,6 +879,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 		float NextAdvanceY = pCursor->m_Advance.y + pCursor->m_FontSize;
 		NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
 		pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
+		pCursor->m_Height = max(pCursor->m_Advance.y + (pSpace->m_BearingY + pSpace->m_Height) * Size, pCursor->m_Height);
 
 		if(WordWidth.m_EffectiveAdvanceX > MaxWidth)
 		{
@@ -956,13 +956,12 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 						pCursor->m_Glyphs.remove_index(i);
 					pCursor->m_GlyphCount--;
 				}
-				pCursor->m_Truncated = true;
 			}
+			pCursor->m_Truncated = true;
 			break;
 		}
 	}
 
-	pCursor->m_Height = pCursor->m_NextLineAdvanceY + Size / 2.0f;
 	pCursor->m_CharCount = pCur - pText;
 
 	TextRefreshGlyphs(pCursor);
@@ -1027,9 +1026,10 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 
 	int Line = -1;
 	vec2 LineOffset = vec2(0, 0);
-	vec2 Anchor = (pCursor->m_CursorPos + AlignOffset + Offset) * ScreenScale;
+	vec2 Anchor = (pCursor->m_CursorPos + AlignOffset) * ScreenScale;
 	Anchor.x = (int)Anchor.x / ScreenScale.x;
 	Anchor.y = (int)Anchor.y / ScreenScale.y;
+	Anchor += Offset;
 	for(int i = NumQuads - 1; i >= 0; --i)
 	{
 		const CScaledGlyph& rScaled = pCursor->m_Glyphs[i];
@@ -1059,7 +1059,7 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 		}
 		Graphics()->QuadsSetSubset(pGlyph->m_aUvs[0], pGlyph->m_aUvs[1], pGlyph->m_aUvs[2], pGlyph->m_aUvs[3]);
 
-		vec2 QuadPosition = Anchor + LineOffset + rScaled.m_Advance + pGlyph->m_Offset * rScaled.m_Size;
+		vec2 QuadPosition = Anchor + LineOffset + rScaled.m_Advance + vec2(pGlyph->m_BearingX, pGlyph->m_BearingY) * rScaled.m_Size;
 		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, pGlyph->m_Width * rScaled.m_Size, pGlyph->m_Height * rScaled.m_Size);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	}
@@ -1100,7 +1100,7 @@ void CTextRender::DrawTextOutlined(CTextCursor *pCursor, float Alpha)
 void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha)
 {
 	TextRefreshGlyphs(pCursor);
-	DrawText(pCursor, ShadowOffset, 0, false, Alpha);
+	DrawText(pCursor, ShadowOffset, 0, true, Alpha);
 	DrawText(pCursor, vec2(0, 0), 0, false, Alpha);
 }
 

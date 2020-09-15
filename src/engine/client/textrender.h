@@ -36,7 +36,8 @@ struct CGlyph
 	bool m_Rendered;
 	float m_Width;
 	float m_Height;
-	vec2 m_Offset;
+	float m_BearingX;
+	float m_BearingY;
 	float m_AdvanceX;
 	float m_aUvs[4];
 };
@@ -209,6 +210,9 @@ public:
 
 	void TextColor(float r, float g, float b, float a);
 	void TextSecondaryColor(float r, float g, float b, float a);
+
+	vec4 GetColor() { return vec4(m_TextR, m_TextG, m_TextB, m_TextA); }
+	vec4 GetSecondaryColor() { return vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA); }
 
 	float TextWidth(float FontSize, const char *pText, int Length);
 	void TextDeferred(CTextCursor *pCursor, const char *pText, int Length);

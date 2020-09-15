@@ -219,7 +219,7 @@ void CHud::RenderScoreHud()
 
 		if(GameFlags&GAMEFLAG_TEAMS && m_pClient->m_Snap.m_pGameDataTeam && !(GameFlags&GAMEFLAG_RACE))
 		{
-			static float s_MaxScoreWidth = TextRender()->TextWidth(14.0f, "100", -1);
+			static float s_ExpectedScoreWidth = TextRender()->TextWidth(14.0f, "100", -1);
 			static CTextCursor s_TeamscoreCursors[2];
 			static CTextCursor s_PlayerCountCursors[2];
 		
@@ -237,7 +237,7 @@ void CHud::RenderScoreHud()
 				TextRender()->TextDeferred(&s_TeamscoreCursors[t], aScoreTeam[t], -1);
 			}
 
-			float ScoreWidthMax = max(max(s_TeamscoreCursors[0].m_Width, s_TeamscoreCursors[1].m_Width), s_MaxScoreWidth);
+			float ScoreWidthMax = max(max(s_TeamscoreCursors[0].m_Width, s_TeamscoreCursors[1].m_Width), s_ExpectedScoreWidth);
 			float Split = 3.0f;
 			float ImageSize = GameFlags&GAMEFLAG_FLAGS ? 16.0f : Split;
 
@@ -289,10 +289,10 @@ void CHud::RenderScoreHud()
 					}
 					else if(FlagCarrier[t] >= 0)
 					{
+						// draw name
 						static CTextCursor s_CarrierCursor(8.0f);
 						s_CarrierCursor.Reset();
 
-						// draw name of the flag holder
 						int ID = FlagCarrier[t]%MAX_CLIENTS;
 						char aName[64];
 						str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
@@ -300,7 +300,6 @@ void CHud::RenderScoreHud()
 						TextRender()->TextDeferred(&s_CarrierCursor, aName, -1);
 
 						float w = s_CarrierCursor.m_Width + RenderTools()->GetClientIdRectSize(8.0f);
-
 						float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split);
 						float y = StartY+(t+1)*TeamOffset-3.0f;
 						
@@ -320,107 +319,127 @@ void CHud::RenderScoreHud()
 		}
 		else
 		{
-			// int Local = -1;
-			// int aPos[2] = { 1, 2 };
-			// CGameClient::CPlayerInfoItem aPlayerInfo[2] = {{0}};
-			// int i = 0;
-			// for(int t = 0; t < 2 && i < MAX_CLIENTS && m_pClient->m_Snap.m_aInfoByScore[i].m_pPlayerInfo; ++i)
-			// {
-			// 	if(m_pClient->m_aClients[m_pClient->m_Snap.m_aInfoByScore[i].m_ClientID].m_Team != TEAM_SPECTATORS)
-			// 	{
-			// 		aPlayerInfo[t] = m_pClient->m_Snap.m_aInfoByScore[i];
-			// 		if(aPlayerInfo[t].m_ClientID == m_pClient->m_LocalClientID)
-			// 			Local = t;
-			// 		++t;
-			// 	}
-			// }
-			// // search local player info if not a spectator, nor within top2 scores
-			// if(Local == -1 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
-			// {
-			// 	for(; i < MAX_CLIENTS && m_pClient->m_Snap.m_aInfoByScore[i].m_pPlayerInfo; ++i)
-			// 	{
-			// 		if(m_pClient->m_aClients[m_pClient->m_Snap.m_aInfoByScore[i].m_ClientID].m_Team != TEAM_SPECTATORS)
-			// 			++aPos[1];
-			// 		if(m_pClient->m_Snap.m_aInfoByScore[i].m_ClientID == m_pClient->m_LocalClientID)
-			// 		{
-			// 			aPlayerInfo[1] = m_pClient->m_Snap.m_aInfoByScore[i];
-			// 			Local = 1;
-			// 			break;
-			// 		}
-			// 	}
-			// }
-			// char aScore[2][32];
-			// for(int t = 0; t < 2; ++t)
-			// {
-			// 	if(aPlayerInfo[t].m_pPlayerInfo)
-			// 	{
-			// 		if(GameFlags&GAMEFLAG_RACE)
-			// 			FormatTime(aScore[t], sizeof(aScore[0]), aPlayerInfo[t].m_pPlayerInfo->m_Score, m_pClient->RacePrecision());
-			// 		else
-			// 			str_format(aScore[t], sizeof(aScore[0]), "%d", aPlayerInfo[t].m_pPlayerInfo->m_Score);
-			// 	}
-			// 	else
-			// 	{
-			// 		aScore[t][0] = 0;
-			// 	}
-			// }
+			int Local = -1;
+			int aPos[2] = { 1, 2 };
+			CGameClient::CPlayerInfoItem aPlayerInfo[2] = {{0}};
+			int i = 0;
+			for(int t = 0; t < 2 && i < MAX_CLIENTS && m_pClient->m_Snap.m_aInfoByScore[i].m_pPlayerInfo; ++i)
+			{
+				if(m_pClient->m_aClients[m_pClient->m_Snap.m_aInfoByScore[i].m_ClientID].m_Team != TEAM_SPECTATORS)
+				{
+					aPlayerInfo[t] = m_pClient->m_Snap.m_aInfoByScore[i];
+					if(aPlayerInfo[t].m_ClientID == m_pClient->m_LocalClientID)
+						Local = t;
+					++t;
+				}
+			}
+			// search local player info if not a spectator, nor within top2 scores
+			if(Local == -1 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
+			{
+				for(; i < MAX_CLIENTS && m_pClient->m_Snap.m_aInfoByScore[i].m_pPlayerInfo; ++i)
+				{
+					if(m_pClient->m_aClients[m_pClient->m_Snap.m_aInfoByScore[i].m_ClientID].m_Team != TEAM_SPECTATORS)
+						++aPos[1];
+					if(m_pClient->m_Snap.m_aInfoByScore[i].m_ClientID == m_pClient->m_LocalClientID)
+					{
+						aPlayerInfo[1] = m_pClient->m_Snap.m_aInfoByScore[i];
+						Local = 1;
+						break;
+					}
+				}
+			}
 
-			// float FontSize = (GameFlags&GAMEFLAG_RACE) ? 10.f : 14.f;
-			// float aScoreWidth[2] = {TextRender()->TextWidth(0, FontSize, aScore[0], -1, -1.0f), TextRender()->TextWidth(0, FontSize, aScore[1], -1, -1.0f)};
-			// float ScoreWidthMax = max(max(aScoreWidth[0], aScoreWidth[1]), TextRender()->TextWidth(0, FontSize, "10", -1, -1.0f));
-			// float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
+			float FontSize = (GameFlags&GAMEFLAG_RACE) ? 10.f : 14.f;
+			static CTextCursor s_ScoreCursors[2];
+			static CTextCursor s_PositionCursors[2];
+			char aBuf[32];
+			for(int t = 0; t < 2; ++t)
+			{
+				s_ScoreCursors[t].m_FontSize = FontSize;
+				if(aPlayerInfo[t].m_pPlayerInfo)
+				{
+					if(GameFlags&GAMEFLAG_RACE)
+						FormatTime(aBuf, sizeof(aBuf), aPlayerInfo[t].m_pPlayerInfo->m_Score, m_pClient->RacePrecision());
+					else
+						str_format(aBuf, sizeof(aBuf), "%d", aPlayerInfo[t].m_pPlayerInfo->m_Score);
+					s_ScoreCursors[t].Reset(aPlayerInfo[t].m_pPlayerInfo->m_Score);
+				}
+				else
+				{
+					aBuf[0] = 0;
+					s_ScoreCursors[t].Reset();
+				}
 
-			// if(GameFlags&GAMEFLAG_SURVIVAL)
-			// {
-			// 	// draw number of alive players
-			// 	char aBuf[32];
-			// 	str_format(aBuf, sizeof(aBuf), m_pClient->m_Snap.m_AliveCount[0] == 1 ? Localize("%d player left") : Localize("%d players left"),
-			// 		m_pClient->m_Snap.m_AliveCount[0]);
-			// 	float w = TextRender()->TextWidth(0, 8.0f, aBuf, -1, -1.0f);
-			// 	TextRender()->Text(0, min(Whole - w - 1.0f, Whole - ScoreWidthMax - ImageSize - 2 * Split), StartY - 12.0f, 8.0f, aBuf, -1.0f);
-			// }
+				TextRender()->TextDeferred(&s_ScoreCursors[t], aBuf, -1);
 
-			// for(int t = 0; t < 2; t++)
-			// {
-			// 	// draw box
-			// 	CUIRect Rect = {Whole-ScoreWidthMax-ImageSize-2*Split-PosSize, StartY+t*TeamOffset, ScoreWidthMax+ImageSize+2*Split+PosSize, 18.0f};
-			// 	Graphics()->BlendNormal();
-			// 	RenderTools()->DrawUIRect(&Rect, t == Local ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_L, 5.0f);
+				s_PositionCursors[t].Reset(0);
+				str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);
+				s_PositionCursors[t].m_FontSize = 10.0f;
+				TextRender()->TextDeferred(&s_PositionCursors[t], aBuf, -1);
+			}
 
-			// 	// draw score
-			// 	float Spacing = (GameFlags&GAMEFLAG_RACE) ? 2.f : 0.f;
-			// 	TextRender()->Text(0, Whole-ScoreWidthMax+(ScoreWidthMax-aScoreWidth[t])/2-Split, StartY+t*TeamOffset+Spacing, FontSize, aScore[t], -1.0f);
+			float ScoreWidthMax = max(max(s_ScoreCursors[0].m_Width, s_ScoreCursors[1].m_Width), TextRender()->TextWidth(FontSize, "10", -1));
+			float Split = 3.0f, ImageSize = 16.0f, PosSize = 16.0f;
 
-			// 	if(aPlayerInfo[t].m_pPlayerInfo)
-			// 	{
-			// 		// draw name
-			// 		int ID = aPlayerInfo[t].m_ClientID;
-			// 		char aName[64];
-			// 		str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
-			// 		float w = TextRender()->TextWidth(0, 8.0f, aName, -1, -1.0f) + RenderTools()->GetClientIdRectSize(8.0f);
+			if(GameFlags&GAMEFLAG_SURVIVAL)
+			{
+				// draw number of alive players
+				static CTextCursor s_PlayerCountCursor(8.0f);
+				char aBuf[32];
+				str_format(aBuf, sizeof(aBuf), m_pClient->m_Snap.m_AliveCount[0] == 1 ? Localize("%d player left") : Localize("%d players left"),
+					m_pClient->m_Snap.m_AliveCount[0]);
+				s_PlayerCountCursor.Reset(g_Localization.Version() << 8 | m_pClient->m_Snap.m_AliveCount[0]);
+				TextRender()->TextDeferred(&s_PlayerCountCursor, aBuf, -1);
+				float w = s_PlayerCountCursor.m_Width;
+				s_PlayerCountCursor.MoveTo(min(Whole - w - 1.0f, Whole - ScoreWidthMax - ImageSize - 2 * Split), StartY - 12.0f);
+				TextRender()->DrawTextOutlined(&s_PlayerCountCursor);
+			}
 
-			// 		CTextCursor Cursor;
-			// 		float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize);
-			// 		float y = StartY+(t+1)*TeamOffset-3.0f;
-			// 		TextRender()->SetCursor(&Cursor, x, y, 8.0f, TEXTFLAG_RENDER);
+			for(int t = 0; t < 2; t++)
+			{
+				// draw box
+				CUIRect Rect = {Whole-ScoreWidthMax-ImageSize-2*Split-PosSize, StartY+t*TeamOffset, ScoreWidthMax+ImageSize+2*Split+PosSize, 18.0f};
+				Graphics()->BlendNormal();
+				RenderTools()->DrawUIRect(&Rect, t == Local ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_L, 5.0f);
 
-			// 		RenderTools()->DrawClientID(TextRender(), &Cursor, ID);
-			// 		TextRender()->TextEx(&Cursor, aName, -1);
+				// draw score
+				float Spacing = (GameFlags&GAMEFLAG_RACE) ? 2.f : 0.f;
+				s_ScoreCursors[t].MoveTo(Whole-ScoreWidthMax+(ScoreWidthMax-s_ScoreCursors[t].m_Width)/2-Split, StartY+t*TeamOffset+Spacing);
+				TextRender()->DrawTextOutlined(&s_ScoreCursors[t]);
 
-			// 		// draw tee
-			// 		CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
-			// 		Info.m_Size = 18.0f;
-			// 		RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
-			// 			vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, StartY+1.0f+Info.m_Size/2+t*TeamOffset));
-			// 	}
+				if(aPlayerInfo[t].m_pPlayerInfo)
+				{
+					// draw name
+					static CTextCursor s_NameCursor(8.0f);
+					s_NameCursor.Reset();
 
-			// 	// draw position
-			// 	char aBuf[32];
-			// 	str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);
-			// 	TextRender()->Text(0, Whole-ScoreWidthMax-ImageSize-Split-PosSize, StartY+2.0f+t*TeamOffset, 10.0f, aBuf, -1.0f);
+					int ID = aPlayerInfo[t].m_ClientID;
+					char aName[64];
+					str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
 
-			// 	StartY += 8.0f;
-			// }
+					TextRender()->TextDeferred(&s_NameCursor, aName, -1);
+
+					float w = s_NameCursor.m_Width + RenderTools()->GetClientIdRectSize(8.0f);
+					float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize);
+					float y = StartY+(t+1)*TeamOffset-3.0f;
+					
+					s_NameCursor.MoveTo(x, y);
+					RenderTools()->DrawClientID(TextRender(), &s_NameCursor, ID);
+					TextRender()->DrawTextOutlined(&s_NameCursor);
+
+					// draw tee
+					CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
+					Info.m_Size = 18.0f;
+					RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, EMOTE_NORMAL, vec2(1,0),
+						vec2(Whole-ScoreWidthMax-Info.m_Size/2-Split, StartY+1.0f+Info.m_Size/2+t*TeamOffset));
+				}
+
+				// draw position
+				s_PositionCursors[t].MoveTo(Whole-ScoreWidthMax-ImageSize-Split-PosSize, StartY+2.0f+t*TeamOffset);
+				TextRender()->DrawTextOutlined(&s_PositionCursors[t]);
+
+				StartY += 8.0f;
+			}
 		}
 	}
 }
@@ -516,26 +535,87 @@ void CHud::RenderFps()
 		str_format(aBuf, sizeof(aBuf), "%d", (int)m_AverageFPS);
 
 		s_Cursor.Reset();
-		TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
-		CTextBoundingBox Box = s_Cursor.BoundingBox();
-		RenderTools()->DrawRoundRect((CUIRect *)&Box, vec4(0,0,0,0.5), 1);
-		TextRender()->DrawTextOutlined(&s_Cursor);
+		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 	}
 }
 
 void CHud::RenderConnectionWarning()
 {
-	// TODO: ADDBACK: render connection warning
+	if(Client()->ConnectionProblems())
+	{
+		const char *pText = Localize("Connection Problems...");
+		static CTextCursor s_Cursor(24.0f);
+		s_Cursor.MoveTo(150*Graphics()->ScreenAspect(), 50.0f);
+		s_Cursor.m_Align = TEXTALIGN_TC;
+		s_Cursor.Reset(g_Localization.Version());
+		TextRender()->TextOutlined(&s_Cursor, pText, -1);
+	}
 }
 
 void CHud::RenderTeambalanceWarning()
 {
-	// TODO: ADDBACK: render team balancing warning
+	// render prompt about team-balance
+	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS && Config()->m_ClWarningTeambalance && m_pClient->m_ServerSettings.m_TeamBalance &&
+		absolute(m_pClient->m_GameInfo.m_aTeamSize[TEAM_RED]-m_pClient->m_GameInfo.m_aTeamSize[TEAM_BLUE]) >= NUM_TEAMS)
+	{
+		static CTextCursor s_Cursor(6.0f, 5.0f, 50.0f);
+
+		bool Flash = time_get()/(time_freq()/2)%2 == 0;
+		const char *pText = Localize("Please balance teams!");
+		if(Flash)
+			TextRender()->TextColor(1,1,0.5f,1);
+		else
+			TextRender()->TextColor(0.7f,0.7f,0.2f,1.0f);
+		
+		s_Cursor.Reset(g_Localization.Version() << 1 | (Flash ? 1 : 0));
+		TextRender()->TextOutlined(&s_Cursor, pText, -1);
+		TextRender()->TextColor(1,1,1,1);
+	}
 }
 
 void CHud::RenderVoting()
 {
-	// TODO: ADDBACK: render voting
+	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		return;
+
+	CUIRect Rect = {-10.0f, 58.0f, 119.0f, 46.0f};
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), 5.0f);
+
+	TextRender()->TextColor(1,1,1,1);
+
+	char aBuf[512];
+	int SecondsLeft = m_pClient->m_pVoting->SecondsLeft();
+	str_format(aBuf, sizeof(aBuf), Localize("%ds left"), SecondsLeft);
+	static CTextCursor s_TimerCursor(6.0f, 105.0f, 60.0f);
+	s_TimerCursor.m_Align = TEXTALIGN_RIGHT;
+	s_TimerCursor.Reset(((int64)g_Localization.Version()) << 32 | SecondsLeft);
+	TextRender()->TextOutlined(&s_TimerCursor, aBuf, -1);
+
+	static CTextCursor s_DescriptionCursor(6.0f, 5.0f, 60.0f, TEXTFLAG_ELLIPSIS);
+	s_DescriptionCursor.m_MaxWidth = 100.0f - s_TimerCursor.m_Width;
+	s_DescriptionCursor.m_MaxLines = 3;
+	s_DescriptionCursor.Reset();
+	TextRender()->TextOutlined(&s_DescriptionCursor, m_pClient->m_pVoting->VoteDescription(), -1);
+
+	// reason
+	static CTextCursor s_ReasonCursor(6.0f, 5.0f, 79.0f, TEXTFLAG_ELLIPSIS);
+	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Reason:"), m_pClient->m_pVoting->VoteReason());
+	s_ReasonCursor.m_MaxWidth = 100.0f;
+	s_ReasonCursor.Reset();
+	TextRender()->TextOutlined(&s_ReasonCursor, aBuf, -1);
+
+	CUIRect Base = {5, 88, 100, 4};
+	m_pClient->m_pVoting->RenderBars(Base, false);
+
+	char aBufYes[64], aBufNo[64];
+	m_pClient->m_pBinds->GetKey("vote yes", aBufYes, sizeof(aBufYes));
+	m_pClient->m_pBinds->GetKey("vote no", aBufNo, sizeof(aBufNo));
+	str_format(aBuf, sizeof(aBuf), "%s - %s", aBufYes, Localize("Vote yes"));
+	Base.y += Base.h+1;
+	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_LEFT);
+
+	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), aBufNo);
+	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_RIGHT);
 }
 
 void CHud::RenderCursor()
@@ -753,10 +833,15 @@ void CHud::RenderSpectatorNotification()
 		for(int i = 0; i < MAX_CLIENTS; i++)
 			if(m_pClient->m_aClients[i].m_Active && m_pClient->m_aClients[i].m_Team != TEAM_SPECTATORS)
 				NumPlayers++;
-
+		
 		if(NumPlayers > 0)
 		{
-			// TODO: ADDBACK: draw following notification
+			const char *pText = Localize("Click on a player or a flag to follow it");
+			static CTextCursor s_Cursor(16.0f);
+			s_Cursor.MoveTo(150 * Graphics()->ScreenAspect(), 30);
+			s_Cursor.m_Align = TEXTALIGN_TC;
+			s_Cursor.Reset(g_Localization.Version());
+			TextRender()->TextOutlined(&s_Cursor, pText, -1);
 		}
 	}
 }
@@ -765,7 +850,18 @@ void CHud::RenderReadyUpNotification()
 {
 	if(!(m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_LocalClientID]->m_PlayerFlags&PLAYERFLAG_READY))
 	{
-		// TODO: ADDBACK: draw ready notification
+		static CTextCursor s_Cursor(16.0f);
+
+		char aKey[64], aText[128];
+		int KeyID, Modifier;
+		m_pClient->m_pBinds->GetKeyID("ready_change", KeyID, Modifier);
+		m_pClient->m_pBinds->GetKey("ready_change", aKey, sizeof(aKey), KeyID, Modifier);
+		str_format(aText, sizeof(aText), Localize("When ready, press <%s>"), aKey);
+
+		s_Cursor.Reset(((int64)g_Localization.Version()) << 32 | KeyID);
+		s_Cursor.m_Align = TEXTALIGN_TC;
+		s_Cursor.MoveTo(150 * Graphics()->ScreenAspect(), 30.0f);
+		TextRender()->TextOutlined(&s_Cursor, aText, -1);
 	}
 }
 
@@ -774,12 +870,62 @@ void CHud::RenderRaceTime(const CNetObj_PlayerInfoRace *pRaceInfo)
 	if(!pRaceInfo || pRaceInfo->m_RaceStartTick == -1)
 		return;
 
-	// TODO: ADDBACK: draw race time
+	char aBuf[32];
+
+	FormatTime(aBuf, sizeof(aBuf), 0, min(m_pClient->RacePrecision(), 1));
+	float TimeWidth = TextRender()->TextWidth(12, aBuf, -1);
+
+	int RaceTime = (Client()->GameTick() - pRaceInfo->m_RaceStartTick)*1000/Client()->GameTickSpeed();
+	FormatTime(aBuf, sizeof(aBuf), RaceTime, min(m_pClient->RacePrecision(), 1));
+
+	float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_TIMERCLOCK].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(SPRITE_TIMERCLOCK_A);
+	IGraphics::CQuadItem QuadItem(Half-TimeWidth/2-18.f, 20, 15, 15);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	static CTextCursor s_Cursor(12);
+	s_Cursor.Reset();
+	s_Cursor.MoveTo(Half-TimeWidth/2, 20);
+	TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 }
 
 void CHud::RenderCheckpoint()
 {
-	// TODO: ADDBACK: draw checkpoint
+	int64 TimeSinceCheckpoint = time_get() - m_CheckpointTime;
+	if(m_CheckpointTime != 0 && TimeSinceCheckpoint < time_freq() * 4)
+	{
+		char aBuf[64];
+		FormatTimeDiff(aBuf, sizeof(aBuf), m_CheckpointDiff, 2);
+
+		// calculate alpha (2 sec 1 than get lower the next 2 sec)
+		float a = 1.0f;
+		if(TimeSinceCheckpoint > time_freq() * 2)
+		{
+			// lower the alpha slowly to blend text out
+			a = (time_freq() * 4 - TimeSinceCheckpoint) / (float)(time_freq() * 2);
+		}
+
+		if(m_CheckpointDiff > 0)
+			TextRender()->TextColor(1.0f,0.5f,0.5f,a); // red
+		else if(m_CheckpointDiff < 0)
+			TextRender()->TextColor(0.5f,1.0f,0.5f,a); // green
+		else if(!m_CheckpointDiff)
+			TextRender()->TextColor(1,1,1,a); // white
+
+		float Half = 300.0f*Graphics()->ScreenAspect()/2.0f;
+		
+		static CTextCursor s_Cursor(10);
+		s_Cursor.m_Align = TEXTALIGN_TC;
+		s_Cursor.Reset();
+		s_Cursor.MoveTo(Half, 33);
+		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+
+		TextRender()->TextColor(1,1,1,1);
+	}
 }
 
 void CHud::OnMessage(int MsgType, void *pRawMsg)
