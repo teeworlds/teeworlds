@@ -552,7 +552,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			for(int c = 0; c < NumCols; c++)
 			{
 				CUIRect Button;
-				Button.x = ms_aDemoCols[c].m_Rect.x + FileIcon.w + 10.0f;
+				Button.x = ms_aDemoCols[c].m_Rect.x;
 				Button.y = FileIcon.y;
 				Button.h = ms_aDemoCols[c].m_Rect.h;
 				Button.w = ms_aDemoCols[c].m_Rect.w;
@@ -566,6 +566,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				}
 				if(ID == COL_DEMO_NAME)
 				{
+					Button.x += FileIcon.w + 10.0f;
 					UI()->DoLabel(&Button, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 				}
 				else if(ID == COL_DEMO_LENGTH && !r.front().m_IsDir && r.front().m_InfosLoaded)
