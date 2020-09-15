@@ -854,6 +854,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	Size = PixelSize / ScreenScale.y;
 	int FontSizeIndex = m_pGlyphMap->GetFontSizeIndex(PixelSize);
 	CGlyph *pSpace = m_pGlyphMap->GetGlyph(' ', FontSizeIndex, false);
+	pCursor->m_Height = max(pCursor->m_Advance.y + (pSpace->m_BearingY + pSpace->m_Height) * Size, pCursor->m_Height);
 
 	// Cursor current states
 	int Flags = pCursor->m_Flags;

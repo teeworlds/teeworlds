@@ -301,7 +301,14 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			Label.y += 2.0f;
 			if(Config()->m_ClShowUserId)
 			{
-				// TODO: ADDBACK: draw client id
+				static CTextCursor s_Cursor;
+				s_Cursor.m_Flags = TEXTFLAG_NO_RENDER;
+				s_Cursor.m_FontSize = ButtonHeight*ms_FontmodHeight*0.8f;
+				s_Cursor.MoveTo(Label.x, Label.y);
+				s_Cursor.Reset(s_Cursor.m_FontSize);
+				TextRender()->TextDeferred(&s_Cursor, " ", -1);
+				RenderTools()->DrawClientID(TextRender(), &s_Cursor, i);
+				Label.VSplitLeft(ButtonHeight, 0, &Label);
 			}
 			char aBuf[64];
 			str_format(aBuf, sizeof(aBuf), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
@@ -590,7 +597,14 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 			{
 				Row.VSplitLeft(Row.h, &Label, &Row);
 				Label.y += 2.0f;
-				// TODO: ADDBACK: draw user id
+
+				static CTextCursor s_Cursor;
+				s_Cursor.m_Flags = TEXTFLAG_NO_RENDER;
+				s_Cursor.m_FontSize = Label.h*ms_FontmodHeight*0.8f;
+				s_Cursor.MoveTo(Label.x, Label.y);
+				s_Cursor.Reset(s_Cursor.m_FontSize);
+				TextRender()->TextDeferred(&s_Cursor, " ", -1);
+				RenderTools()->DrawClientID(TextRender(), &s_Cursor, aPlayerIDs[i]);
 			}
 
 			Row.VSplitLeft(Spacing, 0, &Row);
@@ -766,7 +780,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			if(s_ControlPage == 0)
 			{
 				const char *pSearchLabel = Localize("Search:");
-				// TODO: ADDBACK: render search label
+				w = TextRender()->TextWidth(Search.h*ms_FontmodHeight*0.8f, pSearchLabel, -1);
+				Search.VSplitLeft(w + 10.0f, &Label, &Search);
+				Label.y += 2.0f;
+				UI()->DoLabel(&Label, pSearchLabel, Search.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 				static float s_SearchOffset = 0.0f;
 				if(DoEditBox(&m_aFilterString, &Search, m_aFilterString, sizeof(m_aFilterString), Search.h*ms_FontmodHeight*0.8f, &s_SearchOffset))
 					m_CallvoteSelectedOption = 0;
@@ -779,7 +796,10 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			Bottom.VSplitRight(160.0f, &Bottom, &Reason);
 			Reason.VSplitRight(Reason.h, &Reason, &ClearButton);
 			const char *pReasonLabel = Localize("Reason:");
-			// TODO: ADDBACK: render reason label
+			w = TextRender()->TextWidth(Reason.h*ms_FontmodHeight*0.8f, pReasonLabel, -1);
+			Reason.VSplitLeft(w + 10.0f, &Label, &Reason);
+			Label.y += 2.0f;
+			UI()->DoLabel(&Label, pReasonLabel, Reason.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 			static float s_ReasonOffset = 0.0f;
 			DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), Reason.h*ms_FontmodHeight*0.8f, &s_ReasonOffset, false, CUI::CORNER_L);
 

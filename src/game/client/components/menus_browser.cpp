@@ -563,7 +563,23 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				}
 
 			}
-			// TODO: ADDBACK: render player count
+			static float RenderOffset = 0.0f;
+			if(RenderOffset == 0.0f)
+				RenderOffset = TextRender()->TextWidth(FontSize, "0", -1);
+
+			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
+			if(Config()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
+				TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
+			Button.y += 2.0f;
+
+			if(Num < 100)
+				Button.x += RenderOffset;
+			if(Num < 10)
+				Button.x += RenderOffset;
+			if(!Num)
+				TextRender()->TextColor(CUI::ms_TransparentTextColor);
+			UI()->DoLabel(&Button, aTemp, FontSize, CUI::ALIGN_LEFT);
+			Button.x += TextRender()->TextWidth(FontSize, aTemp, -1);
 		}
 		else if(ID == COL_BROWSER_PING)
 		{
@@ -867,7 +883,13 @@ void CMenus::RenderServerbrowserOverlay()
 				// score
 				if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
 				{
-					// TODO: ADDBACK: draw score
+					char aTemp[16];
+					static CTextCursor s_Cursor(FontSize);
+					FormatScore(aTemp, sizeof(aTemp), pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE, &pInfo->m_aClients[i]);
+					s_Cursor.MoveTo(Score.x, Score.y+(Score.h-FontSize)/4.0f);
+					s_Cursor.Reset();
+					s_Cursor.m_MaxWidth = Score.w;
+					TextRender()->TextOutlined(&s_Cursor, aTemp, -1);
 				}
 
 				// name
@@ -1353,8 +1375,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	{
 		// todo: move this to a helper function
 		static float RenderOffset = 0.0f;
-
-		// TODO: ADDBACK: better way to get offset
+		if(RenderOffset == 0.0f)
+			RenderOffset = TextRender()->TextWidth(FontSize, "0", -1);
 
 		float OffsetServer = 0.0f, OffsetPlayer = 0.0f;
 		int Num = ServerBrowser()->NumServers();
@@ -1795,7 +1817,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		{
 			if(!FilterInfo.m_aGametype[i][0])
 				break;
-			Length += 0 + IconWidth + 2*Spacing; // TODO: ADDBACK: TextWidth
+			Length += TextRender()->TextWidth(FontSize, FilterInfo.m_aGametype[i], -1) + IconWidth + 2*Spacing;
 		}
 		static float s_ScrollValue = 0.0f;
 		const bool NeedScrollbar = (Button.w - Length) < 0.0f;
@@ -1804,7 +1826,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		{
 			if(!FilterInfo.m_aGametype[i][0])
 				break;
-			const float ItemLength = 0 + IconWidth + Spacing; // TODO: ADDBACK: TextWidth
+			const float ItemLength = TextRender()->TextWidth(FontSize, FilterInfo.m_aGametype[i], -1) + IconWidth + Spacing;
 			CUIRect FilterItem;
 			Button.VSplitLeft(ItemLength, &FilterItem, &Button);
 			RenderTools()->DrawUIRect(&FilterItem, FilterInfo.m_aGametypeExclusive[i] ? vec4(0.75f, 0.25f, 0.25f, 0.25f) : vec4(0.25f, 0.75f, 0.25f, 0.25f), CUI::CORNER_ALL, 3.0f);
