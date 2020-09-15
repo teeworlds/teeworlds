@@ -2257,7 +2257,7 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 	MainView.HSplitTop(25.0f, &MainView, 0);
 	MainView.VSplitLeft(ButtonWidth, &Button, &MainView);
 	static CButtonContainer s_RefreshButton;
-	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (Input()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
+	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (UI()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
 	{
 		if(m_MenuPage == PAGE_INTERNET)
 			ServerBrowser()->Refresh(IServerBrowser::REFRESHFLAG_INTERNET);

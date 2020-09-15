@@ -53,7 +53,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 	CUIRect SeekBar, ButtonBar, NameBar;
 
-	const bool CtrlDown = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
+	const bool CtrlDown = UI()->KeyIsPressed(KEY_LCTRL) || UI()->KeyIsPressed(KEY_RCTRL);
 	static bool s_LastCtrlDown = CtrlDown;
 
 	int CurrentTick = pInfo->m_CurrentTick - pInfo->m_FirstTick;
@@ -167,11 +167,11 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		PositionToSeek = 0.0f;
 	}
 
-	bool IncreaseDemoSpeed = Input()->KeyPress(KEY_MOUSE_WHEEL_UP) || Input()->KeyPress(KEY_PLUS) || Input()->KeyPress(KEY_KP_PLUS);
-	bool DecreaseDemoSpeed = Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN) || Input()->KeyPress(KEY_MINUS) || Input()->KeyPress(KEY_KP_MINUS);
+	bool IncreaseDemoSpeed = UI()->KeyPress(KEY_MOUSE_WHEEL_UP) || UI()->KeyPress(KEY_PLUS) || UI()->KeyPress(KEY_KP_PLUS);
+	bool DecreaseDemoSpeed = UI()->KeyPress(KEY_MOUSE_WHEEL_DOWN) || UI()->KeyPress(KEY_MINUS) || UI()->KeyPress(KEY_KP_MINUS);
 
 	// add spacebar for toggling Play/Pause
-	if(Input()->KeyPress(KEY_SPACE))
+	if(UI()->KeyPress(KEY_SPACE))
 	{
 		if(!pInfo->m_Paused)
 			DemoPlayer()->Pause();
@@ -181,8 +181,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 	// skip forward/backward using left/right arrow keys
 	const bool ShiftDown = Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_RSHIFT);
-	const bool SkipBackwards = Input()->KeyPress(KEY_LEFT);
-	const bool SkipForwards = Input()->KeyPress(KEY_RIGHT);
+	const bool SkipBackwards = UI()->KeyPress(KEY_LEFT);
+	const bool SkipForwards = UI()->KeyPress(KEY_RIGHT);
 	if(SkipBackwards || SkipForwards)
 	{
 		int DesiredTick = 0;
@@ -656,7 +656,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 	BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 	static CButtonContainer s_RefreshButton;
-	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (Input()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
+	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (UI()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
 	{
 		DemolistPopulate();
 		DemolistOnUpdate(false);
