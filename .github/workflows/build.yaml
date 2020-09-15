@@ -148,4 +148,4 @@ jobs:
     - name: Create MacOS app using make_release.py
       if: contains(matrix.os, 'macOS')
       run: |
-        sudo python3 scripts/make_release.py 0.7.4 osx
+        sudo python3 scripts/make_release.py master osx
