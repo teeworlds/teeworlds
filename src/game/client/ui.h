@@ -134,7 +134,7 @@ public:
 	const CUIRect *ClipArea() const;
 	inline bool IsClipped() const { return m_NumClips > 0; };
 
-	bool DoButtonLogic(const void *pID, const CUIRect *pRect);
+	bool DoButtonLogic(const void *pID, const CUIRect *pRect, int Button = 0);
 	bool DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
 
 	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
