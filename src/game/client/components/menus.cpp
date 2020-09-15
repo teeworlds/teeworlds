@@ -2240,7 +2240,9 @@ void CMenus::OnRender()
 
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%p %p %p", UI()->HotItem(), UI()->GetActiveItem(), UI()->LastActiveItem());
-		// TODO: ADDBACK: draw debug info
+		static CTextCursor s_Cursor(10, 10, 10);
+		s_Cursor.Reset();
+		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 	}
 
 	UI()->FinishCheck();
