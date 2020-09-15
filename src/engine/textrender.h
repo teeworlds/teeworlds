@@ -172,6 +172,8 @@ public:
 		Box.y += m_CursorPos.y;
 		return Box;
 	}
+
+	bool Rendered() { return m_Glyphs.size() > 0; }
 };
 
 class ITextRender : public IInterface

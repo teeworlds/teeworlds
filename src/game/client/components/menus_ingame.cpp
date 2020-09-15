@@ -301,13 +301,7 @@ void CMenus::RenderPlayers(CUIRect MainView)
 			Label.y += 2.0f;
 			if(Config()->m_ClShowUserId)
 			{
-				static CTextCursor s_Cursor;
-				s_Cursor.m_Flags = TEXTFLAG_NO_RENDER;
-				s_Cursor.m_FontSize = ButtonHeight*ms_FontmodHeight*0.8f;
-				s_Cursor.MoveTo(Label.x, Label.y);
-				s_Cursor.Reset(s_Cursor.m_FontSize);
-				TextRender()->TextDeferred(&s_Cursor, " ", -1);
-				RenderTools()->DrawClientID(TextRender(), &s_Cursor, i);
+				RenderTools()->DrawClientID(TextRender(), ButtonHeight*ms_FontmodHeight*0.8f, vec2(Label.x, Label.y), i);
 				Label.VSplitLeft(ButtonHeight, 0, &Label);
 			}
 			char aBuf[64];
@@ -597,14 +591,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 			{
 				Row.VSplitLeft(Row.h, &Label, &Row);
 				Label.y += 2.0f;
-
-				static CTextCursor s_Cursor;
-				s_Cursor.m_Flags = TEXTFLAG_NO_RENDER;
-				s_Cursor.m_FontSize = Label.h*ms_FontmodHeight*0.8f;
-				s_Cursor.MoveTo(Label.x, Label.y);
-				s_Cursor.Reset(s_Cursor.m_FontSize);
-				TextRender()->TextDeferred(&s_Cursor, " ", -1);
-				RenderTools()->DrawClientID(TextRender(), &s_Cursor, aPlayerIDs[i]);
+				RenderTools()->DrawClientID(TextRender(), Label.h*ms_FontmodHeight*0.8f, vec2(Label.x, Label.y), aPlayerIDs[i]);
 			}
 
 			Row.VSplitLeft(Spacing, 0, &Row);

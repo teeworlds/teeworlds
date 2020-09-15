@@ -31,6 +31,11 @@ void CInfoMessages::AddInfoMsg(int Type, CInfoMsg NewMsg)
 
 void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 {
+	// hint TextRender to render text, deferred, with correct fontsize
+	float Width = 400*3.0f*Graphics()->ScreenAspect();
+	float Height = 400*3.0f;
+	Graphics()->MapScreen(0, 0, Width*1.5f, Height*1.5f);
+
 	bool Race = m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE;
 
 	if(MsgType == NETMSGTYPE_SV_KILLMSG)
@@ -207,8 +212,8 @@ void CInfoMessages::RenderKillMsg(CInfoMsg *pInfoMsg, float x, float y) const
 
 	// render victim name
 	x -= VictimNameW;
-	pInfoMsg->m_Player1NameCursor.MoveTo(x, y);
-	RenderTools()->DrawClientID(TextRender(), &pInfoMsg->m_Player1NameCursor, pInfoMsg->m_Player1ID);
+	float AdvanceID = RenderTools()->DrawClientID(TextRender(), pInfoMsg->m_Player1NameCursor.m_FontSize, vec2(x, y), pInfoMsg->m_Player1ID);
+	pInfoMsg->m_Player1NameCursor.MoveTo(x + AdvanceID, y);
 	TextRender()->DrawTextOutlined(&pInfoMsg->m_Player1NameCursor);
 
 	// render victim tee
@@ -280,8 +285,8 @@ void CInfoMessages::RenderKillMsg(CInfoMsg *pInfoMsg, float x, float y) const
 		{
 			// render killer name
 			x -= KillerNameW;
-			pInfoMsg->m_Player2NameCursor.MoveTo(x, y);
-			RenderTools()->DrawClientID(TextRender(), &pInfoMsg->m_Player2NameCursor, pInfoMsg->m_Player2ID);
+			float AdvanceID = RenderTools()->DrawClientID(TextRender(), pInfoMsg->m_Player2NameCursor.m_FontSize, vec2(x, y), pInfoMsg->m_Player2ID);
+			pInfoMsg->m_Player2NameCursor.MoveTo(x + AdvanceID, y);
 			TextRender()->DrawTextOutlined(&pInfoMsg->m_Player2NameCursor);
 		}
 	}
@@ -324,8 +329,8 @@ void CInfoMessages::RenderFinishMsg(CInfoMsg *pInfoMsg, float x, float y) const
 	// render player name
 	x -= PlayerNameW;
 
-	pInfoMsg->m_Player1NameCursor.MoveTo(x, y);
-	RenderTools()->DrawClientID(TextRender(), &pInfoMsg->m_Player1NameCursor, pInfoMsg->m_Player1ID);
+	float AdvanceID = RenderTools()->DrawClientID(TextRender(), pInfoMsg->m_Player1NameCursor.m_FontSize, vec2(x, y), pInfoMsg->m_Player1ID);
+	pInfoMsg->m_Player1NameCursor.MoveTo(x + AdvanceID, y);
 	TextRender()->DrawTextOutlined(&pInfoMsg->m_Player1NameCursor);
 
 	x -= 28.0f;

@@ -630,37 +630,38 @@ void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup 
 	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 }
 
-void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
-								const vec4& BgColor, const vec4& TextColor)
+float CRenderTools::DrawClientID(ITextRender* pTextRender, float FontSize, vec2 CursorPosition, int ID,
+							const vec4& BgColor, const vec4& TextColor)
 {
-	if(!m_pConfig->m_ClShowUserId) return;
+	if(!m_pConfig->m_ClShowUserId) return 0;
 
 	char aBuf[4];
 	str_format(aBuf, sizeof(aBuf), "%d", ID);
-
-	const float LinebaseY = pCursor->BoundingBox().Bottom();
-	float FontSize = pCursor->m_FontSize;
-	const float Width = 1.4f * FontSize;
-
-	CUIRect Rect;
-	Rect.x = pCursor->m_CursorPos.x;
-	Rect.y = LinebaseY - FontSize + 0.025f * FontSize;
-	Rect.w = Width;
-	Rect.h = FontSize;
-	DrawRoundRect(&Rect, BgColor, 0.25f * FontSize);
 
 	static CTextCursor s_Cursor;
 	s_Cursor.Reset();
 	s_Cursor.m_FontSize = FontSize;
 	s_Cursor.m_Align = TEXTALIGN_CENTER;
-	s_Cursor.MoveTo(Rect.x + Rect.w / 2.0f, pCursor->m_CursorPos.y);
 
-	vec4 OldColor= pTextRender->GetColor();
+	vec4 OldColor = pTextRender->GetColor();
 	pTextRender->TextColor(TextColor);
-	pTextRender->TextPlain(&s_Cursor, aBuf, -1);
+	pTextRender->TextDeferred(&s_Cursor, aBuf, -1);
 	pTextRender->TextColor(OldColor);
 
-	pCursor->MoveTo(pCursor->m_CursorPos.x + Rect.w + 0.2f * FontSize, pCursor->m_CursorPos.y);
+	const float LinebaseY = CursorPosition.y + s_Cursor.m_Height;
+	const float Width = 1.4f * FontSize;
+
+	CUIRect Rect;
+	Rect.x = CursorPosition.x;
+	Rect.y = LinebaseY - FontSize + 0.025f * FontSize;
+	Rect.w = Width;
+	Rect.h = FontSize;
+	DrawRoundRect(&Rect, BgColor, 0.25f * FontSize);
+
+	s_Cursor.MoveTo(Rect.x + Rect.w / 2.0f, CursorPosition.y);
+	pTextRender->DrawTextPlain(&s_Cursor);
+
+	return Width + 0.2f * FontSize;
 }
 
 float CRenderTools::GetClientIdRectSize(float FontSize)

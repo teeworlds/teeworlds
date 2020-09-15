@@ -501,7 +501,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	int NextChr = str_utf8_decode(&pCur);
 	CGlyph *pNextGlyph = NULL;
 	if(NextChr > 0)
-		if (NextChr == '\n' || NextChr == '\t')
+		if(NextChr == '\n' || NextChr == '\t')
 			pNextGlyph = m_pGlyphMap->GetGlyph(' ', FontSizeIndex, Render);
 		else
 			pNextGlyph = m_pGlyphMap->GetGlyph(NextChr, FontSizeIndex, Render);
@@ -545,7 +545,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		NextChr = str_utf8_decode(&pCur);
 		pNextGlyph = NULL;
 		if(NextChr)
-			if (NextChr == '\n' || NextChr == '\t')
+			if(NextChr == '\n' || NextChr == '\t')
 				pNextGlyph = m_pGlyphMap->GetGlyph(' ', FontSizeIndex, Render);
 			else
 				pNextGlyph = m_pGlyphMap->GetGlyph(NextChr, FontSizeIndex, Render);
@@ -578,7 +578,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		Hint.m_GlyphCount++;
 		pCursor->m_GlyphCount++;
 
-		if (IsSpace)
+		if(IsSpace)
 		{
 			Hint.m_EndOfWord = true;
 			Hint.m_EndsWithNewline = Chr == '\n';
@@ -586,6 +586,8 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		}
 
 		Hint.m_EffectiveAdvanceX = pCursor->m_Advance.x;
+
+		// break every char on non latin/greek characters
 		if(!isWestern(Chr))
 		{
 			Hint.m_EndOfWord = true;
@@ -893,7 +895,6 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 					pCursor->m_Glyphs.remove_index(NumGlyphs-1);
 				pCursor->m_GlyphCount--;
 				pCursor->m_Advance.x = WordStartAdvanceX;
-				WordWidth.m_EffectiveAdvanceX = 0;
 			}
 			else
 			{
@@ -921,10 +922,11 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 						pCursor->m_Glyphs[i].m_Line = pCursor->m_LineCount - 1;
 					}
 				}
-				WordWidth.m_EffectiveAdvanceX -= WordStartAdvanceX;
 				pCursor->m_StartOfLine = false;
 			}
 		}
+
+		pCursor->m_Width = max(pCursor->m_Advance.x, pCursor->m_Width);
 
 		bool ForceNewLine = WordWidth.m_EndsWithNewline && (Flags & TEXTFLAG_ALLOW_NEWLINE);
 		if(ForceNewLine || WordWidth.m_IsBroken)
@@ -934,8 +936,6 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 			pCursor->m_Advance.x = 0;
 			pCursor->m_StartOfLine = true;
 		}
-
-		pCursor->m_Width = max(WordWidth.m_EffectiveAdvanceX, pCursor->m_Width);
 
 		WordStartAdvanceX = pCursor->m_Advance.x;
 

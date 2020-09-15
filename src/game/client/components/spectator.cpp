@@ -318,9 +318,10 @@ void CSpectator::OnRender()
 		static CTextCursor s_PlayerNameCursor;
 		s_PlayerNameCursor.m_FontSize = FontSize;
 		s_PlayerNameCursor.Reset();
-
-		s_PlayerNameCursor.MoveTo(Width/2.0f+x+50.0f, Height/2.0f+y+5.0f);
-		RenderTools()->DrawClientID(TextRender(), &s_PlayerNameCursor, i);
+		
+		vec2 CursorPosition = vec2(Width/2.0f+x+50.0f, Height/2.0f+y+5.0f);
+		CursorPosition.x += RenderTools()->DrawClientID(TextRender(), s_PlayerNameCursor.m_FontSize, CursorPosition, i);
+		s_PlayerNameCursor.MoveTo(CursorPosition.x, CursorPosition.y);
 		TextRender()->TextOutlined(&s_PlayerNameCursor, aBuf, -1);
 
 		// flag

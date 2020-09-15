@@ -297,15 +297,13 @@ void CHud::RenderScoreHud()
 						char aName[64];
 						str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
 
-						TextRender()->TextDeferred(&s_CarrierCursor, aName, -1);
-
 						float w = s_CarrierCursor.m_Width + RenderTools()->GetClientIdRectSize(8.0f);
 						float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split);
 						float y = StartY+(t+1)*TeamOffset-3.0f;
 						
-						s_CarrierCursor.MoveTo(x, y);
-						RenderTools()->DrawClientID(TextRender(), &s_CarrierCursor, ID);
-						TextRender()->DrawTextOutlined(&s_CarrierCursor);
+						float AdvanceID = RenderTools()->DrawClientID(TextRender(), s_CarrierCursor.m_FontSize, vec2(x, y), ID);
+						s_CarrierCursor.MoveTo(x + AdvanceID, y);
+						TextRender()->TextOutlined(&s_CarrierCursor, aName, -1);
 
 						// draw tee of the flag holder
 						CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
@@ -417,15 +415,14 @@ void CHud::RenderScoreHud()
 					char aName[64];
 					str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[ID].m_aName : "");
 
-					TextRender()->TextDeferred(&s_NameCursor, aName, -1);
 
 					float w = s_NameCursor.m_Width + RenderTools()->GetClientIdRectSize(8.0f);
 					float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize);
 					float y = StartY+(t+1)*TeamOffset-3.0f;
-					
-					s_NameCursor.MoveTo(x, y);
-					RenderTools()->DrawClientID(TextRender(), &s_NameCursor, ID);
-					TextRender()->DrawTextOutlined(&s_NameCursor);
+
+					float AdvanceID = RenderTools()->DrawClientID(TextRender(), s_NameCursor.m_FontSize, vec2(x, y), ID);
+					s_NameCursor.MoveTo(x + AdvanceID, y);
+					TextRender()->TextOutlined(&s_NameCursor, aName, -1);
 
 					// draw tee
 					CTeeRenderInfo Info = m_pClient->m_aClients[ID].m_RenderInfo;
@@ -794,7 +791,6 @@ void CHud::RenderSpectatorHud()
 	TextRender()->TextOutlined(&s_SpectateLabelCursor, aBuf, -1);
 
 	static CTextCursor s_SpectateTargetCursor(8.0f);
-	s_SpectateTargetCursor.MoveTo(s_SpectateLabelCursor.BoundingBox().Right()+3.0f, m_Height-13.0f);
 	s_SpectateTargetCursor.Reset();
 
 	switch(SpecMode)
@@ -817,9 +813,12 @@ void CHud::RenderSpectatorHud()
 		break;
 	}
 
+	float AdvanceID = 0;
+	vec2 NamePosition = vec2(s_SpectateLabelCursor.BoundingBox().Right()+3.0f, m_Height-13.0f);
 	if(SpecMode == SPEC_PLAYER || SpecID != -1)
-		RenderTools()->DrawClientID(TextRender(), &s_SpectateTargetCursor, SpecID);
+		NamePosition.x += RenderTools()->DrawClientID(TextRender(), s_SpectateTargetCursor.m_FontSize, NamePosition, SpecID);
 
+	s_SpectateTargetCursor.MoveTo(NamePosition.x, NamePosition.y);
 	TextRender()->TextOutlined(&s_SpectateTargetCursor, aBuf, -1);
 }
 

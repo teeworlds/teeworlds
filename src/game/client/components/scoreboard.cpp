@@ -68,14 +68,135 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
 
 	// render goals
+	static CTextCursor s_Cursor(12.0f);
 	y += 2.0f;
-	// TODO: ADDBACK: draw goals
+	if(m_pClient->m_GameInfo.m_ScoreLimit)
+	{
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Score limit"), m_pClient->m_GameInfo.m_ScoreLimit);
+		s_Cursor.Reset();
+		s_Cursor.MoveTo(x+10.0f, y);
+		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+	}
+	if(m_pClient->m_GameInfo.m_TimeLimit)
+	{
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), m_pClient->m_GameInfo.m_TimeLimit);
+		s_Cursor.Reset();
+		TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
+		float tw = s_Cursor.m_Width;
+		s_Cursor.MoveTo(x+w/2-tw/2, y);
+		TextRender()->DrawTextOutlined(&s_Cursor);
+	}
+	if(m_pClient->m_GameInfo.m_MatchNum && m_pClient->m_GameInfo.m_MatchCurrent)
+	{
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Match", "rounds (scoreboard)"), m_pClient->m_GameInfo.m_MatchCurrent, m_pClient->m_GameInfo.m_MatchNum);
+		s_Cursor.Reset();
+		TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
+		float tw = s_Cursor.m_Width;
+		s_Cursor.MoveTo(x+w-tw-10.0f, y);
+		TextRender()->DrawTextOutlined(&s_Cursor);
+	}
 }
 
 float CScoreboard::RenderSpectators(float x, float y, float w)
 {
-	// TODO: ADDBACK: draw spectators
-	return 20;
+	float h = 20.0f;
+
+	int NumSpectators = 0;
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		if(m_pClient->m_aClients[i].m_Active && m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+			NumSpectators++;
+
+	char aBuf[64];
+	char SpectatorBuf[64];
+	str_format(SpectatorBuf, sizeof(SpectatorBuf), "%s (%d):", Localize("Spectators"), NumSpectators);
+	static CTextCursor s_LabelCursor(12.0f);
+	s_LabelCursor.Reset(g_Localization.Version() << 8 | NumSpectators);
+	TextRender()->TextDeferred(&s_LabelCursor, SpectatorBuf, -1);
+	float tw = s_LabelCursor.m_Width;
+
+	float TextStartX = x+10.0f;
+	float TextStartY = y+30.0f;
+	float FontSize = 12.0f;
+	float ClientIDWidth = RenderTools()->GetClientIdRectSize(FontSize);
+
+	// render all the text without drawing
+	static CTextCursor s_SpectatorCursors[MAX_CLIENTS];
+	int MaxLines = 4;
+	int Lines = 1;
+	CTextCursor *pLastCursor = NULL;
+	vec2 CursorPosition = vec2(TextStartX + tw + 3.0f, TextStartY);
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		s_SpectatorCursors[i].Reset();
+		s_SpectatorCursors[i].m_FontSize = FontSize;
+
+		const CNetObj_PlayerInfo *pInfo = m_pClient->m_Snap.m_paPlayerInfos[0];
+		if(!pInfo || m_pClient->m_aClients[i].m_Team != TEAM_SPECTATORS || Lines > MaxLines)
+			continue;
+
+		if(pLastCursor)
+		{
+			TextRender()->TextDeferred(pLastCursor, ", ", -1);
+			CursorPosition.x = pLastCursor->BoundingBox().Right();
+		}
+
+		CursorPosition.x += ClientIDWidth;
+
+		if(m_pClient->m_aClients[i].m_aClan[0])
+		{
+			str_format(aBuf, sizeof(aBuf), "%s ", m_pClient->m_aClients[i].m_aClan);
+			TextRender()->TextColor(1.0f, 1.0f, (pInfo->m_PlayerFlags&PLAYERFLAG_WATCHING) ? 0.0f : 1.0f, 0.7f);
+			TextRender()->TextDeferred(&s_SpectatorCursors[i], aBuf, -1);
+		}
+
+		TextRender()->TextColor(1.0f, 1.0f, (pInfo->m_PlayerFlags&PLAYERFLAG_WATCHING) ? 0.0f :	 1.0f, 1.0f);
+		TextRender()->TextDeferred(&s_SpectatorCursors[i], m_pClient->m_aClients[i].m_aName, -1);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+		if (CursorPosition.x + s_SpectatorCursors[i].m_Width > x + w - 15.0f)
+		{
+			CursorPosition.x = TextStartX + ClientIDWidth;
+			CursorPosition.y += FontSize + 3.0f;
+			Lines += 1;
+
+			if(Lines > MaxLines) 
+			{
+				s_SpectatorCursors[i].Reset();
+
+				TextRender()->TextDeferred(pLastCursor, "...", -1);
+				continue;
+			}
+		}
+
+		s_SpectatorCursors[i].MoveTo(CursorPosition.x, CursorPosition.y);
+		pLastCursor = &s_SpectatorCursors[i];
+	}
+
+	// background
+	float RectHeight = 3*h+((min(Lines, MaxLines)-1) * (FontSize + 3.0f));
+	Graphics()->BlendNormal();
+	CUIRect Rect = {x, y, w, RectHeight};
+	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+
+	// headline
+	s_LabelCursor.MoveTo(TextStartX, TextStartY);
+	TextRender()->DrawTextOutlined(&s_LabelCursor);
+	
+	// draw text
+	for(int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if(s_SpectatorCursors[i].Rendered())
+		{
+			vec2 ClientIDPos = vec2(s_SpectatorCursors[i].m_CursorPos.x - ClientIDWidth, s_SpectatorCursors[i].m_CursorPos.y);
+			RenderTools()->DrawClientID(TextRender(), FontSize,  ClientIDPos, i);
+			TextRender()->DrawTextOutlined(&s_SpectatorCursors[i]);
+		}
+	}
+
+	return RectHeight;
 }
 
 float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const char *pTitle, int Align)
