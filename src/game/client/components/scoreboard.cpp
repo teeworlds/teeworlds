@@ -156,7 +156,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 		TextRender()->TextDeferred(&s_SpectatorCursors[i], m_pClient->m_aClients[i].m_aName, -1);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-		if (CursorPosition.x + s_SpectatorCursors[i].m_Width > x + w - 15.0f)
+		if(CursorPosition.x + s_SpectatorCursors[i].m_Width > x + w - 15.0f)
 		{
 			CursorPosition.x = TextStartX + ClientIDWidth;
 			CursorPosition.y += FontSize + 3.0f;
@@ -226,7 +226,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	float KillOffset = ClanOffset+ClanLength, KillLength = Race ? 0.0f : 24.0f;
 	float DeathOffset = KillOffset+KillLength, DeathLength = Race ? 0.0f : 24.0f;
 	float ScoreOffset = DeathOffset+DeathLength, ScoreLength = Race ? 83.0f : 35.0f;
-	float tw = 0.0f;
 
 	bool NoTitle = pTitle? false : true;
 
@@ -312,7 +311,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	// score record text
 	const float ScoreAnchorX = Align == -1 ? (x+w-20.0f) : (x+20.0f);
-	s_Cursor.m_Align = Align = -1 ? TEXTALIGN_RIGHT : TEXTALIGN_LEFT;
+	s_Cursor.m_Align = Align == -1 ? TEXTALIGN_RIGHT : TEXTALIGN_LEFT;
 	s_Cursor.Reset();
 
 	if(Race)
@@ -384,23 +383,23 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	s_Cursor.Reset();
 	s_Cursor.MoveTo(NameOffset+TeeLength, y+Spacing);
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-	TextRender()->TextOutlined(&s_Cursor, Localize("Name"), -1.0f);
+	TextRender()->TextOutlined(&s_Cursor, Localize("Name"), -1);
 
 	s_Cursor.m_Align = TEXTALIGN_CENTER;
 	s_Cursor.Reset();
 	s_Cursor.MoveTo(ClanOffset+ClanLength/2, y+Spacing);
-	TextRender()->TextOutlined(&s_Cursor, Localize("Clan"), -1.0f);
+	TextRender()->TextOutlined(&s_Cursor, Localize("Clan"), -1);
 
 	if(!Race)
 	{
 		TextRender()->TextColor(CUI::ms_TransparentTextColor);
 		s_Cursor.Reset();
 		s_Cursor.MoveTo(KillOffset+KillLength/2, y+Spacing);
-		TextRender()->TextOutlined(&s_Cursor, "K", -1.0f);
+		TextRender()->TextOutlined(&s_Cursor, "K", -1);
 
 		s_Cursor.Reset();
 		s_Cursor.MoveTo(DeathOffset+DeathLength/2, y+Spacing);
-		TextRender()->TextOutlined(&s_Cursor, "D", -1.0f);
+		TextRender()->TextOutlined(&s_Cursor, "D", -1);
 	}
 
 	const char *pScoreStr = Race ? Localize("Time") : Localize("Score");
@@ -409,7 +408,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	s_Cursor.Reset();
 	s_Cursor.m_Align = Race ? TEXTALIGN_RIGHT : TEXTALIGN_CENTER;
 	s_Cursor.MoveTo(ScoreOffset+(Race ? ScoreLength-3.f : ScoreLength/2), y+Spacing);
-	TextRender()->TextOutlined(&s_Cursor, pScoreStr, -1.0f);
+	TextRender()->TextOutlined(&s_Cursor, pScoreStr, -1);
 
 	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -658,7 +657,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				// D
 				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Deaths, 0, 999));
 				s_Cursor.Reset();
-				s_Cursor.MoveTo(DeathOffset+DeathLength/2-tw/2, y+Spacing);
+				s_Cursor.MoveTo(DeathOffset+DeathLength/2, y+Spacing);
 				s_Cursor.m_MaxWidth = DeathLength;
 				TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			}
