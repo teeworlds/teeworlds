@@ -162,7 +162,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// rewind when reaching the end
 	if(CurrentTick == TotalTicks)
 	{
-		m_pClient->OnReset();
 		DemoPlayer()->Pause();
 		PositionToSeek = 0.0f;
 	}
@@ -276,7 +275,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		static CButtonContainer s_ResetButton;
 		if(DoButton_SpriteID(&s_ResetButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_STOP, false, &Button, CUI::CORNER_ALL))
 		{
-			m_pClient->OnReset();
 			DemoPlayer()->Pause();
 			PositionToSeek = 0.0f;
 		}

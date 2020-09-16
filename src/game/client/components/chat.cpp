@@ -75,15 +75,18 @@ void CChat::OnReset()
 	m_CurrentLineWidth = -1.0f;
 
 	// init chat commands (must be in alphabetical order)
-	m_CommandManager.ClearCommands();
-	m_CommandManager.AddCommand("all", "Switch to all chat", "?r[message]", &Com_All, this);
-	m_CommandManager.AddCommand("friend", "Add player as friend", "s[name]", &Com_Befriend, this);
-	m_CommandManager.AddCommand("m", "Mute a player", "s[name]", &Com_Mute, this);
-	m_CommandManager.AddCommand("mute", "Mute a player", "s[name]", &Com_Mute, this);
-	m_CommandManager.AddCommand("r", "Reply to a whisper", "?r[message]", &Com_Reply, this);
-	m_CommandManager.AddCommand("team", "Switch to team chat", "?r[message]", &Com_Team, this);
-	m_CommandManager.AddCommand("w", "Whisper another player", "r[name]", &Com_Whisper, this);
-	m_CommandManager.AddCommand("whisper", "Whisper another player", "r[name]", &Com_Whisper, this);
+	if(Client()->State() < IClient::STATE_ONLINE)
+	{
+		m_CommandManager.ClearCommands();
+		m_CommandManager.AddCommand("all", "Switch to all chat", "?r[message]", &Com_All, this);
+		m_CommandManager.AddCommand("friend", "Add player as friend", "s[name]", &Com_Befriend, this);
+		m_CommandManager.AddCommand("m", "Mute a player", "s[name]", &Com_Mute, this);
+		m_CommandManager.AddCommand("mute", "Mute a player", "s[name]", &Com_Mute, this);
+		m_CommandManager.AddCommand("r", "Reply to a whisper", "?r[message]", &Com_Reply, this);
+		m_CommandManager.AddCommand("team", "Switch to team chat", "?r[message]", &Com_Team, this);
+		m_CommandManager.AddCommand("w", "Whisper another player", "r[name]", &Com_Whisper, this);
+		m_CommandManager.AddCommand("whisper", "Whisper another player", "r[name]", &Com_Whisper, this);
+	}
 }
 
 void CChat::OnMapLoad()
