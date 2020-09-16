@@ -674,12 +674,13 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 
 void CConsole::Con_EvalIf(IResult *pResult, void *pUserData)
 {
-	CCommand *pCommand = ((CConsole*)pUserData)->FindCommand(pResult->GetString(0), ((CConsole*)pUserData)->m_FlagMask);
+	CConsole* pConsole = static_cast<CConsole *>(pUserData);
+	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(0), pConsole->m_FlagMask);
 	char aBuf[128];
 	if(!pCommand)
 	{
 		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
-		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
 		return;
 	}
 	CResult Result;
@@ -689,25 +690,24 @@ void CConsole::Con_EvalIf(IResult *pResult, void *pUserData)
 		Condition = Result.m_Value == atoi(pResult->GetString(2));
 	else
 		Condition = !str_comp_nocase(Result.m_aValue, pResult->GetString(2));
-	if(!str_comp_num(pResult->GetString(1), "!=", 3))
+	if(!str_comp(pResult->GetString(1), "!="))
 		Condition = !Condition;
-	else if(str_comp_num(pResult->GetString(1), "==", 3) && pCommand->m_pfnCallback == StrVariableCommand)
-		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: invalid comperator for type string");
-	else if(!str_comp_num(pResult->GetString(1), ">", 2))
+	else if(str_comp(pResult->GetString(1), "==") && pCommand->m_pfnCallback == StrVariableCommand)
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: invalid comperator for type string");
+	else if(!str_comp(pResult->GetString(1), ">"))
 		Condition = Result.m_Value > atoi(pResult->GetString(2));
-	else if(!str_comp_num(pResult->GetString(1), "<", 2))
+	else if(!str_comp(pResult->GetString(1), "<"))
 		Condition = Result.m_Value < atoi(pResult->GetString(2));
-	else if(!str_comp_num(pResult->GetString(1), "<=", 3))
+	else if(!str_comp(pResult->GetString(1), "<="))
 		Condition = Result.m_Value <= atoi(pResult->GetString(2));
-	else if(!str_comp_num(pResult->GetString(1), ">=", 3))
+	else if(!str_comp(pResult->GetString(1), ">="))
 		Condition = Result.m_Value >= atoi(pResult->GetString(2));
-	else if(str_comp_num(pResult->GetString(1), "==", 3))
-		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: invalid comperator for type integer");
+	else if(str_comp(pResult->GetString(1), "=="))
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: invalid comperator for type integer");
 
-	if(pResult->NumArguments() > 4 && str_comp_num(pResult->GetString(4), "else", 5))
-		((CConsole*)pUserData)->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: expected else");
+	if(pResult->NumArguments() > 4 && str_comp(pResult->GetString(4), "else"))
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: expected else");
 
-	CConsole* pConsole = static_cast<CConsole *>(pUserData);
 	if(Condition)
 		pConsole->ExecuteLine(pResult->GetString(3));
 	else if(pResult->NumArguments() == 6)
@@ -807,7 +807,7 @@ CConsole::CConsole(int FlagMask)
 	// register some basic commands
 	Register("echo", "r[text]", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Echo, this, "Echo the text");
 	Register("exec", "r[file]", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file");
-	Register("eval_if", "s[config] s[comparison] s[value] s[command] ?s[else] ?s[command]", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_EvalIf, this, "Execute command if condition is true");
+	Register("eval_if", "s[config] s[comparison] s[value] s[command] ?s[else] ?s[command]", CFGFLAG_SERVER|CFGFLAG_CLIENT|CFGFLAG_STORE, Con_EvalIf, this, "Execute command if condition is true");
 
 	Register("toggle", "s[config-option] i[value1] i[value2]", CFGFLAG_SERVER|CFGFLAG_CLIENT, ConToggle, this, "Toggle config value");
 	Register("+toggle", "s[config-option] i[value1] i[value2]", CFGFLAG_CLIENT, ConToggleStroke, this, "Toggle config value via keypress");
