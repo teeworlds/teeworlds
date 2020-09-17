@@ -173,17 +173,13 @@ CBroadcast::CBroadcast()
 
 void CBroadcast::DoClientBroadcast(const char *pText)
 {
-	// str_copy(m_aBroadcastText, pText, sizeof(m_aBroadcastText));
-	// m_Cursor.Clear();
-	
-	// m_Cursor.m_Align = TEXTALIGN_BC;
-	// m_Cursor.m_FontSize = BIG
-	// CTextCursor Cursor;
-	// TextRender()->SetCursor(&Cursor, 0, 0, 12.0f, TEXTFLAG_STOP_AT_END);
-	// Cursor.m_LineWidth = 300*Graphics()->ScreenAspect();
-	// TextRender()->TextEx(&Cursor, m_aBroadcastText, -1);
-	// m_BroadcastRenderOffset = 150*Graphics()->ScreenAspect()-Cursor.m_X/2;
-	// m_BroadcastTime = Client()->LocalTime() + 10.0f;
+	m_BroadcastCursor.Reset();
+	m_BroadcastCursor.m_FontSize = 12.0f;
+	m_BroadcastCursor.m_Align = TEXTALIGN_TC;
+	m_BroadcastCursor.m_MaxWidth = 300*Graphics()->ScreenAspect();
+
+	TextRender()->TextDeferred(&m_BroadcastCursor, pText, -1);
+	m_BroadcastTime = Client()->LocalTime() + 10.0f;
 }
 
 void CBroadcast::OnReset()
