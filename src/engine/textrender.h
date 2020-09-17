@@ -55,7 +55,7 @@ class CScaledGlyph
 public:
 	CGlyph *m_pGlyph;
 	float m_Size;
-	int m_NumChars;
+	int m_NumChars; // TODO: handle this
 	int m_Line;
 	vec2 m_Advance;
 	vec4 m_TextColor;
@@ -74,9 +74,11 @@ class CTextCursor
 	friend class CTextRender;
 
 	// Stats
+	float m_Width;
+	float m_Height;
 	int m_PageCountWhenDrawn;
-	int m_LineCount;
 	bool m_Truncated;
+	int m_LineCount;
 	int m_GlyphCount;
 	int m_CharCount;
 
@@ -130,15 +132,12 @@ public:
 	int m_Align;
 	int m_Flags;
 	float m_LineSpacing;
-	float m_Width;
-	float m_Height;
 
 	void Reset(int64 StringVersion = -1)
 	{
 		if (StringVersion < 0 || m_StringVersion != StringVersion)
 		{
 			m_Width = 0;
-			m_Height = 0;
 			m_NextLineAdvanceY = 0;
 			m_Advance = vec2(0, 0);
 			m_LineCount = 1;
@@ -158,6 +157,12 @@ public:
 	}
 
 	void MoveTo(float x, float y) { m_CursorPos = vec2(x, y); }
+	float Width() { return m_Width; }
+	float Height() { return m_Height; }
+	float BaseLineY() { return m_NextLineAdvanceY; }
+	int LineCount() { return m_LineCount; }
+	int GlyphCount() { return m_GlyphCount; }
+	int CharCount() { return m_CharCount; }
 
 	// Default Cursor: Top left single line no width limit
 	CTextCursor() { Set(10.0f, 0, 0, 0); Reset(); }
@@ -201,9 +206,9 @@ public:
 
 	// These should be only called after TextDeferred, TextOutlined or TextShadowed
 	// TODO: need better names
-	virtual void DrawTextPlain(CTextCursor *pCursor, float Alpha = 1.0f) = 0;
-	virtual void DrawTextOutlined(CTextCursor *pCursor, float Alpha = 1.0f) = 0;
-	virtual void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha = 1.0f) = 0;
+	virtual void DrawTextPlain(CTextCursor *pCursor, float Alpha = 1.0f, int StartGlyph = 0, int NumGlyphs = -1) = 0;
+	virtual void DrawTextOutlined(CTextCursor *pCursor, float Alpha = 1.0f, int StartGlyph = 0, int NumGlyphs = -1) = 0;
+	virtual void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha = 1.0f, int StartGlyph = 0, int NumGlyphs = -1) = 0;
 	// TODO: allow changing quad colors
 };
 

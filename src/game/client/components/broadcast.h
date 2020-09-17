@@ -7,44 +7,25 @@
 
 class CBroadcast : public CComponent
 {
-	// client broadcast
-	char m_aBroadcastText[128];
-	CTextCursor m_Cursor;
-	float m_BroadcastTime;
-	float m_BroadcastRenderOffset;
+	struct CBcSegment
+	{
+		bool m_IsHighContrast;
+		int m_GlyphPos;
+	};
 
-	void RenderClientBroadcast();
+	CTextCursor m_BroadcastCursor;
+	float m_BroadcastTime;
 
 	// server broadcast
-	typedef unsigned char u8;
-	struct CBcColor
-	{
-		u8 m_R, m_G, m_B;
-		int m_CharPos;
-	};
-
-	struct CBcLineInfo
-	{
-		const char* m_pStrStart;
-		int m_StrLen;
-		float m_Width;
-	};
-
 	enum {
-		MAX_BROADCAST_COLORS = 128,
-		MAX_BROADCAST_MSG_LENGTH = 127,
+		MAX_BROADCAST_MSG_LENGTH = 128,
 		MAX_BROADCAST_LINES = 3,
 	};
 
-	CBcColor m_aSrvBroadcastColorList[MAX_BROADCAST_COLORS];
-	CBcLineInfo m_aSrvBroadcastLines[MAX_BROADCAST_LINES];
-	char m_aSrvBroadcastMsg[MAX_BROADCAST_MSG_LENGTH+1];
-	int m_aSrvBroadcastMsgLen;
-	int m_SrvBroadcastColorCount;
-	int m_SrvBroadcastLineCount;
+	CBcSegment m_aSrvBroadcastSegments[MAX_BROADCAST_MSG_LENGTH];
+	int m_NumSegments;
+	CTextCursor m_SrvBroadcastCursor;
 	float m_SrvBroadcastReceivedTime;
-	float m_SrvBroadcastFontSize;
-	bool m_MuteServerBroadcast;
 
 	void OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg);
 	void RenderServerBroadcast();

@@ -35,7 +35,7 @@ void CNamePlates::RenderNameplate(
 		s_Cursor.Reset();
 		TextRender()->TextDeferred(&s_Cursor, aName, -1);
 
-		float tw = s_Cursor.m_Width + RenderTools()->GetClientIdRectSize(FontSize);
+		float tw = s_Cursor.Width() + RenderTools()->GetClientIdRectSize(FontSize);
 
 		TextRender()->TextSecondaryColor(0.0f, 0.0f, 0.0f, 0.5f);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);

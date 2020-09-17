@@ -84,7 +84,7 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 		str_format(aBuf, sizeof(aBuf), Localize("Time limit: %d min"), m_pClient->m_GameInfo.m_TimeLimit);
 		s_Cursor.Reset();
 		TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
-		float tw = s_Cursor.m_Width;
+		float tw = s_Cursor.Width();
 		s_Cursor.MoveTo(x+w/2-tw/2, y);
 		TextRender()->DrawTextOutlined(&s_Cursor);
 	}
@@ -94,7 +94,7 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 		str_format(aBuf, sizeof(aBuf), "%s %d/%d", Localize("Match", "rounds (scoreboard)"), m_pClient->m_GameInfo.m_MatchCurrent, m_pClient->m_GameInfo.m_MatchNum);
 		s_Cursor.Reset();
 		TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
-		float tw = s_Cursor.m_Width;
+		float tw = s_Cursor.Width();
 		s_Cursor.MoveTo(x+w-tw-10.0f, y);
 		TextRender()->DrawTextOutlined(&s_Cursor);
 	}
@@ -115,7 +115,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 	static CTextCursor s_LabelCursor(12.0f);
 	s_LabelCursor.Reset(g_Localization.Version() << 8 | NumSpectators);
 	TextRender()->TextDeferred(&s_LabelCursor, SpectatorBuf, -1);
-	float tw = s_LabelCursor.m_Width;
+	float tw = s_LabelCursor.Width();
 
 	float TextStartX = x+10.0f;
 	float TextStartY = y+30.0f;
@@ -156,7 +156,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 		TextRender()->TextDeferred(&s_SpectatorCursors[i], m_pClient->m_aClients[i].m_aName, -1);
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-		if(CursorPosition.x + s_SpectatorCursors[i].m_Width > x + w - 15.0f)
+		if(CursorPosition.x + s_SpectatorCursors[i].Width() > x + w - 15.0f)
 		{
 			CursorPosition.x = TextStartX + ClientIDWidth;
 			CursorPosition.y += FontSize + 3.0f;

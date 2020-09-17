@@ -648,12 +648,12 @@ float CRenderTools::DrawClientID(ITextRender* pTextRender, float FontSize, vec2 
 	pTextRender->TextDeferred(&s_Cursor, aBuf, -1);
 	pTextRender->TextColor(OldColor);
 
-	const float LinebaseY = CursorPosition.y + s_Cursor.m_Height;
+	const float LinebaseY = CursorPosition.y + s_Cursor.BaseLineY();
 	const float Width = 1.4f * FontSize;
 
 	CUIRect Rect;
 	Rect.x = CursorPosition.x;
-	Rect.y = LinebaseY - FontSize + 0.025f * FontSize;
+	Rect.y = LinebaseY - FontSize + 0.15f * FontSize;
 	Rect.w = Width;
 	Rect.h = FontSize;
 	DrawRoundRect(&Rect, BgColor, 0.25f * FontSize);
