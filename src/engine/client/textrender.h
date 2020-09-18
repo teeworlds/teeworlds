@@ -217,6 +217,7 @@ public:
 	float TextWidth(float FontSize, const char *pText, int Length);
 	void TextDeferred(CTextCursor *pCursor, const char *pText, int Length);
 	void TextNewline(CTextCursor *pCursor);
+	void TextAdvance(CTextCursor *pCursor, float AdvanceX);
 	void TextPlain(CTextCursor *pCursor, const char *pText, int Length);
 	void TextOutlined(CTextCursor *pCursor, const char *pText, int Length);
 	void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset);
@@ -224,6 +225,8 @@ public:
 	void DrawTextPlain(CTextCursor *pCursor, float Alpha, int StartGlyph, int NumGlyphs);
 	void DrawTextOutlined(CTextCursor *pCursor, float Alpha, int StartGlyph, int NumGlyphs);
 	void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha, int StartGlyph, int NumGlyphs);
+
+	vec2 CaretPosition(CTextCursor *pCursor, int NumChars);
 };
 
 #endif

@@ -511,6 +511,8 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	if(MaxWidth < 0)
 		MaxWidth = INFINITY;
 
+	float WordStartAdvanceX = pCursor->m_Advance.x;
+
 	Hint.m_CharCount = 0;
 	Hint.m_GlyphCount = 0;
 	Hint.m_EffectiveAdvanceX = pCursor->m_Advance.x;
@@ -528,7 +530,9 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	{
 		int Chr = NextChr;
 		CGlyph *pGlyph = pNextGlyph;
-		Hint.m_CharCount = pCur - pText;
+		int CharCount = pCur - pText;
+		int NumChars = CharCount - Hint.m_CharCount;
+		Hint.m_CharCount = CharCount;
 
 		if(Chr == 0 || pCur > pEnd)
 		{
@@ -555,7 +559,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 
 		bool IsSpace = Chr == '\n' || Chr == '\t' || Chr == ' ';
 		bool CanBreak = !IsSpace && (BreakWord || pCursor->m_StartOfLine);
-		if(CanBreak && pCursor->m_Advance.x + AdvanceX > MaxWidth)
+		if(Hint.m_EffectiveAdvanceX - WordStartAdvanceX > MaxWidth || (CanBreak && pCursor->m_Advance.x + AdvanceX > MaxWidth))
 		{
 			Hint.m_CharCount--;
 			Hint.m_IsBroken = true;
@@ -571,6 +575,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 			Scaled.m_Line = pCursor->m_LineCount - 1;
 			Scaled.m_TextColor = vec4(m_TextR, m_TextG, m_TextB, m_TextA);
 			Scaled.m_SecondaryColor = vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA);
+			Scaled.m_NumChars = NumChars;
 			pCursor->m_Glyphs.add(Scaled);
 		}
 		
@@ -578,7 +583,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		Hint.m_GlyphCount++;
 		pCursor->m_GlyphCount++;
 
-		if(IsSpace)
+		if(IsSpace || Chr == 0)
 		{
 			Hint.m_EndOfWord = true;
 			Hint.m_EndsWithNewline = Chr == '\n';
@@ -900,6 +905,10 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 				pCursor->m_Advance.y = pCursor->m_LineSpacing + pCursor->m_NextLineAdvanceY;
 				pCursor->m_Advance.x -= WordStartAdvanceX;
 
+				float NextAdvanceY = pCursor->m_Advance.y + pCursor->m_FontSize;
+				NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
+				pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
+
 				if(pCursor->m_LineCount > MaxLines)
 				{
 					for(int i = NumGlyphs - 1; i >= WordStartGlyphIndex; --i)
@@ -919,10 +928,6 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 						pCursor->m_Glyphs[i].m_Line = pCursor->m_LineCount - 1;
 					}
 				}
-
-				float NextAdvanceY = pCursor->m_Advance.y + pCursor->m_FontSize;
-				NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
-				pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
 
 				pCursor->m_StartOfLine = false;
 			}
@@ -1008,6 +1013,20 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 	{
 		pCursor->m_LineCount = MaxLines;
 		pCursor->m_Truncated = true;
+	}
+}
+
+void CTextRender::TextAdvance(CTextCursor *pCursor, float AdvanceX)
+{
+	int LineWidth = pCursor->m_Advance.x + AdvanceX;
+	if(LineWidth > pCursor->m_MaxWidth)
+	{
+		TextNewline(pCursor);
+		pCursor->m_Advance.x = LineWidth - pCursor->m_MaxWidth;
+	}
+	else
+	{
+		pCursor->m_Advance.x = LineWidth;
 	}
 }
 
@@ -1122,6 +1141,24 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, floa
 	TextRefreshGlyphs(pCursor);
 	DrawText(pCursor, ShadowOffset, 0, true, Alpha, StartGlyph, NumGlyphs);
 	DrawText(pCursor, vec2(0, 0), 0, false, Alpha, StartGlyph, NumGlyphs);
+}
+
+vec2 CTextRender::CaretPosition(CTextCursor *pCursor, int NumChars)
+{
+	int CursorChars = 0;
+	int NumGlpyhs = pCursor->m_Glyphs.size();
+	if(NumGlpyhs == 0 || NumChars == 0)
+		return pCursor->m_CursorPos;
+
+	for(int i = 0; i < NumGlpyhs; ++i)
+	{
+		CursorChars += pCursor->m_Glyphs[i].m_NumChars;
+		if(CursorChars >= NumChars)
+			return pCursor->m_CursorPos + pCursor->m_Glyphs[i].m_Advance;
+	}
+
+	CScaledGlyph *pLastScaled = &pCursor->m_Glyphs[NumGlpyhs-1];
+	return pCursor->m_CursorPos + pLastScaled->m_Advance + vec2(pLastScaled->m_pGlyph->m_AdvanceX, 0) * pLastScaled->m_Size;
 }
 
 IEngineTextRender *CreateEngineTextRender() { return new CTextRender; }

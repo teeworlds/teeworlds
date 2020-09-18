@@ -190,7 +190,8 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 	{
 		if(s_SpectatorCursors[i].Rendered())
 		{
-			vec2 ClientIDPos = vec2(s_SpectatorCursors[i].m_CursorPos.x - ClientIDWidth, s_SpectatorCursors[i].m_CursorPos.y);
+			vec2 ClientIDPos = s_SpectatorCursors[i].CursorPosition();
+			ClientIDPos.x -= ClientIDWidth;
 			RenderTools()->DrawClientID(TextRender(), FontSize,  ClientIDPos, i);
 			TextRender()->DrawTextOutlined(&s_SpectatorCursors[i]);
 		}

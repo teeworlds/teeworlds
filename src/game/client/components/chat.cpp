@@ -754,7 +754,588 @@ const char* CChat::GetCommandName(int Mode) const
 
 void CChat::OnRender()
 {
-	// TODO: ADDBACK: Redo chat
+	if(Client()->State() < IClient::STATE_ONLINE)
+		return;
+
+	// send pending chat messages
+	if(m_PendingChatCounter > 0 && m_LastChatSend+time_freq() < time_get())
+	{
+		CHistoryEntry *pEntry = m_History.Last();
+		for(int i = m_PendingChatCounter-1; pEntry; --i, pEntry = m_History.Prev(pEntry))
+		{
+			if(i == 0)
+			{
+				Say(pEntry->m_Mode, pEntry->m_aText);
+				break;
+			}
+		}
+		--m_PendingChatCounter;
+	}
+
+	const float Height = 300.0f;
+	const float Width = Height*Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0.0f, 0.0f, Width, Height);
+	float x = 12.0f;
+	float y = Height-20.0f;
+	float LineWidth = 200.0f;
+
+	// bool showCommands;
+	float CategoryWidth = 0;
+
+	if(m_Mode == CHAT_WHISPER && !m_pClient->m_aClients[m_WhisperTarget].m_Active)
+		m_Mode = CHAT_NONE;
+	else if(m_Mode != CHAT_NONE || m_ChatBufferMode != CHAT_NONE)
+	{
+		//Set ChatMode and alpha blend for buffered chat
+		int ChatMode = m_Mode;
+		float Blend = 1.0f;
+		if(m_Mode == CHAT_NONE)
+		{
+			ChatMode = m_ChatBufferMode;
+			Blend = 0.5f;
+		}
+
+		float CategoryHeight;
+		const float IconOffsetX = ChatMode == CHAT_WHISPER ? 6.0f : 0.0f;
+		const float CategoryFontSize = 8.0f;
+		const float InputFontSize = 8.0f;
+		char aCatText[48];
+
+		static CTextCursor s_CategoryCursor(CategoryFontSize);
+		s_CategoryCursor.Reset();
+
+		if(ChatMode == CHAT_ALL)
+			str_copy(aCatText, Localize("All"), sizeof(aCatText));
+		else if(ChatMode == CHAT_TEAM)
+		{
+			const int LocalCID = m_pClient->m_LocalClientID;
+			const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[LocalCID];
+			const int LocalTteam = LocalClient.m_Team;
+
+			if(LocalTteam == TEAM_SPECTATORS)
+				str_copy(aCatText, Localize("Spectators"), sizeof(aCatText));
+			else
+				str_copy(aCatText, Localize("Team"), sizeof(aCatText));
+		}
+		else if(ChatMode == CHAT_WHISPER)
+		{
+			CategoryWidth += RenderTools()->GetClientIdRectSize(CategoryFontSize);
+			str_format(aCatText, sizeof(aCatText), "%s",m_pClient->m_aClients[m_WhisperTarget].m_aName);
+		}
+		else
+			str_copy(aCatText, Localize("Chat"), sizeof(aCatText));
+
+		TextRender()->TextDeferred(&s_CategoryCursor, aCatText, -1);
+
+		CategoryWidth += s_CategoryCursor.Width();
+		CategoryHeight = s_CategoryCursor.Height();
+
+
+		// draw a background box
+		const vec4 CRCWhite(1.0f, 1.0f, 1.0f, 0.25f*Blend);
+		const vec4 CRCTeam(0.4f, 1.0f, 0.4f, 0.4f*Blend);
+		const vec4 CRCWhisper(0.0f, 0.5f, 1.0f, 0.5f*Blend);
+
+		vec4 CatRectColor = CRCWhite;
+		if(ChatMode == CHAT_TEAM)
+			CatRectColor = CRCTeam;
+		else if(ChatMode == CHAT_WHISPER)
+			CatRectColor = CRCWhisper;
+
+		CUIRect CatRect;
+		CatRect.x = 0;
+		CatRect.y = y;
+		CatRect.w = CategoryWidth + x + 2.0f + IconOffsetX;
+		CatRect.h = CategoryHeight;
+		RenderTools()->DrawUIRect(&CatRect, CatRectColor, CUI::CORNER_R, 2.0f);
+
+		// draw chat icon
+		Graphics()->WrapClamp();
+		IGraphics::CQuadItem QuadIcon;
+
+		if(ChatMode == CHAT_WHISPER)
+		{
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
+			Graphics()->QuadsBegin();
+			Graphics()->QuadsSetSubset(1, 0, 0, 1);
+			QuadIcon = IGraphics::CQuadItem(1.5f, y + (CatRect.h - 8.0f) * 0.5f, 16.f, 8.0f);
+		}
+		else
+		{
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+			Graphics()->QuadsBegin();
+			RenderTools()->SelectSprite(SPRITE_DOTDOT);
+			QuadIcon = IGraphics::CQuadItem(1.0f, y, 10.f, 10.0f);
+		}
+
+		Graphics()->SetColor(1, 1, 1, 1.0f*Blend);
+		Graphics()->QuadsDrawTL(&QuadIcon, 1);
+		Graphics()->QuadsEnd();
+		Graphics()->WrapNormal();
+
+		// render chat input
+		s_CategoryCursor.m_Flags = TEXTFLAG_WORD_WRAP;
+
+		//make buffered chat name transparent
+		TextRender()->TextColor(1, 1, 1, Blend);
+		float ClientIDWidth = 0;
+		if(ChatMode == CHAT_WHISPER)
+			ClientIDWidth = RenderTools()->DrawClientID(TextRender(), CategoryFontSize, vec2(x + IconOffsetX, y), m_WhisperTarget);
+		s_CategoryCursor.MoveTo(x + IconOffsetX + ClientIDWidth, y);
+		TextRender()->DrawTextOutlined(&s_CategoryCursor);
+
+		static CTextCursor m_InputCursor(InputFontSize);
+		vec2 CursorPosition = s_CategoryCursor.CursorPosition();
+		CursorPosition.x += s_CategoryCursor.Width() + 4.0f;
+		CursorPosition.y -= (InputFontSize-CategoryFontSize)*0.5f;
+		m_InputCursor.MoveTo(CursorPosition);
+		m_InputCursor.m_FontSize = InputFontSize;
+		m_InputCursor.Reset();
+
+		// check if the visible text has to be moved
+		if(m_InputUpdate)
+		{
+			if(m_ChatStringOffset > 0 && m_Input.GetLength() < m_OldChatStringLength)
+				m_ChatStringOffset = max(0, m_ChatStringOffset-(m_OldChatStringLength-m_Input.GetLength()));
+
+			if(m_ChatStringOffset > m_Input.GetCursorOffset())
+				m_ChatStringOffset -= m_ChatStringOffset-m_Input.GetCursorOffset();
+			else
+			{
+				m_InputCursor.m_Flags = TEXTFLAG_NO_RENDER | TEXTFLAG_WORD_WRAP;
+				TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
+				while(m_InputCursor.IsTruncated())
+				{
+					++m_ChatStringOffset;
+					m_InputCursor.Reset();
+					TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
+				}
+			}
+			m_InputUpdate = false;
+		}
+
+		m_InputCursor.Reset();
+
+		//render buffered text
+		if(m_Mode == CHAT_NONE)
+		{
+			//calculate WidthLimit
+			m_InputCursor.m_MaxWidth = LineWidth+x+3.0f-s_CategoryCursor.Width();
+			m_InputCursor.m_MaxLines = 1;
+			m_InputCursor.m_Flags = TEXTFLAG_ELLIPSIS;
+
+			//add dots when string excesses length
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
+			TextRender()->TextOutlined(&m_InputCursor, m_Input.GetString(), -1);
+
+			//render helper annotation
+			static CTextCursor s_InfoCursor(CategoryFontSize*0.75);
+			s_InfoCursor.MoveTo(2.0f, y+12.0f);
+			s_InfoCursor.Reset();
+
+			//Check if key exists with bind
+			int KeyID, Modifier;
+			m_pClient->m_pBinds->GetKeyID(GetCommandName(m_ChatBufferMode), KeyID, Modifier);
+
+			if(KeyID < KEY_LAST)
+			{
+				//find keyname and format text
+				char aKeyName[64];
+				m_pClient->m_pBinds->GetKey(GetCommandName(m_ChatBufferMode), aKeyName, sizeof(aKeyName), KeyID, Modifier);
+
+				char aInfoText[128];
+				str_format(aInfoText, sizeof(aInfoText), Localize("Press %s to resume chatting"), aKeyName);
+				TextRender()->TextOutlined(&s_InfoCursor, aInfoText, -1);
+			}
+		}
+		else
+		{
+			m_InputCursor.m_MaxWidth = Width-190.0f-s_CategoryCursor.Width();
+			m_InputCursor.m_MaxLines = 2;
+			m_InputCursor.m_Flags = TEXTFLAG_WORD_WRAP;
+
+			//Render normal text
+			TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, -1);
+			
+			static CTextCursor s_MarkerCursor(InputFontSize);
+			s_MarkerCursor.Reset();
+			TextRender()->TextDeferred(&s_MarkerCursor, "|", -1);
+			s_MarkerCursor.m_Align = TEXTALIGN_CENTER;
+			vec2 MarkerPosition = TextRender()->CaretPosition(&m_InputCursor, m_Input.GetCursorOffset()-m_ChatStringOffset+1);
+			s_MarkerCursor.MoveTo(MarkerPosition.x, MarkerPosition.y);
+
+			//Render command autocomplete option hint
+			if(IsTypingCommand() && m_CommandManager.CommandCount() - m_FilteredCount && m_SelectedCommand >= 0)
+			{
+				const CCommandManager::CCommand *pCommand = m_CommandManager.GetCommand(m_SelectedCommand);
+				if(str_length(pCommand->m_aName)+1 > str_length(m_Input.GetString()))
+				{
+					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+					TextRender()->TextDeferred(&m_InputCursor, pCommand->m_aName + str_length(m_Input.GetString())-1, -1);
+				}
+			}
+
+			if(ChatMode == CHAT_WHISPER)
+			{
+				//render helper annotation
+				static CTextCursor s_InfoCursor(CategoryFontSize*0.75);
+				s_InfoCursor.MoveTo(2.0f, y+12.0f);
+
+				char aInfoText[128];
+				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients"));
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+				TextRender()->TextOutlined(&s_InfoCursor, aInfoText, -1);
+			}
+			
+			TextRender()->DrawTextOutlined(&m_InputCursor);
+			TextRender()->DrawTextOutlined(&s_MarkerCursor);
+
+		}
+	}
+
+	y -= 8.0f;
+
+	// show all chat when typing
+	m_Show |= m_Mode != CHAT_NONE;
+
+	int64 Now = time_get();
+	const int64 TimeFreq = time_freq();
+
+	// get scoreboard data
+	const bool IsScoreboardActive = m_pClient->m_pScoreboard->IsActive();
+	CUIRect ScoreboardRect = m_pClient->m_pScoreboard->GetScoreboardRect();
+	const CUIRect ScoreboardScreen = *UI()->Screen();
+	CUIRect ScoreboardRectFixed;
+	ScoreboardRectFixed.x = ScoreboardRect.x/ScoreboardScreen.w * Width;
+	ScoreboardRectFixed.y = ScoreboardRect.y/ScoreboardScreen.h * Height;
+	ScoreboardRectFixed.w = ScoreboardRect.w/ScoreboardScreen.w * Width;
+	ScoreboardRectFixed.h = ScoreboardRect.h/ScoreboardScreen.h * Height;
+
+	float HeightLimit = m_Show ? 90.0f : 200.0f;
+
+	if(IsScoreboardActive)
+	{
+		// calculate chat area (height gets a penalty as long lines are better to read)
+		float ReducedLineWidth = min(ScoreboardRectFixed.x - 5.0f - x, LineWidth);
+		float ReducedHeightLimit = max(ScoreboardRectFixed.y+ScoreboardRectFixed.h+5.0f, HeightLimit);
+		float Area1 = ReducedLineWidth * ((Height-HeightLimit) * 0.5f);
+		float Area2 = LineWidth * ((Height-ReducedHeightLimit) * 0.5f);
+
+		if(Area1 >= Area2)
+			LineWidth = ReducedLineWidth;
+		else
+			HeightLimit = ReducedHeightLimit;
+	}
+
+	if(m_CurrentLineWidth != LineWidth)
+	{
+		for(int i = 0; i < MAX_LINES; i++)
+		{
+			m_aLines[i].m_Size.y = -1.0f;
+		}
+		m_CurrentLineWidth = LineWidth;
+	}
+
+	float Begin = x;
+	float FontSize = 6.0f;
+	static CTextCursor s_ChatCursor(FontSize);
+	s_ChatCursor.m_Flags = TEXTFLAG_WORD_WRAP;
+	s_ChatCursor.m_MaxWidth = LineWidth;
+	s_ChatCursor.m_MaxLines = -1;
+
+	// get the y offset (calculate it if we haven't done that yet)
+	for(int i = 0; i < MAX_LINES; i++)
+	{
+		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
+		CLine *pLine = &m_aLines[r];
+
+		if(pLine->m_aText[0] == 0) break;
+
+		if(pLine->m_Size.y < 0.0f)
+		{
+			s_ChatCursor.MoveTo(Begin, 0.0f);
+			s_ChatCursor.Reset();
+			char aBuf[768] = {0};
+			if(pLine->m_Mode == CHAT_WHISPER)
+			{
+				TextRender()->TextAdvance(&s_ChatCursor, 12.5f);
+			}
+
+			if(pLine->m_ClientID >= 0)
+			{
+				float ClientIDWidth = RenderTools()->GetClientIdRectSize(FontSize);
+				TextRender()->TextAdvance(&s_ChatCursor, ClientIDWidth);
+				str_format(aBuf, sizeof(aBuf), "%s: ", pLine->m_aName);
+			}
+
+			str_append(aBuf, pLine->m_aText, sizeof(aBuf));
+
+			TextRender()->TextOutlined(&s_ChatCursor, aBuf, -1);
+			pLine->m_Size.y = s_ChatCursor.LineCount() * FontSize;
+			pLine->m_Size.x = s_ChatCursor.Width();
+		}
+	}
+
+	if(m_Show)
+	{
+		CUIRect Rect;
+		Rect.x = 0;
+		Rect.y = HeightLimit - 2.0f;
+		Rect.w = LineWidth + x + 3.0f;
+		Rect.h = Height - HeightLimit - 22.f;
+
+		const float LeftAlpha = 0.85f;
+		const float RightAlpha = 0.05f;
+		RenderTools()->DrawUIRect4(&Rect,
+								   vec4(0, 0, 0, LeftAlpha),
+								   vec4(0, 0, 0, RightAlpha),
+								   vec4(0, 0, 0, LeftAlpha),
+								   vec4(0, 0, 0, RightAlpha),
+								   CUI::CORNER_R, 3.0f);
+	}
+
+	// compute the page index
+	int StartLine = 0;
+	if(m_Show)
+	{
+		int Page;
+		int l = 0;
+		for(Page = 0; Page < MAX_CHAT_PAGES; Page++)
+		{
+			int PageY = y;
+			bool endReached = false;
+			for(; l < MAX_LINES; l++)
+			{
+				int r = ((m_CurrentLine-l)+MAX_LINES)%MAX_LINES;
+				const CLine *pLine = &m_aLines[r];
+
+				if(pLine->m_aText[0] == 0)
+				{
+					endReached = true;
+					break;
+				}
+				if(pLine->m_ClientID >= 0 && m_pClient->m_aClients[pLine->m_ClientID].m_ChatIgnore)
+					continue;
+				if(PageY < HeightLimit)
+					break;
+				PageY -= pLine->m_Size.y;
+			}
+			if(endReached)
+				break;
+			if(Page < m_BacklogPage)
+				StartLine = l - 1;
+		}
+		if(Page == MAX_CHAT_PAGES)
+			Page--;
+		if(Page < m_BacklogPage) // cap the page to the last
+			m_BacklogPage = Page;
+
+		// render the page count
+		if(Page > 0)
+		{
+			static CTextCursor s_PageCursor(FontSize-1.0f);
+			s_PageCursor.Reset();
+			s_PageCursor.MoveTo(6.0f, HeightLimit-3.0f);
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), Localize("-Page %d/%d-"), m_BacklogPage+1, Page+1);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.6f);
+			TextRender()->TextOutlined(&s_PageCursor, aBuf, -1);
+			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+	}
+
+	for(int i = StartLine; i < MAX_LINES; i++)
+	{
+		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
+		const CLine *pLine = &m_aLines[r];
+
+		if(pLine->m_aText[0] == 0)
+			break;
+
+		if(pLine->m_ClientID >= 0 && m_pClient->m_aClients[pLine->m_ClientID].m_ChatIgnore)
+			continue;
+
+		if(Now > pLine->m_Time+16*TimeFreq && !m_Show)
+			break;
+
+		y -= pLine->m_Size.y;
+
+		// cut off if msgs waste too much space
+		if(y < HeightLimit)
+			break;
+
+		float Blend = Now > pLine->m_Time+14*TimeFreq && !m_Show ? 1.0f-(Now-pLine->m_Time-14*TimeFreq)/(2.0f*TimeFreq) : 1.0f;
+
+		const float HlTimeFull = 1.0f;
+		const float HlTimeFade = 1.0f;
+
+		float Delta = (Now - pLine->m_Time) / (float)TimeFreq;
+		const float HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0f, HlTimeFade) / HlTimeFade;
+
+		// reset the cursor
+		s_ChatCursor.MoveTo(Begin, y);
+		s_ChatCursor.Reset();
+
+		const vec2 ShadowOffset(0.8f, 1.5f);
+		const vec4 ShadowWhisper(0.09f, 0.f, 0.26f, Blend * 0.9f);
+		const vec4 ShadowBlack(0, 0, 0, Blend * 0.9f);
+		vec4 ShadowColor = ShadowBlack;
+
+		if(pLine->m_Mode == CHAT_WHISPER)
+			ShadowColor = ShadowWhisper;
+
+
+		const vec4 ColorSystem(1.0f, 1.0f, 0.5f, 1);
+		const vec4 ColorWhisper(0.4f, 1.0f, 1.0f, 1);
+		const vec4 ColorRed(1.0f, 0.5f, 0.5f, 1);
+		const vec4 ColorBlue(0.7f, 0.7f, 1.0f, 1);
+		const vec4 ColorSpec(0.75f, 0.5f, 0.75f, 1);
+		const vec4 ColorAllPre(0.8f, 0.8f, 0.8f, 1);
+		const vec4 ColorAllText(1.0f, 1.0f, 1.0f, 1);
+		const vec4 ColorTeamPre(0.45f, 0.9f, 0.45f, 1);
+		const vec4 ColorTeamText(0.6f, 1.0f, 0.6f, 1);
+		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.5f * HighlightBlend);
+		const vec4 ColorHighlightOutline(0.0f, 0.4f, 1.0f,
+			mix(pLine->m_Mode == CHAT_TEAM ? 0.6f : 0.5f, 1.0f, HighlightBlend));
+
+		vec4 TextColor = ColorAllText;
+
+		if(pLine->m_Highlighted && ColorHighlightBg.a > 0.001f)
+		{
+			CUIRect BgRect;
+			BgRect.x = Begin;
+			BgRect.y = y + 1.0f;
+			BgRect.w = pLine->m_Size.x - 2.0f;
+			BgRect.h = pLine->m_Size.y;
+
+			vec4 LeftColor = ColorHighlightBg * ColorHighlightBg.a;
+			LeftColor.a = ColorHighlightBg.a;
+
+			vec4 RightColor = ColorHighlightBg;
+			RightColor *= 0.1f;
+
+			RenderTools()->DrawUIRect4(&BgRect,
+									   LeftColor,
+									   RightColor,
+									   LeftColor,
+									   RightColor,
+									   CUI::CORNER_R, 2.0f);
+		}
+
+		char aBuf[48];
+		if(pLine->m_Mode == CHAT_WHISPER)
+		{
+			const float LineBaseY = y + FontSize + 1.0f;
+
+			const float qw = 10.0f;
+			const float qh = 5.0f;
+			const float qx = Begin + 1.0f;
+			const float qy = LineBaseY - qh - 0.5f;
+
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
+			Graphics()->WrapClamp();
+
+			Graphics()->QuadsBegin();
+
+			// image orientation
+			const int LocalCID = m_pClient->m_LocalClientID;
+			if(pLine->m_ClientID == LocalCID && pLine->m_TargetID >= 0)
+				Graphics()->QuadsSetSubset(1, 0, 0, 1); // To
+			else if(pLine->m_TargetID == LocalCID)
+				Graphics()->QuadsSetSubset(0, 0, 1, 1); // From
+			else
+				dbg_break();
+
+
+			// shadow pass
+			Graphics()->SetColor(ShadowWhisper.r*ShadowWhisper.a*Blend, ShadowWhisper.g*ShadowWhisper.a*Blend,
+								 ShadowWhisper.b*ShadowWhisper.a*Blend, ShadowWhisper.a*Blend);
+			IGraphics::CQuadItem Quad(qx + 0.2f, qy + 0.5f, qw, qh);
+			Graphics()->QuadsDrawTL(&Quad, 1);
+
+			// color pass
+			Graphics()->SetColor(ColorWhisper.r*Blend, ColorWhisper.g*Blend, ColorWhisper.b*Blend, Blend);
+			Quad = IGraphics::CQuadItem(qx, qy, qw, qh);
+			Graphics()->QuadsDrawTL(&Quad, 1);
+
+			Graphics()->QuadsEnd();
+			Graphics()->WrapNormal();
+			TextRender()->TextAdvance(&s_ChatCursor, 12.5f);
+		}
+
+		// render name
+		if(pLine->m_ClientID < 0)
+			TextColor = ColorSystem;
+		else if(pLine->m_Mode == CHAT_WHISPER)
+			TextColor = ColorWhisper;
+		else if(pLine->m_Mode == CHAT_TEAM)
+			TextColor = ColorTeamPre;
+		else if(pLine->m_NameColor == TEAM_RED)
+			TextColor = ColorRed;
+		else if(pLine->m_NameColor == TEAM_BLUE)
+			TextColor = ColorBlue;
+		else if(pLine->m_NameColor == TEAM_SPECTATORS)
+			TextColor = ColorSpec;
+		else
+			TextColor = ColorAllPre;
+
+		int NumNameGlyphs = 0;
+		if(pLine->m_ClientID >= 0)
+		{
+			int NameCID = pLine->m_ClientID;
+			if(pLine->m_Mode == CHAT_WHISPER && pLine->m_ClientID == m_pClient->m_LocalClientID && pLine->m_TargetID >= 0)
+				NameCID = pLine->m_TargetID;
+
+			vec4 IdTextColor = vec4(0.1f*Blend, 0.1f*Blend, 0.1f*Blend, 1.0f*Blend);
+			vec4 BgIdColor = TextColor;
+			BgIdColor.a = 0.5f*Blend;
+			float ClientIDWidth = RenderTools()->DrawClientID(TextRender(), FontSize, s_ChatCursor.AdvancePosition(), NameCID, BgIdColor, IdTextColor);
+			TextRender()->TextAdvance(&s_ChatCursor, ClientIDWidth);
+			str_format(aBuf, sizeof(aBuf), "%s: ", pLine->m_aName);
+			TextRender()->TextColor(TextColor);
+			TextRender()->TextSecondaryColor(ShadowColor);
+			TextRender()->TextDeferred(&s_ChatCursor, aBuf, -1);
+			NumNameGlyphs = s_ChatCursor.GlyphCount();
+		}
+
+		s_ChatCursor.m_StartOfLine = true;
+
+		// render line
+		if(pLine->m_ClientID < 0)
+			TextColor = ColorSystem;
+		else if(pLine->m_Mode == CHAT_WHISPER)
+			TextColor = ColorWhisper;
+		else if(pLine->m_Mode == CHAT_TEAM)
+			TextColor = ColorTeamText;
+		else
+			TextColor = ColorAllText;
+
+		if(pLine->m_Highlighted)
+		{
+			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
+
+			TextRender()->TextSecondaryColor(ColorHighlightOutline.r,
+										   ColorHighlightOutline.g,
+										   ColorHighlightOutline.b,
+										   ColorHighlightOutline.a);
+
+			TextRender()->TextDeferred(&s_ChatCursor, pLine->m_aText, -1);
+			TextRender()->DrawTextShadowed(&s_ChatCursor, ShadowOffset, Blend, 0, NumNameGlyphs);
+			TextRender()->DrawTextOutlined(&s_ChatCursor, Blend, NumNameGlyphs, -1);
+		}
+		else
+		{
+			TextRender()->TextColor(TextColor);
+			TextRender()->TextSecondaryColor(ShadowColor);
+			TextRender()->TextDeferred(&s_ChatCursor, pLine->m_aText, -1);
+			TextRender()->DrawTextShadowed(&s_ChatCursor, ShadowOffset, Blend);
+		}
+	}
+
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	TextRender()->TextSecondaryColor(0.0f, 0.0f, 0.0f, 0.3f);
+
+	HandleCommands(x+CategoryWidth, Height - 24.f, 200.0f-CategoryWidth);
 }
 
 void CChat::Say(int Mode, const char *pLine)
@@ -777,7 +1358,142 @@ bool CChat::IsTypingCommand() const
 // chat commands handlers
 void CChat::HandleCommands(float x, float y, float w)
 {
+	// render commands menu
+	if(m_Mode != CHAT_NONE && IsTypingCommand())
+	{
+		const float Alpha = 0.90f;
+		const float ScrollBarW = 6.0f;
+		float LineWidth = w;
+		const float LineHeight = 8.0f;
 
+		FilterChatCommands(m_Input.GetString()); // flag active commands, update selected command
+		const int ActiveCount = m_CommandManager.CommandCount() - m_FilteredCount;
+		const int DisplayCount = min(ActiveCount, 16);
+
+		if(DisplayCount && m_aFilter[m_SelectedCommand])
+		{
+			m_SelectedCommand = -1;
+			NextActiveCommand(&m_SelectedCommand);
+		}
+		if(DisplayCount && m_aFilter[m_CommandStart])
+		{
+			NextActiveCommand(&m_CommandStart);
+		}
+
+		if(DisplayCount > 0) // at least one command to display
+		{
+			CUIRect Rect = {x, y-(DisplayCount+1)*LineHeight, LineWidth, (DisplayCount+1)*LineHeight};
+			RenderTools()->DrawUIRect(&Rect,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_ALL, 3.0f);
+
+			int End = m_CommandStart;
+			for(int i = 0; i < DisplayCount - 1; i++)
+				NextActiveCommand(&End);
+
+			if(End >= m_CommandManager.CommandCount())
+				for(int i = End - m_CommandManager.CommandCount(); i >= 0; i--)
+					PreviousActiveCommand(&m_CommandStart);
+
+			if(m_SelectedCommand < m_CommandStart)
+			{
+				PreviousActiveCommand(&m_CommandStart);
+			}
+			else if(m_SelectedCommand > End)
+			{
+				NextActiveCommand(&m_CommandStart);
+				NextActiveCommand(&End);
+			}
+
+			// render worlds most inefficient "scrollbar"
+			if(ActiveCount > DisplayCount)
+			{
+				LineWidth -= ScrollBarW;
+
+				CUIRect Rect = {x + LineWidth, y - (DisplayCount + 1) * LineHeight, ScrollBarW, (DisplayCount+1)*LineHeight};
+				RenderTools()->DrawUIRect(&Rect,  vec4(0.125f, 0.125f, 0.125f, Alpha), CUI::CORNER_R, 3.0f);
+
+				float h = Rect.h;
+				Rect.h *= (float)DisplayCount/ActiveCount;
+				Rect.y += h * (float)(GetActiveCountRange(GetFirstActiveCommand(), m_CommandStart))/ActiveCount;
+				RenderTools()->DrawUIRect(&Rect,  vec4(0.5f, 0.5f, 0.5f, Alpha), CUI::CORNER_R, 3.0f);
+			}
+
+			y -= (DisplayCount+2)*LineHeight;
+			for(int i = m_CommandStart, j = 0; j < DisplayCount && i < m_CommandManager.CommandCount(); i++)
+			{
+				if(m_aFilter[i])
+					continue;
+
+				const CCommandManager::CCommand *pCommand = m_CommandManager.GetCommand(i);
+				if(!pCommand)
+					continue;
+
+				j++;
+
+				y += LineHeight;
+				CUIRect HighlightRect = {Rect.x, y, LineWidth, LineHeight-1};
+
+				if(pCommand->m_pfnCallback == ServerCommandCallback)
+					RenderTools()->DrawUIRect(&HighlightRect,  vec4(0.0f, 0.6f, 0.6f, 0.2f), CUI::CORNER_ALL, 0);
+
+				// draw selection box
+				if(i == m_SelectedCommand)
+					RenderTools()->DrawUIRect(&HighlightRect,  vec4(0.25f, 0.25f, 0.6f, Alpha), CUI::CORNER_ALL, 2.0f);
+
+				// print command
+				static CTextCursor s_CommandCursor(5.0f);
+				s_CommandCursor.Reset();
+				s_CommandCursor.MoveTo(Rect.x + 5.0f, y);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->TextDeferred(&s_CommandCursor, pCommand->m_aName, -1);
+				TextRender()->TextDeferred(&s_CommandCursor, " ", -1);
+
+				TextRender()->TextColor(0.0f, 0.5f, 0.5f, 1.0f);
+				for(const char *c = pCommand->m_aArgsFormat; *c; c++)
+				{
+					// Integer argument
+					if(*c == 'i')
+					{
+						TextRender()->TextDeferred(&s_CommandCursor, "<number> ", -1);
+					}
+					// Player name argument
+					else if(*c == 'p')
+					{
+						TextRender()->TextDeferred(&s_CommandCursor, "<playername> ", -1);
+					}
+					// String argument
+					else if(*c == 's')
+					{
+						TextRender()->TextDeferred(&s_CommandCursor, "<text> ", -1);
+					}
+					// Subcommand argument
+					else if(*c == 'c')
+					{
+						TextRender()->TextDeferred(&s_CommandCursor, "<subcommand> ", -1);
+					}
+				}
+				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
+				TextRender()->TextDeferred(&s_CommandCursor, pCommand->m_aHelpText, -1);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+				TextRender()->DrawTextOutlined(&s_CommandCursor);
+			}
+
+			// render notification
+			{
+				y += LineHeight;
+				static CTextCursor s_NotificationCursor(5.0f);
+				s_NotificationCursor.Reset();
+				s_NotificationCursor.MoveTo(Rect.x + 5.0f, y);
+				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
+				if(m_SelectedCommand >= 0 && str_startswith(m_Input.GetString() + 1, m_CommandManager.GetCommand(m_SelectedCommand)->m_aName))
+					TextRender()->TextDeferred(&s_NotificationCursor, Localize("Press Enter to confirm or Esc to cancel"), -1);
+				else
+					TextRender()->TextDeferred(&s_NotificationCursor, Localize("Press Tab to select or Esc to cancel"), -1);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->DrawTextOutlined(&s_NotificationCursor);
+			}
+		}
+	}
 }
 
 bool CChat::ExecuteCommand()

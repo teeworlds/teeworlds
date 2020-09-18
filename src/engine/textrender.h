@@ -22,6 +22,7 @@ enum
 	TEXTFLAG_ALLOW_NEWLINE=2,
 
 	// Display "…" when the text is truncated
+	// TODO: implement this
 	TEXTFLAG_ELLIPSIS=4,
 
 	// If set, newline will try not to break words
@@ -84,8 +85,8 @@ class CTextCursor
 
 	// Deferred: everything is top left aligned
 	//           alignments only happen during drawing
+	vec2 m_CursorPos;
 	vec2 m_Advance;
-	bool m_StartOfLine;
 	bool m_SkipTextRender;
 	float m_NextLineAdvanceY;
 	array<CScaledGlyph> m_Glyphs;
@@ -125,13 +126,13 @@ class CTextCursor
 	}
 
 public:
-	vec2 m_CursorPos;
 	float m_FontSize;
 	int m_MaxLines;
 	float m_MaxWidth;
 	int m_Align;
 	int m_Flags;
 	float m_LineSpacing;
+	bool m_StartOfLine;
 
 	void Reset(int64 StringVersion = -1)
 	{
@@ -157,9 +158,13 @@ public:
 	}
 
 	void MoveTo(float x, float y) { m_CursorPos = vec2(x, y); }
+	void MoveTo(vec2 Position) { m_CursorPos = Position; }
 	float Width() { return m_Width; }
 	float Height() { return m_Height; }
 	float BaseLineY() { return m_NextLineAdvanceY; }
+	vec2 CursorPosition() { return m_CursorPos; }
+	vec2 AdvancePosition() { return m_CursorPos + m_Advance; }
+	bool IsTruncated() { return m_Truncated; }
 	int LineCount() { return m_LineCount; }
 	int GlyphCount() { return m_GlyphCount; }
 	int CharCount() { return m_CharCount; }
@@ -194,6 +199,7 @@ public:
 	virtual float TextWidth(float FontSize, const char *pText, int Length) = 0;
 	virtual void TextDeferred(CTextCursor *pCursor, const char *pText, int Length) = 0;
 	virtual void TextNewline(CTextCursor *pCursor) = 0;
+	virtual void TextAdvance(CTextCursor *pCursor, float AdvanceX) = 0;
 	virtual void TextPlain(CTextCursor *pCursor, const char *pText, int Length) = 0;
 	virtual void TextOutlined(CTextCursor *pCursor, const char *pText, int Length) = 0;
 	virtual void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset) = 0;
@@ -205,11 +211,13 @@ public:
 	virtual vec4 GetSecondaryColor() = 0;
 
 	// These should be only called after TextDeferred, TextOutlined or TextShadowed
-	// TODO: need better names
+	// TODO: allow changing quad colors
 	virtual void DrawTextPlain(CTextCursor *pCursor, float Alpha = 1.0f, int StartGlyph = 0, int NumGlyphs = -1) = 0;
 	virtual void DrawTextOutlined(CTextCursor *pCursor, float Alpha = 1.0f, int StartGlyph = 0, int NumGlyphs = -1) = 0;
 	virtual void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha = 1.0f, int StartGlyph = 0, int NumGlyphs = -1) = 0;
-	// TODO: allow changing quad colors
+
+	// QoL APIs
+	virtual vec2 CaretPosition(CTextCursor *pCursor, int NumChars) = 0;
 };
 
 class IEngineTextRender : public ITextRender
