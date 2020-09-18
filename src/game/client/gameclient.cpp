@@ -471,28 +471,34 @@ void CGameClient::OnConnected()
 
 void CGameClient::OnReset()
 {
-	// clear out the invalid pointers
-	m_LastNewPredictedTick = -1;
-	mem_zero(&m_Snap, sizeof(m_Snap));
+	if(Client()->State() < IClient::STATE_ONLINE)
+	{
+		// clear out the invalid pointers
+		m_LastNewPredictedTick = -1;
+		mem_zero(&m_Snap, sizeof(m_Snap));
 
-	for(int i = 0; i < MAX_CLIENTS; i++)
-		m_aClients[i].Reset(this, i);
+		for(int ClientID = 0; ClientID < MAX_CLIENTS; ClientID++)
+			m_aClients[ClientID].Reset(this, ClientID);
+	}
 
 	for(int i = 0; i < m_All.m_Num; i++)
 		m_All.m_paComponents[i]->OnReset();
 
-	m_LocalClientID = -1;
-	m_TeamCooldownTick = 0;
-	m_TeamChangeTime = 0.0f;
-	m_LastSkinChangeTime = Client()->LocalTime();
-	mem_zero(&m_GameInfo, sizeof(m_GameInfo));
-	m_DemoSpecMode = SPEC_FREEVIEW;
-	m_DemoSpecID = -1;
-	m_Tuning = CTuningParams();
-	m_MuteServerBroadcast = false;
-	m_LastGameStartTick = -1;
-	m_LastFlagCarrierRed = FLAG_MISSING;
-	m_LastFlagCarrierBlue = FLAG_MISSING;
+	if(Client()->State() < IClient::STATE_ONLINE)
+	{
+		m_LocalClientID = -1;
+		m_TeamCooldownTick = 0;
+		m_TeamChangeTime = 0.0f;
+		m_LastSkinChangeTime = Client()->LocalTime();
+		mem_zero(&m_GameInfo, sizeof(m_GameInfo));
+		m_DemoSpecMode = SPEC_FREEVIEW;
+		m_DemoSpecID = -1;
+		m_Tuning = CTuningParams();
+		m_MuteServerBroadcast = false;
+		m_LastGameStartTick = -1;
+		m_LastFlagCarrierRed = FLAG_MISSING;
+		m_LastFlagCarrierBlue = FLAG_MISSING;
+	}
 }
 
 void CGameClient::UpdatePositions()
@@ -694,13 +700,9 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			switch(GameMsgID)
 			{
 			case GAMEMSG_CTF_DROP:
-				if(m_SuppressEvents)
-					return;
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_DROP);
 				break;
 			case GAMEMSG_CTF_RETURN:
-				if(m_SuppressEvents)
-					return;
 				m_pSounds->Enqueue(CSounds::CHN_GLOBAL, SOUND_CTF_RETURN);
 				break;
 			case GAMEMSG_TEAM_ALL:
@@ -728,8 +730,6 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				}
 				break;
 			case GAMEMSG_CTF_GRAB:
-				if(m_SuppressEvents)
-					return;
 				if(m_LocalClientID != -1 && (m_aClients[m_LocalClientID].m_Team != aParaI[0] || (m_Snap.m_SpecInfo.m_Active &&
 								((m_Snap.m_SpecInfo.m_SpectatorID != -1 && m_aClients[m_Snap.m_SpecInfo.m_SpectatorID].m_Team != aParaI[0]) ||
 								(m_Snap.m_SpecInfo.m_SpecMode == SPEC_FLAGRED && aParaI[0] != TEAM_RED) ||

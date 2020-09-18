@@ -147,19 +147,21 @@ void CSounds::ClearQueue()
 
 void CSounds::Enqueue(int Channel, int SetId)
 {
-	// add sound to the queue
-	if(m_QueuePos < QUEUE_SIZE)
-	{
-		if(Channel == CHN_MUSIC || !Config()->m_ClEditor)
-		{
-			m_aQueue[m_QueuePos].m_Channel = Channel;
-			m_aQueue[m_QueuePos++].m_SetId = SetId;
-		}
-	}
+	if(m_pClient->m_SuppressEvents)
+		return;
+	if(m_QueuePos >= QUEUE_SIZE)
+		return;
+	if(Channel != CHN_MUSIC && Config()->m_ClEditor)
+		return;
+
+	m_aQueue[m_QueuePos].m_Channel = Channel;
+	m_aQueue[m_QueuePos++].m_SetId = SetId;
 }
 
 void CSounds::Play(int Chn, int SetId, float Vol)
 {
+	if(m_pClient->m_SuppressEvents)
+		return;
 	if(Chn == CHN_MUSIC && !Config()->m_SndMusic)
 		return;
 
@@ -176,9 +178,11 @@ void CSounds::Play(int Chn, int SetId, float Vol)
 
 void CSounds::PlayAt(int Chn, int SetId, float Vol, vec2 Pos)
 {
+	if(m_pClient->m_SuppressEvents)
+		return;
 	if(Chn == CHN_MUSIC && !Config()->m_SndMusic)
 		return;
-	
+
 	ISound::CSampleHandle SampleId = GetSampleId(SetId);
 	if(!SampleId.IsValid())
 		return;
