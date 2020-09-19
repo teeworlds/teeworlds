@@ -646,7 +646,7 @@ int CTextRender::LoadFontCollection(const void *pFilename, const void *pBuf, lon
 			break;
 	}
 
-	dbg_msg("textrender", "loaded %d faces from font file '%s'", i, pFilename);
+	dbg_msg("textrender", "loaded %d faces from font file '%s'", i, (char *)pFilename);
 
 	return 0;
 }
