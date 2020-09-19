@@ -326,9 +326,10 @@ void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
 		pInfo->m_pSelf->TextRender()->TextColor(0.05f, 0.05f, 0.05f,1);
+		vec2 Begin = pInfo->m_pCursor->AdvancePosition();
 		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
 		CTextBoundingBox Box = pInfo->m_pCursor->BoundingBox();
-		CUIRect Rect = {Box.x - 2, Box.y, Box.w + 4, Box.h};
+		CUIRect Rect = {Box.x - 5 + Begin.x, Box.y, Box.w + 8 - Begin.x, Box.h};
 
 		pInfo->m_pSelf->RenderTools()->DrawRoundRect(&Rect, vec4(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f), pInfo->m_pCursor->m_FontSize/3);
 

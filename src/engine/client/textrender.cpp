@@ -1057,10 +1057,13 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 void CTextRender::TextAdvance(CTextCursor *pCursor, float AdvanceX)
 {
 	int LineWidth = pCursor->m_Advance.x + AdvanceX;
-	if(LineWidth > pCursor->m_MaxWidth)
+	float MaxWidth = pCursor->m_MaxWidth;
+	if(MaxWidth < 0)
+		MaxWidth = INFINITY;
+	if(LineWidth > MaxWidth)
 	{
 		TextNewline(pCursor);
-		pCursor->m_Advance.x = LineWidth - pCursor->m_MaxWidth;
+		pCursor->m_Advance.x = LineWidth - MaxWidth;
 	}
 	else
 	{
