@@ -834,9 +834,12 @@ void CTextRender::TextSecondaryColor(float r, float g, float b, float a)
 
 float CTextRender::TextWidth(float FontSize, const char *pText, int Length)
 {
-	CTextCursor Cursor(FontSize, 0, 0, TEXTFLAG_NO_RENDER);
-	TextDeferred(&Cursor, pText, Length);
-	return Cursor.m_Width;
+	static CTextCursor s_Cursor;
+	s_Cursor.m_FontSize = FontSize;
+	s_Cursor.m_Flags = TEXTFLAG_NO_RENDER;
+	s_Cursor.Reset();
+	TextDeferred(&s_Cursor, pText, Length);
+	return s_Cursor.m_Width;
 }
 
 void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Length)

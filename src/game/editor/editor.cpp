@@ -548,9 +548,11 @@ int CEditor::DoButton_Editor(const void *pID, const char *pText, int Checked, co
 	NewRect.y += NewRect.h/2.0f-7.0f;
 
 	float tw = min(TextRender()->TextWidth(10.0f, pText, -1), NewRect.w);
-	CTextCursor Cursor(10.0f, NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f);
-	Cursor.m_MaxWidth = NewRect.w;
-	TextRender()->TextOutlined(&Cursor, pText, -1);
+	static CTextCursor s_Cursor(10.0f);
+	s_Cursor.Reset();
+	s_Cursor.MoveTo(NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f);
+	s_Cursor.m_MaxWidth = NewRect.w;
+	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -565,9 +567,11 @@ int CEditor::DoButton_Image(const void *pID, const char *pText, int Checked, con
 	CUIRect NewRect = *pRect;
 	NewRect.y += NewRect.h/2.0f-7.0f;
 	float tw = min(TextRender()->TextWidth(10.0f, pText, -1), NewRect.w);
-	CTextCursor Cursor(10.0f, NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f);
-	Cursor.m_MaxWidth = NewRect.w;
-	TextRender()->TextOutlined(&Cursor, pText, -1);
+	static CTextCursor s_Cursor(10.0f);
+	s_Cursor.MoveTo(NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f);
+	s_Cursor.Reset();
+	s_Cursor.m_MaxWidth = NewRect.w;
+	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -602,9 +606,11 @@ int CEditor::DoButton_MenuItem(const void *pID, const char *pText, int Checked, 
 
 	CUIRect t = *pRect;
 	t.VMargin(5.0f, &t);
-	CTextCursor Cursor(10.0f, t.x, t.y - 1.0f);
-	Cursor.m_MaxWidth = t.w;
-	TextRender()->TextOutlined(&Cursor, pText, -1);
+	static CTextCursor s_Cursor(10.0f);
+	s_Cursor.Reset();
+	s_Cursor.MoveTo(t.x, t.y - 1.0f);
+	s_Cursor.m_MaxWidth = t.w;
+	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -4275,7 +4281,9 @@ void CEditor::Render()
 	if(Config()->m_EdShowkeys)
 	{
 		Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
-		CTextCursor Cursor(24.0f, View.x+10, View.y+View.h-24-10);
+		static CTextCursor s_Cursor(24.0f);
+		s_Cursor.Reset();
+		s_Cursor.MoveTo(View.x+10, View.y+View.h-24-10);
 
 		int NKeys = 0;
 		for(int i = 0; i < KEY_LAST; i++)
@@ -4283,13 +4291,13 @@ void CEditor::Render()
 			if(Input()->KeyIsPressed(i))
 			{
 				if(NKeys)
-					TextRender()->TextDeferred(&Cursor, " + ", -1);
-				TextRender()->TextDeferred(&Cursor, Input()->KeyName(i), -1);
+					TextRender()->TextDeferred(&s_Cursor, " + ", -1);
+				TextRender()->TextDeferred(&s_Cursor, Input()->KeyName(i), -1);
 				NKeys++;
 			}
 		}
 
-		TextRender()->DrawTextOutlined(&Cursor);
+		TextRender()->DrawTextOutlined(&s_Cursor);
 	}
 
 	if(m_ShowMousePointer)
