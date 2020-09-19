@@ -145,28 +145,28 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 
 			Handled = true;
 		}
-		else if (Event.m_Key == KEY_UP)
+		else if(Event.m_Key == KEY_UP)
 		{
-			if (m_pHistoryEntry)
+			if(m_pHistoryEntry)
 			{
 				char *pTest = m_History.Prev(m_pHistoryEntry);
 
-				if (pTest)
+				if(pTest)
 					m_pHistoryEntry = pTest;
 			}
 			else
 				m_pHistoryEntry = m_History.Last();
 
-			if (m_pHistoryEntry)
+			if(m_pHistoryEntry)
 				m_Input.Set(m_pHistoryEntry);
 			Handled = true;
 		}
-		else if (Event.m_Key == KEY_DOWN)
+		else if(Event.m_Key == KEY_DOWN)
 		{
-			if (m_pHistoryEntry)
+			if(m_pHistoryEntry)
 				m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
 
-			if (m_pHistoryEntry)
+			if(m_pHistoryEntry)
 				m_Input.Set(m_pHistoryEntry);
 			else
 				m_Input.Clear();
@@ -370,32 +370,32 @@ void CGameConsole::OnRender()
 
 	float Progress = (TimeNow()-(m_StateChangeEnd-m_StateChangeDuration))/float(m_StateChangeDuration);
 
-	if (Progress >= 1.0f)
+	if(Progress >= 1.0f)
 	{
-		if (m_ConsoleState == CONSOLE_CLOSING)
+		if(m_ConsoleState == CONSOLE_CLOSING)
 			m_ConsoleState = CONSOLE_CLOSED;
-		else if (m_ConsoleState == CONSOLE_OPENING)
+		else if(m_ConsoleState == CONSOLE_OPENING)
 			m_ConsoleState = CONSOLE_OPEN;
 
 		Progress = 1.0f;
 	}
 
-	if (m_ConsoleState == CONSOLE_OPEN && Config()->m_ClEditor)
+	if(m_ConsoleState == CONSOLE_OPEN && Config()->m_ClEditor)
 		Toggle(CONSOLETYPE_LOCAL);
 
-	if (m_ConsoleState == CONSOLE_CLOSED)
+	if(m_ConsoleState == CONSOLE_CLOSED)
 		return;
 
-	if (m_ConsoleState == CONSOLE_OPEN)
+	if(m_ConsoleState == CONSOLE_OPEN)
 		Input()->MouseModeAbsolute();
 
 	float ConsoleHeightScale;
 
-	if (m_ConsoleState == CONSOLE_OPENING)
+	if(m_ConsoleState == CONSOLE_OPENING)
 		ConsoleHeightScale = ConsoleScaleFunc(Progress);
-	else if (m_ConsoleState == CONSOLE_CLOSING)
+	else if(m_ConsoleState == CONSOLE_CLOSING)
 		ConsoleHeightScale = ConsoleScaleFunc(1.0f-Progress);
-	else //if (console_state == CONSOLE_OPEN)
+	else //if(console_state == CONSOLE_OPEN)
 		ConsoleHeightScale = ConsoleScaleFunc(1.0f);
 
 	ConsoleHeight = ConsoleHeightScale*ConsoleMaxHeight;
@@ -651,7 +651,7 @@ void CGameConsole::Toggle(int Type)
 	}
 	else
 	{
-		if (m_ConsoleState == CONSOLE_CLOSED || m_ConsoleState == CONSOLE_OPEN)
+		if(m_ConsoleState == CONSOLE_CLOSED || m_ConsoleState == CONSOLE_OPEN)
 		{
 			m_StateChangeEnd = TimeNow()+m_StateChangeDuration;
 		}
@@ -663,7 +663,7 @@ void CGameConsole::Toggle(int Type)
 			m_StateChangeEnd = TimeNow()+ReversedProgress;
 		}
 
-		if (m_ConsoleState == CONSOLE_CLOSED || m_ConsoleState == CONSOLE_CLOSING)
+		if(m_ConsoleState == CONSOLE_CLOSED || m_ConsoleState == CONSOLE_CLOSING)
 		{
 			Input()->MouseModeAbsolute();
 			UI()->SetEnabled(false);

@@ -300,7 +300,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		{
 			// everything is handled within
 		}
-		else if (m_Mode == CHAT_WHISPER)
+		else if(m_Mode == CHAT_WHISPER)
 		{
 			// change target
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -310,7 +310,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 					ClientID = (m_WhisperTarget + MAX_CLIENTS - i) % MAX_CLIENTS; // pick previous player as target
 				else
 					ClientID = (m_WhisperTarget + i) % MAX_CLIENTS; // pick next player as target
-				if (m_pClient->m_aClients[ClientID].m_Active && m_WhisperTarget != ClientID && m_pClient->m_LocalClientID != ClientID)
+				if(m_pClient->m_aClients[ClientID].m_Active && m_WhisperTarget != ClientID && m_pClient->m_LocalClientID != ClientID)
 				{
 					m_WhisperTarget = ClientID;
 					break;
@@ -338,7 +338,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 				m_CompletionChosen = m_CompletionFav;
 			else
 			{
-				if (m_ReverseCompletion)
+				if(m_ReverseCompletion)
 					m_CompletionChosen = (m_CompletionChosen - 1 + 2 * MAX_CLIENTS) % (2 * MAX_CLIENTS);
 				else
 					m_CompletionChosen = (m_CompletionChosen + 1) % (2 * MAX_CLIENTS);
@@ -453,7 +453,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 				m_Input.Set(m_pHistoryEntry->m_aText);
 		}
 	}
-	else if (Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_DOWN)
+	else if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_DOWN)
 	{
 		if(IsTypingCommand() && !m_pHistoryEntry)
 		{
@@ -466,7 +466,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 			if(m_pHistoryEntry)
 				m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
 
-			if (m_pHistoryEntry)
+			if(m_pHistoryEntry)
 				m_Input.Set(m_pHistoryEntry->m_aText);
 			else
 				m_Input.Clear();
