@@ -890,6 +890,8 @@ void CChat::OnRender()
 		CursorPosition.y -= (InputFontSize-CategoryFontSize)*0.5f;
 		m_InputCursor.MoveTo(CursorPosition);
 		m_InputCursor.m_FontSize = InputFontSize;
+		m_InputCursor.m_MaxWidth = Width-190.0f-s_CategoryCursor.Width();
+		m_InputCursor.m_MaxLines = 2;
 		m_InputCursor.Reset();
 
 		// check if the visible text has to be moved
@@ -950,10 +952,7 @@ void CChat::OnRender()
 		}
 		else
 		{
-			m_InputCursor.m_MaxWidth = Width-190.0f-s_CategoryCursor.Width();
-			m_InputCursor.m_MaxLines = 2;
 			m_InputCursor.m_Flags = TEXTFLAG_WORD_WRAP;
-
 			//Render normal text
 			TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, -1);
 			

@@ -977,6 +977,42 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	pCursor->m_Height = pCursor->m_NextLineAdvanceY + 0.35f * Size;
 	pCursor->m_CharCount = pCur - pText;
 
+	// insert "..." at the end
+	if(pCursor->m_Truncated && pCursor->m_Flags & TEXTFLAG_ELLIPSIS)
+	{
+		const char ellipsis[] = "...";
+		if(pCursor->m_Glyphs.size() > 0)
+		{
+			CScaledGlyph *pLastGlyph = &pCursor->m_Glyphs[pCursor->m_Glyphs.size()-1];
+			pCursor->m_Advance.x = pLastGlyph->m_Advance.x + pLastGlyph->m_pGlyph->m_AdvanceX * pLastGlyph->m_Size;
+			pCursor->m_Advance.y = pLastGlyph->m_Advance.y;
+		}
+
+		int OldMaxWidth = pCursor->m_MaxWidth;
+		pCursor->m_MaxWidth = -1;
+		WordWidth = MakeWord(pCursor, ellipsis, ellipsis+sizeof(ellipsis), FontSizeIndex, Size, PixelSize, ScreenScale);
+		pCursor->m_MaxWidth = OldMaxWidth;
+		if(WordWidth.m_EffectiveAdvanceX > MaxWidth)
+		{
+			int NumDots = WordWidth.m_GlyphCount;
+			int NumGlyphs = pCursor->m_Glyphs.size() - NumDots;
+			float BackAdvanceX = 0;
+			for(int i = NumGlyphs - 1; i > 1; --i)
+			{
+				CScaledGlyph *pScaled = &pCursor->m_Glyphs[i];
+				if(pScaled->m_Advance.x + pScaled->m_pGlyph->m_AdvanceX * pScaled->m_Size > MaxWidth)
+				{
+					BackAdvanceX = pCursor->m_Advance.x - pScaled->m_Advance.x;
+					pCursor->m_Glyphs.remove_index(i);
+				}
+				else
+					break;
+			}
+			for(int i = pCursor->m_Glyphs.size() - NumDots; i < pCursor->m_Glyphs.size(); ++i)
+				pCursor->m_Glyphs[i].m_Advance.x -= BackAdvanceX;
+		}
+	}
+
 	TextRefreshGlyphs(pCursor);
 }
 
