@@ -388,8 +388,6 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 		int BitmapLeft = Glyph->left;
 		int BitmapTop = Glyph->top;
 
-		int BitmapSize = Width * Height;
-
 		UploadGlyph(0, Position.x + Offset, Position.y + Offset, BitmapWidth, BitmapHeight, pBitmap->buffer);
 		FT_Done_Glyph((FT_Glyph)Glyph);
 
@@ -501,10 +499,12 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	int NextChr = str_utf8_decode(&pCur);
 	CGlyph *pNextGlyph = NULL;
 	if(NextChr > 0)
+	{
 		if(NextChr == '\n' || NextChr == '\t')
 			pNextGlyph = m_pGlyphMap->GetGlyph(' ', FontSizeIndex, Render);
 		else
 			pNextGlyph = m_pGlyphMap->GetGlyph(NextChr, FontSizeIndex, Render);
+	}
 
 	float Scale = 1.0f/PixelSize;
 	float MaxWidth = pCursor->m_MaxWidth;
@@ -845,8 +845,6 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	if(!m_pGlyphMap->GetDefaultFace())
 		return;
 
-	int NumTotalPages = m_pGlyphMap->NumTotalPages();
-
 	bool Render = !(pCursor->m_Flags & TEXTFLAG_NO_RENDER);
 
 	// Sizes
@@ -995,7 +993,6 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 	float Size = pCursor->m_FontSize;
 	int PixelSize = (int)(Size * ScreenScale.y);
 	Size = PixelSize / ScreenScale.y;
-	int FontSizeIndex = m_pGlyphMap->GetFontSizeIndex(PixelSize);
 
 	pCursor->m_LineCount++;
 	pCursor->m_Advance.y = pCursor->m_LineSpacing + pCursor->m_NextLineAdvanceY;
@@ -1081,7 +1078,7 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 				LineOffset.x = 0;
 		}
 
-		if (i < StartGlyph || i >= EndGlyphs)
+		if(i < StartGlyph || i >= EndGlyphs)
 			continue;
 
 		vec4 Color;
