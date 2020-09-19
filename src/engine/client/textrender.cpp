@@ -346,7 +346,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 
 	FT_Face GlyphFace;
 	int GlyphIndex = GetCharGlyph(pGlyph->m_ID, &GlyphFace);
-	int FontSize = aFontSizes[pGlyph->m_FontSizeIndex];
+	int FontSize = s_aFontSizes[pGlyph->m_FontSizeIndex];
 	FT_Set_Pixel_Sizes(GlyphFace, 0, FontSize);
 
 	if(FT_Load_Glyph(GlyphFace, GlyphIndex, FT_LOAD_NO_BITMAP))
@@ -406,10 +406,10 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 		m_aAtlasPages[AtlasIndex].Touch();
 
 		float UVscale = 1.0f / TEXTURE_SIZE;
-		pGlyph->m_aUvs[0] = (Position.x + Spacing) * UVscale;
-		pGlyph->m_aUvs[1] = (Position.y + Spacing) * UVscale;
-		pGlyph->m_aUvs[2] = pGlyph->m_aUvs[0] + OutlinedWidth * UVscale;
-		pGlyph->m_aUvs[3] = pGlyph->m_aUvs[1] + OutlinedHeight * UVscale;
+		pGlyph->m_aUvCoords[0] = (Position.x + Spacing) * UVscale;
+		pGlyph->m_aUvCoords[1] = (Position.y + Spacing) * UVscale;
+		pGlyph->m_aUvCoords[2] = pGlyph->m_aUvCoords[0] + OutlinedWidth * UVscale;
+		pGlyph->m_aUvCoords[3] = pGlyph->m_aUvCoords[1] + OutlinedHeight * UVscale;
 	}
 
 	float Scale = 1.0f / FontSize;
@@ -476,7 +476,7 @@ int CGlyphMap::GetFontSizeIndex(int PixelSize)
 {
 	for(unsigned i = 0; i < NUM_FONT_SIZES; i++)
 	{
-		if(aFontSizes[i] >= PixelSize)
+		if(s_aFontSizes[i] >= PixelSize)
 			return i;
 	}
 
@@ -1131,7 +1131,7 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 			LastColor = Color;
 		}
 
-		Graphics()->QuadsSetSubset(pGlyph->m_aUvs[0], pGlyph->m_aUvs[1], pGlyph->m_aUvs[2], pGlyph->m_aUvs[3]);
+		Graphics()->QuadsSetSubset(pGlyph->m_aUvCoords[0], pGlyph->m_aUvCoords[1], pGlyph->m_aUvCoords[2], pGlyph->m_aUvCoords[3]);
 
 		vec2 QuadPosition = Anchor + LineOffset + rScaled.m_Advance + vec2(pGlyph->m_BearingX, pGlyph->m_BearingY) * rScaled.m_Size;
 		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, pGlyph->m_Width * rScaled.m_Size, pGlyph->m_Height * rScaled.m_Size);

@@ -21,8 +21,8 @@ enum
 };
 
 // TODO: use SDF or MSDF font instead of multiple font sizes
-static int aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36,64};
-#define NUM_FONT_SIZES (sizeof(aFontSizes)/sizeof(int))
+static int s_aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36,64};
+#define NUM_FONT_SIZES (sizeof(s_aFontSizes)/sizeof(int))
 #define PAGE_SIZE (TEXTURE_SIZE/PAGE_COUNT)
 
 struct CGlyph
@@ -39,7 +39,7 @@ struct CGlyph
 	float m_BearingX;
 	float m_BearingY;
 	float m_AdvanceX;
-	float m_aUvs[4];
+	float m_aUvCoords[4];
 };
 
 struct CGlyphIndex
@@ -182,11 +182,9 @@ class CTextRender : public IEngineTextRender
 
 	int LoadFontCollection(const void *pFilename, const void *pBuf, long FileSize);
 
-	bool isWestern(int Chr)
+	bool isWestern(int Chr) const
 	{
-		if(Chr >= 0x0020 && Chr <= 0x218F)
-			return true;
-		return false;
+		return Chr >= 0x0020 && Chr <= 0x218F;
 	}
 
 	CWordWidthHint MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, 
@@ -205,8 +203,6 @@ public:
 
 	void LoadFonts(IStorage *pStorage, IConsole *pConsole);
 	void SetFontLanguageVariant(const char *pLanguageFile);
-
-	// void SetCursor(CTextCursor *pCursor, float x, float y, int Flags = 0);
 
 	void TextColor(float r, float g, float b, float a);
 	void TextSecondaryColor(float r, float g, float b, float a);

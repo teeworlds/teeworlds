@@ -1312,22 +1312,16 @@ void CChat::OnRender()
 		else
 			TextColor = ColorAllText;
 
+		TextRender()->TextColor(TextColor);
 		if(pLine->m_Highlighted)
 		{
-			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, TextColor.a);
-
-			TextRender()->TextSecondaryColor(ColorHighlightOutline.r,
-										   ColorHighlightOutline.g,
-										   ColorHighlightOutline.b,
-										   ColorHighlightOutline.a);
-
+			TextRender()->TextSecondaryColor(ColorHighlightOutline);
 			TextRender()->TextDeferred(&s_ChatCursor, pLine->m_aText, -1);
 			TextRender()->DrawTextShadowed(&s_ChatCursor, ShadowOffset, Blend, 0, NumNameGlyphs);
 			TextRender()->DrawTextOutlined(&s_ChatCursor, Blend, NumNameGlyphs, -1);
 		}
 		else
 		{
-			TextRender()->TextColor(TextColor);
 			TextRender()->TextSecondaryColor(ShadowColor);
 			TextRender()->TextDeferred(&s_ChatCursor, pLine->m_aText, -1);
 			TextRender()->DrawTextShadowed(&s_ChatCursor, ShadowOffset, Blend);
