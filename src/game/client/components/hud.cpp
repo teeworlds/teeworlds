@@ -816,7 +816,6 @@ void CHud::RenderSpectatorHud()
 		break;
 	}
 
-	float AdvanceID = 0;
 	vec2 NamePosition = vec2(s_SpectateLabelCursor.BoundingBox().Right()+3.0f, m_Height-13.0f);
 	if(SpecMode == SPEC_PLAYER || SpecID != -1)
 		NamePosition.x += RenderTools()->DrawClientID(TextRender(), s_SpectateTargetCursor.m_FontSize, NamePosition, SpecID);

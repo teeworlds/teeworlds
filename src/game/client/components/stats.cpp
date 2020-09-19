@@ -217,7 +217,6 @@ void CStats::OnRender()
 		RenderTools()->DrawRoundRect(&Rect, vec4(0,0,0,0.5f), 17.0f);
 	}
 
-	float tw;
 	int px = 325;
 
 	s_Cursor.m_FontSize = 20.0f;

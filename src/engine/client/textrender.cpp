@@ -548,11 +548,13 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 
 		NextChr = str_utf8_decode(&pCur);
 		pNextGlyph = NULL;
-		if(NextChr)
+		if(NextChr > 0)
+		{
 			if(NextChr == '\n' || NextChr == '\t')
 				pNextGlyph = m_pGlyphMap->GetGlyph(' ', FontSizeIndex, Render);
 			else
 				pNextGlyph = m_pGlyphMap->GetGlyph(NextChr, FontSizeIndex, Render);
+		}
 
 		vec2 Kerning = m_pGlyphMap->Kerning(pGlyph, pNextGlyph, PixelSize) * Scale;
 		float AdvanceX = (pGlyph->m_AdvanceX + Kerning.x) * Size;

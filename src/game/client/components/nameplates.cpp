@@ -16,8 +16,6 @@ void CNamePlates::RenderNameplate(
 	int ClientID
 	) const
 {
-	const CGameClient::CClientData *pClientData = &m_pClient->m_aClients[ClientID];
-
 	bool Predicted = m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(ClientID);
 	vec2 Position = m_pClient->GetCharPos(ClientID, Predicted);
 
