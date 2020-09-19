@@ -961,7 +961,7 @@ void CChat::OnRender()
 			s_MarkerCursor.Reset();
 			TextRender()->TextDeferred(&s_MarkerCursor, "|", -1);
 			s_MarkerCursor.m_Align = TEXTALIGN_CENTER;
-			vec2 MarkerPosition = TextRender()->CaretPosition(&m_InputCursor, m_Input.GetCursorOffset()-m_ChatStringOffset+1);
+			vec2 MarkerPosition = TextRender()->CaretPosition(&m_InputCursor, m_Input.GetCursorOffset()-m_ChatStringOffset);
 			s_MarkerCursor.MoveTo(MarkerPosition.x, MarkerPosition.y);
 
 			//Render command autocomplete option hint
@@ -1055,6 +1055,7 @@ void CChat::OnRender()
 		{
 			s_ChatCursor.MoveTo(Begin, 0.0f);
 			s_ChatCursor.Reset();
+			s_ChatCursor.m_Flags = TEXTFLAG_WORD_WRAP | TEXTFLAG_NO_RENDER;
 			char aBuf[768] = {0};
 			if(pLine->m_Mode == CHAT_WHISPER)
 			{
@@ -1070,11 +1071,13 @@ void CChat::OnRender()
 
 			str_append(aBuf, pLine->m_aText, sizeof(aBuf));
 
-			TextRender()->TextOutlined(&s_ChatCursor, aBuf, -1);
+			TextRender()->TextDeferred(&s_ChatCursor, aBuf, -1);
 			pLine->m_Size.y = s_ChatCursor.LineCount() * FontSize;
 			pLine->m_Size.x = s_ChatCursor.Width();
 		}
 	}
+
+	s_ChatCursor.m_Flags = TEXTFLAG_WORD_WRAP;
 
 	if(m_Show)
 	{

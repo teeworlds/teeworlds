@@ -556,7 +556,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 
 		vec2 Kerning = m_pGlyphMap->Kerning(pGlyph, pNextGlyph, PixelSize) * Scale;
 		float AdvanceX = (pGlyph->m_AdvanceX + Kerning.x) * Size;
-
+	
 		bool IsSpace = Chr == '\n' || Chr == '\t' || Chr == ' ';
 		bool CanBreak = !IsSpace && (BreakWord || pCursor->m_StartOfLine);
 		if(Hint.m_EffectiveAdvanceX - WordStartAdvanceX > MaxWidth || (CanBreak && pCursor->m_Advance.x + AdvanceX > MaxWidth))
@@ -1153,7 +1153,7 @@ vec2 CTextRender::CaretPosition(CTextCursor *pCursor, int NumChars)
 	for(int i = 0; i < NumGlpyhs; ++i)
 	{
 		CursorChars += pCursor->m_Glyphs[i].m_NumChars;
-		if(CursorChars >= NumChars)
+		if(CursorChars > NumChars)
 			return pCursor->m_CursorPos + pCursor->m_Glyphs[i].m_Advance;
 	}
 

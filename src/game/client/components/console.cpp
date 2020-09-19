@@ -311,7 +311,7 @@ static float ConsoleScaleFunc(float t)
 struct CRenderInfo
 {
 	CGameConsole *m_pSelf;
-	CTextCursor m_Cursor;
+	CTextCursor *m_pCursor;
 	const char *m_pCurrentCmd;
 	int m_WantedCompletion;
 	int m_EnumCount;
@@ -321,7 +321,45 @@ struct CRenderInfo
 
 void CGameConsole::PossibleCommandsRenderCallback(const char *pStr, void *pUser)
 {
-	// TODO: ADDBACK: Redo chat
+	CRenderInfo *pInfo = static_cast<CRenderInfo *>(pUser);
+
+	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
+	{
+		pInfo->m_pSelf->TextRender()->TextColor(0.05f, 0.05f, 0.05f,1);
+		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
+		CTextBoundingBox Box = pInfo->m_pCursor->BoundingBox();
+		CUIRect Rect = {Box.x - 2, Box.y, Box.w + 4, Box.h};
+
+		pInfo->m_pSelf->RenderTools()->DrawRoundRect(&Rect, vec4(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f), pInfo->m_pCursor->m_FontSize/3);
+
+		// scroll when out of sight
+		if(pInfo->m_pCursor->CursorPosition().x < 3.0f)
+			pInfo->m_Offset = 0.0f;
+		else if(pInfo->m_pCursor->BoundingBox().Right() > pInfo->m_Width)
+			pInfo->m_Offset -= pInfo->m_Width/2;
+	}
+	else
+	{
+		const char *pMatchStart = str_find_nocase(pStr, pInfo->m_pCurrentCmd);
+
+		if(pMatchStart)
+		{
+			pInfo->m_pSelf->TextRender()->TextColor(0.5f,0.5f,0.5f,1);
+			pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, pMatchStart-pStr);
+			pInfo->m_pSelf->TextRender()->TextColor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,1);
+			pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pMatchStart, str_length(pInfo->m_pCurrentCmd));
+			pInfo->m_pSelf->TextRender()->TextColor(0.5f,0.5f,0.5f,1);
+			pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pMatchStart+str_length(pInfo->m_pCurrentCmd), -1);
+		}
+		else
+		{
+			pInfo->m_pSelf->TextRender()->TextColor(0.75f,0.75f,0.75f,1);
+			pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
+		}
+	}
+
+	pInfo->m_EnumCount++;
+	pInfo->m_pSelf->TextRender()->TextAdvance(pInfo->m_pCursor, 7.0f);
 }
 
 void CGameConsole::OnRender()
@@ -413,7 +451,177 @@ void CGameConsole::OnRender()
 
 	CInstance *pConsole = CurrentConsole();
 
-	// TODO: ADDBACK: Redo console
+	{
+		float FontSize = 10.0f;
+		float RowHeight = FontSize*1.25f;
+		float x = 3;
+		float y = ConsoleHeight - RowHeight - 5.0f;
+
+		CRenderInfo Info;
+		Info.m_pSelf = this;
+		Info.m_WantedCompletion = pConsole->m_CompletionChosen;
+		Info.m_EnumCount = 0;
+		Info.m_Offset = pConsole->m_CompletionRenderOffset;
+		Info.m_Width = Screen.w;
+		Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
+
+		static CTextCursor s_InfoCursor;
+		s_InfoCursor.MoveTo(x+Info.m_Offset, y+RowHeight+2.0f);
+		s_InfoCursor.m_FontSize = FontSize;
+		s_InfoCursor.Reset();
+
+		Info.m_pCursor = &s_InfoCursor;
+
+
+		// render prompt
+		static CTextCursor s_Cursor;
+		s_Cursor.Reset();
+		s_Cursor.MoveTo(x, y);
+		s_Cursor.m_FontSize = FontSize;
+		s_Cursor.m_MaxLines = -1;
+		const char *pPrompt = "> ";
+		if(m_ConsoleType == CONSOLETYPE_REMOTE)
+		{
+			if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_LOADING)
+			{
+				if(Client()->RconAuthed())
+					pPrompt = "rcon> ";
+				else
+					pPrompt = "ENTER PASSWORD> ";
+			}
+			else
+				pPrompt = "NOT CONNECTED> ";
+		}
+		TextRender()->TextOutlined(&s_Cursor, pPrompt, -1);
+
+		x = s_Cursor.AdvancePosition().x;
+
+		//hide rcon password
+		char aInputString[256];
+		str_copy(aInputString, pConsole->m_Input.GetString(), sizeof(aInputString));
+		if(m_ConsoleType == CONSOLETYPE_REMOTE && (Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_LOADING) && !Client()->RconAuthed())
+		{
+			for(int i = 0; i < pConsole->m_Input.GetLength(); ++i)
+				aInputString[i] = '*';
+		}
+
+		// render console input (wrap line)
+		s_Cursor.Reset();
+		s_Cursor.m_MaxWidth = Screen.w - 10.0f - x;
+		TextRender()->TextDeferred(&s_Cursor, aInputString, -1);
+		int Lines = s_Cursor.LineCount();
+		
+		y -= (Lines - 1) * FontSize;
+		s_Cursor.MoveTo(x, y);
+
+		static CTextCursor s_MarkerCursor;
+		s_MarkerCursor.Reset();
+		s_MarkerCursor.m_FontSize = FontSize;
+		TextRender()->TextDeferred(&s_MarkerCursor, "|", -1);
+		s_MarkerCursor.m_Align = TEXTALIGN_CENTER;
+		vec2 MarkerPosition = TextRender()->CaretPosition(&s_Cursor, pConsole->m_Input.GetCursorOffset());
+		s_MarkerCursor.MoveTo(MarkerPosition);
+
+		TextRender()->DrawTextOutlined(&s_Cursor);
+		TextRender()->DrawTextOutlined(&s_MarkerCursor);
+
+		// render possible commands
+		if(m_ConsoleType == CONSOLETYPE_LOCAL || Client()->RconAuthed())
+		{
+			if(pConsole->m_Input.GetString()[0] != 0)
+			{
+				m_pConsole->PossibleCommands(pConsole->m_aCompletionBuffer, pConsole->m_CompletionFlagmask, m_ConsoleType != CGameConsole::CONSOLETYPE_LOCAL &&
+					Client()->RconAuthed() && Client()->UseTempRconCommands(), PossibleCommandsRenderCallback, &Info);
+				pConsole->m_CompletionRenderOffset = Info.m_Offset;
+
+				if(Info.m_EnumCount <= 0)
+				{
+					if(pConsole->m_IsCommand)
+					{
+						char aBuf[512];
+						str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_aCommandHelp);
+						TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
+						TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1);
+						str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
+						TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
+					}
+				}
+			}
+		}
+
+		TextRender()->DrawTextOutlined(Info.m_pCursor);
+
+		TextRender()->TextColor(1,1,1,1);
+
+		//	render log (actual page, wrap lines)
+
+		CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.Last();
+		float OffsetY = 0.0f;
+		float LineOffset = 1.0f;
+		s_Cursor.m_MaxWidth = Screen.w-10;
+		for(int Page = 0; Page <= pConsole->m_BacklogActPage; ++Page, OffsetY = 0.0f)
+		{
+			while(pEntry)
+			{
+				s_Cursor.Reset();
+				if(pEntry->m_Highlighted)
+					TextRender()->TextColor(1,0.75,0.75,1);
+				TextRender()->TextDeferred(&s_Cursor, pEntry->m_aText, -1);
+				TextRender()->TextColor(1,1,1,1);
+
+				// get y offset (calculate it if we haven't yet)
+				if(pEntry->m_YOffset < 0.0f)
+				{
+					pEntry->m_YOffset = s_Cursor.BaseLineY()+LineOffset;
+				}
+				OffsetY += pEntry->m_YOffset;
+
+				//	next page when lines reach the top
+				if(y-OffsetY <= RowHeight)
+					break;
+
+				//	just render output from actual backlog page (render bottom up)
+				if(Page == pConsole->m_BacklogActPage)
+				{
+					s_Cursor.MoveTo(0.0f, y-OffsetY);
+					TextRender()->DrawTextOutlined(&s_Cursor);
+				}
+				pEntry = pConsole->m_Backlog.Prev(pEntry);
+			}
+
+			//	actual backlog page number is too high, render last available page (current checked one, render top down)
+			if(!pEntry && Page < pConsole->m_BacklogActPage)
+			{
+				pConsole->m_BacklogActPage = Page;
+				pEntry = pConsole->m_Backlog.First();
+				while(OffsetY > 0.0f && pEntry)
+				{
+					s_Cursor.Reset();
+					s_Cursor.MoveTo(0.0f, y-OffsetY);
+					TextRender()->TextOutlined(&s_Cursor, pEntry->m_aText, -1);
+					OffsetY -= pEntry->m_YOffset;
+					pEntry = pConsole->m_Backlog.Next(pEntry);
+				}
+				break;
+			}
+		}
+
+		s_Cursor.Reset();
+		s_Cursor.m_MaxWidth = -1;
+		// render page
+		char aBuf[128];
+		str_format(aBuf, sizeof(aBuf), Localize("-Page %d-"), pConsole->m_BacklogActPage+1);
+		s_Cursor.MoveTo(10.0f, 0.0f);
+		TextRender()->TextOutlined(&s_Cursor, aBuf, -1.0f);
+
+		// render version
+		str_format(aBuf, sizeof(aBuf), "v%s", GAME_RELEASE_VERSION);
+		s_Cursor.Reset();
+		s_Cursor.MoveTo(Screen.w-10.0f, 0.0f);
+		s_Cursor.m_Align = TEXTALIGN_RIGHT;
+		TextRender()->TextOutlined(&s_Cursor, aBuf, -1.0f);
+		s_Cursor.m_Align = TEXTALIGN_LEFT;
+	}
 }
 
 void CGameConsole::OnMessage(int MsgType, void *pRawMsg)
