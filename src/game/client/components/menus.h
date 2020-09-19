@@ -317,6 +317,10 @@ private:
 		ACTLB_NONE=0,
 		ACTLB_LANG,
 		ACTLB_THEME,
+
+		// demo player states
+		DEMOPLAYER_NONE=0,
+		DEMOPLAYER_SLICE_SAVE,
 	};
 
 	int m_GamePage;
@@ -334,6 +338,8 @@ private:
 	bool m_SkinModified;
 	bool m_KeyReaderWasActive;
 	bool m_KeyReaderIsActive;
+	int m_DemoPlayerState;
+	char m_aDemoPlayerPopupHint[256];
 
 	// generic popups
 	typedef void (CMenus::*FPopupButtonCallback)();

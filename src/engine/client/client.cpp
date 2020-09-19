@@ -1838,6 +1838,7 @@ void CClient::InitInterfaces()
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 
 	//
+	m_DemoEditor.Init(m_pGameClient->NetVersion(), &m_SnapshotDelta, m_pConsole, m_pStorage);
 	m_ServerBrowser.Init(&m_ContactClient, m_pGameClient->NetVersion());
 	m_Friends.Init();
 	m_Blacklist.Init();
@@ -2292,6 +2293,39 @@ void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData)
 	pSelf->RconAuth("", pResult->GetString(0));
 }
 
+void CClient::DemoSliceBegin()
+{
+	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
+	Config()->m_ClDemoSliceBegin = pInfo->m_Info.m_CurrentTick;
+}
+
+void CClient::DemoSliceEnd()
+{
+	const CDemoPlayer::CPlaybackInfo *pInfo = m_DemoPlayer.Info();
+	Config()->m_ClDemoSliceEnd = pInfo->m_Info.m_CurrentTick;
+}
+
+void CClient::Con_DemoSliceBegin(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	pSelf->DemoSliceBegin();
+}
+
+void CClient::Con_DemoSliceEnd(IConsole::IResult *pResult, void *pUserData)
+{
+	CClient *pSelf = (CClient *)pUserData;
+	pSelf->DemoSliceEnd();
+}
+
+void CClient::DemoSlice(const char *pDstPath, class CConfig *pConfig)
+{
+	if(m_DemoPlayer.IsPlaying())
+	{
+		const char *pDemoFileName = m_DemoPlayer.GetDemoFileName();
+		m_DemoEditor.Slice(pConfig, pDemoFileName, pDstPath, pConfig->m_ClDemoSliceBegin, pConfig->m_ClDemoSliceEnd);
+	}
+}
+
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 {
 	int Crc;
@@ -2302,7 +2336,7 @@ const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 	// try to start playback
 	m_DemoPlayer.SetListener(this);
 
-	const char *pError = m_DemoPlayer.Load(Storage(), m_pConsole, pFilename, StorageType, GameClient()->NetVersion());
+	const char *pError = m_DemoPlayer.Load(Config(), Storage(), m_pConsole, pFilename, StorageType, GameClient()->NetVersion());
 	if(pError)
 		return pError;
 
@@ -2534,6 +2568,8 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("record", "?s[file]", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
 	m_pConsole->Register("add_demomarker", "", CFGFLAG_CLIENT, Con_AddDemoMarker, this, "Add demo timeline marker");
+	m_pConsole->Register("demo_slice_start", "", CFGFLAG_CLIENT, Con_DemoSliceBegin, this, "");
+	m_pConsole->Register("demo_slice_end", "", CFGFLAG_CLIENT, Con_DemoSliceEnd, this, "");
 
 	// used for server browser update
 	m_pConsole->Chain("br_filter_string", ConchainServerBrowserUpdate, this);

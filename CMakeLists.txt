@@ -1118,6 +1118,7 @@ set(EXPECTED_DATA
   ui/console_bar.png
   ui/debug_font.png
   ui/demo_buttons.png
+  ui/demo_slice.png
   ui/file_icons.png
   ui/gametypes/ctf.png
   ui/gametypes/dm.png

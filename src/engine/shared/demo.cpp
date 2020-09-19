@@ -6,6 +6,8 @@
 #include <engine/console.h>
 #include <engine/storage.h>
 
+#include <engine/shared/config.h>
+
 #include "compression.h"
 #include "datafile.h"
 #include "demo.h"
@@ -27,7 +29,7 @@ CDemoRecorder::CDemoRecorder(class CSnapshotDelta *pSnapshotDelta)
 }
 
 // Record
-int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetVersion, const char *pMap, SHA256_DIGEST Sha256, unsigned Crc, const char *pType)
+int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetVersion, const char *pMap, SHA256_DIGEST Sha256, unsigned Crc, const char *pType, bool Insecure)
 {
 	CDemoHeader Header;
 	if(m_File)
@@ -37,22 +39,23 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 
 	// open mapfile
 	char aMapFilename[128];
-	// try the normal maps folder
-	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
-	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
-	if(!MapFile)
-	{
-		// try the downloaded maps (sha256)
-		char aSha256[SHA256_MAXSTRSIZE];
-		sha256_str(Sha256, aSha256, sizeof(aSha256));
-		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%s.map", pMap, aSha256);
-		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
-	}
+
+	// try the downloaded maps (sha256)
+	char aSha256[SHA256_MAXSTRSIZE];
+	sha256_str(Sha256, aSha256, sizeof(aSha256));
+	str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%s.map", pMap, aSha256);
+	IOHANDLE MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, Insecure ? NULL : CDataFileReader::CheckSha256, &Sha256);
 	if(!MapFile)
 	{
 		// try the downloaded maps (crc)
 		str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", pMap, Crc);
-		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, Insecure ? NULL : CDataFileReader::CheckSha256, &Sha256);
+	}
+	if(!MapFile)
+	{
+		// try the normal maps folder
+		str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
+		MapFile = pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, Insecure ? NULL : CDataFileReader::CheckSha256, &Sha256);
 	}
 	if(!MapFile)
 	{
@@ -60,7 +63,7 @@ int CDemoRecorder::Start(class IStorage *pStorage, class IConsole *pConsole, con
 		char aBuf[IO_MAX_PATH_LENGTH];
 		str_format(aMapFilename, sizeof(aMapFilename), "%s.map", pMap);
 		if(pStorage->FindFile(aMapFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
-			MapFile = pStorage->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
+			MapFile = pStorage->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, Insecure ? NULL : CDataFileReader::CheckSha256, &Sha256);
 	}
 	if(!MapFile)
 	{
@@ -582,7 +585,7 @@ void CDemoPlayer::Unpause()
 	m_Info.m_Info.m_Paused = false;
 }
 
-const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion)
+const char *CDemoPlayer::Load(class CConfig *pConfig, class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion)
 {
 	m_pConsole = pConsole;
 	m_aErrorMsg[0] = 0;
@@ -675,6 +678,11 @@ const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole
 		mem_free(pMapData);
 	}
 
+	// store map inforation
+	m_MapInfo.m_Crc = Crc;
+	m_MapInfo.m_Size = MapSize;
+	str_copy(m_MapInfo.m_aName, m_Info.m_Header.m_aMapName, sizeof(m_MapInfo.m_aName));
+
 	// get timeline markers
 	m_Info.m_Info.m_NumTimelineMarkers = min(bytes_be_to_uint(m_Info.m_Header.m_aNumTimelineMarkers), unsigned(MAX_TIMELINE_MARKERS));
 	for(int i = 0; i < m_Info.m_Info.m_NumTimelineMarkers; i++)
@@ -684,6 +692,10 @@ const char *CDemoPlayer::Load(class IStorage *pStorage, class IConsole *pConsole
 
 	// scan the file for interesting points
 	ScanFile();
+
+	// reset slice markers
+	pConfig->m_ClDemoSliceBegin = -1;
+	pConfig->m_ClDemoSliceEnd = -1;
 
 	// ready for playback
 	return 0;
@@ -746,7 +758,7 @@ void CDemoPlayer::SetSpeed(float Speed)
 	m_Info.m_Info.m_Speed = Speed;
 }
 
-int CDemoPlayer::Update()
+int CDemoPlayer::Update(bool RealTime)
 {
 	int64 Now = time_get();
 	int64 Deltatime = Now-m_Info.m_LastUpdate;
@@ -763,7 +775,7 @@ int CDemoPlayer::Update()
 		int64 CurtickStart = (m_Info.m_Info.m_CurrentTick)*Freq/SERVER_TICK_SPEED;
 
 		// break if we are ready
-		if(CurtickStart > m_Info.m_CurrentTime)
+		if(RealTime && CurtickStart > m_Info.m_CurrentTime)
 			break;
 
 		// do one more tick
@@ -846,4 +858,75 @@ int CDemoPlayer::GetDemoType() const
 	if(m_File)
 		return m_DemoType;
 	return DEMOTYPE_INVALID;
+}
+
+void CDemoEditor::Init(const char *pNetVersion, class CSnapshotDelta *pSnapshotDelta, class IConsole *pConsole, class IStorage *pStorage)
+{
+	m_pNetVersion = pNetVersion;
+	m_pSnapshotDelta = pSnapshotDelta;
+	m_pConsole = pConsole;
+	m_pStorage = pStorage;
+}
+
+void CDemoEditor::Slice(class CConfig *pConfig, const char *pDemo, const char *pDst, int StartTick, int EndTick)
+{
+	class CDemoPlayer DemoPlayer(m_pSnapshotDelta);
+	class CDemoRecorder DemoRecorder(m_pSnapshotDelta);
+
+	m_pDemoPlayer = &DemoPlayer;
+	m_pDemoRecorder = &DemoRecorder;
+
+	m_pDemoPlayer->SetListener(this);
+
+	m_SliceFrom = StartTick;
+	m_SliceTo = EndTick;
+	m_Stop = false;
+
+	const char *pError = m_pDemoPlayer->Load(pConfig, m_pStorage, m_pConsole, pDemo, IStorage::TYPE_ALL, m_pNetVersion);
+	if (pError)
+		return;
+
+	const CDemoPlayer::CMapInfo *pMapInfo = m_pDemoPlayer->GetMapInfo();
+	SHA256_DIGEST Fake;
+	for(unsigned i = 0; i < sizeof(Fake.data); i++)
+	{
+		Fake.data[i] = 0xff;
+	}
+	if(m_pDemoRecorder->Start(m_pStorage, m_pConsole, pDst, m_pNetVersion, pMapInfo->m_aName, Fake, pMapInfo->m_Crc, "client", true) == -1)
+		return;
+
+	m_pDemoPlayer->Play();
+	const CDemoPlayer::CPlaybackInfo *pInfo = m_pDemoPlayer->Info();
+
+	while(m_pDemoPlayer->IsPlaying() && !m_Stop)
+	{
+		m_pDemoPlayer->Update(false);
+
+		pInfo = m_pDemoPlayer->Info();
+
+		if(pInfo->m_Info.m_Paused)
+			break;
+	}
+
+	m_pDemoRecorder->Stop();
+}
+
+void CDemoEditor::OnDemoPlayerSnapshot(void *pData, int Size)
+{
+	const CDemoPlayer::CPlaybackInfo *pInfo = m_pDemoPlayer->Info();
+
+	if(m_SliceTo != -1 && pInfo->m_Info.m_CurrentTick > m_SliceTo)
+		m_Stop = true;
+	else if (m_SliceFrom == -1 || pInfo->m_Info.m_CurrentTick >= m_SliceFrom)
+		m_pDemoRecorder->RecordSnapshot(pInfo->m_Info.m_CurrentTick, pData, Size);
+}
+
+void CDemoEditor::OnDemoPlayerMessage(void *pData, int Size)
+{
+	const CDemoPlayer::CPlaybackInfo *pInfo = m_pDemoPlayer->Info();
+
+	if(m_SliceTo != -1 && pInfo->m_Info.m_CurrentTick > m_SliceTo)
+		m_Stop = true;
+	else if (m_SliceFrom == -1 || pInfo->m_Info.m_CurrentTick >= m_SliceFrom)
+		m_pDemoRecorder->RecordMessage(pData, Size);
 }

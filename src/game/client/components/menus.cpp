@@ -96,6 +96,7 @@ CMenus::CMenus()
 	m_aFilterString[0] = 0;
 
 	m_ActiveListBox = ACTLB_NONE;
+	m_DemoPlayerState = DEMOPLAYER_NONE;
 }
 
 float CMenus::CButtonContainer::GetFade(bool Checked, float Seconds)
