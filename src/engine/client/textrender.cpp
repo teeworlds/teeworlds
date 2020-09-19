@@ -781,11 +781,11 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 		{
 			char aFileName[128];
 			str_format(aFileName, sizeof(aFileName), "languages/%s.json", (const char *)Entries[i].name);
-			strncpy(m_paVariants[i].m_aLanguageFile, aFileName, sizeof(m_paVariants[i].m_aLanguageFile));
+			str_copy(m_paVariants[i].m_aLanguageFile, aFileName, sizeof(m_paVariants[i].m_aLanguageFile));
 
 			json_value *pFamilyName = rVariant.u.object.values[i].value;
 			if(pFamilyName->type == json_string)
-				strncpy(m_paVariants[i].m_aFamilyName, pFamilyName->u.string.ptr, sizeof(m_paVariants[i].m_aFamilyName));
+				str_copy(m_paVariants[i].m_aFamilyName, pFamilyName->u.string.ptr, sizeof(m_paVariants[i].m_aFamilyName));
 			else
 				m_paVariants[i].m_aFamilyName[0] = 0;
 		}
