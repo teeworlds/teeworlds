@@ -69,7 +69,6 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 	// background
 	float Spacing = 2.0f;
-	float ButtonHeight = 20.0f;
 
 	if(!(*CSkins::ms_apUCCVariables[m_TeePartSelected]))
 		return;
