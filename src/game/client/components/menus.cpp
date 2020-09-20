@@ -96,6 +96,8 @@ CMenus::CMenus()
 	m_aFilterString[0] = 0;
 
 	m_ActiveListBox = ACTLB_NONE;
+
+	m_PopupSelection = -2;
 }
 
 float CMenus::CButtonContainer::GetFade(bool Checked, float Seconds)
@@ -990,15 +992,17 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			}
 		}
 
+
+		// TODO: replace tee page to something else
 		Box.VSplitLeft(Spacing, 0, &Box); // little space
 		Box.VSplitLeft(ButtonWidth, &Button, &Box);
 		{
 			static CButtonContainer s_TeeButton;
-			if(DoButton_MenuTabTop(&s_TeeButton, Localize("Tee"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage == SETTINGS_TEE, &Button,
-				Config()->m_UiSettingsPage == SETTINGS_TEE ? 1.0f : NotActiveAlpha, 1.0f, Corners))
+			if(DoButton_MenuTabTop(&s_TeeButton, Localize("TBD"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage == SETTINGS_TBD, &Button,
+				Config()->m_UiSettingsPage == SETTINGS_TBD ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 			{
-				m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_TEE);
-				Config()->m_UiSettingsPage = SETTINGS_TEE;
+				m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_TBD);
+				Config()->m_UiSettingsPage = SETTINGS_TBD;
 			}
 		}
 
@@ -1425,6 +1429,14 @@ void CMenus::PopupConfirm(const char *pTitle, const char *pMessage, const char *
 	m_Popup = POPUP_CONFIRM;
 }
 
+void CMenus::PopupCountry(int Selection, FPopupButtonCallback pfnOkButtonCallback)
+{
+	m_PopupSelection = Selection;
+	m_aPopupButtons[BUTTON_CONFIRM].m_NextPopup = POPUP_NONE;
+	m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback = pfnOkButtonCallback;
+	m_Popup = POPUP_COUNTRY;
+}
+
 
 int CMenus::Render()
 {
@@ -1806,13 +1818,6 @@ int CMenus::Render()
 		else if(m_Popup == POPUP_COUNTRY)
 		{
 			// selected filter
-			CBrowserFilter *pFilter = GetSelectedBrowserFilter();
-			CServerFilterInfo FilterInfo;
-			pFilter->GetFilter(&FilterInfo);
-
-			static int s_ActSelection = -2;
-			if(s_ActSelection == -2)
-				s_ActSelection = FilterInfo.m_Country;
 			static CListBox s_ListBox;
 			int OldSelected = -1;
 			s_ListBox.DoStart(40.0f, m_pClient->m_pCountryFlags->Num(), 12, 1, OldSelected, &Box, false);
@@ -1822,7 +1827,7 @@ int CMenus::Render()
 				const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
 				if(pEntry->m_Blocked)
 					continue;
-				if(pEntry->m_CountryCode == s_ActSelection)
+				if(pEntry->m_CountryCode == m_PopupSelection)
 					OldSelected = i;
 
 				CListboxItem Item = s_ListBox.DoNextItem(pEntry, OldSelected == i);
@@ -1858,21 +1863,20 @@ int CMenus::Render()
 
 			const int NewSelected = s_ListBox.DoEnd();
 			if(OldSelected != NewSelected)
-				s_ActSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
+				m_PopupSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
 			Part.VMargin(120.0f, &Part);
 
 			static CButtonContainer s_ButtonCountry;
 			if(DoButton_Menu(&s_ButtonCountry, Localize("Ok"), 0, &BottomBar) || m_EnterPressed)
 			{
-				FilterInfo.m_Country = s_ActSelection;
-				pFilter->SetFilter(&FilterInfo);
+				(this->*m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback)();
 				m_Popup = POPUP_NONE;
 			}
 
 			if(m_EscapePressed)
 			{
-				s_ActSelection = FilterInfo.m_Country;
+				m_PopupSelection = -2;
 				m_Popup = POPUP_NONE;
 			}
 		}
