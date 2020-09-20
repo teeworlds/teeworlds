@@ -40,6 +40,13 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 	m_ListBoxView = View;
 }
 
+void CMenus::CListBox::DoSubHeader(float HeaderHeight, float Spacing)
+{
+	CUIRect View = m_ListBoxView;
+	View.HSplitTop(HeaderHeight+Spacing, 0, &View);
+	m_ListBoxView = View;
+}
+
 bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 {
 	CUIRect Filter;
