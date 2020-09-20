@@ -156,10 +156,10 @@ void CGlyphMap::InitTexture(int Width, int Height)
 	mem_free(pMem);
 }
 
-int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *Position)
+int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *pPosition)
 {
-	*Position = m_aAtlasPages[m_ActiveAtlasIndex].Add(Width, Height);
-	if(Position->x >= 0 && Position->y >= 0)
+	*pPosition = m_aAtlasPages[m_ActiveAtlasIndex].Add(Width, Height);
+	if(pPosition->x >= 0 && pPosition->y >= 0)
 		return m_ActiveAtlasIndex;
 
 	// out of space, drop a page
@@ -189,8 +189,10 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *Position)
 
 	UploadGlyph(0, X, Y, W, H, pMem);
 
+	mem_free(pMem);
+
 	m_aAtlasPages[Atlas].Init(m_NumTotalPages++, X, Y, W, H);
-	*Position = m_aAtlasPages[Atlas].Add(Width, Height);
+	*pPosition = m_aAtlasPages[Atlas].Add(Width, Height);
 	m_ActiveAtlasIndex = Atlas;
 
 	dbg_msg("textrender", "atlas is full, dropping atlas %d, total pages: %u", Atlas, m_NumTotalPages);
