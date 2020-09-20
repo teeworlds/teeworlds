@@ -24,7 +24,6 @@ CMapLayers::CMapLayers(int Type)
 	m_Type = Type;
 	m_CurrentLocalTick = 0;
 	m_LastLocalTick = 0;
-	m_EnvelopeUpdate = false;
 	m_pMenuMap = 0;
 	m_pMenuLayers = 0;
 	m_OnlineStartTime = 0;
@@ -200,7 +199,6 @@ void CMapLayers::EnvelopeUpdate()
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
 		m_CurrentLocalTick = pInfo->m_CurrentTick;
 		m_LastLocalTick = pInfo->m_CurrentTick;
-		m_EnvelopeUpdate = true;
 	}
 }
 
@@ -214,17 +212,15 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 
 	CEnvPoint *pPoints = 0;
 	CLayers *pLayers = 0;
+	if(pThis->Client()->State() == IClient::STATE_ONLINE || pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
-		if(pThis->Client()->State() == IClient::STATE_ONLINE || pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
-		{
-			pLayers = pThis->Layers();
-			pPoints = pThis->m_lEnvPoints.base_ptr();
-		}
-		else
-		{
-			pLayers = pThis->m_pMenuLayers;
-			pPoints = pThis->m_lEnvPointsMenu.base_ptr();
-		}
+		pLayers = pThis->Layers();
+		pPoints = pThis->m_lEnvPoints.base_ptr();
+	}
+	else
+	{
+		pLayers = pThis->m_pMenuLayers;
+		pPoints = pThis->m_lEnvPointsMenu.base_ptr();
 	}
 
 	int Start, Num;
@@ -233,60 +229,51 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	if(Env >= Num)
 		return;
 
-	CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);
-
-	float Time = 0.0f;
+	const CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);
+	const float TickSpeed = (float)pThis->Client()->GameTickSpeed();
+	static float s_Time = 0.0f;
 	if(pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = pThis->DemoPlayer()->BaseInfo();
-
-		if(!pInfo->m_Paused || pThis->m_EnvelopeUpdate)
+		if(pThis->m_CurrentLocalTick != pInfo->m_CurrentTick)
 		{
-			if(pThis->m_CurrentLocalTick != pInfo->m_CurrentTick)
-			{
-				pThis->m_LastLocalTick = pThis->m_CurrentLocalTick;
-				pThis->m_CurrentLocalTick = pInfo->m_CurrentTick;
-			}
-
-			Time = mix(pThis->m_LastLocalTick / (float)pThis->Client()->GameTickSpeed(),
-						pThis->m_CurrentLocalTick / (float)pThis->Client()->GameTickSpeed(),
-						pThis->Client()->IntraGameTick());
+			pThis->m_LastLocalTick = pThis->m_CurrentLocalTick;
+			pThis->m_CurrentLocalTick = pInfo->m_CurrentTick;
 		}
 
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
+		s_Time = mix(
+			pThis->m_LastLocalTick / TickSpeed,
+			pThis->m_CurrentLocalTick / TickSpeed,
+			pThis->Client()->IntraGameTick());
 	}
-	else if(pThis->Client()->State() != IClient::STATE_OFFLINE)
+	else if(pThis->Client()->State() == IClient::STATE_ONLINE)
 	{
 		if(pThis->m_pClient->m_Snap.m_pGameData && !pThis->m_pClient->IsWorldPaused())
 		{
 			if(pItem->m_Version < 2 || pItem->m_Synchronized)
 			{
-				Time = mix((pThis->Client()->PrevGameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
-							(pThis->Client()->GameTick()-pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / (float)pThis->Client()->GameTickSpeed(),
-							pThis->Client()->IntraGameTick());
+				s_Time = mix(
+					(pThis->Client()->PrevGameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / TickSpeed,
+					(pThis->Client()->GameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / TickSpeed,
+					pThis->Client()->IntraGameTick());
 			}
 			else
-				Time = pThis->Client()->LocalTime()-pThis->m_OnlineStartTime;
+				s_Time = pThis->Client()->LocalTime() - pThis->m_OnlineStartTime;
 		}
-
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
 	}
 	else
 	{
-		Time = pThis->Client()->LocalTime();
-		pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, Time+TimeOffset, pChannels);
+		s_Time = pThis->Client()->LocalTime();
 	}
+	pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 }
 
 void CMapLayers::OnRender()
 {
-	if((Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK && !m_pMenuMap))
-		return;
-
 	CLayers *pLayers = 0;
 	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		pLayers = Layers();
-	else if(m_pMenuMap->IsLoaded())
+	else if(m_pMenuMap && m_pMenuMap->IsLoaded())
 		pLayers = m_pMenuLayers;
 
 	if(!pLayers)
