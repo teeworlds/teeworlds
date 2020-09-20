@@ -568,29 +568,23 @@ void CMenus::RenderDemoList(CUIRect MainView)
 					Button.x += FileIcon.w + 10.0f;
 					UI()->DoLabel(&Button, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 				}
-				else if(ID == COL_DEMO_LENGTH && !r.front().m_IsDir && r.front().m_InfosLoaded)
+				else if(ID == COL_DEMO_LENGTH && !DemoItem.m_IsDir && DemoItem.m_InfosLoaded && DemoItem.m_Valid)
 				{
-					if (DemoItem.m_Valid)
-					{
-						int Length = DemoItem.Length();
-						char aLength[32];
-						str_format(aLength, sizeof(aLength), "%d:%02d", Length/60, Length%60);
-						Button.VMargin(4.0f, &Button);
-						if(!Item.m_Selected)
-							TextRender()->TextColor(CUI::ms_TransparentTextColor);
-						UI()->DoLabel(&Button, aLength, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
-					}
+					int Length = DemoItem.Length();
+					char aLength[32];
+					str_format(aLength, sizeof(aLength), "%d:%02d", Length/60, Length%60);
+					Button.VMargin(4.0f, &Button);
+					if(!Item.m_Selected)
+						TextRender()->TextColor(CUI::ms_TransparentTextColor);
+					UI()->DoLabel(&Button, aLength, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
 				}
-				else if(ID == COL_DEMO_DATE)
+				else if(ID == COL_DEMO_DATE && !DemoItem.m_IsDir)
 				{
-					if(!DemoItem.m_IsDir)
-					{
-						char aDate[64];
-						str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
-						if(!Item.m_Selected)
-							TextRender()->TextColor(CUI::ms_TransparentTextColor);
-						UI()->DoLabel(&Button, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-					}
+					char aDate[64];
+					str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
+					if(!Item.m_Selected)
+						TextRender()->TextColor(CUI::ms_TransparentTextColor);
+					UI()->DoLabel(&Button, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 				}
 				TextRender()->TextColor(CUI::ms_DefaultTextColor);
 				if(Item.m_Selected)
