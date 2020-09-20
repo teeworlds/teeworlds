@@ -563,10 +563,9 @@ void CDemoPlayer::DoTick()
 				m_Info.m_NextTick = ChunkTick;
 				break;
 			}
-			else if(ChunkType == CHUNKTYPE_MESSAGE)
+			else if(ChunkType == CHUNKTYPE_MESSAGE && m_pListener && m_LastSnapshotDataSize != -1)
 			{
-				if(m_pListener)
-					m_pListener->OnDemoPlayerMessage(aData, DataSize);
+				m_pListener->OnDemoPlayerMessage(aData, DataSize);
 			}
 		}
 	}
