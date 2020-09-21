@@ -827,7 +827,7 @@ private:
 	void RenderSkinPartPalette(CUIRect MainView);
 	void RenderSettingsGeneral(CUIRect MainView);
 	void RenderSettingsPlayer(CUIRect MainView);
-	// void RenderSettingsTee(CUIRect MainView);
+	// void RenderSettingsTBD(CUIRect MainView); // TODO: change removed tee page to something else
 	void RenderSettingsTeeBasic(CUIRect MainView);
 	void RenderSettingsTeeCustom(CUIRect MainView);
 	void PopupConfirmDeleteSkin();

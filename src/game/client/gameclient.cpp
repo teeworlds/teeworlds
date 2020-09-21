@@ -490,6 +490,7 @@ void CGameClient::OnReset()
 		m_TeamCooldownTick = 0;
 		m_TeamChangeTime = 0.0f;
 		m_LastSkinChangeTime = Client()->LocalTime();
+		m_IdentityState = -1;
 		mem_zero(&m_GameInfo, sizeof(m_GameInfo));
 		m_DemoSpecMode = SPEC_FREEVIEW;
 		m_DemoSpecID = -1;
