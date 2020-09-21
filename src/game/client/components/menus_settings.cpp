@@ -2098,8 +2098,8 @@ void CMenus::RenderSettings(CUIRect MainView)
 		RenderSettingsGeneral(MainView);
 	else if(Config()->m_UiSettingsPage == SETTINGS_PLAYER)
 		RenderSettingsPlayer(MainView);
-	else if(Config()->m_UiSettingsPage == SETTINGS_TBD) {} // TODO: replace removed tee page to something else
-		// RenderSettingsTBD(MainView);
+	else if(Config()->m_UiSettingsPage == SETTINGS_TBD) // TODO: replace removed tee page to something else	
+		Config()->m_UiSettingsPage = SETTINGS_PLAYER; // TODO: remove this
 	else if(Config()->m_UiSettingsPage == SETTINGS_CONTROLS)
 		RenderSettingsControls(MainView);
 	else if(Config()->m_UiSettingsPage == SETTINGS_GRAPHICS)
