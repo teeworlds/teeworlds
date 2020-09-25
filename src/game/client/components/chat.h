@@ -28,7 +28,7 @@ class CChat : public CComponent
 		int m_TargetID;
 		int m_Mode;
 		int m_NameColor;
-		char m_aName[MAX_NAME_LENGTH];
+		char m_aName[MAX_NAME_LENGTH*UTF8_BYTE_LENGTH];
 		char m_aText[MAX_LINE_LENGTH];
 		bool m_Highlighted;
 	};

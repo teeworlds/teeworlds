@@ -2646,6 +2646,22 @@ int str_utf8_check(const char *str)
 	return 1;
 }
 
+void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
+{
+	int new_cursor;
+	int cursor = 0;
+
+	while(src[cursor])
+	{
+		new_cursor = str_utf8_forward(src, cursor);
+		if(new_cursor >= dst_size)			// reserve 1 byte for the null termination
+			break;
+		else
+			cursor = new_cursor;
+	}
+
+	str_copy(dst, src, min(cursor+1, dst_size));
+}
 
 unsigned str_quickhash(const char *str)
 {

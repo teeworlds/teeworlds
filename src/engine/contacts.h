@@ -9,8 +9,8 @@
 
 struct CContactInfo
 {
-	char m_aName[MAX_NAME_LENGTH];
-	char m_aClan[MAX_CLAN_LENGTH];
+	char m_aName[MAX_NAME_LENGTH*UTF8_BYTE_LENGTH];
+	char m_aClan[MAX_CLAN_LENGTH*UTF8_BYTE_LENGTH];
 	unsigned m_NameHash;
 	unsigned m_ClanHash;
 

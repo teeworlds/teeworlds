@@ -558,8 +558,8 @@ private:
 	{
 	public:
 		const CServerInfo *m_pServerInfo;
-		char m_aName[MAX_NAME_LENGTH];
-		char m_aClan[MAX_CLAN_LENGTH];
+		char m_aName[MAX_NAME_LENGTH*UTF8_BYTE_LENGTH];
+		char m_aClan[MAX_CLAN_LENGTH*UTF8_BYTE_LENGTH];
 		int m_FriendState;
 		bool m_IsPlayer;
 

@@ -14,12 +14,12 @@ class CInfoMessages : public CComponent
 	
 		// victim / finishing player
 		int m_Player1ID;
-		char m_aPlayer1Name[MAX_NAME_LENGTH];
+		char m_aPlayer1Name[MAX_NAME_LENGTH*UTF8_BYTE_LENGTH];
 		CTeeRenderInfo m_Player1RenderInfo;
 
 		// killer
 		int m_Player2ID;
-		char m_aPlayer2Name[MAX_NAME_LENGTH];
+		char m_aPlayer2Name[MAX_NAME_LENGTH*UTF8_BYTE_LENGTH];
 		CTeeRenderInfo m_Player2RenderInfo;
 
 		// kill msg
