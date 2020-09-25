@@ -2660,7 +2660,7 @@ void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
 			cursor = new_cursor;
 	}
 
-	str_copy(dst, src, min(cursor+1, dst_size));
+	str_copy(dst, src, cursor < dst_size ? cursor+1 : dst_size);
 }
 
 unsigned str_quickhash(const char *str)
