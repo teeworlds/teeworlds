@@ -242,9 +242,9 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 		}
 
 		s_Time = mix(
-			pThis->m_LastLocalTick / TickSpeed,
-			pThis->m_CurrentLocalTick / TickSpeed,
-			pThis->Client()->IntraGameTick());
+			pThis->m_LastLocalTick - pInfo->m_FirstTick,
+			pThis->m_CurrentLocalTick - pInfo->m_FirstTick,
+			pThis->Client()->IntraGameTick()) / TickSpeed;
 	}
 	else if(pThis->Client()->State() == IClient::STATE_ONLINE)
 	{
@@ -253,9 +253,9 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 			if(pItem->m_Version < 2 || pItem->m_Synchronized)
 			{
 				s_Time = mix(
-					(pThis->Client()->PrevGameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / TickSpeed,
-					(pThis->Client()->GameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick) / TickSpeed,
-					pThis->Client()->IntraGameTick());
+					pThis->Client()->PrevGameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick,
+					pThis->Client()->GameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick,
+					pThis->Client()->IntraGameTick()) / TickSpeed;
 			}
 			else
 				s_Time = pThis->Client()->LocalTime() - pThis->m_OnlineStartTime;
@@ -265,7 +265,7 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	{
 		s_Time = pThis->Client()->LocalTime();
 	}
-	pThis->RenderTools()->RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
+	CRenderTools::RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time+TimeOffset, pChannels);
 }
 
 void CMapLayers::OnRender()
