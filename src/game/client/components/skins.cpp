@@ -454,7 +454,7 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 		// TODO: adjust eye color here as well?
 		if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0 || str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
 		{
-			str_copy(aPartNames[SKINPART_EYES], "standard", 24);
+			str_copy(aPartNames[SKINPART_EYES], "standard", MAX_SKIN_LENGTH);
 			return false;
 		}
 	}
@@ -490,7 +490,7 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 
 				// white eye can't go to black because of our DARKEST_COLOR_LGT restriction, so switch to standard (black) eyes
 				if(OrgEyeHsl.l < DARKEST_COLOR_LGT/255.f)
-					str_copy(aPartNames[SKINPART_EYES], "standard", 24); // black
+					str_copy(aPartNames[SKINPART_EYES], "standard", MAX_SKIN_LENGTH); // black
 				else
 				{
 					aUseCustomColors[SKINPART_EYES] = 1;

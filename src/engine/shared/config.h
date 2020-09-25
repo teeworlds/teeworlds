@@ -4,6 +4,7 @@
 #define ENGINE_SHARED_CONFIG_H
 
 #include <engine/config.h>
+#include "protocol.h"
 
 class CConfig
 {

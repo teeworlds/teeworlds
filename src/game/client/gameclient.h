@@ -200,7 +200,7 @@ public:
 		char m_aName[MAX_NAME_LENGTH*UTF8_BYTE_LENGTH];
 		char m_aClan[MAX_CLAN_LENGTH*UTF8_BYTE_LENGTH];
 		int m_Country;
-		char m_aaSkinPartNames[NUM_SKINPARTS][24];
+		char m_aaSkinPartNames[NUM_SKINPARTS][MAX_SKIN_LENGTH];
 		int m_aUseCustomColors[NUM_SKINPARTS];
 		int m_aSkinPartColors[NUM_SKINPARTS];
 		int m_SkinPartIDs[NUM_SKINPARTS];
