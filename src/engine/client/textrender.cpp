@@ -1047,7 +1047,7 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 
 	int MaxLines = pCursor->m_MaxLines;
 	if(MaxLines < 0)
-		MaxLines = INT32_MAX;
+		MaxLines = (ScreenY1-ScreenY0) / pCursor->m_FontSize;
 
 	if(pCursor->m_LineCount > MaxLines)
 	{
