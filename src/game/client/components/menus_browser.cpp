@@ -58,9 +58,6 @@ CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBro
 	default:
 		m_Filter = m_pServerBrowser->AddFilter(&ms_FilterAll);
 	}
-
-	// init buttons
-	m_SwitchButton = 0;
 }
 
 void CMenus::CBrowserFilter::Reset()
