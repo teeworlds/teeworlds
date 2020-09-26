@@ -887,7 +887,7 @@ public:
 	};
 	void GetSwitchTeamInfo(CSwitchTeamInfo *pInfo);
 
-	static CMenusKeyBinder m_Binder;
+	CMenusKeyBinder m_Binder;
 
 	CMenus();
 

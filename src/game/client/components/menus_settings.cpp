@@ -27,8 +27,6 @@
 #include "countryflags.h"
 #include "menus.h"
 
-CMenusKeyBinder CMenus::m_Binder;
-
 CMenusKeyBinder::CMenusKeyBinder()
 {
 	m_TakeKey = false;
