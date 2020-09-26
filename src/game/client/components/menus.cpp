@@ -807,7 +807,7 @@ void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance,
 	RenderTools()->DrawUIRect(&Slider, SliderColor, CUI::CORNER_ALL, Slider.h/2.0f);
 }
 
-int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier)
+int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* pNewModifier)
 {
 	// process
 	static const void *s_pGrabbedID = 0;
@@ -816,7 +816,7 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 
 	const bool Hovered = UI()->MouseHovered(pRect);
 	int NewKey = Key;
-	*NewModifier = Modifier;
+	*pNewModifier = Modifier;
 
 	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && s_pGrabbedID == pBC->GetID())
 		s_MouseReleased = true;
@@ -829,7 +829,7 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 			if(m_Binder.m_Key.m_Key != KEY_ESCAPE)
 			{
 				NewKey = m_Binder.m_Key.m_Key;
-				*NewModifier = m_Binder.m_Modifier;
+				*pNewModifier = m_Binder.m_Modifier;
 			}
 			m_Binder.m_GotKey = false;
 			UI()->SetActiveItem(0);
@@ -873,16 +873,15 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 		DoButton_KeySelect(pBC, "???", pRect);
 		m_KeyReaderIsActive = true;
 	}
+	else if(Key == 0)
+	{
+		DoButton_KeySelect(pBC, "", pRect);
+	}
 	else
 	{
-		if(Key == 0)
-			DoButton_KeySelect(pBC, "", pRect);
-		else
-		{
-			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%s%s", CBinds::GetModifierName(*NewModifier), Input()->KeyName(Key));
-			DoButton_KeySelect(pBC, aBuf, pRect);
-		}
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%s%s", CBinds::GetModifierName(*pNewModifier), Input()->KeyName(Key));
+		DoButton_KeySelect(pBC, aBuf, pRect);
 	}
 	return NewKey;
 }
