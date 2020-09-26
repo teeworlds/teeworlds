@@ -810,15 +810,16 @@ void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance,
 int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier)
 {
 	// process
-	static const void *pGrabbedID = 0;
-	static bool MouseReleased = true;
-	static int ButtonUsed = 0;
+	static const void *s_pGrabbedID = 0;
+	static bool s_MouseReleased = true;
+	static int s_ButtonUsed = 0;
+
 	const bool Hovered = UI()->MouseHovered(pRect);
 	int NewKey = Key;
 	*NewModifier = Modifier;
 
-	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && pGrabbedID == pBC->GetID())
-		MouseReleased = true;
+	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && s_pGrabbedID == pBC->GetID())
+		s_MouseReleased = true;
 
 	if(UI()->CheckActiveItem(pBC->GetID()))
 	{
@@ -832,11 +833,11 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 			}
 			m_Binder.m_GotKey = false;
 			UI()->SetActiveItem(0);
-			MouseReleased = false;
-			pGrabbedID = pBC->GetID();
+			s_MouseReleased = false;
+			s_pGrabbedID = pBC->GetID();
 		}
 
-		if(ButtonUsed == 1 && !UI()->MouseButton(1))
+		if(s_ButtonUsed == 1 && !UI()->MouseButton(1))
 		{
 			if(Hovered)
 				NewKey = 0;
@@ -845,20 +846,20 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 	}
 	else if(UI()->HotItem() == pBC->GetID())
 	{
-		if(MouseReleased)
+		if(s_MouseReleased)
 		{
 			if(UI()->MouseButton(0))
 			{
 				m_Binder.m_TakeKey = true;
 				m_Binder.m_GotKey = false;
 				UI()->SetActiveItem(pBC->GetID());
-				ButtonUsed = 0;
+				s_ButtonUsed = 0;
 			}
 
 			if(UI()->MouseButton(1))
 			{
 				UI()->SetActiveItem(pBC->GetID());
-				ButtonUsed = 1;
+				s_ButtonUsed = 1;
 			}
 		}
 	}
@@ -867,7 +868,7 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 		UI()->SetHotItem(pBC->GetID());
 
 	// draw
-	if(UI()->CheckActiveItem(pBC->GetID()) && ButtonUsed == 0)
+	if(UI()->CheckActiveItem(pBC->GetID()) && s_ButtonUsed == 0)
 	{
 		DoButton_KeySelect(pBC, "???", pRect);
 		m_KeyReaderIsActive = true;
