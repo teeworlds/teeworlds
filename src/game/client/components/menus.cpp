@@ -1439,7 +1439,7 @@ void CMenus::PopupCountry(int Selection, FPopupButtonCallback pfnOkButtonCallbac
 }
 
 
-int CMenus::Render()
+void CMenus::Render()
 {
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
@@ -1466,11 +1466,6 @@ int CMenus::Render()
 	if(IsBackgroundNeeded())
 		RenderBackground(Client()->LocalTime());
 
-	CUIRect TabBar, MainView;
-
-	// some margin around the screen
-	//Screen.Margin(10.0f, &Screen);
-
 	static bool s_SoundCheck = false;
 	if(!s_SoundCheck && m_Popup == POPUP_NONE)
 	{
@@ -1495,17 +1490,12 @@ int CMenus::Render()
 			if(Config()->m_UiWideview)
 				VMargin = min(VMargin, 60.0f);
 
+			CUIRect TabBar, MainView;
 			Screen.VMargin(VMargin, &MainView);
 			MainView.HSplitTop(BarHeight, &TabBar, &MainView);
 			RenderMenubar(TabBar);
 
-			// news is not implemented yet
-			/*if(m_MenuPage <= PAGE_NEWS || m_MenuPage > PAGE_SETTINGS || (Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_GAME && m_MenuPage <= PAGE_CALLVOTE))
-			{
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-				m_MenuPage = PAGE_INTERNET;
-			}*/
-
+			// render top buttons
 			{
 				// quit button
 				CUIRect Button, Row;
@@ -2026,8 +2016,6 @@ int CMenus::Render()
 		if(m_Popup == POPUP_NONE)
 			UI()->SetActiveItem(0);
 	}
-
-	return 0;
 }
 
 
