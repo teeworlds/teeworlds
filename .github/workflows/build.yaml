@@ -52,7 +52,7 @@ jobs:
     - name: Prepare MacOS
       if: contains(matrix.os, 'macOS')
       run: |
-        brew update
+        brew update || true
         brew install pkg-config sdl2
         brew upgrade freetype
         sudo rm -rf /Library/Developer/CommandLineTools
