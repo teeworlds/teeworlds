@@ -1474,59 +1474,21 @@ int net_init()
 	return 0;
 }
 
-
-int fs_listdir_info(const char *dir, FS_LISTDIR_INFO_CALLBACK cb, int type, void *user)
+#if defined (CONF_FAMILY_WINDOWS)
+static inline time_t filetime_to_unixtime(LPFILETIME filetime)
 {
-#if defined(CONF_FAMILY_WINDOWS)
-	WIN32_FIND_DATA finddata;
-	HANDLE handle;
-	char buffer[1024*2];
-	int length;
-	str_format(buffer, sizeof(buffer), "%s/*", dir);
+	time_t t;
+	ULARGE_INTEGER li;
+	li.LowPart = filetime->dwLowDateTime;
+	li.HighPart = filetime->dwHighDateTime;
 
-	handle = FindFirstFileA(buffer, &finddata);
+	li.QuadPart /= 10000000; // 100ns to 1s
+	li.QuadPart -= 11644473600LL; // Windows epoch is in the past
 
-	if(handle == INVALID_HANDLE_VALUE)
-		return 0;
-
-	str_format(buffer, sizeof(buffer), "%s/", dir);
-	length = str_length(buffer);
-
-	/* add all the entries */
-	do
-	{
-		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
-		if(cb(finddata.cFileName, fs_getmtime(buffer), fs_is_dir(buffer), type, user))
-			break;
-	}
-	while (FindNextFileA(handle, &finddata));
-
-	FindClose(handle);
-	return 0;
-#else
-	struct dirent *entry;
-	char buffer[1024*2];
-	int length;
-	DIR *d = opendir(dir);
-
-	if(!d)
-		return 0;
-
-	str_format(buffer, sizeof(buffer), "%s/", dir);
-	length = str_length(buffer);
-
-	while((entry = readdir(d)) != NULL)
-	{
-		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
-		if(cb(entry->d_name, fs_getmtime(buffer), fs_is_dir(buffer), type, user))
-			break;
-	}
-
-	/* close the directory and return */
-	closedir(d);
-	return 0;
-#endif
+	t = li.QuadPart;
+	return t == li.QuadPart ? t : (time_t)-1;
 }
+#endif
 
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 {
@@ -1572,6 +1534,74 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	{
 		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
 		if(cb(entry->d_name, fs_is_dir(buffer), type, user))
+			break;
+	}
+
+	/* close the directory and return */
+	closedir(d);
+	return;
+#endif
+}
+
+void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void* user)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	WIN32_FIND_DATA finddata;
+	HANDLE handle;
+	char buffer[1024*2];
+	int length;
+	str_format(buffer, sizeof(buffer), "%s/*", dir);
+
+	handle = FindFirstFileA(buffer, &finddata);
+
+	if (handle == INVALID_HANDLE_VALUE)
+		return;
+
+	str_format(buffer, sizeof(buffer), "%s/", dir);
+	length = str_length(buffer);
+
+	/* add all the entries */
+	do
+	{
+		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
+
+		CFsFileInfo info;
+		info.m_pName = finddata.cFileName;
+		info.m_TimeCreated = filetime_to_unixtime(&finddata.ftCreationTime);
+		info.m_TimeModified = filetime_to_unixtime(&finddata.ftLastWriteTime);
+
+		if(cb(&info, fs_is_dir(buffer), type, user))
+			break;
+	}
+	while (FindNextFileA(handle, &finddata));
+
+	FindClose(handle);
+	return;
+#else
+	struct dirent *entry;
+	time_t created = -1, modified = -1;
+	char buffer[1024*2];
+	int length;
+	DIR *d = opendir(dir);
+
+	if(!d)
+		return;
+
+	str_format(buffer, sizeof(buffer), "%s/", dir);
+	length = str_length(buffer);
+
+	while((entry = readdir(d)) != NULL)
+	{
+		CFsFileInfo info;
+
+		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
+		fs_file_time(buffer, &created, &modified);
+
+		info.m_pName = entry->d_name;
+		info.m_TimeCreated = created;
+		info.m_TimeModified = modified;
+
+		if(cb(&info, fs_is_dir(buffer), type, user))
 			break;
 	}
 
@@ -1793,6 +1823,30 @@ char *fs_read_str(const char *name)
 	result = io_read_all_str(file);
 	io_close(file);
 	return result;
+}
+
+int fs_file_time(const char *name, time_t *created, time_t *modified)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	WIN32_FIND_DATA finddata;
+	HANDLE handle = FindFirstFile(name, &finddata);
+	if(handle == INVALID_HANDLE_VALUE)
+		return 1;
+
+	*created = filetime_to_unixtime(&finddata.ftCreationTime);
+	*modified = filetime_to_unixtime(&finddata.ftLastWriteTime);
+#elif defined(CONF_FAMILY_UNIX)
+	struct stat sb;
+	if(stat(name, &sb))
+		return 1;
+
+	*created = sb.st_ctime;
+	*modified = sb.st_mtime;
+#else
+	#error not implemented
+#endif
+
+	return 0;
 }
 
 void swap_endian(void *data, unsigned elem_size, unsigned num)

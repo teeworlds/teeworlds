@@ -349,9 +349,10 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	}
 }
 
-int CMenus::DemolistFetchCallback(const char *pName, time_t Date, int IsDir, int StorageType, void *pUser)
+int CMenus::DemolistFetchCallback(const CFsFileInfo* pFileInfo, int IsDir, int StorageType, void *pUser)
 {
 	CMenus *pSelf = (CMenus *)pUser;
+	const char *pName = pFileInfo->m_pName;
 	if(str_comp(pName, ".") == 0
 		|| (str_comp(pName, "..") == 0 && str_comp(pSelf->m_aCurrentDemoFolder, "demos") == 0)
 		|| (!IsDir && !str_endswith(pName, ".demo")))
@@ -370,7 +371,7 @@ int CMenus::DemolistFetchCallback(const char *pName, time_t Date, int IsDir, int
 	{
 		str_truncate(Item.m_aName, sizeof(Item.m_aName), pName, str_length(pName) - 5);
 		Item.m_InfosLoaded = false;
-		Item.m_Date = Date;
+		Item.m_Date = pFileInfo->m_TimeModified;
 	}
 	Item.m_IsDir = IsDir != 0;
 	Item.m_StorageType = StorageType;
@@ -384,7 +385,7 @@ void CMenus::DemolistPopulate()
 	m_lDemos.clear();
 	if(!str_comp(m_aCurrentDemoFolder, "demos"))
 		m_DemolistStorageType = IStorage::TYPE_ALL;
-	Storage()->ListDirectoryInfo(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
+	Storage()->ListDirectoryFileInfo(m_DemolistStorageType, m_aCurrentDemoFolder, DemolistFetchCallback, this);
 	m_lDemos.sort_range_by(CDemoComparator(
 		Config()->m_BrDemoSort, Config()->m_BrDemoSortOrder
 	));

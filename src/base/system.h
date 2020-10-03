@@ -1336,9 +1336,27 @@ int str_span(const char *str, const char *set);
 typedef int (*FS_LISTDIR_CALLBACK)(const char *name, int is_dir, int dir_type, void *user);
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 
+typedef struct
+{
+	const char* m_pName;
+	time_t m_TimeCreated; // seconds since UNIX Epoch
+	time_t m_TimeModified; // seconds since UNIX Epoch
+} CFsFileInfo;
 
-typedef int (*FS_LISTDIR_INFO_CALLBACK)(const char *name, time_t date, int is_dir, int dir_type, void *user);
-int fs_listdir_info(const char *dir, FS_LISTDIR_INFO_CALLBACK cb, int type, void *user);
+/* Group: Filesystem */
+
+/*
+	Function: fs_listdir_fileinfo
+		Lists the files in a directory and gets additional file information
+
+	Parameters:
+		dir - Directory to list
+		cb - Callback function to call for each entry
+		type - Type of the directory
+		user - Pointer to give to the callback
+*/
+typedef int (*FS_LISTDIR_CALLBACK_FILEINFO)(const CFsFileInfo* info, int is_dir, int dir_type, void *user);
+void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void *user);
 
 /*
 	Function: fs_makedir
@@ -1499,6 +1517,23 @@ int fs_read(const char *name, void **result, unsigned *result_len);
 		- The result must be freed after it has been used.
 */
 char *fs_read_str(const char *name);
+
+/*
+	Function: fs_file_time
+		Gets the creation and the last modification date of a file.
+
+	Parameters:
+		name - The filename.
+		created - Pointer to time_t
+		modified - Pointer to time_t
+
+	Returns:
+		0 on success non-zero on failure
+
+	Remarks:
+		- Returned time is in seconds since UNIX Epoch
+*/
+int fs_file_time(const char *name, time_t *created, time_t *modified);
 
 /*
 	Group: Undocumented
