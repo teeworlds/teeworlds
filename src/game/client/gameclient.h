@@ -228,7 +228,6 @@ public:
 	CClientData m_aClients[MAX_CLIENTS];
 	int m_LocalClientID;
 	int m_TeamCooldownTick;
-	bool m_MuteServerBroadcast;
 	float m_TeamChangeTime;
 	bool m_IsXmasDay;
 	float m_LastSkinChangeTime;
