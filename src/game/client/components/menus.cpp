@@ -807,18 +807,19 @@ void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance,
 	RenderTools()->DrawUIRect(&Slider, SliderColor, CUI::CORNER_ALL, Slider.h/2.0f);
 }
 
-int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* NewModifier)
+int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, int Modifier, int* pNewModifier)
 {
 	// process
-	static const void *pGrabbedID = 0;
-	static bool MouseReleased = true;
-	static int ButtonUsed = 0;
+	static const void *s_pGrabbedID = 0;
+	static bool s_MouseReleased = true;
+	static int s_ButtonUsed = 0;
+
 	const bool Hovered = UI()->MouseHovered(pRect);
 	int NewKey = Key;
-	*NewModifier = Modifier;
+	*pNewModifier = Modifier;
 
-	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && pGrabbedID == pBC->GetID())
-		MouseReleased = true;
+	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && s_pGrabbedID == pBC->GetID())
+		s_MouseReleased = true;
 
 	if(UI()->CheckActiveItem(pBC->GetID()))
 	{
@@ -828,15 +829,15 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 			if(m_Binder.m_Key.m_Key != KEY_ESCAPE)
 			{
 				NewKey = m_Binder.m_Key.m_Key;
-				*NewModifier = m_Binder.m_Modifier;
+				*pNewModifier = m_Binder.m_Modifier;
 			}
 			m_Binder.m_GotKey = false;
 			UI()->SetActiveItem(0);
-			MouseReleased = false;
-			pGrabbedID = pBC->GetID();
+			s_MouseReleased = false;
+			s_pGrabbedID = pBC->GetID();
 		}
 
-		if(ButtonUsed == 1 && !UI()->MouseButton(1))
+		if(s_ButtonUsed == 1 && !UI()->MouseButton(1))
 		{
 			if(Hovered)
 				NewKey = 0;
@@ -845,20 +846,20 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 	}
 	else if(UI()->HotItem() == pBC->GetID())
 	{
-		if(MouseReleased)
+		if(s_MouseReleased)
 		{
 			if(UI()->MouseButton(0))
 			{
 				m_Binder.m_TakeKey = true;
 				m_Binder.m_GotKey = false;
 				UI()->SetActiveItem(pBC->GetID());
-				ButtonUsed = 0;
+				s_ButtonUsed = 0;
 			}
 
 			if(UI()->MouseButton(1))
 			{
 				UI()->SetActiveItem(pBC->GetID());
-				ButtonUsed = 1;
+				s_ButtonUsed = 1;
 			}
 		}
 	}
@@ -867,21 +868,20 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 		UI()->SetHotItem(pBC->GetID());
 
 	// draw
-	if(UI()->CheckActiveItem(pBC->GetID()) && ButtonUsed == 0)
+	if(UI()->CheckActiveItem(pBC->GetID()) && s_ButtonUsed == 0)
 	{
 		DoButton_KeySelect(pBC, "???", pRect);
 		m_KeyReaderIsActive = true;
 	}
+	else if(Key == 0)
+	{
+		DoButton_KeySelect(pBC, "", pRect);
+	}
 	else
 	{
-		if(Key == 0)
-			DoButton_KeySelect(pBC, "", pRect);
-		else
-		{
-			char aBuf[64];
-			str_format(aBuf, sizeof(aBuf), "%s%s", CBinds::GetModifierName(*NewModifier), Input()->KeyName(Key));
-			DoButton_KeySelect(pBC, aBuf, pRect);
-		}
+		char aBuf[64];
+		str_format(aBuf, sizeof(aBuf), "%s%s", CBinds::GetModifierName(*pNewModifier), Input()->KeyName(Key));
+		DoButton_KeySelect(pBC, aBuf, pRect);
 	}
 	return NewKey;
 }
@@ -1439,7 +1439,7 @@ void CMenus::PopupCountry(int Selection, FPopupButtonCallback pfnOkButtonCallbac
 }
 
 
-int CMenus::Render()
+void CMenus::Render()
 {
 	CUIRect Screen = *UI()->Screen();
 	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
@@ -1466,11 +1466,6 @@ int CMenus::Render()
 	if(IsBackgroundNeeded())
 		RenderBackground(Client()->LocalTime());
 
-	CUIRect TabBar, MainView;
-
-	// some margin around the screen
-	//Screen.Margin(10.0f, &Screen);
-
 	static bool s_SoundCheck = false;
 	if(!s_SoundCheck && m_Popup == POPUP_NONE)
 	{
@@ -1495,17 +1490,12 @@ int CMenus::Render()
 			if(Config()->m_UiWideview)
 				VMargin = min(VMargin, 60.0f);
 
+			CUIRect TabBar, MainView;
 			Screen.VMargin(VMargin, &MainView);
 			MainView.HSplitTop(BarHeight, &TabBar, &MainView);
 			RenderMenubar(TabBar);
 
-			// news is not implemented yet
-			/*if(m_MenuPage <= PAGE_NEWS || m_MenuPage > PAGE_SETTINGS || (Client()->State() == IClient::STATE_OFFLINE && m_MenuPage >= PAGE_GAME && m_MenuPage <= PAGE_CALLVOTE))
-			{
-				ServerBrowser()->Refresh(IServerBrowser::TYPE_INTERNET);
-				m_MenuPage = PAGE_INTERNET;
-			}*/
-
+			// render top buttons
 			{
 				// quit button
 				CUIRect Button, Row;
@@ -2026,8 +2016,6 @@ int CMenus::Render()
 		if(m_Popup == POPUP_NONE)
 			UI()->SetActiveItem(0);
 	}
-
-	return 0;
 }
 
 

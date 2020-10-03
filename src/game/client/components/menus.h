@@ -481,18 +481,12 @@ private:
 		{
 			if(!m_Valid || !m_InfosLoaded)
 				return -1;
-			return ((m_Info.m_aNumTimelineMarkers[0]<<24)&0xFF000000) |
-				((m_Info.m_aNumTimelineMarkers[1]<<16)&0xFF0000) |
-				((m_Info.m_aNumTimelineMarkers[2]<<8)&0xFF00) |
-				(m_Info.m_aNumTimelineMarkers[3]&0xFF);
+			return bytes_be_to_uint(m_Info.m_aNumTimelineMarkers);
 		}
 
 		int Length() const
 		{
-			return ((m_Info.m_aLength[0]<<24)&0xFF000000) |
-				((m_Info.m_aLength[1]<<16)&0xFF0000) |
-				((m_Info.m_aLength[2]<<8)&0xFF00) |
-				(m_Info.m_aLength[3]&0xFF);
+			return bytes_be_to_uint(m_Info.m_aLength);
 		}
 
 		bool operator<(const CDemoItem &Other) const
@@ -509,7 +503,8 @@ private:
 	{
 		int m_Type;
 		int m_Order;
-		public:
+
+	public:
 		CDemoComparator(int Type, int Order)
 		{
 			m_Type = Type;
@@ -614,8 +609,6 @@ private:
 			FILTER_FAVORITES,
 		};
 
-		// buttons var
-		int m_SwitchButton;
 		CButtonContainer m_DeleteButtonContainer;
 		CButtonContainer m_UpButtonContainer;
 		CButtonContainer m_DownButtonContainer;
@@ -763,7 +756,7 @@ private:
 	void UpdateVideoModeSettings();
 
 	// found in menus.cpp
-	int Render();
+	void Render();
 	void RenderMenubar(CUIRect r);
 	void RenderNews(CUIRect MainView);
 	void RenderBackButton(CUIRect MainView);
@@ -887,7 +880,7 @@ public:
 	};
 	void GetSwitchTeamInfo(CSwitchTeamInfo *pInfo);
 
-	static CMenusKeyBinder m_Binder;
+	CMenusKeyBinder m_Binder;
 
 	CMenus();
 

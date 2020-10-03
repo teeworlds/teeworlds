@@ -15,6 +15,8 @@ class CLayers
 	CMapItemGroup *m_pGameGroup;
 	CMapItemLayerTilemap *m_pGameLayer;
 	class IMap *m_pMap;
+
+	void InitGameLayer();
 	void InitTilemapSkip();
 
 public:
