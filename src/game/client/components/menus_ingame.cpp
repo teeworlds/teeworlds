@@ -59,7 +59,7 @@ void CMenus::RenderGame(CUIRect MainView)
 
 	float Spacing = 3.0f;
 	float ButtonWidth = (MainView.w/6.0f)-(Spacing*5.0)/6.0f;
-	
+
 	// cut view
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	float NoteHeight = !Info.m_aNotification[0] ? 0.0f : 45.0f;
@@ -376,7 +376,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	UI()->DoLabel(&Label, Localize("Server info"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	RenderTools()->DrawUIRect(&ServerInfo, vec4(0.0, 0.0, 0.0, 0.25f), CUI::CORNER_ALL, 5.0f);
 	ServerInfo.Margin(5.0f, &ServerInfo);
-	
+
 	ServerInfo.HSplitTop(2*ButtonHeight, &Label, &ServerInfo);
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, CurrentServerInfo.m_aName, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT, Label.w);
@@ -385,7 +385,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	Label.y += 2.0f;
 	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Address"), CurrentServerInfo.m_aHostname);
 	UI()->DoLabel(&Label, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-	
+
 	ServerInfo.HSplitTop(ButtonHeight, &Label, &ServerInfo);
 	Label.y += 2.0f;
 	str_format(aBuf, sizeof(aBuf), "%s: %d", Localize("Ping"), m_pClient->m_Snap.m_pLocalInfo->m_Latency);
@@ -400,7 +400,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	Label.y += 2.0f;
 	str_format(aBuf, sizeof(aBuf), "%s: %s", Localize("Password"), CurrentServerInfo.m_Flags&IServerBrowser::FLAG_PASSWORD ? Localize("Yes", "With") : Localize("No", "Without/None"));
 	UI()->DoLabel(&Label, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
-	
+
 	const bool IsFavorite = CurrentServerInfo.m_Favorite;
 	ServerInfo.HSplitBottom(ButtonHeight, &ServerInfo, &Label);
 	static int s_AddFavButton = 0;
@@ -512,15 +512,21 @@ bool CMenus::RenderServerControlServer(CUIRect MainView)
 
 	for(CVoteOptionClient *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext)
 	{
-		if(m_aFilterString[0] && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
+		if(m_aFilterString[0] && !pOption->m_IsSubheader && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
 			continue; // no match found
 
-		CListboxItem Item = s_ListBox.DoNextItem(pOption);
+		if(!pOption->m_aDescription[0])
+			continue; // depth resets
+
+		CListboxItem Item = pOption->m_IsSubheader ? s_ListBox.DoSubheader() : s_ListBox.DoNextItem(pOption);
 
 		if(Item.m_Visible)
-		{			
+		{
 			Item.m_Rect.VMargin(5.0f, &Item.m_Rect);
 			Item.m_Rect.y += 2.0f;
+			for(int i = pOption->m_IsSubheader ? 1 : 0; i < pOption->m_Depth; i++)
+				Item.m_Rect.VSplitLeft(10.0f, 0, &Item.m_Rect);
+
 			UI()->DoLabel(&Item.m_Rect, pOption->m_aDescription, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 		}
 	}
@@ -610,8 +616,11 @@ void CMenus::HandleCallvote(int Page, bool Force)
 		int RealIndex = 0, FilteredIndex = 0;
 		for(CVoteOptionClient *pOption = m_pClient->m_pVoting->m_pFirst; pOption; pOption = pOption->m_pNext, RealIndex++)
 		{
-			if(m_aFilterString[0] && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
+			if(m_aFilterString[0] && !pOption->m_IsSubheader && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
 				continue; // no match found
+
+			if(!pOption->m_aDescription[0])
+				continue; // depth reset
 
 			if(FilteredIndex == m_CallvoteSelectedOption)
 				break;
@@ -727,12 +736,12 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	// render background
 	MainView.HSplitBottom(90.0f+2*20.0f, &MainView, &Extended);
 	RenderTools()->DrawUIRect(&Extended, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-	
+
 	bool doCallVote = false;
 	// render page
 	if(s_ControlPage == 0)
 		// double click triggers vote if not spectating
-		doCallVote = RenderServerControlServer(MainView) && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS; 
+		doCallVote = RenderServerControlServer(MainView) && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS;
 	else if(s_ControlPage == 1)
 		RenderServerControlKick(MainView, false);
 	else if(s_ControlPage == 2)
@@ -788,7 +797,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 					m_aCallvoteReason[0] = 0;
 			}
 		}
- 
+
 		if(pNotification == 0)
 		{
 			// call vote
@@ -864,4 +873,3 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		}
 	}
 }
-

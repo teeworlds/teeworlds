@@ -207,6 +207,14 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 	return Item;
 }
 
+CMenus::CListboxItem CMenus::CListBox::DoSubheader()
+{
+	CListboxItem Item = DoNextRow();
+	CUIRect r = Item.m_Rect;
+	m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, 0.2f), 0, 0.0f);
+	return Item;
+}
+
 int CMenus::CListBox::DoEnd()
 {
 	m_ScrollRegion.End();

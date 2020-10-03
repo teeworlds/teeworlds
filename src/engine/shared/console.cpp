@@ -290,8 +290,12 @@ void CConsole::Print(int Level, const char *pFrom, const char *pStr, bool Highli
 
 bool CConsole::LineIsValid(const char *pStr)
 {
-	if(!pStr || *pStr == 0)
+	if(!pStr)
 		return false;
+
+	// Comments and empty lines are valid commands
+	if(*pStr == '#' || *pStr == '\0')
+		return true;
 
 	do
 	{
