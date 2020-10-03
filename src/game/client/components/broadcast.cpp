@@ -58,18 +58,18 @@ void CBroadcast::RenderServerBroadcast()
 	Graphics()->MapScreen(0, 0, Width, Height);
 
 	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
+	const float FontSize = m_SrvBroadcastFontSize;
+	const int LineCount = m_SrvBroadcastLineCount;
 
-	CUIRect ScreenRect = {0, 0, Width, Height};
-
-	CUIRect BcView = ScreenRect;
-	BcView.x += Width * 0.25f;
-	BcView.y += Height * 0.8f;
-	BcView.w *= 0.5f;
-	BcView.h *= 0.2f;
+	CUIRect BcView;
+	BcView.w = Width * 0.5f;
+	BcView.h = 1.5f * LineCount * FontSize + 4.0f;
+	BcView.x = BcView.w * 0.5f;
+	BcView.y = Height - BcView.h;
 
 	CUIRect BgRect;
-	BcView.HSplitBottom(10.0f, 0, &BgRect);
-	BcView.HSplitBottom(6.0f, &BcView, 0);
+	BcView.HSplitBottom(1.5f * LineCount * FontSize, 0, &BgRect);
+	BcView.HSplitBottom(2.0f, &BcView, 0);
 
 	// draw bottom bar
 	const float CornerWidth = 10.0f;
@@ -126,7 +126,7 @@ void CBroadcast::RenderServerBroadcast()
 
 	IGraphics::CColorVertex aColorVert[4] = {
 		IGraphics::CColorVertex(0, 0, 0, 0, 0.0f),
-		IGraphics::CColorVertex(1, 0, 0, 0, 0.4f * Fade),
+		IGraphics::CColorVertex(1, 0, 0, 0, 0.7f * Fade),
 		IGraphics::CColorVertex(2, 0, 0, 0, 0.0f),
 		IGraphics::CColorVertex(3, 0, 0, 0, 0.0f)
 	};
@@ -138,9 +138,9 @@ void CBroadcast::RenderServerBroadcast()
 	Graphics()->QuadsEnd();
 
 	{
-		vec4 ColorTop(0, 0, 0, 0);
-		vec4 ColorBot(0, 0, 0, 0.4f * Fade);
-		RenderTools()->DrawUIRect4(&BgRect, ColorTop, ColorTop, ColorBot, ColorBot, 0, 0);
+		vec4 ColorTop(0, 0, 0, 0.01f * Fade);
+		vec4 ColorBot(0, 0, 0, 0.7f * Fade);
+		RenderTools()->DrawUIRect4(&BgRect, ColorTop, ColorTop, ColorBot, ColorBot, 0, 0.0f);
 	}
 
 	BcView.VMargin(5.0f, &BcView);
@@ -148,8 +148,6 @@ void CBroadcast::RenderServerBroadcast()
 
 	// draw lines
 	const bool ColoredBroadcastEnabled = Config()->m_ClColoredBroadcast;
-	const float FontSize = m_SrvBroadcastFontSize;
-	const int LineCount = m_SrvBroadcastLineCount;
 
 	const vec2 ShadowOff(1.0f, 2.0f);
 	const vec4 ShadowColorBlack(0, 0, 0, 0.9f * Fade);
