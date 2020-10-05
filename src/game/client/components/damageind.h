@@ -23,13 +23,14 @@ class CDamageInd : public CComponent
 	CItem m_aItems[MAX_ITEMS];
 	int m_NumItems;
 
-	CItem *CreateI();
-	void DestroyI(CItem *i);
+	CItem *CreateItem();
+	void DestroyItem(CItem *pItem);
 
 public:
 	CDamageInd();
 
 	void Create(vec2 Pos, vec2 Dir);
+
 	virtual void OnRender();
 	virtual void OnReset();
 };

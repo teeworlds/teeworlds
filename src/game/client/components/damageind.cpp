@@ -14,32 +14,32 @@ CDamageInd::CDamageInd()
 	m_NumItems = 0;
 }
 
-CDamageInd::CItem *CDamageInd::CreateI()
+CDamageInd::CItem *CDamageInd::CreateItem()
 {
-	if (m_NumItems < MAX_ITEMS)
+	if(m_NumItems < MAX_ITEMS)
 	{
-		CItem *p = &m_aItems[m_NumItems];
+		CItem *pItem = &m_aItems[m_NumItems];
 		m_NumItems++;
-		return p;
+		return pItem;
 	}
 	return 0;
 }
 
-void CDamageInd::DestroyI(CDamageInd::CItem *i)
+void CDamageInd::DestroyItem(CDamageInd::CItem *pItem)
 {
 	m_NumItems--;
-	*i = m_aItems[m_NumItems];
+	*pItem = m_aItems[m_NumItems];
 }
 
 void CDamageInd::Create(vec2 Pos, vec2 Dir)
 {
-	CItem *i = CreateI();
-	if (i)
+	CItem *pItem = CreateItem();
+	if(pItem)
 	{
-		i->m_Pos = Pos;
-		i->m_StartTime = Client()->LocalTime();
-		i->m_Dir = Dir*-1;
-		i->m_StartAngle = (frandom() - 1.0f) * 2.0f * pi;
+		pItem->m_Pos = Pos;
+		pItem->m_StartTime = Client()->LocalTime();
+		pItem->m_Dir = Dir*-1;
+		pItem->m_StartAngle = (frandom() - 1.0f) * 2.0f * pi;
 	}
 }
 
@@ -47,26 +47,27 @@ void CDamageInd::OnRender()
 {
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
-	static float s_LastLocalTime = Client()->LocalTime();
+	const float Now = Client()->LocalTime();
+	static float s_LastLocalTime = Now;
 	for(int i = 0; i < m_NumItems;)
 	{
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		{
 			const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-			if(pInfo->m_Paused)
-				m_aItems[i].m_StartTime += Client()->LocalTime()-s_LastLocalTime;
+			if(pInfo->m_Paused || m_pClient->IsWorldPaused())
+				m_aItems[i].m_StartTime += Now-s_LastLocalTime;
 			else
-				m_aItems[i].m_StartTime += (Client()->LocalTime()-s_LastLocalTime)*(1.0f-pInfo->m_Speed);
+				m_aItems[i].m_StartTime += (Now-s_LastLocalTime)*(1.0f-pInfo->m_Speed);
 		}
 		else
 		{
 			if(m_pClient->IsWorldPaused())
-				m_aItems[i].m_StartTime += Client()->LocalTime()-s_LastLocalTime;
+				m_aItems[i].m_StartTime += Now-s_LastLocalTime;
 		}
 
-		float Life = 0.75f - (Client()->LocalTime() - m_aItems[i].m_StartTime);
+		float Life = 0.75f - (Now - m_aItems[i].m_StartTime);
 		if(Life < 0.0f)
-			DestroyI(&m_aItems[i]);
+			DestroyItem(&m_aItems[i]);
 		else
 		{
 			vec2 Pos = mix(m_aItems[i].m_Pos+m_aItems[i].m_Dir*75.0f, m_aItems[i].m_Pos, clamp((Life-0.60f)/0.15f, 0.0f, 1.0f));
@@ -78,8 +79,8 @@ void CDamageInd::OnRender()
 			i++;
 		}
 	}
-	s_LastLocalTime = Client()->LocalTime();
 	Graphics()->QuadsEnd();
+	s_LastLocalTime = Now;
 }
 
 void CDamageInd::OnReset()
