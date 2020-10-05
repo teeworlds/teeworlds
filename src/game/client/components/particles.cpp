@@ -40,7 +40,7 @@ void CParticles::Add(int Group, CParticle *pPart)
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-		if(pInfo->m_Paused)
+		if(pInfo->m_Paused || m_pClient->IsWorldPaused())
 			return;
 	}
 	else
@@ -143,7 +143,7 @@ void CParticles::OnRender()
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		const IDemoPlayer::CInfo *pInfo = DemoPlayer()->BaseInfo();
-		if(!pInfo->m_Paused)
+		if(!pInfo->m_Paused && !m_pClient->IsWorldPaused())
 			Update((float)((Now-s_LastTime)/(double)time_freq())*pInfo->m_Speed);
 	}
 	else
