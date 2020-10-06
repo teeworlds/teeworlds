@@ -344,8 +344,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		m_pClient->m_SuppressEvents = true;
 		DemoPlayer()->SetPos(PositionToSeek);
 		m_pClient->m_SuppressEvents = false;
-		m_pClient->m_pMapLayersBackGround->EnvelopeUpdate();
-		m_pClient->m_pMapLayersForeGround->EnvelopeUpdate();
 	}
 }
 
