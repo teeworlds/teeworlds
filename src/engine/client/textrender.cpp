@@ -1129,9 +1129,15 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 
 		vec4 Color;
 		if(IsSecondary)
-			Color = vec4(rScaled.m_SecondaryColor.r, rScaled.m_SecondaryColor.g, rScaled.m_SecondaryColor.b, rScaled.m_SecondaryColor.a);
+		{
+			Color = rScaled.m_SecondaryColor;
+			if(Texture == 1)
+				Color.a *= rScaled.m_TextColor.a;
+		}
 		else
-			Color = vec4(rScaled.m_TextColor.r, rScaled.m_TextColor.g, rScaled.m_TextColor.b, rScaled.m_TextColor.a);
+		{
+			Color = rScaled.m_TextColor;
+		}
 
 		if(Color != LastColor)
 		{
