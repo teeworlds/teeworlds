@@ -903,7 +903,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 	{
 		int NumButtons = 6;
 		float Spacing = 3.0f;
-		float ButtonWidth = (Box.w / NumButtons) - (Spacing*5.0) / NumButtons;
+		float ButtonWidth = (Box.w/NumButtons)-(Spacing*(NumButtons-1))/NumButtons;
 		float Alpha = 1.0f;
 		if(m_GamePage == PAGE_SETTINGS)
 			Alpha = InactiveAlpha;
@@ -963,7 +963,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 	{
 		int NumButtons = 5;
 		float Spacing = 3.0f;
-		float ButtonWidth = (Box.w/NumButtons)-(Spacing*5.0)/NumButtons;
+		float ButtonWidth = (Box.w/NumButtons)-(Spacing*(NumButtons-1))/NumButtons;
 		float NotActiveAlpha = Client()->State() == IClient::STATE_ONLINE ? 0.5f : 1.0f;
 		int Corners = Client()->State() == IClient::STATE_ONLINE ? CUI::CORNER_T : CUI::CORNER_ALL;
 
