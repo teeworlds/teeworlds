@@ -28,7 +28,8 @@ CDamageInd::CItem *CDamageInd::CreateItem()
 void CDamageInd::DestroyItem(CDamageInd::CItem *pItem)
 {
 	m_NumItems--;
-	*pItem = m_aItems[m_NumItems];
+	if(pItem != &m_aItems[m_NumItems])
+		*pItem = m_aItems[m_NumItems];
 }
 
 void CDamageInd::Create(vec2 Pos, vec2 Dir)
