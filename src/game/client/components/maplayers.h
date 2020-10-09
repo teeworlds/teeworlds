@@ -11,8 +11,6 @@ class CMapLayers : public CComponent
 	IEngineMap *m_pMenuMap;
 
 	int m_Type;
-	int m_CurrentLocalTick;
-	int m_LastLocalTick;
 	float m_OnlineStartTime;
 
 	array<CEnvPoint> m_lEnvPoints;
@@ -43,8 +41,6 @@ public:
 	virtual void OnShutdown();
 	virtual void OnRender();
 	virtual void OnMapLoad();
-
-	void EnvelopeUpdate();
 
 	static void ConchainBackgroundMap(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
