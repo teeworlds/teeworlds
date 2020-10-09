@@ -124,7 +124,9 @@ void CEcon::Update()
 				m_aClients[ClientID].m_State = CClient::STATE_AUTHED;
 				m_NetConsole.Send(ClientID, "Authentication successful. External console access granted.");
 
-				str_format(aBuf, sizeof(aBuf), "cid=%d authed", ClientID);
+				char aAddrStr[NETADDR_MAXSTRSIZE];
+				net_addr_str(m_NetConsole.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
+				str_format(aBuf, sizeof(aBuf), "cid=%d addr=%s  authed", ClientID, aAddrStr);
 				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "econ", aBuf);
 			}
 			else
