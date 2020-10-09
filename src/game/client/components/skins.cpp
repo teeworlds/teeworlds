@@ -92,7 +92,7 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		Part.m_Flags |= SKINFLAG_SPECIAL;
 	if(DirType != IStorage::TYPE_SAVE)
 		Part.m_Flags |= SKINFLAG_STANDARD;
-	str_truncate(Part.m_aName, sizeof(Part.m_aName), pName, str_length(pName) - 4);
+	str_utf8_copy_num(Part.m_aName, pName, min(str_length(pName) - 3, int(sizeof(Part.m_aName))), MAX_SKIN_LENGTH);
 	if(pSelf->Config()->m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin part %s", Part.m_aName);
@@ -123,7 +123,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	// init
 	CSkin Skin = pSelf->m_DummySkin;
-	str_truncate(Skin.m_aName, sizeof(Skin.m_aName), pName, str_length(pName) - 5);
+	str_utf8_copy_num(Skin.m_aName, pName, min(str_length(pName) - 4, int(sizeof(Skin.m_aName))), MAX_SKIN_LENGTH);
 	if(pSelf->Find(Skin.m_aName, true) != -1)
 		return 0;
 	bool SpecialSkin = pName[0] == 'x' && pName[1] == '_';
@@ -341,7 +341,7 @@ void CSkins::AddSkin(const char *pSkinName)
 {
 	CSkin Skin = m_DummySkin;
 	Skin.m_Flags = 0;
-	str_copy(Skin.m_aName, pSkinName, sizeof(Skin.m_aName));
+	str_utf8_copy_num(Skin.m_aName, pSkinName, sizeof(Skin.m_aName), MAX_SKIN_LENGTH);
 	for(int PartIndex = 0; PartIndex < NUM_SKINPARTS; ++PartIndex)
 	{
 		int SkinPart = FindSkinPart(PartIndex, ms_apSkinVariables[PartIndex], false);
@@ -350,7 +350,7 @@ void CSkins::AddSkin(const char *pSkinName)
 		Skin.m_aUseCustomColors[PartIndex] = *ms_apUCCVariables[PartIndex];
 		Skin.m_aPartColors[PartIndex] = *ms_apColorVariables[PartIndex];
 	}
-	int SkinIndex = Find(pSkinName, false);
+	int SkinIndex = Find(Skin.m_aName, false);
 	if(SkinIndex != -1)
 		m_aSkins[SkinIndex] = Skin;
 	else
