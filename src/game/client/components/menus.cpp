@@ -583,6 +583,9 @@ void CMenus::DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pR
 	ScrollBar.VMargin(4.0f, &ScrollBar);
 	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, 0, Max)), 0, Max);
 
+	if(UI()->HotItem() != pID && UI()->MouseHovered(pRect) && UI()->MouseButtonClicked(0))
+		Value = (Value + 1) % Num;
+
 	*pOption = clamp(Value, 0, Max);
 }
 
