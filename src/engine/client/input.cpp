@@ -222,6 +222,22 @@ bool CInput::JoystickRelative(float *pX, float *pY)
 	return false;
 }
 
+bool CInput::JoystickAbsolute(float *pX, float *pY)
+{
+	if(m_pConfig->m_JoystickEnable && GetActiveJoystick())
+	{
+		const vec2 RawJoystickPos = vec2(GetJoystickAxisValue(m_pConfig->m_JoystickX), GetJoystickAxisValue(m_pConfig->m_JoystickY));
+		const float DeadZone = m_pConfig->m_JoystickTolerance/50.0f;
+		if(length(RawJoystickPos) > DeadZone)
+		{
+			*pX = RawJoystickPos.x;
+			*pY = RawJoystickPos.y;
+			return true;
+		}
+	}
+	return false;
+}
+
 bool CInput::MouseRelative(float *pX, float *pY)
 {
 	if(!m_MouseInputRelative)
@@ -229,7 +245,7 @@ bool CInput::MouseRelative(float *pX, float *pY)
 
 	int MouseX = 0, MouseY = 0;
 	SDL_GetRelativeMouseState(&MouseX, &MouseY);
-	if (MouseX || MouseY)
+	if(MouseX || MouseY)
 	{
 		*pX = MouseX;
 		*pY = MouseY;

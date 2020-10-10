@@ -72,6 +72,7 @@ public:
 	virtual int GetJoystickNumAxes() = 0;
 	virtual float GetJoystickAxisValue(int Axis) = 0;
 	virtual bool JoystickRelative(float *pX, float *pY) = 0;
+	virtual bool JoystickAbsolute(float *pX, float *pY) = 0;
 
 	// mouse
 	virtual void MouseModeRelative() = 0;
@@ -85,9 +86,9 @@ public:
 
 	int CursorRelative(float *pX, float *pY)
 	{
-		if (MouseRelative(pX, pY))
+		if(MouseRelative(pX, pY))
 			return CURSOR_MOUSE;
-		if (JoystickRelative(pX, pY))
+		if(JoystickRelative(pX, pY))
 			return CURSOR_JOYSTICK;
 		return CURSOR_NONE;
 	}
