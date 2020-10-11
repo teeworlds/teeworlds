@@ -124,8 +124,7 @@ void CVoting::AddOption(const char *pDescription)
 	for(;*pDescription == '#'; pDescription++, Depth++);
 	pOption->m_Depth = Depth ? Depth : pOption->m_pPrev ? pOption->m_pPrev->m_Depth : 0;
 
-	if(Depth)
-		pOption->m_IsSubheader = true;
+	pOption->m_IsSubheader = Depth;
 
 	if(!*pDescription)
 		pOption->m_Depth = 0;
