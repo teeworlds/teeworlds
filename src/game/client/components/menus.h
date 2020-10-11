@@ -102,7 +102,7 @@ public:
 		bool m_CleanBackground;
 		float m_FadeStartTime;
 	public:
-		CButtonContainer(bool CleanBackground = false) { m_CleanBackground = CleanBackground; }
+		CButtonContainer(bool CleanBackground = false) : m_FadeStartTime(0.0f) { m_CleanBackground = CleanBackground; }
 		const void *GetID() const { return &m_FadeStartTime; }
 		float GetFade(bool Checked = false, float Seconds = 0.6f);
 		bool IsCleanBackground() const { return m_CleanBackground; }
