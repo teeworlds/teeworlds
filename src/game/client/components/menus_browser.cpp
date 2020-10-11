@@ -528,13 +528,13 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		{
 			TextRender()->TextColor(TextBaseColor);
 			TextRender()->TextOutlineColor(TextBaseOutlineColor);
-			Button.y += 2.0f;
+			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
 			UI()->DoLabelHighlighted(&Button, pEntry->m_aName, (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_SERVERNAME) ? Config()->m_BrFilterString : 0, FontSize, TextBaseColor, HighlightColor);
 		}
 		else if(ID == COL_BROWSER_MAP)
 		{
 			TextRender()->TextColor(TextBaseColor);
-			Button.y += 2.0f;
+			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
 			UI()->DoLabelHighlighted(&Button, pEntry->m_aMap, (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_MAPNAME) ? Config()->m_BrFilterString : 0, FontSize, TextBaseColor, HighlightColor);
 		}
 		else if(ID == COL_BROWSER_PLAYERS)
@@ -563,19 +563,19 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				}
 
 			}
-			static float RenderOffset = 0.0f;
-			if(RenderOffset == 0.0f)
-				RenderOffset = TextRender()->TextWidth(0, FontSize, "0", -1, -1.0f);
+			static float s_RenderOffset = 0.0f;
+			if(s_RenderOffset == 0.0f)
+				s_RenderOffset = TextRender()->TextWidth(0, FontSize, "0", -1, -1.0f);
 
 			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
 			if(Config()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
 				TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
-			Button.y += 2.0f;
+			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
 
 			if(Num < 100)
-				Button.x += RenderOffset;
+				Button.x += s_RenderOffset;
 			if(Num < 10)
-				Button.x += RenderOffset;
+				Button.x += s_RenderOffset;
 			if(!Num)
 				TextRender()->TextColor(CUI::ms_TransparentTextColor);
 			UI()->DoLabel(&Button, aTemp, FontSize, CUI::ALIGN_LEFT);
@@ -583,7 +583,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		}
 		else if(ID == COL_BROWSER_PING)
 		{
-			int Ping = pEntry->m_Latency;
+			const int Ping = pEntry->m_Latency;
 
 			vec4 Color;
 			if(Selected || Highlighted)
@@ -612,10 +612,10 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				Color = mix(StartColor, EndColor, MixVal);
 			}
 
-			str_format(aTemp, sizeof(aTemp), "%d", pEntry->m_Latency);
+			str_format(aTemp, sizeof(aTemp), "%d", Ping);
 			TextRender()->TextColor(Color);
 			TextRender()->TextOutlineColor(TextBaseOutlineColor);
-			Button.y += 2.0f;
+			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
 			Button.w -= 4.0f;
 			UI()->DoLabel(&Button, aTemp, FontSize, CUI::ALIGN_RIGHT);
 		}
@@ -630,7 +630,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			// gametype text
 			TextRender()->TextColor(TextBaseColor);
 			TextRender()->TextOutlineColor(TextBaseOutlineColor);
-			Button.y += 2.0f;
+			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
 			UI()->DoLabelHighlighted(&Button, pEntry->m_aGameType, (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_GAMETYPE) ? Config()->m_BrFilterString : 0, FontSize, TextBaseColor, HighlightColor);
 		}
 	}
@@ -2127,7 +2127,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 	s_pLastInfo = pInfo;
 
 	const float RowWidth = (RowCount == 0) ? View.w : (View.w * 0.25f);
-	const float FontSize = 8.0f;
+	const float FontSize = Config()->m_UiWideview ? 8.0f : 7.0f;
 	const vec4 HighlightColor = vec4(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextColor.a);
 	float LineHeight = 20.0f;
 
@@ -2207,7 +2207,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		// score
 		if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
 		{
-			Score.y += 4.0f;
+			Score.y += (Score.h - FontSize/ms_FontmodHeight)/2.0f;
 			char aTemp[16];
 			FormatScore(aTemp, sizeof(aTemp), pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE, &pInfo->m_aClients[i]);
 			UI()->DoLabel(&Score, aTemp, FontSize, CUI::ALIGN_LEFT);
