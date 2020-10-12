@@ -563,19 +563,19 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				}
 
 			}
-			static float RenderOffset = 0.0f;
-			if(RenderOffset == 0.0f)
-				RenderOffset = TextRender()->TextWidth(FontSize, "0", -1);
+			static float s_RenderOffset = 0.0f;
+			if(s_RenderOffset == 0.0f)
+				s_RenderOffset = TextRender()->TextWidth(FontSize, "0", -1);
 
 			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
 			if(Config()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
 				TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
-			Button.y += 2.0f;
+			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
 
 			if(Num < 100)
-				Button.x += RenderOffset;
+				Button.x += s_RenderOffset;
 			if(Num < 10)
-				Button.x += RenderOffset;
+				Button.x += s_RenderOffset;
 			if(!Num)
 				TextRender()->TextColor(CUI::ms_TransparentTextColor);
 			UI()->DoLabel(&Button, aTemp, FontSize, CUI::ALIGN_LEFT);
@@ -614,7 +614,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 
 			str_format(aTemp, sizeof(aTemp), "%d", Ping);
 			TextRender()->TextColor(Color);
-			TextRender()->TextOutlineColor(TextBaseOutlineColor);
+			TextRender()->TextSecondaryColor(TextBaseOutlineColor);
 			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
 			Button.w -= 4.0f;
 			UI()->DoLabel(&Button, aTemp, FontSize, CUI::ALIGN_RIGHT);
