@@ -854,7 +854,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 
 	bool Render = !(pCursor->m_Flags & TEXTFLAG_NO_RENDER);
 
-	// Sizes
+	// Alignment
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	int ScreenWidth = Graphics()->ScreenWidth();
 	int ScreenHeight = Graphics()->ScreenHeight();
@@ -1026,7 +1026,7 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 	if(pCursor->m_Truncated || pCursor->m_SkipTextRender)
 		return;
 
-	// Sizes
+	// Alignment
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
 	int ScreenWidth = Graphics()->ScreenWidth();
 	int ScreenHeight = Graphics()->ScreenHeight();
@@ -1058,6 +1058,14 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 
 void CTextRender::TextAdvance(CTextCursor *pCursor, float AdvanceX)
 {
+	// Alignment
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	int ScreenWidth = Graphics()->ScreenWidth();
+	int ScreenHeight = Graphics()->ScreenHeight();
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
+
 	int LineWidth = pCursor->m_Advance.x + AdvanceX;
 	float MaxWidth = pCursor->m_MaxWidth;
 	if(MaxWidth < 0)
@@ -1071,6 +1079,8 @@ void CTextRender::TextAdvance(CTextCursor *pCursor, float AdvanceX)
 	{
 		pCursor->m_Advance.x = LineWidth;
 	}
+
+	pCursor->m_Advance.x = (int)(pCursor->m_Advance.x * ScreenScale.x) / ScreenScale.x;
 }
 
 void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool IsSecondary, float Alpha, int StartGlyph = 0, int NumGlyphs = -1)
