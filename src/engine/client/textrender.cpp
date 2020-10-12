@@ -421,8 +421,8 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	pGlyph->m_Face = GlyphFace;
 	pGlyph->m_Height = OutlinedHeight * Scale;
 	pGlyph->m_Width = OutlinedWidth * Scale;
-	pGlyph->m_BearingX = (GlyphFace->glyph->bitmap_left-OutlineThickness/2.0f) * Scale; // ignore_convention
-	pGlyph->m_BearingY = (FontSize - GlyphFace->glyph->bitmap_top) * Scale; // ignore_convention
+	pGlyph->m_BearingX = (GlyphFace->glyph->bitmap_left-OutlineThickness/2) * Scale; // ignore_convention
+	pGlyph->m_BearingY = (FontSize - GlyphFace->glyph->bitmap_top-OutlineThickness/2) * Scale; // ignore_convention
 	pGlyph->m_AdvanceX = (GlyphFace->glyph->advance.x>>6) * Scale; // ignore_convention
 	pGlyph->m_Rendered = Render;
 
@@ -1094,7 +1094,6 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 	int HorizontalAlign = pCursor->m_Align & TEXTALIGN_MASK_HORI;
 	CTextBoundingBox AlignBox = pCursor->AlignedBoundingBox();
 	vec2 AlignOffset = vec2(AlignBox.x, AlignBox.y);
-	float BoxWidth = (int)(pCursor->m_Width * ScreenScale.x) / ScreenScale.x;
 
 	vec4 LastColor = vec4(-1, -1, -1, -1);
 	Graphics()->TextureSet(m_pGlyphMap->GetTexture(Texture));
@@ -1102,11 +1101,7 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 
 	int Line = -1;
 	vec2 LineOffset = vec2(0, 0);
-	vec2 Anchor = (pCursor->m_CursorPos + AlignOffset) * ScreenScale;
-	Anchor.x = (int)Anchor.x / ScreenScale.x;
-	Anchor.y = (int)Anchor.y / ScreenScale.y;
-
-	Anchor += Offset / ScreenScale;
+	vec2 Anchor = pCursor->m_CursorPos + AlignOffset;
 
 	for(int i = NumQuads - 1; i >= 0; --i)
 	{
@@ -1117,9 +1112,9 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 		{
 			Line = rScaled.m_Line;
 			if(HorizontalAlign == TEXTALIGN_RIGHT)
-				LineOffset.x = BoxWidth - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size);
+				LineOffset.x = pCursor->m_Width - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size);
 			else if(HorizontalAlign == TEXTALIGN_CENTER)
-				LineOffset.x = (BoxWidth - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size)) / 2.0f;
+				LineOffset.x = (pCursor->m_Width - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size)) / 2.0f;
 			else
 				LineOffset.x = 0;
 		}
@@ -1146,8 +1141,10 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 		}
 
 		Graphics()->QuadsSetSubset(pGlyph->m_aUvCoords[0], pGlyph->m_aUvCoords[1], pGlyph->m_aUvCoords[2], pGlyph->m_aUvCoords[3]);
-
-		vec2 QuadPosition = Anchor + LineOffset + rScaled.m_Advance + vec2(pGlyph->m_BearingX, pGlyph->m_BearingY) * rScaled.m_Size;
+		
+		float AnchorX = (int)((Anchor.x + LineOffset.x) * ScreenScale.x) / ScreenScale.x; 
+		float AnchorY = (int)((Anchor.y + LineOffset.y) * ScreenScale.y) / ScreenScale.y; 
+		vec2 QuadPosition = vec2(AnchorX, AnchorY) + rScaled.m_Advance + vec2(pGlyph->m_BearingX, pGlyph->m_BearingY) * rScaled.m_Size;
 		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, pGlyph->m_Width * rScaled.m_Size, pGlyph->m_Height * rScaled.m_Size);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	}
