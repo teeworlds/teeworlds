@@ -60,22 +60,49 @@ void CCamera::OnRender()
 				m_CamType = CAMTYPE_PLAYER;
 			}
 
-			vec2 CameraOffset(0, 0);
+			float DeltaTime = Client()->RenderFrameTime();
+			static vec2 s_LastMousePos(0, 0);
+			static vec2 s_CurrentCameraOffset(0, 0);
+			static float s_SpeedBias = 0.5f;
 
-			float l = length(m_pClient->m_pControls->m_MousePos);
+			if(Config()->m_ClCameraSmoothness > 0)
+			{
+				float CameraSpeed = (1.0f - (Config()->m_ClCameraSmoothness / 100.0f)) * 9.5f + 0.5f;
+				float CameraStabilizingFactor = 1 + Config()->m_ClCameraStabilizing / 100.0f;
+
+				s_SpeedBias += CameraSpeed * DeltaTime;
+				if(Config()->m_ClDynamicCamera)
+				{
+					s_SpeedBias -= length(m_pClient->m_pControls->m_MousePos - s_LastMousePos) * log10f(CameraStabilizingFactor) * 0.02f;
+					s_SpeedBias = clamp(s_SpeedBias, 0.5f, CameraSpeed);
+				}
+				else
+				{
+					s_SpeedBias = max(5.0f, CameraSpeed); // make sure toggle back is fast
+				}
+			}
+
+			vec2 TargetCameraOffset(0, 0);
+			s_LastMousePos = m_pClient->m_pControls->m_MousePos;
+			float l = length(s_LastMousePos);
 			if(Config()->m_ClDynamicCamera && l > 0.0001f) // make sure that this isn't 0
 			{
 				float DeadZone = Config()->m_ClMouseDeadzone;
 				float FollowFactor = Config()->m_ClMouseFollowfactor/100.0f;
 				float OffsetAmount = max(l-DeadZone, 0.0f) * FollowFactor;
 
-				CameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;
+				TargetCameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;
 			}
-
-			if(m_pClient->m_Snap.m_SpecInfo.m_Active)
-				m_Center = m_pClient->m_Snap.m_SpecInfo.m_Position + CameraOffset;
+			
+			if(Config()->m_ClCameraSmoothness > 0)
+				s_CurrentCameraOffset += (TargetCameraOffset - s_CurrentCameraOffset) * min(DeltaTime * s_SpeedBias, 1.0f);
 			else
-				m_Center = m_pClient->m_LocalCharacterPos + CameraOffset;
+				s_CurrentCameraOffset = TargetCameraOffset;
+			
+			if(m_pClient->m_Snap.m_SpecInfo.m_Active)
+				m_Center = m_pClient->m_Snap.m_SpecInfo.m_Position + s_CurrentCameraOffset;
+			else
+				m_Center = m_pClient->m_LocalCharacterPos + s_CurrentCameraOffset;
 		}
 	}
 	else
