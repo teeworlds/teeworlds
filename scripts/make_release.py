@@ -142,7 +142,7 @@ if include_data and not use_bundle:
 if include_exe and not use_bundle:
 	shutil.copy(source_package_dir+name+exe_ext, package_dir)
 	shutil.copy(source_package_dir+name+"_srv"+exe_ext, package_dir)
-	
+
 if include_src:
 	for p in ["src", "scripts", "datasrc", "other", "objs"]:
 		os.mkdir(os.path.join(package_dir, p))
