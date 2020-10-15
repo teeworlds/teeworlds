@@ -1021,7 +1021,7 @@ void CChat::OnRender()
 					vec4 *pBox = &aSelectionBoxBuffer[i];
 					// Cheat with the Y coordinate in lieu of a proper bounding box
 					CUIRect sbb = {pBox->x, pBox->y + Cursor.m_FontSize * 0.25f, pBox->z, pBox->w};
-					RenderTools()->DrawUIRect(&sbb, vec4(1.0f, 0.0f, 0.0f, 0.3f), 0, 0.0f);
+					RenderTools()->DrawUIRect(&sbb, vec4(1.0f, 1.0f, 1.0f, 0.3f), 0, 0.0f);
 				}
 			}
 			else
