@@ -281,6 +281,9 @@ bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, in
 		*pSelectionStart = Selecting ? SelectionStart : CursorPos;
 	}
 
+	if(*pCursorPosPtr != CursorPos)
+		Changes = true;
+
 	*pNumCharsPtr = NumChars;
 	*pCursorPosPtr = CursorPos;
 	*pStrLenPtr = Len;
