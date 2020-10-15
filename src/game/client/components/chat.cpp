@@ -976,8 +976,13 @@ void CChat::OnRender()
 			int SelectionStart = m_Input.GetSelectionStartOffset();
 			int SelectionLength = m_Input.GetSelectionLength();
 
-			if(SelectionStart >= m_ChatStringOffset && SelectionLength)
+			if(SelectionLength)
 			{
+				if(SelectionStart < m_ChatStringOffset) {
+					SelectionLength -= m_ChatStringOffset - SelectionStart;
+					SelectionStart = m_ChatStringOffset;
+				}
+
 				vec4 aSelectionBoxBuffer[3];
 				int SelectionBoxCount = 0;
 				if(SelectionLength < 0)
