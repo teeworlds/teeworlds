@@ -411,11 +411,11 @@ void CSkins::RandomizeSkin()
 		int Sat = random_int() % 255;
 		int Lgt = random_int() % 255;
 		int Alp = 0;
-		if (p == 1) // 1 == SKINPART_MARKING
+		if (p == 1) // SKINPART_MARKING
 			Alp = random_int() % 255;
-		int NewVal = (Alp << 24) + (Hue << 16) + (Sat << 8) + Lgt;
+		int ColorVariable = (Alp << 24) | (Hue << 16) | (Sat << 8) | Lgt;
 		*CSkins::ms_apUCCVariables[p] = true;
-		*CSkins::ms_apColorVariables[p] = NewVal;
+		*CSkins::ms_apColorVariables[p] = ColorVariable;
 	}
 
 	for(int p = 0; p < NUM_SKINPARTS; p++)
