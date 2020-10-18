@@ -271,7 +271,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 			// bar marker
 			Graphics()->SetColor(0.0f, 0.0f, 0.0f, 1.0f);
-			IGraphics::CQuadItem QuadItem(Bar.x + min(127.0f, *apVars[i]/2.0f), Bar.y, UI()->PixelSize(), Bar.h);
+			IGraphics::CQuadItem QuadItem(Bar.x + min(Bar.w, *apVars[i]/255.0f*Bar.w), Bar.y, UI()->PixelSize(), Bar.h);
 			Graphics()->QuadsDrawTL(&QuadItem, 1);
 			Graphics()->QuadsEnd();
 
