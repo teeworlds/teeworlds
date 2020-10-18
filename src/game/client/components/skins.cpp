@@ -403,6 +403,30 @@ int CSkins::FindSkinPart(int Part, const char *pName, bool AllowSpecialPart)
 	return -1;
 }
 
+void CSkins::RandomizeSkin()
+{
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		int Hue = random_int() % 255;
+		int Sat = random_int() % 255;
+		int Lgt = random_int() % 255;
+		int Alp = 0;
+		if (p == 1) // 1 == SKINPART_MARKING
+			Alp = random_int() % 255;
+		int NewVal = (Alp << 24) + (Hue << 16) + (Sat << 8) + Lgt;
+		*CSkins::ms_apUCCVariables[p] = true;
+		*CSkins::ms_apColorVariables[p] = NewVal;
+	}
+
+	for(int p = 0; p < NUM_SKINPARTS; p++)
+	{
+		const CSkins::CSkinPart *s = GetSkinPart(p, random_int() % NumSkinPart(p));
+		while(s->m_Flags&CSkins::SKINFLAG_SPECIAL)
+			s = GetSkinPart(p, random_int() % NumSkinPart(p));
+		mem_copy(CSkins::ms_apSkinVariables[p], s->m_aName, MAX_SKIN_LENGTH);
+	}
+}
+
 vec3 CSkins::GetColorV3(int v) const
 {
 	float Dark = DARKEST_COLOR_LGT/255.0f;
