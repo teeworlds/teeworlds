@@ -1621,7 +1621,7 @@ void CMenus::Render()
 		else if(m_Popup == POPUP_PASSWORD)
 		{
 			pTitle = Localize("Password incorrect");
-			pExtraText = "Please enter the password.";
+			pExtraText = Localize("Please enter the password.");
 		}
 		else if(m_Popup == POPUP_QUIT)
 		{

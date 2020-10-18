@@ -500,7 +500,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	// do headers
 	for(int i = 0; i < NumCols; i++)
 	{
-		if(DoButton_GridHeader(ms_aDemoCols[i].m_Caption, ms_aDemoCols[i].m_Caption, Config()->m_BrDemoSort == ms_aDemoCols[i].m_Sort, ms_aDemoCols[i].m_Align, &ms_aDemoCols[i].m_Rect, CUI::CORNER_T))
+		if(DoButton_GridHeader(ms_aDemoCols[i].m_Caption, ms_aDemoCols[i].m_Caption, Config()->m_BrDemoSort == ms_aDemoCols[i].m_Sort, ms_aDemoCols[i].m_Align, &ms_aDemoCols[i].m_Rect, CUI::CORNER_ALL))
 		{
 			if(ms_aDemoCols[i].m_Sort != -1)
 			{
@@ -519,7 +519,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		}
 	}
 
-	s_ListBox.DoSubHeader(GetListHeaderHeight(), 0.0f);
+	s_ListBox.DoSpacing(GetListHeaderHeight());
 
 	s_ListBox.DoStart(20.0f, m_lDemos.size(), 1, 3, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
