@@ -79,6 +79,11 @@ void CEcon::Init(CConfig *pConfig, IConsole *pConsole, CNetBan *pNetBan)
 	for(int i = 0; i < NET_MAX_CONSOLE_CLIENTS; i++)
 		m_aClients[i].m_State = CClient::STATE_EMPTY;
 
+	SetDefaultValues();
+}
+
+void CEcon::SetDefaultValues()
+{
 	m_Ready = false;
 	m_LastOpenTry = 0;
 	m_UserClientID = -1;
@@ -210,4 +215,5 @@ void CEcon::Shutdown()
 		return;
 
 	m_NetConsole.Close();
+	SetDefaultValues();
 }
