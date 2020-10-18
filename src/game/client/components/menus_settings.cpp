@@ -1163,8 +1163,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 {
 	static bool s_CustomSkinMenu = false;
 	static int s_PlayerCountry = 0;
-	static char s_aPlayerName[256] = {0};
-	static char s_aPlayerClan[256] = {0};
+	static char s_aPlayerName[MAX_NAME_ARRAY_SIZE] = {0};
+	static char s_aPlayerClan[MAX_CLAN_ARRAY_SIZE] = {0};
 
 	if(m_pClient->m_IdentityState < 0)
 	{
