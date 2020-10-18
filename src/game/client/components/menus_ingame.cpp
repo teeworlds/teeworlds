@@ -22,6 +22,7 @@
 #include "menus.h"
 #include "motd.h"
 #include "voting.h"
+#include "broadcast.h"
 
 void CMenus::GetSwitchTeamInfo(CSwitchTeamInfo *pInfo)
 {
@@ -416,10 +417,9 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		CUIRect Button;
 		ServerInfo.HSplitBottom(20.0f, &ServerInfo, &Button);
 		static int s_MuteBroadcast = 0;
-		if(DoButton_CheckBox(&s_MuteBroadcast, Localize("Mute broadcasts"),
-							 m_pClient->m_MuteServerBroadcast, &Button))
+		if(DoButton_CheckBox(&s_MuteBroadcast, Localize("Mute broadcasts"), m_pClient->m_pBroadcast->IsMuteServerBroadcast(), &Button))
 		{
-			m_pClient->m_MuteServerBroadcast ^= 1;
+			m_pClient->m_pBroadcast->ToggleMuteServerBroadcast();
 		}
 	}
 

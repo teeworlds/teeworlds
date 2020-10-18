@@ -505,7 +505,6 @@ void CGameClient::OnReset()
 		m_DemoSpecMode = SPEC_FREEVIEW;
 		m_DemoSpecID = -1;
 		m_Tuning = CTuningParams();
-		m_MuteServerBroadcast = false;
 		m_LastGameStartTick = -1;
 		m_LastFlagCarrierRed = FLAG_MISSING;
 		m_LastFlagCarrierBlue = FLAG_MISSING;
@@ -718,7 +717,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 				break;
 			case GAMEMSG_TEAM_ALL:
 				{
-					const char *pMsg;
+					const char *pMsg = "";
 					switch(GetStrTeam(aParaI[0], TeamPlay))
 					{
 					case STR_TEAM_GAME: pMsg = Localize("All players were moved to the game"); break;
@@ -726,7 +725,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 					case STR_TEAM_BLUE: pMsg = Localize("All players were moved to the blue team"); break;
 					case STR_TEAM_SPECTATORS: pMsg = Localize("All players were moved to the spectators"); break;
 					}
-					m_pBroadcast->DoBroadcast(pMsg);
+					m_pBroadcast->DoClientBroadcast(pMsg);
 				}
 				break;
 			case GAMEMSG_TEAM_BALANCE_VICTIM:
@@ -737,7 +736,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 					case STR_TEAM_RED: pMsg = Localize("You were moved to the red team due to team balancing"); break;
 					case STR_TEAM_BLUE: pMsg = Localize("You were moved to the blue team due to team balancing"); break;
 					}
-					m_pBroadcast->DoBroadcast(pMsg);
+					m_pBroadcast->DoClientBroadcast(pMsg);
 				}
 				break;
 			case GAMEMSG_CTF_GRAB:
@@ -807,7 +806,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 			m_pChat->AddLine(pText);
 			break;
 		case DO_BROADCAST:
-			m_pBroadcast->DoBroadcast(pText);
+			m_pBroadcast->DoClientBroadcast(pText);
 			break;
 		}
 	}

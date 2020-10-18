@@ -6,9 +6,12 @@
 
 class CBroadcast : public CComponent
 {
+	// client broadcast
 	char m_aBroadcastText[128];
 	float m_BroadcastTime;
 	float m_BroadcastRenderOffset;
+
+	void RenderClientBroadcast();
 
 	// server broadcast
 	typedef unsigned char u8;
@@ -39,13 +42,18 @@ class CBroadcast : public CComponent
 	int m_SrvBroadcastLineCount;
 	float m_SrvBroadcastReceivedTime;
 	float m_SrvBroadcastFontSize;
+	bool m_MuteServerBroadcast;
 
+	void OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg);
 	void RenderServerBroadcast();
 
 public:
 	CBroadcast();
 
-	void DoBroadcast(const char *pText);
+	void DoClientBroadcast(const char *pText);
+
+	void ToggleMuteServerBroadcast() { m_MuteServerBroadcast = !m_MuteServerBroadcast; };
+	bool IsMuteServerBroadcast() const { return m_MuteServerBroadcast; };
 
 	virtual void OnReset();
 	virtual void OnMessage(int MsgType, void *pRawMsg);
