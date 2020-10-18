@@ -516,6 +516,7 @@ public:
 	int Recv(char *pLine, int MaxLength, int *pClientID = 0);
 	int Send(int ClientID, const char *pLine);
 	int Update();
+	void SetLingerState(int State);
 
 	//
 	int AcceptClient(NETSOCKET Socket, const NETADDR *pAddr);

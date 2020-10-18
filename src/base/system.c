@@ -1280,6 +1280,27 @@ NETSOCKET net_tcp_create(NETADDR bindaddr)
 	return sock;
 }
 
+int net_tcp_set_linger(NETSOCKET sock, int state)
+{
+	struct linger linger_state;
+	linger_state.l_onoff = state;
+	linger_state.l_linger = 0;
+
+	if(sock.ipv4sock >= 0)
+	{
+		/*	set linger	*/
+		setsockopt(sock.ipv4sock, SOL_SOCKET, SO_LINGER, (const char*)&linger_state, sizeof(linger_state));
+	}
+
+	if(sock.ipv6sock >= 0)
+	{
+		/*	set linger	*/
+		setsockopt(sock.ipv6sock, SOL_SOCKET, SO_LINGER, (const char*)&linger_state, sizeof(linger_state));
+	}
+
+	return 0;
+}
+
 int net_set_non_blocking(NETSOCKET sock)
 {
 	unsigned long mode = 1;

@@ -52,6 +52,16 @@ void CEcon::ConchainEconOutputLevelUpdate(IConsole::IResult *pResult, void *pUse
 	}
 }
 
+void CEcon::ConchainEconLingerUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	if(pResult->NumArguments() == 1)
+	{
+		CEcon *pThis = static_cast<CEcon *>(pUserData);
+		pThis->m_NetConsole.SetLingerState(pResult->GetInteger(0));
+	}
+}
+
 void CEcon::ConLogout(IConsole::IResult *pResult, void *pUserData)
 {
 	CEcon *pThis = static_cast<CEcon *>(pUserData);
@@ -94,8 +104,10 @@ void CEcon::Init(CConfig *pConfig, IConsole *pConsole, CNetBan *pNetBan)
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), "bound to %s:%d", m_pConfig->m_EcBindaddr, m_pConfig->m_EcPort);
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD,"econ", aBuf);
+		m_NetConsole.SetLingerState(m_pConfig->m_NetTcpAbortOnClose);
 
 		Console()->Chain("ec_output_level", ConchainEconOutputLevelUpdate, this);
+		Console()->Chain("net_tcp_abort_on_close", ConchainEconLingerUpdate, this);
 		m_PrintCBIndex = Console()->RegisterPrintCallback(m_pConfig->m_EcOutputLevel, SendLineCB, this);
 
 		Console()->Register("logout", "", CFGFLAG_ECON, ConLogout, this, "Logout of econ");

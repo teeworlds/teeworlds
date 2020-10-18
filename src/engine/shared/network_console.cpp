@@ -149,3 +149,8 @@ int CNetConsole::Send(int ClientID, const char *pLine)
 	else
 		return -1;
 }
+
+void CNetConsole::SetLingerState(int State)
+{
+	net_tcp_set_linger(m_Socket, State);
+}
