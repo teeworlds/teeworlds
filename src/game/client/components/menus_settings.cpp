@@ -397,7 +397,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		mem_copy(Config()->m_PlayerSkin, m_pSelectedSkin->m_aName, sizeof(Config()->m_PlayerSkin));
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			mem_copy(CSkins::ms_apSkinVariables[p], m_pSelectedSkin->m_apParts[p]->m_aName, MAX_SKIN_LENGTH);
+			mem_copy(CSkins::ms_apSkinVariables[p], m_pSelectedSkin->m_apParts[p]->m_aName, MAX_SKIN_ARRAY_SIZE);
 			*CSkins::ms_apUCCVariables[p] = m_pSelectedSkin->m_aUseCustomColors[p];
 			*CSkins::ms_apColorVariables[p] = m_pSelectedSkin->m_aPartColors[p];
 		}
@@ -505,7 +505,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 	if(NewSelected != -1 && NewSelected != OldSelected)
 	{
 		const CSkins::CSkinPart *s = s_paList[m_TeePartSelected][NewSelected];
-		mem_copy(CSkins::ms_apSkinVariables[m_TeePartSelected], s->m_aName, MAX_SKIN_LENGTH);
+		mem_copy(CSkins::ms_apSkinVariables[m_TeePartSelected], s->m_aName, MAX_SKIN_ARRAY_SIZE);
 		Config()->m_PlayerSkin[0] = 0;
 		m_SkinModified = true;
 	}
@@ -1218,13 +1218,13 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		CTeeRenderInfo OwnSkinInfo;
 		OwnSkinInfo.m_Size = 50.0f;
 
-		char aSkinParts[NUM_SKINPARTS][MAX_SKIN_LENGTH];
+		char aSkinParts[NUM_SKINPARTS][MAX_SKIN_ARRAY_SIZE];
 		char* apSkinPartsPtr[NUM_SKINPARTS];
 		int aUCCVars[NUM_SKINPARTS];
 		int aColorVars[NUM_SKINPARTS];
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[p], MAX_SKIN_LENGTH);
+			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[p], MAX_SKIN_ARRAY_SIZE);
 			apSkinPartsPtr[p] = aSkinParts[p];
 			aUCCVars[p] = *CSkins::ms_apUCCVariables[p];
 			aColorVars[p] = *CSkins::ms_apColorVariables[p];
@@ -1276,7 +1276,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[p], MAX_SKIN_LENGTH);
+			str_copy(aSkinParts[p], CSkins::ms_apSkinVariables[p], MAX_SKIN_ARRAY_SIZE);
 			apSkinPartsPtr[p] = aSkinParts[p];
 			aUCCVars[p] = *CSkins::ms_apUCCVariables[p];
 			aColorVars[p] = *CSkins::ms_apColorVariables[p];

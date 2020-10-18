@@ -423,7 +423,7 @@ void CSkins::RandomizeSkin()
 		const CSkins::CSkinPart *s = GetSkinPart(p, random_int() % NumSkinPart(p));
 		while(s->m_Flags&CSkins::SKINFLAG_SPECIAL)
 			s = GetSkinPart(p, random_int() % NumSkinPart(p));
-		mem_copy(CSkins::ms_apSkinVariables[p], s->m_aName, MAX_SKIN_LENGTH);
+		mem_copy(CSkins::ms_apSkinVariables[p], s->m_aName, MAX_SKIN_ARRAY_SIZE);
 	}
 }
 
@@ -478,7 +478,7 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 		// TODO: adjust eye color here as well?
 		if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0 || str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
 		{
-			str_copy(aPartNames[SKINPART_EYES], "standard", MAX_SKIN_LENGTH);
+			str_copy(aPartNames[SKINPART_EYES], "standard", MAX_SKIN_ARRAY_SIZE);
 			return false;
 		}
 	}
@@ -514,7 +514,7 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 
 				// white eye can't go to black because of our DARKEST_COLOR_LGT restriction, so switch to standard (black) eyes
 				if(OrgEyeHsl.l < DARKEST_COLOR_LGT/255.f)
-					str_copy(aPartNames[SKINPART_EYES], "standard", MAX_SKIN_LENGTH); // black
+					str_copy(aPartNames[SKINPART_EYES], "standard", MAX_SKIN_ARRAY_SIZE); // black
 				else
 				{
 					aUseCustomColors[SKINPART_EYES] = 1;
