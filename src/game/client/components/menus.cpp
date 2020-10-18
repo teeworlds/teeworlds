@@ -341,6 +341,11 @@ bool CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID,
 
 bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
 {
+	return DoEditBoxUTF8(pID, pRect, pStr, StrSize, StrSize, FontSize, pOffset, Hidden, Corners);
+}
+
+bool CMenus::DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, unsigned MaxLength, float FontSize, float *pOffset, bool Hidden, int Corners)
+{
 	bool Inside = UI()->MouseHovered(pRect);
 	bool Changed = false;
 	bool UpdateOffset = false;
@@ -405,7 +410,7 @@ bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 			{
 				Len = str_length(pStr);
 				int NumChars = Len;
-				Changed |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, StrSize, &Len, &s_AtIndex, &NumChars, Input());
+				Changed |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, MaxLength, &Len, &s_AtIndex, &NumChars, Input());
 			}
 		}
 	}
@@ -508,7 +513,12 @@ bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 	return Changed;
 }
 
-void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const CUIRect *pRect, const char *pStr,  float VSplitVal, float *pOffset, bool Hidden)
+void CMenus::DoEditBoxOption(void *pID, char *pOption, unsigned OptionSize, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden)
+{
+	DoEditBoxOptionUTF8(pID, pOption, OptionSize, OptionSize, pRect, pStr, VSplitVal, pOffset, Hidden);
+}
+
+void CMenus::DoEditBoxOptionUTF8(void *pID, char *pOption, unsigned OptionSize, unsigned OptionMaxLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden)
 {
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
@@ -520,7 +530,7 @@ void CMenus::DoEditBoxOption(void *pID, char *pOption, int OptionLength, const C
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, aBuf, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-	DoEditBox(pID, &EditBox, pOption, OptionLength, pRect->h*ms_FontmodHeight*0.8f, pOffset, Hidden);
+	DoEditBoxUTF8(pID, &EditBox, pOption, OptionSize, OptionMaxLength, pRect->h*ms_FontmodHeight*0.8f, pOffset, Hidden);
 }
 
 void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, IScrollbarScale *pScale, bool Infinite)
@@ -1966,7 +1976,7 @@ void CMenus::Render()
 			Box.HSplitTop(ButtonHeight, &EditBox, &Box);
 
 			static float s_OffsetName = 0.0f;
-			DoEditBoxOption(Config()->m_PlayerName, Config()->m_PlayerName, sizeof(Config()->m_PlayerName), &EditBox, Localize("Nickname"), ButtonWidth, &s_OffsetName);
+			DoEditBoxOptionUTF8(Config()->m_PlayerName, Config()->m_PlayerName, sizeof(Config()->m_PlayerName), MAX_NAME_LENGTH, &EditBox, Localize("Nickname"), ButtonWidth, &s_OffsetName);
 
 			// button
 			static CButtonContainer s_EnterButton;
