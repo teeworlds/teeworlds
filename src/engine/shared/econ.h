@@ -29,9 +29,11 @@ class CEcon
 
 	CConfig *m_pConfig;
 	IConsole *m_pConsole;
+	CNetBan *m_pNetBan;
 	CNetConsole m_NetConsole;
 
 	bool m_Ready;
+	int64 m_LastOpenTry;
 	int m_PrintCBIndex;
 	int m_UserClientID;
 
@@ -47,6 +49,7 @@ public:
 	IConsole *Console() { return m_pConsole; }
 
 	void Init(CConfig *pConfig, IConsole *pConsole, class CNetBan *pNetBan);
+	bool Open();
 	void Update();
 	void Send(int ClientID, const char *pLine);
 	void Shutdown();
