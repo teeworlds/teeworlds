@@ -147,14 +147,8 @@ void CBroadcast::RenderServerBroadcast()
 	BroadcastView.HSplitBottom(2.0f, &BroadcastView, 0);
 
 	// draw lines
-	const bool ColoredBroadcastEnabled = Config()->m_ClColoredBroadcast;
-
 	const vec2 ShadowOffset(1.0f, 2.0f);
-	const vec4 ShadowColorBlack(0, 0, 0, 0.9f * Fade);
-	const vec4 TextColorWhite(1, 1, 1, Fade);
-
 	float y = BroadcastView.y + BroadcastView.h - LineCount * FontSize;
-
 	m_ServerBroadcastCursor.MoveTo(BroadcastView.x+BroadcastView.w/2, y);
 
 	TextRender()->DrawTextShadowed(&m_ServerBroadcastCursor, ShadowOffset, Fade, 0, m_aServerBroadcastSegments[0].m_GlyphPos);
@@ -274,11 +268,12 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 	m_ServerBroadcastCursor.m_Align = TEXTALIGN_TC;
 	m_ServerBroadcastCursor.m_MaxWidth = LineMaxWidth;
 	m_ServerBroadcastCursor.m_MaxLines = MAX_BROADCAST_LINES;
+	m_ServerBroadcastCursor.m_Flags = TEXTFLAG_ALLOW_NEWLINE | TEXTFLAG_WORD_WRAP;
 
 	if(UserLineCount <= 1) // auto mode
 	{
 		m_ServerBroadcastCursor.m_FontSize = FontSize;
-		m_ServerBroadcastCursor.m_Flags = TEXTFLAG_ALLOW_NEWLINE | TEXTFLAG_NO_RENDER | TEXTFLAG_WORD_WRAP;
+		m_ServerBroadcastCursor.m_Flags |= TEXTFLAG_NO_RENDER;
 
 		TextRender()->TextOutlined(&m_ServerBroadcastCursor, aBuf, ServerMsgLen);
 
@@ -300,7 +295,7 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 	vec4 OldColor = TextRender()->GetColor();
 	vec4 OldSecondary = TextRender()->GetSecondaryColor();
 
-	TextRender()->TextColor(1,1,1,1);
+	TextRender()->TextColor(1, 1, 1, 1);
 	TextRender()->TextSecondaryColor(0, 0, 0, 1);
 	TextRender()->TextDeferred(&m_ServerBroadcastCursor, aBuf, SegmentIndices[0]);
 	for(int i = 0; i < m_NumSegments; i++)
