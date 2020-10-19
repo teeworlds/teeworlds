@@ -130,11 +130,11 @@ int CGlyphMap::AdjustOutlineThicknessToFontSize(int OutlineThickness, int FontSi
 
 void CGlyphMap::InitTexture(int Width, int Height)
 {
-	for(int y = 0; y < PAGE_COUNT; ++y)
+	for(int y = 0; y < NUM_PAGES_PER_DIM; ++y)
 	{
-		for(int x = 0; x < PAGE_COUNT; ++x)
+		for(int x = 0; x < NUM_PAGES_PER_DIM; ++x)
 		{
-			m_aAtlasPages[y*PAGE_COUNT+x].Init(m_NumTotalPages++, x * PAGE_SIZE, y * PAGE_SIZE, PAGE_SIZE, PAGE_SIZE);
+			m_aAtlasPages[y*NUM_PAGES_PER_DIM+x].Init(m_NumTotalPages++, x * PAGE_SIZE, y * PAGE_SIZE, PAGE_SIZE, PAGE_SIZE);
 		}
 	}
 	m_ActiveAtlasIndex = 0;
@@ -165,7 +165,7 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *pPosition)
 	// out of space, drop a page
 	int LeastAccess = INT_MAX;
 	int Atlas = 0;
-	for(int i = 0; i < PAGE_COUNT*PAGE_COUNT; ++i)
+	for(int i = 0; i < NUM_PAGES_PER_DIM*NUM_PAGES_PER_DIM; ++i)
 	{
 		// Do not drop the active page
 		if(m_ActiveAtlasIndex == i)
@@ -487,7 +487,7 @@ int CGlyphMap::GetFontSizeIndex(int PixelSize)
 
 void CGlyphMap::PagesAccessReset()
 {
-	for(int i = 0; i < PAGE_COUNT * PAGE_COUNT; ++i)
+	for(int i = 0; i < NUM_PAGES_PER_DIM * NUM_PAGES_PER_DIM; ++i)
 		m_aAtlasPages[i].Update();
 }
 
@@ -496,6 +496,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 {
 	bool Render = !(pCursor->m_Flags & TEXTFLAG_NO_RENDER);
 	bool BreakWord = !(pCursor->m_Flags & TEXTFLAG_WORD_WRAP);
+	bool AllowNewline = pCursor->m_Flags & TEXTFLAG_ALLOW_NEWLINE;
 	CWordWidthHint Hint;
 	const char *pCur = pText;
 	int NextChr = str_utf8_decode(&pCur);
@@ -585,12 +586,17 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		
 		pCursor->m_Advance.x += AdvanceX;
 		Hint.m_GlyphCount++;
-		pCursor->m_GlyphCount++;
 
 		if(IsSpace || Chr == 0)
 		{
 			Hint.m_EndOfWord = true;
 			Hint.m_EndsWithNewline = Chr == '\n';
+			if(AllowNewline && Hint.m_EndsWithNewline)
+			{
+				// remove redundant space
+				Hint.m_GlyphCount--;
+				pCursor->m_Glyphs.remove_index(pCursor->m_Glyphs.size()-1);
+			}
 			break;
 		}
 
@@ -893,14 +899,13 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	{
 		if(WordWidth.m_EffectiveAdvanceX > MaxWidth)
 		{
-			int NumGlyphs = pCursor->m_GlyphCount;
+			int NumGlyphs = pCursor->m_Glyphs.size();
 			int WordStartGlyphIndex = NumGlyphs - WordWidth.m_GlyphCount;
 			// Do not let space create new line.
 			if(WordWidth.m_GlyphCount == 1 && (*pCur == ' ' || *pCur == '\n' || *pCur == '\t'))
 			{
 				if(Render)
 					pCursor->m_Glyphs.remove_index(NumGlyphs-1);
-				pCursor->m_GlyphCount--;
 				pCursor->m_Advance.x = WordStartAdvanceX;
 			}
 			else
@@ -920,9 +925,9 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 					{
 						if(Render)
 							pCursor->m_Glyphs.remove_index(i);
-						pCursor->m_GlyphCount--;
 					}
 					pCursor->m_Truncated = true;
+					pCursor->m_LineCount = MaxLines;
 				}
 				else if(Render)
 				{
@@ -962,19 +967,18 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 
 		if(pCursor->m_LineCount > MaxLines)
 		{
-			pCursor->m_LineCount--;
 			if(WordWidth.m_CharCount > 0)
 			{
-				int NumGlyphs = pCursor->m_GlyphCount;
+				int NumGlyphs = pCursor->m_Glyphs.size();
 				int WordStartGlyphIndex = NumGlyphs - WordWidth.m_GlyphCount;
 				for(int i = NumGlyphs - 1; i >= WordStartGlyphIndex; --i)
 				{
 					if(Render)
 						pCursor->m_Glyphs.remove_index(i);
-					pCursor->m_GlyphCount--;
 				}
 			}
 			pCursor->m_Truncated = true;
+			pCursor->m_LineCount = MaxLines;
 			break;
 		}
 	}

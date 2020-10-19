@@ -490,13 +490,13 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(CUI::ms_HighlightTextColor);
-				TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
+				TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
 			}
 			UI()->DoLabel(&Label, s->m_aName, 10.0f, CUI::ALIGN_CENTER);
 			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(CUI::ms_DefaultTextColor);
-				TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+				TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 			}
 		}
 	}

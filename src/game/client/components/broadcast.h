@@ -3,29 +3,32 @@
 #ifndef GAME_CLIENT_COMPONENTS_BROADCAST_H
 #define GAME_CLIENT_COMPONENTS_BROADCAST_H
 #include <game/client/component.h>
-#include <engine/textrender.h>
 
 class CBroadcast : public CComponent
 {
-	struct CBcSegment
+	// client broadcast
+	CTextCursor m_ClientBroadcastCursor;
+	float m_BroadcastTime;
+
+	void RenderClientBroadcast();
+
+	// server broadcast
+	struct CBroadcastSegment
 	{
 		bool m_IsHighContrast;
 		int m_GlyphPos;
 	};
 
-	CTextCursor m_BroadcastCursor;
-	float m_BroadcastTime;
-
-	// server broadcast
 	enum {
-		MAX_BROADCAST_MSG_LENGTH = 128,
+		MAX_BROADCAST_MSG_SIZE = 128,
 		MAX_BROADCAST_LINES = 3,
 	};
 
-	CBcSegment m_aSrvBroadcastSegments[MAX_BROADCAST_MSG_LENGTH];
+	CBroadcastSegment m_aServerBroadcastSegments[MAX_BROADCAST_MSG_SIZE];
 	int m_NumSegments;
-	CTextCursor m_SrvBroadcastCursor;
-	float m_SrvBroadcastReceivedTime;
+	CTextCursor m_ServerBroadcastCursor;
+	float m_ServerBroadcastReceivedTime;
+	bool m_MuteServerBroadcast;
 
 	void OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg);
 	void RenderServerBroadcast();

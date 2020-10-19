@@ -16,14 +16,14 @@ enum
 {
 	MAX_FACES = 16,
 	MAX_CHARACTERS = 64,
-	TEXTURE_SIZE = 1024,
-	PAGE_COUNT = 2,
+	TEXTURE_SIZE = 2048,
+	NUM_PAGES_PER_DIM = 4, // 16 pages total
 };
 
 // TODO: use SDF or MSDF font instead of multiple font sizes
-static int s_aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,36,64};
+static int s_aFontSizes[] = {8,9,10,11,12,13,14,15,16,17,18,19,20,24,36,64};
 #define NUM_FONT_SIZES (sizeof(s_aFontSizes)/sizeof(int))
-#define PAGE_SIZE (TEXTURE_SIZE/PAGE_COUNT)
+#define PAGE_SIZE (TEXTURE_SIZE/NUM_PAGES_PER_DIM)
 
 struct CGlyph
 {
@@ -98,7 +98,7 @@ class CGlyphMap
 	IGraphics *m_pGraphics;
 	FT_Stroker m_FtStroker;
 	IGraphics::CTextureHandle m_aTextures[2];
-	CAtlas m_aAtlasPages[PAGE_COUNT*PAGE_COUNT];
+	CAtlas m_aAtlasPages[NUM_PAGES_PER_DIM*NUM_PAGES_PER_DIM];
 	int m_ActiveAtlasIndex;
 	sorted_array<CGlyphIndex> m_Glyphs;
 

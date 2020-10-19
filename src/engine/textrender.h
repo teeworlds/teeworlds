@@ -80,7 +80,6 @@ class CTextCursor
 	int m_PageCountWhenDrawn;
 	bool m_Truncated;
 	int m_LineCount;
-	int m_GlyphCount;
 	int m_CharCount;
 
 	// Deferred: everything is top left aligned
@@ -143,7 +142,6 @@ public:
 			m_Advance = vec2(0, 0);
 			m_LineCount = 1;
 			m_CharCount = 0;
-			m_GlyphCount = 0;
 			m_PageCountWhenDrawn = -1;
 			m_Truncated = false;
 			m_StartOfLine = true;
@@ -166,7 +164,7 @@ public:
 	vec2 AdvancePosition() { return m_CursorPos + m_Advance; }
 	bool IsTruncated() { return m_Truncated; }
 	int LineCount() { return m_LineCount; }
-	int GlyphCount() { return m_GlyphCount; }
+	int GlyphCount() { return m_Glyphs.size(); }
 	int CharCount() { return m_CharCount; }
 
 	// Default Cursor: Top left single line no width limit
