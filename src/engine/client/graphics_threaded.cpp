@@ -178,6 +178,24 @@ void CGraphics_Threaded::ClipDisable()
 	m_State.m_ClipEnable = false;
 }
 
+void CGraphics_Threaded::StencilBegin()
+{
+	CCommandBuffer::CStencilBeginCommand Cmd;
+	m_pCommandBuffer->AddCommand(Cmd);
+}
+
+void CGraphics_Threaded::StencilEnd()
+{
+	CCommandBuffer::CStencilEndCommand Cmd;
+	m_pCommandBuffer->AddCommand(Cmd);
+}
+
+void CGraphics_Threaded::StencilClear()
+{
+	CCommandBuffer::CStencilClearCommand Cmd;
+	m_pCommandBuffer->AddCommand(Cmd);
+}
+
 void CGraphics_Threaded::BlendNone()
 {
 	m_State.m_BlendMode = CCommandBuffer::BLEND_NONE;

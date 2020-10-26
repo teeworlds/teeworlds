@@ -160,6 +160,17 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 				// draw marking
 				if(pInfo->m_aTextures[SKINPART_MARKING].IsValid() && !OutLine)
 				{
+					// set stencil
+					Graphics()->StencilBegin();
+					Graphics()->QuadsBegin();
+					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
+					Graphics()->SetColor(1, 1, 1, 1);
+					SelectSprite(SPRITE_TEE_BODY, 0, 0, 0);
+					Item = BodyItem;
+					Graphics()->QuadsDraw(&Item, 1);
+					Graphics()->QuadsEnd();
+					Graphics()->StencilEnd();
+
 					Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_MARKING]);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
@@ -169,6 +180,8 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
+
+					Graphics()->StencilClear();
 				}
 
 				// draw body (in front of marking)

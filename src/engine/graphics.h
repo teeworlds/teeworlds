@@ -124,6 +124,10 @@ public:
 	virtual void ClipEnable(int x, int y, int w, int h) = 0;
 	virtual void ClipDisable() = 0;
 
+	virtual void StencilBegin() = 0;
+	virtual void StencilEnd() = 0;
+	virtual void StencilClear() = 0;
+
 	virtual void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY) = 0;
 	virtual void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) = 0;
 
