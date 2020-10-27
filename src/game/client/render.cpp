@@ -161,7 +161,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 				if(pInfo->m_aTextures[SKINPART_MARKING].IsValid() && !OutLine)
 				{
 					// set stencil
-					Graphics()->StencilBegin();
+					Graphics()->AlphaMaskBegin();
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
 					Graphics()->SetColor(1, 1, 1, 1);
@@ -169,7 +169,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 					Item = BodyItem;
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
-					Graphics()->StencilEnd();
+					Graphics()->AlphaMaskEnd();
 
 					Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_MARKING]);
 					Graphics()->QuadsBegin();
@@ -181,7 +181,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
 
-					Graphics()->StencilClear();
+					Graphics()->AlphaMaskClear();
 				}
 
 				// draw body (in front of marking)

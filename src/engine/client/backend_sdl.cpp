@@ -440,26 +440,25 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	mem_free(pTexData);
 }
 
-void CCommandProcessorFragment_OpenGL::Cmd_Stencil_Begin(const CCommandBuffer::CStencilBeginCommand *pCommand)
+void CCommandProcessorFragment_OpenGL::Cmd_AlphaMask_Begin(const CCommandBuffer::CAlphaMaskBeginCommand *pCommand)
 { 
 	glClear(GL_STENCIL_BUFFER_BIT);
 	glEnable(GL_STENCIL_TEST);
-	glEnable(GL_ALPHA_TEST);
 	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 	glStencilFunc(GL_ALWAYS, 1, 1);
 	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-	glAlphaFunc(GL_GREATER, 0.5f);
+	glAlphaFunc(GL_GREATER, pCommand->m_Threshold);
 } 
 
-void CCommandProcessorFragment_OpenGL::Cmd_Stencil_End(const CCommandBuffer::CStencilEndCommand *pCommand)
+void CCommandProcessorFragment_OpenGL::Cmd_AlphaMask_End(const CCommandBuffer::CAlphaMaskEndCommand *pCommand)
 {
-	glDisable(GL_ALPHA_TEST);
 	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	glStencilFunc(GL_EQUAL, 1, 1);
 	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glAlphaFunc(GL_GREATER, 0);
 }
 
-void CCommandProcessorFragment_OpenGL::Cmd_Stencil_Clear(const CCommandBuffer::CStencilClearCommand *pCommand)
+void CCommandProcessorFragment_OpenGL::Cmd_AlphaMask_Clear(const CCommandBuffer::CAlphaMaskClearCommand *pCommand)
 {
 	glDisable(GL_STENCIL_TEST);
 }
@@ -545,9 +544,9 @@ bool CCommandProcessorFragment_OpenGL::RunCommand(const CCommandBuffer::CCommand
 	case CCommandBuffer::CMD_TEXTURE_CREATE: Cmd_Texture_Create(static_cast<const CCommandBuffer::CTextureCreateCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_TEXTURE_DESTROY: Cmd_Texture_Destroy(static_cast<const CCommandBuffer::CTextureDestroyCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_TEXTURE_UPDATE: Cmd_Texture_Update(static_cast<const CCommandBuffer::CTextureUpdateCommand *>(pBaseCommand)); break;
-	case CCommandBuffer::CMD_STENCIL_BEGIN: Cmd_Stencil_Begin(static_cast<const CCommandBuffer::CStencilBeginCommand *>(pBaseCommand)); break;
-	case CCommandBuffer::CMD_STENCIL_END: Cmd_Stencil_End(static_cast<const CCommandBuffer::CStencilEndCommand *>(pBaseCommand)); break;
-	case CCommandBuffer::CMD_STENCIL_CLEAR: Cmd_Stencil_Clear(static_cast<const CCommandBuffer::CStencilClearCommand *>(pBaseCommand)); break;
+	case CCommandBuffer::CMD_ALPHAMASK_BEGIN: Cmd_AlphaMask_Begin(static_cast<const CCommandBuffer::CAlphaMaskBeginCommand *>(pBaseCommand)); break;
+	case CCommandBuffer::CMD_ALPHAMASK_END: Cmd_AlphaMask_End(static_cast<const CCommandBuffer::CAlphaMaskEndCommand *>(pBaseCommand)); break;
+	case CCommandBuffer::CMD_ALPHAMASK_CLEAR: Cmd_AlphaMask_Clear(static_cast<const CCommandBuffer::CAlphaMaskClearCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_CLEAR: Cmd_Clear(static_cast<const CCommandBuffer::CClearCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_RENDER: Cmd_Render(static_cast<const CCommandBuffer::CRenderCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_SCREENSHOT: Cmd_Screenshot(static_cast<const CCommandBuffer::CScreenshotCommand *>(pBaseCommand)); break;

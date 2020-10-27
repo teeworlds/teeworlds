@@ -178,21 +178,22 @@ void CGraphics_Threaded::ClipDisable()
 	m_State.m_ClipEnable = false;
 }
 
-void CGraphics_Threaded::StencilBegin()
+void CGraphics_Threaded::AlphaMaskBegin(float Threshold)
 {
-	CCommandBuffer::CStencilBeginCommand Cmd;
+	CCommandBuffer::CAlphaMaskBeginCommand Cmd;
+	Cmd.m_Threshold = Threshold;
 	m_pCommandBuffer->AddCommand(Cmd);
 }
 
-void CGraphics_Threaded::StencilEnd()
+void CGraphics_Threaded::AlphaMaskEnd()
 {
-	CCommandBuffer::CStencilEndCommand Cmd;
+	CCommandBuffer::CAlphaMaskEndCommand Cmd;
 	m_pCommandBuffer->AddCommand(Cmd);
 }
 
-void CGraphics_Threaded::StencilClear()
+void CGraphics_Threaded::AlphaMaskClear()
 {
-	CCommandBuffer::CStencilClearCommand Cmd;
+	CCommandBuffer::CAlphaMaskClearCommand Cmd;
 	m_pCommandBuffer->AddCommand(Cmd);
 }
 

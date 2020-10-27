@@ -79,9 +79,9 @@ public:
 		CMD_TEXTURE_UPDATE,
 
 		// stencil commands
-		CMD_STENCIL_BEGIN,
-		CMD_STENCIL_END,
-		CMD_STENCIL_CLEAR,
+		CMD_ALPHAMASK_BEGIN,
+		CMD_ALPHAMASK_END,
+		CMD_ALPHAMASK_CLEAR,
 
 		// rendering
 		CMD_CLEAR,
@@ -256,19 +256,21 @@ public:
 		int m_Slot;
 	};
 
-	struct CStencilBeginCommand : public CCommand
+	struct CAlphaMaskBeginCommand : public CCommand
 	{
-		CStencilBeginCommand() : CCommand(CMD_STENCIL_BEGIN) {}
+		CAlphaMaskBeginCommand() : CCommand(CMD_ALPHAMASK_BEGIN) {}
+
+		float m_Threshold;
 	};
 
-	struct CStencilEndCommand : public CCommand
+	struct CAlphaMaskEndCommand : public CCommand
 	{
-		CStencilEndCommand() : CCommand(CMD_STENCIL_END) {}
+		CAlphaMaskEndCommand() : CCommand(CMD_ALPHAMASK_END) {}
 	};
 
-	struct CStencilClearCommand : public CCommand
+	struct CAlphaMaskClearCommand : public CCommand
 	{
-		CStencilClearCommand() : CCommand(CMD_STENCIL_CLEAR) {}
+		CAlphaMaskClearCommand() : CCommand(CMD_ALPHAMASK_CLEAR) {}
 	};
 
 	//
@@ -417,9 +419,9 @@ public:
 	virtual void ClipEnable(int x, int y, int w, int h);
 	virtual void ClipDisable();
 
-	virtual void StencilBegin();
-	virtual void StencilEnd();
-	virtual void StencilClear();
+	virtual void AlphaMaskBegin(float Threshold);
+	virtual void AlphaMaskEnd();
+	virtual void AlphaMaskClear();
 
 	virtual void BlendNone();
 	virtual void BlendNormal();
