@@ -10,7 +10,8 @@ class CEffects : public CComponent
 	{
 		vec2 Pos;
 		int Amount;
-		float Angle;
+		float SumSin;
+		float SumCos;
 		int NumEvents;
 	};
 	bool m_Add50hz;

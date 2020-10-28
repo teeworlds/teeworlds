@@ -24,7 +24,7 @@ void CEffects::CreateDamageIndicator(CDamageIndInfo *pDamage)
 	if(pDamage->Amount == 0 || pDamage->NumEvents == 0)
 		return;
 
-	float Angle = pDamage->Angle / pDamage->NumEvents;
+	float Angle = atan2f(pDamage->SumSin / pDamage->NumEvents, pDamage->SumCos / pDamage->NumEvents);
 	vec2 Pos = pDamage->Pos / pDamage->NumEvents;
 
 	float s = Angle-pi/3;
@@ -73,14 +73,16 @@ void CEffects::DamageIndicator(vec2 Pos, int Amount, float Angle, int ClientID)
 		CDamageIndInfo Damage;
 		Damage.Pos = Pos;
 		Damage.Amount = Amount;
-		Damage.Angle = Angle;
+		Damage.SumSin = sinf(Angle);
+		Damage.SumCos = cosf(Angle);
 		Damage.NumEvents = 1;
 		CreateDamageIndicator(&Damage);
 	}
 	else
 	{
 		m_aClientDamage[ClientID].Amount += Amount;
-		m_aClientDamage[ClientID].Angle += Angle;
+		m_aClientDamage[ClientID].SumSin += sinf(Angle);
+		m_aClientDamage[ClientID].SumCos += cosf(Angle);
 		m_aClientDamage[ClientID].Pos += Pos;
 		m_aClientDamage[ClientID].NumEvents++;
 	}
