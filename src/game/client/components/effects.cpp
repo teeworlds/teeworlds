@@ -18,12 +18,29 @@
 
 inline vec2 RandomDir() { return normalize(vec2(frandom()-0.5f, frandom()-0.5f)); }
 
+void CEffects::CreateDamageIndicator(CDamageIndInfo *pDamage)
+{
+	// ignore if there is no damage
+	if(pDamage->Amount == 0 || pDamage->NumEvents == 0)
+		return;
+
+	float Angle = pDamage->Angle / pDamage->NumEvents;
+	vec2 Pos = pDamage->Pos / pDamage->NumEvents;
+
+	float s = Angle-pi/3;
+	float e = Angle+pi/3;
+	for(int i = 0; i < pDamage->Amount; i++)
+	{
+		float f = mix(s, e, float(i+1)/float(pDamage->Amount+1));
+		m_pClient->m_pDamageind->Create(Pos, direction(f));
+	}
+}
+
 CEffects::CEffects()
 {
 	m_Add50hz = false;
 	m_Add100hz = false;
-	m_DamageTaken = 0;
-	m_DamageTakenTick = 0;
+	mem_zero(m_aClientDamage, sizeof(m_aClientDamage));
 }
 
 void CEffects::AirJump(vec2 Pos)
@@ -49,36 +66,24 @@ void CEffects::AirJump(vec2 Pos)
 	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
-void CEffects::DamageIndicator(vec2 Pos, int Amount)
+void CEffects::DamageIndicator(vec2 Pos, int Amount, float Angle, int ClientID)
 {
-	// ignore if there is no damage
-	if(Amount == 0)
-		return;
-
-	m_DamageTaken++;
-	float Angle;
-	// create healthmod indicator
-	if(Client()->LocalTime() < m_DamageTakenTick+0.5f)
+	if(ClientID < 0 || ClientID >= MAX_CLIENTS)
 	{
-		// make sure that the damage indicators don't group together
-		Angle = m_DamageTaken*0.25f;
+		CDamageIndInfo Damage;
+		Damage.Pos = Pos;
+		Damage.Amount = Amount;
+		Damage.Angle = Angle;
+		Damage.NumEvents = 1;
+		CreateDamageIndicator(&Damage);
 	}
 	else
 	{
-		m_DamageTaken = 0;
-		Angle = 0;
+		m_aClientDamage[ClientID].Amount += Amount;
+		m_aClientDamage[ClientID].Angle += Angle;
+		m_aClientDamage[ClientID].Pos += Pos;
+		m_aClientDamage[ClientID].NumEvents++;
 	}
-
-	float a = 3*pi/2 + Angle;
-	float s = a-pi/3;
-	float e = a+pi/3;
-	for(int i = 0; i < Amount; i++)
-	{
-		float f = mix(s, e, float(i+1)/float(Amount+2));
-		m_pClient->m_pDamageind->Create(vec2(Pos.x, Pos.y), direction(f));
-	}
-
-	m_DamageTakenTick = Client()->LocalTime();
 }
 
 void CEffects::PowerupShine(vec2 Pos, vec2 size)
@@ -281,6 +286,15 @@ void CEffects::HammerHit(vec2 Pos)
 	p.m_Rot = frandom()*pi*2;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_EXPLOSIONS, &p);
 	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HAMMER_HIT, 1.0f, Pos);
+}
+
+void CEffects::ApplyDamageIndicators()
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+	{
+		CreateDamageIndicator(&m_aClientDamage[i]);
+	}
+	mem_zero(m_aClientDamage, sizeof(m_aClientDamage));
 }
 
 void CEffects::OnRender()

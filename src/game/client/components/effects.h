@@ -6,16 +6,24 @@
 
 class CEffects : public CComponent
 {
+	struct CDamageIndInfo
+	{
+		vec2 Pos;
+		int Amount;
+		float Angle;
+		int NumEvents;
+	};
 	bool m_Add50hz;
 	bool m_Add100hz;
 
-	int m_DamageTaken;
-	float m_DamageTakenTick;
+	CDamageIndInfo m_aClientDamage[MAX_CLIENTS];
+	void CreateDamageIndicator(CDamageIndInfo *pDamage);
+
 public:
 	CEffects();
 
 	void AirJump(vec2 Pos);
-	void DamageIndicator(vec2 Pos, int Amount);
+	void DamageIndicator(vec2 Pos, int Amount, float Angle, int ClientID);
 	void PowerupShine(vec2 Pos, vec2 Size);
 	void SmokeTrail(vec2 Pos, vec2 Vel);
 	void SkidTrail(vec2 Pos, vec2 Vel);
@@ -24,6 +32,8 @@ public:
 	void PlayerDeath(vec2 Pos, int ClientID);
 	void Explosion(vec2 Pos);
 	void HammerHit(vec2 Pos);
+
+	void ApplyDamageIndicators();
 
 	virtual void OnRender();
 	float GetEffectsSpeed();
