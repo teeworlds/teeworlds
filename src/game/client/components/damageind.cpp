@@ -32,15 +32,16 @@ void CDamageInd::DestroyItem(CDamageInd::CItem *pItem)
 		*pItem = m_aItems[m_NumItems];
 }
 
-void CDamageInd::Create(vec2 Pos, vec2 Dir)
+void CDamageInd::Create(vec2 Pos, vec2 Dir, int ClientID)
 {
 	CItem *pItem = CreateItem();
 	if(pItem)
 	{
 		pItem->m_Pos = Pos;
 		pItem->m_LifeTime = 0.75f;
-		pItem->m_Dir = Dir*-1;
+		pItem->m_Dir = Dir;
 		pItem->m_StartAngle = (frandom() - 1.0f) * 2.0f * pi;
+		pItem->m_ClientID = ClientID;
 	}
 }
 
@@ -58,7 +59,7 @@ void CDamageInd::OnRender()
 		else
 		{
 			vec2 Pos = mix(m_aItems[i].m_Pos+m_aItems[i].m_Dir*75.0f, m_aItems[i].m_Pos, clamp((m_aItems[i].m_LifeTime-0.60f)/0.15f, 0.0f, 1.0f));
-			const float Alpha = clamp(m_aItems[i].m_LifeTime * 10.0f, 0.0f, 1.0f); // 0.1 -> 0.0 == 1.0 -> 0.0
+			const float Alpha = clamp(m_aItems[i].m_LifeTime * 10.0f, 0.0f, 1.0f);
 			Graphics()->SetColor(1.0f*Alpha, 1.0f*Alpha, 1.0f*Alpha, Alpha);
 			Graphics()->QuadsSetRotation(m_aItems[i].m_StartAngle + m_aItems[i].m_LifeTime * 2.0f);
 			RenderTools()->SelectSprite(SPRITE_STAR1);
