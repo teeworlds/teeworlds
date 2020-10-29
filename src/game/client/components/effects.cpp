@@ -58,8 +58,6 @@ void CEffects::CreateDamageIndicator(CDamageIndInfo *pDamage, int ClientID)
 
 	float s = Angle-pi/3;
 	float e = Angle+pi/3;
-
-	int HealthDamageIndex = (pDamage->m_ArmorAmount) / 2;
 	for(int i = 0; i < Amount; i++)
 	{
 		float f = mix(s, e, float(i+1)/float(Amount+1));
