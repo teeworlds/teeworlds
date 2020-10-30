@@ -16,7 +16,8 @@ int CAtlas::TrySection(int Index, int Width, int Height)
 
 	int FitWidth = Width;
 
-	if(CurX + Width > m_Width - 1) return -1;
+	if(CurX + Width > m_Width - 1)
+		return -1;
 
 	for(int i = Index; i < m_Sections.size(); ++i)
 	{
@@ -24,7 +25,8 @@ int CAtlas::TrySection(int Index, int Width, int Height)
 
 		Section = m_Sections[i];
 		if(Section.y > CurY) CurY = Section.y;
-		if(CurY + Height > m_Height - 1) return -1;
+		if(CurY + Height > m_Height - 1)
+			return -1;
 		FitWidth -= Section.l;
 	}
 
@@ -804,7 +806,8 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 
 void CTextRender::SetFontLanguageVariant(const char *pLanguageFile)
 {
-	if(!m_pGlyphMap) return;	
+	if(!m_pGlyphMap)
+		return;	
 
 	char *FamilyName = NULL;
 
