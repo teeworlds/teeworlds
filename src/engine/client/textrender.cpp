@@ -21,7 +21,8 @@ int CAtlas::TrySection(int Index, int Width, int Height)
 
 	for(int i = Index; i < m_Sections.size(); ++i)
 	{
-		if(FitWidth <= 0) break;
+		if(FitWidth <= 0)
+			break;
 
 		Section = m_Sections[i];
 		if(Section.y > CurY) CurY = Section.y;
@@ -94,12 +95,14 @@ ivec2 CAtlas::Add(int Width, int Height)
 		ivec3 *Section = &m_Sections[i];
 		ivec3 *Previous = &m_Sections[i-1];
 
-		if(Section->x >= Previous->x + Previous->l) break;
+		if(Section->x >= Previous->x + Previous->l)
+			break;
 
 		int Shrink = Previous->x + Previous->l - Section->x;
 		Section->x += Shrink;
 		Section->l -= Shrink;
-		if(Section->l > 0) break;
+		if(Section->l > 0)
+			break;
 
 		m_Sections.remove_index(i);
 		i -= 1;
@@ -140,6 +143,9 @@ void CGlyphMap::InitTexture(int Width, int Height)
 		}
 	}
 	m_ActiveAtlasIndex = 0;
+
+	for(int i = 0; i < m_Glyphs.size(); ++i)
+		delete m_Glyphs[i].m_pGlyph;
 	m_Glyphs.clear();
 
 	int TextureSize = Width*Height;
@@ -210,13 +216,13 @@ void CGlyphMap::UploadGlyph(int TextureIndex, int PosX, int PosY, int Width, int
 bool CGlyphMap::SetFaceByName(FT_Face *pFace, const char *pFamilyName)
 {
 	FT_Face Face = NULL;
-	char aFamilyStyleName[128];
+	char aFamilyStyleName[FONT_NAME_SIZE];
 
 	if(pFamilyName != NULL)
 	{
 		for(int i = 0; i < m_NumFtFaces; ++i)
 		{
-			str_format(aFamilyStyleName, 128, "%s %s", m_aFtFaces[i]->family_name, m_aFtFaces[i]->style_name);
+			str_format(aFamilyStyleName, FONT_NAME_SIZE, "%s %s", m_aFtFaces[i]->family_name, m_aFtFaces[i]->style_name);
 			if(str_comp(pFamilyName, aFamilyStyleName) == 0)
 			{
 				Face = m_aFtFaces[i];
@@ -305,7 +311,8 @@ int CGlyphMap::AddFace(FT_Face Face)
 		return -1;
 
 	m_aFtFaces[m_NumFtFaces++] = Face;
-	if(!m_DefaultFace) m_DefaultFace = Face;
+	if(!m_DefaultFace)
+		m_DefaultFace = Face;
 
 	return 0; 
 }
@@ -642,7 +649,6 @@ int CTextRender::LoadFontCollection(const void *pFilename, const void *pBuf, lon
 	FT_Face FtFace;
 
 	if(FT_New_Memory_Face(m_FTLibrary, (FT_Byte *)pBuf, FileSize, -1, &FtFace))
-
 		return -1;
 
 	int NumFaces = FtFace->num_faces;
@@ -700,13 +706,15 @@ void CTextRender::Init()
 
 void CTextRender::Update()
 {
-	if(m_pGlyphMap) m_pGlyphMap->PagesAccessReset();
+	if(m_pGlyphMap)
+		m_pGlyphMap->PagesAccessReset();
 }
 
 void CTextRender::Shutdown()
 {
 	delete m_pGlyphMap;
-	if(m_paVariants) mem_free(m_paVariants);
+	if(m_paVariants)
+		mem_free(m_paVariants);
 }
 
 void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
@@ -809,7 +817,7 @@ void CTextRender::SetFontLanguageVariant(const char *pLanguageFile)
 	if(!m_pGlyphMap)
 		return;	
 
-	char *FamilyName = NULL;
+	char *pFamilyName = NULL;
 
 	if(m_paVariants)
 	{
@@ -817,14 +825,14 @@ void CTextRender::SetFontLanguageVariant(const char *pLanguageFile)
 		{
 			if(str_comp_filenames(pLanguageFile, m_paVariants[i].m_aLanguageFile) == 0)
 			{
-				FamilyName = m_paVariants[i].m_aFamilyName;
+				pFamilyName = m_paVariants[i].m_aFamilyName;
 				m_CurrentVariant = i;
 				break;
 			}
 		}
 	}
 
-	m_pGlyphMap->SetVariantFaceByName(FamilyName);
+	m_pGlyphMap->SetVariantFaceByName(pFamilyName);
 }
 
 void CTextRender::TextColor(float r, float g, float b, float a)

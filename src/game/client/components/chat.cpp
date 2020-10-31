@@ -756,6 +756,9 @@ void CChat::OnRender()
 {
 	if(Client()->State() < IClient::STATE_ONLINE)
 		return;
+	
+	if(!Config()->m_ClShowChat)
+		return;
 
 	// send pending chat messages
 	if(m_PendingChatCounter > 0 && m_LastChatSend+time_freq() < time_get())
@@ -1049,7 +1052,8 @@ void CChat::OnRender()
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
 		CLine *pLine = &m_aLines[r];
 
-		if(pLine->m_aText[0] == 0) break;
+		if(pLine->m_aText[0] == 0)
+			break;
 
 		if(pLine->m_Size.y < 0.0f)
 		{

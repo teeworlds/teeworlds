@@ -18,6 +18,8 @@ enum
 	MAX_CHARACTERS = 64,
 	TEXTURE_SIZE = 2048,
 	NUM_PAGES_PER_DIM = 4, // 16 pages total
+
+	FONT_NAME_SIZE = 128,
 };
 
 // TODO: use SDF or MSDF font instead of multiple font sizes
@@ -141,8 +143,8 @@ public:
 
 struct CFontLanguageVariant
 {
-	char m_aLanguageFile[128];
-	char m_aFamilyName[128];
+	char m_aLanguageFile[IO_MAX_PATH_LENGTH];
+	char m_aFamilyName[FONT_NAME_SIZE];
 };
 
 struct CWordWidthHint
