@@ -230,7 +230,9 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 			{
 				float PrevAnimationTick = fmod(pThis->Client()->PrevGameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick, EnvalopTicks);
 				float CurAnimationTick = fmod(pThis->Client()->GameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick, EnvalopTicks);
-				s_Time = mix(PrevAnimationTick, CurAnimationTick, pThis->Client()->IntraGameTick())/pThis->Client()->GameTickSpeed();
+				if(PrevAnimationTick > CurAnimationTick)
+					CurAnimationTick += EnvalopTicks;
+				s_Time = mix(PrevAnimationTick, CurAnimationTick, pThis->Client()->IntraGameTick()) / pThis->Client()->GameTickSpeed();
 			}
 			else
 				s_Time = pThis->Client()->LocalTime() - pThis->m_OnlineStartTime;
