@@ -269,6 +269,9 @@ CGlyphMap::~CGlyphMap()
 	for(int i = 0; i < m_Glyphs.size(); ++i)
 		delete m_Glyphs[i].m_pGlyph;
 
+	for(int i = 0; i < m_NumFtFaces; ++i)
+		FT_Done_Face(m_aFtFaces[i]);
+
 	FT_Stroker_Done(m_FtStroker);
 }
 
