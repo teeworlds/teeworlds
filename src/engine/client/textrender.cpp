@@ -50,10 +50,13 @@ void CAtlas::Init(int Index, int X, int Y, int Width, int Height)
 	Section.y = 1;
 	Section.l = m_Width - 2;
 	m_Sections.add(Section);
+
+	m_IsEmpty = true;
 }
 
 ivec2 CAtlas::Add(int Width, int Height)
 {
+	m_IsEmpty = false;
 	int BestHeight = m_Height;
 	int BestWidth = m_Width;
 	int BestSectionIndex = -1;
@@ -171,6 +174,18 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *pPosition)
 	if(pPosition->x >= 0 && pPosition->y >= 0)
 		return m_ActiveAtlasIndex;
 
+	// try next page
+	int NextPage = m_ActiveAtlasIndex + 1;
+	if(NextPage < NUM_PAGES_PER_DIM*NUM_PAGES_PER_DIM && m_aAtlasPages[NextPage].IsEmpty())
+	{
+		*pPosition = m_aAtlasPages[NextPage].Add(Width, Height);
+		if(pPosition->x >= 0 && pPosition->y >= 0)
+		{
+			m_ActiveAtlasIndex = NextPage;
+			return m_ActiveAtlasIndex;
+		}
+	}
+	
 	// out of space, drop a page
 	int LeastAccess = INT_MAX;
 	int Atlas = 0;

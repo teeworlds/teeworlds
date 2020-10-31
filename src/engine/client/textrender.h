@@ -76,6 +76,7 @@ class CAtlas
 
 	int m_LastFrameAccess;
 	int m_Access;
+	bool m_IsEmpty;
 
 	int TrySection(int Index, int Width, int Height);
 public:
@@ -93,6 +94,7 @@ public:
 	void Touch() { m_Access++; }
 	int GetAccess() { return m_LastFrameAccess; }
 	void Update() { m_LastFrameAccess = m_Access; m_Access = 0; }
+	bool IsEmpty() { return m_IsEmpty; }
 };
 
 class CGlyphMap
