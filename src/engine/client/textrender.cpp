@@ -25,7 +25,8 @@ int CAtlas::TrySection(int Index, int Width, int Height)
 			break;
 
 		Section = m_Sections[i];
-		if(Section.y > CurY) CurY = Section.y;
+		if(Section.y > CurY)
+			CurY = Section.y;
 		if(CurY + Height > m_Height - 1)
 			return -1;
 		FitWidth -= Section.l;
