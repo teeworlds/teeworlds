@@ -662,10 +662,16 @@ int CTextRender::LoadFontCollection(const void *pFilename, const void *pBuf, lon
 	for(i = 0; i < NumFaces; ++i)
 	{
 		if(FT_New_Memory_Face(m_FTLibrary, (FT_Byte *)pBuf, FileSize, i, &FtFace))
+		{
+			FT_Done_Face(FtFace);
 			break;
+		}
 
 		if(m_pGlyphMap->AddFace(FtFace))
+		{
+			FT_Done_Face(FtFace);
 			break;
+		}
 	}
 
 	dbg_msg("textrender", "loaded %d faces from font file '%s'", i, (char *)pFilename);
