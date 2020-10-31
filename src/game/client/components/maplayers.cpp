@@ -218,17 +218,19 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 		return;
 
 	const CMapItemEnvelope *pItem = (CMapItemEnvelope *)pLayers->Map()->GetItem(Start+Env, 0, 0);
+	CEnvPoint *pItemPoints = pPoints + pItem->m_StartPoint;
+
 	static float s_Time = 0.0f;
+	float EnvalopTicks = (pItemPoints[pItem->m_NumPoints-1].m_Time - pItemPoints[0].m_Time)/1000.0f * pThis->Client()->GameTickSpeed();
 	if(pThis->Client()->State() == IClient::STATE_ONLINE || pThis->Client()->State() == IClient::STATE_DEMOPLAYBACK)
 	{
 		if(pThis->m_pClient->m_Snap.m_pGameData && !pThis->m_pClient->IsWorldPaused())
 		{
 			if(pItem->m_Version < 2 || pItem->m_Synchronized)
 			{
-				s_Time = mix(
-					pThis->Client()->PrevGameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick,
-					pThis->Client()->GameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick,
-					pThis->Client()->IntraGameTick()) / (float)pThis->Client()->GameTickSpeed();
+				float PrevAnimationTick = fmod(pThis->Client()->PrevGameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick, EnvalopTicks);
+				float CurAnimationTick = fmod(pThis->Client()->GameTick() - pThis->m_pClient->m_Snap.m_pGameData->m_GameStartTick, EnvalopTicks);
+				s_Time = mix(PrevAnimationTick, CurAnimationTick, pThis->Client()->IntraGameTick())/pThis->Client()->GameTickSpeed();
 			}
 			else
 				s_Time = pThis->Client()->LocalTime() - pThis->m_OnlineStartTime;
@@ -238,7 +240,7 @@ void CMapLayers::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void 
 	{
 		s_Time = pThis->Client()->LocalTime();
 	}
-	CRenderTools::RenderEvalEnvelope(pPoints + pItem->m_StartPoint, pItem->m_NumPoints, 4, s_Time + TimeOffset, pChannels);
+	CRenderTools::RenderEvalEnvelope(pItemPoints, pItem->m_NumPoints, 4, s_Time + TimeOffset, pChannels);
 }
 
 void CMapLayers::OnRender()
