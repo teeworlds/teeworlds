@@ -300,7 +300,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		{
 			// everything is handled within
 		}
-		else if (m_Mode == CHAT_WHISPER)
+		else if(m_Mode == CHAT_WHISPER)
 		{
 			// change target
 			for(int i = 0; i < MAX_CLIENTS; i++)
@@ -310,7 +310,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 					ClientID = (m_WhisperTarget + MAX_CLIENTS - i) % MAX_CLIENTS; // pick previous player as target
 				else
 					ClientID = (m_WhisperTarget + i) % MAX_CLIENTS; // pick next player as target
-				if (m_pClient->m_aClients[ClientID].m_Active && m_WhisperTarget != ClientID && m_pClient->m_LocalClientID != ClientID)
+				if(m_pClient->m_aClients[ClientID].m_Active && m_WhisperTarget != ClientID && m_pClient->m_LocalClientID != ClientID)
 				{
 					m_WhisperTarget = ClientID;
 					break;
@@ -338,7 +338,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 				m_CompletionChosen = m_CompletionFav;
 			else
 			{
-				if (m_ReverseCompletion)
+				if(m_ReverseCompletion)
 					m_CompletionChosen = (m_CompletionChosen - 1 + 2 * MAX_CLIENTS) % (2 * MAX_CLIENTS);
 				else
 					m_CompletionChosen = (m_CompletionChosen + 1) % (2 * MAX_CLIENTS);
@@ -453,7 +453,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 				m_Input.Set(m_pHistoryEntry->m_aText);
 		}
 	}
-	else if (Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_DOWN)
+	else if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_DOWN)
 	{
 		if(IsTypingCommand() && !m_pHistoryEntry)
 		{
@@ -466,7 +466,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 			if(m_pHistoryEntry)
 				m_pHistoryEntry = m_History.Next(m_pHistoryEntry);
 
-			if (m_pHistoryEntry)
+			if(m_pHistoryEntry)
 				m_Input.Set(m_pHistoryEntry->m_aText);
 			else
 				m_Input.Clear();
@@ -756,6 +756,7 @@ void CChat::OnRender()
 {
 	if(Client()->State() < IClient::STATE_ONLINE)
 		return;
+	
 	if(!Config()->m_ClShowChat)
 		return;
 
@@ -797,44 +798,41 @@ void CChat::OnRender()
 			Blend = 0.5f;
 		}
 
-		// calculate category text size
-		// TODO: rework TextRender. Writing the same code twice to calculate a simple thing as width is ridiculus
 		float CategoryHeight;
 		const float IconOffsetX = ChatMode == CHAT_WHISPER ? 6.0f : 0.0f;
 		const float CategoryFontSize = 8.0f;
 		const float InputFontSize = 8.0f;
 		char aCatText[48];
 
+		static CTextCursor s_CategoryCursor(CategoryFontSize);
+		s_CategoryCursor.Reset();
+
+		if(ChatMode == CHAT_ALL)
+			str_copy(aCatText, Localize("All"), sizeof(aCatText));
+		else if(ChatMode == CHAT_TEAM)
 		{
-			CTextCursor Cursor;
-			TextRender()->SetCursor(&Cursor, x, y, CategoryFontSize, 0);
+			const int LocalCID = m_pClient->m_LocalClientID;
+			const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[LocalCID];
+			const int LocalTteam = LocalClient.m_Team;
 
-			if(ChatMode == CHAT_ALL)
-				str_copy(aCatText, Localize("All"), sizeof(aCatText));
-			else if(ChatMode == CHAT_TEAM)
-			{
-				const int LocalCID = m_pClient->m_LocalClientID;
-				const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[LocalCID];
-				const int LocalTteam = LocalClient.m_Team;
-
-				if(LocalTteam == TEAM_SPECTATORS)
-					str_copy(aCatText, Localize("Spectators"), sizeof(aCatText));
-				else
-					str_copy(aCatText, Localize("Team"), sizeof(aCatText));
-			}
-			else if(ChatMode == CHAT_WHISPER)
-			{
-				CategoryWidth += RenderTools()->GetClientIdRectSize(CategoryFontSize);
-				str_format(aCatText, sizeof(aCatText), "%s",m_pClient->m_aClients[m_WhisperTarget].m_aName);
-			}
+			if(LocalTteam == TEAM_SPECTATORS)
+				str_copy(aCatText, Localize("Spectators"), sizeof(aCatText));
 			else
-				str_copy(aCatText, Localize("Chat"), sizeof(aCatText));
-
-			TextRender()->TextEx(&Cursor, aCatText, -1);
-
-			CategoryWidth += Cursor.m_X - Cursor.m_StartX;
-			CategoryHeight = Cursor.m_FontSize;
+				str_copy(aCatText, Localize("Team"), sizeof(aCatText));
 		}
+		else if(ChatMode == CHAT_WHISPER)
+		{
+			CategoryWidth += RenderTools()->GetClientIdRectSize(CategoryFontSize);
+			str_format(aCatText, sizeof(aCatText), "%s",m_pClient->m_aClients[m_WhisperTarget].m_aName);
+		}
+		else
+			str_copy(aCatText, Localize("Chat"), sizeof(aCatText));
+
+		TextRender()->TextDeferred(&s_CategoryCursor, aCatText, -1);
+
+		CategoryWidth += s_CategoryCursor.Width();
+		CategoryHeight = s_CategoryCursor.Height();
+
 
 		// draw a background box
 		const vec4 CRCWhite(1.0f, 1.0f, 1.0f, 0.25f*Blend);
@@ -851,7 +849,7 @@ void CChat::OnRender()
 		CatRect.x = 0;
 		CatRect.y = y;
 		CatRect.w = CategoryWidth + x + 2.0f + IconOffsetX;
-		CatRect.h = CategoryHeight + 4.0f;
+		CatRect.h = CategoryHeight;
 		RenderTools()->DrawUIRect(&CatRect, CatRectColor, CUI::CORNER_R, 2.0f);
 
 		// draw chat icon
@@ -879,22 +877,25 @@ void CChat::OnRender()
 		Graphics()->WrapNormal();
 
 		// render chat input
-		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, x + IconOffsetX, y, CategoryFontSize, TEXTFLAG_RENDER);
-		Cursor.m_LineWidth = Width-190.0f;
-		Cursor.m_MaxLines = 2;
+		s_CategoryCursor.m_Flags = TEXTFLAG_WORD_WRAP;
 
 		//make buffered chat name transparent
 		TextRender()->TextColor(1, 1, 1, Blend);
-
+		float ClientIDWidth = 0;
 		if(ChatMode == CHAT_WHISPER)
-			RenderTools()->DrawClientID(TextRender(), &Cursor, m_WhisperTarget);
-		TextRender()->TextEx(&Cursor, aCatText, -1);
+			ClientIDWidth = RenderTools()->DrawClientID(TextRender(), CategoryFontSize, vec2(x + IconOffsetX, y), m_WhisperTarget);
+		s_CategoryCursor.MoveTo(x + IconOffsetX + ClientIDWidth, y);
+		TextRender()->DrawTextOutlined(&s_CategoryCursor);
 
-		Cursor.m_X += 4.0f;
-		Cursor.m_Y -= (InputFontSize-CategoryFontSize) * 0.5f;
-		Cursor.m_StartX = Cursor.m_X;
-		Cursor.m_FontSize = InputFontSize;
+		static CTextCursor m_InputCursor(InputFontSize);
+		vec2 CursorPosition = s_CategoryCursor.CursorPosition();
+		CursorPosition.x += s_CategoryCursor.Width() + 4.0f;
+		CursorPosition.y -= (InputFontSize-CategoryFontSize)*0.5f;
+		m_InputCursor.MoveTo(CursorPosition);
+		m_InputCursor.m_FontSize = InputFontSize;
+		m_InputCursor.m_MaxWidth = Width-190.0f-s_CategoryCursor.Width();
+		m_InputCursor.m_MaxLines = 2;
+		m_InputCursor.Reset();
 
 		// check if the visible text has to be moved
 		if(m_InputUpdate)
@@ -906,53 +907,36 @@ void CChat::OnRender()
 				m_ChatStringOffset -= m_ChatStringOffset-m_Input.GetCursorOffset();
 			else
 			{
-				CTextCursor Temp = Cursor;
-				Temp.m_Flags = 0;
-
-				TextRender()->TextEx(&Temp, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
-				TextRender()->TextEx(&Temp, "|", -1);
-				while(Temp.m_LineCount > 2)
+				m_InputCursor.m_Flags = TEXTFLAG_NO_RENDER | TEXTFLAG_WORD_WRAP;
+				TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
+				while(m_InputCursor.IsTruncated())
 				{
 					++m_ChatStringOffset;
-					Temp = Cursor;
-					Temp.m_Flags = 0;
-					TextRender()->TextEx(&Temp, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
-					TextRender()->TextEx(&Temp, "|", -1);
+					m_InputCursor.Reset();
+					TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
 				}
 			}
 			m_InputUpdate = false;
 		}
 
+		m_InputCursor.Reset();
+
 		//render buffered text
 		if(m_Mode == CHAT_NONE)
 		{
 			//calculate WidthLimit
-			float WidthLimit = LineWidth + x + 3.0f - Cursor.m_X;
-			float TextWidth = TextRender()->TextWidth(0, Cursor.m_FontSize, m_Input.GetString(), -1, -1);
+			m_InputCursor.m_MaxWidth = LineWidth+x+3.0f-s_CategoryCursor.Width();
+			m_InputCursor.m_MaxLines = 1;
+			m_InputCursor.m_Flags = TEXTFLAG_ELLIPSIS;
 
 			//add dots when string excesses length
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, Blend);
-			if(TextWidth > WidthLimit)
-			{
-				const static float DotWidth = TextRender()->TextWidth(0, Cursor.m_FontSize, "...", -1, -1);
-
-				Cursor.m_Flags|=TEXTFLAG_STOP_AT_END;
-
-				//Limit the line width to append three dots
-				Cursor.m_LineWidth = WidthLimit-DotWidth;
-
-				TextRender()->TextEx(&Cursor, m_Input.GetString(), -1);
-
-				//Change line width back to default
-				Cursor.m_LineWidth = LineWidth;
-				TextRender()->TextEx(&Cursor, "...", -1);
-			}
-			else
-				TextRender()->TextEx(&Cursor, m_Input.GetString(), -1);
+			TextRender()->TextOutlined(&m_InputCursor, m_Input.GetString(), -1);
 
 			//render helper annotation
-			CTextCursor InfoCursor;
-			TextRender()->SetCursor(&InfoCursor, 2.0f, y+12.0f, CategoryFontSize*0.75, TEXTFLAG_RENDER);
+			static CTextCursor s_InfoCursor(CategoryFontSize*0.75);
+			s_InfoCursor.MoveTo(2.0f, y+12.0f);
+			s_InfoCursor.Reset();
 
 			//Check if key exists with bind
 			int KeyID, Modifier;
@@ -966,19 +950,21 @@ void CChat::OnRender()
 
 				char aInfoText[128];
 				str_format(aInfoText, sizeof(aInfoText), Localize("Press %s to resume chatting"), aKeyName);
-				TextRender()->TextEx(&InfoCursor, aInfoText, -1);
+				TextRender()->TextOutlined(&s_InfoCursor, aInfoText, -1);
 			}
 		}
 		else
 		{
+			m_InputCursor.m_Flags = TEXTFLAG_WORD_WRAP;
 			//Render normal text
-			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
-			static float MarkerOffset = TextRender()->TextWidth(0, 8.0f, "|", -1, -1.0f)/3;
-			CTextCursor Marker = Cursor;
-			Marker.m_X -= MarkerOffset;
-
-			TextRender()->TextEx(&Marker, "|", -1);
-			TextRender()->TextEx(&Cursor, m_Input.GetString()+m_Input.GetCursorOffset(), -1);
+			TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, -1);
+			
+			static CTextCursor s_MarkerCursor(InputFontSize);
+			s_MarkerCursor.Reset();
+			TextRender()->TextDeferred(&s_MarkerCursor, "|", -1);
+			s_MarkerCursor.m_Align = TEXTALIGN_CENTER;
+			vec2 MarkerPosition = TextRender()->CaretPosition(&m_InputCursor, m_Input.GetCursorOffset()-m_ChatStringOffset);
+			s_MarkerCursor.MoveTo(MarkerPosition.x, MarkerPosition.y);
 
 			//Render command autocomplete option hint
 			if(IsTypingCommand() && m_CommandManager.CommandCount() - m_FilteredCount && m_SelectedCommand >= 0)
@@ -986,20 +972,27 @@ void CChat::OnRender()
 				const CCommandManager::CCommand *pCommand = m_CommandManager.GetCommand(m_SelectedCommand);
 				if(str_length(pCommand->m_aName)+1 > str_length(m_Input.GetString()))
 				{
-					TextRender()->TextColor(CUI::ms_TransparentTextColor);
-					TextRender()->TextEx(&Cursor, pCommand->m_aName + str_length(m_Input.GetString())-1, -1);
+					TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+					TextRender()->TextDeferred(&m_InputCursor, pCommand->m_aName + str_length(m_Input.GetString())-1, -1);
 				}
 			}
 
 			if(ChatMode == CHAT_WHISPER)
 			{
 				//render helper annotation
-				CTextCursor InfoCursor;
-				TextRender()->SetCursor(&InfoCursor, 2.0f, y+12.0f, CategoryFontSize*0.75, TEXTFLAG_RENDER);
+				static CTextCursor s_HelpCursor(CategoryFontSize*0.75);
+				s_HelpCursor.Reset();
+				s_HelpCursor.MoveTo(2.0f, y+12.0f);
 
-				TextRender()->TextColor(CUI::ms_TransparentTextColor);
-				TextRender()->TextEx(&InfoCursor, Localize("Press Tab to cycle chat recipients. Whispers aren't encrypted and might be logged by the server."), -1);
+				char aInfoText[128];
+				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients"));
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
+				TextRender()->TextOutlined(&s_HelpCursor, aInfoText, -1);
 			}
+			
+			TextRender()->DrawTextOutlined(&m_InputCursor);
+			TextRender()->DrawTextOutlined(&s_MarkerCursor);
+
 		}
 	}
 
@@ -1048,7 +1041,10 @@ void CChat::OnRender()
 
 	float Begin = x;
 	float FontSize = 6.0f;
-	CTextCursor Cursor;
+	static CTextCursor s_ChatCursor(FontSize);
+	s_ChatCursor.m_Flags = TEXTFLAG_WORD_WRAP;
+	s_ChatCursor.m_MaxWidth = LineWidth;
+	s_ChatCursor.m_MaxLines = -1;
 
 	// get the y offset (calculate it if we haven't done that yet)
 	for(int i = 0; i < MAX_LINES; i++)
@@ -1056,32 +1052,36 @@ void CChat::OnRender()
 		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
 		CLine *pLine = &m_aLines[r];
 
-		if(pLine->m_aText[0] == 0) break;
+		if(pLine->m_aText[0] == 0)
+			break;
 
 		if(pLine->m_Size.y < 0.0f)
 		{
-			TextRender()->SetCursor(&Cursor, Begin, 0.0f, FontSize, 0);
-			Cursor.m_LineWidth = LineWidth;
-
+			s_ChatCursor.MoveTo(Begin, 0.0f);
+			s_ChatCursor.Reset();
+			s_ChatCursor.m_Flags = TEXTFLAG_WORD_WRAP | TEXTFLAG_NO_RENDER;
 			char aBuf[768] = {0};
 			if(pLine->m_Mode == CHAT_WHISPER)
 			{
-				Cursor.m_X += 12.5f;
+				TextRender()->TextAdvance(&s_ChatCursor, 12.5f);
 			}
 
 			if(pLine->m_ClientID >= 0)
 			{
-				Cursor.m_X += RenderTools()->GetClientIdRectSize(Cursor.m_FontSize);
+				float ClientIDWidth = RenderTools()->GetClientIdRectSize(FontSize);
+				TextRender()->TextAdvance(&s_ChatCursor, ClientIDWidth);
 				str_format(aBuf, sizeof(aBuf), "%s: ", pLine->m_aName);
 			}
 
 			str_append(aBuf, pLine->m_aText, sizeof(aBuf));
 
-			TextRender()->TextEx(&Cursor, aBuf, -1);
-			pLine->m_Size.y = Cursor.m_LineCount * Cursor.m_FontSize;
-			pLine->m_Size.x = Cursor.m_LineCount == 1 ? Cursor.m_X - Cursor.m_StartX : LineWidth;
+			TextRender()->TextDeferred(&s_ChatCursor, aBuf, -1);
+			pLine->m_Size.y = s_ChatCursor.LineCount() * FontSize;
+			pLine->m_Size.x = s_ChatCursor.Width();
 		}
 	}
+
+	s_ChatCursor.m_Flags = TEXTFLAG_WORD_WRAP;
 
 	if(m_Show)
 	{
@@ -1140,10 +1140,13 @@ void CChat::OnRender()
 		// render the page count
 		if(Page > 0)
 		{
+			static CTextCursor s_PageCursor(FontSize-1.0f);
+			s_PageCursor.Reset();
+			s_PageCursor.MoveTo(6.0f, HeightLimit-3.0f);
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf), Localize("-Page %d/%d-"), m_BacklogPage+1, Page+1);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.6f);
-			TextRender()->Text(0, 6.0f, HeightLimit-3.0f, FontSize-1.0f, aBuf, -1.0f);
+			TextRender()->TextOutlined(&s_PageCursor, aBuf, -1);
 			TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		}
 	}
@@ -1177,8 +1180,8 @@ void CChat::OnRender()
 		const float HighlightBlend = 1.0f - clamp(Delta - HlTimeFull, 0.0f, HlTimeFade) / HlTimeFade;
 
 		// reset the cursor
-		TextRender()->SetCursor(&Cursor, Begin, y, FontSize, TEXTFLAG_RENDER);
-		Cursor.m_LineWidth = LineWidth;
+		s_ChatCursor.MoveTo(Begin, y);
+		s_ChatCursor.Reset();
 
 		const vec2 ShadowOffset(0.8f, 1.5f);
 		const vec4 ShadowWhisper(0.09f, 0.f, 0.26f, Blend * 0.9f);
@@ -1189,15 +1192,15 @@ void CChat::OnRender()
 			ShadowColor = ShadowWhisper;
 
 
-		const vec4 ColorSystem(1.0f, 1.0f, 0.5f, Blend);
-		const vec4 ColorWhisper(0.4f, 1.0f, 1.0f, Blend);
-		const vec4 ColorRed(1.0f, 0.5f, 0.5f, Blend);
-		const vec4 ColorBlue(0.7f, 0.7f, 1.0f, Blend);
-		const vec4 ColorSpec(0.75f, 0.5f, 0.75f, Blend);
-		const vec4 ColorAllPre(0.8f, 0.8f, 0.8f, Blend);
-		const vec4 ColorAllText(1.0f, 1.0f, 1.0f, Blend);
-		const vec4 ColorTeamPre(0.45f, 0.9f, 0.45f, Blend);
-		const vec4 ColorTeamText(0.6f, 1.0f, 0.6f, Blend);
+		const vec4 ColorSystem(1.0f, 1.0f, 0.5f, 1);
+		const vec4 ColorWhisper(0.4f, 1.0f, 1.0f, 1);
+		const vec4 ColorRed(1.0f, 0.5f, 0.5f, 1);
+		const vec4 ColorBlue(0.7f, 0.7f, 1.0f, 1);
+		const vec4 ColorSpec(0.75f, 0.5f, 0.75f, 1);
+		const vec4 ColorAllPre(0.8f, 0.8f, 0.8f, 1);
+		const vec4 ColorAllText(1.0f, 1.0f, 1.0f, 1);
+		const vec4 ColorTeamPre(0.45f, 0.9f, 0.45f, 1);
+		const vec4 ColorTeamText(0.6f, 1.0f, 0.6f, 1);
 		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.5f * HighlightBlend);
 		const vec4 ColorHighlightOutline(0.0f, 0.4f, 1.0f,
 			mix(pLine->m_Mode == CHAT_TEAM ? 0.6f : 0.5f, 1.0f, HighlightBlend));
@@ -1207,8 +1210,8 @@ void CChat::OnRender()
 		if(pLine->m_Highlighted && ColorHighlightBg.a > 0.001f)
 		{
 			CUIRect BgRect;
-			BgRect.x = Cursor.m_X;
-			BgRect.y = Cursor.m_Y + 2.0f;
+			BgRect.x = Begin;
+			BgRect.y = y + 1.0f;
 			BgRect.w = pLine->m_Size.x - 2.0f;
 			BgRect.h = pLine->m_Size.y;
 
@@ -1229,11 +1232,11 @@ void CChat::OnRender()
 		char aBuf[48];
 		if(pLine->m_Mode == CHAT_WHISPER)
 		{
-			const float LineBaseY = TextRender()->TextGetLineBaseY(&Cursor);
+			const float LineBaseY = y + FontSize + 1.0f;
 
 			const float qw = 10.0f;
 			const float qh = 5.0f;
-			const float qx = Cursor.m_X + 2.0f;
+			const float qx = Begin + 1.0f;
 			const float qy = LineBaseY - qh - 0.5f;
 
 			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CHATWHISPER].m_Id);
@@ -1264,7 +1267,7 @@ void CChat::OnRender()
 
 			Graphics()->QuadsEnd();
 			Graphics()->WrapNormal();
-			Cursor.m_X += 12.5f;
+			TextRender()->TextAdvance(&s_ChatCursor, 12.5f);
 		}
 
 		// render name
@@ -1283,6 +1286,7 @@ void CChat::OnRender()
 		else
 			TextColor = ColorAllPre;
 
+		int NumNameGlyphs = 0;
 		if(pLine->m_ClientID >= 0)
 		{
 			int NameCID = pLine->m_ClientID;
@@ -1292,10 +1296,16 @@ void CChat::OnRender()
 			vec4 IdTextColor = vec4(0.1f*Blend, 0.1f*Blend, 0.1f*Blend, 1.0f*Blend);
 			vec4 BgIdColor = TextColor;
 			BgIdColor.a = 0.5f*Blend;
-			RenderTools()->DrawClientID(TextRender(), &Cursor, NameCID, BgIdColor, IdTextColor);
+			float ClientIDWidth = RenderTools()->DrawClientID(TextRender(), FontSize, s_ChatCursor.AdvancePosition(), NameCID, BgIdColor, IdTextColor);
+			TextRender()->TextAdvance(&s_ChatCursor, ClientIDWidth);
 			str_format(aBuf, sizeof(aBuf), "%s: ", pLine->m_aName);
-			TextRender()->TextShadowed(&Cursor, aBuf, -1, ShadowOffset, ShadowColor, TextColor);
+			TextRender()->TextColor(TextColor);
+			TextRender()->TextSecondaryColor(ShadowColor);
+			TextRender()->TextDeferred(&s_ChatCursor, aBuf, -1);
+			NumNameGlyphs = s_ChatCursor.GlyphCount();
 		}
+
+		s_ChatCursor.m_StartOfLine = true;
 
 		// render line
 		if(pLine->m_ClientID < 0)
@@ -1307,18 +1317,24 @@ void CChat::OnRender()
 		else
 			TextColor = ColorAllText;
 
+		TextRender()->TextColor(TextColor);
 		if(pLine->m_Highlighted)
 		{
-			TextRender()->TextColor(TextColor);
-			TextRender()->TextOutlineColor(ColorHighlightOutline);
-			TextRender()->TextEx(&Cursor, pLine->m_aText, -1);
+			TextRender()->TextSecondaryColor(ColorHighlightOutline);
+			TextRender()->TextDeferred(&s_ChatCursor, pLine->m_aText, -1);
+			TextRender()->DrawTextShadowed(&s_ChatCursor, ShadowOffset, Blend, 0, NumNameGlyphs);
+			TextRender()->DrawTextOutlined(&s_ChatCursor, Blend, NumNameGlyphs, -1);
 		}
 		else
-			TextRender()->TextShadowed(&Cursor, pLine->m_aText, -1, ShadowOffset, ShadowColor, TextColor);
+		{
+			TextRender()->TextSecondaryColor(ShadowColor);
+			TextRender()->TextDeferred(&s_ChatCursor, pLine->m_aText, -1);
+			TextRender()->DrawTextShadowed(&s_ChatCursor, ShadowOffset, Blend);
+		}
 	}
 
-	TextRender()->TextColor(CUI::ms_DefaultTextColor);
-	TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+	TextRender()->TextSecondaryColor(0.0f, 0.0f, 0.0f, 0.3f);
 
 	HandleCommands(x+CategoryWidth, Height - 24.f, 200.0f-CategoryWidth);
 }
@@ -1378,12 +1394,11 @@ void CChat::HandleCommands(float x, float y, float w)
 				for(int i = End - m_CommandManager.CommandCount(); i >= 0; i--)
 					PreviousActiveCommand(&m_CommandStart);
 
-			while(m_SelectedCommand < m_CommandStart)
+			if(m_SelectedCommand < m_CommandStart)
 			{
 				PreviousActiveCommand(&m_CommandStart);
 			}
-
-			while(m_SelectedCommand > End)
+			else if(m_SelectedCommand > End)
 			{
 				NextActiveCommand(&m_CommandStart);
 				NextActiveCommand(&End);
@@ -1426,85 +1441,57 @@ void CChat::HandleCommands(float x, float y, float w)
 					RenderTools()->DrawUIRect(&HighlightRect,  vec4(0.25f, 0.25f, 0.6f, Alpha), CUI::CORNER_ALL, 2.0f);
 
 				// print command
-				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, Rect.x + 5.0f, y, 5.0f, TEXTFLAG_RENDER);
-				// Janky way to truncate
-				Cursor.m_LineWidth = LineWidth;
-				Cursor.m_MaxLines = 1;
-
+				static CTextCursor s_CommandCursor(5.0f);
+				s_CommandCursor.Reset();
+				s_CommandCursor.MoveTo(Rect.x + 5.0f, y);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-				TextRender()->TextEx(&Cursor, pCommand->m_aName, -1);
-				TextRender()->TextEx(&Cursor, " ", -1);
+				TextRender()->TextDeferred(&s_CommandCursor, pCommand->m_aName, -1);
+				TextRender()->TextDeferred(&s_CommandCursor, " ", -1);
 
 				TextRender()->TextColor(0.0f, 0.5f, 0.5f, 1.0f);
-				for(const char *c = pCommand->m_aArgsFormat; *c;)
+				for(const char *c = pCommand->m_aArgsFormat; *c; c++)
 				{
-					char aBuf[32] = "";
-					char aDesc[32];
-
-					bool Optional = false;
-					if(c[0] == '?')
+					// Integer argument
+					if(*c == 'i')
 					{
-						Optional = true;
-						c++;
+						TextRender()->TextDeferred(&s_CommandCursor, "<number> ", -1);
 					}
-
-					const char *pDesc = 0;
-					if(c[1] == '[')
+					// Player name argument
+					else if(*c == 'p')
 					{
-						str_format(aDesc, sizeof(aDesc), "%.*s", str_span(&c[2], "]"), &c[2]);
-						pDesc = aDesc;
-						c += str_span(c, "]") + 1;
+						TextRender()->TextDeferred(&s_CommandCursor, "<playername> ", -1);
 					}
-					else
+					// String argument
+					else if(*c == 's')
 					{
-						if(c[0] == 'i')
-						{
-							pDesc = "number";
-						}
-						else if(c[0] == 'f')
-						{
-							pDesc = "float";
-						}
-						else if(c[0] == 'r' || c[0] == 's')
-						{
-							pDesc = "string";
-						}
-						else
-						{
-							break; // ill-formed
-						}
-
-						c++;
+						TextRender()->TextDeferred(&s_CommandCursor, "<text> ", -1);
 					}
-
-					if(Optional)
+					// Subcommand argument
+					else if(*c == 'c')
 					{
-						str_format(aBuf, sizeof(aBuf), "[%s] ", pDesc);
+						TextRender()->TextDeferred(&s_CommandCursor, "<subcommand> ", -1);
 					}
-					else
-					{
-						str_format(aBuf, sizeof(aBuf), "<%s> ", pDesc);
-					}
-					c = str_skip_whitespaces_const(c);
-					TextRender()->TextEx(&Cursor, aBuf, -1);
 				}
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
-				TextRender()->TextEx(&Cursor, pCommand->m_aHelpText, -1);
+				TextRender()->TextDeferred(&s_CommandCursor, pCommand->m_aHelpText, -1);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+				TextRender()->DrawTextOutlined(&s_CommandCursor);
 			}
 
 			// render notification
 			{
 				y += LineHeight;
-				CTextCursor Cursor;
-				TextRender()->SetCursor(&Cursor, Rect.x + 5.0f, y, 5.0f, TEXTFLAG_RENDER);
+				static CTextCursor s_NotificationCursor(5.0f);
+				s_NotificationCursor.Reset();
+				s_NotificationCursor.MoveTo(Rect.x + 5.0f, y);
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
 				if(m_SelectedCommand >= 0 && str_startswith(m_Input.GetString() + 1, m_CommandManager.GetCommand(m_SelectedCommand)->m_aName))
-					TextRender()->TextEx(&Cursor, Localize("Press Enter to confirm or Esc to cancel"), -1);
+					TextRender()->TextDeferred(&s_NotificationCursor, Localize("Press Enter to confirm or Esc to cancel"), -1);
 				else
-					TextRender()->TextEx(&Cursor, Localize("Press Tab to select or Esc to cancel"), -1);
+					TextRender()->TextDeferred(&s_NotificationCursor, Localize("Press Tab to select or Esc to cancel"), -1);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+				TextRender()->DrawTextOutlined(&s_NotificationCursor);
 			}
 		}
 	}

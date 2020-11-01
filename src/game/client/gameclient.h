@@ -72,6 +72,8 @@ class CGameClient : public IGameClient
 
 	void EvolveCharacter(CNetObj_Character *pCharacter, int Tick);
 
+	void LoadFonts();
+
 public:
 	IKernel *Kernel() { return IInterface::Kernel(); }
 	IEngine *Engine() const { return m_pEngine; }

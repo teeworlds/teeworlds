@@ -1,0 +1,16 @@
+{
+    "font files": [
+        "DejaVuSans.ttf",
+        "SourceHanSans.ttc"
+    ],
+    "default": "DejaVu Sans",
+    "language variants": {
+        "japanese": "Source Han Sans",
+        "korean": "Source Han Sans K",
+        "simplified_chinese": "Source Han Sans SC", 
+        "traditional_chinese": "Source Han Sans TC"
+    },
+    "fallbacks": [
+        "Source Han Sans"
+    ]
+}

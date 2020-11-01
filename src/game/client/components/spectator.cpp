@@ -9,6 +9,7 @@
 #include <generated/protocol.h>
 
 #include <game/client/animstate.h>
+#include <game/client/localization.h>
 #include <game/client/render.h>
 
 #include "spectator.h"
@@ -228,7 +229,11 @@ void CSpectator::OnRender()
 			Selected = true;
 		}
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, Selected?1.0f:0.5f);
-		TextRender()->Text(0, Width/2.0f-240.0f, Height/2.0f-265.0f, FontSize, Localize("Free-View"), -1.0f);
+		static CTextCursor s_FreeViewLabelCursor;
+		s_FreeViewLabelCursor.m_FontSize = FontSize;
+		s_FreeViewLabelCursor.MoveTo(Width/2.0f-240.0f, Height/2.0f-265.0f);
+		s_FreeViewLabelCursor.Reset(g_Localization.Version());
+		TextRender()->TextOutlined(&s_FreeViewLabelCursor, Localize("Free-View"), -1);
 	}
 
 	//
@@ -310,11 +315,14 @@ void CSpectator::OnRender()
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
 
-		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, Width/2.0f+x+50.0f, Height/2.0f+y+5.0f, FontSize, TEXTFLAG_RENDER);
-
-		RenderTools()->DrawClientID(TextRender(), &Cursor, i);
-		TextRender()->TextEx(&Cursor, aBuf, -1);
+		static CTextCursor s_PlayerNameCursor;
+		s_PlayerNameCursor.m_FontSize = FontSize;
+		s_PlayerNameCursor.Reset();
+		
+		vec2 CursorPosition = vec2(Width/2.0f+x+50.0f, Height/2.0f+y+5.0f);
+		CursorPosition.x += RenderTools()->DrawClientID(TextRender(), s_PlayerNameCursor.m_FontSize, CursorPosition, i);
+		s_PlayerNameCursor.MoveTo(CursorPosition.x, CursorPosition.y);
+		TextRender()->TextOutlined(&s_PlayerNameCursor, aBuf, -1);
 
 		// flag
 		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS &&

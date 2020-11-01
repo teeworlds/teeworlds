@@ -41,14 +41,14 @@ inline int WordLengthBack(const char *pText, int MaxChars)
 
 void CBroadcast::RenderServerBroadcast()
 {
-	if(!Config()->m_ClShowServerBroadcast || m_MuteServerBroadcast || m_aSrvBroadcastMsg[0] == 0)
+	if(!Config()->m_ClShowServerBroadcast || m_MuteServerBroadcast || !m_ServerBroadcastCursor.Rendered())
 		return;
 	if(m_pClient->m_pChat->IsActive())
 		return;
 
 	const float DisplayDuration = 10.0f;
 	const float DisplayStartFade = 9.0f;
-	const float DeltaTime = Client()->LocalTime() - m_SrvBroadcastReceivedTime;
+	const float DeltaTime = Client()->LocalTime() - m_ServerBroadcastReceivedTime;
 
 	if(DeltaTime > DisplayDuration)
 		return;
@@ -58,23 +58,23 @@ void CBroadcast::RenderServerBroadcast()
 	Graphics()->MapScreen(0, 0, Width, Height);
 
 	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
-	const float FontSize = m_SrvBroadcastFontSize;
-	const int LineCount = m_SrvBroadcastLineCount;
+	const int FontSize = m_ServerBroadcastCursor.m_FontSize;
+	const int LineCount = m_ServerBroadcastCursor.LineCount();
 
-	CUIRect BcView;
-	BcView.w = Width * 0.5f;
-	BcView.h = 1.5f * LineCount * FontSize + 4.0f;
-	BcView.x = BcView.w * 0.5f;
-	BcView.y = Height - BcView.h;
+	CUIRect BroadcastView;
+	BroadcastView.w = Width * 0.5f;
+	BroadcastView.h = 1.5f * LineCount * FontSize + 4.0f;
+	BroadcastView.x = BroadcastView.w * 0.5f;
+	BroadcastView.y = Height - BroadcastView.h;
 
-	CUIRect BgRect;
-	BcView.HSplitBottom(1.5f * LineCount * FontSize, 0, &BgRect);
-	BcView.HSplitBottom(2.0f, &BcView, 0);
+	CUIRect BackgroundRect;
+	BroadcastView.HSplitBottom(1.5f * LineCount * FontSize, 0, &BackgroundRect);
+	BroadcastView.HSplitBottom(2.0f, &BroadcastView, 0);
 
 	// draw bottom bar
 	const float CornerWidth = 10.0f;
-	const float CornerHeight = BgRect.h;
-	BgRect.VMargin(CornerWidth, &BgRect);
+	const float CornerHeight = BackgroundRect.h;
+	BackgroundRect.VMargin(CornerWidth, &BackgroundRect);
 
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
@@ -96,30 +96,30 @@ void CBroadcast::RenderServerBroadcast()
 		const float sa2 = sinf(Angle + AngleStep * 2);
 
 		IGraphics::CFreeformItem LQuad(
-			BgRect.x + ca * -CornerWidth,
-			BgRect.y + CornerHeight + sa * -CornerHeight,
+			BackgroundRect.x + ca * -CornerWidth,
+			BackgroundRect.y + CornerHeight + sa * -CornerHeight,
 
-			BgRect.x, BgRect.y + CornerHeight,
+			BackgroundRect.x, BackgroundRect.y + CornerHeight,
 
-			BgRect.x + ca1 * -CornerWidth,
-			BgRect.y + CornerHeight + sa1 * -CornerHeight,
+			BackgroundRect.x + ca1 * -CornerWidth,
+			BackgroundRect.y + CornerHeight + sa1 * -CornerHeight,
 
-			BgRect.x + ca2 * -CornerWidth,
-			BgRect.y + CornerHeight + sa2 *- CornerHeight
+			BackgroundRect.x + ca2 * -CornerWidth,
+			BackgroundRect.y + CornerHeight + sa2 *- CornerHeight
 		);
 		LeftCornerQuads[q] = LQuad;
 
 		IGraphics::CFreeformItem RQuad(
-			BgRect.x + BgRect.w + ca * CornerWidth,
-			BgRect.y + CornerHeight + sa * -CornerHeight,
+			BackgroundRect.x + BackgroundRect.w + ca * CornerWidth,
+			BackgroundRect.y + CornerHeight + sa * -CornerHeight,
 
-			BgRect.x + BgRect.w, BgRect.y + CornerHeight,
+			BackgroundRect.x + BackgroundRect.w, BackgroundRect.y + CornerHeight,
 
-			BgRect.x + BgRect.w + ca1 * CornerWidth,
-			BgRect.y + CornerHeight + sa1 * -CornerHeight,
+			BackgroundRect.x + BackgroundRect.w + ca1 * CornerWidth,
+			BackgroundRect.y + CornerHeight + sa1 * -CornerHeight,
 
-			BgRect.x + BgRect.w + ca2 * CornerWidth,
-			BgRect.y + CornerHeight + sa2 *- CornerHeight
+			BackgroundRect.x + BackgroundRect.w + ca2 * CornerWidth,
+			BackgroundRect.y + CornerHeight + sa2 *- CornerHeight
 		);
 		RightCornerQuads[q] = RQuad;
 	}
@@ -140,98 +140,31 @@ void CBroadcast::RenderServerBroadcast()
 	{
 		vec4 ColorTop(0, 0, 0, 0.01f * Fade);
 		vec4 ColorBot(0, 0, 0, 0.7f * Fade);
-		RenderTools()->DrawUIRect4(&BgRect, ColorTop, ColorTop, ColorBot, ColorBot, 0, 0.0f);
+		RenderTools()->DrawUIRect4(&BackgroundRect, ColorTop, ColorTop, ColorBot, ColorBot, 0, 0.0f);
 	}
 
-	BcView.VMargin(5.0f, &BcView);
-	BcView.HSplitBottom(2.0f, &BcView, 0);
+	BroadcastView.VMargin(5.0f, &BroadcastView);
+	BroadcastView.HSplitBottom(2.0f, &BroadcastView, 0);
 
 	// draw lines
-	const bool ColoredBroadcastEnabled = Config()->m_ClColoredBroadcast;
+	const vec2 ShadowOffset(1.0f, 2.0f);
+	float y = BroadcastView.y + BroadcastView.h - LineCount * FontSize;
+	m_ServerBroadcastCursor.MoveTo(BroadcastView.x+BroadcastView.w/2, y);
 
-	const vec2 ShadowOff(1.0f, 2.0f);
-	const vec4 ShadowColorBlack(0, 0, 0, 0.9f * Fade);
-	const vec4 TextColorWhite(1, 1, 1, Fade);
-
-	float y = BcView.y + BcView.h - LineCount * FontSize;
-	for(int l = 0; l < LineCount; l++)
+	TextRender()->DrawTextShadowed(&m_ServerBroadcastCursor, ShadowOffset, Fade, 0, m_aServerBroadcastSegments[0].m_GlyphPos);
+	for(int i = 0; i < m_NumSegments; ++i)
 	{
-		const CBcLineInfo& Line = m_aSrvBroadcastLines[l];
-		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, BcView.x + (BcView.w - Line.m_Width) * 0.5f, y,
-								FontSize, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-		Cursor.m_LineWidth = BcView.w;
-
-		// draw colored text
-		if(ColoredBroadcastEnabled)
-		{
-			int DrawnStrLen = 0;
-			int ThisCharPos = Line.m_pStrStart - m_aSrvBroadcastMsg;
-			while(DrawnStrLen < Line.m_StrLen)
-			{
-				int StartColorID = -1;
-				int ColorStrLen = -1;
-
-				// find color
-				for(int j = 0; j < m_SrvBroadcastColorCount; j++)
-				{
-					if((ThisCharPos+DrawnStrLen) >= m_aSrvBroadcastColorList[j].m_CharPos)
-					{
-						StartColorID = j;
-					}
-					else if(StartColorID >= 0)
-					{
-						ColorStrLen = m_aSrvBroadcastColorList[j].m_CharPos -
-									  max(m_aSrvBroadcastColorList[StartColorID].m_CharPos, ThisCharPos);
-						break;
-					}
-				}
-
-				dbg_assert(StartColorID >= 0, "This should not be -1, color not found");
-
-				if(ColorStrLen < 0)
-					ColorStrLen = Line.m_StrLen-DrawnStrLen;
-				ColorStrLen = min(ColorStrLen, Line.m_StrLen-DrawnStrLen);
-
-				const CBcColor& TextColor = m_aSrvBroadcastColorList[StartColorID];
-				float r = TextColor.m_R/255.f;
-				float g = TextColor.m_G/255.f;
-				float b = TextColor.m_B/255.f;
-				float AvgLum = 0.2126*r + 0.7152*g + 0.0722*b;
-
-				if(AvgLum < 0.25f)
-				{
-					TextRender()->TextOutlineColor(1, 1, 1, 0.6f);
-					TextRender()->TextColor(r, g, b, Fade);
-					TextRender()->TextEx(&Cursor, Line.m_pStrStart+DrawnStrLen, ColorStrLen);
-				}
-				else
-				{
-					vec4 TextColor(r, g, b, Fade);
-					vec4 ShadowColor(r * 0.15f, g * 0.15f, b * 0.15f, 0.9f * Fade);
-					TextRender()->TextShadowed(&Cursor, Line.m_pStrStart+DrawnStrLen, ColorStrLen,
-											   ShadowOff, ShadowColor, TextColor);
-				}
-
-				DrawnStrLen += ColorStrLen;
-			}
-		}
+		CBroadcastSegment *pSegment = &m_aServerBroadcastSegments[i];
+		if(m_aServerBroadcastSegments[i].m_IsHighContrast)
+			TextRender()->DrawTextOutlined(&m_ServerBroadcastCursor, Fade, pSegment->m_GlyphPos, (pSegment+1)->m_GlyphPos);
 		else
-		{
-			TextRender()->TextShadowed(&Cursor, Line.m_pStrStart, Line.m_StrLen,
-									   ShadowOff, ShadowColorBlack, TextColorWhite);
-		}
-
-		y += FontSize;
+			TextRender()->DrawTextShadowed(&m_ServerBroadcastCursor, ShadowOffset, Fade, pSegment->m_GlyphPos, (pSegment+1)->m_GlyphPos);
 	}
-
-	TextRender()->TextColor(1, 1, 1, 1);
-	TextRender()->TextOutlineColor(0, 0, 0, 0.3f);
 }
 
 void CBroadcast::RenderClientBroadcast()
 {
-	if(m_pClient->m_pScoreboard->IsActive() || m_pClient->m_pMotd->IsActive() || m_aBroadcastText[0] == 0)
+	if(m_pClient->m_pScoreboard->IsActive() || m_pClient->m_pMotd->IsActive() || !m_ClientBroadcastCursor.Rendered())
 		return;
 	if(Client()->LocalTime() >= m_BroadcastTime)
 		return;
@@ -241,10 +174,8 @@ void CBroadcast::RenderClientBroadcast()
 
 	Graphics()->MapScreen(0, 0, Width, Height);
 
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, m_BroadcastRenderOffset, 40.0f, 12.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-	Cursor.m_LineWidth = Width - m_BroadcastRenderOffset;
-	TextRender()->TextEx(&Cursor, m_aBroadcastText, -1);
+	m_ClientBroadcastCursor.MoveTo(300*Graphics()->ScreenAspect() / 2, 40.0f);
+	TextRender()->DrawTextOutlined(&m_ClientBroadcastCursor);
 }
 
 CBroadcast::CBroadcast()
@@ -254,20 +185,21 @@ CBroadcast::CBroadcast()
 
 void CBroadcast::DoClientBroadcast(const char *pText)
 {
-	str_copy(m_aBroadcastText, pText, sizeof(m_aBroadcastText));
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, 0, 0, 12.0f, TEXTFLAG_STOP_AT_END);
-	Cursor.m_LineWidth = 300*Graphics()->ScreenAspect();
-	TextRender()->TextEx(&Cursor, m_aBroadcastText, -1);
-	m_BroadcastRenderOffset = 150*Graphics()->ScreenAspect()-Cursor.m_X/2;
+	m_ClientBroadcastCursor.Reset();
+	m_ClientBroadcastCursor.m_FontSize = 12.0f;
+	m_ClientBroadcastCursor.m_Align = TEXTALIGN_TC;
+	m_ClientBroadcastCursor.m_MaxWidth = 300*Graphics()->ScreenAspect();
+
+	TextRender()->TextDeferred(&m_ClientBroadcastCursor, pText, -1);
 	m_BroadcastTime = Client()->LocalTime() + 10.0f;
 }
 
 void CBroadcast::OnReset()
 {
 	m_BroadcastTime = 0;
-	m_SrvBroadcastReceivedTime = 0;
+	m_ServerBroadcastReceivedTime = 0;
 	m_MuteServerBroadcast = false;
+	m_NumSegments = -1;
 }
 
 void CBroadcast::OnMessage(int MsgType, void* pRawMsg)
@@ -285,158 +217,115 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 		return;
 
 	// new broadcast message
-	const int RcvMsgLen = str_length(pMsg->m_pMessage);
-	mem_zero(m_aSrvBroadcastMsg, sizeof(m_aSrvBroadcastMsg));
-	m_aSrvBroadcastMsgLen = 0;
-	m_SrvBroadcastReceivedTime = Client()->LocalTime();
+	int MsgLength = str_length(pMsg->m_pMessage);
+	m_ServerBroadcastReceivedTime = Client()->LocalTime();
 
-	const CBcColor White = { 255, 255, 255, 0 };
-	m_aSrvBroadcastColorList[0] = White;
-	m_SrvBroadcastColorCount = 1;
-
-	CBcLineInfo UserLines[MAX_BROADCAST_LINES];
+	char aBuf[MAX_BROADCAST_MSG_SIZE];
+	vec4 SegmentColors[MAX_BROADCAST_MSG_SIZE];
+	int SegmentIndices[MAX_BROADCAST_MSG_SIZE];
+	m_NumSegments = 0;
+	int ServerMsgLen = 0;
 	int UserLineCount = 0;
-	int LastUserLineStartPoint = 0;
 
-	// parse colors
-	for(int i = 0; i < RcvMsgLen; i++)
+	// parse colors and newline
+	for(int i = 0; i < MsgLength && ServerMsgLen < MAX_BROADCAST_MSG_SIZE - 1; i++)
 	{
-		const char* c = pMsg->m_pMessage + i;
-		const char* pTmp = c;
-		int CharUtf8 = str_utf8_decode(&pTmp);
-		const int Utf8Len = pTmp-c;
-
-		if(*c == CharUtf8 && *c == '^')
+		const char *c = pMsg->m_pMessage + i;
+		if(*c == '^' && i+3 < MsgLength && IsCharANum(c[1]) && IsCharANum(c[2])  && IsCharANum(c[3]))
 		{
-			if(i+3 < RcvMsgLen && IsCharANum(c[1]) && IsCharANum(c[2])  && IsCharANum(c[3]))
-			{
-				u8 r = (c[1] - '0') * 24 + 39;
-				u8 g = (c[2] - '0') * 24 + 39;
-				u8 b = (c[3] - '0') * 24 + 39;
-				CBcColor Color = { r, g, b, m_aSrvBroadcastMsgLen };
-				if(m_SrvBroadcastColorCount < MAX_BROADCAST_COLORS)
-					m_aSrvBroadcastColorList[m_SrvBroadcastColorCount++] = Color;
-				i += 3;
-				continue;
-			}
-		}
-
-		if(*c == CharUtf8 && *c == '\\')
-		{
-			if(i+1 < RcvMsgLen && c[1] == 'n' && UserLineCount < MAX_BROADCAST_LINES)
-			{
-				CBcLineInfo Line = { m_aSrvBroadcastMsg+LastUserLineStartPoint,
-									 m_aSrvBroadcastMsgLen-LastUserLineStartPoint, 0 };
-				if(Line.m_StrLen > 0)
-					UserLines[UserLineCount++] = Line;
-				LastUserLineStartPoint = m_aSrvBroadcastMsgLen;
-				i++;
-				continue;
-			}
-		}
-
-		if(*c == '\n')
-		{
-			CBcLineInfo Line = { m_aSrvBroadcastMsg+LastUserLineStartPoint,
-								 m_aSrvBroadcastMsgLen-LastUserLineStartPoint, 0 };
-			if(Line.m_StrLen > 0)
-				UserLines[UserLineCount++] = Line;
-			LastUserLineStartPoint = m_aSrvBroadcastMsgLen;
+			SegmentColors[m_NumSegments] = vec4((c[1] - '0') / 9.0f, (c[2] - '0') / 9.0f, (c[3] - '0') / 9.0f, 1.0f);
+			SegmentIndices[m_NumSegments] = ServerMsgLen;
+			m_NumSegments++;
+			i += 3;
 			continue;
 		}
 
-		if(m_aSrvBroadcastMsgLen+Utf8Len < MAX_BROADCAST_MSG_LENGTH)
-			m_aSrvBroadcastMsg[m_aSrvBroadcastMsgLen++] = *c;
-	}
+		if(*c == '\\' && c[1] == 'n')
+		{
+			aBuf[ServerMsgLen++] = '\n';
+			UserLineCount += 1;
+			i++;
+			continue;
+		}
 
-	// last user defined line
-	if(LastUserLineStartPoint > 0 && UserLineCount < 3)
-	{
-		CBcLineInfo Line = { m_aSrvBroadcastMsg+LastUserLineStartPoint,
-							 m_aSrvBroadcastMsgLen-LastUserLineStartPoint, 0 };
-		if(Line.m_StrLen > 0)
-			UserLines[UserLineCount++] = Line;
+		aBuf[ServerMsgLen++] = *c;
 	}
+	SegmentIndices[m_NumSegments] = ServerMsgLen;
+	aBuf[ServerMsgLen] = 0;
 
 	const float Height = 300;
 	const float Width = Height*Graphics()->ScreenAspect();
 	const float LineMaxWidth = Width * 0.5f - 10.0f;
 
-	// process broadcast message
-	const char* pBroadcastMsg = m_aSrvBroadcastMsg;
-	const int MsgLen = m_aSrvBroadcastMsgLen;
-
-	CTextCursor Cursor;
 	Graphics()->MapScreen(0, 0, Width, Height);
 
 	// one line == big font
 	// 2+ lines == small font
-	m_SrvBroadcastLineCount = 0;
 	float FontSize = BROADCAST_FONTSIZE_BIG;
+
+	m_ServerBroadcastCursor.Reset();
+	m_ServerBroadcastCursor.m_FontSize = FontSize;
+	m_ServerBroadcastCursor.m_Align = TEXTALIGN_TC;
+	m_ServerBroadcastCursor.m_MaxWidth = LineMaxWidth;
+	m_ServerBroadcastCursor.m_MaxLines = MAX_BROADCAST_LINES;
+	m_ServerBroadcastCursor.m_Flags = TEXTFLAG_ALLOW_NEWLINE | TEXTFLAG_WORD_WRAP;
 
 	if(UserLineCount <= 1) // auto mode
 	{
-		TextRender()->SetCursor(&Cursor, 0, 0, FontSize, 0);
-		Cursor.m_LineWidth = LineMaxWidth;
-		TextRender()->TextEx(&Cursor, pBroadcastMsg, MsgLen);
+		m_ServerBroadcastCursor.m_FontSize = FontSize;
+		m_ServerBroadcastCursor.m_Flags |= TEXTFLAG_NO_RENDER;
+
+		TextRender()->TextOutlined(&m_ServerBroadcastCursor, aBuf, ServerMsgLen);
 
 		// can't fit on one line, reduce size
-		Cursor.m_LineCount = min(Cursor.m_LineCount, (int)MAX_BROADCAST_LINES);
+		int NumLines = m_ServerBroadcastCursor.LineCount();
 		FontSize = mix(BROADCAST_FONTSIZE_BIG, BROADCAST_FONTSIZE_SMALL,
-					   Cursor.m_LineCount/(float)MAX_BROADCAST_LINES);
-
-		// make lines
-		int CurCharCount = 0;
-		while(CurCharCount < MsgLen && m_SrvBroadcastLineCount < MAX_BROADCAST_LINES)
-		{
-			const char* RemainingMsg = pBroadcastMsg + CurCharCount;
-
-			TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
-			Cursor.m_LineWidth = LineMaxWidth;
-
-			TextRender()->TextEx(&Cursor, RemainingMsg, -1);
-			int StrLen = Cursor.m_CharCount;
-
-			// don't cut words
-			if(CurCharCount + StrLen < MsgLen)
-			{
-				const int WorldLen = WordLengthBack(RemainingMsg + StrLen, StrLen);
-				if(WorldLen > 0 && WorldLen < StrLen)
-				{
-					StrLen -= WorldLen;
-					TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
-					Cursor.m_LineWidth = LineMaxWidth;
-					TextRender()->TextEx(&Cursor, RemainingMsg, StrLen);
-				}
-			}
-
-			const float TextWidth = Cursor.m_X-Cursor.m_StartX;
-
-			CBcLineInfo Line = { RemainingMsg, StrLen, TextWidth };
-			m_aSrvBroadcastLines[m_SrvBroadcastLineCount++] = Line;
-			CurCharCount += StrLen;
-		}
+					   NumLines/(float)MAX_BROADCAST_LINES);
 	}
 	else // user defined lines mode
 	{
 		FontSize = mix(BROADCAST_FONTSIZE_BIG, BROADCAST_FONTSIZE_SMALL,
 					   UserLineCount/(float)MAX_BROADCAST_LINES);
-
-		for(int i = 0; i < UserLineCount && m_SrvBroadcastLineCount < MAX_BROADCAST_LINES; i++)
-		{
-			TextRender()->SetCursor(&Cursor, 0, 0, FontSize, TEXTFLAG_STOP_AT_END);
-			Cursor.m_LineWidth = LineMaxWidth;
-			TextRender()->TextEx(&Cursor, UserLines[i].m_pStrStart, UserLines[i].m_StrLen);
-
-			const float TextWidth = Cursor.m_X-Cursor.m_StartX;
-			const int StrLen = Cursor.m_CharCount;
-
-			CBcLineInfo Line = { UserLines[i].m_pStrStart, StrLen, TextWidth };
-			m_aSrvBroadcastLines[m_SrvBroadcastLineCount++] = Line;
-		}
 	}
 
-	m_SrvBroadcastFontSize = FontSize;
+	m_ServerBroadcastCursor.Reset();
+	m_ServerBroadcastCursor.m_Flags &= ~TEXTFLAG_NO_RENDER;
+	m_ServerBroadcastCursor.m_FontSize = FontSize;
+
+	vec4 OldColor = TextRender()->GetColor();
+	vec4 OldSecondary = TextRender()->GetSecondaryColor();
+
+	TextRender()->TextColor(1, 1, 1, 1);
+	TextRender()->TextSecondaryColor(0, 0, 0, 1);
+	TextRender()->TextDeferred(&m_ServerBroadcastCursor, aBuf, SegmentIndices[0]);
+	for(int i = 0; i < m_NumSegments; i++)
+	{
+		if(Config()->m_ClColoredBroadcast)
+		{
+			float AvgLum = 0.2126*SegmentColors[i].r + 0.7152*SegmentColors[i].g + 0.0722*SegmentColors[i].b;
+			TextRender()->TextColor(SegmentColors[i]);
+			if(AvgLum < 0.25f)
+			{
+				m_aServerBroadcastSegments[i].m_IsHighContrast = true;
+				TextRender()->TextSecondaryColor(1, 1, 1, 0.6f);
+			}
+			else
+			{
+				m_aServerBroadcastSegments[i].m_IsHighContrast = false;
+				TextRender()->TextSecondaryColor(0, 0, 0, 1);
+			}
+		}
+		else
+		{
+			TextRender()->TextSecondaryColor(0, 0, 0, 1);
+			m_aServerBroadcastSegments[i].m_IsHighContrast = false;
+		}
+		m_aServerBroadcastSegments[i].m_GlyphPos = m_ServerBroadcastCursor.GlyphCount();
+		TextRender()->TextDeferred(&m_ServerBroadcastCursor, aBuf + SegmentIndices[i], SegmentIndices[i+1] - SegmentIndices[i]);
+	}
+	m_aServerBroadcastSegments[m_NumSegments].m_GlyphPos = m_ServerBroadcastCursor.GlyphCount();
+	TextRender()->TextColor(OldColor);
+	TextRender()->TextSecondaryColor(OldSecondary);
 }
 
 void CBroadcast::OnRender()

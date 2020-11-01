@@ -229,7 +229,11 @@ void CLayerTiles::BrushSelecting(CUIRect Rect)
 	m_pEditor->Graphics()->QuadsEnd();
 	char aBuf[16];
 	str_format(aBuf, sizeof(aBuf), "%d,%d", ConvertX(Rect.w), ConvertY(Rect.h));
-	TextRender()->Text(0, Rect.x+3.0f, Rect.y+3.0f, m_pEditor->m_ShowTilePicker?15.0f:15.0f*m_pEditor->m_WorldZoom, aBuf, -1.0f);
+	static CTextCursor s_Cursor;
+	s_Cursor.m_FontSize = m_pEditor->m_ShowTilePicker?15.0f:15.0f*m_pEditor->m_WorldZoom;
+	s_Cursor.MoveTo(Rect.x+3.0f, Rect.y+3.0f);
+	s_Cursor.Reset();
+	TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 }
 
 static int s_lastBrushX = -1, s_lastBrushY = -1;

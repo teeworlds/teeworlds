@@ -377,21 +377,8 @@ void CGameClient::OnInit()
 	m_pMenus->InitLoading(TotalWorkAmount);
 	m_pMenus->RenderLoading(4);
 
-	// load default font
-	char aFontName[IO_MAX_PATH_LENGTH];
-	str_format(aFontName, sizeof(aFontName), "fonts/%s", Config()->m_ClFontfile);
-	char aFilename[IO_MAX_PATH_LENGTH];
-	IOHANDLE File = Storage()->OpenFile(aFontName, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
-	if(File)
-	{
-		io_close(File);
-		if(TextRender()->LoadFont(aFilename))
-		{
-			char aBuf[256];
-			str_format(aBuf, sizeof(aBuf), "failed to load font. filename='%s'", aFontName);
-			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "gameclient", aBuf);
-		}
-	}
+	m_pTextRender->LoadFonts(Storage(), Console());
+	m_pTextRender->SetFontLanguageVariant(Config()->m_ClLanguagefile);
 	m_pMenus->RenderLoading(1);
 
 	// set the language

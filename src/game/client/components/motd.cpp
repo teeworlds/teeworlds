@@ -51,12 +51,16 @@ void CMotd::OnRender()
 	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 30.0f);
 
 	Rect.Margin(30.0f, &Rect);
+
 	float TextSize = 32.0f;
-	CTextCursor Cursor;
-	TextRender()->SetCursor(&Cursor, Rect.x, Rect.y, TextSize, TEXTFLAG_RENDER);
-	Cursor.m_LineWidth = Rect.w;
-	Cursor.m_MaxLines = ceil(Rect.h/TextSize);
-	TextRender()->TextEx(&Cursor, m_aServerMotd, -1);
+	m_ServerMotdCursor.m_Flags = TEXTFLAG_ALLOW_NEWLINE | TEXTFLAG_WORD_WRAP;
+	m_ServerMotdCursor.m_FontSize = TextSize;
+	m_ServerMotdCursor.m_MaxWidth = Rect.w;
+	m_ServerMotdCursor.m_MaxLines = (int)(Rect.h/TextSize);
+
+	m_ServerMotdCursor.Reset(m_ServerMotdTime);
+	m_ServerMotdCursor.MoveTo(Rect.x, Rect.y);
+	TextRender()->TextOutlined(&m_ServerMotdCursor, m_aServerMotd, -1);
 }
 
 void CMotd::OnMessage(int MsgType, void *pRawMsg)

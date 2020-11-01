@@ -266,6 +266,8 @@ void CCommandProcessorFragment_OpenGL::Cmd_Init(const CInitCommand *pCommand)
 		dbg_msg("render", "*** warning *** max 3D texture size is too low - using the fallback system");
 	m_TextureArraySize = IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION / min(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
 	*pCommand->m_pTextureArraySize = m_TextureArraySize;
+
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 }
 
 void CCommandProcessorFragment_OpenGL::Cmd_Texture_Update(const CCommandBuffer::CTextureUpdateCommand *pCommand)

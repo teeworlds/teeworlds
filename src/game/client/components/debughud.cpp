@@ -33,44 +33,60 @@ void CDebugHud::RenderNetCorrections()
 
 	const char *paStrings[] = {"velspeed:", "velspeed*ramp:", "ramp:", "Pos", " x:", " y:", "netmsg failed on:", "netobj num failures:", "netobj failed on:"};
 	const int Num = sizeof(paStrings)/sizeof(char *);
-	const float LineHeight = 6.0f;
-	const float Fontsize = 5.0f;
 
-	float x = Width-100.0f, y = 50.0f;
+	static CTextCursor s_CursorLabels(5.0f);
+	s_CursorLabels.MoveTo(Width-100.0f, 50.0f);
+	s_CursorLabels.m_MaxLines = -1;
+	s_CursorLabels.m_LineSpacing = 1.0f;
+	s_CursorLabels.Reset(0);
+
+	static CTextCursor s_CursorValues(5.0f);
+	s_CursorValues.MoveTo(Width-10.0f, 50.0f);
+	s_CursorValues.m_MaxLines = -1;
+	s_CursorValues.m_LineSpacing = 1.0f;
+	s_CursorValues.m_Align = TEXTALIGN_TR;
+	s_CursorValues.Reset();
+
 	for(int i = 0; i < Num; ++i)
-		TextRender()->Text(0, x, y+i*LineHeight, Fontsize, paStrings[i], -1.0f);
+	{
+		TextRender()->TextDeferred(&s_CursorLabels, paStrings[i], -1);
+		TextRender()->TextNewline(&s_CursorLabels);
+	}
 
-	x = Width-10.0f;
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "%.0f", Velspeed/32);
-	float w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
-	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1.0f);
-	y += LineHeight;
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
 	str_format(aBuf, sizeof(aBuf), "%.0f", Velspeed/32*Ramp);
-	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
-	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1.0f);
-	y += LineHeight;
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
 	str_format(aBuf, sizeof(aBuf), "%.2f", Ramp);
-	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
-	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1.0f);
-	y += 2*LineHeight;
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+	TextRender()->TextNewline(&s_CursorValues);
+
 	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_X/32);
-	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
-	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1.0f);
-	y += LineHeight;
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
 	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->m_Snap.m_pLocalCharacter->m_Y/32);
-	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1,-1.0f);
-	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1.0f);
-	y += LineHeight;
-	w = TextRender()->TextWidth(0, Fontsize, m_pClient->NetmsgFailedOn(), -1, -1.0f);
-	TextRender()->Text(0, x-w, y, Fontsize, m_pClient->NetmsgFailedOn(), -1.0f);
-	y += LineHeight;
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+	
+
+	TextRender()->TextDeferred(&s_CursorValues, m_pClient->NetmsgFailedOn(), -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
 	str_format(aBuf, sizeof(aBuf), "%d", m_pClient->NetobjNumFailures());
-	w = TextRender()->TextWidth(0, Fontsize, aBuf, -1, -1.0f);
-	TextRender()->Text(0, x-w, y, Fontsize, aBuf, -1.0f);
-	y += LineHeight;
-	w = TextRender()->TextWidth(0, Fontsize, m_pClient->NetobjFailedOn(), -1, -1.0f);
-	TextRender()->Text(0, x-w, y, Fontsize, m_pClient->NetobjFailedOn(), -1.0f);
+	TextRender()->TextDeferred(&s_CursorValues, aBuf, -1);
+	TextRender()->TextNewline(&s_CursorValues);
+
+	TextRender()->TextDeferred(&s_CursorValues, m_pClient->NetobjFailedOn(), -1);
+
+	TextRender()->DrawTextOutlined(&s_CursorLabels);
+	TextRender()->DrawTextOutlined(&s_CursorValues);
 }
 
 void CDebugHud::RenderTuning()
@@ -83,8 +99,21 @@ void CDebugHud::RenderTuning()
 
 	Graphics()->MapScreen(0, 0, 300*Graphics()->ScreenAspect(), 300);
 
-	float y = 50.0f;
-	int Count = 0;
+	static CTextCursor s_CursorStandard(5.0f, 25.0f, 50.0f);
+	static CTextCursor s_CursorCurrent(5.0f, 50.0f, 50.0f);
+	static CTextCursor s_CursorLabels(5.0f, 55.0f, 50.0f);
+	s_CursorStandard.m_MaxLines = -1;
+	s_CursorStandard.m_LineSpacing = 1.0f;
+	s_CursorStandard.m_Align = TEXTALIGN_TR;
+	s_CursorStandard.Reset(0);
+	s_CursorCurrent.m_MaxLines = -1;
+	s_CursorCurrent.m_LineSpacing = 1.0f;
+	s_CursorCurrent.m_Align = TEXTALIGN_TR;
+	s_CursorCurrent.Reset();
+	s_CursorLabels.m_MaxLines = -1;
+	s_CursorLabels.m_LineSpacing = 1.0f;
+	s_CursorLabels.Reset(0);
+
 	for(int i = 0; i < m_pClient->m_Tuning.Num(); i++)
 	{
 		char aBuf[128];
@@ -97,26 +126,24 @@ void CDebugHud::RenderTuning()
 		else
 			TextRender()->TextColor(1,0.25f,0.25f,1.0f);
 
-		float w;
-		float x = 5.0f;
-
 		str_format(aBuf, sizeof(aBuf), "%.2f", Standard);
-		x += 20.0f;
-		w = TextRender()->TextWidth(0, 5, aBuf, -1, -1.0f);
-		TextRender()->Text(0x0, x-w, y+Count*6, 5, aBuf, -1.0f);
+		TextRender()->TextDeferred(&s_CursorStandard, aBuf, -1);
 
 		str_format(aBuf, sizeof(aBuf), "%.2f", Current);
-		x += 20.0f;
-		w = TextRender()->TextWidth(0, 5, aBuf, -1, -1.0f);
-		TextRender()->Text(0x0, x-w, y+Count*6, 5, aBuf, -1.0f);
+		TextRender()->TextDeferred(&s_CursorCurrent, aBuf, -1);
 
-		x += 5.0f;
-		TextRender()->Text(0x0, x, y+Count*6, 5, m_pClient->m_Tuning.m_apNames[i], -1.0f);
+		TextRender()->TextDeferred(&s_CursorLabels, m_pClient->m_Tuning.m_apNames[i], -1);
 
-		Count++;
+		TextRender()->TextNewline(&s_CursorStandard);
+		TextRender()->TextNewline(&s_CursorCurrent);
+		TextRender()->TextNewline(&s_CursorLabels);
 	}
 
-	y = y+Count*6;
+	TextRender()->DrawTextOutlined(&s_CursorStandard);
+	TextRender()->DrawTextOutlined(&s_CursorCurrent);
+	TextRender()->DrawTextOutlined(&s_CursorLabels);
+
+	float y = 50.0f+m_pClient->m_Tuning.Num()*6;
 
 	Graphics()->TextureClear();
 	Graphics()->BlendNormal();

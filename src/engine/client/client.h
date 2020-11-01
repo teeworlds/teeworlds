@@ -59,6 +59,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	IEngineInput *m_pInput;
 	IEngineGraphics *m_pGraphics;
 	IEngineSound *m_pSound;
+	IEngineTextRender *m_pTextRender;
 	IGameClient *m_pGameClient;
 	IEngineMap *m_pMap;
 	IConfigManager *m_pConfigManager;

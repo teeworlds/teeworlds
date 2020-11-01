@@ -630,50 +630,38 @@ void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup 
 	Graphics()->MapScreen(aPoints[0], aPoints[1], aPoints[2], aPoints[3]);
 }
 
-void CRenderTools::DrawClientID(ITextRender* pTextRender, CTextCursor* pCursor, int ID,
-								const vec4& BgColor, const vec4& TextColor)
+float CRenderTools::DrawClientID(ITextRender* pTextRender, float FontSize, vec2 CursorPosition, int ID,
+							const vec4& BgColor, const vec4& TextColor)
 {
-	if(!m_pConfig->m_ClShowUserId) return;
+	if(!m_pConfig->m_ClShowUserId) return 0;
 
-	char aBuff[4];
-	str_format(aBuff, sizeof(aBuff), "%2d ", ID);
+	char aBuf[4];
+	str_format(aBuf, sizeof(aBuf), "%d", ID);
 
-	const float LinebaseY = pTextRender->TextGetLineBaseY(pCursor);
+	static CTextCursor s_Cursor;
+	s_Cursor.Reset();
+	s_Cursor.m_FontSize = FontSize;
+	s_Cursor.m_Align = TEXTALIGN_CENTER;
 
-	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
-	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
-	float FakeToScreenY = (Graphics()->ScreenHeight()/(ScreenY1-ScreenY0));
-	float FontSize = (int)(pCursor->m_FontSize * FakeToScreenY)/FakeToScreenY;
+	vec4 OldColor = pTextRender->GetColor();
+	pTextRender->TextColor(TextColor);
+	pTextRender->TextDeferred(&s_Cursor, aBuf, -1);
+	pTextRender->TextColor(OldColor);
+
+	const float LinebaseY = CursorPosition.y + s_Cursor.BaseLineY();
 	const float Width = 1.4f * FontSize;
-	float OffsetY = 0.0f;
-
-	// jump to the next line when reaching the line width
-	if((pCursor->m_Flags & (TEXTFLAG_ALLOW_NEWLINE|TEXTFLAG_STOP_AT_END)) && pCursor->m_LineWidth > 0.0f && pCursor->m_LineWidth + pCursor->m_StartX < pCursor->m_X + Width)
-	{
-		pCursor->m_X = pCursor->m_StartX;
-		pCursor->m_Y += FontSize;
-		pCursor->m_LineCount += 1;
-		OffsetY += FontSize;
-	}
-
-	// abort when exceeding the maximum numbers of lines
-	if(pCursor->m_MaxLines > 0 && pCursor->m_LineCount > pCursor->m_MaxLines)
-		return;
 
 	CUIRect Rect;
-	Rect.x = pCursor->m_X;
-	Rect.y = LinebaseY - FontSize + 0.025f * FontSize + OffsetY;
+	Rect.x = CursorPosition.x;
+	Rect.y = LinebaseY - FontSize + 0.15f * FontSize;
 	Rect.w = Width;
 	Rect.h = FontSize;
 	DrawRoundRect(&Rect, BgColor, 0.25f * FontSize);
 
-	const float PrevX = pCursor->m_X;
-	pCursor->m_X += (ID < 10 ? 0.04f: 0.0f) * FontSize;
+	s_Cursor.MoveTo(Rect.x + Rect.w / 2.0f, CursorPosition.y);
+	pTextRender->DrawTextPlain(&s_Cursor);
 
-	// TODO: make a simple text one (no shadow)
-	pTextRender->TextShadowed(pCursor, aBuff, -1, vec2(0,0), vec4(0,0,0,0), TextColor);
-
-	pCursor->m_X = PrevX + Rect.w + 0.2f * FontSize;
+	return Width + 0.2f * FontSize;
 }
 
 float CRenderTools::GetClientIdRectSize(float FontSize)

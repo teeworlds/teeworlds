@@ -309,10 +309,12 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		DemoPlayer()->GetDemoName(aDemoName, sizeof(aDemoName));
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), Localize("Demofile: %s"), aDemoName);
-		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, NameBar.x, NameBar.y, Button.h*0.5f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-		Cursor.m_LineWidth = MainView.w;
-		TextRender()->TextEx(&Cursor, aBuf, -1);
+		static CTextCursor s_Cursor;
+		s_Cursor.m_FontSize = Button.h*0.5f;
+		s_Cursor.MoveTo(NameBar.x, NameBar.y);
+		s_Cursor.Reset();
+		s_Cursor.m_MaxWidth = MainView.w;
+		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 	}
 
 	if(IncreaseDemoSpeed)
@@ -560,7 +562,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				if(Item.m_Selected)
 				{
 					TextRender()->TextColor(CUI::ms_HighlightTextColor);
-					TextRender()->TextOutlineColor(CUI::ms_HighlightTextOutlineColor);
+					TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
 				}
 				if(ID == COL_DEMO_NAME)
 				{
@@ -587,7 +589,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				}
 				TextRender()->TextColor(CUI::ms_DefaultTextColor);
 				if(Item.m_Selected)
-					TextRender()->TextOutlineColor(CUI::ms_DefaultTextOutlineColor);
+					TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 			}
 		}
 	}

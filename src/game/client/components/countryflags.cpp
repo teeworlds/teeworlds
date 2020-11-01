@@ -190,9 +190,11 @@ void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y
 	}
 	else
 	{
-		CTextCursor Cursor;
-		TextRender()->SetCursor(&Cursor, x, y, 10.0f, TEXTFLAG_RENDER|TEXTFLAG_STOP_AT_END);
-		Cursor.m_LineWidth = w;
-		TextRender()->TextEx(&Cursor, pFlag->m_aCountryCodeString, -1);
+		static CTextCursor s_Cursor(10.0f);
+		s_Cursor.Reset();
+		s_Cursor.MoveTo(x+w/2, y+h/2);
+		s_Cursor.m_MaxLines = w;
+		s_Cursor.m_Align = TEXTALIGN_MC;
+		TextRender()->TextOutlined(&s_Cursor, pFlag->m_aCountryCodeString, -1);
 	}
 }
