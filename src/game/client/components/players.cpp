@@ -230,10 +230,10 @@ void CPlayers::RenderPlayer(
 			m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
 			SkidSoundTime = time_get();
 		}
-        m_pClient->m_pEffects->SkidTrail(
-            Position+vec2(-Player.m_Direction*6,12),
-            vec2(-Player.m_Direction*100*length(Vel),-50)
-        );
+		m_pClient->m_pEffects->SkidTrail(
+			Position+vec2(-Player.m_Direction*6,12),
+			vec2(-Player.m_Direction*100*length(Vel),-50)
+		);
 	}
 
 	// draw gun
