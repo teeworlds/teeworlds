@@ -608,6 +608,14 @@ public:
 		return !fs_file_time(aBuf, pCreated, pModified);
 	}
 
+	virtual bool GetFileSystemFileName(const char *pFilename, int StorageType, char *pBuffer, int Length)
+	{
+		char aBuf[IO_MAX_PATH_LENGTH];
+		GetCompletePath(StorageType, pFilename, aBuf, sizeof(aBuf));
+
+		return !fs_file_name(aBuf, pBuffer, Length);
+	}
+
 	static IStorage *Create(const char *pApplicationName, int StorageType, int NumArgs, const char **ppArguments)
 	{
 		CStorage *p = new CStorage();

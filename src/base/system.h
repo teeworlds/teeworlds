@@ -1358,8 +1358,6 @@ typedef struct
 	time_t m_TimeModified; // seconds since UNIX Epoch
 } CFsFileInfo;
 
-/* Group: Filesystem */
-
 /*
 	Function: fs_listdir_fileinfo
 		Lists the files in a directory and gets additional file information
@@ -1549,6 +1547,20 @@ char *fs_read_str(const char *name);
 		- Returned time is in seconds since UNIX Epoch
 */
 int fs_file_time(const char *name, time_t *created, time_t *modified);
+
+/*
+	Function: fs_file_name
+		Gets the stored name in filesystem of a file.
+
+	Parameters:
+		name - The filename
+		buffer - The buffer to store the real filename
+		length - size of the buffer
+
+	Returns:
+		0 on success non-zero on failure
+*/
+int fs_file_name(const char *name, char *buffer, int length);
 
 /*
 	Group: Undocumented

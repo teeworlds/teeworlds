@@ -557,6 +557,13 @@ void CSkins::SaveSkinfile(const char *pSaveSkinName)
 {
 	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s.json", pSaveSkinName);
+
+	char aFileSystemFileName[IO_MAX_PATH_LENGTH];
+	if(Storage()->GetFileSystemFileName(aBuf, IStorage::TYPE_SAVE, aFileSystemFileName, IO_MAX_PATH_LENGTH))
+		str_format(aBuf, sizeof(aBuf), "skins/%s", aFileSystemFileName);
+	else
+		str_format(aFileSystemFileName, sizeof(aFileSystemFileName), "%s.json", pSaveSkinName);
+
 	IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
 		return;
@@ -603,6 +610,10 @@ void CSkins::SaveSkinfile(const char *pSaveSkinName)
 	Writer.EndObject();
 	Writer.EndObject();
 
+	// remove file extension
+	int Length = str_length(aFileSystemFileName);
+	aFileSystemFileName[Length-5] = 0;
+
 	// add new skin to the skin list
-	AddSkin(pSaveSkinName);
+	AddSkin(aFileSystemFileName);
 }
