@@ -93,7 +93,7 @@ void CCharacterCore::Tick(bool UseInput)
     */
     bool Iced = Grounded &&
         (m_pCollision->CheckPoint(m_Pos.x+PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5, m_pCollision->COLFLAG_ICE) || !RightSolid) &&
-        (m_pCollision->CheckPoint(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5, m_pCollision->COLFLAG_ICE || !LeftSolid));
+        (m_pCollision->CheckPoint(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5, m_pCollision->COLFLAG_ICE) || !LeftSolid);
 
 	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
 
