@@ -179,8 +179,15 @@ void CPlayers::RenderPlayer(
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
 
-	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
-	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
+
+	bool RightGround = Collision()->CheckPoint(Player.m_X+28/2, Player.m_Y+28/2+5);
+	bool LeftGround = Collision()->CheckPoint(Player.m_X-28/2, Player.m_Y+28/2+5);
+
+	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16); // why 16 and not 19?
+	bool OnIce = (RightGround || LeftGround) &&
+        (Collision()->CheckPoint(Player.m_X+28/2, Player.m_Y+28/2+5, CCollision::COLFLAG_ICE) || !RightGround) &&
+        (Collision()->CheckPoint(Player.m_X+28/2, Player.m_Y+28/2+5, CCollision::COLFLAG_ICE) || !LeftGround);
+	bool Stationary = OnIce ? Player.m_Direction == 0 : (Player.m_VelX <= 1 && Player.m_VelX >= -1);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 
 	// evaluate animation
