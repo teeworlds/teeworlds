@@ -83,19 +83,25 @@ void CCharacterCore::Tick(bool UseInput)
 	m_TriggeredEvents = 0;
 
 	// get ground state
-	bool Grounded = false;
-	if(m_pCollision->CheckPoint(m_Pos.x+PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5))
-		Grounded = true;
-	if(m_pCollision->CheckPoint(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5))
-		Grounded = true;
+	bool RightSolid = m_pCollision->CheckPoint(m_Pos.x+PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5)
+	bool LeftSolid = m_pCollision->CheckPoint(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5)
+	bool Grounded = RightSolid || LeftSolid;
+
+    // get ice state
+    /*
+    Player is on ground and both sides are ICE or UNSOLID
+    */
+    bool Iced = Grounded &&
+        (m_pCollision->CheckPoint(m_Pos.x+PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5, COLFLAG_ICE) || !RightSolid) &&
+        (m_pCollision->CheckPoint(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5, COLFLAG_ICE || !LeftSolid));
 
 	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
 
 	m_Vel.y += m_pWorld->m_Tuning.m_Gravity;
 
-	float MaxSpeed = Grounded ? m_pWorld->m_Tuning.m_GroundControlSpeed : m_pWorld->m_Tuning.m_AirControlSpeed;
-	float Accel = Grounded ? m_pWorld->m_Tuning.m_GroundControlAccel : m_pWorld->m_Tuning.m_AirControlAccel;
-	float Friction = Grounded ? m_pWorld->m_Tuning.m_GroundFriction : m_pWorld->m_Tuning.m_AirFriction;
+	float MaxSpeed = Grounded ? (Iced ? m_pWorld->m_Tuning.m_IceControlSpeed : m_pWorld->m_Tuning.m_GroundControlSpeed) : m_pWorld->m_Tuning.m_AirControlSpeed;
+	float Accel = Grounded ? (Iced ? m_pWorld->m_Tuning.m_IceControlAccel : m_pWorld->m_Tuning.m_GroundControlAccel) : m_pWorld->m_Tuning.m_AirControlAccel;
+	float Friction = Grounded ? (Iced ? m_pWorld->m_Tuning.m_IceFriction : m_pWorld->m_Tuning.m_GroundFriction) : m_pWorld->m_Tuning.m_AirFriction;
 
 	// handle input
 	if(UseInput)
