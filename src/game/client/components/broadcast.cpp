@@ -58,98 +58,20 @@ void CBroadcast::RenderServerBroadcast()
 	Graphics()->MapScreen(0, 0, Width, Height);
 
 	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
-	const int FontSize = m_ServerBroadcastCursor.m_FontSize;
-	const int LineCount = m_ServerBroadcastCursor.LineCount();
+	const float TextHeight = m_ServerBroadcastCursor.BoundingBox().h;
+	const float Rounding = 5.0f;
 
 	CUIRect BroadcastView;
 	BroadcastView.w = Width * 0.5f;
-	BroadcastView.h = 1.5f * LineCount * FontSize + 4.0f;
+	BroadcastView.h = max(TextHeight, 2*Rounding) + 2.0f;
 	BroadcastView.x = BroadcastView.w * 0.5f;
 	BroadcastView.y = Height - BroadcastView.h;
 
-	CUIRect BackgroundRect;
-	BroadcastView.HSplitBottom(1.5f * LineCount * FontSize, 0, &BackgroundRect);
-	BroadcastView.HSplitBottom(2.0f, &BroadcastView, 0);
-
-	// draw bottom bar
-	const float CornerWidth = 10.0f;
-	const float CornerHeight = BackgroundRect.h;
-	BackgroundRect.VMargin(CornerWidth, &BackgroundRect);
-
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-
-	// make round corners
-	enum { CORNER_MAX_QUADS=4 };
-	IGraphics::CFreeformItem LeftCornerQuads[CORNER_MAX_QUADS];
-	IGraphics::CFreeformItem RightCornerQuads[CORNER_MAX_QUADS];
-	const float AngleStep = (pi * 0.5f)/(CORNER_MAX_QUADS * 2);
-
-	for(int q = 0; q < CORNER_MAX_QUADS; q++)
-	{
-		const float Angle = AngleStep * q * 2;
-		const float ca = cosf(Angle);
-		const float ca1 = cosf(Angle + AngleStep);
-		const float ca2 = cosf(Angle + AngleStep * 2);
-		const float sa = sinf(Angle);
-		const float sa1 = sinf(Angle + AngleStep);
-		const float sa2 = sinf(Angle + AngleStep * 2);
-
-		IGraphics::CFreeformItem LQuad(
-			BackgroundRect.x + ca * -CornerWidth,
-			BackgroundRect.y + CornerHeight + sa * -CornerHeight,
-
-			BackgroundRect.x, BackgroundRect.y + CornerHeight,
-
-			BackgroundRect.x + ca1 * -CornerWidth,
-			BackgroundRect.y + CornerHeight + sa1 * -CornerHeight,
-
-			BackgroundRect.x + ca2 * -CornerWidth,
-			BackgroundRect.y + CornerHeight + sa2 *- CornerHeight
-		);
-		LeftCornerQuads[q] = LQuad;
-
-		IGraphics::CFreeformItem RQuad(
-			BackgroundRect.x + BackgroundRect.w + ca * CornerWidth,
-			BackgroundRect.y + CornerHeight + sa * -CornerHeight,
-
-			BackgroundRect.x + BackgroundRect.w, BackgroundRect.y + CornerHeight,
-
-			BackgroundRect.x + BackgroundRect.w + ca1 * CornerWidth,
-			BackgroundRect.y + CornerHeight + sa1 * -CornerHeight,
-
-			BackgroundRect.x + BackgroundRect.w + ca2 * CornerWidth,
-			BackgroundRect.y + CornerHeight + sa2 *- CornerHeight
-		);
-		RightCornerQuads[q] = RQuad;
-	}
-
-	IGraphics::CColorVertex aColorVert[4] = {
-		IGraphics::CColorVertex(0, 0, 0, 0, 0.0f),
-		IGraphics::CColorVertex(1, 0, 0, 0, 0.7f * Fade),
-		IGraphics::CColorVertex(2, 0, 0, 0, 0.0f),
-		IGraphics::CColorVertex(3, 0, 0, 0, 0.0f)
-	};
-
-	Graphics()->SetColorVertex(aColorVert, 4);
-	Graphics()->QuadsDrawFreeform(LeftCornerQuads, CORNER_MAX_QUADS);
-	Graphics()->QuadsDrawFreeform(RightCornerQuads, CORNER_MAX_QUADS);
-
-	Graphics()->QuadsEnd();
-
-	{
-		vec4 ColorTop(0, 0, 0, 0.01f * Fade);
-		vec4 ColorBot(0, 0, 0, 0.7f * Fade);
-		RenderTools()->DrawUIRect4(&BackgroundRect, ColorTop, ColorTop, ColorBot, ColorBot, 0, 0.0f);
-	}
-
-	BroadcastView.VMargin(5.0f, &BroadcastView);
-	BroadcastView.HSplitBottom(2.0f, &BroadcastView, 0);
+	RenderTools()->DrawUIRect(&BroadcastView, vec4(0.0f, 0.0f, 0.0f, 0.25f * Fade), CUI::CORNER_T, Rounding);
 
 	// draw lines
 	const vec2 ShadowOffset(1.0f, 2.0f);
-	float y = BroadcastView.y + BroadcastView.h - LineCount * FontSize;
-	m_ServerBroadcastCursor.MoveTo(BroadcastView.x+BroadcastView.w/2, y);
+	m_ServerBroadcastCursor.MoveTo(BroadcastView.x + BroadcastView.w/2, BroadcastView.y + BroadcastView.h/2 - TextHeight/2);
 
 	TextRender()->DrawTextShadowed(&m_ServerBroadcastCursor, ShadowOffset, Fade, 0, m_aServerBroadcastSegments[0].m_GlyphPos);
 	for(int i = 0; i < m_NumSegments; ++i)
@@ -225,7 +147,7 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 	int SegmentIndices[MAX_BROADCAST_MSG_SIZE];
 	m_NumSegments = 0;
 	int ServerMsgLen = 0;
-	int UserLineCount = 0;
+	int UserLineCount = 1;
 
 	// parse colors and newline
 	for(int i = 0; i < MsgLength && ServerMsgLen < MAX_BROADCAST_MSG_SIZE - 1; i++)
@@ -236,15 +158,17 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 			SegmentColors[m_NumSegments] = vec4((c[1] - '0') / 9.0f, (c[2] - '0') / 9.0f, (c[3] - '0') / 9.0f, 1.0f);
 			SegmentIndices[m_NumSegments] = ServerMsgLen;
 			m_NumSegments++;
-			i += 3;
+			i += 3; // skip color code
 			continue;
 		}
 
 		if(*c == '\\' && c[1] == 'n')
 		{
+			if(UserLineCount >= MAX_BROADCAST_LINES)
+				break;
+			UserLineCount++;
 			aBuf[ServerMsgLen++] = '\n';
-			UserLineCount += 1;
-			i++;
+			i++; // skip 'n'
 			continue;
 		}
 
