@@ -912,7 +912,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	int Flags = pCursor->m_Flags;
 	float MaxWidth = pCursor->m_MaxWidth;
 	if(MaxWidth < 0)
-		MaxWidth = (ScreenX1-ScreenX0);
+		MaxWidth = INFINITY;
 	int MaxLines = pCursor->m_MaxLines;
 	if(MaxLines < 0)
 		MaxLines = (ScreenY1-ScreenY0) / pCursor->m_FontSize;

@@ -320,17 +320,17 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
 		pInfo->m_pSelf->TextRender()->TextColor(0.05f, 0.05f, 0.05f,1);
-		vec2 Begin = pInfo->m_pCursor->AdvancePosition();
+		const float BeginX = pInfo->m_pCursor->AdvancePosition().x - pInfo->m_Offset;
 		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
 		CTextBoundingBox Box = pInfo->m_pCursor->BoundingBox();
-		CUIRect Rect = {Box.x - 5 + Begin.x, Box.y, Box.w + 8 - Begin.x, Box.h};
+		CUIRect Rect = {Box.x - 5 + BeginX, Box.y, Box.w + 8 - BeginX, Box.h};
 
 		pInfo->m_pSelf->RenderTools()->DrawRoundRect(&Rect, vec4(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f), pInfo->m_pCursor->m_FontSize/3);
 
 		// scroll when out of sight
-		if(pInfo->m_pCursor->CursorPosition().x < 3.0f)
+		if(Rect.x < 0.0f)
 			pInfo->m_Offset = 0.0f;
-		else if(pInfo->m_pCursor->BoundingBox().Right() > pInfo->m_Width)
+		else if(Rect.x + Rect.w >= pInfo->m_Width)
 			pInfo->m_Offset -= pInfo->m_Width/2;
 	}
 	else
@@ -461,12 +461,11 @@ void CGameConsole::OnRender()
 		Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
 
 		static CTextCursor s_InfoCursor;
+		s_InfoCursor.Reset();
 		s_InfoCursor.MoveTo(x+Info.m_Offset, y+RowHeight+2.0f);
 		s_InfoCursor.m_FontSize = FontSize;
-		s_InfoCursor.Reset();
-
+		s_InfoCursor.m_MaxWidth = -1.0f;
 		Info.m_pCursor = &s_InfoCursor;
-
 
 		// render prompt
 		static CTextCursor s_Cursor;
@@ -762,7 +761,6 @@ void CGameConsole::OnConsoleInit()
 
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 
-	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(Config()->m_ConsoleOutputLevel, ClientConsolePrintCallback, this);
 
 	Console()->Register("toggle_local_console", "", CFGFLAG_CLIENT, ConToggleLocalConsole, this, "Toggle local console");
