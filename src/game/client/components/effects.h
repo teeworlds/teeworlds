@@ -19,6 +19,7 @@ public:
 	void PowerupShine(vec2 Pos, vec2 Size);
 	void SmokeTrail(vec2 Pos, vec2 Vel);
 	void SkidTrail(vec2 Pos, vec2 Vel);
+	void IceTrail(vec2 Pos, vec2 Vel);
 	void BulletTrail(vec2 Pos);
 	void PlayerSpawn(vec2 Pos);
 	void PlayerDeath(vec2 Pos, int ClientID);

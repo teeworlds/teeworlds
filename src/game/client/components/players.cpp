@@ -222,18 +222,28 @@ void CPlayers::RenderPlayer(
 	}
 
 	// do skidding
-	if(!InAir && !OnIce && WantOtherDir && length(Vel*50) > 500.0f)
+	if(!InAir && WantOtherDir && length(Vel*50) > 500.0f)
 	{
-		static int64 SkidSoundTime = 0;
-		if(time_get()-SkidSoundTime > time_freq()/10)
+		if (!OnIce)
 		{
-			m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
-			SkidSoundTime = time_get();
+			static int64 SkidSoundTime = 0;
+			if(time_get()-SkidSoundTime > time_freq()/10)
+			{
+				m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
+				SkidSoundTime = time_get();
+			}
+			m_pClient->m_pEffects->SkidTrail(
+				Position+vec2(-Player.m_Direction*6,12),
+				vec2(-Player.m_Direction*100*length(Vel),-50)
+			);
 		}
-		m_pClient->m_pEffects->SkidTrail(
-			Position+vec2(-Player.m_Direction*6,12),
-			vec2(-Player.m_Direction*100*length(Vel),-50)
-		);
+		else
+		{
+			m_pClient->m_pEffects->IceTrail(
+				Position+vec2(-Player.m_Direction*6,12),
+				vec2(-Player.m_Direction*100*length(Vel),-50)
+			);
+		}
 	}
 
 	// draw gun
