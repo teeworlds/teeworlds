@@ -56,8 +56,8 @@ class CGameConsole : public CComponent
 		void PrintLine(const char *pLine, bool Highlighted);
 
 		const char *GetString() const { return m_Input.GetString(); }
-		static void PossibleCommandsCompleteCallback(const char *pStr, void *pUser);
-		static void PossibleMapsCompleteCallback(const char *pStr, void *pUser);
+		static void PossibleCommandsCompleteCallback(int Index, const char *pStr, void *pUser);
+		static void PossibleMapsCompleteCallback(int Index, const char *pStr, void *pUser);
 	};
 
 	class IConsole *m_pConsole;
@@ -77,7 +77,7 @@ class CGameConsole : public CComponent
 	void Toggle(int Type);
 	void Dump(int Type);
 
-	static void PossibleCommandsRenderCallback(const char *pStr, void *pUser);
+	static void PossibleCommandsRenderCallback(int Index, const char *pStr, void *pUser);
 	static void ClientConsolePrintCallback(const char *pStr, void *pUserData, bool Highlighted);
 	static void ConToggleLocalConsole(IConsole::IResult *pResult, void *pUserData);
 	static void ConToggleRemoteConsole(IConsole::IResult *pResult, void *pUserData);
@@ -103,7 +103,6 @@ public:
 	virtual void OnConsoleInit();
 	virtual void OnReset();
 	virtual void OnRender();
-	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual bool OnInput(IInput::CEvent Events);
 };
 #endif
