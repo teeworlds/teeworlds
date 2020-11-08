@@ -1613,7 +1613,7 @@ void CMenus::Render()
 		}
 		else if(m_Popup == POPUP_COUNTRY)
 		{
-			pTitle = Localize("Country");
+			pTitle = Localize("Flag");
 			NumOptions = 8;
 		}
 		else if(m_Popup == POPUP_RENAME_DEMO)
