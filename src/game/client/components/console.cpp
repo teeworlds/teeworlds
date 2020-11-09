@@ -329,8 +329,8 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 
 		// scroll when out of sight
 		if(Rect.x < 0.0f)
-			pInfo->m_Offset = 0.0f;
-		else if(Rect.x + Rect.w >= pInfo->m_Width)
+			pInfo->m_Offset += pInfo->m_Width/2;
+		else if(Rect.x + Rect.w > pInfo->m_Width)
 			pInfo->m_Offset -= pInfo->m_Width/2;
 	}
 	else
