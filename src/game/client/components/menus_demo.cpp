@@ -20,10 +20,10 @@
 #include "maplayers.h"
 #include "menus.h"
 
-CMenus::CColumn CMenus::ms_aDemoCols[] = {
-	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, Localize("Name"), 0, 100.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
-	{COL_DEMO_LENGTH,	CMenus::SORT_LENGTH, Localize("Length"), 1, 80.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
-	{COL_DEMO_DATE,		CMenus::SORT_DATE, Localize("Date"), 1, 170.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+CMenus::CColumn CMenus::ms_aDemoCols[] = { // Localize("Name"); Localize("Length"); Localize("Date"); - these strings are localized within CLocConstString
+	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, "Name", 0, 100.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_LENGTH,	CMenus::SORT_LENGTH, "Length", 1, 80.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_DATE,		CMenus::SORT_DATE, "Date", 1, 170.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
 };
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)
