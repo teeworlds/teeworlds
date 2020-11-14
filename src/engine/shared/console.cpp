@@ -429,35 +429,41 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 	}
 }
 
-void CConsole::PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser)
+int CConsole::PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser)
 {
+	int Index = 0;
 	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
-		if(pCommand->m_Flags&FlagMask && pCommand->m_Temp == Temp)
+		if(pCommand->m_Flags&FlagMask && pCommand->m_Temp == Temp && str_find_nocase(pCommand->m_pName, pStr))
 		{
-			if(str_find_nocase(pCommand->m_pName, pStr))
-				pfnCallback(pCommand->m_pName, pUser);
+			pfnCallback(Index, pCommand->m_pName, pUser);
+			Index++;
 		}
 	}
+	return Index;
 }
 
-void CConsole::PossibleMaps(const char *pStr, FPossibleCallback pfnCallback, void *pUser)
+int CConsole::PossibleMaps(const char *pStr, FPossibleCallback pfnCallback, void *pUser)
 {
+	int Index = 0;
 	for(CMapListEntryTemp *pMapEntry = m_pFirstMapEntry; pMapEntry; pMapEntry = pMapEntry->m_pNext)
 	{
 		if(str_find_nocase(pMapEntry->m_aName, pStr))
-			pfnCallback(pMapEntry->m_aName, pUser);
+		{
+			pfnCallback(Index, pMapEntry->m_aName, pUser);
+			Index++;
+		}
 	}
+	return Index;
 }
 
 CConsole::CCommand *CConsole::FindCommand(const char *pName, int FlagMask)
 {
 	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
-		if(pCommand->m_Flags&FlagMask)
+		if(pCommand->m_Flags&FlagMask && str_comp_nocase(pCommand->m_pName, pName) == 0)
 		{
-			if(str_comp_nocase(pCommand->m_pName, pName) == 0)
-				return pCommand;
+			return pCommand;
 		}
 	}
 
