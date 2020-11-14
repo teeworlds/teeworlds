@@ -360,7 +360,8 @@ void CNetBase::SendControlMsg(const NETADDR *pAddr, TOKEN Token, int Ack, int Co
 	Construct.m_NumChunks = 0;
 	Construct.m_DataSize = 1+ExtraSize;
 	Construct.m_aChunkData[0] = ControlMsg;
-	mem_copy(&Construct.m_aChunkData[1], pExtra, ExtraSize);
+	if(ExtraSize > 0)
+		mem_copy(&Construct.m_aChunkData[1], pExtra, ExtraSize);
 
 	// send the control message
 	SendPacket(pAddr, &Construct);
