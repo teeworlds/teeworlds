@@ -929,6 +929,23 @@ void CHud::RenderCheckpoint()
 	}
 }
 
+void CHud::RenderLocalTime(float x)
+{
+	if(!Config()->m_ClShowLocalTimeAlways && !m_pClient->m_pScoreboard->IsActive())
+		return;
+
+	//draw the box
+	Graphics()->BlendNormal();
+	CUIRect Rect = {x-30.0f, 0.0f, 25.0f, 12.5f};
+	vec4 Color = vec4(0.0f, 0.0f, 0.0f, 0.4f);
+	RenderTools()->DrawUIRect(&Rect, Color, CUI::CORNER_B, 3.75f);
+
+	//draw the text
+	char aTimeStr[6];
+	str_timestamp_format(aTimeStr, sizeof(aTimeStr), "%H:%M");
+	TextRender()->Text(0, x-25.0f, (12.5f - 7.5f) / 2.f, 5.0f, aTimeStr, -1);
+}
+
 void CHud::OnMessage(int MsgType, void *pRawMsg)
 {
 	if(MsgType == NETMSGTYPE_SV_CHECKPOINT)
@@ -999,6 +1016,7 @@ void CHud::OnRender()
 			RenderConnectionWarning();
 		RenderTeambalanceWarning();
 		RenderVoting();
+		RenderLocalTime((m_Width/7)*3);
 	}
 	RenderCursor();
 }
