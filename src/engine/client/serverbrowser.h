@@ -29,6 +29,7 @@ public:
 	void Refresh(int RefreshFlags);
 	bool IsRefreshing() const { return m_pFirstReqServer != 0; }
 	bool IsRefreshingMasters() const { return m_pMasterServer->IsRefreshing(); }
+	bool WasUpdated(bool Purge);
 	int LoadingProgression() const;
 
 	int NumServers() const { return m_aServerlist[m_ActServerlistType].m_NumServers; }
@@ -94,6 +95,7 @@ private:
 	int m_NumRequests;
 
 	int m_NeedRefresh;
+	bool m_InfoUpdated;
 
 	// the token is to keep server refresh separated from each other
 	int m_CurrentLanToken;

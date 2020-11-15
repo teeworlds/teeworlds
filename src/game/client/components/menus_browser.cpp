@@ -1040,7 +1040,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	}
 
 	// update selection based on address if it changed
-	if(ServerBrowser()->IsRefreshing())
+	if(ServerBrowser()->IsRefreshing() || ServerBrowser()->WasUpdated(true))
 		m_AddressSelection |= ADDR_SELECTION_CHANGE;
 
 	const int BrowserType = ServerBrowser()->GetType();

@@ -68,6 +68,7 @@ CServerBrowser::CServerBrowser()
 
 	m_NeedRefresh = 0;
 	m_RefreshFlags = 0;
+	m_InfoUpdated = false;
 
 	// the token is to keep server refresh separated from each other
 	m_CurrentLanToken = 1;
@@ -149,6 +150,7 @@ void CServerBrowser::Set(const NETADDR &Addr, int SetType, int Token, const CSer
 					pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-m_BroadcastTime)*1000/time_freq()), 999);
 				else
 					pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-pEntry->m_RequestTime)*1000/time_freq()), 999);
+				m_InfoUpdated = true;
 				RemoveRequest(pEntry);
 			}
 		}
@@ -171,6 +173,7 @@ void CServerBrowser::Update(bool ForceResort)
 		CNetChunk Packet;
 
 		m_NeedRefresh = 0;
+		m_InfoUpdated = false;
 
 		mem_zero(&Packet, sizeof(Packet));
 		Packet.m_ClientID = -1;
@@ -326,6 +329,14 @@ void CServerBrowser::Refresh(int RefreshFlags)
 			if(m_ServerBrowserFavorites.m_aFavoriteServers[i].m_State >= CServerBrowserFavorites::FAVSTATE_ADDR)
 				Set(m_ServerBrowserFavorites.m_aFavoriteServers[i].m_Addr, SET_FAV_ADD, -1, 0);
 	}
+}
+
+bool CServerBrowser::WasUpdated(bool Purge)
+{
+	bool Result = m_InfoUpdated;
+	if(Purge)
+		m_InfoUpdated = false;
+	return Result;
 }
 
 int CServerBrowser::LoadingProgression() const
