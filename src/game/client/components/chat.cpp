@@ -387,7 +387,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 
 				// quote the name
 				char aQuoted[MAX_NAME_LENGTH+2];
-				if(IsTypingCommand() && *str_skip_to_whitespace_const(pCompletionString) != '\0')
+				if(IsTypingCommand() && str_find(pCompletionString, " "))
 				{
 					str_format(aQuoted, sizeof(aQuoted), "\"%s\"", pCompletionString);
 					pCompletionString = aQuoted;
