@@ -943,7 +943,10 @@ void CHud::RenderLocalTime(float x)
 	//draw the text
 	char aTimeStr[6];
 	str_timestamp_format(aTimeStr, sizeof(aTimeStr), "%H:%M");
-	TextRender()->Text(0, x-25.0f, (12.5f - 7.5f) / 2.f, 5.0f, aTimeStr, -1);
+	static CTextCursor s_Cursor(5.0f);
+	s_Cursor.Reset(0);
+	s_Cursor.MoveTo(x - 25.0f, (12.5f - 7.5f) / 2.f);
+	TextRender()->TextOutlined(&s_Cursor, aTimeStr, -1);
 }
 
 void CHud::OnMessage(int MsgType, void *pRawMsg)
