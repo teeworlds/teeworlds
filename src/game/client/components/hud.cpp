@@ -605,7 +605,7 @@ void CHud::RenderVoting()
 	TextRender()->TextOutlined(&s_ReasonCursor, aBuf, -1);
 
 	CUIRect Base = {5, 88, 100, 4};
-	m_pClient->m_pVoting->RenderBars(Base, false);
+	m_pClient->m_pVoting->RenderBars(Base);
 
 	char aBufYes[64], aBufNo[64];
 	m_pClient->m_pBinds->GetKey("vote yes", aBufYes, sizeof(aBufYes));

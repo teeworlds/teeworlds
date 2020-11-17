@@ -122,10 +122,6 @@ public:
 	int m_VoteEnforce;
 	enum
 	{
-		VOTE_ENFORCE_UNKNOWN=0,
-		VOTE_ENFORCE_NO,
-		VOTE_ENFORCE_YES,
-
 		VOTE_TIME=25,
 		VOTE_CANCEL_TIME = 10,
 

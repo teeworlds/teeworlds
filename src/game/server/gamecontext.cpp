@@ -363,12 +363,12 @@ void CGameContext::StartVote(const char *pDesc, const char *pCommand, const char
 		return;
 
 	// reset votes
-	m_VoteEnforce = VOTE_ENFORCE_UNKNOWN;
+	m_VoteEnforce = VOTE_CHOICE_PASS;
 	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(m_apPlayers[i])
 		{
-			m_apPlayers[i]->m_Vote = 0;
+			m_apPlayers[i]->m_Vote = VOTE_CHOICE_PASS;
 			m_apPlayers[i]->m_VotePos = 0;
 		}
 	}
@@ -568,7 +568,7 @@ void CGameContext::OnTick()
 				}
 			}
 
-			if(m_VoteEnforce == VOTE_ENFORCE_YES || (m_VoteUpdate && Yes >= Total/2+1))
+			if(m_VoteEnforce == VOTE_CHOICE_YES || (m_VoteUpdate && Yes >= Total/2+1))
 			{
 				Server()->SetRconCID(IServer::RCON_CID_VOTE);
 				Console()->ExecuteLine(m_aVoteCommand);
@@ -576,10 +576,10 @@ void CGameContext::OnTick()
 				if(m_VoteCreator != -1 && m_apPlayers[m_VoteCreator])
 					m_apPlayers[m_VoteCreator]->m_LastVoteCall = 0;
 
-				EndVote(VOTE_END_PASS, m_VoteEnforce==VOTE_ENFORCE_YES);
+				EndVote(VOTE_END_PASS, m_VoteEnforce == VOTE_CHOICE_YES);
 			}
-			else if(m_VoteEnforce == VOTE_ENFORCE_NO || (m_VoteUpdate && No >= (Total+1)/2) || time_get() > m_VoteCloseTime)
-				EndVote(VOTE_END_FAIL, m_VoteEnforce==VOTE_ENFORCE_NO);
+			else if(m_VoteEnforce == VOTE_CHOICE_NO || (m_VoteUpdate && No >= (Total+1)/2) || time_get() > m_VoteCloseTime)
+				EndVote(VOTE_END_FAIL, m_VoteEnforce == VOTE_CHOICE_NO);
 			else if(m_VoteUpdate)
 			{
 				m_VoteUpdate = false;
@@ -983,7 +983,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			{
 				m_VoteCreator = ClientID;
 				StartVote(aDesc, aCmd, pReason);
-				pPlayer->m_Vote = 1;
+				pPlayer->m_Vote = VOTE_CHOICE_YES;
 				pPlayer->m_VotePos = m_VotePos = 1;
 				pPlayer->m_LastVoteCall = Now;
 			}
@@ -993,10 +993,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			if(!m_VoteCloseTime)
 				return;
 
-			if(pPlayer->m_Vote == 0)
+			if(pPlayer->m_Vote == VOTE_CHOICE_PASS)
 			{
 				CNetMsg_Cl_Vote *pMsg = (CNetMsg_Cl_Vote *)pRawMsg;
-				if(!pMsg->m_Vote)
+				if(pMsg->m_Vote == VOTE_CHOICE_PASS)
 					return;
 
 				pPlayer->m_Vote = pMsg->m_Vote;
@@ -1006,7 +1006,7 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 			else if(m_VoteCreator == pPlayer->GetCID())
 			{
 				CNetMsg_Cl_Vote *pMsg = (CNetMsg_Cl_Vote *)pRawMsg;
-				if(pMsg->m_Vote != -1 || m_VoteCancelTime<time_get())
+				if(pMsg->m_Vote != VOTE_CHOICE_NO || m_VoteCancelTime<time_get())
 					return;
 
 				m_VoteCloseTime = -1;
@@ -1469,9 +1469,9 @@ void CGameContext::ConVote(IConsole::IResult *pResult, void *pUserData)
 		return;
 
 	if(str_comp_nocase(pResult->GetString(0), "yes") == 0)
-		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_YES;
+		pSelf->m_VoteEnforce = VOTE_CHOICE_YES;
 	else if(str_comp_nocase(pResult->GetString(0), "no") == 0)
-		pSelf->m_VoteEnforce = CGameContext::VOTE_ENFORCE_NO;
+		pSelf->m_VoteEnforce = VOTE_CHOICE_NO;
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "forcing vote %s", pResult->GetString(0));
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", aBuf);
