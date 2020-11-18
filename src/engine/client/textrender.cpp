@@ -927,17 +927,19 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 	NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
 	pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
 
-	float WordStartAdvanceX = pCursor->m_Advance.x;
-	CWordWidthHint WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize, ScreenScale);
-	const char *pWordEnd = pCur + WordWidth.m_CharCount;
-
-	while(pWordEnd <= pEnd && WordWidth.m_CharCount >= 0)
+	while(pCur < pEnd && !pCursor->m_Truncated)
 	{
+		const float WordStartAdvanceX = pCursor->m_Advance.x;
+		CWordWidthHint WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize, ScreenScale);
+		pCursor->m_StartOfLine = false;
+		if(WordWidth.m_CharCount < 0)
+			break;
+		
+		// word wrapping
 		if(WordWidth.m_EffectiveAdvanceX > MaxWidth)
 		{
-			int NumGlyphs = pCursor->m_Glyphs.size();
-			int WordStartGlyphIndex = NumGlyphs - WordWidth.m_GlyphCount;
-			// Do not let space create new line.
+			const int NumGlyphs = pCursor->m_Glyphs.size();
+			// do not let space create new line.
 			if(WordWidth.m_GlyphCount == 1 && (*pCur == ' ' || *pCur == '\n' || *pCur == '\t'))
 			{
 				if(Render)
@@ -955,18 +957,9 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 				NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
 				pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
 
-				if(pCursor->m_LineCount > MaxLines)
+				if(Render)
 				{
-					for(int i = NumGlyphs - 1; i >= WordStartGlyphIndex; --i)
-					{
-						if(Render)
-							pCursor->m_Glyphs.remove_index(i);
-					}
-					pCursor->m_Truncated = true;
-					pCursor->m_LineCount = MaxLines;
-				}
-				else if(Render)
-				{
+					const int WordStartGlyphIndex = NumGlyphs - WordWidth.m_GlyphCount;
 					for(int i = NumGlyphs - 1; i >= WordStartGlyphIndex; --i)
 					{
 						pCursor->m_Glyphs[i].m_Advance.x -= WordStartAdvanceX;
@@ -979,8 +972,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 			}
 		}
 
-		pCursor->m_Width = max(pCursor->m_Advance.x, pCursor->m_Width);
-
+		// newline \n
 		bool ForceNewLine = WordWidth.m_EndsWithNewline && (Flags & TEXTFLAG_ALLOW_NEWLINE);
 		if(ForceNewLine || WordWidth.m_IsBroken)
 		{
@@ -994,29 +986,21 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 			pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
 		}
 
-		WordStartAdvanceX = pCursor->m_Advance.x;
-
-		pCur = pWordEnd;
-		WordWidth = MakeWord(pCursor, pCur, pEnd, FontSizeIndex, Size, PixelSize, ScreenScale);
-		pWordEnd = pWordEnd + WordWidth.m_CharCount;
-		pCursor->m_StartOfLine = false;
-
+		// remove extra lines
 		if(pCursor->m_LineCount > MaxLines)
 		{
-			if(WordWidth.m_CharCount > 0)
+			if(Render && WordWidth.m_CharCount > 0)
 			{
-				int NumGlyphs = pCursor->m_Glyphs.size();
-				int WordStartGlyphIndex = NumGlyphs - WordWidth.m_GlyphCount;
-				for(int i = NumGlyphs - 1; i >= WordStartGlyphIndex; --i)
-				{
-					if(Render)
-						pCursor->m_Glyphs.remove_index(i);
-				}
+				const int NumGlyphs = pCursor->m_Glyphs.size();
+				for(int i = NumGlyphs - 1; i >= 0 && pCursor->m_Glyphs[i].m_Line >= MaxLines; --i)
+					pCursor->m_Glyphs.remove_index(i);
 			}
 			pCursor->m_Truncated = true;
 			pCursor->m_LineCount = MaxLines;
-			break;
 		}
+
+		pCursor->m_Width = max(pCursor->m_Advance.x, pCursor->m_Width);
+		pCur += WordWidth.m_CharCount;
 	}
 
 	pCursor->m_Height = pCursor->m_NextLineAdvanceY + 0.35f * Size;
@@ -1035,7 +1019,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 
 		int OldMaxWidth = pCursor->m_MaxWidth;
 		pCursor->m_MaxWidth = -1;
-		WordWidth = MakeWord(pCursor, ellipsis, ellipsis+sizeof(ellipsis), FontSizeIndex, Size, PixelSize, ScreenScale);
+		CWordWidthHint WordWidth = MakeWord(pCursor, ellipsis, ellipsis+sizeof(ellipsis), FontSizeIndex, Size, PixelSize, ScreenScale);
 		pCursor->m_MaxWidth = OldMaxWidth;
 		if(WordWidth.m_EffectiveAdvanceX > MaxWidth)
 		{
@@ -1048,6 +1032,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 				if(pScaled->m_Advance.x + pScaled->m_pGlyph->m_AdvanceX * pScaled->m_Size > MaxWidth)
 				{
 					BackAdvanceX = pCursor->m_Advance.x - pScaled->m_Advance.x;
+					pCursor->m_CharCount -= pScaled->m_NumChars;
 					pCursor->m_Glyphs.remove_index(i);
 				}
 				else
