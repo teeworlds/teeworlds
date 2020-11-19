@@ -262,6 +262,7 @@ private:
 		vec2 m_ScrollOffset;
 		char m_aFilterString[64];
 		float m_OffsetFilter;
+		int m_BackgroundCorners;
 
 	protected:
 		CListboxItem DoNextRow();
@@ -275,7 +276,7 @@ private:
 		bool DoFilter(float FilterHeight = 20.0f, float Spacing = 2.0f);
 		void DoFooter(const char *pBottomText, float FooterHeight = 20.0f); // call before DoStart to create a footer
 		void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex,
-					const CUIRect *pRect = 0, bool Background = true, bool *pActive = 0);
+					const CUIRect *pRect = 0, bool Background = true, bool *pActive = 0, int BackgroundCorners = CUI::CORNER_ALL);
 		CListboxItem DoNextItem(const void *pID, bool Selected = false, bool *pActive = 0);
 		CListboxItem DoSubheader();
 		int DoEnd();
