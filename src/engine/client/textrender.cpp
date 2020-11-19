@@ -8,7 +8,7 @@
 
 #include "textrender.h"
 
-int CAtlas::TrySection(int Index, int Width, int Height)
+int CGlyphMap::CAtlas::TrySection(int Index, int Width, int Height)
 {
 	ivec3 Section = m_Sections[Index];
 	int CurX = Section.x;
@@ -35,7 +35,7 @@ int CAtlas::TrySection(int Index, int Width, int Height)
 	return CurY;
 }
 
-void CAtlas::Init(int Index, int X, int Y, int Width, int Height)
+void CGlyphMap::CAtlas::Init(int Index, int X, int Y, int Width, int Height)
 {
 	m_Offset.x = X;
 	m_Offset.y = Y;
@@ -54,7 +54,7 @@ void CAtlas::Init(int Index, int X, int Y, int Width, int Height)
 	m_IsEmpty = true;
 }
 
-ivec2 CAtlas::Add(int Width, int Height)
+ivec2 CGlyphMap::CAtlas::Add(int Width, int Height)
 {
 	m_IsEmpty = false;
 	int BestHeight = m_Height;
@@ -148,9 +148,9 @@ void CGlyphMap::InitTexture(int Width, int Height)
 	}
 	m_ActiveAtlasIndex = 0;
 
+	// invalidate all glyphs
 	for(int i = 0; i < m_Glyphs.size(); ++i)
-		delete m_Glyphs[i].m_pGlyph;
-	m_Glyphs.clear();
+		m_Glyphs[i].m_pGlyph->m_Rendered = false;
 
 	int TextureSize = Width*Height;
 
@@ -176,7 +176,7 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *pPosition)
 
 	// try next page
 	int NextPage = m_ActiveAtlasIndex + 1;
-	if(NextPage < NUM_PAGES_PER_DIM*NUM_PAGES_PER_DIM && m_aAtlasPages[NextPage].IsEmpty())
+	if(NextPage < NUM_PAGES_PER_DIM*NUM_PAGES_PER_DIM && m_aAtlasPages[NextPage].m_IsEmpty)
 	{
 		*pPosition = m_aAtlasPages[NextPage].Add(Width, Height);
 		if(pPosition->x >= 0 && pPosition->y >= 0)
@@ -195,7 +195,7 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *pPosition)
 		if(m_ActiveAtlasIndex == i)
 			continue;
 
-		int PageAccess = m_aAtlasPages[i].GetAccess();
+		int PageAccess = m_aAtlasPages[i].m_LastFrameAccess;
 		if(PageAccess < LeastAccess)
 		{
 			LeastAccess = PageAccess;
@@ -203,10 +203,10 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *pPosition)
 		}
 	}
 
-	int X = m_aAtlasPages[Atlas].GetOffsetX();
-	int Y = m_aAtlasPages[Atlas].GetOffsetY();
-	int W = m_aAtlasPages[Atlas].GetWidth();
-	int H = m_aAtlasPages[Atlas].GetHeight();
+	int X = m_aAtlasPages[Atlas].m_Offset.x;
+	int Y = m_aAtlasPages[Atlas].m_Offset.y;
+	int W = m_aAtlasPages[Atlas].m_Width;
+	int H = m_aAtlasPages[Atlas].m_Height;
 
 	unsigned char *pMem = (unsigned char *)mem_alloc(W*H, 1);
 	mem_zero(pMem, W*H);
@@ -366,9 +366,9 @@ void CGlyphMap::SetVariantFaceByName(const char *pFamilyName)
 
 bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 {
-	if(Render && pGlyph->m_Rendered && m_aAtlasPages[pGlyph->m_AtlasIndex].GetPageID() == pGlyph->m_PageID)
+	if(Render && pGlyph->m_Rendered && m_aAtlasPages[pGlyph->m_AtlasIndex].m_ID == pGlyph->m_PageID)
 	{
-		m_aAtlasPages[pGlyph->m_AtlasIndex].Touch();
+		TouchPage(pGlyph->m_AtlasIndex);
 		return true;
 	}
 
@@ -409,7 +409,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 		// find space in atlas
 		ivec2 Position;
 		AtlasIndex = FitGlyph(Width, Height, &Position);
-		Page = m_aAtlasPages[AtlasIndex].GetPageID();
+		Page = m_aAtlasPages[AtlasIndex].m_ID;
 
 		FT_BitmapGlyph Glyph;
 		FT_Get_Glyph(GlyphFace->glyph, (FT_Glyph *)&Glyph);
@@ -433,7 +433,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 		UploadGlyph(1, OutlinedPositionX, OutlinedPositionY, pBitmap->width, pBitmap->rows, pBitmap->buffer);
 		FT_Done_Glyph((FT_Glyph)Glyph);
 
-		m_aAtlasPages[AtlasIndex].Touch();
+		TouchPage(AtlasIndex);
 
 		float UVscale = 1.0f / TEXTURE_SIZE;
 		pGlyph->m_aUvCoords[0] = (Position.x + Spacing) * UVscale;
@@ -513,10 +513,18 @@ int CGlyphMap::GetFontSizeIndex(int PixelSize)
 	return NUM_FONT_SIZES-1;
 }
 
+void CGlyphMap::TouchPage(int Index)
+{
+	m_aAtlasPages[Index].m_Access++;
+}
+
 void CGlyphMap::PagesAccessReset()
 {
 	for(int i = 0; i < NUM_PAGES_PER_DIM * NUM_PAGES_PER_DIM; ++i)
-		m_aAtlasPages[i].Update();
+	{
+		m_aAtlasPages[i].m_LastFrameAccess = m_aAtlasPages[i].m_Access;
+		m_aAtlasPages[i].m_Access = 0;
+	}
 }
 
 CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, 
@@ -1141,6 +1149,7 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 	for(int i = NumQuads - 1; i >= 0; --i)
 	{
 		const CScaledGlyph& rScaled = pCursor->m_Glyphs[i];
+	    m_pGlyphMap->TouchPage(rScaled.m_pGlyph->m_AtlasIndex);
 		const CGlyph *pGlyph = rScaled.m_pGlyph;
 
 		if(Line != rScaled.m_Line)

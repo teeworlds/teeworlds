@@ -64,41 +64,29 @@ struct CGlyphIndex
 	friend bool operator >=(const CGlyphIndex& l, const CGlyphIndex& r) { return !(l < r); };
 };
 
-class CAtlas
-{
-	array<ivec3> m_Sections;
-
-	int m_ID;
-	int m_Width;
-	int m_Height;
-
-	ivec2 m_Offset;
-
-	int m_LastFrameAccess;
-	int m_Access;
-	bool m_IsEmpty;
-
-	int TrySection(int Index, int Width, int Height);
-public:
-	CAtlas() { m_LastFrameAccess = 0; m_Access = 0; }
-	void Init(int Index, int X, int Y, int Width, int Height);
-
-	ivec2 Add(int Width, int Height);
-
-	int GetWidth() { return m_Width; }
-	int GetHeight() { return m_Height; }
-	int GetOffsetX() { return m_Offset.x; }
-	int GetOffsetY() { return m_Offset.y; }
-
-	int GetPageID() { return m_ID; }
-	void Touch() { m_Access++; }
-	int GetAccess() { return m_LastFrameAccess; }
-	void Update() { m_LastFrameAccess = m_Access; m_Access = 0; }
-	bool IsEmpty() { return m_IsEmpty; }
-};
-
 class CGlyphMap
 {
+	class CAtlas
+	{
+	public:
+		array<ivec3> m_Sections;
+
+		int m_ID;
+		int m_Width;
+		int m_Height;
+
+		ivec2 m_Offset;
+
+		int m_LastFrameAccess;
+		int m_Access;
+		bool m_IsEmpty;
+
+		CAtlas() { m_LastFrameAccess = 0; m_Access = 0; }
+		int TrySection(int Index, int Width, int Height);
+		void Init(int Index, int X, int Y, int Width, int Height);
+		ivec2 Add(int Width, int Height);
+	};
+
 	IGraphics *m_pGraphics;
 	FT_Stroker m_FtStroker;
 	IGraphics::CTextureHandle m_aTextures[2];
@@ -140,6 +128,7 @@ public:
 	vec2 Kerning(CGlyph *pLeft, CGlyph *pRight, int PixelSize);
 
 	int NumTotalPages() { return m_NumTotalPages; }
+	void TouchPage(int Index);
 	void PagesAccessReset();
 };
 
