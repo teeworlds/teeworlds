@@ -434,7 +434,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 		FT_Done_Glyph((FT_Glyph)Glyph);
 
 		TouchPage(AtlasIndex);
-		
+
 		float UVscale = 1.0f / TEXTURE_SIZE;
 		pGlyph->m_aUvCoords[0] = (Position.x + Spacing) * UVscale;
 		pGlyph->m_aUvCoords[1] = (Position.y + Spacing) * UVscale;
@@ -1149,7 +1149,7 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 	for(int i = NumQuads - 1; i >= 0; --i)
 	{
 		const CScaledGlyph& rScaled = pCursor->m_Glyphs[i];
-	    m_pGlyphMap->TouchPage(rScaled.m_pGlyph->m_AtlasIndex);
+		m_pGlyphMap->TouchPage(rScaled.m_pGlyph->m_AtlasIndex);
 		const CGlyph *pGlyph = rScaled.m_pGlyph;
 
 		if(Line != rScaled.m_Line)
