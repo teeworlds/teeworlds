@@ -10,6 +10,7 @@
 #include <engine/demo.h>
 #include <engine/contacts.h>
 #include <engine/serverbrowser.h>
+#include <engine/config.h>
 
 #include <game/voting.h>
 #include <game/client/component.h>
@@ -92,9 +93,10 @@ public:
 		static CUI *m_pUI;
 		static IInput *m_pInput;
 		static IClient *m_pClient;
+		static CConfig *m_pConfig;
 
 	public:
-		static void Init(CMenus *pMenus) { m_pMenus = pMenus; m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); };
+		static void Init(CMenus *pMenus) { m_pMenus = pMenus; m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); m_pConfig = pMenus->Config(); };
 	};
 
 	class CButtonContainer : public CUIElementBase

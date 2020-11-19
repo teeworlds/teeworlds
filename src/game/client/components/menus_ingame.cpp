@@ -660,6 +660,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	static int s_ControlPage = 0;
 	const char *pNotification = 0;
 	char aBuf[64];
+	const bool Authed = Client()->RconAuthed();
 
 	if(m_pClient->m_pVoting->IsVoting())
 		pNotification = Localize("Wait for current vote to end before calling a new one.");
@@ -668,8 +669,9 @@ void CMenus::RenderServerControl(CUIRect MainView)
 		str_format(aBuf, sizeof(aBuf), Localize("You must wait %d seconds before making another vote"), m_pClient->m_pVoting->CallvoteBlockTime());
 		pNotification = aBuf;
 	}
+	else if(!Authed && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
+		pNotification = Localize("Spectators aren't allowed to start a vote.");
 
-	bool Authed = Client()->RconAuthed();
 	MainView.HSplitBottom(80.0f, &MainView, 0);
 	if(pNotification && !Authed)
 	{
@@ -718,14 +720,11 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	else if(s_ControlPage == 2 && !m_pClient->m_ServerSettings.m_SpecVote)
 		pNotification = Localize("Server does not allow voting to move players to spectators");
 
-	if(!Authed && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
-		pNotification = Localize("Spectators aren't allowed to start a vote.");
-
 	if(pNotification && !Authed)
 	{
 		// only print notice
 		MainView.HSplitTop(45.0f, &MainView, 0);
-		RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
 		MainView.HMargin(15.0f, &MainView);
 		UI()->DoLabel(&MainView, pNotification, 14.0f, CUI::ALIGN_CENTER);
 		return;
@@ -736,7 +735,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	const float LineHeight = 20.0f;
 	const float ColumnWidth = 120.0f;
 	MainView.HSplitBottom(LineHeight + 2*Spacing + (Authed ? (3*LineHeight + 2*Spacing) : 0.0f), &MainView, &Extended);
-	RenderTools()->DrawUIRect(&Extended, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	RenderTools()->DrawUIRect(&Extended, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), CUI::CORNER_B, 5.0f);
 
 	bool DoCallVote = false;
 	// render page
