@@ -366,7 +366,7 @@ void CGlyphMap::SetVariantFaceByName(const char *pFamilyName)
 
 bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 {
-	if(Render && pGlyph->m_Rendered && m_aAtlasPages[pGlyph->m_AtlasIndex].m_ID == pGlyph->m_PageID)
+	if(Render && pGlyph->m_Rendered && pGlyph->m_AtlasIndex >= 0 && m_aAtlasPages[pGlyph->m_AtlasIndex].m_ID == pGlyph->m_PageID)
 	{
 		TouchPage(pGlyph->m_AtlasIndex);
 		return true;
@@ -404,10 +404,10 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	int AtlasIndex = -1;
 	int Page = -1;
 
-	if(Render)
+	if(Render && BitmapWidth > 0 && BitmapHeight > 0)
 	{
 		// find space in atlas
-		ivec2 Position;
+		ivec2 Position = ivec2(0, 0);
 		AtlasIndex = FitGlyph(Width, Height, &Position);
 		Page = m_aAtlasPages[AtlasIndex].m_ID;
 
@@ -434,7 +434,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 		FT_Done_Glyph((FT_Glyph)Glyph);
 
 		TouchPage(AtlasIndex);
-
+		
 		float UVscale = 1.0f / TEXTURE_SIZE;
 		pGlyph->m_aUvCoords[0] = (Position.x + Spacing) * UVscale;
 		pGlyph->m_aUvCoords[1] = (Position.y + Spacing) * UVscale;
@@ -607,7 +607,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 			break;
 		}
 
-		if(Render)
+		if(Render && pGlyph->m_AtlasIndex >= 0)
 		{
 			CScaledGlyph Scaled;
 			Scaled.m_pGlyph = pGlyph;
