@@ -607,7 +607,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 			break;
 		}
 
-		if(Render && pGlyph->m_AtlasIndex >= 0)
+		if(Render)
 		{
 			CScaledGlyph Scaled;
 			Scaled.m_pGlyph = pGlyph;
@@ -631,7 +631,8 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 			{
 				// remove redundant space
 				Hint.m_GlyphCount--;
-				pCursor->m_Glyphs.remove_index(pCursor->m_Glyphs.size()-1);
+				if(Render)
+					pCursor->m_Glyphs.remove_index(pCursor->m_Glyphs.size()-1);
 			}
 			break;
 		}
@@ -1149,7 +1150,6 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 	for(int i = NumQuads - 1; i >= 0; --i)
 	{
 		const CScaledGlyph& rScaled = pCursor->m_Glyphs[i];
-		m_pGlyphMap->TouchPage(rScaled.m_pGlyph->m_AtlasIndex);
 		const CGlyph *pGlyph = rScaled.m_pGlyph;
 
 		if(Line != rScaled.m_Line)
@@ -1163,8 +1163,10 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 				LineOffset.x = 0;
 		}
 
-		if(i < StartGlyph || i >= EndGlyphs)
+		if(pGlyph->m_AtlasIndex < 0 || i < StartGlyph || i >= EndGlyphs)
 			continue;
+
+		m_pGlyphMap->TouchPage(pGlyph->m_AtlasIndex);
 
 		vec4 Color;
 		if(IsSecondary)
