@@ -141,7 +141,7 @@ void CEditor2::Init()
 	m_Brush.m_aTiles.clear();
 
 	// init history
-	mem_zero(m_aHistoryEntryUsed, sizeof(m_aHistoryEntryUsed));
+	m_HistoryEntryPool.Clear();
 	m_pHistoryEntryCurrent = 0x0;
 
 	ResetCamera();
@@ -4025,11 +4025,7 @@ void CEditor2::OnMapLoaded()
 	HistoryClear();
 
 	// initialize history
-	m_pHistoryEntryCurrent = HistoryAllocEntry();
-	m_pHistoryEntryCurrent->m_pSnap = m_Map.SaveSnapshot();
-	m_pHistoryEntryCurrent->m_pUiSnap = SaveUiSnapshot();
-	m_pHistoryEntryCurrent->SetAction("Map loaded");
-	m_pHistoryEntryCurrent->SetDescription(m_Map.m_aPath);
+	m_pHistoryEntryCurrent = HistoryAllocEntry("Map loaded", m_Map.m_aPath);
 }
 
 void CEditor2::UserMapNew()
@@ -4085,50 +4081,34 @@ void CEditor2::UserMapSaveAs()
 
 void CEditor2::HistoryClear()
 {
-	for(int i = 0; i < MAX_HISTORY; i++)
-	{
-		if(m_aHistoryEntryUsed[i])
-		{
-			HistoryDeallocEntry(&m_aHistoryEntries[i]);
-		}
-	}
-
-	mem_zero(m_aHistoryEntryUsed, sizeof(m_aHistoryEntryUsed));
+	m_HistoryEntryPool.Clear();
 	m_pHistoryEntryCurrent = 0x0;
 }
 
-CEditor2::CHistoryEntry *CEditor2::HistoryAllocEntry()
+CEditor2::CHistoryEntry *CEditor2::HistoryAllocEntry(const char* pActionStr, const char* pDescStr)
 {
-	for(int i = 0; i < MAX_HISTORY; i++)
+	CHistoryEntry* pElt = m_HistoryEntryPool.New();
+	if(!pElt)
 	{
-		if(!m_aHistoryEntryUsed[i])
+		// if not found, free the oldest one
+		CHistoryEntry* pCur = m_pHistoryEntryCurrent;
+		while(pCur && pCur->m_pPrev)
 		{
-			m_aHistoryEntryUsed[i] = 1;
-			m_aHistoryEntries[i] = CHistoryEntry();
-			return &m_aHistoryEntries[i];
+			pCur = pCur->m_pPrev;
 		}
+
+		pCur->m_pNext->m_pPrev = 0x0;
+		m_HistoryEntryPool.Free(pCur);
+		pElt = m_HistoryEntryPool.New();
+		dbg_assert(pElt != 0x0, "failed to allocate");
 	}
 
-	// if not found, get the last one
-	CHistoryEntry* pCur = m_pHistoryEntryCurrent;
-	while(pCur && pCur->m_pPrev)
-	{
-		pCur = pCur->m_pPrev;
-	}
-
-	pCur->m_pNext->m_pPrev = 0x0;
-	*pCur = CHistoryEntry();
-	return pCur;
-}
-
-void CEditor2::HistoryDeallocEntry(CEditor2::CHistoryEntry *pEntry)
-{
-	int Index = pEntry - m_aHistoryEntries;
-	dbg_assert(Index >= 0 && Index < MAX_HISTORY, "History entry out of bounds");
-	dbg_assert(pEntry->m_pSnap != 0x0, "Snapshot is null");
-	mem_free(pEntry->m_pSnap);
-	mem_free(pEntry->m_pUiSnap); // TODO: dealloc smarter, see above
-	m_aHistoryEntryUsed[Index] = 0;
+	pElt->m_pSnap = m_Map.SaveSnapshot();
+	pElt->m_pUiSnap = SaveUiSnapshot();
+	pElt->m_pUiSnapshotPool = &m_UiSnapshotPool;
+	pElt->SetAction(pActionStr);
+	pElt->SetDescription(pDescStr);
+	return pElt;
 }
 
 void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
@@ -4136,11 +4116,7 @@ void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 	m_MapSaved = false;
 
 	CHistoryEntry* pEntry;
-	pEntry = HistoryAllocEntry();
-	pEntry->m_pSnap = m_Map.SaveSnapshot();
-	pEntry->m_pUiSnap = SaveUiSnapshot();
-	pEntry->SetAction(pActionStr);
-	pEntry->SetDescription(pDescStr);
+	pEntry = HistoryAllocEntry(pActionStr, pDescStr);
 
 	// delete all the next entries from current
 	CHistoryEntry* pCur = m_pHistoryEntryCurrent->m_pNext;
@@ -4148,7 +4124,7 @@ void CEditor2::HistoryNewEntry(const char* pActionStr, const char* pDescStr)
 	{
 		CHistoryEntry* pToDelete = pCur;
 		pCur = pCur->m_pNext;
-		HistoryDeallocEntry(pToDelete);
+		m_HistoryEntryPool.Free(pToDelete);
 	}
 
 	m_pHistoryEntryCurrent->m_pNext = pEntry;
@@ -4160,7 +4136,8 @@ void CEditor2::HistoryRestoreToEntry(CHistoryEntry* pEntry)
 {
 	dbg_assert(pEntry && pEntry->m_pSnap, "History entry or snapshot invalid");
 	m_Map.RestoreSnapshot(pEntry->m_pSnap);
-	RestoreUiSnapshot(pEntry->m_pUiSnap);
+	if(pEntry->m_pNext)
+		RestoreUiSnapshot(pEntry->m_pNext->m_pUiSnap);
 	m_pHistoryEntryCurrent = pEntry;
 }
 
@@ -4180,10 +4157,31 @@ void CEditor2::HistoryRedo()
 
 CEditor2::CUISnapshot* CEditor2::SaveUiSnapshot()
 {
-	CUISnapshot* pUiSnap = (CUISnapshot*)mem_alloc(sizeof(CUISnapshot), 1); // TODO: alloc this smarter. Does this even need to be heap allocated?
+	CUISnapshot* pUiSnap = m_UiSnapshotPool.New();
+	dbg_assert(pUiSnap != 0x0, "failed to allocate ui snapshot");
+
 	pUiSnap->m_SelectedLayerID = m_UiSelectedLayerID;
 	pUiSnap->m_SelectedGroupID = m_UiSelectedGroupID;
 	pUiSnap->m_ToolID = m_Tool;
+
+	switch(m_Tool)
+	{
+		case TOOL_SELECT: {
+
+		} break;
+
+		case TOOL_DIMENSION: {
+
+		} break;
+
+		case TOOL_TILE_BRUSH: {
+			pUiSnap->m_ToolBrush.m_Brush = m_Brush;
+			pUiSnap->m_ToolBrush.m_UiBrushPalette = m_UiBrushPalette;
+			pUiSnap->m_ToolBrush.m_TileSelection = m_TileSelection;
+		} break;
+
+		default: dbg_assert(0, "case not handled"); break;
+	}
 
 	ed_dbg("NewUiSnapshot :: m_SelectedLayerID=%d m_SelectedGroupID=%d m_ToolID=%d", pUiSnap->m_SelectedLayerID, pUiSnap->m_SelectedGroupID, pUiSnap->m_ToolID);
 	return pUiSnap;
@@ -4196,8 +4194,27 @@ void CEditor2::RestoreUiSnapshot(CUISnapshot* pUiSnap)
 	dbg_assert(m_UiSelectedLayerID == -1 || m_Map.m_aLayers.IsValid(m_UiSelectedLayerID), "Selected layer is invalid");
 	dbg_assert(m_Map.m_aGroups.IsValid(m_UiSelectedGroupID), "Selected group is invalid");
 	m_Tool = pUiSnap->m_ToolID;
-	MainBrushClear(); // TODO: save brush?
-	m_TileSelection.Deselect(); // TODO: save selection?
+	MainBrushClear();
+	m_TileSelection.Deselect();
+
+	switch(m_Tool)
+	{
+		case TOOL_SELECT: {
+
+		} break;
+
+		case TOOL_DIMENSION: {
+
+		} break;
+
+		case TOOL_TILE_BRUSH: {
+			m_Brush = pUiSnap->m_ToolBrush.m_Brush;
+			m_UiBrushPalette = pUiSnap->m_ToolBrush.m_UiBrushPalette;
+			m_TileSelection = pUiSnap->m_ToolBrush.m_TileSelection;
+		} break;
+
+		default: dbg_assert(0, "case not handled"); break;
+	}
 }
 
 void CEditor2::PushPopup(CUIPopup::Func_PopupRender pFuncRender, void* pPopupData)

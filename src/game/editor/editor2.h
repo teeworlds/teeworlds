@@ -192,59 +192,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 		void Rotate90CounterClockwise();
 	};
 
-	CBrush m_Brush;
-
-	struct CUISnapshot
-	{
-		int m_SelectedLayerID;
-		int m_SelectedGroupID;
-		int m_ToolID;
-	};
-
-	struct CHistoryEntry
-	{
-		CHistoryEntry* m_pPrev;
-		CHistoryEntry* m_pNext;
-		CEditorMap2::CSnapshot* m_pSnap;
-		CUISnapshot* m_pUiSnap;
-		char m_aActionStr[64];
-		char m_aDescStr[64];
-
-		inline void SetAction(const char* pStr)
-		{
-			const int Len = min((int)(sizeof(m_aActionStr)-1), str_length(pStr));
-			memmove(m_aActionStr, pStr, Len);
-			m_aActionStr[Len] = 0;
-		}
-
-		inline void SetDescription(const char* pStr)
-		{
-			const int Len = min((int)(sizeof(m_aDescStr)-1), str_length(pStr));
-			memmove(m_aDescStr, pStr, Len);
-			m_aDescStr[Len] = 0;
-		}
-	};
-
-	CHistoryEntry m_aHistoryEntries[MAX_HISTORY];
-	u8 m_aHistoryEntryUsed[MAX_HISTORY];
-	CHistoryEntry* m_pHistoryEntryCurrent;
-
-	enum
-	{
-		PAGE_MAP_EDITOR=0,
-		PAGE_ASSET_MANAGER,
-		PAGE_COUNT_,
-
-		TOOL_SELECT=0,
-		TOOL_DIMENSION,
-		TOOL_TILE_BRUSH,
-		TOOL_COUNT_
-	};
-
-	int m_Page;
-	int m_Tool;
-
-	// TODO: here functions are member functions, but not for CBrush. Choose one or the other
 	struct CTileSelection
 	{
 		int m_StartTX;
@@ -279,6 +226,154 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 		void FitLayer(const CEditorMap2::CLayer& TileLayer);
 	};
+
+	CBrush m_Brush;
+
+	template<class T, u32 CAPACITY_>
+	struct StackPool
+	{
+		enum
+		{
+			CAPACITY = CAPACITY_
+		};
+
+		T m_aEntries[CAPACITY];
+		u8 m_aUsed[CAPACITY];
+
+		StackPool()
+		{
+			mem_zero(m_aUsed, sizeof(m_aUsed));
+		}
+
+		~StackPool()
+		{
+			Clear();
+		}
+
+		T* Allocate()
+		{
+			for(int i = 0; i < CAPACITY; i++)
+			{
+				if(!m_aUsed[i])
+				{
+					m_aUsed[i] = 1;
+					return &m_aEntries[i];
+				}
+			}
+
+			return 0x0;
+		}
+
+		T* New()
+		{
+			T* pElt = Allocate();
+			if(!pElt) return 0x0;
+
+			new(pElt) T();
+			return pElt;
+		}
+
+		void Free(T* pElt)
+		{
+			const int Index = pElt - m_aEntries;
+			dbg_assert(Index >= 0 && Index < CAPACITY, "element out of bounds");
+			pElt->~T();
+			m_aUsed[Index] = 0;
+		}
+
+		void Clear()
+		{
+			for(int i = 0; i < CAPACITY; i++)
+			{
+				if(m_aUsed[i])
+				{
+					m_aEntries[i].~T();
+				}
+			}
+
+			mem_zero(m_aUsed, sizeof(m_aUsed));
+		}
+	};
+
+	struct CUISnapshot
+	{
+		int m_SelectedLayerID;
+		int m_SelectedGroupID;
+		int m_ToolID;
+
+		struct ToolBrush
+		{
+			CBrush m_Brush;
+			CUIBrushPalette m_UiBrushPalette;
+			CTileSelection m_TileSelection;
+		};
+
+		ToolBrush m_ToolBrush;
+	};
+
+	struct CHistoryEntry
+	{
+		CHistoryEntry* m_pPrev;
+		CHistoryEntry* m_pNext;
+		CEditorMap2::CSnapshot* m_pSnap;
+		StackPool<CUISnapshot, MAX_HISTORY>* m_pUiSnapshotPool;
+		CUISnapshot* m_pUiSnap;
+		char m_aActionStr[64];
+		char m_aDescStr[64];
+
+		CHistoryEntry()
+		{
+			m_pPrev = 0x0;
+			m_pNext = 0x0;
+			m_pSnap = 0x0;
+			m_pUiSnapshotPool = 0x0;
+			m_pUiSnap = 0x0;
+		}
+
+		~CHistoryEntry()
+		{
+			dbg_assert(m_pSnap != 0x0, "Snapshot is null");
+			mem_free(m_pSnap);
+			if(m_pUiSnap)
+			{
+				dbg_assert(m_pSnap != 0x0, "m_pUiSnapshotPool is null");
+				m_pUiSnapshotPool->Free(m_pUiSnap);
+			}
+		}
+
+		inline void SetAction(const char* pStr)
+		{
+			const int Len = min((int)(sizeof(m_aActionStr)-1), str_length(pStr));
+			memmove(m_aActionStr, pStr, Len);
+			m_aActionStr[Len] = 0;
+		}
+
+		inline void SetDescription(const char* pStr)
+		{
+			const int Len = min((int)(sizeof(m_aDescStr)-1), str_length(pStr));
+			memmove(m_aDescStr, pStr, Len);
+			m_aDescStr[Len] = 0;
+		}
+	};
+
+	StackPool<CHistoryEntry, MAX_HISTORY> m_HistoryEntryPool;
+	StackPool<CUISnapshot, MAX_HISTORY> m_UiSnapshotPool;
+	CHistoryEntry* m_pHistoryEntryCurrent;
+
+	enum
+	{
+		PAGE_MAP_EDITOR=0,
+		PAGE_ASSET_MANAGER,
+		PAGE_COUNT_,
+
+		TOOL_SELECT=0,
+		TOOL_DIMENSION,
+		TOOL_TILE_BRUSH,
+		TOOL_COUNT_
+	};
+
+	int m_Page;
+	int m_Tool;
 
 	CTileSelection m_TileSelection;
 
@@ -471,8 +566,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void EditHistCondBrushPaintStrokeOnLayer(int StartTX, int StartTY, int EndTX, int EndTY, int LayerID, bool HistoryCondition);
 
 	void HistoryClear();
-	CHistoryEntry* HistoryAllocEntry();
-	void HistoryDeallocEntry(CHistoryEntry* pEntry);
+	CHistoryEntry* HistoryAllocEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryNewEntry(const char* pActionStr, const char* pDescStr);
 	void HistoryRestoreToEntry(CHistoryEntry* pEntry);
 	void HistoryUndo();
