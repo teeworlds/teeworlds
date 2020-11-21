@@ -688,16 +688,10 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			}
 			else // file
 			{
-				char aBuf[IO_MAX_PATH_LENGTH];
-				str_format(aBuf, sizeof(aBuf), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
-				const char *pError = Client()->DemoPlayer_Play(aBuf, m_lDemos[m_DemolistSelectedIndex].m_StorageType);
-				if(pError)
-					PopupMessage(Localize("Error loading demo"), pError, Localize("Ok"));
-				else
-				{
-					UI()->SetActiveItem(0);
-					return;
-				}
+				str_format(m_aDemoLoadingFile, sizeof(m_aDemoLoadingFile), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
+				m_DemoLoadingStorageType = m_lDemos[m_DemolistSelectedIndex].m_StorageType;
+				m_Popup = POPUP_LOADING_DEMO;
+				UI()->SetActiveItem(0);
 			}
 		}
 	}
@@ -785,4 +779,12 @@ float CMenus::RenderDemoDetails(CUIRect View)
 
 	//unused
 	return 0.0f;
+}
+
+void CMenus::Con_Play(IConsole::IResult *pResult, void *pUserData)
+{
+	CMenus *pSelf = (CMenus *)pUserData;
+	str_copy(pSelf->m_aDemoLoadingFile, pResult->GetString(0), sizeof(pSelf->m_aDemoLoadingFile));
+	pSelf->m_DemoLoadingStorageType = IStorage::TYPE_ALL;
+	pSelf->m_Popup = POPUP_LOADING_DEMO;
 }
