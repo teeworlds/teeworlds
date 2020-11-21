@@ -400,7 +400,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pPreviewRect = 0);
 	bool DoPopupYesNo(CUIPopupYesNo* state);
 
-	void RenderBrush(vec2 Pos);
+	void RenderBrush(const CBrush& Brush, vec2 Pos);
 	void DrawBrushGridHoverRect(vec2 Pos);
 
 	void RenderAssetManager();

@@ -12,7 +12,6 @@
 
 
 // TODO:
-// - Magic brush (auto map)
 // - Multi layer paint (game layer collision/death/...)
 
 // - Easily know if we're clicking on UI or elsewhere
@@ -1027,43 +1026,112 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 			const int EndTY = floor(EndMouseWorldPos.y/TileSize);
 
 			TileLayerRegionToBrush(SelectedLayerID, StartTX, StartTY, EndTX, EndTY, &m_Brush);
+			m_UiBrushPalette.m_IsAutomapEnabled = false; // disable automapping (we'd like to copy tiles)
 		}
 	}
 	else
 	{
-		// draw brush
-		RenderBrush(GridMousePos);
+		bool IsAutomapEnabled = m_UiBrushPalette.m_IsAutomapEnabled;
+		const int AutomapRuleID = m_UiBrushPalette.m_AutoMapRuleID;
+		const CTilesetMapper2* pMapper = 0x0;
 
-		// block paint
-		if(IsShiftPressed)
-		{
-			if(FinishedDragging)
-			{
-				const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
-					m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, pMouseDrag->m_StartDragPos);
-				const int StartTX = floor(StartMouseWorldPos.x/TileSize);
-				const int StartTY = floor(StartMouseWorldPos.y/TileSize);
-
-				const int RectStartX = min(MouseTx, StartTX);
-				const int RectStartY = min(MouseTy, StartTY);
-				const int RectEndX = max(MouseTx, StartTX);
-				const int RectEndY = max(MouseTy, StartTY);
-
-				// click without dragging, paint whole brush in place
-				if(StartTX == MouseTx && StartTY == MouseTy)
-					EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
-				else // drag, fill the rectangle by repeating the brush
-					EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
-			}
-
+		if(IsAutomapEnabled) {
+			pMapper = m_Map.AssetsFindTilesetMapper(SelectedTileLayer.m_ImageID);
+			if(!pMapper)
+				IsAutomapEnabled = false;
 		}
-		else // stroke paint
+
+		if(IsAutomapEnabled)
 		{
-			// TODO: input last mouse position as "StartTX/Y"
-			if(pMouseDrag->m_IsDragging) // TODO: we don't need to do this *every* frame
-				EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, false);
-			else if(FinishedDragging)
-				EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, true); // push history entry when we finish the stroke
+			// preview automap
+			/*
+			// TODO: copy tiles from layer to a +1 size (on each side) 'brush' based on shape size
+			CBrush TempBrush;
+			TileLayerRegionToBrush(SelectedLayerID, MouseTx-1, MouseTy-1, MouseTx+1, MouseTy+1, &TempBrush);
+
+			// fill in the middle part (the shape part)
+			TempBrush.m_aTiles[4].m_Index = 1;
+
+			// Automap the -1 inner section
+			pMapper->AutomapLayerSection(TempBrush.m_aTiles.base_ptr(), 1, 1, TempBrush.m_Width-1, TempBrush.m_Height-1, TempBrush.m_Width, TempBrush.m_Height, AutomapRuleID);
+
+			// chisel the outer section
+			CBrush PreviewBrush;
+			PreviewBrush.m_aTiles.add_empty(1);
+			PreviewBrush.m_aTiles[0] = TempBrush.m_aTiles[4];
+			PreviewBrush.m_Width = 1;
+			PreviewBrush.m_Height = 1;
+
+			// Draw it as a brush
+			RenderBrush(PreviewBrush, GridMousePos);
+			*/
+
+			RenderBrush(m_Brush, GridMousePos);
+
+			// block paint
+			if(IsShiftPressed)
+			{
+				if(FinishedDragging)
+				{
+					const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+						m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, pMouseDrag->m_StartDragPos);
+					const int StartTX = floor(StartMouseWorldPos.x/TileSize);
+					const int StartTY = floor(StartMouseWorldPos.y/TileSize);
+
+					const int RectStartX = min(MouseTx, StartTX);
+					const int RectStartY = min(MouseTy, StartTY);
+					const int RectEndX = max(MouseTx, StartTX);
+					const int RectEndY = max(MouseTy, StartTY);
+
+					// click without dragging, paint whole brush in place
+					if(StartTX == MouseTx && StartTY == MouseTy)
+						EditBrushPaintLayerAutomap(MouseTx, MouseTy, SelectedLayerID, AutomapRuleID);
+					else // drag, fill the rectangle by repeating the brush
+						EditBrushPaintLayerFillRectAutomap(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID, AutomapRuleID);
+				}
+
+			}
+			else // stroke paint
+			{
+				// TODO: automap stroke painting
+			}
+		}
+		else
+		{
+			// draw brush
+			RenderBrush(m_Brush, GridMousePos);
+
+			// block paint
+			if(IsShiftPressed)
+			{
+				if(FinishedDragging)
+				{
+					const vec2 StartMouseWorldPos = CalcGroupWorldPosFromUiPos(m_UiSelectedGroupID,
+						m_ZoomWorldViewWidth, m_ZoomWorldViewHeight, pMouseDrag->m_StartDragPos);
+					const int StartTX = floor(StartMouseWorldPos.x/TileSize);
+					const int StartTY = floor(StartMouseWorldPos.y/TileSize);
+
+					const int RectStartX = min(MouseTx, StartTX);
+					const int RectStartY = min(MouseTy, StartTY);
+					const int RectEndX = max(MouseTx, StartTX);
+					const int RectEndY = max(MouseTy, StartTY);
+
+					// click without dragging, paint whole brush in place
+					if(StartTX == MouseTx && StartTY == MouseTy)
+						EditBrushPaintLayer(MouseTx, MouseTy, SelectedLayerID);
+					else // drag, fill the rectangle by repeating the brush
+						EditBrushPaintLayerFillRectRepeat(RectStartX, RectStartY, RectEndX-RectStartX+1, RectEndY-RectStartY+1, SelectedLayerID);
+				}
+
+			}
+			else // stroke paint
+			{
+				// TODO: input last mouse position as "StartTX/Y"
+				if(pMouseDrag->m_IsDragging) // TODO: we don't need to do this *every* frame
+					EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, false);
+				else if(FinishedDragging)
+					EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, true); // push history entry when we finish the stroke
+			}
 		}
 	}
 
@@ -2812,7 +2880,7 @@ void CEditor2::RenderPopupBrushPalette(void* pPopupData)
 	}
 	// -------------------
 
-	RenderBrush(m_UiMousePos);
+	RenderBrush(m_Brush, m_UiMousePos);
 
 	if((!IsToolBrush() || !Input()->KeyIsPressed(KEY_SPACE)) && m_UiBrushPalette.m_PopupEnabled)
 	{
@@ -3392,9 +3460,9 @@ bool CEditor2::DoPopupYesNo(CUIPopupYesNo* state)
 	return false;
 }
 
-void CEditor2::RenderBrush(vec2 Pos)
+void CEditor2::RenderBrush(const CBrush& Brush, vec2 Pos)
 {
-	if(m_Brush.IsEmpty())
+	if(Brush.IsEmpty())
 		return;
 
 	float ScreenX0, ScreenX1, ScreenY0, ScreenY1;
@@ -3406,7 +3474,7 @@ void CEditor2::RenderBrush(vec2 Pos)
 	dbg_assert(SelectedTileLayer.IsTileLayer(), "Selected layer is not a tile layer");
 
 	const float TileSize = 32;
-	const CUIRect BrushRect = {0, 0, m_Brush.m_Width * TileSize, m_Brush.m_Height * TileSize};
+	const CUIRect BrushRect = {0, 0, Brush.m_Width * TileSize, Brush.m_Height * TileSize};
 	DrawRect(BrushRect, vec4(1, 1, 1, 0.1f));
 
 	IGraphics::CTextureHandle LayerTexture;
@@ -3419,9 +3487,9 @@ void CEditor2::RenderBrush(vec2 Pos)
 
 	Graphics()->TextureSet(LayerTexture);
 	Graphics()->BlendNone();
-	RenderTools()->RenderTilemap(m_Brush.m_aTiles.base_ptr(), m_Brush.m_Width, m_Brush.m_Height, TileSize, White, LAYERRENDERFLAG_OPAQUE, 0, 0, -1, 0);
+	RenderTools()->RenderTilemap(Brush.m_aTiles.base_ptr(), Brush.m_Width, Brush.m_Height, TileSize, White, LAYERRENDERFLAG_OPAQUE, 0, 0, -1, 0);
 	Graphics()->BlendNormal();
-	RenderTools()->RenderTilemap(m_Brush.m_aTiles.base_ptr(), m_Brush.m_Width, m_Brush.m_Height, TileSize, White, LAYERRENDERFLAG_TRANSPARENT, 0, 0, -1, 0);
+	RenderTools()->RenderTilemap(Brush.m_aTiles.base_ptr(), Brush.m_Width, Brush.m_Height, TileSize, White, LAYERRENDERFLAG_TRANSPARENT, 0, 0, -1, 0);
 
 	DrawRectBorder(BrushRect, vec4(0, 0, 0, 0), 1, vec4(1, 1, 1, 1));
 
