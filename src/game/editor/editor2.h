@@ -229,72 +229,6 @@ class CEditor2: public IEditor, public CEditor2Ui
 
 	CBrush m_Brush;
 
-	template<class T, u32 CAPACITY_>
-	struct StackPool
-	{
-		enum
-		{
-			CAPACITY = CAPACITY_
-		};
-
-		T m_aEntries[CAPACITY];
-		u8 m_aUsed[CAPACITY];
-
-		StackPool()
-		{
-			mem_zero(m_aUsed, sizeof(m_aUsed));
-		}
-
-		~StackPool()
-		{
-			Clear();
-		}
-
-		T* Allocate()
-		{
-			for(int i = 0; i < CAPACITY; i++)
-			{
-				if(!m_aUsed[i])
-				{
-					m_aUsed[i] = 1;
-					return &m_aEntries[i];
-				}
-			}
-
-			return 0x0;
-		}
-
-		T* New()
-		{
-			T* pElt = Allocate();
-			if(!pElt) return 0x0;
-
-			new(pElt) T();
-			return pElt;
-		}
-
-		void Free(T* pElt)
-		{
-			const int Index = pElt - m_aEntries;
-			dbg_assert(Index >= 0 && Index < CAPACITY, "element out of bounds");
-			pElt->~T();
-			m_aUsed[Index] = 0;
-		}
-
-		void Clear()
-		{
-			for(int i = 0; i < CAPACITY; i++)
-			{
-				if(m_aUsed[i])
-				{
-					m_aEntries[i].~T();
-				}
-			}
-
-			mem_zero(m_aUsed, sizeof(m_aUsed));
-		}
-	};
-
 	struct CUISnapshot
 	{
 		int m_SelectedLayerID;
@@ -495,7 +429,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pPreviewRect = 0);
 	bool DoPopupYesNo(CUIPopupYesNo* state);
 
-	void RenderBrush(const CBrush& Brush, vec2 Pos);
+	void RenderBrush(const CBrush& Brush, vec2 Pos, vec4 Overlay = vec4(0, 0, 0, 0));
 	void DrawBrushGridHoverRect(vec2 Pos);
 
 	void RenderAssetManager();
@@ -554,16 +488,17 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void EditTileLayerAutoMapWhole(int LayerID, int RulesetID);
 	void EditTileLayerAutoMapSection(int LayerID, int RulesetID, int StartTx, int StartTy, int SectionWidth, int SectionHeight);
 
-	void EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition);
-	void EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition);
-	void EditHistCondGroupChangeName(int GroupID, const char* pNewName, bool HistoryCondition);
-	void EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY, bool HistoryCondition);
-	void EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY, bool HistoryCondition);
-	void EditHistCondGroupChangeClipX(int GroupID, int NewClipX, bool HistoryCondition);
-	void EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool HistoryCondition);
-	void EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, bool HistoryCondition);
-	void EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom, bool HistoryCondition);
-	void EditHistCondBrushPaintStrokeOnLayer(int StartTX, int StartTY, int EndTX, int EndTY, int LayerID, bool HistoryCondition);
+	void EditSeqLayerChangeName(int LayerID, const char* pNewName, bool SequenceEnd);
+	void EditSeqLayerChangeColor(int LayerID, vec4 NewColor, bool SequenceEnd);
+	void EditSeqGroupChangeName(int GroupID, const char* pNewName, bool SequenceEnd);
+	void EditSeqGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY, bool SequenceEnd);
+	void EditSeqGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY, bool SequenceEnd);
+	void EditSeqGroupChangeClipX(int GroupID, int NewClipX, bool SequenceEnd);
+	void EditSeqGroupChangeClipY(int GroupID, int NewClipY, bool SequenceEnd);
+	void EditSeqGroupChangeClipRight(int GroupID, int NewClipRight, bool SequenceEnd);
+	void EditSeqGroupChangeClipBottom(int GroupID, int NewClipBottom, bool SequenceEnd);
+	void EditSeqBrushPaintStroke(int StartTX, int StartTY, int EndTX, int EndTY, int LayerID, bool SequenceEnd);
+	void EditSeqBrushPaintStrokeAutomap(int StartTX, int StartTY, int EndTX, int EndTY, int LayerID, int RulesetID, bool SequenceEnd);
 
 	void HistoryClear();
 	CHistoryEntry* HistoryAllocEntry(const char* pActionStr, const char* pDescStr);

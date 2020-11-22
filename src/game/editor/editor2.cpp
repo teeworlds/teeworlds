@@ -284,7 +284,12 @@ void CEditor2::Render()
 	Graphics()->Clear(0.3f, 0.3f, 0.3f);
 
 	if(m_Page == PAGE_MAP_EDITOR)
+	{
 		RenderMap();
+		//TODO: find a better name
+		DoToolStuff();
+		RenderMapEditorUI();
+	}
 	else if(m_Page == PAGE_ASSET_MANAGER)
 		RenderAssetManager();
 
@@ -530,7 +535,7 @@ void CEditor2::EnvelopeEval(float TimeOffset, int EnvID, float* pChannels)
 void CEditor2::RenderMap()
 {
 	// Move the map view
-	// We do this here so there are no frame delay
+	// We do this here so there is no frame delay
 	// NOTE: we use the same id as in DoToolStuff() on purpose
 	CUIButton MapViewButton;
 	UiDoButtonBehavior(&m_MapViewDrag, m_UiMainViewRect, &MapViewButton);
@@ -817,12 +822,6 @@ void CEditor2::RenderMap()
 	Graphics()->QuadsDrawTL(&RecOriginLineYtY, 1);
 
 	Graphics()->QuadsEnd();
-
-	//TODO: find a better name
-	DoToolStuff();
-
-	// user interface
-	RenderMapEditorUI();
 }
 
 void CEditor2::DoToolStuff()
@@ -1066,7 +1065,12 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 			RenderBrush(PreviewBrush, GridMousePos);
 			*/
 
-			RenderBrush(m_Brush, GridMousePos);
+			// draw brush
+			vec4 BrushOverlayColor = vec4(0, 0, 0, 0);
+			if(pMouseDrag->m_IsDragging)
+				BrushOverlayColor = vec4(0, 0, 0, 0.2f);
+
+			RenderBrush(m_Brush, GridMousePos, BrushOverlayColor);
 
 			// block paint
 			if(IsShiftPressed)
@@ -1093,13 +1097,21 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 			}
 			else // stroke paint
 			{
-				// TODO: automap stroke painting
+				// TODO: input last mouse position as "StartTX/Y"
+				if(pMouseDrag->m_IsDragging) // TODO: we don't need to do this *every* frame
+					EditSeqBrushPaintStrokeAutomap(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, AutomapRuleID, false);
+				else if(FinishedDragging)
+					EditSeqBrushPaintStrokeAutomap(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, AutomapRuleID, true); // push history entry when we finish the stroke
 			}
 		}
 		else
 		{
 			// draw brush
-			RenderBrush(m_Brush, GridMousePos);
+			vec4 BrushOverlayColor = vec4(0, 0, 0, 0);
+			if(pMouseDrag->m_IsDragging)
+				BrushOverlayColor = vec4(0, 0, 0, 0.2f);
+
+			RenderBrush(m_Brush, GridMousePos, BrushOverlayColor);
 
 			// block paint
 			if(IsShiftPressed)
@@ -1128,9 +1140,9 @@ void CEditor2::DoToolBrush(int MouseTx, int MouseTy, vec2 MouseWorldPos, vec2 Gr
 			{
 				// TODO: input last mouse position as "StartTX/Y"
 				if(pMouseDrag->m_IsDragging) // TODO: we don't need to do this *every* frame
-					EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, false);
+					EditSeqBrushPaintStroke(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, false);
 				else if(FinishedDragging)
-					EditHistCondBrushPaintStrokeOnLayer(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, true); // push history entry when we finish the stroke
+					EditSeqBrushPaintStroke(MouseTx, MouseTy, MouseTx, MouseTy, SelectedLayerID, true); // push history entry when we finish the stroke
 			}
 		}
 	}
@@ -1400,25 +1412,25 @@ void CEditor2::RenderMapEditorUI()
 
 			if(UiGrabHandle(HandleTop, &s_GrabHandleTop, ColNormal, ColActive))
 			{
-				EditHistCondGroupChangeClipY(m_UiSelectedGroupID, WorldMousePos.y, false);
+				EditSeqGroupChangeClipY(m_UiSelectedGroupID, WorldMousePos.y, false);
 				ToolTipPos = vec2(HandleTop.x, HandleTop.y);
 			}
 
 			if(UiGrabHandle(HandleLeft, &s_GrabHandleLeft, ColNormal, ColActive))
 			{
-				EditHistCondGroupChangeClipX(m_UiSelectedGroupID, WorldMousePos.x, false);
+				EditSeqGroupChangeClipX(m_UiSelectedGroupID, WorldMousePos.x, false);
 				ToolTipPos = vec2(HandleLeft.x, HandleLeft.y);
 			}
 
 			if(UiGrabHandle(HandleBottom, &s_GrabHandleBot, ColNormal, ColActive))
 			{
-				EditHistCondGroupChangeClipBottom(m_UiSelectedGroupID, WorldMousePos.y, false);
+				EditSeqGroupChangeClipBottom(m_UiSelectedGroupID, WorldMousePos.y, false);
 				ToolTipPos = vec2(HandleBottom.x, HandleBottom.y);
 			}
 
 			if(UiGrabHandle(HandleRight, &s_GrabHandleRight, ColNormal, ColActive))
 			{
-				EditHistCondGroupChangeClipRight(m_UiSelectedGroupID, WorldMousePos.x, false);
+				EditSeqGroupChangeClipRight(m_UiSelectedGroupID, WorldMousePos.x, false);
 				ToolTipPos = vec2(HandleRight.x, HandleRight.y);
 			}
 
@@ -1427,26 +1439,26 @@ void CEditor2::RenderMapEditorUI()
 			{
 				SelectedGroup.m_ClipX = BeforeGrabbingClipX;
 				SelectedGroup.m_ClipWidth = BeforeGrabbingClipWidth;
-				EditHistCondGroupChangeClipX(m_UiSelectedGroupID, WorldMousePos.x, true);
+				EditSeqGroupChangeClipX(m_UiSelectedGroupID, WorldMousePos.x, true);
 			}
 
 			if(!s_GrabHandleTop.m_IsGrabbed && WasGrabbingTop)
 			{
 				SelectedGroup.m_ClipY = BeforeGrabbingClipY;
 				SelectedGroup.m_ClipHeight = BeforeGrabbingClipHeight;
-				EditHistCondGroupChangeClipY(m_UiSelectedGroupID, WorldMousePos.y, true);
+				EditSeqGroupChangeClipY(m_UiSelectedGroupID, WorldMousePos.y, true);
 			}
 
 			if(!s_GrabHandleRight.m_IsGrabbed && WasGrabbingRight)
 			{
 				SelectedGroup.m_ClipWidth = BeforeGrabbingClipWidth;
-				EditHistCondGroupChangeClipRight(m_UiSelectedGroupID, WorldMousePos.x, true);
+				EditSeqGroupChangeClipRight(m_UiSelectedGroupID, WorldMousePos.x, true);
 			}
 
 			if(!s_GrabHandleBot.m_IsGrabbed && WasGrabbingBot)
 			{
 				SelectedGroup.m_ClipHeight = BeforeGrabbingClipHeight;
-				EditHistCondGroupChangeClipBottom(m_UiSelectedGroupID, WorldMousePos.y, true);
+				EditSeqGroupChangeClipBottom(m_UiSelectedGroupID, WorldMousePos.y, true);
 			}
 
 			// Size tooltip info
@@ -1787,7 +1799,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 				if(ShowButState.m_Clicked)
 					m_UiLayerState[LyID].m_IsHidden ^= 1;
 
-				const bool IsShown = !m_UiLayerState[LyID].m_IsHovered;
+				const bool IsShown = !m_UiLayerState[LyID].m_IsHidden;
 
 				vec4 ShowButColor = StyleColorButton;
 				if(ShowButState.m_Hovered)
@@ -2100,13 +2112,13 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 
 		// "preview" new name instantly
 		if(UiTextInput(ButtonRect, aNewName, sizeof(aNewName), &s_TIGroupName))
-			EditHistCondGroupChangeName(m_UiSelectedGroupID, aNewName, false);
+			EditSeqGroupChangeName(m_UiSelectedGroupID, aNewName, false);
 
 		// if not selected, restore old name and change to new name with history entry
 		if(!s_TIGroupName.m_Selected)
 		{
 			str_copy(SelectedGroup.m_aName, aBeforeSelectionName, sizeof(SelectedGroup.m_aName));
-			EditHistCondGroupChangeName(m_UiSelectedGroupID, aNewName, true);
+			EditSeqGroupChangeName(m_UiSelectedGroupID, aNewName, true);
 		}
 	}
 
@@ -2135,14 +2147,14 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	ParallaxChanged |= UiIntegerInput(ButtonRect, &NewGroupParallaxX, &s_IntInpParallaxX);
 	ParallaxChanged |= UiIntegerInput(ButtonRect2, &NewGroupParallaxY, &s_IntInpParallaxY);
 	if(ParallaxChanged)
-		EditHistCondGroupChangeParallax(m_UiSelectedGroupID, NewGroupParallaxX, NewGroupParallaxY, false);
+		EditSeqGroupChangeParallax(m_UiSelectedGroupID, NewGroupParallaxX, NewGroupParallaxY, false);
 
 	// restore "before preview" parallax, the nchange to new one
 	if(!s_IntInpParallaxX.m_TextInput.m_Selected && !s_IntInpParallaxY.m_TextInput.m_Selected)
 	{
 		SelectedGroup.m_ParallaxX = BsGroupParallaX;
 		SelectedGroup.m_ParallaxY = BsGroupParallaY;
-		EditHistCondGroupChangeParallax(m_UiSelectedGroupID, NewGroupParallaxX, NewGroupParallaxY, true);
+		EditSeqGroupChangeParallax(m_UiSelectedGroupID, NewGroupParallaxX, NewGroupParallaxY, true);
 	}
 
 	// offset
@@ -2170,14 +2182,14 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 	OffsetChanged |= UiIntegerInput(ButtonRect, &NewGroupOffsetX, &s_IntInpOffsetX);
 	OffsetChanged |= UiIntegerInput(ButtonRect2, &NewGroupOffsetY, &s_IntInpOffsetY);
 	if(OffsetChanged)
-		EditHistCondGroupChangeOffset(m_UiSelectedGroupID, NewGroupOffsetX, NewGroupOffsetY, false);
+		EditSeqGroupChangeOffset(m_UiSelectedGroupID, NewGroupOffsetX, NewGroupOffsetY, false);
 
 	// restore "before preview" offset, the nchange to new one
 	if(!s_IntInpOffsetX.m_TextInput.m_Selected && !s_IntInpOffsetY.m_TextInput.m_Selected)
 	{
 		SelectedGroup.m_OffsetX = BsGroupOffsetX;
 		SelectedGroup.m_OffsetY = BsGroupOffsetY;
-		EditHistCondGroupChangeOffset(m_UiSelectedGroupID, NewGroupOffsetX, NewGroupOffsetY, true);
+		EditSeqGroupChangeOffset(m_UiSelectedGroupID, NewGroupOffsetX, NewGroupOffsetY, true);
 	}
 
 	// clip
@@ -2247,13 +2259,13 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 
 			// "preview" new name instantly
 			if(UiTextInput(ButtonRect, aNewName, sizeof(aNewName), &s_TILayerName))
-				EditHistCondLayerChangeName(m_UiSelectedLayerID, aNewName, false);
+				EditSeqLayerChangeName(m_UiSelectedLayerID, aNewName, false);
 
 			// if not selected, restore old name and change to new name with history entry
 			if(!s_TILayerName.m_Selected)
 			{
 				str_copy(SelectedLayer.m_aName, aBeforeSelectionName, sizeof(SelectedLayer.m_aName));
-				EditHistCondLayerChangeName(m_UiSelectedLayerID, aNewName, true);
+				EditSeqLayerChangeName(m_UiSelectedLayerID, aNewName, true);
 			}
 		}
 
@@ -2357,13 +2369,13 @@ void CEditor2::RenderMapEditorUiDetailPanel(CUIRect DetailRect)
 
 				// "preview" change instantly
 				if(SliderModified)
-					EditHistCondLayerChangeColor(m_UiSelectedLayerID, NewColor, false);
+					EditSeqLayerChangeColor(m_UiSelectedLayerID, NewColor, false);
 
 				// restore old color before preview, then change it
 				if(!AnySliderSelected)
 				{
 					SelectedLayer.m_Color = ColorBeforePreview;
-					EditHistCondLayerChangeColor(m_UiSelectedLayerID, NewColor, true);
+					EditSeqLayerChangeColor(m_UiSelectedLayerID, NewColor, true);
 				}
 
 				// Auto map
@@ -3460,7 +3472,7 @@ bool CEditor2::DoPopupYesNo(CUIPopupYesNo* state)
 	return false;
 }
 
-void CEditor2::RenderBrush(const CBrush& Brush, vec2 Pos)
+void CEditor2::RenderBrush(const CBrush& Brush, vec2 Pos, vec4 Overlay)
 {
 	if(Brush.IsEmpty())
 		return;
@@ -3473,7 +3485,6 @@ void CEditor2::RenderBrush(const CBrush& Brush, vec2 Pos)
 	const CEditorMap2::CLayer& SelectedTileLayer = m_Map.m_aLayers.Get(m_UiSelectedLayerID);
 	dbg_assert(SelectedTileLayer.IsTileLayer(), "Selected layer is not a tile layer");
 
-	const float TileSize = 32;
 	const CUIRect BrushRect = {0, 0, Brush.m_Width * TileSize, Brush.m_Height * TileSize};
 	DrawRect(BrushRect, vec4(1, 1, 1, 0.1f));
 
@@ -3491,7 +3502,7 @@ void CEditor2::RenderBrush(const CBrush& Brush, vec2 Pos)
 	Graphics()->BlendNormal();
 	RenderTools()->RenderTilemap(Brush.m_aTiles.base_ptr(), Brush.m_Width, Brush.m_Height, TileSize, White, LAYERRENDERFLAG_TRANSPARENT, 0, 0, -1, 0);
 
-	DrawRectBorder(BrushRect, vec4(0, 0, 0, 0), 1, vec4(1, 1, 1, 1));
+	DrawRectBorder(BrushRect, Overlay, 1, vec4(1, 1, 1, 1));
 
 	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }

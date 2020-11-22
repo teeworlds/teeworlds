@@ -270,3 +270,69 @@ inline void ArraySetSizeAndZero(array<T>* pArray, int NewSize)
 	for(int i = 0; i < Diff; i++)
 		(*pArray)[i+OldElementCount] = T();
 }
+
+template<class T, u32 CAPACITY_>
+struct StackPool
+{
+	enum
+	{
+		CAPACITY = CAPACITY_
+	};
+
+	T m_aEntries[CAPACITY];
+	u8 m_aUsed[CAPACITY];
+
+	StackPool()
+	{
+		mem_zero(m_aUsed, sizeof(m_aUsed));
+	}
+
+	~StackPool()
+	{
+		Clear();
+	}
+
+	T* Allocate()
+	{
+		for(int i = 0; i < CAPACITY; i++)
+		{
+			if(!m_aUsed[i])
+			{
+				m_aUsed[i] = 1;
+				return &m_aEntries[i];
+			}
+		}
+
+		return 0x0;
+	}
+
+	T* New()
+	{
+		T* pElt = Allocate();
+		if(!pElt) return 0x0;
+
+		new(pElt) T();
+		return pElt;
+	}
+
+	void Free(T* pElt)
+	{
+		const int Index = pElt - m_aEntries;
+		dbg_assert(Index >= 0 && Index < CAPACITY, "element out of bounds");
+		pElt->~T();
+		m_aUsed[Index] = 0;
+	}
+
+	void Clear()
+	{
+		for(int i = 0; i < CAPACITY; i++)
+		{
+			if(m_aUsed[i])
+			{
+				m_aEntries[i].~T();
+			}
+		}
+
+		mem_zero(m_aUsed, sizeof(m_aUsed));
+	}
+};

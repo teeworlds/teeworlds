@@ -635,7 +635,7 @@ void CEditor2::EditTileLayerAutoMapSection(int LayerID, int RulesetID, int Start
 	HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 }
 
-void CEditor2::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bool HistoryCondition)
+void CEditor2::EditSeqLayerChangeName(int LayerID, const char* pNewName, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
 
@@ -649,7 +649,7 @@ void CEditor2::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bo
 	str_copy(aOldName, Layer.m_aName, sizeof(aOldName));
 	str_copy(Layer.m_aName, pNewName, sizeof(Layer.m_aName));
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
@@ -660,7 +660,7 @@ void CEditor2::EditHistCondLayerChangeName(int LayerID, const char* pNewName, bo
 	}
 }
 
-void CEditor2::EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool HistoryCondition)
+void CEditor2::EditSeqLayerChangeColor(int LayerID, vec4 NewColor, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
 
@@ -672,7 +672,7 @@ void CEditor2::EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool His
 
 	Layer.m_Color = NewColor;
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
@@ -684,7 +684,7 @@ void CEditor2::EditHistCondLayerChangeColor(int LayerID, vec4 NewColor, bool His
 	}
 }
 
-void CEditor2::EditHistCondGroupChangeName(int GroupID, const char* pNewName, bool HistoryCondition)
+void CEditor2::EditSeqGroupChangeName(int GroupID, const char* pNewName, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aGroups.IsValid(GroupID), "GroupID out of bounds");
 
@@ -698,7 +698,7 @@ void CEditor2::EditHistCondGroupChangeName(int GroupID, const char* pNewName, bo
 	str_copy(aOldName, Group.m_aName, sizeof(aOldName));
 	str_copy(Group.m_aName, pNewName, sizeof(Group.m_aName));
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
@@ -709,7 +709,7 @@ void CEditor2::EditHistCondGroupChangeName(int GroupID, const char* pNewName, bo
 	}
 }
 
-void CEditor2::EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY, bool HistoryCondition)
+void CEditor2::EditSeqGroupChangeParallax(int GroupID, int NewParallaxX, int NewParallaxY, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aGroups.IsValid(GroupID), "GroupID out of bounds");
 
@@ -726,7 +726,7 @@ void CEditor2::EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, in
 	Group.m_ParallaxX = NewParallaxX;
 	Group.m_ParallaxY = NewParallaxY;
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
@@ -739,7 +739,7 @@ void CEditor2::EditHistCondGroupChangeParallax(int GroupID, int NewParallaxX, in
 	}
 }
 
-void CEditor2::EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY, bool HistoryCondition)
+void CEditor2::EditSeqGroupChangeOffset(int GroupID, int NewOffsetX, int NewOffsetY, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aGroups.IsValid(GroupID), "GroupID out of bounds");
 
@@ -756,7 +756,7 @@ void CEditor2::EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int Ne
 	Group.m_OffsetX = NewOffsetX;
 	Group.m_OffsetY = NewOffsetY;
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
@@ -769,7 +769,7 @@ void CEditor2::EditHistCondGroupChangeOffset(int GroupID, int NewOffsetX, int Ne
 	}
 }
 
-void CEditor2::EditHistCondGroupChangeClipX(int GroupID, int NewClipX, bool HistoryCondition)
+void CEditor2::EditSeqGroupChangeClipX(int GroupID, int NewClipX, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aGroups.IsValid(GroupID), "GroupID out of bounds");
 
@@ -785,7 +785,7 @@ void CEditor2::EditHistCondGroupChangeClipX(int GroupID, int NewClipX, bool Hist
 	if(Group.m_ClipWidth < 0)
 		Group.m_ClipWidth = 0;
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
@@ -797,7 +797,7 @@ void CEditor2::EditHistCondGroupChangeClipX(int GroupID, int NewClipX, bool Hist
 	}
 }
 
-void CEditor2::EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool HistoryCondition)
+void CEditor2::EditSeqGroupChangeClipY(int GroupID, int NewClipY, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aGroups.IsValid(GroupID), "GroupID out of bounds");
 
@@ -813,7 +813,7 @@ void CEditor2::EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool Hist
 	if(Group.m_ClipHeight < 0)
 		Group.m_ClipHeight = 0;
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
@@ -826,7 +826,7 @@ void CEditor2::EditHistCondGroupChangeClipY(int GroupID, int NewClipY, bool Hist
 	}
 }
 
-void CEditor2::EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, bool HistoryCondition)
+void CEditor2::EditSeqGroupChangeClipRight(int GroupID, int NewClipRight, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aGroups.IsValid(GroupID), "GroupID out of bounds");
 
@@ -840,7 +840,7 @@ void CEditor2::EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, b
 	if(Group.m_ClipWidth < 0)
 		Group.m_ClipWidth = 0;
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
@@ -851,7 +851,7 @@ void CEditor2::EditHistCondGroupChangeClipRight(int GroupID, int NewClipRight, b
 	}
 }
 
-void CEditor2::EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom, bool HistoryCondition)
+void CEditor2::EditSeqGroupChangeClipBottom(int GroupID, int NewClipBottom, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aGroups.IsValid(GroupID), "GroupID out of bounds");
 
@@ -865,7 +865,7 @@ void CEditor2::EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom,
 	if(Group.m_ClipHeight < 0)
 		Group.m_ClipHeight = 0;
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
@@ -876,7 +876,7 @@ void CEditor2::EditHistCondGroupChangeClipBottom(int GroupID, int NewClipBottom,
 	}
 }
 
-void CEditor2::EditHistCondBrushPaintStrokeOnLayer(int StartTX, int StartTY, int EndTX, int EndTY, int LayerID, bool HistoryCondition)
+void CEditor2::EditSeqBrushPaintStroke(int StartTX, int StartTY, int EndTX, int EndTY, int LayerID, bool SequenceEnd)
 {
 	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
 	dbg_assert(m_Map.m_aLayers.Get(LayerID).IsTileLayer(), "Layer is not a tile layer");
@@ -884,11 +884,39 @@ void CEditor2::EditHistCondBrushPaintStrokeOnLayer(int StartTX, int StartTY, int
 	// TODO: trace from Start to End
 	BrushPaintLayer(m_Brush, EndTX, EndTY, LayerID);
 
-	if(HistoryCondition)
+	if(SequenceEnd)
 	{
 		char aHistoryEntryAction[64];
 		char aHistoryEntryDesc[64];
 		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: brush paint"), LayerID);
+		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d)", EndTX, EndTY);
+		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
+	}
+}
+
+void CEditor2::EditSeqBrushPaintStrokeAutomap(int StartTX, int StartTY, int EndTX, int EndTY, int LayerID, int RulesetID, bool SequenceEnd)
+{
+	dbg_assert(m_Map.m_aLayers.IsValid(LayerID), "LayerID out of bounds");
+	dbg_assert(m_Map.m_aLayers.Get(LayerID).IsTileLayer(), "Layer is not a tile layer");
+
+	// TODO: trace from Start to End
+	BrushPaintLayer(m_Brush, EndTX, EndTY, LayerID);
+
+	CEditorMap2::CLayer& Layer = m_Map.m_aLayers.Get(LayerID);
+	dbg_assert(Layer.m_ImageID >= 0 && Layer.m_ImageID < m_Map.m_Assets.m_ImageCount, "ImageID out of bounds or invalid");
+
+	CTilesetMapper2* pMapper = m_Map.AssetsFindTilesetMapper(Layer.m_ImageID);
+
+	dbg_assert(pMapper != 0, "Tileset mapper not found");
+	dbg_assert(Layer.m_aTiles.size() == Layer.m_Width*Layer.m_Height, "Tile count does not match layer size");
+
+	pMapper->AutomapLayerSection(Layer.m_aTiles.base_ptr(), EndTX, EndTY, m_Brush.m_Width, m_Brush.m_Height, Layer.m_Width, Layer.m_Height, RulesetID);
+
+	if(SequenceEnd)
+	{
+		char aHistoryEntryAction[64];
+		char aHistoryEntryDesc[64];
+		str_format(aHistoryEntryAction, sizeof(aHistoryEntryAction), Localize("Layer %d: brush paint auto"), LayerID);
 		str_format(aHistoryEntryDesc, sizeof(aHistoryEntryDesc), "(%d, %d)", EndTX, EndTY);
 		HistoryNewEntry(aHistoryEntryAction, aHistoryEntryDesc);
 	}
