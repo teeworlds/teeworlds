@@ -126,9 +126,9 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 	// handle input
 	if(!pActive || *pActive)
 	{
-		if(m_pMenus->m_DownArrowPressed)
+		if(m_pUI->ConsumeHotkey(CUI::HOTKEY_DOWN))
 			m_ListBoxNewSelOffset += 1;
-		if(m_pMenus->m_UpArrowPressed)
+		if(m_pUI->ConsumeHotkey(CUI::HOTKEY_UP))
 			m_ListBoxNewSelOffset -= 1;
 	}
 
@@ -195,7 +195,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 		{
 			m_ListBoxDoneEvents = 1;
 
-			if(m_pMenus->m_EnterPressed || (s_ItemClicked && m_pInput->MouseDoubleClick()))
+			if(m_pUI->ConsumeHotkey(CUI::HOTKEY_ENTER) || (s_ItemClicked && m_pInput->MouseDoubleClick()))
 			{
 				m_ListBoxItemActivated = true;
 				m_pUI->SetActiveItem(0);

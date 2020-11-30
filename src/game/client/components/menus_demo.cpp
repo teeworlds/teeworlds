@@ -614,7 +614,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	{
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 		static CButtonContainer s_DeleteButton;
-		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &Button) || m_DeletePressed)
+		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &Button) || UI()->ConsumeHotkey(CUI::HOTKEY_DELETE))
 		{
 			if(m_DemolistSelectedIndex >= 0)
 			{

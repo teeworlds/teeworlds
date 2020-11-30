@@ -925,7 +925,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		int NewFilter = SelectedFilter;
 		int ToBeSelectedServer = -1;
 
-		if(m_DownArrowPressed)
+		if(UI()->ConsumeHotkey(CUI::HOTKEY_DOWN))
 		{
 			if(!CtrlPressed)
 			{
@@ -939,7 +939,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 				NewFilter = SelectedFilter + 1;
 			}
 		}
-		else if(m_UpArrowPressed)
+		else if(UI()->ConsumeHotkey(CUI::HOTKEY_UP))
 		{
 			if(!CtrlPressed)
 			{
@@ -1240,7 +1240,7 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 	View.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f));
 
 	// handle Tab key
-	if(m_TabPressed)
+	if(UI()->ConsumeHotkey(CUI::HOTKEY_TAB))
 	{
 		if(Input()->KeyIsPressed(KEY_LSHIFT) || Input()->KeyIsPressed(KEY_RSHIFT))
 		{
@@ -2099,10 +2099,9 @@ void CMenus::RenderServerbrowserBottomBox(CUIRect MainView)
 	MainView.VSplitLeft(Spacing, 0, &MainView); // little space
 	MainView.VSplitLeft(ButtonWidth, &Button, &MainView);
 	static CButtonContainer s_JoinButton;
-	if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || m_EnterPressed)
+	if(DoButton_Menu(&s_JoinButton, Localize("Connect"), 0, &Button) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 	{
 		Client()->Connect(GetServerBrowserAddress());
-		m_EnterPressed = false;
 	}
 }
 
