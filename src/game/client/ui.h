@@ -3,8 +3,8 @@
 #ifndef GAME_CLIENT_UI_H
 #define GAME_CLIENT_UI_H
 
+#include <engine/input.h>
 #include "ui_rect.h"
-
 
 class IScrollbarScale
 {
@@ -77,6 +77,8 @@ class CUI
 	unsigned m_MouseButtons;
 	unsigned m_LastMouseButtons;
 
+	unsigned m_HotkeysPressed;
+
 	CUIRect m_Screen;
 
 	CUIRect m_aClips[MAX_CLIP_NESTING_DEPTH];
@@ -114,6 +116,16 @@ public:
 		ALIGN_RIGHT,
 	};
 
+	enum
+	{
+		HOTKEY_ENTER = 1,
+		HOTKEY_ESCAPE = 2,
+		HOTKEY_UP = 4,
+		HOTKEY_DOWN = 8,
+		HOTKEY_DELETE = 16,
+		HOTKEY_TAB = 32,
+	};
+
 	void SetEnabled(bool Enabled) { m_Enabled = Enabled; }
 	bool Enabled() const { return m_Enabled; }
 	void Update(float MouseX, float MouseY, float MouseWorldX, float MouseWorldY);
@@ -144,6 +156,9 @@ public:
 
 	bool KeyPress(int Key) const;
 	bool KeyIsPressed(int Key) const;
+	bool ConsumeHotkey(unsigned Hotkey);
+	void ClearHotkeys() { m_HotkeysPressed = 0; }
+	void OnInput(const IInput::CEvent &e);
 
 	const CUIRect *Screen();
 	float PixelSize();
