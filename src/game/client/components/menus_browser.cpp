@@ -1683,7 +1683,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		if(NeedScrollbar)
 		{
 			ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
-			s_ScrollValue = DoScrollbarH(&s_ScrollValue, &Button, s_ScrollValue);
+			s_ScrollValue = UI()->DoScrollbarH(&s_ScrollValue, &Button, s_ScrollValue);
 		}
 		else
 			ServerFilter.HSplitTop(4.f, &Button, &ServerFilter); // Leave some space in between edit boxes
@@ -1761,7 +1761,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		Button.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 		Button.VMargin(4.0f, &Button);
 		static int s_BrFilterPing = 0;
-		Value = LogarithmicScrollbarScale.ToAbsolute(DoScrollbarH(&s_BrFilterPing, &Button, LogarithmicScrollbarScale.ToRelative(Value, Min, Max)), Min, Max);
+		Value = LogarithmicScrollbarScale.ToAbsolute(UI()->DoScrollbarH(&s_BrFilterPing, &Button, LogarithmicScrollbarScale.ToRelative(Value, Min, Max)), Min, Max);
 		if(Value != FilterInfo.m_Ping)
 		{
 			FilterInfo.m_Ping = Value;
@@ -1976,7 +1976,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			CUIRect Scroll;
 			View.HSplitBottom(14.0f, &View, &Scroll);
 			Scroll.VMargin(5.0f, &Scroll);
-			s_ScrollValue = DoScrollbarH(&s_ScrollValue, &Scroll, s_ScrollValue);
+			s_ScrollValue = UI()->DoScrollbarH(&s_ScrollValue, &Scroll, s_ScrollValue);
 			View.x += (View.w - Width) * s_ScrollValue;
 			LineHeight = 0.25f*View.h;
 		}
