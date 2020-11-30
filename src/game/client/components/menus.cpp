@@ -33,8 +33,8 @@
 #include "menus.h"
 #include "skins.h"
 
-float CMenus::ms_ListheaderHeight = 17.0f;
-float CMenus::ms_FontmodHeight = 0.8f;
+float CMenus::ms_ListheaderHeight = CUI::ms_ListheaderHeight;
+float CMenus::ms_FontmodHeight = CUI::ms_FontmodHeight;
 
 CMenus *CMenus::CUIElementBase::m_pMenus = 0;
 CRenderTools *CMenus::CUIElementBase::m_pRenderTools = 0;
@@ -531,71 +531,6 @@ void CMenus::DoEditBoxOptionUTF8(void *pID, char *pOption, unsigned OptionSize, 
 	DoEditBoxUTF8(pID, &EditBox, pOption, OptionSize, OptionMaxLength, pRect->h*ms_FontmodHeight*0.8f, pOffset, Hidden);
 }
 
-void CMenus::DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, IScrollbarScale *pScale, bool Infinite)
-{
-	int Value = *pOption;
-	if(Infinite)
-	{
-		Min += 1;
-		Max += 1;
-		if(Value == 0)
-			Value = Max;
-	}
-
-	char aBufMax[128];
-	str_format(aBufMax, sizeof(aBufMax), "%s: %i", pStr, Max);
-	char aBuf[128];
-	if(!Infinite || Value != Max)
-		str_format(aBuf, sizeof(aBuf), "%s: %i", pStr, Value);
-	else
-		str_format(aBuf, sizeof(aBuf), "%s: \xe2\x88\x9e", pStr);
-
-	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
-	float VSplitVal = max(TextRender()->TextWidth(FontSize, aBuf, -1), TextRender()->TextWidth(FontSize, aBufMax, -1));
-
-	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
-
-	CUIRect Label, ScrollBar;
-	pRect->VSplitLeft(pRect->h+10.0f+VSplitVal, &Label, &ScrollBar);
-	Label.VSplitLeft(Label.h+5.0f, 0, &Label);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
-
-	ScrollBar.VMargin(4.0f, &ScrollBar);
-	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, Min, Max)), Min, Max);
-	if(Infinite && Value == Max)
-		Value = 0;
-
-	*pOption = Value;
-}
-
-void CMenus::DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char* aLabels[], int Num, IScrollbarScale *pScale)
-{
-	int Value = clamp(*pOption, 0, Num - 1);
-	const int Max = Num - 1;
-
-	char aBuf[128];
-	str_format(aBuf, sizeof(aBuf), "%s: %s", pStr, aLabels[Value]);
-
-	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
-
-	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
-
-	CUIRect Label, ScrollBar;
-	pRect->VSplitLeft(pRect->h+5.0f, 0, &Label);
-	Label.VSplitRight(60.0f, &Label, &ScrollBar);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
-
-	ScrollBar.VMargin(4.0f, &ScrollBar);
-	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, 0, Max)), 0, Max);
-
-	if(UI()->HotItem() != pID && !UI()->CheckActiveItem(pID) && UI()->MouseHovered(pRect) && UI()->MouseButtonClicked(0))
-		Value = (Value + 1) % Num;
-
-	*pOption = clamp(Value, 0, Max);
-}
-
 float CMenus::DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool *pActive)
 {
 	CUIRect View = *pRect;
@@ -653,144 +588,6 @@ void CMenus::DoInfoBox(const CUIRect *pRect, const char *pLabel, const char *pVa
 
 	Value.y += 2.0f;
 	UI()->DoLabel(&Value, pValue, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-}
-
-float CMenus::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
-{
-	// layout
-	CUIRect Handle;
-	pRect->HSplitTop(min(pRect->h/8.0f, 33.0f), &Handle, 0);
-	Handle.y += (pRect->h-Handle.h)*Current;
-	Handle.VMargin(5.0f, &Handle);
-
-	CUIRect Rail;
-	pRect->VMargin(5.0f, &Rail);
-
-	// logic
-	static float s_OffsetY;
-	const bool InsideHandle = UI()->MouseHovered(&Handle);
-	const bool InsideRail = UI()->MouseHovered(&Rail);
-	float ReturnValue = Current;
-	bool Grabbed = false; // whether to apply the offset
-
-	if(UI()->CheckActiveItem(pID))
-	{
-		if(UI()->MouseButton(0))
-			Grabbed = true;
-		else
-			UI()->SetActiveItem(0);
-	}
-	else if(UI()->HotItem() == pID)
-	{
-		if(UI()->MouseButton(0))
-		{
-			s_OffsetY = UI()->MouseY()-Handle.y;
-			UI()->SetActiveItem(pID);
-			Grabbed = true;
-		}
-	}
-	else if(UI()->MouseButtonClicked(0) && !InsideHandle && InsideRail)
-	{
-		s_OffsetY = Handle.h * 0.5f;
-		UI()->SetActiveItem(pID);
-		Grabbed = true;
-	}
-
-	if(InsideHandle)
-	{
-		UI()->SetHotItem(pID);
-	}
-
-	if(Grabbed)
-	{
-		const float Min = pRect->y;
-		const float Max = pRect->h-Handle.h;
-		const float Cur = UI()->MouseY()-s_OffsetY;
-		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
-	}
-
-	// render
-	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.w/2.0f);
-
-	vec4 Color;
-	if(Grabbed)
-		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
-	else if(InsideHandle)
-		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	else
-		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
-	Handle.Draw(Color, Handle.w/2.0f);
-
-	return ReturnValue;
-}
-
-float CMenus::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
-{
-	// layout
-	CUIRect Handle;
-	pRect->VSplitLeft(max(min(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
-	Handle.x += (pRect->w-Handle.w)*clamp(Current, 0.0f, 1.0f);
-	Handle.HMargin(5.0f, &Handle);
-
-	CUIRect Rail;
-	pRect->HMargin(5.0f, &Rail);
-
-	// logic
-	static float s_OffsetX;
-	const bool InsideHandle = UI()->MouseHovered(&Handle);
-	const bool InsideRail = UI()->MouseHovered(&Rail);
-	float ReturnValue = Current;
-	bool Grabbed = false; // whether to apply the offset
-
-	if(UI()->CheckActiveItem(pID))
-	{
-		if(UI()->MouseButton(0))
-			Grabbed = true;
-		else
-			UI()->SetActiveItem(0);
-	}
-	else if(UI()->HotItem() == pID)
-	{
-		if(UI()->MouseButton(0))
-		{
-			s_OffsetX = UI()->MouseX()-Handle.x;
-			UI()->SetActiveItem(pID);
-			Grabbed = true;
-		}
-	}
-	else if(UI()->MouseButtonClicked(0) && !InsideHandle && InsideRail)
-	{
-		s_OffsetX = Handle.w * 0.5f;
-		UI()->SetActiveItem(pID);
-		Grabbed = true;
-	}
-
-	if(InsideHandle)
-	{
-		UI()->SetHotItem(pID);
-	}
-
-	if(Grabbed)
-	{
-		const float Min = pRect->x;
-		const float Max = pRect->w-Handle.w;
-		const float Cur = UI()->MouseX()-s_OffsetX;
-		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
-	}
-
-	// render
-	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.h/2.0f);
-
-	vec4 Color;
-	if(Grabbed)
-		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
-	else if(InsideHandle)
-		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	else
-		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
-	Handle.Draw(Color, Handle.h/2.0f);
-
-	return ReturnValue;
 }
 
 void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active)

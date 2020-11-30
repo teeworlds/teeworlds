@@ -815,8 +815,6 @@ public:
 	void PopupSelectConfigAutoMapInvoke(float x, float y);
 	bool PopupAutoMapProceedOrder();
 
-	vec4 ButtonColorMul(const void *pID);
-
 	void DoQuadEnvelopes(const array<CQuad> &m_lQuads, IGraphics::CTextureHandle Texture);
 	void DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int pIndex);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
@@ -824,7 +822,6 @@ public:
 	void DoMapEditor(CUIRect View, CUIRect Toolbar);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
-	float UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	vec4 GetButtonColor(const void *pID, int Checked);
 
 	static void ReplaceImage(const char *pFilename, int StorageType, void *pUser);
