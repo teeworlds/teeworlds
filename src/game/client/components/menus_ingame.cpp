@@ -513,7 +513,7 @@ bool CMenus::RenderServerControlServer(CUIRect MainView)
 {
 	static CListBox s_ListBox;
 	CUIRect List = MainView;
-	s_ListBox.DoHeader(&List, Localize("Option"), GetListHeaderHeight());
+	s_ListBox.DoHeader(&List, Localize("Option"), UI()->GetListHeaderHeight());
 	s_ListBox.DoStart(20.0f, m_pClient->m_pVoting->NumVoteOptions(), 1, 3, m_CallvoteSelectedOption, 0, true, 0, CUIRect::CORNER_NONE);
 
 	for(const CVoteOptionClient *pOption = m_pClient->m_pVoting->FirstVoteOption(); pOption; pOption = pOption->m_pNext)
@@ -567,7 +567,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 
 	static CListBox s_ListBox;
 	CUIRect List = MainView;
-	s_ListBox.DoHeader(&List, Localize("Player"), GetListHeaderHeight());
+	s_ListBox.DoHeader(&List, Localize("Player"), UI()->GetListHeaderHeight());
 	s_ListBox.DoStart(20.0f, NumOptions, 1, 3, Selected, 0, true, 0, CUIRect::CORNER_NONE);
 
 	for(int i = 0; i < NumOptions; i++)
