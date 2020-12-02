@@ -520,7 +520,7 @@ public:
 	CUI *UI() { return &m_UI; }
 	CRenderTools *RenderTools() { return &m_RenderTools; }
 
-	CEditor() : m_TilesetPicker(16, 16)
+	CEditor() : m_FileDialogFilterInput(m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString)), m_TilesetPicker(16, 16)
 	{
 		m_pInput = 0;
 		m_pClient = 0;
@@ -671,10 +671,10 @@ public:
 	int m_FileDialogFileType;
 	float m_FileDialogScrollValue;
 	int m_FilesSelectedIndex;
+	CLineInput m_FileDialogFilterInput;
 	char m_aFileDialogFilterString[64];
-	char m_FileDialogNewFolderName[64];
-	char m_FileDialogErrString[64];
-	float m_FilesSearchBoxID;
+	char m_aFileDialogNewFolderName[64];
+	char m_aFileDialogErrString[64];
 	IGraphics::CTextureHandle m_FilePreviewImage;
 	bool m_PreviewImageIsLoaded;
 	CImageInfo m_FilePreviewImageInfo;
@@ -775,7 +775,7 @@ public:
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_MenuItem(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags=0, const char *pToolTip=0);
 
-	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden=false, int Corners=CUIRect::CORNER_ALL);
+	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize) { return UI()->DoEditBox(pLineInput, pRect, FontSize, false, CUIRect::CORNER_ALL, &LightButtonColorFunction); }
 
 	void RenderBackground(CUIRect View, IGraphics::CTextureHandle Texture, float Size, float Brightness);
 

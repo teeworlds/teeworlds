@@ -765,8 +765,8 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Search.VSplitLeft(TextRender()->TextWidth(FontSize, pSearchLabel, -1) + 10.0f, &Label, &Search);
 				Label.y += 2.0f;
 				UI()->DoLabel(&Label, pSearchLabel, FontSize, CUI::ALIGN_LEFT);
-				static float s_SearchOffset = 0.0f;
-				if(DoEditBox(&m_aFilterString, &Search, m_aFilterString, sizeof(m_aFilterString), FontSize, &s_SearchOffset))
+				static CLineInput s_FilterInput(m_aFilterString, sizeof(m_aFilterString));
+				if(UI()->DoEditBox(&s_FilterInput, &Search, FontSize))
 					m_CallvoteSelectedOption = 0;
 			}
 
@@ -789,8 +789,8 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Reason.VSplitLeft(TextRender()->TextWidth(FontSize, pReasonLabel, -1) + 10.0f, &Label, &Reason);
 				Label.y += 2.0f;
 				UI()->DoLabel(&Label, pReasonLabel, FontSize, CUI::ALIGN_LEFT);
-				static float s_ReasonOffset = 0.0f;
-				DoEditBox(&m_aCallvoteReason, &Reason, m_aCallvoteReason, sizeof(m_aCallvoteReason), FontSize, &s_ReasonOffset, false, CUIRect::CORNER_L);
+				static CLineInput s_ReasonInput(m_aCallvoteReason, sizeof(m_aCallvoteReason));
+				UI()->DoEditBox(&s_ReasonInput, &Reason, FontSize, false, CUIRect::CORNER_L);
 
 				// clear button
 				static CButtonContainer s_ClearButton;
@@ -852,12 +852,12 @@ void CMenus::RenderServerControl(CUIRect MainView)
 						m_pClient->m_pVoting->RconAddVoteOption(s_aVoteDescription, s_aVoteCommand);
 
 				Bottom.VSplitLeft(2*ColumnWidth+Spacing, &Button, &Bottom);
-				static float s_OffsetDesc = 0.0f;
-				DoEditBox(&s_aVoteDescription, &Button, s_aVoteDescription, sizeof(s_aVoteDescription), FontSize, &s_OffsetDesc, false, CUIRect::CORNER_ALL);
+				static CLineInput s_DescriptionInput(s_aVoteDescription, sizeof(s_aVoteDescription));
+				UI()->DoEditBox(&s_DescriptionInput, &Button, FontSize);
 
 				Bottom.VMargin(2*Spacing, &Button);
-				static float s_OffsetCmd = 0.0f;
-				DoEditBox(&s_aVoteCommand, &Button, s_aVoteCommand, sizeof(s_aVoteCommand), FontSize, &s_OffsetCmd, false, CUIRect::CORNER_ALL);
+				static CLineInput s_CommandInput(s_aVoteCommand, sizeof(s_aVoteCommand));
+				UI()->DoEditBox(&s_CommandInput, &Button, FontSize);
 			}
 		}
 	}

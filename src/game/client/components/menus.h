@@ -72,10 +72,6 @@ private:
 	void DoIcon(int ImageId, int SpriteId, const CUIRect *pRect, const vec4 *pColor = 0);
 	bool DoButton_GridHeader(const void *pID, const char *pText, bool Checked, CUI::EAlignment Align, const CUIRect *pRect, int Corners = CUIRect::CORNER_ALL);
 
-	bool DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUIRect::CORNER_ALL);
-	bool DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, unsigned MaxLength, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUIRect::CORNER_ALL);
-	void DoEditBoxOption(void *pID, char *pOption, unsigned OptionSize, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden = false);
-	void DoEditBoxOptionUTF8(void *pID, char *pOption, unsigned OptionSize, unsigned OptionMaxLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden = false);
 	float DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool *pActive);
 	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
 
@@ -207,8 +203,8 @@ private:
 		float m_FooterHeight;
 		CScrollRegion m_ScrollRegion;
 		vec2 m_ScrollOffset;
+		CLineInput m_FilterInput;
 		char m_aFilterString[64];
-		float m_OffsetFilter;
 		int m_BackgroundCorners;
 
 	protected:
@@ -283,8 +279,6 @@ private:
 	bool m_MenuActive;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
-	bool m_CursorActive;
-	bool m_PrevCursorActive;
 	bool m_PopupActive;
 	int m_ActiveListBox;
 	int m_PopupSelection;
