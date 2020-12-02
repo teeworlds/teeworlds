@@ -457,12 +457,12 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 	// demo list header
 	static CListBox s_ListBox;
-	s_ListBox.DoHeader(&ListBox, Localize("Recorded"), GetListHeaderHeight());
+	s_ListBox.DoHeader(&ListBox, Localize("Recorded"), UI()->GetListHeaderHeight());
 
 	// demo list column headers
 	CUIRect Headers;
-	ListBox.HMargin(GetListHeaderHeight() + 2.0f, &Headers);
-	Headers.h = GetListHeaderHeight();
+	ListBox.HMargin(UI()->GetListHeaderHeight() + 2.0f, &Headers);
+	Headers.h = UI()->GetListHeaderHeight();
 
 	Headers.Draw(vec4(0.0f,0,0,0.15f), 0.0f, CUIRect::CORNER_NONE);
 
@@ -521,7 +521,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		}
 	}
 
-	s_ListBox.DoSpacing(GetListHeaderHeight());
+	s_ListBox.DoSpacing(UI()->GetListHeaderHeight());
 
 	s_ListBox.DoStart(20.0f, m_lDemos.size(), 1, 3, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
