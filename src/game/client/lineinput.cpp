@@ -4,35 +4,73 @@
 #include <engine/input.h>
 #include "lineinput.h"
 
-CLineInput::CLineInput()
+IInput *CLineInput::s_pInput = 0;
+
+void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 {
-	Clear();
-	m_pInput = 0;
+	if(m_pStr && m_pStr == pStr)
+		return;
+	const char *pLastStr = pStr;
+	m_pStr = pStr;
+	m_MaxSize = MaxSize;
+	m_MaxChars = MaxChars;
+	m_ScrollOffset = 0;
+	m_WasChanged = m_pStr && pLastStr && m_WasChanged;
+	if(m_pStr)
+		UpdateStrData();
 }
 
 void CLineInput::Clear()
 {
-	mem_zero(m_Str, sizeof(m_Str));
+	mem_zero(m_pStr, m_MaxSize);
 	m_Len = 0;
 	m_CursorPos = 0;
 	m_NumChars = 0;
 }
 
-void CLineInput::Init(IInput *pInput)
-{
-	m_pInput = pInput;
-}
-
 void CLineInput::Set(const char *pString)
 {
-	str_copy(m_Str, pString, sizeof(m_Str));
-	m_Len = str_length(m_Str);
+	str_copy(m_pStr, pString, m_MaxSize);
+	UpdateStrData();
+}
+
+void CLineInput::Append(const char *pString)
+{
+	// gather string stats
+	int CharCount = 0;
+	int CharSize = 0;
+	while(pString[CharSize])
+	{
+		int NewCharSize = str_utf8_forward(pString, CharSize);
+		if(NewCharSize != CharSize)
+		{
+			++CharCount;
+			CharSize = NewCharSize;
+		}
+	}
+
+	// add new string
+	if(CharCount && m_Len + CharSize < m_MaxSize && m_CursorPos + CharSize < m_MaxSize && m_NumChars + CharCount <= m_MaxChars)
+	{
+		mem_move(m_pStr + m_CursorPos + CharSize, m_pStr + m_CursorPos, m_Len - m_CursorPos + 1); // +1 == null term
+		for(int i = 0; i < CharSize; i++)
+			m_pStr[m_CursorPos + i] = pString[i];
+		m_CursorPos += CharSize;
+		m_Len += CharSize;
+		m_NumChars += CharCount;
+		m_WasChanged = true;
+	}
+}
+
+void CLineInput::UpdateStrData()
+{
+	m_Len = str_length(m_pStr);
 	m_CursorPos = m_Len;
 	m_NumChars = 0;
 	int Offset = 0;
-	while(pString[Offset])
+	while(m_pStr[Offset])
 	{
-		Offset = str_utf8_forward(pString, Offset);
+		Offset = str_utf8_forward(m_pStr, Offset);
 		++m_NumChars;
 	}
 }
@@ -45,148 +83,83 @@ bool CLineInput::MoveWordStop(char c)
 			(91 <= c && c <= 96));  // [\]^_`
 }
 
-bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr, IInput *pInput)
+bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 {
-	int NumChars = *pNumCharsPtr;
-	int CursorPos = *pCursorPosPtr;
-	int Len = *pStrLenPtr;
-	bool Changes = false;
+	if(m_pStr[0] == 0 && m_Len > 0)
+		UpdateStrData();
+	if(m_CursorPos > m_Len)
+		m_CursorPos = m_Len;
 
-	if(CursorPos > Len)
-		CursorPos = Len;
+	int OldCursorPos = m_CursorPos;
 
-	if(Event.m_Flags&IInput::FLAG_TEXT &&
-		!(KEY_LCTRL <= Event.m_Key && Event.m_Key <= KEY_RGUI))
-	{
-		// gather string stats
-		int CharCount = 0;
-		int CharSize = 0;
-		while(Event.m_aText[CharSize])
-		{
-			int NewCharSize = str_utf8_forward(Event.m_aText, CharSize);
-			if(NewCharSize != CharSize)
-			{
-				++CharCount;
-				CharSize = NewCharSize;
-			}
-		}
-
-		// add new string
-		if(CharCount)
-		{
-			if(Len+CharSize < StrMaxSize && CursorPos+CharSize < StrMaxSize && NumChars+CharCount <= StrMaxChars)
-			{
-				mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len-CursorPos+1); // +1 == null term
-				for(int i = 0; i < CharSize; i++)
-					pStr[CursorPos+i] = Event.m_aText[i];
-				CursorPos += CharSize;
-				Len += CharSize;
-				NumChars += CharCount;
-				Changes = true;
-			}
-		}
-	}
+	if(Event.m_Flags&IInput::FLAG_TEXT && !(KEY_LCTRL <= Event.m_Key && Event.m_Key <= KEY_RGUI))
+		Append(Event.m_aText);
 
 	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
 		int Key = Event.m_Key;
+
 		bool MoveWord = false;
 #ifdef CONF_PLATFORM_MACOSX
-		if(pInput && (pInput->KeyIsPressed(KEY_LALT) || pInput->KeyIsPressed(KEY_RALT)))
+		if(s_pInput->KeyIsPressed(KEY_LALT) || s_pInput->KeyIsPressed(KEY_RALT))
 #else
-		if(pInput && (pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)))
+		if(s_pInput->KeyIsPressed(KEY_LCTRL) || s_pInput->KeyIsPressed(KEY_RCTRL))
 #endif
 			MoveWord = true;
-		if(Key == KEY_BACKSPACE && CursorPos > 0)
+
+		if(Key == KEY_BACKSPACE && m_CursorPos > 0)
 		{
-			int NewCursorPos = CursorPos;
+			int NewCursorPos = m_CursorPos;
 			do
 			{
-				NewCursorPos = str_utf8_rewind(pStr, NewCursorPos);
-				NumChars -= 1;
-			} while(MoveWord && NewCursorPos > 0 && !MoveWordStop(pStr[NewCursorPos - 1]));
-			int CharSize = CursorPos-NewCursorPos;
-			mem_move(pStr+NewCursorPos, pStr+CursorPos, Len - NewCursorPos - CharSize + 1); // +1 == null term
-			CursorPos = NewCursorPos;
-			Len -= CharSize;
-			Changes = true;
+				NewCursorPos = str_utf8_rewind(m_pStr, NewCursorPos);
+				m_NumChars -= 1;
+			} while(MoveWord && NewCursorPos > 0 && !MoveWordStop(m_pStr[NewCursorPos - 1]));
+			int CharSize = m_CursorPos-NewCursorPos;
+			mem_move(m_pStr+NewCursorPos, m_pStr+m_CursorPos, m_Len - NewCursorPos - CharSize + 1); // +1 == null term
+			m_CursorPos = NewCursorPos;
+			m_Len -= CharSize;
+			m_WasChanged = true;
 		}
-		else if(Key == KEY_DELETE && CursorPos < Len)
+		else if(Key == KEY_DELETE && m_CursorPos < m_Len)
 		{
-			int EndCursorPos = CursorPos;
+			int EndCursorPos = m_CursorPos;
 			do
 			{
-				EndCursorPos = str_utf8_forward(pStr, EndCursorPos);
-				NumChars -= 1;
-			} while(MoveWord && EndCursorPos < Len && !MoveWordStop(pStr[EndCursorPos - 1]));
-			int CharSize = EndCursorPos - CursorPos;
-			mem_move(pStr + CursorPos, pStr + CursorPos + CharSize, Len - CursorPos - CharSize + 1); // +1 == null term
-			Len -= CharSize;
-			Changes = true;
+				EndCursorPos = str_utf8_forward(m_pStr, EndCursorPos);
+				m_NumChars -= 1;
+			} while(MoveWord && EndCursorPos < m_Len && !MoveWordStop(m_pStr[EndCursorPos - 1]));
+			int CharSize = EndCursorPos - m_CursorPos;
+			mem_move(m_pStr + m_CursorPos, m_pStr + m_CursorPos + CharSize, m_Len - m_CursorPos - CharSize + 1); // +1 == null term
+			m_Len -= CharSize;
+			m_WasChanged = true;
 		}
-		else if(Key == KEY_LEFT && CursorPos > 0)
+		else if(Key == KEY_LEFT && m_CursorPos > 0)
 		{
 			do
 			{
-				CursorPos = str_utf8_rewind(pStr, CursorPos);
-			} while(MoveWord && CursorPos > 0 && !MoveWordStop(pStr[CursorPos - 1]));
+				m_CursorPos = str_utf8_rewind(m_pStr, m_CursorPos);
+			} while(MoveWord && m_CursorPos > 0 && !MoveWordStop(m_pStr[m_CursorPos - 1]));
 		}
-		else if(Key == KEY_RIGHT && CursorPos < Len)
+		else if(Key == KEY_RIGHT && m_CursorPos < m_Len)
 		{
 			do
 			{
-				CursorPos = str_utf8_forward(pStr, CursorPos);
-			} while(MoveWord && CursorPos < Len && !MoveWordStop(pStr[CursorPos - 1]));
+				m_CursorPos = str_utf8_forward(m_pStr, m_CursorPos);
+			} while(MoveWord && m_CursorPos < m_Len && !MoveWordStop(m_pStr[m_CursorPos - 1]));
 		}
 		else if(Key == KEY_HOME)
-			CursorPos = 0;
+			m_CursorPos = 0;
 		else if(Key == KEY_END)
-			CursorPos = Len;
-		else if((pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)) && Key == KEY_V)
+			m_CursorPos = m_Len;
+		else if((s_pInput->KeyIsPressed(KEY_LCTRL) || s_pInput->KeyIsPressed(KEY_RCTRL)) && Key == KEY_V)
 		{
 			// paste clipboard to cursor
-			const char *pClipboardText = pInput->GetClipboardText();
+			const char *pClipboardText = s_pInput->GetClipboardText();
 			if(pClipboardText)
-			{
-				// gather string stats
-				int CharCount = 0;
-				int CharSize = 0;
-				while(pClipboardText[CharSize])
-				{
-					int NewCharSize = str_utf8_forward(pClipboardText, CharSize);
-					if(NewCharSize != CharSize)
-					{
-						++CharCount;
-						CharSize = NewCharSize;
-					}
-				}
-
-				// add new string
-				if(CharCount)
-				{
-					if(Len + CharSize < StrMaxSize && CursorPos + CharSize < StrMaxSize && NumChars + CharCount <= StrMaxChars)
-					{
-						mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len - CursorPos + 1); // +1 == null term
-						for(int i = 0; i < CharSize; i++)
-							pStr[CursorPos + i] = pClipboardText[i];
-						CursorPos += CharSize;
-						Len += CharSize;
-						NumChars += CharCount;
-						Changes = true;
-					}
-				}
-			}
+				Append(pClipboardText);
 		}
 	}
 
-	*pNumCharsPtr = NumChars;
-	*pCursorPosPtr = CursorPos;
-	*pStrLenPtr = Len;
-
-	return Changes;
-}
-
-bool CLineInput::ProcessInput(IInput::CEvent e)
-{
-	return Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_NumChars, m_pInput);
+	return m_WasChanged || OldCursorPos != m_CursorPos;
 }

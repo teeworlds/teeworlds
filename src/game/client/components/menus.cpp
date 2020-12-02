@@ -84,9 +84,6 @@ CMenus::CMenus()
 
 	m_LastInput = time_get();
 
-	m_CursorActive = false;
-	m_PrevCursorActive = false;
-
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
 	m_aCallvoteReason[0] = 0;
 	m_aFilterString[0] = 0;
@@ -328,200 +325,6 @@ bool CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID,
 	Graphics()->QuadsEnd();
 
 	return UI()->DoButtonLogic(pBC, pRect);
-}
-
-bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
-{
-	return DoEditBoxUTF8(pID, pRect, pStr, StrSize, StrSize, FontSize, pOffset, Hidden, Corners);
-}
-
-bool CMenus::DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, unsigned MaxLength, float FontSize, float *pOffset, bool Hidden, int Corners)
-{
-	bool Inside = UI()->MouseHovered(pRect);
-	bool Changed = false;
-	bool UpdateOffset = false;
-	static int s_AtIndex = 0;
-	static bool s_DoScroll = false;
-
-	if(UI()->LastActiveItem() == pID)
-	{
-		static float s_ScrollStart = 0.0f;
-
-		int Len = str_length(pStr);
-		if(Len == 0)
-			s_AtIndex = 0;
-
-		if(Inside && UI()->MouseButton(0))
-		{
-			s_DoScroll = true;
-			s_ScrollStart = UI()->MouseX();
-			int MxRel = (int)(UI()->MouseX() - pRect->x);
-
-			for(int i = 1; i <= Len; i++)
-			{
-				if(TextRender()->TextWidth(FontSize, pStr, i) - *pOffset > MxRel)
-				{
-					s_AtIndex = i - 1;
-					break;
-				}
-
-				if(i == Len)
-					s_AtIndex = Len;
-			}
-		}
-		else if(!UI()->MouseButton(0))
-			s_DoScroll = false;
-		else if(s_DoScroll)
-		{
-			// do scrolling
-			if(UI()->MouseX() < pRect->x && s_ScrollStart-UI()->MouseX() > 10.0f)
-			{
-				s_AtIndex = maximum(0, s_AtIndex-1);
-				s_ScrollStart = UI()->MouseX();
-				UpdateOffset = true;
-			}
-			else if(UI()->MouseX() > pRect->x+pRect->w && UI()->MouseX()-s_ScrollStart > 10.0f)
-			{
-				s_AtIndex = minimum(Len, s_AtIndex+1);
-				s_ScrollStart = UI()->MouseX();
-				UpdateOffset = true;
-			}
-		}
-		else if(!Inside && UI()->MouseButton(0))
-		{
-			s_AtIndex = minimum(s_AtIndex, str_length(pStr));
-			s_DoScroll = false;
-			UI()->SetActiveItem(0);
-			UI()->ClearLastActiveItem();
-		}
-
-		if(UI()->LastActiveItem() == pID && UI()->Enabled())
-		{
-			for(int i = 0; i < Input()->NumEvents(); i++)
-			{
-				Len = str_length(pStr);
-				int NumChars = Len;
-				Changed |= CLineInput::Manipulate(Input()->GetEvent(i), pStr, StrSize, MaxLength, &Len, &s_AtIndex, &NumChars, Input());
-			}
-		}
-	}
-
-	bool JustGotActive = false;
-
-	if(UI()->CheckActiveItem(pID))
-	{
-		if(!UI()->MouseButton(0))
-		{
-			s_AtIndex = minimum(s_AtIndex, str_length(pStr));
-			s_DoScroll = false;
-			UI()->SetActiveItem(0);
-		}
-	}
-	else if(UI()->HotItem() == pID)
-	{
-		if(UI()->MouseButton(0))
-		{
-			if (UI()->LastActiveItem() != pID)
-				JustGotActive = true;
-			UI()->SetActiveItem(pID);
-		}
-	}
-
-	if(Inside)
-		UI()->SetHotItem(pID);
-
-	CUIRect Textbox = *pRect;
-	vec4 Color;
-	if(UI()->LastActiveItem() == pID)
-		Color = vec4(0.25f, 0.25f, 0.25f, 0.25f);
-	else if(Inside)
-		Color = vec4(0.5f, 0.5f, 0.5f, 0.25f);
-	else
-		Color = vec4(0.0f, 0.0f, 0.0f, 0.25f);
-	Textbox.Draw(Color, 5.0f, Corners);
-	Textbox.Margin(2.0f, &Textbox);
-
-	const char *pDisplayStr = pStr;
-	char aStars[128];
-
-	if(Hidden)
-	{
-		unsigned s = str_length(pStr);
-		if(s >= sizeof(aStars))
-			s = sizeof(aStars)-1;
-		for(unsigned int i = 0; i < s; ++i)
-			aStars[i] = '*';
-		aStars[s] = 0;
-		pDisplayStr = aStars;
-	}
-
-	// check if the text has to be moved
-	if(UI()->LastActiveItem() == pID && !JustGotActive && (UpdateOffset || Input()->NumEvents()))
-	{
-		float w = TextRender()->TextWidth(FontSize, pDisplayStr, s_AtIndex);
-		if(w-*pOffset > Textbox.w)
-		{
-			// move to the left
-			float wt = TextRender()->TextWidth(FontSize, pDisplayStr, -1);
-			do
-			{
-				*pOffset += minimum(wt-*pOffset-Textbox.w, Textbox.w/3);
-			}
-			while(w-*pOffset > Textbox.w);
-		}
-		else if(w-*pOffset < 0.0f)
-		{
-			// move to the right
-			do
-			{
-				*pOffset = maximum(0.0f, *pOffset-Textbox.w/3);
-			}
-			while(w-*pOffset < 0.0f);
-		}
-	}
-	UI()->ClipEnable(pRect);
-	Textbox.x -= *pOffset;
-
-	UI()->DoLabel(&Textbox, pDisplayStr, FontSize, CUI::ALIGN_LEFT);
-
-	// render the cursor
-	if(UI()->LastActiveItem() == pID && !JustGotActive)
-	{
-		// set cursor active
-		m_CursorActive = true;
-
-		if((2*time_get()/time_freq()) % 2)	// make it blink
-		{
-			float TextWidth = TextRender()->TextWidth(FontSize, pDisplayStr, s_AtIndex);
-			Textbox = *pRect;
-			Textbox.VSplitLeft(2.0f, 0, &Textbox);
-			Textbox.x += TextWidth - *pOffset - TextRender()->TextWidth(FontSize, "|", -1)/2;
-			UI()->DoLabel(&Textbox, "|", FontSize, CUI::ALIGN_LEFT);
-		}
-	}
-	UI()->ClipDisable();
-
-	return Changed;
-}
-
-void CMenus::DoEditBoxOption(void *pID, char *pOption, unsigned OptionSize, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden)
-{
-	DoEditBoxOptionUTF8(pID, pOption, OptionSize, OptionSize, pRect, pStr, VSplitVal, pOffset, Hidden);
-}
-
-void CMenus::DoEditBoxOptionUTF8(void *pID, char *pOption, unsigned OptionSize, unsigned OptionMaxLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden)
-{
-	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
-
-	CUIRect Label, EditBox;
-	pRect->VSplitLeft(VSplitVal, &Label, &EditBox);
-
-	char aBuf[32];
-	str_format(aBuf, sizeof(aBuf), "%s:", pStr);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, aBuf, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
-
-	DoEditBoxUTF8(pID, &EditBox, pOption, OptionSize, OptionMaxLength, pRect->h*ms_FontmodHeight*0.8f, pOffset, Hidden);
 }
 
 float CMenus::DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool *pActive)
@@ -1500,8 +1303,8 @@ void CMenus::RenderMenu(CUIRect Screen)
 
 			CUIRect EditBox;
 			Box.HSplitTop(20.0f, &EditBox, &Box);
-			static float s_OffsetPassword = 0.0f;
-			DoEditBoxOption(Config()->m_Password, Config()->m_Password, sizeof(Config()->m_Password), &EditBox, Localize("Password"), ButtonWidth, &s_OffsetPassword, true);
+			static CLineInput s_PasswordInput(Config()->m_Password, sizeof(Config()->m_Password));
+			UI()->DoEditBoxOption(&s_PasswordInput, &EditBox, Localize("Password"), ButtonWidth, true);
 
 			Box.HSplitTop(2.0f, 0, &Box);
 
@@ -1702,8 +1505,8 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
-			static float s_OffsetRenameDemo = 0.0f;
-			DoEditBoxOption(m_aCurrentDemoFile, m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile), &EditBox, Localize("Name"), ButtonWidth, &s_OffsetRenameDemo);
+			static CLineInput s_DemoNameInput(m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile));
+			UI()->DoEditBoxOption(&s_DemoNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
 			CUIRect Yes, No;
@@ -1751,8 +1554,8 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
-			static float s_OffsetSaveSkin = 0.0f;
-			DoEditBoxOption(m_aSaveSkinName, m_aSaveSkinName, sizeof(m_aSaveSkinName), &EditBox, Localize("Name"), ButtonWidth, &s_OffsetSaveSkin);
+			static CLineInput s_SkinNameInput(m_aSaveSkinName, sizeof(m_aSaveSkinName));
+			UI()->DoEditBoxOption(&s_SkinNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
 			CUIRect Yes, No;
@@ -1783,8 +1586,8 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitBottom(ButtonHeight*2.0f, 0, &Box);
 			Box.HSplitTop(ButtonHeight, &EditBox, &Box);
 
-			static float s_OffsetName = 0.0f;
-			DoEditBoxOptionUTF8(Config()->m_PlayerName, Config()->m_PlayerName, sizeof(Config()->m_PlayerName), MAX_NAME_LENGTH, &EditBox, Localize("Nickname"), ButtonWidth, &s_OffsetName);
+			static CLineInput s_PlayerNameInput(Config()->m_PlayerName, sizeof(Config()->m_PlayerName), MAX_NAME_LENGTH);
+			UI()->DoEditBoxOption(&s_PlayerNameInput, &EditBox, Localize("Nickname"), ButtonWidth);
 
 			// button
 			static CButtonContainer s_EnterButton;
@@ -1893,17 +1696,19 @@ bool CMenus::OnInput(IInput::CEvent e)
 {
 	m_LastInput = time_get();
 
-	UI()->OnInput(e);
-
 	// special handle esc and enter for popup purposes
 	if(e.m_Flags&IInput::FLAG_PRESS && e.m_Key == KEY_ESCAPE)
 	{
 		SetActive(!IsActive());
+		UI()->OnInput(e);
 		return true;
 	}
-
-	// TODO: check for active lineinput instead
-	return IsActive();
+	if(IsActive())
+	{
+		UI()->OnInput(e);
+		return true;
+	}
+	return false;
 }
 
 void CMenus::OnConsoleInit()
@@ -1964,10 +1769,6 @@ void CMenus::OnRender()
 {
 	UI()->StartCheck();
 
-	// reset cursor
-	m_PrevCursorActive = m_CursorActive;
-	m_CursorActive = false;
-
 	if(m_KeyReaderIsActive)
 	{
 		m_KeyReaderIsActive = false;
@@ -2024,7 +1825,7 @@ void CMenus::OnRender()
 
 bool CMenus::CheckHotKey(int Key) const
 {
-	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !m_PrevCursorActive && !m_PopupActive
+	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !UI()->IsInputActive() && !m_PopupActive
 		&& !Input()->KeyIsPressed(KEY_LSHIFT) && !Input()->KeyIsPressed(KEY_RSHIFT)
 		&& !Input()->KeyIsPressed(KEY_LCTRL) && !Input()->KeyIsPressed(KEY_RCTRL)
 		&& !Input()->KeyIsPressed(KEY_LALT)

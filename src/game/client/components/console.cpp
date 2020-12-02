@@ -33,7 +33,7 @@ enum
 	CONSOLE_CLOSING,
 };
 
-CGameConsole::CInstance::CInstance(int Type)
+CGameConsole::CInstance::CInstance(int Type) : m_Input(m_aInputBuf, sizeof(m_aInputBuf))
 {
 	m_pHistoryEntry = 0x0;
 
@@ -63,7 +63,6 @@ CGameConsole::CInstance::CInstance(int Type)
 void CGameConsole::CInstance::Init(CGameConsole *pGameConsole)
 {
 	m_pGameConsole = pGameConsole;
-	m_Input.Init(m_pGameConsole->Input());
 };
 
 void CGameConsole::CInstance::ClearBacklog()

@@ -11,12 +11,11 @@
 
 #include "menus.h"
 
-CMenus::CListBox::CListBox()
+CMenus::CListBox::CListBox() : m_FilterInput(m_aFilterString, sizeof(m_aFilterString))
 {
 	m_ScrollOffset = vec2(0,0);
 	m_ListBoxUpdateScroll = false;
 	m_aFilterString[0] = '\0';
-	m_OffsetFilter = 0.0f;
 }
 
 void CMenus::CListBox::DoBegin(const CUIRect *pRect)
@@ -72,7 +71,7 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 	Filter.VSplitLeft(Filter.w/5.0f, &Label, &EditBox);
 	Label.y += Spacing;
 	m_pUI->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_CENTER);
-	bool Changed = m_pMenus->DoEditBox(m_aFilterString, &EditBox, m_aFilterString, sizeof(m_aFilterString), FontSize, &m_OffsetFilter);
+	bool Changed = m_pUI->DoEditBox(&m_FilterInput, &EditBox, FontSize);
 
 	View.HSplitTop(Spacing, &Filter, &View);
 
