@@ -19,8 +19,8 @@ def check_file(filename):
 			if line[0] == "/" or line[0] == "*" or line[0] == "\r" or line[0] == "\n" or line[0] == "\t":
 				continue
 			if line.startswith("#ifndef"):
-				hg = "#ifndef " + ("_".join(filename.split(PATH)[1].split("/"))[:-2]).upper() + "_H"
-				if line[:-1] != hg:
+				header_guard = "#ifndef " + ("_".join(filename.split(PATH)[1].split("/"))[:-2]).upper() + "_H"
+				if line[:-1] != header_guard:
 					error = True
 					print("Wrong header guard in {}".format(filename))
 			else:
@@ -29,13 +29,13 @@ def check_file(filename):
 			break
 	return error
 
-def check_dir(dir):
+def check_dir(directory):
 	errors = 0
-	list = os.listdir(dir)
-	for file in list:
-		path = dir + file
+	file_list = os.listdir(directory)
+	for file in file_list:
+		path = directory + file
 		if os.path.isdir(path):
-			if file != "external" and file != "generated":
+			if file not in ("external", "generated"):
 				errors += check_dir(path + "/")
 		elif file.endswith(".h") and file != "keynames.h":
 			errors += check_file(path)
