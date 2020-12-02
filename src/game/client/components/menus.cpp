@@ -33,8 +33,6 @@
 #include "menus.h"
 #include "skins.h"
 
-float CMenus::ms_FontmodHeight = CUI::ms_FontmodHeight;
-
 CRenderTools *CMenus::CUIElementBase::m_pRenderTools = 0;
 CUI *CMenus::CUIElementBase::m_pUI = 0;
 IInput *CMenus::CUIElementBase::m_pInput = 0;
@@ -181,7 +179,7 @@ bool CMenus::DoButton_Menu(CButtonContainer *pBC, const char *pText, bool Checke
 		TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
 		TextRender()->TextSecondaryColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
 	}
-	UI()->DoLabel(&Text, pText, Text.h*ms_FontmodHeight, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Text, pText, Text.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
 	if(TextFade)
 	{
 		TextRender()->TextColor(CUI::ms_DefaultTextColor);
@@ -200,7 +198,7 @@ void CMenus::DoButton_KeySelect(CButtonContainer *pBC, const char *pText, const 
 	pRect->HMargin(1.0f, &Label);
 	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
 	TextRender()->TextSecondaryColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
-	UI()->DoLabel(&Label, pText, Label.h*ms_FontmodHeight, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
 	TextRender()->TextColor(CUI::ms_DefaultTextColor);
 	TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 }
@@ -217,7 +215,7 @@ bool CMenus::DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, bool 
 	Label.HMargin((Label.h*FontFactor)/2.0f, &Label);
 	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, FontAlpha);
 	TextRender()->TextSecondaryColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f*FontAlpha);
-	UI()->DoLabel(&Label, pText, Label.h*ms_FontmodHeight, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
 	TextRender()->TextColor(CUI::ms_DefaultTextColor);
 	TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 	return UI()->DoButtonLogic(pBC, pRect);
@@ -239,7 +237,7 @@ bool CMenus::DoButton_GridHeader(const void *pID, const char *pText, bool Checke
 	CUIRect Label;
 	pRect->VMargin(2.0f, &Label);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, pText, Label.h*ms_FontmodHeight*0.8f, Align);
+	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight*0.8f, Align);
 
 	if(Checked)
 	{
@@ -282,7 +280,7 @@ bool CMenus::DoButton_CheckBox(const void *pID, const char *pText, bool Checked,
 	Graphics()->QuadsEnd();
 
 	Label.y += 1.0f; // lame fix
-	UI()->DoLabel(&Label, pText, Label.h*ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
+	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
 
 	if(Locked)
 	{
@@ -352,7 +350,7 @@ float CMenus::DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const c
 	// label
 	Label = Header;
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, pStr, Header.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, pStr, Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	if(UI()->DoButtonLogic(pID, &Header))
 		*pActive ^= 1;
@@ -376,10 +374,10 @@ void CMenus::DoInfoBox(const CUIRect *pRect, const char *pLabel, const char *pVa
 	char aBuf[32];
 	str_format(aBuf, sizeof(aBuf), "%s:", pLabel);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, aBuf, pRect->h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, aBuf, pRect->h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	Value.y += 2.0f;
-	UI()->DoLabel(&Value, pValue, pRect->h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Value, pValue, pRect->h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 }
 
 void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active)
@@ -698,7 +696,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			Box.HMargin(2.0f, &Box);
 			TextRender()->TextColor(CUI::ms_HighlightTextColor);
 			TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-			UI()->DoLabel(&Box, Localize("Demos"), Box.h*ms_FontmodHeight, TEXTALIGN_CENTER);
+			UI()->DoLabel(&Box, Localize("Demos"), Box.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
 			TextRender()->TextColor(CUI::ms_DefaultTextColor);
 			TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 		}
@@ -1107,7 +1105,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 				Button.Draw(Color, 5.0f, CUIRect::CORNER_BL);
 
 				// draw non-blending X
-				UI()->DoLabel(&Button, "\xE2\x9C\x95", Button.h*ms_FontmodHeight, TEXTALIGN_CENTER);
+				UI()->DoLabel(&Button, "\xE2\x9C\x95", Button.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
 				if(UI()->DoButtonLogic(&s_QuitButton, &Button))
 					m_Popup = POPUP_QUIT;
 
@@ -1234,7 +1232,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 		}
 
 		const float ButtonHeight = 20.0f;
-		const float FontSize = ButtonHeight*ms_FontmodHeight*0.8f;
+		const float FontSize = ButtonHeight*CUI::ms_FontmodHeight*0.8f;
 		const float SpacingH = 2.0f;
 		const float SpacingW = 3.0f;
 		CUIRect Box = Screen;
@@ -1250,7 +1248,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 		CUIRect Part;
 		Box.HSplitTop(ButtonHeight+5.0f, &Part, &Box);
 		Part.y += 3.0f;
-		UI()->DoLabel(&Part, pTitle, Part.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&Part, pTitle, Part.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 		// inner box
 		CUIRect BottomBar;

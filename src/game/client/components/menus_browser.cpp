@@ -520,13 +520,13 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 		{
 			TextRender()->TextColor(TextBaseColor);
 			TextRender()->TextSecondaryColor(TextBaseOutlineColor);
-			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
+			Button.y += (Button.h - FontSize/CUI::ms_FontmodHeight)/2.0f;
 			UI()->DoLabelHighlighted(&Button, pEntry->m_aName, (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_SERVERNAME) ? Config()->m_BrFilterString : 0, FontSize, TextBaseColor, HighlightColor);
 		}
 		else if(ID == COL_BROWSER_MAP)
 		{
 			TextRender()->TextColor(TextBaseColor);
-			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
+			Button.y += (Button.h - FontSize/CUI::ms_FontmodHeight)/2.0f;
 			UI()->DoLabelHighlighted(&Button, pEntry->m_aMap, (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_MAPNAME) ? Config()->m_BrFilterString : 0, FontSize, TextBaseColor, HighlightColor);
 		}
 		else if(ID == COL_BROWSER_PLAYERS)
@@ -562,7 +562,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			str_format(aTemp, sizeof(aTemp), "%d/%d", Num, Max);
 			if(Config()->m_BrFilterString[0] && (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_PLAYER))
 				TextRender()->TextColor(TextHighlightColor.r, TextHighlightColor.g, TextHighlightColor.b, TextAlpha);
-			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
+			Button.y += (Button.h - FontSize/CUI::ms_FontmodHeight)/2.0f;
 
 			if(Num < 100)
 				Button.x += s_RenderOffset;
@@ -607,7 +607,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			str_format(aTemp, sizeof(aTemp), "%d", Ping);
 			TextRender()->TextColor(Color);
 			TextRender()->TextSecondaryColor(TextBaseOutlineColor);
-			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
+			Button.y += (Button.h - FontSize/CUI::ms_FontmodHeight)/2.0f;
 			Button.w -= 4.0f;
 			UI()->DoLabel(&Button, aTemp, FontSize, TEXTALIGN_RIGHT);
 		}
@@ -622,7 +622,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			// gametype text
 			TextRender()->TextColor(TextBaseColor);
 			TextRender()->TextSecondaryColor(TextBaseOutlineColor);
-			Button.y += (Button.h - FontSize/ms_FontmodHeight)/2.0f;
+			Button.y += (Button.h - FontSize/CUI::ms_FontmodHeight)/2.0f;
 			UI()->DoLabelHighlighted(&Button, pEntry->m_aGameType, (pEntry->m_QuickSearchHit&IServerBrowser::QUICK_GAMETYPE) ? Config()->m_BrFilterString : 0, FontSize, TextBaseColor, HighlightColor);
 		}
 	}
@@ -673,12 +673,12 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 
 	View.VSplitLeft(20.0f, 0, &View); // little space
 	View.y += 2.0f;
-	UI()->DoLabel(&View, pFilter->Name(), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
+	UI()->DoLabel(&View, pFilter->Name(), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
 
 	View.VSplitRight(20.0f, &View, 0); // little space
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), Localize("%d servers, %d players"), pFilter->NumSortedServers(), pFilter->NumPlayers());
-	UI()->DoLabel(&View, aBuf, ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_RIGHT);
+	UI()->DoLabel(&View, aBuf, ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_RIGHT);
 
 	EditButtons.VSplitRight(ButtonHeight, &EditButtons, &Button);
 	Button.Margin(2.0f, &Button);
@@ -1131,7 +1131,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	// bottom
 	float SpacingW = 3.0f;
 	float ButtonWidth = (Status.w/6.0f)-(SpacingW*5.0)/6.0f;
-	float FontSize = ButtonHeight*ms_FontmodHeight*0.8f;
+	float FontSize = ButtonHeight*CUI::ms_FontmodHeight*0.8f;
 
 	// cut view
 	CUIRect Left, Label, EditBox, Button;
@@ -1475,7 +1475,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	UI()->DoLabel(&Label, Localize("Name"), FontSize, TEXTALIGN_LEFT);
 	static char s_aName[MAX_NAME_ARRAY_SIZE] = { 0 };
 	static CLineInput s_NameInput(s_aName, sizeof(s_aName), MAX_NAME_LENGTH);
-	UI()->DoEditBox(&s_NameInput, &Button, Button.h*ms_FontmodHeight*0.8f);
+	UI()->DoEditBox(&s_NameInput, &Button, Button.h*CUI::ms_FontmodHeight*0.8f);
 
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
@@ -1483,7 +1483,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	UI()->DoLabel(&Label, Localize("Clan"), FontSize, TEXTALIGN_LEFT);
 	static char s_aClan[MAX_CLAN_ARRAY_SIZE] = { 0 };
 	static CLineInput s_ClanInput(s_aClan, sizeof(s_aClan), MAX_CLAN_LENGTH);
-	UI()->DoEditBox(&s_ClanInput, &Button, Button.h*ms_FontmodHeight*0.8f);
+	UI()->DoEditBox(&s_ClanInput, &Button, Button.h*CUI::ms_FontmodHeight*0.8f);
 
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f));
@@ -2038,7 +2038,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		// score
 		if(!(pInfo->m_aClients[i].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
 		{
-			Score.y += (Score.h - FontSize/ms_FontmodHeight)/2.0f;
+			Score.y += (Score.h - FontSize/CUI::ms_FontmodHeight)/2.0f;
 			char aTemp[16];
 			FormatScore(aTemp, sizeof(aTemp), pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE, &pInfo->m_aClients[i]);
 			UI()->DoLabel(&Score, aTemp, FontSize, TEXTALIGN_LEFT);

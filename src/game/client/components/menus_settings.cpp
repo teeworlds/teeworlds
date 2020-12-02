@@ -180,13 +180,13 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 			// label
 			Label.VSplitMid(&Label, &Button, 0.0f);
 			Label.y += 4.0f;
-			UI()->DoLabel(&Label, apNames[i], SliderHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+			UI()->DoLabel(&Label, apNames[i], SliderHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 			// value label
 			char aBuf[16];
 			str_format(aBuf, sizeof(aBuf), "%d", *apVars[i]);
 			Button.y += 4.0f;
-			UI()->DoLabel(&Button, aBuf, SliderHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+			UI()->DoLabel(&Button, aBuf, SliderHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 			// button <
 			Section.VSplitLeft(SliderHeight, &Button, &Bar);
@@ -752,7 +752,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 				TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
 			}
 			Item.m_Rect.y += 2.0f;
-			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
+			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
 			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(CUI::ms_DefaultTextColor);
@@ -847,7 +847,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 			TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
 		}
 		Item.m_Rect.y += 2.0f;
-		UI()->DoLabel(&Item.m_Rect, aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
+		UI()->DoLabel(&Item.m_Rect, aName, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
 		if(Item.m_Selected)
 		{
 			TextRender()->TextColor(CUI::ms_DefaultTextColor);
@@ -903,7 +903,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	// render game menu
 	Game.HSplitTop(ButtonHeight, &Label, &Game);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Game"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Game"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	Game.VSplitMid(&GameLeft, &GameRight, Spacing);
 
@@ -1015,7 +1015,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	// render client menu
 	Client.HSplitTop(ButtonHeight, &Label, &Client);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Client"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Client"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	Client.HSplitTop(Spacing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
@@ -1095,7 +1095,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 
 	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Customize"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Customize"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	// skin part selection
 	MainView.HSplitTop(SpacingH, 0, &MainView);
@@ -1183,7 +1183,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	Left.HSplitTop(ButtonHeight, &Label, &Left);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Tee"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Tee"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	// Preview
 	{
@@ -1235,7 +1235,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 		Top.VSplitLeft(Top.w/3.0f+SpacingW/2.0f, &Label, &Top);
 		Label.y += 17.0f;
-		UI()->DoLabel(&Label, Localize("Normal:"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&Label, Localize("Normal:"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 		Top.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
@@ -1287,7 +1287,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 		Bottom.VSplitLeft(Bottom.w/3.0f+SpacingW/2.0f, &Label, &Bottom);
 		Label.y += 17.0f;
-		UI()->DoLabel(&Label, Localize("Team:"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&Label, Localize("Team:"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 		Bottom.VSplitMid(&TeeLeft, &TeeRight, SpacingW);
 
@@ -1312,7 +1312,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 	Right.HSplitTop(ButtonHeight, &Label, &Right);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Personal"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Personal"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	// Personal
 	{
@@ -1336,7 +1336,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 		Bottom.VSplitLeft(100.0f, &Label, &Button);
 		Label.y += 17.0f;
-		UI()->DoLabel(&Label, Localize("Flag:"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&Label, Localize("Flag:"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 		Button.w = (SkinHeight - 20.0f) * 2 + 20.0f;
 		Button.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
@@ -1613,7 +1613,7 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 				TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
 			}
 			Item.m_Rect.y += 2.0f;
-			UI()->DoLabel(&Item.m_Rect, aBuf, Item.m_Rect.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+			UI()->DoLabel(&Item.m_Rect, aBuf, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(CUI::ms_DefaultTextColor);
@@ -1680,7 +1680,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// render screen menu
 	ScreenLeft.HSplitTop(ButtonHeight, &Label, &ScreenLeft);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Screen"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Screen"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	ScreenLeft.VSplitMid(&ScreenLeft, &ScreenRight, Spacing);
 
@@ -1709,7 +1709,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Button.VSplitLeft(100.0f-25.0f, &Text, &Button); // make button appear centered with FSAA
 		str_format(aBuf, sizeof(aBuf), Localize("Screen:"));
 		Text.y += 2.0f;
-		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
+		UI()->DoLabel(&Text, aBuf, Text.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
 
 		Button.VSplitLeft(120.0f, &Button, 0);
 		str_format(aBuf, sizeof(aBuf), "#%d  (%dx%d)", Config()->m_GfxScreen+1, Graphics()->DesktopWidth(), Graphics()->DesktopHeight());
@@ -1732,7 +1732,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		char aBuf[32];
 		str_format(aBuf, sizeof(aBuf), "%s:", Localize("Anti Aliasing"));
 		Text.y += 2.0f;
-		UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
+		UI()->DoLabel(&Text, aBuf, Text.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
 
 		Button.VSplitLeft(70.0f, &Button, 0);
 		str_format(aBuf, sizeof(aBuf), "%dx", Config()->m_GfxFsaaSamples);
@@ -1775,7 +1775,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	// render texture menu
 	Texture.HSplitTop(ButtonHeight, &Label, &Texture);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Texture"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Texture"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	Texture.HSplitTop(Spacing, 0, &Texture);
 	Texture.HSplitTop(ButtonHeight, &Button, &Texture);
@@ -1813,7 +1813,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		// draw header
 		MainView.HSplitTop(ButtonHeight, &Header, &MainView);
 		Header.y += 2.0f;
-		UI()->DoLabel(&Header, Localize("Resolution"), Header.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&Header, Localize("Resolution"), Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 		MainView.HSplitTop(Spacing, 0, &MainView);
 		MainView.HSplitTop(ButtonHeight, &Button, &MainView);
@@ -1826,11 +1826,11 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%s", Localize("Recommended"));
 		HeaderLeft.y += 2;
-		UI()->DoLabel(&HeaderLeft, aBuf, HeaderLeft.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&HeaderLeft, aBuf, HeaderLeft.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 		str_format(aBuf, sizeof(aBuf), "%s", Localize("Other"));
 		HeaderRight.y += 2;
-		UI()->DoLabel(&HeaderRight, aBuf, HeaderRight.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&HeaderRight, aBuf, HeaderRight.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 
 		MainView.HSplitTop(Spacing, 0, &MainView);
@@ -1844,7 +1844,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		const float HiDPIScale = Graphics()->ScreenHiDPIScale();
 		str_format(aBuf, sizeof(aBuf), Localize("Current: %dx%d (%d:%d)"), (int)(s_GfxScreenWidth*HiDPIScale), (int)(s_GfxScreenHeight*HiDPIScale), s_GfxScreenWidth/g, s_GfxScreenHeight/g);
 		Button.y += 2;
-		UI()->DoLabel(&Button, aBuf, Button.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&Button, aBuf, Button.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 		static int s_LastScreen = Config()->m_GfxScreen;
 		if(s_LastScreen != Config()->m_GfxScreen)
@@ -1927,7 +1927,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 	// render sound menu
 	Sound.HSplitTop(ButtonHeight, &Label, &Sound);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Sound"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, Localize("Sound"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	Sound.HSplitTop(Spacing, 0, &Sound);
 	CUIRect UseSoundButton;
@@ -1953,7 +1953,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		// render detail menu
 		Detail.HSplitTop(ButtonHeight, &Label, &Detail);
 		Label.y += 2.0f;
-		UI()->DoLabel(&Label, Localize("Detail"), ButtonHeight*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&Label, Localize("Detail"), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 		// split menu
 		CUIRect Left, Right;
@@ -1972,10 +1972,10 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 			char aBuf[32];
 			str_format(aBuf, sizeof(aBuf), "%s:", Localize("Sample rate"));
 			Text.y += 2.0f;
-			UI()->DoLabel(&Text, aBuf, Text.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+			UI()->DoLabel(&Text, aBuf, Text.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 			Unit.y += 2.0f;
-			UI()->DoLabel(&Unit, "kHz", Unit.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+			UI()->DoLabel(&Unit, "kHz", Unit.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 			if(Config()->m_SndRate != 48000 && Config()->m_SndRate != 44100)
 				Config()->m_SndRate = 48000;
@@ -2143,16 +2143,16 @@ void CMenus::RenderSettings(CUIRect MainView)
 		TextRender()->TextColor(0.973f, 0.863f, 0.207f, 1.0f);
 		RestartWarning.y += 2.0f;
 		if(m_NeedRestartGraphics || m_NeedRestartSound)
-			UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*ms_FontmodHeight*0.75f, TEXTALIGN_CENTER);
+			UI()->DoLabel(&RestartWarning, Localize("You must restart the game for all settings to take effect."), RestartWarning.h*CUI::ms_FontmodHeight*0.75f, TEXTALIGN_CENTER);
 		else if(Client()->State() == IClient::STATE_ONLINE)
 		{
 			if(m_NeedRestartPlayer || NeedRestartTee)
-				UI()->DoLabel(&RestartWarning, Localize("You must reconnect to change identity."), RestartWarning.h*ms_FontmodHeight*0.75f, TEXTALIGN_CENTER);
+				UI()->DoLabel(&RestartWarning, Localize("You must reconnect to change identity."), RestartWarning.h*CUI::ms_FontmodHeight*0.75f, TEXTALIGN_CENTER);
 			else if(m_SkinModified)
 			{
 				char aBuf[128];
 				str_format(aBuf, sizeof(aBuf), Localize("You have to wait %1.0f seconds to change identity."), m_pClient->m_LastSkinChangeTime+6.5f - Client()->LocalTime());
-				UI()->DoLabel(&RestartWarning, aBuf, RestartWarning.h*ms_FontmodHeight*0.75f, TEXTALIGN_CENTER);
+				UI()->DoLabel(&RestartWarning, aBuf, RestartWarning.h*CUI::ms_FontmodHeight*0.75f, TEXTALIGN_CENTER);
 			}
 		}
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);

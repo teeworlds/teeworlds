@@ -363,8 +363,6 @@ private:
 
 	int64 m_LastInput;
 
-	static float ms_FontmodHeight;
-
 	// for settings
 	bool m_NeedRestartPlayer;
 	bool m_NeedRestartGraphics;
