@@ -33,7 +33,6 @@
 #include "menus.h"
 #include "skins.h"
 
-float CMenus::ms_ButtonHeight = 25.0f;
 float CMenus::ms_ListheaderHeight = 17.0f;
 float CMenus::ms_FontmodHeight = 0.8f;
 
