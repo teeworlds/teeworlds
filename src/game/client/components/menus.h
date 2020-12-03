@@ -770,7 +770,7 @@ private:
 	void UpdateVideoModeSettings();
 
 	// found in menus.cpp
-	void Render();
+	void RenderMenu(CUIRect Screen);
 	void RenderMenubar(CUIRect r);
 	void RenderNews(CUIRect MainView);
 	void RenderBackButton(CUIRect MainView);
@@ -781,7 +781,7 @@ private:
 
 	// found in menus_demo.cpp
 	bool FetchHeader(CDemoItem *pItem);
-	void RenderDemoPlayer(CUIRect MainView);
+	void RenderDemoPlayer(CUIRect Screen);
 	void RenderDemoList(CUIRect MainView);
 	float RenderDemoDetails(CUIRect View);
 	void PopupConfirmDeleteDemo();
