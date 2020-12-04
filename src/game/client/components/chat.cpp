@@ -43,8 +43,6 @@ void CChat::OnReset()
 		m_ReverseCompletion = false;
 		m_Show = false;
 		m_BacklogPage = 0;
-		m_InputUpdate = false;
-		m_ChatStringOffset = 0;
 		m_CompletionChosen = -1;
 		m_CompletionFav = -1;
 		m_aCompletionBuffer[0] = 0;
@@ -422,20 +420,15 @@ bool CChat::OnInput(IInput::CEvent Event)
 				str_append(aBuf, m_Input.GetString()+m_PlaceholderOffset+m_PlaceholderLength, sizeof(aBuf));
 
 				m_PlaceholderLength = str_length(pSeparator)+str_length(pCompletionString);
-				m_OldChatStringLength = m_Input.GetLength();
 				m_Input.Set(aBuf);
 				m_Input.SetCursorOffset(m_PlaceholderOffset+m_PlaceholderLength);
-				m_InputUpdate = true;
 			}
 		}
 	}
 	else
 	{
-		m_OldChatStringLength = m_Input.GetLength();
 		if(m_Input.ProcessInput(Event))
 		{
-			m_InputUpdate = true;
-
 			// reset name completion process
 			m_CompletionChosen = -1;
 		}
@@ -518,17 +511,9 @@ void CChat::EnableMode(int Mode, const char* pText)
 	m_Mode = Mode;
 
 	if(pText) // optional text to initalize with
-	{
 		m_Input.Set(pText);
-		m_Input.SetCursorOffset(str_length(pText));
-		m_InputUpdate = true;
-	}
 	else if(m_Mode == m_ChatBufferMode)
-	{
 		m_Input.Set(m_ChatBuffer);
-		m_Input.SetCursorOffset(str_length(m_ChatBuffer));
-		m_InputUpdate = true;
-	}
 }
 
 void CChat::ClearInput()
@@ -897,40 +882,14 @@ void CChat::OnRender()
 		vec2 CursorPosition = s_CategoryCursor.CursorPosition();
 		CursorPosition.x += s_CategoryCursor.Width() + 4.0f;
 		CursorPosition.y -= (InputFontSize-CategoryFontSize)*0.5f;
-		m_InputCursor.MoveTo(CursorPosition);
-		m_InputCursor.m_FontSize = InputFontSize;
 		m_InputCursor.m_MaxWidth = Width-190.0f-s_CategoryCursor.Width();
-		m_InputCursor.m_MaxLines = 2;
-		m_InputCursor.Reset();
-
-		// check if the visible text has to be moved
-		if(m_InputUpdate)
-		{
-			if(m_ChatStringOffset > 0 && m_Input.GetLength() < m_OldChatStringLength)
-				m_ChatStringOffset = maximum(0, m_ChatStringOffset-(m_OldChatStringLength-m_Input.GetLength()));
-
-			if(m_ChatStringOffset > m_Input.GetCursorOffset())
-				m_ChatStringOffset -= m_ChatStringOffset-m_Input.GetCursorOffset();
-			else
-			{
-				m_InputCursor.m_Flags = TEXTFLAG_NO_RENDER | TEXTFLAG_WORD_WRAP;
-				TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
-				while(m_InputCursor.IsTruncated())
-				{
-					++m_ChatStringOffset;
-					m_InputCursor.Reset();
-					TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, m_Input.GetCursorOffset()-m_ChatStringOffset);
-				}
-			}
-			m_InputUpdate = false;
-		}
-
 		m_InputCursor.Reset();
 
 		//render buffered text
 		if(m_Mode == CHAT_NONE)
 		{
 			//calculate WidthLimit
+			m_InputCursor.MoveTo(CursorPosition);
 			m_InputCursor.m_MaxWidth = LineWidth+x+3.0f-s_CategoryCursor.Width();
 			m_InputCursor.m_MaxLines = 1;
 			m_InputCursor.m_Flags = TEXTFLAG_ELLIPSIS;
@@ -940,7 +899,7 @@ void CChat::OnRender()
 			TextRender()->TextOutlined(&m_InputCursor, m_Input.GetString(), -1);
 
 			//render helper annotation
-			static CTextCursor s_InfoCursor(CategoryFontSize*0.75);
+			static CTextCursor s_InfoCursor(CategoryFontSize*0.75f);
 			s_InfoCursor.MoveTo(2.0f, y+12.0f);
 			s_InfoCursor.Reset();
 
@@ -961,16 +920,13 @@ void CChat::OnRender()
 		}
 		else
 		{
+			float ScrollOffset = m_Input.GetScrollOffset();
+			m_InputCursor.MoveTo(CursorPosition.x, CursorPosition.y - ScrollOffset);
+			m_InputCursor.m_MaxLines = -1;
 			m_InputCursor.m_Flags = TEXTFLAG_WORD_WRAP;
-			//Render normal text
-			TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString()+m_ChatStringOffset, -1);
-			
-			static CTextCursor s_MarkerCursor(InputFontSize);
-			s_MarkerCursor.Reset();
-			TextRender()->TextDeferred(&s_MarkerCursor, "|", -1);
-			s_MarkerCursor.m_Align = TEXTALIGN_CENTER;
-			vec2 MarkerPosition = TextRender()->CaretPosition(&m_InputCursor, m_Input.GetCursorOffset()-m_ChatStringOffset);
-			s_MarkerCursor.MoveTo(MarkerPosition.x, MarkerPosition.y);
+
+			// Render normal text
+			TextRender()->TextDeferred(&m_InputCursor, m_Input.GetString(), -1);
 
 			//Render command autocomplete option hint
 			if(IsTypingCommand() && m_CommandManager.CommandCount() - m_FilteredCount && m_SelectedCommand >= 0)
@@ -986,19 +942,28 @@ void CChat::OnRender()
 			if(ChatMode == CHAT_WHISPER)
 			{
 				//render helper annotation
-				static CTextCursor s_HelpCursor(CategoryFontSize*0.75);
+				static CTextCursor s_HelpCursor(CategoryFontSize*0.75f);
 				s_HelpCursor.Reset();
 				s_HelpCursor.MoveTo(2.0f, y+12.0f);
 
-				char aInfoText[128];
-				str_format(aInfoText, sizeof(aInfoText), Localize("Press Tab to cycle chat recipients"));
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 0.5f);
-				TextRender()->TextOutlined(&s_HelpCursor, aInfoText, -1);
+				TextRender()->TextOutlined(&s_HelpCursor, Localize("Press Tab to cycle chat recipients"), -1);
 			}
-			
-			TextRender()->DrawTextOutlined(&m_InputCursor);
-			TextRender()->DrawTextOutlined(&s_MarkerCursor);
 
+			const float Spacing = 1.0f;
+			const CUIRect ClippingRect = { CursorPosition.x-Spacing, CursorPosition.y-Spacing, m_InputCursor.m_MaxWidth+2*Spacing, 2*InputFontSize+3*Spacing };
+			const float XScale = Graphics()->ScreenWidth()/Width;
+			const float YScale = Graphics()->ScreenHeight()/Height;
+			Graphics()->ClipEnable((int)(ClippingRect.x*XScale), (int)(ClippingRect.y*YScale), (int)(ClippingRect.w*XScale), (int)(ClippingRect.h*YScale));
+			m_Input.Render(&m_InputCursor, true);
+			Graphics()->ClipDisable();
+
+			// scroll to keep the caret inside the clipping rect
+			float CaretPositionY = TextRender()->CaretPosition(&m_InputCursor, m_Input.GetCursorOffset()).y+InputFontSize/2.0f;
+			if(CaretPositionY < ClippingRect.y)
+				m_Input.SetScrollOffset(maximum(0.0f, ScrollOffset-InputFontSize));
+			else if(CaretPositionY > ClippingRect.y+ClippingRect.h)
+				m_Input.SetScrollOffset(ScrollOffset+InputFontSize);
 		}
 	}
 
@@ -1496,8 +1461,6 @@ bool CChat::CompleteCommand()
 	str_format(aBuf, sizeof(aBuf), "/%s ", pCommand->m_aName);
 
 	m_Input.Set(aBuf);
-	m_Input.SetCursorOffset(str_length(aBuf));
-	m_InputUpdate = true;
 	return true;
 }
 

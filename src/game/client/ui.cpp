@@ -55,7 +55,7 @@ void CUI::Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput 
 	m_pInput = pInput;
 	m_pTextRender = pTextRender;
 	CUIRect::Init(pGraphics);
-	CLineInput::Init(pInput);
+	CLineInput::Init(pInput, pTextRender);
 }
 
 void CUI::Update(float MouseX, float MouseY, float MouseWorldX, float MouseWorldY)
@@ -409,7 +409,6 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	CUIRect Textbox = *pRect;
 	Textbox.Draw(pColorFunction->GetColor(LastActiveItem() == pLineInput, Inside), 5.0f, Corners);
 	Textbox.VMargin(Spacing, &Textbox);
-	Textbox.HMargin((Textbox.h-FontSize/CUI::ms_FontmodHeight)/2, &Textbox);
 
 	const char *pDisplayStr = pLineInput->GetString();
 	char aStars[128];
@@ -449,23 +448,16 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 			while(w-ScrollOffset < 0.0f);
 		}
 	}
+
 	ClipEnable(pRect);
 	Textbox.x -= ScrollOffset;
-
-	DoLabel(&Textbox, pDisplayStr, FontSize, TEXTALIGN_LEFT);
-
-	// render the cursor
-	if(LastActiveItem() == pLineInput && !JustGotActive)
-	{
-		if((2*time_get()/time_freq()) % 2)	// make it blink
-		{
-			float TextWidth = TextRender()->TextWidth(FontSize, pDisplayStr, pLineInput->GetCursorOffset());
-			Textbox = *pRect;
-			Textbox.VSplitLeft(Spacing, 0, &Textbox);
-			Textbox.x += TextWidth - ScrollOffset - TextRender()->TextWidth(FontSize, "|", -1)/2;
-			DoLabel(&Textbox, "|", FontSize, TEXTALIGN_LEFT);
-		}
-	}
+	static CTextCursor s_TextCursor;
+	s_TextCursor.Reset();
+	s_TextCursor.m_FontSize = FontSize;
+	s_TextCursor.m_Align = TEXTALIGN_ML;
+	s_TextCursor.MoveTo(Textbox.x, Textbox.y + Textbox.h/2.0f);
+	TextRender()->TextDeferred(&s_TextCursor, pDisplayStr, -1);
+	pLineInput->Render(&s_TextCursor, LastActiveItem() == pLineInput && !JustGotActive);
 	ClipDisable();
 
 	pLineInput->SetScrollOffset(ScrollOffset);

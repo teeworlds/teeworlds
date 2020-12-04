@@ -2,21 +2,25 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/keys.h>
 #include <engine/input.h>
+#include <engine/textrender.h>
+
 #include "lineinput.h"
 
 IInput *CLineInput::s_pInput = 0;
+ITextRender *CLineInput::s_pTextRender = 0;
 
 void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 {
 	if(m_pStr && m_pStr == pStr)
 		return;
-	const char *pLastStr = pStr;
+	const char *pLastStr = m_pStr;
 	m_pStr = pStr;
 	m_MaxSize = MaxSize;
 	m_MaxChars = MaxChars;
-	m_ScrollOffset = 0;
 	m_WasChanged = m_pStr && pLastStr && m_WasChanged;
-	if(m_pStr)
+	if(!pLastStr)
+		m_ScrollOffset = 0;
+	if(m_pStr && m_pStr != pLastStr)
 		UpdateStrData();
 }
 
@@ -161,5 +165,22 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 		}
 	}
 
-	return m_WasChanged || OldCursorPos != m_CursorPos;
+	m_WasChanged |= OldCursorPos != m_CursorPos;
+	return m_WasChanged;
+}
+
+void CLineInput::Render(CTextCursor *pCursor, bool Active)
+{
+	s_pTextRender->DrawTextOutlined(pCursor);
+
+	if(Active && (2*time_get()/time_freq())%2)
+	{
+		static CTextCursor s_MarkerCursor;
+		s_MarkerCursor.Reset();
+		s_MarkerCursor.m_FontSize = pCursor->m_FontSize;
+		s_MarkerCursor.m_Align = (pCursor->m_Align&TEXTALIGN_MASK_VERT) | TEXTALIGN_CENTER;
+		s_pTextRender->TextDeferred(&s_MarkerCursor, "｜", -1);
+		s_MarkerCursor.MoveTo(s_pTextRender->CaretPosition(pCursor, GetCursorOffset()));
+		s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
+	}
 }
