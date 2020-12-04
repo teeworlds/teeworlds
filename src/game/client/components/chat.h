@@ -51,9 +51,6 @@ class CChat : public CComponent
 	int m_LastWhisperFrom;
 	bool m_Show;
 	int m_BacklogPage;
-	bool m_InputUpdate;
-	int m_ChatStringOffset;
-	int m_OldChatStringLength;
 	int m_CompletionChosen;
 	int m_CompletionFav;
 	char m_aCompletionBuffer[256];
