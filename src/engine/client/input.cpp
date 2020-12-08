@@ -25,6 +25,14 @@
 	#define SDL_JOYSTICK_AXIS_MAX 32767
 #endif
 
+// for platform specific features that aren't available or are broken in SDL
+#include "SDL_syswm.h"
+
+#if defined(CONF_FAMILY_WINDOWS)
+#include <windows.h>
+#include <imm.h>
+#endif
+
 void CInput::AddEvent(char *pText, int Key, int Flags)
 {
 	if(m_NumEvents != INPUT_BUFFER_SIZE)
@@ -61,6 +69,11 @@ CInput::CInput()
 	m_MouseDoubleClick = false;
 
 	m_NumEvents = 0;
+	
+	m_CompositionCursor = COMP_CURSOR_INACTIVE;
+	m_CompositionSelectedLength = 0;
+	m_CandidateCount = 0;
+	m_CandidateSelectedIndex = -1;
 }
 
 CInput::~CInput()
@@ -72,10 +85,12 @@ CInput::~CInput()
 
 void CInput::Init()
 {
+	// enable system messages
+	SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
+
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
-	// FIXME: unicode handling: use SDL_StartTextInput/SDL_StopTextInput on inputs
 
 	MouseModeRelative();
 
@@ -342,7 +357,40 @@ int CInput::Update()
 		int Action = IInput::FLAG_PRESS;
 		switch(Event.type)
 		{
+			// handle text editing candidate
+			case SDL_SYSWMEVENT:
+				ProcessSystemMessage(Event.syswm.msg);
+				break;
+
+			// handle on the spot text editing
+			case SDL_TEXTEDITING:
+			{
+				const int CompositionLength = str_length(Event.edit.text);
+				if(CompositionLength)
+				{
+					str_copy(m_aComposition, Event.edit.text, sizeof(m_aComposition));
+					m_CompositionCursor = 0;
+					for(int i = 0; i < Event.edit.start; i++)
+						m_CompositionCursor = str_utf8_forward(m_aComposition, m_CompositionCursor);
+					m_CompositionSelectedLength = Event.edit.length;
+				}
+				else
+				{
+					m_aComposition[0] = '\0';
+					m_CompositionCursor = 0;
+					m_CompositionSelectedLength = 0;
+
+					// close candidate window as well
+					m_CandidateCount = 0;
+					m_CandidateSelectedIndex = -1;
+				}
+				break;
+			}
 			case SDL_TEXTINPUT:
+				m_aComposition[0] = '\0';
+				m_CandidateCount = 0;
+				m_CandidateSelectedIndex = -1;
+				m_CompositionCursor = COMP_CURSOR_INACTIVE;
 				AddEvent(Event.text.text, 0, IInput::FLAG_TEXT);
 				break;
 
@@ -465,7 +513,7 @@ int CInput::Update()
 				return 1;
 		}
 
-		if(Key >= 0)
+		if(Key >= 0 && m_CompositionCursor == COMP_CURSOR_INACTIVE)
 		{
 			if(Action&IInput::FLAG_PRESS && Key < g_MaxKeys && Scancode >= 0 && Scancode < g_MaxKeys)
 			{
@@ -476,8 +524,66 @@ int CInput::Update()
 		}
 	}
 
+	if(m_CompositionCursor == 0)
+		m_CompositionCursor = COMP_CURSOR_INACTIVE;
+
 	return 0;
 }
 
+void CInput::ProcessSystemMessage(SDL_SysWMmsg *pMsg)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	// Todo SDL: remove this after SDL2 supports IME candidates
+	if(pMsg->subsystem == SDL_SYSWM_WINDOWS)
+	{
+		if(pMsg->msg.win.msg != WM_IME_NOTIFY)
+			return;
+
+		switch(pMsg->msg.win.wParam)
+		{
+			case IMN_OPENCANDIDATE:
+			case IMN_CHANGECANDIDATE:
+			{
+				HWND WindowHandle = pMsg->msg.win.hwnd;
+				DWORD CandidateCount;
+				HIMC ImeContext = ImmGetContext(WindowHandle);
+				DWORD Size = ImmGetCandidateListCountW(ImeContext, &CandidateCount);
+				LPCANDIDATELIST CandidateList = NULL;
+				if(Size > 0)
+				{
+					CandidateList = (LPCANDIDATELIST)mem_alloc(Size, 1);
+					Size = ImmGetCandidateListW(ImeContext, 0, CandidateList, Size);
+				}
+				if(CandidateList && Size > 0)
+				{
+					m_CandidateCount = 0;
+					for (DWORD i = CandidateList->dwPageStart; i < CandidateList->dwCount && m_CandidateCount < (int)CandidateList->dwPageSize; i++)
+					{
+						LPCWSTR Candidate = (LPCWSTR)((DWORD_PTR)CandidateList + CandidateList->dwOffset[i]);
+						WideCharToMultiByte(CP_UTF8, 0, Candidate, -1, m_aaCandidates[m_CandidateCount], MAX_CANDIDATE_ARRAY_SIZE, "?", NULL);
+						m_aaCandidates[m_CandidateCount][MAX_CANDIDATE_ARRAY_SIZE-1] = '\0';
+						m_CandidateCount++;
+					}
+					m_CandidateSelectedIndex = CandidateList->dwSelection;
+				}
+				else
+				{
+					m_CandidateCount = 0;
+					m_CandidateSelectedIndex = -1;
+				}
+
+				if(CandidateList)
+					mem_free(CandidateList);
+				ImmReleaseContext(WindowHandle, ImeContext);
+				break;	
+			}
+			case IMN_CLOSECANDIDATE:
+				m_CandidateCount = 0;
+				m_CandidateSelectedIndex = -1;
+				break;
+		}
+	}
+#endif
+}
 
 IEngineInput *CreateEngineInput() { return new CInput; }

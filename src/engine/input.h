@@ -42,7 +42,15 @@ public:
 
 		CURSOR_NONE = 0,
 		CURSOR_MOUSE,
-		CURSOR_JOYSTICK
+		CURSOR_JOYSTICK,
+
+		MAX_CANDIDATES = 16,
+		MAX_CANDIDATE_LENGTH = 16,
+		MAX_CANDIDATE_ARRAY_SIZE=MAX_CANDIDATE_LENGTH*UTF8_BYTE_LENGTH+1,
+		MAX_COMPOSITION_LENGTH = 64,
+		MAX_COMPOSITION_ARRAY_SIZE = MAX_COMPOSITION_LENGTH*UTF8_BYTE_LENGTH+1,
+
+		COMP_CURSOR_INACTIVE = -1
 	};
 
 	// events
@@ -83,6 +91,14 @@ public:
 	// clipboard
 	virtual const char *GetClipboardText() = 0;
 	virtual void SetClipboardText(const char *pText) = 0;
+
+	// text editing
+	virtual const char *GetComposition() = 0;
+	virtual int GetCompositionCursor() = 0;
+	virtual int GetCompositionSelectedLength() = 0;
+	virtual const char *GetCandidate(int Index) = 0;
+	virtual int GetCandidateCount() = 0;
+	virtual int GetCandidateSelectedIndex() = 0;
 
 	int CursorRelative(float *pX, float *pY)
 	{
