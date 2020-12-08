@@ -435,6 +435,15 @@ if(NOT(GTEST_FOUND) AND DOWNLOAD_GTEST)
       message(WARNING "Build step for googletest failed: ${result}")
       set(DOWNLOAD_GTEST OFF)
     else()
+      file(GLOB_RECURSE DDNET_GTEST_CMAKELISTS ${CMAKE_BINARY_DIR}/googletest-src/CMakeLists.txt)
+      foreach(file ${DDNET_GTEST_CMAKELISTS})
+        file(READ ${file} CONTENTS)
+        string(REPLACE "cmake_minimum_required(VERSION 2.6.4)" "cmake_minimum_required(VERSION 2.8.12...3.19.1)" CONTENTS "${CONTENTS}")
+        string(REPLACE "cmake_minimum_required(VERSION 2.6.4)" "cmake_minimum_required(VERSION 2.8.12...3.19.1)" CONTENTS "${CONTENTS}")
+        string(REPLACE "cmake_minimum_required(VERSION 2.8.8)" "cmake_minimum_required(VERSION 2.8.12...3.19.1)" CONTENTS "${CONTENTS}")
+        file(WRITE ${file} "${CONTENTS}")
+      endforeach()
+
       # Prevent overriding the parent project's compiler/linker settings on Windows
       set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
