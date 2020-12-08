@@ -213,6 +213,7 @@ public:
 	void DrawTextOutlined(CTextCursor *pCursor, float Alpha, int StartGlyph, int NumGlyphs);
 	void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha, int StartGlyph, int NumGlyphs);
 
+	int CharToGlyph(CTextCursor *pCursor, int NumChars, float *pLineWidth = 0);
 	vec2 CaretPosition(CTextCursor *pCursor, int NumChars);
 };
 

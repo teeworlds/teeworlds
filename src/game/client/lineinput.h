@@ -23,6 +23,10 @@ class CLineInput
 	static CLineInput *s_pActiveInput;
 	static EInputPriority s_ActiveInputPriority;
 
+	static vec2 s_CompositionWindowPosition;
+	static float s_CompositionLineHeight;
+
+	class CTextCursor m_TextCursor;
 	char *m_pStr;
 	int m_MaxSize;
 	int m_MaxChars;
@@ -34,6 +38,7 @@ class CLineInput
 	int m_SelectionEnd;
 
 	float m_ScrollOffset;
+	vec2 m_CaretPosition;
 
 	bool m_WasChanged;
 
@@ -44,12 +49,15 @@ class CLineInput
 		REWIND
 	};
 	static void MoveCursor(EMoveDirection Direction, bool MoveWord, const char *pStr, int MaxSize, int *pCursorPos);
+	static void SetCompositionWindowPosition(vec2 Anchor, float LineHeight);
+	void DrawSelection(float HeightWeight, int Start, int End, vec4 Color);
 
 	void OnActivate();
 	void OnDeactivate();
 
 public:
 	static void Init(class IInput *pInput, class ITextRender *pTextRender, class IGraphics *pGraphics) { s_pInput = pInput; s_pTextRender = pTextRender; s_pGraphics = pGraphics; }
+	static void RenderCandidates();
 
 	static CLineInput *GetActiveInput() { return s_pActiveInput; }
 
@@ -66,6 +74,7 @@ public:
 	void Insert(const char *pString, int Begin);
 	void Append(const char *pString);
 
+	class CTextCursor *GetCursor() { return &m_TextCursor; }
 	const char *GetString() const { return m_pStr; }
 	int GetMaxSize() const { return m_MaxSize; }
 	int GetMaxChars() const { return m_MaxChars; }
@@ -83,10 +92,13 @@ public:
 	float GetScrollOffset() const { return m_ScrollOffset; }
 	void SetScrollOffset(float ScrollOffset) { m_ScrollOffset = ScrollOffset; }
 
+	vec2 GetCaretPosition() const { return m_CaretPosition; } // only updated while the input is active
+
 	bool ProcessInput(const IInput::CEvent &Event);
 	bool WasChanged() { bool Changed = m_WasChanged; m_WasChanged = false; return Changed; }
 
-	void Render(class CTextCursor *pCursor);
+	void Render();
+
 	bool IsActive() const { return GetActiveInput() == this; }
 	void Activate(EInputPriority Priority);
 	void Deactivate();

@@ -338,6 +338,10 @@ void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char
 
 bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool Hidden, int Corners, const IButtonColorFunction *pColorFunction)
 {
+	CTextCursor *pCursor = pLineInput->GetCursor();
+	pCursor->m_FontSize = FontSize;
+	pCursor->m_Align = TEXTALIGN_ML;
+
 	const bool Inside = MouseHovered(pRect);
 	const bool Active = LastActiveItem() == pLineInput;
 	const bool Changed = pLineInput->WasChanged();
@@ -494,13 +498,8 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	pRect->Draw(pColorFunction->GetColor(Active, Inside), 5.0f, Corners);
 	ClipEnable(pRect);
 	Textbox.x -= ScrollOffset;
-	static CTextCursor s_TextCursor;
-	s_TextCursor.Reset();
-	s_TextCursor.m_FontSize = FontSize;
-	s_TextCursor.m_Align = TEXTALIGN_ML;
-	s_TextCursor.MoveTo(Textbox.x, Textbox.y + Textbox.h/2.0f);
-	TextRender()->TextDeferred(&s_TextCursor, pDisplayStr, -1);
-	pLineInput->Render(&s_TextCursor);
+	pCursor->MoveTo(Textbox.x, Textbox.y + Textbox.h/2.0f);
+	pLineInput->Render();
 	ClipDisable();
 
 	return Changed;

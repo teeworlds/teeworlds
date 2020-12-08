@@ -604,7 +604,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		bool CanBreak = !IsSpace && (BreakWord || pCursor->m_StartOfLine);
 		if(Hint.m_EffectiveAdvanceX - WordStartAdvanceX > MaxWidth || (CanBreak && pCursor->m_Advance.x + AdvanceX > MaxWidth))
 		{
-			Hint.m_CharCount--;
+			Hint.m_CharCount -= NumChars;
 			Hint.m_IsBroken = true;
 			break;
 		}
@@ -1237,22 +1237,106 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, floa
 	DrawText(pCursor, vec2(0, 0), 0, false, Alpha, StartGlyph, NumGlyphs);
 }
 
-vec2 CTextRender::CaretPosition(CTextCursor *pCursor, int NumChars)
+int CTextRender::CharToGlyph(CTextCursor *pCursor, int NumChars, float *pLineWidth)
 {
 	int CursorChars = 0;
 	int NumGlyphs = pCursor->m_Glyphs.size();
 	if(NumGlyphs == 0 || NumChars == 0)
-		return pCursor->m_CursorPos;
+	{
+		if (pLineWidth)
+			*pLineWidth = 0.0f;
+		return 0;
+	}
 
+	int GlyphIndex = -1;
 	for(int i = 0; i < NumGlyphs; ++i)
 	{
 		CursorChars += pCursor->m_Glyphs[i].m_NumChars;
 		if(CursorChars > NumChars)
-			return pCursor->m_CursorPos + pCursor->m_Glyphs[i].m_Advance;
+		{
+			GlyphIndex = i;
+			break;
+		}
 	}
 
+	int LastGlyphIndex = GlyphIndex;
+
+	if(GlyphIndex < 0)
+	{
+		GlyphIndex = NumGlyphs;
+		LastGlyphIndex = GlyphIndex - 1;
+	}
+
+	if(pLineWidth)
+	{
+		const int Line = pCursor->m_Glyphs[LastGlyphIndex].m_Line;
+
+		for(; LastGlyphIndex < NumGlyphs; ++LastGlyphIndex)
+		{
+			if(LastGlyphIndex + 1 >= NumGlyphs)
+				break;
+
+			if(pCursor->m_Glyphs[LastGlyphIndex].m_Line > Line)
+			{
+				LastGlyphIndex -= 1;
+				break;
+			}
+		}
+
+		const CScaledGlyph& rScaled = pCursor->m_Glyphs[LastGlyphIndex];
+		*pLineWidth = rScaled.m_Advance.x + rScaled.m_pGlyph->m_AdvanceX * rScaled.m_Size;
+	}
+
+	return GlyphIndex;
+}
+
+vec2 CTextRender::CaretPosition(CTextCursor *pCursor, int NumChars)
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	int ScreenWidth = Graphics()->ScreenWidth();
+	int ScreenHeight = Graphics()->ScreenHeight();
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
+	float Size = pCursor->m_FontSize;
+	int PixelSize = (int)(Size * ScreenScale.y);
+	Size = PixelSize / ScreenScale.y;
+
+	int NumGlyphs = pCursor->m_Glyphs.size();
+	float LineWidth;
+	int GlyphIndex = CharToGlyph(pCursor, NumChars, &LineWidth);
+
+	int HorizontalAlign = pCursor->m_Align & TEXTALIGN_MASK_HORI;
+	int VerticalAlign = pCursor->m_Align & TEXTALIGN_MASK_VERT;
+
+	vec2 Offset = vec2(0,0);
+	float LineOffset = 0.0f;
+
+	if(HorizontalAlign == TEXTALIGN_RIGHT)
+	{
+		Offset.x = -pCursor->m_Width;
+		LineOffset = pCursor->m_Width - LineWidth;
+	}
+	else if(HorizontalAlign == TEXTALIGN_CENTER)
+	{
+		Offset.x = -pCursor->m_Width / 2.0f;
+		LineOffset = (pCursor->m_Width - LineWidth) / 2.0f;
+	}
+
+	if(VerticalAlign == TEXTALIGN_BOTTOM)
+		Offset.y = -pCursor->m_Height + Size * 1.35f;
+	else if(VerticalAlign == TEXTALIGN_MIDDLE)
+		Offset.y = -pCursor->m_Height / 2.0f + Size * 0.675f;
+
+	if(GlyphIndex == 0 || NumGlyphs == 0)
+		return pCursor->m_CursorPos + Offset;
+
+	if(GlyphIndex < NumGlyphs)
+		return pCursor->m_CursorPos + pCursor->m_Glyphs[GlyphIndex].m_Advance + Offset;
+
 	CScaledGlyph *pLastScaled = &pCursor->m_Glyphs[NumGlyphs-1];
-	return pCursor->m_CursorPos + pLastScaled->m_Advance + vec2(pLastScaled->m_pGlyph->m_AdvanceX, 0) * pLastScaled->m_Size;
+	return pCursor->m_CursorPos + pLastScaled->m_Advance + Offset
+		+ vec2(pLastScaled->m_pGlyph->m_AdvanceX + LineOffset, 0) * pLastScaled->m_Size;
 }
 
 IEngineTextRender *CreateEngineTextRender() { return new CTextRender; }
