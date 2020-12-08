@@ -790,7 +790,6 @@ void CChat::OnRender()
 	float y = Height-20.0f;
 	float LineWidth = 200.0f;
 
-	// bool showCommands;
 	float CategoryWidth = 0;
 
 	if(m_Mode == CHAT_WHISPER && !m_pClient->m_aClients[m_WhisperTarget].m_Active)
@@ -806,40 +805,30 @@ void CChat::OnRender()
 			Blend = 0.5f;
 		}
 
-		float CategoryHeight;
 		const float IconOffsetX = ChatMode == CHAT_WHISPER ? 6.0f : 0.0f;
 		const float CategoryFontSize = 8.0f;
 		const float InputFontSize = 8.0f;
-		char aCatText[48];
 
 		static CTextCursor s_CategoryCursor(CategoryFontSize);
 		s_CategoryCursor.Reset();
 
 		if(ChatMode == CHAT_ALL)
-			str_copy(aCatText, Localize("All"), sizeof(aCatText));
+			TextRender()->TextDeferred(&s_CategoryCursor, Localize("All"), -1);
 		else if(ChatMode == CHAT_TEAM)
 		{
-			const int LocalCID = m_pClient->m_LocalClientID;
-			const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[LocalCID];
-			const int LocalTteam = LocalClient.m_Team;
-
-			if(LocalTteam == TEAM_SPECTATORS)
-				str_copy(aCatText, Localize("Spectators"), sizeof(aCatText));
-			else
-				str_copy(aCatText, Localize("Team"), sizeof(aCatText));
+			const CGameClient::CClientData& LocalClient = m_pClient->m_aClients[m_pClient->m_LocalClientID];
+			TextRender()->TextDeferred(&s_CategoryCursor, LocalClient.m_Team == TEAM_SPECTATORS ? Localize("Spectators") : Localize("Team"), -1);
 		}
 		else if(ChatMode == CHAT_WHISPER)
 		{
 			CategoryWidth += RenderTools()->GetClientIdRectSize(CategoryFontSize);
-			str_format(aCatText, sizeof(aCatText), "%s",m_pClient->m_aClients[m_WhisperTarget].m_aName);
+			TextRender()->TextDeferred(&s_CategoryCursor, m_pClient->m_aClients[m_WhisperTarget].m_aName, -1);
 		}
 		else
-			str_copy(aCatText, Localize("Chat"), sizeof(aCatText));
-
-		TextRender()->TextDeferred(&s_CategoryCursor, aCatText, -1);
+			TextRender()->TextDeferred(&s_CategoryCursor, Localize("Chat"), -1);
 
 		CategoryWidth += s_CategoryCursor.Width();
-		CategoryHeight = s_CategoryCursor.Height();
+		float CategoryHeight = s_CategoryCursor.Height();
 
 
 		// draw a background box
@@ -1057,8 +1046,7 @@ void CChat::OnRender()
 	// get the y offset (calculate it if we haven't done that yet)
 	for(int i = 0; i < MAX_LINES; i++)
 	{
-		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
-		CLine *pLine = &m_aLines[r];
+		CLine *pLine = &m_aLines[((m_CurrentLine-i)+MAX_LINES)%MAX_LINES];
 
 		if(pLine->m_aText[0] == 0)
 			break;
@@ -1068,7 +1056,6 @@ void CChat::OnRender()
 			s_ChatCursor.MoveTo(Begin, 0.0f);
 			s_ChatCursor.Reset();
 			s_ChatCursor.m_Flags = TEXTFLAG_WORD_WRAP | TEXTFLAG_NO_RENDER;
-			char aBuf[768] = {0};
 			if(pLine->m_Mode == CHAT_WHISPER)
 			{
 				TextRender()->TextAdvance(&s_ChatCursor, 12.5f);
@@ -1078,12 +1065,11 @@ void CChat::OnRender()
 			{
 				float ClientIDWidth = RenderTools()->GetClientIdRectSize(FontSize);
 				TextRender()->TextAdvance(&s_ChatCursor, ClientIDWidth);
-				str_format(aBuf, sizeof(aBuf), "%s: ", pLine->m_aName);
+				TextRender()->TextDeferred(&s_ChatCursor, pLine->m_aName, -1);
+				TextRender()->TextDeferred(&s_ChatCursor, ": ", -1);
 			}
 
-			str_append(aBuf, pLine->m_aText, sizeof(aBuf));
-
-			TextRender()->TextDeferred(&s_ChatCursor, aBuf, -1);
+			TextRender()->TextDeferred(&s_ChatCursor, pLine->m_aText, -1);
 			pLine->m_Size.y = s_ChatCursor.LineCount() * FontSize;
 			pLine->m_Size.x = s_ChatCursor.Width();
 		}
@@ -1118,7 +1104,7 @@ void CChat::OnRender()
 		for(Page = 0; Page < MAX_CHAT_PAGES; Page++)
 		{
 			int PageY = y;
-			bool endReached = false;
+			bool EndReached = false;
 			for(; l < MAX_LINES; l++)
 			{
 				int r = ((m_CurrentLine-l)+MAX_LINES)%MAX_LINES;
@@ -1126,7 +1112,7 @@ void CChat::OnRender()
 
 				if(pLine->m_aText[0] == 0)
 				{
-					endReached = true;
+					EndReached = true;
 					break;
 				}
 				if(pLine->m_ClientID >= 0 && m_pClient->m_aClients[pLine->m_ClientID].m_ChatIgnore)
@@ -1135,7 +1121,7 @@ void CChat::OnRender()
 					break;
 				PageY -= pLine->m_Size.y;
 			}
-			if(endReached)
+			if(EndReached)
 				break;
 			if(Page < m_BacklogPage)
 				StartLine = l - 1;
@@ -1161,8 +1147,7 @@ void CChat::OnRender()
 
 	for(int i = StartLine; i < MAX_LINES; i++)
 	{
-		int r = ((m_CurrentLine-i)+MAX_LINES)%MAX_LINES;
-		const CLine *pLine = &m_aLines[r];
+		const CLine *pLine = &m_aLines[((m_CurrentLine-i)+MAX_LINES)%MAX_LINES];
 
 		if(pLine->m_aText[0] == 0)
 			break;
@@ -1194,12 +1179,7 @@ void CChat::OnRender()
 		const vec2 ShadowOffset(0.8f, 1.5f);
 		const vec4 ShadowWhisper(0.09f, 0.f, 0.26f, Blend * 0.9f);
 		const vec4 ShadowBlack(0, 0, 0, Blend * 0.9f);
-		vec4 ShadowColor = ShadowBlack;
-
-		if(pLine->m_Mode == CHAT_WHISPER)
-			ShadowColor = ShadowWhisper;
-
-
+		const vec4 ShadowColor = pLine->m_Mode == CHAT_WHISPER ? ShadowWhisper : ShadowBlack;
 		const vec4 ColorSystem(1.0f, 1.0f, 0.5f, 1);
 		const vec4 ColorWhisper(0.4f, 1.0f, 1.0f, 1);
 		const vec4 ColorRed(1.0f, 0.5f, 0.5f, 1);
@@ -1212,8 +1192,6 @@ void CChat::OnRender()
 		const vec4 ColorHighlightBg(0.0f, 0.27f, 0.9f, 0.5f * HighlightBlend);
 		const vec4 ColorHighlightOutline(0.0f, 0.4f, 1.0f,
 			mix(pLine->m_Mode == CHAT_TEAM ? 0.6f : 0.5f, 1.0f, HighlightBlend));
-
-		vec4 TextColor = ColorAllText;
 
 		if(pLine->m_Highlighted && ColorHighlightBg.a > 0.001f)
 		{
@@ -1237,7 +1215,6 @@ void CChat::OnRender()
 									   CUI::CORNER_R, 2.0f);
 		}
 
-		char aBuf[48];
 		if(pLine->m_Mode == CHAT_WHISPER)
 		{
 			const float LineBaseY = y + FontSize + 1.0f;
@@ -1261,7 +1238,6 @@ void CChat::OnRender()
 			else
 				dbg_break();
 
-
 			// shadow pass
 			Graphics()->SetColor(ShadowWhisper.r*ShadowWhisper.a*Blend, ShadowWhisper.g*ShadowWhisper.a*Blend,
 								 ShadowWhisper.b*ShadowWhisper.a*Blend, ShadowWhisper.a*Blend);
@@ -1279,20 +1255,21 @@ void CChat::OnRender()
 		}
 
 		// render name
+		vec4 TextColorName;
 		if(pLine->m_ClientID < 0)
-			TextColor = ColorSystem;
+			TextColorName = ColorSystem;
 		else if(pLine->m_Mode == CHAT_WHISPER)
-			TextColor = ColorWhisper;
+			TextColorName = ColorWhisper;
 		else if(pLine->m_Mode == CHAT_TEAM)
-			TextColor = ColorTeamPre;
+			TextColorName = ColorTeamPre;
 		else if(pLine->m_NameColor == TEAM_RED)
-			TextColor = ColorRed;
+			TextColorName = ColorRed;
 		else if(pLine->m_NameColor == TEAM_BLUE)
-			TextColor = ColorBlue;
+			TextColorName = ColorBlue;
 		else if(pLine->m_NameColor == TEAM_SPECTATORS)
-			TextColor = ColorSpec;
+			TextColorName = ColorSpec;
 		else
-			TextColor = ColorAllPre;
+			TextColorName = ColorAllPre;
 
 		int NumNameGlyphs = 0;
 		if(pLine->m_ClientID >= 0)
@@ -1302,30 +1279,31 @@ void CChat::OnRender()
 				NameCID = pLine->m_TargetID;
 
 			vec4 IdTextColor = vec4(0.1f*Blend, 0.1f*Blend, 0.1f*Blend, 1.0f*Blend);
-			vec4 BgIdColor = TextColor;
+			vec4 BgIdColor = TextColorName;
 			BgIdColor.a = 0.5f*Blend;
 			float ClientIDWidth = RenderTools()->DrawClientID(TextRender(), FontSize, s_ChatCursor.AdvancePosition(), NameCID, BgIdColor, IdTextColor);
 			TextRender()->TextAdvance(&s_ChatCursor, ClientIDWidth);
-			str_format(aBuf, sizeof(aBuf), "%s: ", pLine->m_aName);
-			TextRender()->TextColor(TextColor);
+			TextRender()->TextColor(TextColorName);
 			TextRender()->TextSecondaryColor(ShadowColor);
-			TextRender()->TextDeferred(&s_ChatCursor, aBuf, -1);
+			TextRender()->TextDeferred(&s_ChatCursor, pLine->m_aName, -1);
+			TextRender()->TextDeferred(&s_ChatCursor, ": ", -1);
 			NumNameGlyphs = s_ChatCursor.GlyphCount();
 		}
 
 		s_ChatCursor.m_StartOfLine = true;
 
 		// render line
+		vec4 TextColorLine;
 		if(pLine->m_ClientID < 0)
-			TextColor = ColorSystem;
+			TextColorLine = ColorSystem;
 		else if(pLine->m_Mode == CHAT_WHISPER)
-			TextColor = ColorWhisper;
+			TextColorLine = ColorWhisper;
 		else if(pLine->m_Mode == CHAT_TEAM)
-			TextColor = ColorTeamText;
+			TextColorLine = ColorTeamText;
 		else
-			TextColor = ColorAllText;
+			TextColorLine = ColorAllText;
 
-		TextRender()->TextColor(TextColor);
+		TextRender()->TextColor(TextColorLine);
 		if(pLine->m_Highlighted)
 		{
 			TextRender()->TextSecondaryColor(ColorHighlightOutline);
@@ -1457,33 +1435,20 @@ void CChat::HandleCommands(float x, float y, float w)
 				TextRender()->TextDeferred(&s_CommandCursor, " ", -1);
 
 				TextRender()->TextColor(0.0f, 0.5f, 0.5f, 1.0f);
-				for(const char *c = pCommand->m_aArgsFormat; *c; c++)
+				for(const char *pArg = pCommand->m_aArgsFormat; *pArg; pArg++)
 				{
-					// Integer argument
-					if(*c == 'i')
-					{
+					if(*pArg == 'i') // Integer argument
 						TextRender()->TextDeferred(&s_CommandCursor, "<number> ", -1);
-					}
-					// Player name argument
-					else if(*c == 'p')
-					{
+					else if(*pArg == 'p') // Player name argument
 						TextRender()->TextDeferred(&s_CommandCursor, "<playername> ", -1);
-					}
-					// String argument
-					else if(*c == 's')
-					{
+					else if(*pArg == 's') // String argument
 						TextRender()->TextDeferred(&s_CommandCursor, "<text> ", -1);
-					}
-					// Subcommand argument
-					else if(*c == 'c')
-					{
+					else if(*pArg == 'c') // Subcommand argument
 						TextRender()->TextDeferred(&s_CommandCursor, "<subcommand> ", -1);
-					}
 				}
 				TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
 				TextRender()->TextDeferred(&s_CommandCursor, pCommand->m_aHelpText, -1);
 				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-
 				TextRender()->DrawTextOutlined(&s_CommandCursor);
 			}
 
