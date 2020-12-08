@@ -20,10 +20,6 @@ else()
   message(FATAL_ERROR "Couldn't parse version from src/game/version.h")
 endif()
 
-if(POLICY CMP0072)
-  cmake_policy(SET CMP0072 OLD)
-endif()
-
 # Extra support for CMake pre-3.0
 if(NOT POLICY CMP0048)
   set(PROJECT_VERSION_MAJOR ${VERSION_MAJOR})
