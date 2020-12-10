@@ -556,7 +556,6 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 	Hint.m_GlyphCount = 0;
 	Hint.m_EffectiveAdvanceX = pCursor->m_Advance.x;
 	Hint.m_EndsWithNewline = false;
-	Hint.m_EndOfWord = false;
 	Hint.m_IsBroken = false;
 
 	if(*pText == '\0' || pCur > pEnd)
@@ -625,7 +624,6 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 
 		if(IsSpace || Chr == 0)
 		{
-			Hint.m_EndOfWord = true;
 			Hint.m_EndsWithNewline = Chr == '\n';
 			if(AllowNewline && Hint.m_EndsWithNewline)
 			{
@@ -641,10 +639,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 
 		// break every char on non latin/greek characters
 		if(!isWestern(Chr))
-		{
-			Hint.m_EndOfWord = true;
 			break;
-		}
 	}
 
 	return Hint;

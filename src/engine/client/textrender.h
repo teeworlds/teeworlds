@@ -143,7 +143,6 @@ struct CWordWidthHint
 	float m_EffectiveAdvanceX;
 	int m_CharCount;
 	int m_GlyphCount;
-	bool m_EndOfWord;
 	bool m_EndsWithNewline;
 	bool m_IsBroken;
 };

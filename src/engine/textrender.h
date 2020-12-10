@@ -9,9 +9,6 @@
 #include <engine/console.h>
 #include <engine/graphics.h>
 
-#define TEXTALIGN_MASK_HORI 3
-#define TEXTALIGN_MASK_VERT 12
-
 // TextRender Features
 enum
 {
@@ -22,11 +19,14 @@ enum
 	TEXTFLAG_ALLOW_NEWLINE=2,
 
 	// Display "…" when the text is truncated
-	// TODO: implement this
 	TEXTFLAG_ELLIPSIS=4,
 
 	// If set, newline will try not to break words
 	TEXTFLAG_WORD_WRAP=8,
+
+	// Masks
+	TEXTALIGN_MASK_HORI=3,
+	TEXTALIGN_MASK_VERT=12
 };
 
 enum ETextAlignment
