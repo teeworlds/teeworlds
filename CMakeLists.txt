@@ -1549,7 +1549,7 @@ if(CLIENT)
 
   # Target
   set(TARGET_CLIENT ${CLIENT_EXECUTABLE})
-  add_executable(${TARGET_CLIENT}
+  add_executable(${TARGET_CLIENT} WIN32
     ${CLIENT_SRC}
     ${CLIENT_ICON}
     ${CLIENT_MANIFEST}
@@ -1651,7 +1651,7 @@ set(LIBS_SERVER ${LIBS})
 
 # Target
 set(TARGET_SERVER ${SERVER_EXECUTABLE})
-add_executable(${TARGET_SERVER}
+add_executable(${TARGET_SERVER} WIN32
   ${DEPS}
   ${SERVER_SRC}
   ${SERVER_ICON}
@@ -2092,7 +2092,7 @@ endforeach()
 
 foreach(target ${TARGETS_LINK})
   if(MSVC)
-    set_property(TARGET ${target} APPEND PROPERTY LINK_FLAGS /SAFESEH:NO) # Disable SafeSEH because the shipped libraries don't support it (would cause error LNK2026 otherwise).
+    set_property(TARGET ${target} APPEND PROPERTY LINK_FLAGS "/SAFESEH:NO /ENTRY:mainCRTStartup") # Disable SafeSEH because the shipped libraries don't support it (would cause error LNK2026 otherwise).
   endif()
   if(TARGET_OS STREQUAL "mac")
     target_link_libraries(${target} -stdlib=libc++)
