@@ -15,6 +15,8 @@ class CLineInput
 	int m_NumChars;
 
 	int m_CursorPos;
+	int m_SelectionStart;
+	int m_SelectionEnd;
 
 	float m_ScrollOffset;
 
@@ -22,12 +24,13 @@ class CLineInput
 
 	static class IInput *s_pInput;
 	static class ITextRender *s_pTextRender;
+	static class IGraphics *s_pGraphics;
 
 	void UpdateStrData();
 	static bool MoveWordStop(char c);
 
 public:
-	static void Init(class IInput *pInput, class ITextRender *pTextRender) { s_pInput = pInput; s_pTextRender = pTextRender; }
+	static void Init(class IInput *pInput, class ITextRender *pTextRender, class IGraphics *pGraphics) { s_pInput = pInput; s_pTextRender = pTextRender; s_pGraphics = pGraphics; }
 
 	CLineInput() { SetBuffer(0, 0, 0); }
 	CLineInput(char *pStr, int MaxSize) { SetBuffer(pStr, MaxSize, MaxSize); }
@@ -38,7 +41,8 @@ public:
 
 	void Clear();
 	void Set(const char *pString);
-	void Append(const char *pString);
+	void SetRange(const char *pString, int Begin, int End);
+	void Append(const char *pString) { SetRange(pString, m_CursorPos, m_CursorPos); }
 
 	const char *GetString() const { return m_pStr; }
 	int GetMaxSize() const { return m_MaxSize; }
@@ -47,7 +51,11 @@ public:
 	int GetNumChars() const { return m_NumChars; }
 
 	int GetCursorOffset() const { return m_CursorPos; }
-	void SetCursorOffset(int Offset) { m_CursorPos = Offset > m_Len ? m_Len : Offset < 0 ? 0 : Offset; }
+	void SetCursorOffset(int Offset);
+	int GetSelectionStart() const { return m_SelectionStart; }
+	int GetSelectionEnd() const { return m_SelectionEnd; }
+	int GetSelectionLength() const { return m_SelectionEnd - m_SelectionStart; }
+	void SetSelection(int Start, int End);
 
 	// used either for vertical or horizontal scrolling
 	float GetScrollOffset() const { return m_ScrollOffset; }
