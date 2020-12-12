@@ -115,8 +115,8 @@ public:
 	CGlyphMap(IGraphics *pGraphics, FT_Library FtLibrary);
 	~CGlyphMap();
 
-	IGraphics::CTextureHandle GetTexture(int Index) { return m_aTextures[Index]; }
-	FT_Face GetDefaultFace() { return m_DefaultFace; };
+	IGraphics::CTextureHandle GetTexture(int Index) const { return m_aTextures[Index]; }
+	FT_Face GetDefaultFace() const { return m_DefaultFace; };
 	int AddFace(FT_Face Face);
 	void SetDefaultFaceByName(const char *pFamilyName);
 	void AddFallbackFaceByName(const char *pFamilyName);
@@ -124,10 +124,10 @@ public:
 	
 	bool RenderGlyph(CGlyph *pGlyph, bool Render);
 	CGlyph *GetGlyph(int Chr, int FontSizeIndex, bool Render);
-	int GetFontSizeIndex(int PixelSize);
+	int GetFontSizeIndex(int PixelSize) const;
 	vec2 Kerning(CGlyph *pLeft, CGlyph *pRight, int PixelSize);
 
-	int NumTotalPages() { return m_NumTotalPages; }
+	int NumTotalPages() const { return m_NumTotalPages; }
 	void TouchPage(int Index);
 	void PagesAccessReset();
 };
@@ -199,8 +199,8 @@ public:
 	void TextColor(float r, float g, float b, float a);
 	void TextSecondaryColor(float r, float g, float b, float a);
 
-	vec4 GetColor() { return vec4(m_TextR, m_TextG, m_TextB, m_TextA); }
-	vec4 GetSecondaryColor() { return vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA); }
+	vec4 GetColor() const { return vec4(m_TextR, m_TextG, m_TextB, m_TextA); }
+	vec4 GetSecondaryColor() const { return vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA); }
 
 	float TextWidth(float FontSize, const char *pText, int Length);
 	void TextDeferred(CTextCursor *pCursor, const char *pText, int Length);

@@ -435,11 +435,11 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 
 		TouchPage(AtlasIndex);
 
-		float UVscale = 1.0f / TEXTURE_SIZE;
-		pGlyph->m_aUvCoords[0] = (Position.x + Spacing) * UVscale;
-		pGlyph->m_aUvCoords[1] = (Position.y + Spacing) * UVscale;
-		pGlyph->m_aUvCoords[2] = pGlyph->m_aUvCoords[0] + OutlinedWidth * UVscale;
-		pGlyph->m_aUvCoords[3] = pGlyph->m_aUvCoords[1] + OutlinedHeight * UVscale;
+		float UVScale = 1.0f / TEXTURE_SIZE;
+		pGlyph->m_aUvCoords[0] = (Position.x + Spacing) * UVScale;
+		pGlyph->m_aUvCoords[1] = (Position.y + Spacing) * UVScale;
+		pGlyph->m_aUvCoords[2] = pGlyph->m_aUvCoords[0] + OutlinedWidth * UVScale;
+		pGlyph->m_aUvCoords[3] = pGlyph->m_aUvCoords[1] + OutlinedHeight * UVScale;
 	}
 
 	float Scale = 1.0f / FontSize;
@@ -502,7 +502,7 @@ vec2 CGlyphMap::Kerning(CGlyph *pLeft, CGlyph *pRight, int PixelSize)
 	return Vec;
 }
 
-int CGlyphMap::GetFontSizeIndex(int PixelSize)
+int CGlyphMap::GetFontSizeIndex(int PixelSize) const
 {
 	for(unsigned i = 0; i < NUM_FONT_SIZES; i++)
 	{
@@ -655,7 +655,7 @@ void CTextRender::TextRefreshGlyphs(CTextCursor *pCursor)
 
 	if(NumTotalPages != pCursor->m_PageCountWhenDrawn)
 	{
-		// pages were dropped, rerender glyphs
+		// pages were dropped, re-render glyphs
 		for(int i = 0; i < pCursor->m_Glyphs.size(); ++i)
 			m_pGlyphMap->RenderGlyph(pCursor->m_Glyphs[i].m_pGlyph, true);
 		pCursor->m_PageCountWhenDrawn = m_pGlyphMap->NumTotalPages();
@@ -750,6 +750,7 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 {
 	// read file data into buffer
 	const char *pFilename = "fonts/index.json";
+
 	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
 	if(!File)
 	{
@@ -1233,18 +1234,18 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, floa
 vec2 CTextRender::CaretPosition(CTextCursor *pCursor, int NumChars)
 {
 	int CursorChars = 0;
-	int NumGlpyhs = pCursor->m_Glyphs.size();
-	if(NumGlpyhs == 0 || NumChars == 0)
+	int NumGlyphs = pCursor->m_Glyphs.size();
+	if(NumGlyphs == 0 || NumChars == 0)
 		return pCursor->m_CursorPos;
 
-	for(int i = 0; i < NumGlpyhs; ++i)
+	for(int i = 0; i < NumGlyphs; ++i)
 	{
 		CursorChars += pCursor->m_Glyphs[i].m_NumChars;
 		if(CursorChars > NumChars)
 			return pCursor->m_CursorPos + pCursor->m_Glyphs[i].m_Advance;
 	}
 
-	CScaledGlyph *pLastScaled = &pCursor->m_Glyphs[NumGlpyhs-1];
+	CScaledGlyph *pLastScaled = &pCursor->m_Glyphs[NumGlyphs-1];
 	return pCursor->m_CursorPos + pLastScaled->m_Advance + vec2(pLastScaled->m_pGlyph->m_AdvanceX, 0) * pLastScaled->m_Size;
 }
 
