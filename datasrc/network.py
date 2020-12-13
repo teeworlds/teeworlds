@@ -54,6 +54,10 @@ enum
 	SKINPART_FEET,
 	SKINPART_EYES,
 	NUM_SKINPARTS,
+
+	VOTE_CHOICE_NO = -1,
+	VOTE_CHOICE_PASS = 0,
+	VOTE_CHOICE_YES = 1
 };
 '''
 
@@ -423,7 +427,7 @@ Messages = [
 	]),
 
 	NetMessage("Cl_Vote", [
-		NetIntRange("m_Vote", -1, 1),
+		NetIntRange("m_Vote", 'VOTE_CHOICE_NO', 'VOTE_CHOICE_YES'),
 	]),
 
 	NetMessage("Cl_CallVote", [

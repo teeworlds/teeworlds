@@ -42,6 +42,7 @@ CRenderTools *CMenus::CUIElementBase::m_pRenderTools = 0;
 CUI *CMenus::CUIElementBase::m_pUI = 0;
 IInput *CMenus::CUIElementBase::m_pInput = 0;
 IClient *CMenus::CUIElementBase::m_pClient = 0;
+CConfig *CMenus::CUIElementBase::m_pConfig = 0;
 
 CMenus::CMenus()
 {

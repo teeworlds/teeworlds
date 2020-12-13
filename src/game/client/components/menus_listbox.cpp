@@ -33,7 +33,7 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 
 	// background
 	View.HSplitTop(HeaderHeight+Spacing, &Header, 0);
-	m_pRenderTools->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
+	m_pRenderTools->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), m_BackgroundCorners&CUI::CORNER_T, 5.0f);
 
 	// draw header
 	View.HSplitTop(HeaderHeight, &Header, &View);
@@ -60,7 +60,7 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 
 	// background
 	View.HSplitTop(FilterHeight+Spacing, &Filter, 0);
-	m_pRenderTools->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 5.0f);
+	m_pRenderTools->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 0, 5.0f);
 
 	// draw filter
 	View.HSplitTop(FilterHeight, &Filter, &View);
@@ -88,7 +88,7 @@ void CMenus::CListBox::DoFooter(const char *pBottomText, float FooterHeight)
 }
 
 void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, 
-							int SelectedIndex, const CUIRect *pRect, bool Background, bool *pActive)
+							int SelectedIndex, const CUIRect *pRect, bool Background, bool *pActive, int BackgroundCorners)
 {
 	CUIRect View;
 	if(pRect)
@@ -97,8 +97,9 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 		View = m_ListBoxView;
 
 	// background
+	m_BackgroundCorners = BackgroundCorners;
 	if(Background)
-		m_pRenderTools->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+		m_pRenderTools->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), m_BackgroundCorners&CUI::CORNER_B, 5.0f);
 
 	// draw footers
 	if(m_pBottomText)
