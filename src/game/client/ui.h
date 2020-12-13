@@ -118,6 +118,10 @@ class CUI
 	unsigned m_NumClips;
 	void UpdateClipping();
 
+	const void *m_pActiveTooltip;
+	CUIRect m_TooltipAnchor;
+	char m_aTooltipText[256];
+
 	class CConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
 	class IInput *m_pInput;
@@ -216,6 +220,10 @@ public:
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
 	void DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite = false);
 	void DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int NumLabels, const IScrollbarScale *pScale = &LinearScrollbarScale);
+
+	// tooltips
+	void DoTooltip(const void *pID, const CUIRect *pRect, const char *pText);
+	void RenderTooltip();
 
 	// client ID
 	float DrawClientID(float FontSize, vec2 Position, int ID,

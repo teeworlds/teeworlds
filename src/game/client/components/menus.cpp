@@ -1780,6 +1780,7 @@ void CMenus::OnRender()
 
 		if(IsActive())
 		{
+			UI()->RenderTooltip();
 			RenderTools()->RenderCursor(MouseX, MouseY, 24.0f);
 
 			// render debug information

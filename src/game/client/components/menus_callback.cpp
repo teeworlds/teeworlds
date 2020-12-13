@@ -204,6 +204,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 				{
 					m_pClient->Input()->SelectNextJoystick();
 				}
+				UI()->DoTooltip(&s_ButtonJoystickId, &Button, Localize("Click to cycle through all available joysticks."));
 			}
 
 			{
