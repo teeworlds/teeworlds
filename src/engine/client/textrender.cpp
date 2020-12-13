@@ -983,6 +983,8 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 			}
 		}
 
+		pCursor->m_Width = max(pCursor->m_Advance.x, pCursor->m_Width);
+
 		// newline \n
 		bool ForceNewLine = WordWidth.m_EndsWithNewline && (Flags & TEXTFLAG_ALLOW_NEWLINE);
 		if(ForceNewLine || WordWidth.m_IsBroken)
@@ -1010,7 +1012,6 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 			pCursor->m_LineCount = MaxLines;
 		}
 
-		pCursor->m_Width = max(pCursor->m_Advance.x, pCursor->m_Width);
 		pCur += WordWidth.m_CharCount;
 	}
 
