@@ -87,6 +87,9 @@ CMenus::CMenus()
 	m_UpArrowPressed = false;
 	m_DownArrowPressed = false;
 
+	m_aDemoLoadingFile[0] = 0;
+	m_DemoLoadingPopupRendered = false;
+
 	m_LastInput = time_get();
 
 	m_CursorActive = false;
@@ -1607,6 +1610,11 @@ void CMenus::Render()
 				NumOptions = 5;
 			}
 		}
+		else if(m_Popup == POPUP_LOADING_DEMO)
+		{
+			pTitle = Localize("Loading demo");
+			pExtraText = "";
+		}
 		else if(m_Popup == POPUP_LANGUAGE)
 		{
 			pTitle = Localize("Language");
@@ -1809,6 +1817,25 @@ void CMenus::Render()
 			{
 				Box.HSplitTop(27.0f, 0, &Box);
 				UI()->DoLabel(&Box, Client()->ServerAddress(), FontSize, CUI::ALIGN_CENTER);
+			}
+		}
+		else if(m_Popup == POPUP_LOADING_DEMO)
+		{
+			if(m_DemoLoadingPopupRendered)
+			{
+				m_Popup = POPUP_NONE;
+				m_DemoLoadingPopupRendered = false;
+				const char *pError = Client()->DemoPlayer_Play(m_aDemoLoadingFile, m_DemoLoadingStorageType);
+				if(pError)
+					PopupMessage(Localize("Error loading demo"), pError, Localize("Ok"));
+				m_aDemoLoadingFile[0] = 0;
+			}
+			else
+			{
+				Box.HSplitTop(27.0f, 0, &Box);
+				UI()->DoLabel(&Box, m_aDemoLoadingFile, FontSize, CUI::ALIGN_CENTER);
+				// wait until next frame to load the demo
+				m_DemoLoadingPopupRendered = true;
 			}
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
@@ -2121,6 +2148,8 @@ bool CMenus::OnInput(IInput::CEvent e)
 void CMenus::OnConsoleInit()
 {
 	CUIElementBase::Init(this);
+
+	Console()->Register("play", "r[file]", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Play, this, "Play the file specified");
 }
 
 void CMenus::OnShutdown()

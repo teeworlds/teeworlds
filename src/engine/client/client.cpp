@@ -2298,8 +2298,6 @@ void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData)
 
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 {
-	int Crc;
-
 	Disconnect();
 	m_NetClient.ResetErrorString();
 
@@ -2311,10 +2309,7 @@ const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 		return pError;
 
 	// load map
-	Crc = (m_DemoPlayer.Info()->m_Header.m_aMapCrc[0]<<24)|
-		(m_DemoPlayer.Info()->m_Header.m_aMapCrc[1]<<16)|
-		(m_DemoPlayer.Info()->m_Header.m_aMapCrc[2]<<8)|
-		(m_DemoPlayer.Info()->m_Header.m_aMapCrc[3]);
+	const unsigned Crc = bytes_be_to_uint(m_DemoPlayer.Info()->m_Header.m_aMapCrc);
 	pError = LoadMapSearch(m_DemoPlayer.Info()->m_Header.m_aMapName, 0, Crc);
 	if(pError)
 	{
@@ -2347,12 +2342,6 @@ const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 	GameClient()->OnEnterGame();
 
 	return 0;
-}
-
-void CClient::Con_Play(IConsole::IResult *pResult, void *pUserData)
-{
-	CClient *pSelf = (CClient *)pUserData;
-	pSelf->DemoPlayer_Play(pResult->GetString(0), IStorage::TYPE_ALL);
 }
 
 void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
@@ -2534,7 +2523,6 @@ void CClient::RegisterCommands()
 	m_pConsole->Register("screenshot", "", CFGFLAG_CLIENT, Con_Screenshot, this, "Take a screenshot");
 	m_pConsole->Register("rcon", "r[command]", CFGFLAG_CLIENT, Con_Rcon, this, "Send specified command to rcon");
 	m_pConsole->Register("rcon_auth", "s[password]", CFGFLAG_CLIENT, Con_RconAuth, this, "Authenticate to rcon");
-	m_pConsole->Register("play", "r[file]", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Play, this, "Play the file specified");
 	m_pConsole->Register("record", "?s[file]", CFGFLAG_CLIENT, Con_Record, this, "Record to the file");
 	m_pConsole->Register("stoprecord", "", CFGFLAG_CLIENT, Con_StopRecord, this, "Stop recording");
 	m_pConsole->Register("add_demomarker", "", CFGFLAG_CLIENT, Con_AddDemoMarker, this, "Add demo timeline marker");

@@ -295,6 +295,7 @@ private:
 		POPUP_CONFIRM, // generic confirmation popup (two buttons)
 		POPUP_FIRST_LAUNCH,
 		POPUP_CONNECTING,
+		POPUP_LOADING_DEMO,
 		POPUP_LANGUAGE,
 		POPUP_COUNTRY,
 		POPUP_RENAME_DEMO,
@@ -452,6 +453,11 @@ private:
 	int64 m_DownloadLastCheckTime;
 	int m_DownloadLastCheckSize;
 	float m_DownloadSpeed;
+
+	// for demo loading popup
+	char m_aDemoLoadingFile[IO_MAX_PATH_LENGTH];
+	int m_DemoLoadingStorageType;
+	bool m_DemoLoadingPopupRendered;
 
 	// for password popup
 	char m_aPasswordPopupServerAddress[256];
@@ -904,5 +910,7 @@ public:
 	virtual void OnRender();
 	virtual bool OnInput(IInput::CEvent Event);
 	virtual bool OnCursorMove(float x, float y, int CursorType);
+
+	static void Con_Play(IConsole::IResult *pResult, void *pUserData);
 };
 #endif
