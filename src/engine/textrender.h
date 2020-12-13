@@ -9,9 +9,6 @@
 #include <engine/console.h>
 #include <engine/graphics.h>
 
-#define TEXTALIGN_MASK_HORI 3
-#define TEXTALIGN_MASK_VERT 12
-
 // TextRender Features
 enum
 {
@@ -22,11 +19,14 @@ enum
 	TEXTFLAG_ALLOW_NEWLINE=2,
 
 	// Display "…" when the text is truncated
-	// TODO: implement this
 	TEXTFLAG_ELLIPSIS=4,
 
 	// If set, newline will try not to break words
 	TEXTFLAG_WORD_WRAP=8,
+
+	// Masks
+	TEXTALIGN_MASK_HORI=3,
+	TEXTALIGN_MASK_VERT=12
 };
 
 enum ETextAlignment
@@ -56,7 +56,7 @@ class CScaledGlyph
 public:
 	CGlyph *m_pGlyph;
 	float m_Size;
-	int m_NumChars; // TODO: handle this
+	int m_NumChars;
 	int m_Line;
 	vec2 m_Advance;
 	vec4 m_TextColor;
@@ -66,8 +66,8 @@ public:
 struct CTextBoundingBox
 {
 	float x, y, w, h;
-	float Right() { return x + w; }
-	float Bottom() { return y + h; }
+	float Right() const { return x + w; }
+	float Bottom() const { return y + h; }
 };
 
 class CTextCursor
@@ -91,7 +91,7 @@ class CTextCursor
 	array<CScaledGlyph> m_Glyphs;
 	int64 m_StringVersion;
 
-	CTextBoundingBox AlignedBoundingBox()
+	CTextBoundingBox AlignedBoundingBox() const
 	{
 		CTextBoundingBox Box;
 		if((m_Align & TEXTALIGN_MASK_HORI) == TEXTALIGN_RIGHT)
@@ -157,15 +157,15 @@ public:
 
 	void MoveTo(float x, float y) { m_CursorPos = vec2(x, y); }
 	void MoveTo(vec2 Position) { m_CursorPos = Position; }
-	float Width() { return m_Width; }
-	float Height() { return m_Height; }
-	float BaseLineY() { return m_NextLineAdvanceY; }
-	vec2 CursorPosition() { return m_CursorPos; }
-	vec2 AdvancePosition() { return m_CursorPos + m_Advance; }
-	bool IsTruncated() { return m_Truncated; }
-	int LineCount() { return m_LineCount; }
-	int GlyphCount() { return m_Glyphs.size(); }
-	int CharCount() { return m_CharCount; }
+	float Width() const { return m_Width; }
+	float Height() const { return m_Height; }
+	float BaseLineY() const { return m_NextLineAdvanceY; }
+	vec2 CursorPosition() const { return m_CursorPos; }
+	vec2 AdvancePosition() const { return m_CursorPos + m_Advance; }
+	bool IsTruncated() const { return m_Truncated; }
+	int LineCount() const { return m_LineCount; }
+	int GlyphCount() const { return m_Glyphs.size(); }
+	int CharCount() const { return m_CharCount; }
 
 	// Default Cursor: Top left single line no width limit
 	CTextCursor() { Set(10.0f, 0, 0, 0); Reset(); }
@@ -173,7 +173,7 @@ public:
 	CTextCursor(float FontSize, float x, float y, int Flags = 0) { Set(FontSize, x, y, Flags); Reset(); }
 
 	// Exposed Bounding Box, converted to screen coord.
-	CTextBoundingBox BoundingBox()
+	CTextBoundingBox BoundingBox() const
 	{
 		CTextBoundingBox Box = AlignedBoundingBox();
 		Box.x += m_CursorPos.x;
@@ -181,7 +181,7 @@ public:
 		return Box;
 	}
 
-	bool Rendered() { return m_Glyphs.size() > 0; }
+	bool Rendered() const { return m_Glyphs.size() > 0; }
 };
 
 class ITextRender : public IInterface
@@ -205,8 +205,8 @@ public:
 	inline void TextColor(const vec4 &Color) { TextColor(Color.r, Color.g, Color.b, Color.a); }
 	inline void TextSecondaryColor(const vec4 &Color) { TextSecondaryColor(Color.r, Color.g, Color.b, Color.a); }
 
-	virtual vec4 GetColor() = 0;
-	virtual vec4 GetSecondaryColor() = 0;
+	virtual vec4 GetColor() const = 0;
+	virtual vec4 GetSecondaryColor() const = 0;
 
 	// These should be only called after TextDeferred, TextOutlined or TextShadowed
 	// TODO: allow changing quad colors

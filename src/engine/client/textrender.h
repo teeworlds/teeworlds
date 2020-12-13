@@ -64,41 +64,29 @@ struct CGlyphIndex
 	friend bool operator >=(const CGlyphIndex& l, const CGlyphIndex& r) { return !(l < r); };
 };
 
-class CAtlas
-{
-	array<ivec3> m_Sections;
-
-	int m_ID;
-	int m_Width;
-	int m_Height;
-
-	ivec2 m_Offset;
-
-	int m_LastFrameAccess;
-	int m_Access;
-	bool m_IsEmpty;
-
-	int TrySection(int Index, int Width, int Height);
-public:
-	CAtlas() { m_LastFrameAccess = 0; m_Access = 0; }
-	void Init(int Index, int X, int Y, int Width, int Height);
-
-	ivec2 Add(int Width, int Height);
-
-	int GetWidth() { return m_Width; }
-	int GetHeight() { return m_Height; }
-	int GetOffsetX() { return m_Offset.x; }
-	int GetOffsetY() { return m_Offset.y; }
-
-	int GetPageID() { return m_ID; }
-	void Touch() { m_Access++; }
-	int GetAccess() { return m_LastFrameAccess; }
-	void Update() { m_LastFrameAccess = m_Access; m_Access = 0; }
-	bool IsEmpty() { return m_IsEmpty; }
-};
-
 class CGlyphMap
 {
+	class CAtlas
+	{
+	public:
+		array<ivec3> m_Sections;
+
+		int m_ID;
+		int m_Width;
+		int m_Height;
+
+		ivec2 m_Offset;
+
+		int m_LastFrameAccess;
+		int m_Access;
+		bool m_IsEmpty;
+
+		CAtlas() { m_LastFrameAccess = 0; m_Access = 0; }
+		int TrySection(int Index, int Width, int Height);
+		void Init(int Index, int X, int Y, int Width, int Height);
+		ivec2 Add(int Width, int Height);
+	};
+
 	IGraphics *m_pGraphics;
 	FT_Stroker m_FtStroker;
 	IGraphics::CTextureHandle m_aTextures[2];
@@ -127,8 +115,8 @@ public:
 	CGlyphMap(IGraphics *pGraphics, FT_Library FtLibrary);
 	~CGlyphMap();
 
-	IGraphics::CTextureHandle GetTexture(int Index) { return m_aTextures[Index]; }
-	FT_Face GetDefaultFace() { return m_DefaultFace; };
+	IGraphics::CTextureHandle GetTexture(int Index) const { return m_aTextures[Index]; }
+	FT_Face GetDefaultFace() const { return m_DefaultFace; };
 	int AddFace(FT_Face Face);
 	void SetDefaultFaceByName(const char *pFamilyName);
 	void AddFallbackFaceByName(const char *pFamilyName);
@@ -136,10 +124,11 @@ public:
 	
 	bool RenderGlyph(CGlyph *pGlyph, bool Render);
 	CGlyph *GetGlyph(int Chr, int FontSizeIndex, bool Render);
-	int GetFontSizeIndex(int PixelSize);
+	int GetFontSizeIndex(int PixelSize) const;
 	vec2 Kerning(CGlyph *pLeft, CGlyph *pRight, int PixelSize);
 
-	int NumTotalPages() { return m_NumTotalPages; }
+	int NumTotalPages() const { return m_NumTotalPages; }
+	void TouchPage(int Index);
 	void PagesAccessReset();
 };
 
@@ -154,7 +143,6 @@ struct CWordWidthHint
 	float m_EffectiveAdvanceX;
 	int m_CharCount;
 	int m_GlyphCount;
-	bool m_EndOfWord;
 	bool m_EndsWithNewline;
 	bool m_IsBroken;
 };
@@ -211,8 +199,8 @@ public:
 	void TextColor(float r, float g, float b, float a);
 	void TextSecondaryColor(float r, float g, float b, float a);
 
-	vec4 GetColor() { return vec4(m_TextR, m_TextG, m_TextB, m_TextA); }
-	vec4 GetSecondaryColor() { return vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA); }
+	vec4 GetColor() const { return vec4(m_TextR, m_TextG, m_TextB, m_TextA); }
+	vec4 GetSecondaryColor() const { return vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA); }
 
 	float TextWidth(float FontSize, const char *pText, int Length);
 	void TextDeferred(CTextCursor *pCursor, const char *pText, int Length);
