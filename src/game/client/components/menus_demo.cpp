@@ -121,7 +121,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		str_format(aBuffer, sizeof(aBuffer), "%d:%02d / %d:%02d",
 			CurrentTick/SERVER_TICK_SPEED/60, (CurrentTick/SERVER_TICK_SPEED)%60,
 			TotalTicks/SERVER_TICK_SPEED/60, (TotalTicks/SERVER_TICK_SPEED)%60);
-		UI()->DoLabel(&SeekBar, aBuffer, SeekBar.h*0.70f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&SeekBar, aBuffer, SeekBar.h*0.70f, TEXTALIGN_MC);
 
 		// do the logic
 		if(UI()->CheckActiveItem(&s_PrevAmount))
@@ -151,6 +151,13 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 				s_PausedBeforeSeeking = pInfo->m_Paused;
 				if(!pInfo->m_Paused)
 					DemoPlayer()->Pause();
+			}
+			else
+			{
+				int HoveredTick = (int)(clamp((UI()->MouseX()-SeekBar.x-Rounding)/(float)(SeekBar.w-2*Rounding), 0.0f, 1.0f)*TotalTicks);
+				str_format(aBuffer, sizeof(aBuffer), "%d:%02d",
+					HoveredTick/SERVER_TICK_SPEED/60, (HoveredTick/SERVER_TICK_SPEED)%60);
+				UI()->DoTooltip(&s_PrevAmount, &SeekBar, aBuffer);
 			}
 		}
 

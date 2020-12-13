@@ -45,6 +45,9 @@ CUI::CUI()
 
 	m_NumClips = 0;
 
+	m_pActiveTooltip = 0;
+	m_aTooltipText[0] = '\0';
+
 	m_NumPopupMenus = 0;
 }
 
@@ -269,6 +272,25 @@ bool CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float 
 	return true;
 }
 
+void CUI::ApplyCursorAlign(class CTextCursor *pCursor, const CUIRect *pRect, int Align)
+{
+	pCursor->m_Align = Align;
+
+	float x = pRect->x;
+	if((Align & TEXTALIGN_MASK_HORI) == TEXTALIGN_CENTER)
+		x += pRect->w / 2.0f;
+	else if((Align & TEXTALIGN_MASK_HORI) == TEXTALIGN_RIGHT)
+		x += pRect->w;
+
+	float y = pRect->y;
+	if((Align & TEXTALIGN_MASK_VERT) == TEXTALIGN_MIDDLE)
+		y += pRect->h / 2.0f;
+	else if((Align & TEXTALIGN_MASK_VERT) == TEXTALIGN_BOTTOM)
+		y += pRect->h;
+
+	pCursor->MoveTo(x, y);
+}
+
 void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int Align, float LineWidth, bool MultiLine)
 {
 	// TODO: FIX ME!!!!
@@ -279,21 +301,9 @@ void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int A
 	s_Cursor.m_FontSize = FontSize;
 	s_Cursor.m_MaxLines = MultiLine ? -1 : 1;
 	s_Cursor.m_MaxWidth = LineWidth;
-	s_Cursor.m_Align = Align;
+	s_Cursor.m_Flags = MultiLine ? TEXTFLAG_WORD_WRAP : 0;
+	ApplyCursorAlign(&s_Cursor, pRect, Align);
 
-	float x = pRect->x;
-	if(Align&TEXTALIGN_CENTER)
-		x += pRect->w / 2.0f;
-	else if(Align&TEXTALIGN_RIGHT)
-		x += pRect->w;
-
-	float y = pRect->y;
-	if(Align&TEXTALIGN_MIDDLE)
-		y += pRect->h / 2.0f;
-	else if(Align&TEXTALIGN_BOTTOM)
-		y += pRect->h;
-
-	s_Cursor.MoveTo(x, y);
 	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 }
 
@@ -702,6 +712,80 @@ float CUI::DrawClientID(float FontSize, vec2 CursorPosition, int ID, const vec4&
 	TextRender()->DrawTextPlain(&s_Cursor);
 
 	return Width + 0.2f * FontSize;
+}
+
+void CUI::DoTooltip(const void *pID, const CUIRect *pRect, const char *pText)
+{
+	if(MouseHovered(pRect))
+	{
+		m_pActiveTooltip = pID;
+		m_TooltipAnchor = *pRect;
+		str_copy(m_aTooltipText, pText, sizeof(m_aTooltipText));
+	}
+	else if(m_pActiveTooltip == pID)
+	{
+		m_pActiveTooltip = 0;
+		m_aTooltipText[0] = '\0';
+	}
+}
+
+void CUI::RenderTooltip()
+{
+	static const void *s_pLastTooltip = 0;
+	if(!m_pActiveTooltip || !m_aTooltipText[0])
+	{
+		s_pLastTooltip = 0;
+		return;
+	}
+	const int64 Now = time_get();
+	static int64 s_TooltipActivationStart = 0;
+	if(s_pLastTooltip != m_pActiveTooltip)
+	{
+		// Reset the fade in timer if a new tooltip got active
+		s_TooltipActivationStart = Now;
+		s_pLastTooltip = m_pActiveTooltip;
+	}
+
+	const float SecondsBeforeFadeIn = 0.75f;
+	const float SecondsSinceActivation = (Now - s_TooltipActivationStart)/(float)time_freq();
+	if(SecondsSinceActivation < SecondsBeforeFadeIn)
+		return;
+	const float SecondsFadeIn = 0.25f;
+	const float AlphaFactor = SecondsSinceActivation < SecondsBeforeFadeIn+SecondsFadeIn ? (SecondsSinceActivation-SecondsBeforeFadeIn)/SecondsFadeIn : 1.0f;
+	const CUIRect *pScreen = Screen();
+
+	static CTextCursor s_Cursor;
+	s_Cursor.Reset();
+	s_Cursor.m_FontSize = 10.0f;
+	s_Cursor.m_MaxLines = -1;
+	s_Cursor.m_MaxWidth = pScreen->w/4.0f;
+	s_Cursor.m_Flags = TEXTFLAG_ALLOW_NEWLINE|TEXTFLAG_WORD_WRAP;
+	vec4 OldTextColor = TextRender()->GetColor();
+	TextRender()->TextColor(1.0f, 1.0f, 1.0f, AlphaFactor);
+	TextRender()->TextDeferred(&s_Cursor, m_aTooltipText, -1);
+	TextRender()->TextColor(OldTextColor);
+
+	// Position tooltip below hovered rect, to the right of the mouse cursor.
+	// If the tooltip would overflow the screen, position it to the top and/or left instead.
+	CTextBoundingBox BoundingBox = s_Cursor.BoundingBox();
+	const float Rounding = 4.0f;
+	const float Spacing = 4.0f;
+	const float Border = 1.0f;
+	CUIRect Tooltip = { MouseX(), m_TooltipAnchor.y + m_TooltipAnchor.h + Spacing, BoundingBox.w + 2 * (Spacing+Border), BoundingBox.h + 2 * (Spacing+Border) };
+	if(Tooltip.x + Tooltip.w > pScreen->w)
+		Tooltip.x -= Tooltip.w;
+	if(Tooltip.y + Tooltip.h > pScreen->h)
+		Tooltip.y -= Tooltip.h + 2 * Spacing + m_TooltipAnchor.h;
+	Tooltip.Draw(vec4(0.0f, 0.0f, 0.0f, 0.4f * AlphaFactor), Rounding);
+	Tooltip.Margin(Border, &Tooltip);
+	Tooltip.Draw(vec4(0.5f, 0.5f, 0.5f, 0.8f * AlphaFactor), Rounding);
+	Tooltip.Margin(Spacing, &Tooltip);
+	ApplyCursorAlign(&s_Cursor, &Tooltip, TEXTALIGN_ML);
+	TextRender()->DrawTextOutlined(&s_Cursor);
+
+	// Clear active tooltip. DoTooltip must be called each render call.
+	m_pActiveTooltip = 0;
+	m_aTooltipText[0] = '\0';
 }
 
 void CUI::DoPopupMenu(int X, int Y, int Width, int Height, void *pContext, bool (*pfnFunc)(void *pContext, CUIRect View), int Corners)
