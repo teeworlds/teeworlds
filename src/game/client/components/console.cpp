@@ -367,9 +367,15 @@ void CGameConsole::OnRender()
 	if(Progress >= 1.0f)
 	{
 		if(m_ConsoleState == CONSOLE_CLOSING)
+		{
 			m_ConsoleState = CONSOLE_CLOSED;
+			CurrentConsole()->m_Input.SetActive(false);
+		}
 		else if(m_ConsoleState == CONSOLE_OPENING)
+		{
 			m_ConsoleState = CONSOLE_OPEN;
+			CurrentConsole()->m_Input.SetActive(true);
+		}
 
 		Progress = 1.0f;
 	}
@@ -504,7 +510,7 @@ void CGameConsole::OnRender()
 		TextRender()->TextDeferred(&s_Cursor, aInputString, -1);
 		y -= (s_Cursor.LineCount() - 1) * FontSize;
 		s_Cursor.MoveTo(x, y);
-		pConsole->m_Input.Render(&s_Cursor, true);
+		pConsole->m_Input.Render(&s_Cursor);
 
 		// render possible commands
 		if(m_ConsoleType == CONSOLETYPE_LOCAL || Client()->RconAuthed())
@@ -622,9 +628,12 @@ void CGameConsole::Toggle(int Type)
 	if(m_ConsoleType != Type && (m_ConsoleState == CONSOLE_OPEN || m_ConsoleState == CONSOLE_OPENING))
 	{
 		// don't toggle console, just switch what console to use
+		m_ConsoleType = Type;
+		CurrentConsole()->m_Input.SetActive(true);
 	}
 	else
 	{
+		m_ConsoleType = Type;
 		if(m_ConsoleState == CONSOLE_CLOSED || m_ConsoleState == CONSOLE_OPEN)
 		{
 			m_StateChangeEnd = TimeNow()+m_StateChangeDuration;
@@ -641,6 +650,7 @@ void CGameConsole::Toggle(int Type)
 		{
 			Input()->MouseModeAbsolute();
 			UI()->SetEnabled(false);
+			CurrentConsole()->m_Input.SetActive(false);
 			m_ConsoleState = CONSOLE_OPENING;
 			// reset controls
 			m_pClient->m_pControls->OnReset();
@@ -649,12 +659,11 @@ void CGameConsole::Toggle(int Type)
 		{
 			Input()->MouseModeRelative();
 			UI()->SetEnabled(true);
+			CurrentConsole()->m_Input.SetActive(true);
 			m_pClient->OnRelease();
 			m_ConsoleState = CONSOLE_CLOSING;
 		}
 	}
-
-	m_ConsoleType = Type;
 }
 
 void CGameConsole::Dump(int Type)

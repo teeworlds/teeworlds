@@ -11,6 +11,9 @@ IInput *CLineInput::s_pInput = 0;
 ITextRender *CLineInput::s_pTextRender = 0;
 IGraphics *CLineInput::s_pGraphics = 0;
 
+CLineInput *CLineInput::s_apActiveInputs[MAX_ACTIVE_INPUTS] = { 0 };
+unsigned CLineInput::s_NumActiveInputs = 0;
+
 void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 {
 	if(m_pStr && m_pStr == pStr)
@@ -282,11 +285,11 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 	return m_WasChanged;
 }
 
-void CLineInput::Render(CTextCursor *pCursor, bool Active)
+void CLineInput::Render(CTextCursor *pCursor)
 {
 	s_pTextRender->DrawTextOutlined(pCursor);
 
-	if(Active)
+	if(IsActive())
 	{
 		const int VAlign = pCursor->m_Align&TEXTALIGN_MASK_VERT;
 
@@ -340,4 +343,57 @@ void CLineInput::Render(CTextCursor *pCursor, bool Active)
 			s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
 		}
 	}
+}
+
+void CLineInput::SetActive(bool Active)
+{
+	if(Active)
+	{
+		if(IsActive())
+			return;
+		// Try to restore active input from stack
+		for(unsigned i = 0; i < s_NumActiveInputs; i++)
+		{
+			if(s_apActiveInputs[i] == this)
+			{
+				// Deactivate inputs above in the stack
+				for(unsigned j = s_NumActiveInputs-1; j >= i+1; j--)
+				{
+					if(s_apActiveInputs[j])
+					{
+						s_apActiveInputs[j]->OnDeactivate();
+						s_apActiveInputs[j] = 0;
+					}
+				}
+				s_NumActiveInputs = i+1;
+				OnActivate();
+				return;
+			}
+		}
+		if(s_NumActiveInputs > 0)
+			s_apActiveInputs[s_NumActiveInputs-1]->OnDeactivate();
+		// Activate new input
+		dbg_assert(s_NumActiveInputs < MAX_ACTIVE_INPUTS, "max number of active line inputs exceeded");
+		s_apActiveInputs[s_NumActiveInputs] = this;
+		s_NumActiveInputs++;
+		OnActivate();
+	}
+	else
+	{
+		if(!IsActive() || s_NumActiveInputs == 0)
+			return;
+		s_apActiveInputs[s_NumActiveInputs] = 0;
+		s_NumActiveInputs--;
+		OnDeactivate();
+		if(s_NumActiveInputs > 0)
+			s_apActiveInputs[s_NumActiveInputs-1]->OnActivate();
+	}
+}
+
+void CLineInput::OnActivate()
+{
+}
+
+void CLineInput::OnDeactivate()
+{
 }

@@ -37,7 +37,7 @@ void CChat::OnReset()
 			m_aLines[i].m_aName[0] = 0;
 		}
 
-		m_Mode = CHAT_NONE;
+		Disable();
 		// m_WhisperTarget = -1;
 		m_LastWhisperFrom = -1;
 		m_ReverseCompletion = false;
@@ -115,7 +115,7 @@ void CChat::OnStateChange(int NewState, int OldState)
 {
 	if(OldState <= IClient::STATE_CONNECTING)
 	{
-		m_Mode = CHAT_NONE;
+		Disable();
 		for(int i = 0; i < MAX_LINES; i++)
 			m_aLines[i].m_Time = 0;
 		m_CurrentLine = 0;
@@ -262,7 +262,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 		else
 		{
 			m_pHistoryEntry = 0x0;
-			m_Mode = CHAT_NONE;
+			Disable();
 			m_pClient->OnRelease();
 		}
 	}
@@ -290,7 +290,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 				}
 			}
 			m_pHistoryEntry = 0x0;
-			m_Mode = CHAT_NONE;
+			Disable();
 			m_pClient->OnRelease();
 		}
 
@@ -514,6 +514,14 @@ void CChat::EnableMode(int Mode, const char* pText)
 		m_Input.Set(pText);
 	else if(m_Mode == m_ChatBufferMode)
 		m_Input.Set(m_ChatBuffer);
+
+	m_Input.SetActive(true);
+}
+
+void CChat::Disable()
+{
+	m_Mode = CHAT_NONE;
+	m_Input.SetActive(false);
 }
 
 void CChat::ClearInput()
@@ -537,7 +545,7 @@ void CChat::ServerCommandCallback(IConsole::IResult *pResult, void *pContext)
 	pChatData->Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 
 	pChatData->m_pHistoryEntry = 0x0;
-	pChatData->m_Mode = CHAT_NONE;
+	pChatData->Disable();
 	pChatData->m_pClient->OnRelease();
 }
 
@@ -787,7 +795,7 @@ void CChat::OnRender()
 	float CategoryWidth = 0;
 
 	if(m_Mode == CHAT_WHISPER && !m_pClient->m_aClients[m_WhisperTarget].m_Active)
-		m_Mode = CHAT_NONE;
+		Disable();
 	else if(m_Mode != CHAT_NONE || m_ChatBufferMode != CHAT_NONE)
 	{
 		//Set ChatMode and alpha blend for buffered chat
@@ -955,7 +963,7 @@ void CChat::OnRender()
 			const float XScale = Graphics()->ScreenWidth()/Width;
 			const float YScale = Graphics()->ScreenHeight()/Height;
 			Graphics()->ClipEnable((int)(ClippingRect.x*XScale), (int)(ClippingRect.y*YScale), (int)(ClippingRect.w*XScale), (int)(ClippingRect.h*YScale));
-			m_Input.Render(&m_InputCursor, true);
+			m_Input.Render(&m_InputCursor);
 			Graphics()->ClipDisable();
 
 			// scroll to keep the caret inside the clipping rect
@@ -1560,7 +1568,7 @@ void CChat::Com_Mute(IConsole::IResult *pResult, void *pContext)
 		str_format(aMsg, sizeof(aMsg), !isMuted ? Localize("'%s' was muted") : Localize("'%s' was unmuted"), pChatData->m_pClient->m_aClients[TargetID].m_aName);
 		pChatData->AddLine(aMsg, CLIENT_MSG, CHAT_ALL);
 	}
-	pChatData->m_Mode = CHAT_NONE;
+	pChatData->Disable();
 	pChatData->m_pClient->OnRelease();
 }
 
@@ -1585,7 +1593,7 @@ void CChat::Com_Befriend(IConsole::IResult *pResult, void *pContext)
 		str_format(aMsg, sizeof(aMsg), !isFriend ? Localize("'%s' was added as a friend") : Localize("'%s' was removed as a friend"), pChatData->m_pClient->m_aClients[TargetID].m_aName);
 		pChatData->AddLine(aMsg, CLIENT_MSG, CHAT_ALL);
 	}
-	pChatData->m_Mode = CHAT_NONE;
+	pChatData->Disable();
 	pChatData->m_pClient->OnRelease();
 }
 

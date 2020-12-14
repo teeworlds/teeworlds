@@ -8,6 +8,17 @@
 // line input helper
 class CLineInput
 {
+	static class IInput *s_pInput;
+	static class ITextRender *s_pTextRender;
+	static class IGraphics *s_pGraphics;
+
+	enum
+	{
+		MAX_ACTIVE_INPUTS = 8
+	};
+	static CLineInput *s_apActiveInputs[MAX_ACTIVE_INPUTS];
+	static unsigned s_NumActiveInputs;
+
 	char *m_pStr;
 	int m_MaxSize;
 	int m_MaxChars;
@@ -22,15 +33,16 @@ class CLineInput
 
 	bool m_WasChanged;
 
-	static class IInput *s_pInput;
-	static class ITextRender *s_pTextRender;
-	static class IGraphics *s_pGraphics;
-
 	void UpdateStrData();
 	static bool MoveWordStop(char c);
 
+	void OnActivate();
+	void OnDeactivate();
+
 public:
 	static void Init(class IInput *pInput, class ITextRender *pTextRender, class IGraphics *pGraphics) { s_pInput = pInput; s_pTextRender = pTextRender; s_pGraphics = pGraphics; }
+
+	static CLineInput *GetActiveInput() { return s_NumActiveInputs ? s_apActiveInputs[s_NumActiveInputs-1] : 0; }
 
 	CLineInput() { SetBuffer(0, 0, 0); }
 	CLineInput(char *pStr, int MaxSize) { SetBuffer(pStr, MaxSize, MaxSize); }
@@ -64,7 +76,9 @@ public:
 	bool ProcessInput(const IInput::CEvent &Event);
 	bool WasChanged() { bool Changed = m_WasChanged; m_WasChanged = false; return Changed; }
 
-	void Render(class CTextCursor *pCursor, bool Active);
+	void Render(class CTextCursor *pCursor);
+	bool IsActive() const { return GetActiveInput() == this; }
+	void SetActive(bool Active);
 };
 
 #endif
