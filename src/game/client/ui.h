@@ -123,7 +123,6 @@ class CUI
 	unsigned m_LastMouseButtons;
 
 	unsigned m_HotkeysPressed;
-	CLineInput *m_pActiveInput;
 
 	CUIRect m_Screen;
 
@@ -215,7 +214,7 @@ public:
 	bool ConsumeHotkey(unsigned Hotkey);
 	void ClearHotkeys() { m_HotkeysPressed = 0; }
 	bool OnInput(const IInput::CEvent &e);
-	bool IsInputActive() const { return m_pActiveInput != 0; }
+	bool IsInputActive() const { return CLineInput::GetActiveInput() != 0; }
 
 	const CUIRect *Screen();
 	float PixelSize();

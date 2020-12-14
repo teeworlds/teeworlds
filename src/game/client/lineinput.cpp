@@ -13,6 +13,9 @@ IInput *CLineInput::s_pInput = 0;
 ITextRender *CLineInput::s_pTextRender = 0;
 IGraphics *CLineInput::s_pGraphics = 0;
 
+CLineInput *CLineInput::s_pActiveInput = 0;
+EInputPriority CLineInput::s_ActiveInputPriority = NONE;
+
 void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 {
 	if(m_pStr && m_pStr == pStr)
@@ -293,11 +296,11 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 	return m_WasChanged;
 }
 
-void CLineInput::Render(CTextCursor *pCursor, bool Active)
+void CLineInput::Render(CTextCursor *pCursor)
 {
 	s_pTextRender->DrawTextOutlined(pCursor);
 
-	if(Active)
+	if(IsActive())
 	{
 		const int VAlign = pCursor->m_Align&TEXTALIGN_MASK_VERT;
 
@@ -351,4 +354,34 @@ void CLineInput::Render(CTextCursor *pCursor, bool Active)
 			s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
 		}
 	}
+}
+
+void CLineInput::Activate(EInputPriority Priority)
+{
+	if(IsActive())
+		return;
+	if(s_ActiveInputPriority != NONE && Priority < s_ActiveInputPriority)
+		return; // do not replace a higher priority input
+	if(s_pActiveInput)
+		s_pActiveInput->OnDeactivate();
+	s_pActiveInput = this;
+	s_pActiveInput->OnActivate();
+	s_ActiveInputPriority = Priority;
+}
+
+void CLineInput::Deactivate()
+{
+	if(!IsActive())
+		return;
+	s_pActiveInput->OnDeactivate();
+	s_pActiveInput = 0x0;
+	s_ActiveInputPriority = NONE;
+}
+
+void CLineInput::OnActivate()
+{
+}
+
+void CLineInput::OnDeactivate()
+{
 }

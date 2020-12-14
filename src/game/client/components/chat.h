@@ -125,7 +125,8 @@ public:
 
 	bool IsActive() const { return m_Mode != CHAT_NONE; }
 	void AddLine(const char *pLine, int ClientID = SERVER_MSG, int Mode = CHAT_NONE, int TargetID = -1);
-	void EnableMode(int Mode, const char* pText = NULL);
+	void Disable();
+	void EnableMode(int Mode, const char *pText = 0x0);
 	void Say(int Mode, const char *pLine);
 	void ClearChatBuffer();
 	const char* GetCommandName(int Mode) const;

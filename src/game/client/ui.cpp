@@ -38,7 +38,6 @@ CUI::CUI()
 	m_Enabled = true;
 
 	m_HotkeysPressed = 0;
-	m_pActiveInput = 0;
 
 	m_Screen.x = 0;
 	m_Screen.y = 0;
@@ -81,8 +80,13 @@ void CUI::Update(float MouseX, float MouseY, float MouseWorldX, float MouseWorld
 	if(m_pActiveItem)
 		m_pHotItem = m_pActiveItem;
 	m_pBecommingHotItem = 0;
-	if(m_pActiveInput != m_pLastActiveItem)
-		m_pActiveInput = 0;
+
+	if(Enabled())
+	{
+		CLineInput *pActiveInput = CLineInput::GetActiveInput();
+		if(pActiveInput && m_pLastActiveItem && pActiveInput != m_pLastActiveItem)
+			pActiveInput->Deactivate();
+	}
 }
 
 bool CUI::KeyPress(int Key) const
@@ -107,7 +111,8 @@ bool CUI::OnInput(const IInput::CEvent &e)
 	if(!Enabled())
 		return false;
 
-	if(m_pActiveInput && m_pActiveInput->ProcessInput(e))
+	CLineInput *pActiveInput = CLineInput::GetActiveInput();
+	if(pActiveInput && pActiveInput->ProcessInput(e))
 		return true;
 
 	if(e.m_Flags&IInput::FLAG_PRESS)
@@ -416,8 +421,6 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 			pLineInput->SetCursorOffset(CursorOffset);
 			pLineInput->SetSelection(s_SelectionStartOffset, CursorOffset);
 		}
-
-		m_pActiveInput = pLineInput;
 	}
 
 	bool JustGotActive = false;
@@ -482,6 +485,10 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	}
 
 	pLineInput->SetScrollOffset(ScrollOffset);
+	if(Enabled() && Active && !JustGotActive)
+		pLineInput->Activate(UI);
+	else
+		pLineInput->Deactivate();
 
 	// render
 	pRect->Draw(pColorFunction->GetColor(Active, Inside), 5.0f, Corners);
@@ -493,7 +500,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	s_TextCursor.m_Align = TEXTALIGN_ML;
 	s_TextCursor.MoveTo(Textbox.x, Textbox.y + Textbox.h/2.0f);
 	TextRender()->TextDeferred(&s_TextCursor, pDisplayStr, -1);
-	pLineInput->Render(&s_TextCursor, Active && !JustGotActive);
+	pLineInput->Render(&s_TextCursor);
 	ClipDisable();
 
 	return Changed;

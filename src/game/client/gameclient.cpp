@@ -1687,6 +1687,10 @@ vec2 CGameClient::GetCharPos(int ClientID, bool Predicted) const
 void CGameClient::OnActivateEditor()
 {
 	OnRelease();
+
+	CLineInput *pActiveInput = CLineInput::GetActiveInput();
+	if(pActiveInput)
+		pActiveInput->Deactivate();
 }
 
 void CGameClient::CClientData::UpdateBotRenderInfo(CGameClient *pGameClient, int ClientID)

@@ -5,9 +5,24 @@
 
 #include <engine/input.h>
 
+enum EInputPriority
+{
+	NONE = 0,
+	UI,
+	CHAT,
+	CONSOLE,
+};
+
 // line input helper
 class CLineInput
 {
+	static class IInput *s_pInput;
+	static class ITextRender *s_pTextRender;
+	static class IGraphics *s_pGraphics;
+
+	static CLineInput *s_pActiveInput;
+	static EInputPriority s_ActiveInputPriority;
+
 	char *m_pStr;
 	int m_MaxSize;
 	int m_MaxChars;
@@ -22,10 +37,6 @@ class CLineInput
 
 	bool m_WasChanged;
 
-	static class IInput *s_pInput;
-	static class ITextRender *s_pTextRender;
-	static class IGraphics *s_pGraphics;
-
 	void UpdateStrData();
 	enum EMoveDirection
 	{
@@ -34,12 +45,17 @@ class CLineInput
 	};
 	static void MoveCursor(EMoveDirection Direction, bool MoveWord, const char *pStr, int MaxSize, int *pCursorPos);
 
+	void OnActivate();
+	void OnDeactivate();
+
 public:
 	static void Init(class IInput *pInput, class ITextRender *pTextRender, class IGraphics *pGraphics) { s_pInput = pInput; s_pTextRender = pTextRender; s_pGraphics = pGraphics; }
 
+	static CLineInput *GetActiveInput() { return s_pActiveInput; }
+
 	CLineInput() : m_pStr(0) { SetBuffer(0, 0, 0); }
-	CLineInput(char *pStr, int MaxSize) : m_pStr(0)  { SetBuffer(pStr, MaxSize, MaxSize); }
-	CLineInput(char *pStr, int MaxSize, int MaxChars) : m_pStr(0)  { SetBuffer(pStr, MaxSize, MaxChars); }
+	CLineInput(char *pStr, int MaxSize) : m_pStr(0) { SetBuffer(pStr, MaxSize, MaxSize); }
+	CLineInput(char *pStr, int MaxSize, int MaxChars) : m_pStr(0) { SetBuffer(pStr, MaxSize, MaxChars); }
 
 	void SetBuffer(char *pStr, int MaxSize) { SetBuffer(pStr, MaxSize, MaxSize); }
 	void SetBuffer(char *pStr, int MaxSize, int MaxChars);
@@ -70,7 +86,10 @@ public:
 	bool ProcessInput(const IInput::CEvent &Event);
 	bool WasChanged() { bool Changed = m_WasChanged; m_WasChanged = false; return Changed; }
 
-	void Render(class CTextCursor *pCursor, bool Active);
+	void Render(class CTextCursor *pCursor);
+	bool IsActive() const { return GetActiveInput() == this; }
+	void Activate(EInputPriority Priority);
+	void Deactivate();
 };
 
 #endif
