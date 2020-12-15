@@ -806,6 +806,8 @@ int CGraphics_Threaded::Init()
 	if(InitWindow() != 0)
 		return -1;
 
+	m_ScreenHiDPIScale = m_ScreenWidth / (float)m_pConfig->m_GfxScreenWidth;
+
 	// create command buffers
 	for(int i = 0; i < NUM_CMDBUFFERS; i++)
 		m_apCommandBuffers[i] = new CCommandBuffer(128*1024, 2*1024*1024);

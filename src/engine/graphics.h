@@ -56,6 +56,7 @@ protected:
 	int m_ScreenHeight;
 	int m_DesktopScreenWidth;
 	int m_DesktopScreenHeight;
+	float m_ScreenHiDPIScale;
 public:
 	/* Constants: Texture Loading Flags
 		TEXLOAD_NORESAMPLE - Prevents the texture from any resampling
@@ -98,6 +99,7 @@ public:
 	int ScreenWidth() const { return m_ScreenWidth; }
 	int ScreenHeight() const { return m_ScreenHeight; }
 	float ScreenAspect() const { return (float)ScreenWidth()/(float)ScreenHeight(); }
+	float ScreenHiDPIScale() const { return m_ScreenHiDPIScale; }
 	int DesktopWidth() const { return m_DesktopScreenWidth; }
 	int DesktopHeight() const { return m_DesktopScreenHeight; }
 	float DesktopAspect() const { return m_DesktopScreenWidth/(float)m_DesktopScreenHeight; }

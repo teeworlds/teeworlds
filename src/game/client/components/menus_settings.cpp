@@ -1629,6 +1629,8 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 	int OldSelected = -1;
 	char aBuf[32];
 
+	float HiDPIScale = Graphics()->ScreenHiDPIScale();
+
 	pListBox->DoStart(20.0f, lModes.size(), 1, 3, OldSelected, pRect);
 
 	for(int i = 0; i < lModes.size(); ++i)
@@ -1645,8 +1647,8 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 			int G = gcd(lModes[i].m_Width, lModes[i].m_Height);
 
 			str_format(aBuf, sizeof(aBuf), "%dx%d (%d:%d)",
-					   lModes[i].m_Width,
-					   lModes[i].m_Height,
+					   (int)(lModes[i].m_Width * HiDPIScale),
+					   (int)(lModes[i].m_Height * HiDPIScale),
 					   lModes[i].m_Width/G,
 					   lModes[i].m_Height/G);
 
@@ -1894,7 +1896,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		ListRec.HSplitBottom(Spacing, &ListRec, 0);
 		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_B, 5.0f);
 		int g = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
-		str_format(aBuf, sizeof(aBuf), Localize("Current: %dx%d (%d:%d)"), s_GfxScreenWidth, s_GfxScreenHeight, s_GfxScreenWidth/g, s_GfxScreenHeight/g);
+		const float HiDPIScale = Graphics()->ScreenHiDPIScale();
+		str_format(aBuf, sizeof(aBuf), Localize("Current: %dx%d (%d:%d)"), (int)(s_GfxScreenWidth*HiDPIScale), (int)(s_GfxScreenHeight*HiDPIScale), s_GfxScreenWidth/g, s_GfxScreenHeight/g);
 		Button.y += 2;
 		UI()->DoLabel(&Button, aBuf, Button.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
