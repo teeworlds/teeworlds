@@ -366,10 +366,16 @@ void CGlyphMap::SetVariantFaceByName(const char *pFamilyName)
 
 bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 {
-	if(Render && pGlyph->m_Rendered && pGlyph->m_AtlasIndex >= 0 && m_aAtlasPages[pGlyph->m_AtlasIndex].m_ID == pGlyph->m_PageID)
+	if(Render && pGlyph->m_Rendered)
 	{
-		TouchPage(pGlyph->m_AtlasIndex);
-		return true;
+		if(pGlyph->m_AtlasIndex < 0)
+			return false;
+
+		if(m_aAtlasPages[pGlyph->m_AtlasIndex].m_ID == pGlyph->m_PageID)
+		{
+			TouchPage(pGlyph->m_AtlasIndex);
+			return false;
+		}
 	}
 
 	FT_Bitmap *pBitmap;
