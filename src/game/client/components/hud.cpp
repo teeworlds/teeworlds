@@ -784,7 +784,7 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	{
 		CDataWeaponspec weapon = g_pData->m_Weapons.m_aId[i];
 		RenderTools()->SelectSprite(weapon.m_pSpriteBody);
-		RenderTools()->DrawSprite(hotbar_left+12+i*26,y+4+8,weapon.m_VisualSize/6);
+		RenderTools()->DrawSprite(hotbar_left+12+i*26,y+4+8,weapon.m_VisualSize/5);
 	}
 
 	// render selected slot sprite over hotbar
