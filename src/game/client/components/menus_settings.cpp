@@ -986,9 +986,14 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	// right side
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+	Button.VSplitMid(&CheckBoxLeft, &CheckBoxRight);
 	static int s_Showhud = 0;
-	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), Config()->m_ClShowhud, &Button))
+	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), Config()->m_ClShowhud, &CheckBoxLeft))
 		Config()->m_ClShowhud ^= 1;
+
+	static int s_Showhotbar = 0;
+	if(DoButton_CheckBox(&s_Showhotbar, Localize("Show hotbar"), Config()->m_ClShowhotbar, &CheckBoxRight))
+		Config()->m_ClShowhotbar ^= 1;
 
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
@@ -2098,6 +2103,7 @@ void CMenus::ResetSettingsGeneral()
 	Config()->m_ClMouseDeadzone = 300;
 	Config()->m_ClAutoswitchWeapons = 1;
 	Config()->m_ClShowhud = 1;
+	Config()->m_ClShowhotbar = 1;
 	Config()->m_ClFilterchat = 0;
 	Config()->m_ClNameplates = 1;
 	Config()->m_ClNameplatesAlways = 1;
