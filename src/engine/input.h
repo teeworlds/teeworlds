@@ -18,7 +18,7 @@ public:
 	public:
 		int m_Flags;
 		int m_Key;
-		char m_aText[32];
+		char m_aText[32*UTF8_BYTE_LENGTH+1];
 		int m_InputCount;
 	};
 
@@ -39,6 +39,7 @@ public:
 		FLAG_RELEASE=2,
 		FLAG_REPEAT=4,
 		FLAG_TEXT=8,
+		FLAG_TEXTEDIT=16,
 
 		CURSOR_NONE = 0,
 		CURSOR_MOUSE,
@@ -93,7 +94,10 @@ public:
 	virtual void SetClipboardText(const char *pText) = 0;
 
 	// text editing
-	virtual const char *GetComposition() = 0;
+	virtual void StartTextInput() = 0;
+	virtual void StopTextInput() = 0;
+ 	virtual const char *GetComposition() = 0;
+	virtual bool HasComposition() = 0;
 	virtual int GetCompositionCursor() = 0;
 	virtual int GetCompositionSelectedLength() = 0;
 	virtual const char *GetCandidate(int Index) = 0;

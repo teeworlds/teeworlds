@@ -76,7 +76,10 @@ public:
 	const char *GetClipboardText();
 	void SetClipboardText(const char *pText);
 
+	void StartTextInput();
+	void StopTextInput();
 	const char *GetComposition() { return m_aComposition; }
+	bool HasComposition() { return m_CompositionCursor != COMP_CURSOR_INACTIVE; }
 	int GetCompositionCursor() { return m_CompositionCursor; }
 	int GetCompositionSelectedLength() { return m_CompositionSelectedLength; }
 	const char *GetCandidate(int Index) { return m_aaCandidates[Index]; }

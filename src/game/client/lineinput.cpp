@@ -292,7 +292,7 @@ void CLineInput::Render(CTextCursor *pCursor)
 	if(IsActive())
 	{
 		const int VAlign = pCursor->m_Align&TEXTALIGN_MASK_VERT;
-
+		
 		// render selection
 		if(GetSelectionLength())
 		{
@@ -330,6 +330,8 @@ void CLineInput::Render(CTextCursor *pCursor)
 			}
 			s_pGraphics->QuadsEnd();
 		}
+
+		// render on the spot composition
 
 		// render blinking caret
 		if((2*time_get()/time_freq())%2)
@@ -392,8 +394,10 @@ void CLineInput::SetActive(bool Active)
 
 void CLineInput::OnActivate()
 {
+	s_pInput->StartTextInput();
 }
 
 void CLineInput::OnDeactivate()
 {
+	s_pInput->StopTextInput();
 }

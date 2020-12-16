@@ -1238,20 +1238,34 @@ void CTextRender::DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, floa
 	DrawText(pCursor, vec2(0, 0), 0, false, Alpha, StartGlyph, NumGlyphs);
 }
 
-vec2 CTextRender::CaretPosition(CTextCursor *pCursor, int NumChars)
+int CTextRender::CharToGlyph(CTextCursor *pCursor, int NumChars)
 {
 	int CursorChars = 0;
 	int NumGlyphs = pCursor->m_Glyphs.size();
 	if(NumGlyphs == 0 || NumChars == 0)
-		return pCursor->m_CursorPos;
+		return 0;
 
 	for(int i = 0; i < NumGlyphs; ++i)
 	{
 		CursorChars += pCursor->m_Glyphs[i].m_NumChars;
 		if(CursorChars > NumChars)
-			return pCursor->m_CursorPos + pCursor->m_Glyphs[i].m_Advance;
+			return i;
 	}
 
+	return NumGlyphs;
+}
+
+vec2 CTextRender::CaretPosition(CTextCursor *pCursor, int NumChars)
+{
+	int CursorChars = 0;
+	int NumGlyphs = pCursor->m_Glyphs.size();
+	int GlyphIndex = CharToGlyph(pCursor, NumChars);
+	if(GlyphIndex == 0 || NumGlyphs == 0)
+		return pCursor->m_CursorPos;
+
+	if(GlyphIndex < NumGlyphs)
+		return pCursor->m_CursorPos + pCursor->m_Glyphs[GlyphIndex].m_Advance;
+	
 	CScaledGlyph *pLastScaled = &pCursor->m_Glyphs[NumGlyphs-1];
 	return pCursor->m_CursorPos + pLastScaled->m_Advance + vec2(pLastScaled->m_pGlyph->m_AdvanceX, 0) * pLastScaled->m_Size;
 }
