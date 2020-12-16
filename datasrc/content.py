@@ -357,6 +357,8 @@ container.sprites.Add(Sprite("part_hit01", set_particles, 4,1,2,2))
 
 container.sprites.Add(Sprite("health_full", set_game, 21,0,2,2))
 container.sprites.Add(Sprite("health_empty", set_game, 23,0,2,2))
+container.sprites.Add(Sprite("hotbar", set_game, 17,2,2,2))
+container.sprites.Add(Sprite("hotbar_selected", set_game, 19,2,2,2))
 container.sprites.Add(Sprite("armor_full", set_game, 21,2,2,2))
 container.sprites.Add(Sprite("armor_empty", set_game, 23,2,2,2))
 

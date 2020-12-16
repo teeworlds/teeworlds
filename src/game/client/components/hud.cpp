@@ -769,6 +769,33 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	for(; h < 10; h++)
 		Array[i++] = IGraphics::CQuadItem(x+h*12,y+12,12,12);
 	Graphics()->QuadsDrawTL(Array, i);
+
+	// render hotbar
+	RenderTools()->SelectSprite(SPRITE_HOTBAR);
+	int hotbar_left = m_Width-x-24-(NUM_WEAPONS-2)*26;
+	i = 0;
+	for(; i < NUM_WEAPONS-1; i++)
+		Array[i] = IGraphics::CQuadItem(hotbar_left+i*26,y,24,24);
+	Graphics()->QuadsDrawTL(Array, i);
+
+	// render weapons in hotbar
+	i = 0;
+	for(; i < NUM_WEAPONS-1; i++)
+	{
+		CDataWeaponspec weapon = g_pData->m_Weapons.m_aId[i];
+		int size = weapon.m_VisualSize/6;
+		RenderTools()->SelectSprite(weapon.m_pSpriteBody);
+		RenderTools()->DrawSprite(hotbar_left+12+i*26,y+4+8,size);
+	}
+
+	// render selected slot sprite over hotbar
+	if(pCharacter->m_Weapon < NUM_WEAPONS-1)
+	{
+		RenderTools()->SelectSprite(SPRITE_HOTBAR_SELECTED);
+		Array[0] = IGraphics::CQuadItem(hotbar_left+pCharacter->m_Weapon*26,y,24,24);
+		Graphics()->QuadsDrawTL(Array, 1);
+	}
+
 	Graphics()->QuadsEnd();
 	Graphics()->WrapNormal();
 }
