@@ -790,7 +790,7 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 		}
 
 		// render selected slot sprite over hotbar
-		if(pCharacter->m_Weapon < NUM_WEAPONS-1)
+		if(pCharacter->m_Weapon != WEAPON_NINJA)
 		{
 			RenderTools()->SelectSprite(SPRITE_HOTBAR_SELECTED);
 			Array[0] = IGraphics::CQuadItem(hotbar_left+pCharacter->m_Weapon*26,y,24,24);
