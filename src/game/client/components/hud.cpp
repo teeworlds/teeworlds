@@ -774,26 +774,26 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	{
 		// render hotbar
 		RenderTools()->SelectSprite(SPRITE_HOTBAR);
-		int hotbar_left = m_Width-x-24-(NUM_WEAPONS-2)*26;
+		int HotbarLeft = m_Width-x-24-(NUM_WEAPONS-2)*26;
 		i = 0;
 		for(; i < NUM_WEAPONS-1; i++)
-			Array[i] = IGraphics::CQuadItem(hotbar_left+i*26,y,24,24);
+			Array[i] = IGraphics::CQuadItem(HotbarLeft+i*26,y,24,24);
 		Graphics()->QuadsDrawTL(Array, i);
 
 		// render weapons in hotbar
 		i = 0;
 		for(; i < NUM_WEAPONS-1; i++)
 		{
-			CDataWeaponspec weapon = g_pData->m_Weapons.m_aId[i];
-			RenderTools()->SelectSprite(weapon.m_pSpriteBody);
-			RenderTools()->DrawSprite(hotbar_left+12+i*26,y+4+8,weapon.m_VisualSize/5);
+			CDataWeaponspec Weapon = g_pData->m_Weapons.m_aId[i];
+			RenderTools()->SelectSprite(Weapon.m_pSpriteBody);
+			RenderTools()->DrawSprite(HotbarLeft+12+i*26,y+4+8,Weapon.m_VisualSize/5);
 		}
 
 		// render selected slot sprite over hotbar
 		if(pCharacter->m_Weapon != WEAPON_NINJA)
 		{
 			RenderTools()->SelectSprite(SPRITE_HOTBAR_SELECTED);
-			Array[0] = IGraphics::CQuadItem(hotbar_left+pCharacter->m_Weapon*26,y,24,24);
+			Array[0] = IGraphics::CQuadItem(HotbarLeft+pCharacter->m_Weapon*26,y,24,24);
 			Graphics()->QuadsDrawTL(Array, 1);
 		}
 	}
