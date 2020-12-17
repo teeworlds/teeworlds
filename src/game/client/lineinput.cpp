@@ -78,6 +78,7 @@ void CLineInput::SetRange(const char *pString, int Begin, int End)
 		m_pStr[m_Len] = '\0';
 		m_SelectionStart = m_SelectionEnd = m_CursorPos;
 	}
+	UpdateTextCursor(IsActive());
 }
 
 void CLineInput::UpdateStrData()
@@ -85,6 +86,13 @@ void CLineInput::UpdateStrData()
 	str_utf8_stats(m_pStr, m_MaxSize, &m_Len, &m_NumChars);
 	if(m_CursorPos < 0 || m_CursorPos > m_Len)
 		m_SelectionStart = m_SelectionEnd = m_CursorPos = m_Len;
+}
+
+void CLineInput::UpdateTextCursor(bool Active)
+{
+	m_TextCursor.Reset();
+	if (s_pTextRender && m_pStr)
+		s_pTextRender->TextDeferred(&m_TextCursor, m_pStr, -1);
 }
 
 bool CLineInput::MoveWordStop(char c)
@@ -285,30 +293,31 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 	return m_WasChanged;
 }
 
-void CLineInput::Render(CTextCursor *pCursor)
+void CLineInput::Render()
 {
-	s_pTextRender->DrawTextOutlined(pCursor);
+	UpdateTextCursor(IsActive());
+	s_pTextRender->DrawTextOutlined(&m_TextCursor);
 
 	if(IsActive())
 	{
-		const int VAlign = pCursor->m_Align&TEXTALIGN_MASK_VERT;
+		const int VAlign = m_TextCursor.m_Align&TEXTALIGN_MASK_VERT;
 		
 		// render selection
 		if(GetSelectionLength())
 		{
-			const vec2 StartPos = s_pTextRender->CaretPosition(pCursor, GetSelectionStart());
-			const vec2 EndPos = s_pTextRender->CaretPosition(pCursor, GetSelectionEnd());
-			const float LineHeight = pCursor->BaseLineY()/pCursor->LineCount();
+			const vec2 StartPos = s_pTextRender->CaretPosition(&m_TextCursor, GetSelectionStart());
+			const vec2 EndPos = s_pTextRender->CaretPosition(&m_TextCursor, GetSelectionEnd());
+			const float LineHeight = m_TextCursor.BaseLineY()/m_TextCursor.LineCount();
 			const float VAlignOffset =
 				(VAlign == TEXTALIGN_TOP) ? -1.0f :
 				(VAlign == TEXTALIGN_MIDDLE) ? LineHeight/2 :
-				/* TEXTALIGN_BOTTOM */ LineHeight - 1.0f;
+				/* TEXTALIGN_BOTTOM */ LineHeight + LineHeight * 0.35f - 1.0f;
 			s_pGraphics->TextureClear();
 			s_pGraphics->QuadsBegin();
 			s_pGraphics->SetColor(0.3f, 0.3f, 0.3f, 0.3f);
 			if(StartPos.y < EndPos.y) // multi line selection
 			{
-				CTextBoundingBox BoundingBox = pCursor->BoundingBox();
+				CTextBoundingBox BoundingBox = m_TextCursor.BoundingBox();
 				int NumQuads = 0;
 				IGraphics::CQuadItem SelectionQuads[3];
 				SelectionQuads[NumQuads++] = IGraphics::CQuadItem(StartPos.x, StartPos.y - VAlignOffset, BoundingBox.Right() - StartPos.x, LineHeight);
@@ -331,17 +340,19 @@ void CLineInput::Render(CTextCursor *pCursor)
 			s_pGraphics->QuadsEnd();
 		}
 
-		// render on the spot composition
+		static CTextCursor s_MarkerCursor;
+		s_MarkerCursor.m_FontSize = m_TextCursor.m_FontSize;
+		s_MarkerCursor.Reset(s_MarkerCursor.m_FontSize);
+		s_MarkerCursor.m_Align = VAlign | TEXTALIGN_CENTER;
+		s_pTextRender->TextDeferred(&s_MarkerCursor, "｜", -1);
+		vec2 Offset = s_pTextRender->CaretPosition(&m_TextCursor, GetCursorOffset());
+		s_MarkerCursor.MoveTo(Offset);
+		CTextBoundingBox BoundingBox = s_MarkerCursor.BoundingBox();
+		s_pInput->SetTextCompositionWindowPosition(BoundingBox.Right(), BoundingBox.Bottom());
 
 		// render blinking caret
 		if((2*time_get()/time_freq())%2)
 		{
-			static CTextCursor s_MarkerCursor;
-			s_MarkerCursor.Reset();
-			s_MarkerCursor.m_FontSize = pCursor->m_FontSize;
-			s_MarkerCursor.m_Align = VAlign | TEXTALIGN_CENTER;
-			s_pTextRender->TextDeferred(&s_MarkerCursor, "｜", -1);
-			s_MarkerCursor.MoveTo(s_pTextRender->CaretPosition(pCursor, GetCursorOffset()));
 			s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
 		}
 	}

@@ -473,11 +473,8 @@ void CGameConsole::OnRender()
 		Info.m_pCursor = &s_InfoCursor;
 
 		// render prompt
-		static CTextCursor s_Cursor;
-		s_Cursor.Reset();
-		s_Cursor.MoveTo(x, y);
-		s_Cursor.m_FontSize = FontSize;
-		s_Cursor.m_MaxLines = -1;
+		static CTextCursor s_PromptCursor(FontSize);
+		s_PromptCursor.MoveTo(x, y);
 		const char *pPrompt = "> ";
 		if(m_ConsoleType == CONSOLETYPE_REMOTE)
 		{
@@ -491,9 +488,10 @@ void CGameConsole::OnRender()
 			else
 				pPrompt = "NOT CONNECTED> ";
 		}
-		TextRender()->TextOutlined(&s_Cursor, pPrompt, -1);
+		s_PromptCursor.Reset((int64)pPrompt);
+		TextRender()->TextOutlined(&s_PromptCursor, pPrompt, -1);
 
-		x = s_Cursor.AdvancePosition().x;
+		x = s_PromptCursor.AdvancePosition().x;
 
 		//hide rcon password
 		char aInputString[256];
@@ -505,12 +503,16 @@ void CGameConsole::OnRender()
 		}
 
 		// render console input (wrap line)
-		s_Cursor.Reset();
-		s_Cursor.m_MaxWidth = Screen.w - 10.0f - x;
-		TextRender()->TextDeferred(&s_Cursor, aInputString, -1);
-		y -= (s_Cursor.LineCount() - 1) * FontSize;
-		s_Cursor.MoveTo(x, y);
-		pConsole->m_Input.Render(&s_Cursor);
+		CTextCursor *pInputCursor = pConsole->m_Input.GetCursor();
+		pInputCursor->m_Align = TEXTALIGN_BL;
+		pInputCursor->m_MaxLines = -1;
+		pInputCursor->m_FontSize = FontSize;
+		pInputCursor->m_MaxWidth = Screen.w - 10.0f - x;
+		pInputCursor->MoveTo(x, y + FontSize * 1.35f);
+	
+		pConsole->m_Input.Render();
+	
+		y -= (pInputCursor->LineCount() - 1) * FontSize;
 
 		// render possible commands
 		if(m_ConsoleType == CONSOLETYPE_LOCAL || Client()->RconAuthed())
@@ -538,6 +540,11 @@ void CGameConsole::OnRender()
 		TextRender()->TextColor(1,1,1,1);
 
 		//	render log (actual page, wrap lines)
+		static CTextCursor s_Cursor;
+		s_Cursor.Reset();
+		s_Cursor.MoveTo(x, y);
+		s_Cursor.m_FontSize = FontSize;
+		s_Cursor.m_MaxLines = -1;
 
 		CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.Last();
 		float OffsetY = 0.0f;
