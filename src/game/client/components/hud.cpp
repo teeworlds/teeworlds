@@ -793,8 +793,8 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 		if(pCharacter->m_Weapon != WEAPON_NINJA)
 		{
 			RenderTools()->SelectSprite(SPRITE_HOTBAR_SELECTED);
-			Array[0] = IGraphics::CQuadItem(HotbarLeft+pCharacter->m_Weapon*26,y,24,24);
-			Graphics()->QuadsDrawTL(Array, 1);
+			IGraphics::CQuadItem QuadItem(HotbarLeft+pCharacter->m_Weapon*26,y,24,24);
+			Graphics()->QuadsDrawTL(&QuadItem, 1);
 		}
 	}
 
