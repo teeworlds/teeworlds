@@ -138,6 +138,7 @@ public:
 		if (StringVersion < 0 || m_StringVersion != StringVersion)
 		{
 			m_Width = 0;
+			m_Height = 0;
 			m_NextLineAdvanceY = 0;
 			m_Advance = vec2(0, 0);
 			m_LineCount = 1;

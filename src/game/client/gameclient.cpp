@@ -17,6 +17,7 @@
 #include <generated/client_data.h>
 
 #include <game/version.h>
+#include "lineinput.h"
 #include "localization.h"
 #include "render.h"
 
@@ -612,6 +613,9 @@ void CGameClient::OnRender()
 
 	// clear all events/input for this frame
 	Input()->Clear();
+
+	// render ime candidates
+	CLineInput::RenderCandidates();
 }
 
 void CGameClient::OnRelease()

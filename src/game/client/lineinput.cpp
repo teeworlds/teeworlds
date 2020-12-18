@@ -14,6 +14,9 @@ IGraphics *CLineInput::s_pGraphics = 0;
 CLineInput *CLineInput::s_apActiveInputs[MAX_ACTIVE_INPUTS] = { 0 };
 unsigned CLineInput::s_NumActiveInputs = 0;
 
+vec2 CLineInput::s_CompositionWindowPosition = vec2(0, 0);
+float CLineInput::s_CompositionLineHeight = 0.0f;
+
 void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 {
 	if(m_pStr && m_pStr == pStr)
@@ -31,6 +34,58 @@ void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 	{
 		UpdateStrData();
 	}
+}
+
+void CLineInput::DrawSelection(float HeightWeight, int Start, int End, vec4 Color)
+{
+	const int VAlign = m_TextCursor.m_Align&TEXTALIGN_MASK_VERT;
+
+	const vec2 StartPos = s_pTextRender->CaretPosition(&m_TextCursor, Start);
+	const vec2 EndPos = s_pTextRender->CaretPosition(&m_TextCursor, End);
+	const float LineHeight = m_TextCursor.BaseLineY()/m_TextCursor.LineCount();
+	const float VAlignOffset =
+		(VAlign == TEXTALIGN_TOP) ? -LineHeight*(1.0f-HeightWeight)-1.0f :
+		(VAlign == TEXTALIGN_MIDDLE) ? -LineHeight*(1.0f-HeightWeight)+LineHeight/2 :
+		/* TEXTALIGN_BOTTOM */ LineHeight*(1.35f-1.0f+HeightWeight)-1.0f;
+	s_pGraphics->TextureClear();
+	s_pGraphics->QuadsBegin();
+	s_pGraphics->SetColor(Color);
+	if(StartPos.y < EndPos.y) // multi line selection
+	{
+		CTextBoundingBox BoundingBox = m_TextCursor.BoundingBox();
+		int NumQuads = 0;
+		IGraphics::CQuadItem SelectionQuads[3];
+		SelectionQuads[NumQuads++] = IGraphics::CQuadItem(StartPos.x, StartPos.y - VAlignOffset, BoundingBox.Right() - StartPos.x, LineHeight*HeightWeight);
+		const float SecondSegmentY = StartPos.y - VAlignOffset + LineHeight;
+		if(EndPos.y - StartPos.y > LineHeight)
+		{
+			const float MiddleSegmentHeight = EndPos.y - StartPos.y - LineHeight;
+			SelectionQuads[NumQuads++] = IGraphics::CQuadItem(BoundingBox.x, SecondSegmentY, BoundingBox.w, MiddleSegmentHeight);
+			SelectionQuads[NumQuads++] = IGraphics::CQuadItem(BoundingBox.x, SecondSegmentY + MiddleSegmentHeight, EndPos.x - BoundingBox.x, LineHeight*HeightWeight);
+		}
+		else
+			SelectionQuads[NumQuads++] = IGraphics::CQuadItem(BoundingBox.x, SecondSegmentY, EndPos.x - BoundingBox.x, LineHeight*HeightWeight);
+		s_pGraphics->QuadsDrawTL(SelectionQuads, NumQuads);
+	}
+	else // single line selection
+	{
+		IGraphics::CQuadItem SelectionQuad = IGraphics::CQuadItem(StartPos.x, StartPos.y - VAlignOffset, EndPos.x - StartPos.x, LineHeight*HeightWeight);
+		s_pGraphics->QuadsDrawTL(&SelectionQuad, 1);
+	}
+	s_pGraphics->QuadsEnd();
+}
+
+void CLineInput::SetCompositionWindowPosition(vec2 Anchor, float LineHeight)
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	int ScreenWidth = s_pGraphics->ScreenWidth();
+	int ScreenHeight = s_pGraphics->ScreenHeight();
+	s_pGraphics->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	vec2 ScreenScale = vec2(ScreenWidth / (ScreenX1 - ScreenX0), ScreenHeight / (ScreenY1 - ScreenY0));
+	s_CompositionWindowPosition = Anchor * ScreenScale;
+	s_CompositionLineHeight = LineHeight * ScreenScale.y;
+	s_pInput->SetCompositionWindowPosition(s_CompositionWindowPosition.x, s_CompositionWindowPosition.y);
 }
 
 void CLineInput::Clear()
@@ -78,7 +133,6 @@ void CLineInput::SetRange(const char *pString, int Begin, int End)
 		m_pStr[m_Len] = '\0';
 		m_SelectionStart = m_SelectionEnd = m_CursorPos;
 	}
-	UpdateTextCursor(IsActive());
 }
 
 void CLineInput::UpdateStrData()
@@ -86,13 +140,6 @@ void CLineInput::UpdateStrData()
 	str_utf8_stats(m_pStr, m_MaxSize, &m_Len, &m_NumChars);
 	if(m_CursorPos < 0 || m_CursorPos > m_Len)
 		m_SelectionStart = m_SelectionEnd = m_CursorPos = m_Len;
-}
-
-void CLineInput::UpdateTextCursor(bool Active)
-{
-	m_TextCursor.Reset();
-	if (s_pTextRender && m_pStr)
-		s_pTextRender->TextDeferred(&m_TextCursor, m_pStr, -1);
 }
 
 bool CLineInput::MoveWordStop(char c)
@@ -295,49 +342,39 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 
 void CLineInput::Render()
 {
-	UpdateTextCursor(IsActive());
-	s_pTextRender->DrawTextOutlined(&m_TextCursor);
+	m_TextCursor.Reset();
+
+	if(!m_pStr)
+		return;
 
 	if(IsActive())
 	{
+		const int CompositionCursor = s_pInput->GetCompositionCursor();
+		const bool HasComposition = s_pInput->HasComposition();
+		const int CompositionStart = GetCursorOffset() + CompositionCursor;
+		const int CompositionEnd = CompositionStart + s_pInput->GetCompositionSelectedLength();
+
 		const int VAlign = m_TextCursor.m_Align&TEXTALIGN_MASK_VERT;
-		
-		// render selection
-		if(GetSelectionLength())
+
+		if(HasComposition)
 		{
-			const vec2 StartPos = s_pTextRender->CaretPosition(&m_TextCursor, GetSelectionStart());
-			const vec2 EndPos = s_pTextRender->CaretPosition(&m_TextCursor, GetSelectionEnd());
-			const float LineHeight = m_TextCursor.BaseLineY()/m_TextCursor.LineCount();
-			const float VAlignOffset =
-				(VAlign == TEXTALIGN_TOP) ? -1.0f :
-				(VAlign == TEXTALIGN_MIDDLE) ? LineHeight/2 :
-				/* TEXTALIGN_BOTTOM */ LineHeight + LineHeight * 0.35f - 1.0f;
-			s_pGraphics->TextureClear();
-			s_pGraphics->QuadsBegin();
-			s_pGraphics->SetColor(0.3f, 0.3f, 0.3f, 0.3f);
-			if(StartPos.y < EndPos.y) // multi line selection
-			{
-				CTextBoundingBox BoundingBox = m_TextCursor.BoundingBox();
-				int NumQuads = 0;
-				IGraphics::CQuadItem SelectionQuads[3];
-				SelectionQuads[NumQuads++] = IGraphics::CQuadItem(StartPos.x, StartPos.y - VAlignOffset, BoundingBox.Right() - StartPos.x, LineHeight);
-				const float SecondSegmentY = StartPos.y - VAlignOffset + LineHeight;
-				if(EndPos.y - StartPos.y > LineHeight)
-				{
-					const float MiddleSegmentHeight = EndPos.y - StartPos.y - LineHeight;
-					SelectionQuads[NumQuads++] = IGraphics::CQuadItem(BoundingBox.x, SecondSegmentY, BoundingBox.w, MiddleSegmentHeight);
-					SelectionQuads[NumQuads++] = IGraphics::CQuadItem(BoundingBox.x, SecondSegmentY + MiddleSegmentHeight, EndPos.x - BoundingBox.x, LineHeight);
-				}
-				else
-					SelectionQuads[NumQuads++] = IGraphics::CQuadItem(BoundingBox.x, SecondSegmentY, EndPos.x - BoundingBox.x, LineHeight);
-				s_pGraphics->QuadsDrawTL(SelectionQuads, NumQuads);
-			}
-			else // single line selection
-			{
-				IGraphics::CQuadItem SelectionQuad = IGraphics::CQuadItem(StartPos.x, StartPos.y - VAlignOffset, EndPos.x - StartPos.x, LineHeight);
-				s_pGraphics->QuadsDrawTL(&SelectionQuad, 1);
-			}
-			s_pGraphics->QuadsEnd();
+			s_pTextRender->TextDeferred(&m_TextCursor, m_pStr, GetCursorOffset());
+			s_pTextRender->TextDeferred(&m_TextCursor, s_pInput->GetComposition(), -1);
+			s_pTextRender->TextDeferred(&m_TextCursor, m_pStr + GetCursorOffset(), -1);
+			s_pTextRender->DrawTextOutlined(&m_TextCursor);
+			DrawSelection(0.1f, GetCursorOffset(), GetCursorOffset()+s_pInput->GetCompositionLength(), vec4(0.7f, 0.7f, 0.7f, 0.7f));
+		}
+		else
+		{
+			s_pTextRender->TextOutlined(&m_TextCursor, m_pStr, -1);
+		}
+
+		// render selection
+		if(GetSelectionLength() || HasComposition)
+		{
+			const int Start = HasComposition ? CompositionStart : GetSelectionStart();
+			const int End = HasComposition ? CompositionEnd : GetSelectionEnd();
+			DrawSelection(1.0f, Start, End, vec4(0.3f, 0.3f, 0.3f, 0.3f));
 		}
 
 		static CTextCursor s_MarkerCursor;
@@ -345,16 +382,97 @@ void CLineInput::Render()
 		s_MarkerCursor.Reset(s_MarkerCursor.m_FontSize);
 		s_MarkerCursor.m_Align = VAlign | TEXTALIGN_CENTER;
 		s_pTextRender->TextDeferred(&s_MarkerCursor, "｜", -1);
-		vec2 Offset = s_pTextRender->CaretPosition(&m_TextCursor, GetCursorOffset());
+		vec2 Offset = s_pTextRender->CaretPosition(&m_TextCursor, HasComposition ? CompositionStart : GetCursorOffset());
 		s_MarkerCursor.MoveTo(Offset);
-		CTextBoundingBox BoundingBox = s_MarkerCursor.BoundingBox();
-		s_pInput->SetTextCompositionWindowPosition(BoundingBox.Right(), BoundingBox.Bottom());
 
 		// render blinking caret
 		if((2*time_get()/time_freq())%2)
 		{
 			s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
 		}
+
+		if(HasComposition)
+		{
+			vec2 CursorPosition = s_pTextRender->CaretPosition(&m_TextCursor, GetCursorOffset());
+			s_MarkerCursor.MoveTo(CursorPosition);
+			CTextBoundingBox BoundingBox = s_MarkerCursor.BoundingBox();
+			SetCompositionWindowPosition(vec2(BoundingBox.Right(), BoundingBox.Bottom()), BoundingBox.h);
+		}
+
+	}
+	else
+	{
+		s_pTextRender->TextOutlined(&m_TextCursor, m_pStr, -1);
+	}
+}
+
+void CLineInput::RenderCandidates()
+{
+	if(s_pInput->HasComposition() && s_pInput->GetCandidateCount() > 0)
+	{
+		const float FontSize = 7.0f;
+		const float Height = 300;
+		const float Width = Height*s_pGraphics->ScreenAspect();
+		int ScreenWidth = s_pGraphics->ScreenWidth();
+		int ScreenHeight = s_pGraphics->ScreenHeight();
+
+		s_pGraphics->MapScreen(0, 0, Width, Height);
+
+		static CTextCursor s_CandidateCursor;
+		s_CandidateCursor.Reset();
+		s_CandidateCursor.m_FontSize = FontSize;
+		s_CandidateCursor.m_LineSpacing = FontSize*0.35f;
+		s_CandidateCursor.m_MaxLines = -1;
+
+		vec2 Position = s_CompositionWindowPosition / vec2(ScreenWidth, ScreenHeight) * vec2(Width, Height);
+		float SelectedCandidateY = 0;
+		for(int i = 0; i < s_pInput->GetCandidateCount(); ++i)
+		{
+			char aBuf[32];
+
+			if(i == s_pInput->GetCandidateSelectedIndex())
+				SelectedCandidateY = s_CandidateCursor.Height();
+
+			if(i > 0)
+				s_pTextRender->TextNewline(&s_CandidateCursor);
+			
+			str_format(aBuf, 32, "%d. ", (i+1)%10);
+
+			s_pTextRender->TextColor(0.8f, 0.8f, 0.8f, 1.0f);
+			s_pTextRender->TextDeferred(&s_CandidateCursor, aBuf, -1);
+			s_pTextRender->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			s_pTextRender->TextDeferred(&s_CandidateCursor, s_pInput->GetCandidate(i), -1);
+		}
+
+		CTextBoundingBox BoundingBox = s_CandidateCursor.BoundingBox();
+
+		// move candidate window up if needed
+		if(Position.y + FontSize * 13.5f > Height)
+			Position.y -= BoundingBox.h + s_CompositionLineHeight / ScreenHeight * Height;
+
+		// move candidate window left if needed
+		if(Position.x + BoundingBox.w + 2.0f > Width)
+			Position.x -= Position.x + BoundingBox.w + 2.0f - Width;
+
+		s_CandidateCursor.MoveTo(Position);
+		BoundingBox = s_CandidateCursor.BoundingBox();
+
+		// draw rect
+		s_pGraphics->TextureClear();
+		s_pGraphics->QuadsBegin();
+		s_pGraphics->BlendNormal();
+
+		s_pGraphics->SetColor(0.0f, 0.0f, 0.0f, 0.9f);
+		IGraphics::CQuadItem Quad = IGraphics::CQuadItem(BoundingBox.x-1, BoundingBox.y-1, BoundingBox.w+2, BoundingBox.h+2);
+		s_pGraphics->QuadsDrawTL(&Quad, 1);
+
+		s_pGraphics->SetColor(0.8f, 0.8f, 0.8f, 0.9f);
+		Quad = IGraphics::CQuadItem(BoundingBox.x, BoundingBox.y + SelectedCandidateY, BoundingBox.w, FontSize*1.35f);
+		s_pGraphics->QuadsDrawTL(&Quad, 1);
+		s_pGraphics->QuadsEnd();
+
+	
+		s_pTextRender->DrawTextOutlined(&s_CandidateCursor);
 	}
 }
 

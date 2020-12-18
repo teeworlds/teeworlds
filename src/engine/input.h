@@ -48,10 +48,9 @@ public:
 		MAX_CANDIDATES = 16,
 		MAX_CANDIDATE_LENGTH = 16,
 		MAX_CANDIDATE_ARRAY_SIZE=MAX_CANDIDATE_LENGTH*UTF8_BYTE_LENGTH+1,
-		MAX_COMPOSITION_LENGTH = 64,
-		MAX_COMPOSITION_ARRAY_SIZE = MAX_COMPOSITION_LENGTH*UTF8_BYTE_LENGTH+1,
+		MAX_COMPOSITION_ARRAY_SIZE = 32, // SDL2 limitation
 
-		COMP_CURSOR_INACTIVE = -1
+		COMP_LENGTH_INACTIVE = -1
 	};
 
 	// events
@@ -100,10 +99,11 @@ public:
 	virtual bool HasComposition() = 0;
 	virtual int GetCompositionCursor() = 0;
 	virtual int GetCompositionSelectedLength() = 0;
+	virtual int GetCompositionLength() = 0;
 	virtual const char *GetCandidate(int Index) = 0;
 	virtual int GetCandidateCount() = 0;
 	virtual int GetCandidateSelectedIndex() = 0;
-	virtual void SetTextCompositionWindowPosition(float X, float Y) = 0;
+	virtual void SetCompositionWindowPosition(float X, float Y) = 0;
 
 	int CursorRelative(float *pX, float *pY)
 	{

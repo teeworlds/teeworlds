@@ -1262,13 +1262,13 @@ int CTextRender::CharToGlyph(CTextCursor *pCursor, int NumChars, float *pLineWid
 
 	int LastGlyphIndex = GlyphIndex;
 
-	if (GlyphIndex < 0)
+	if(GlyphIndex < 0)
 	{
 		GlyphIndex = NumGlyphs;
 		LastGlyphIndex = GlyphIndex - 1;
 	}
 
-	if (pLineWidth)
+	if(pLineWidth)
 	{
 		int Line = pCursor->m_Glyphs[LastGlyphIndex].m_Line;
 		
@@ -1304,7 +1304,6 @@ vec2 CTextRender::CaretPosition(CTextCursor *pCursor, int NumChars)
 	int PixelSize = (int)(Size * ScreenScale.y);
 	Size = PixelSize / ScreenScale.y;
 
-	int CursorChars = 0;
 	int NumGlyphs = pCursor->m_Glyphs.size();
 	float LineWidth;
 	int GlyphIndex = CharToGlyph(pCursor, NumChars, &LineWidth);

@@ -19,6 +19,9 @@ class CLineInput
 	static CLineInput *s_apActiveInputs[MAX_ACTIVE_INPUTS];
 	static unsigned s_NumActiveInputs;
 
+	static vec2 s_CompositionWindowPosition;
+	static float s_CompositionLineHeight;
+
 	class CTextCursor m_TextCursor;
 	char *m_pStr;
 	int m_MaxSize;
@@ -35,14 +38,16 @@ class CLineInput
 	bool m_WasChanged;
 
 	void UpdateStrData();
-	void UpdateTextCursor(bool Active);
 	static bool MoveWordStop(char c);
+	void DrawSelection(float HeightWeight, int Start, int End, vec4 Color);
 
 	void OnActivate();
 	void OnDeactivate();
 
 public:
 	static void Init(class IInput *pInput, class ITextRender *pTextRender, class IGraphics *pGraphics) { s_pInput = pInput; s_pTextRender = pTextRender; s_pGraphics = pGraphics; }
+	static void RenderCandidates();
+	static void SetCompositionWindowPosition(vec2 Anchor, float LineHeight);
 
 	static CLineInput *GetActiveInput() { return s_NumActiveInputs ? s_apActiveInputs[s_NumActiveInputs-1] : 0; }
 
