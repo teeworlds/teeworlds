@@ -769,33 +769,38 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	for(; h < 10; h++)
 		Array[i++] = IGraphics::CQuadItem(x+h*12,y+12,12,12);
 	Graphics()->QuadsDrawTL(Array, i);
+	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
+}
 
-	if(Config()->m_ClShowhotbar)
+void CHud::RenderHotbar(const CNetObj_Character *pCharacter)
+{
+	int x = m_Width-5;
+	int y = 5;
+
+	// render hotbar
+	int HotbarLeft = x-24-(NUM_WEAPONS-2)*26;
+	int i = 0;
+	for(; i < NUM_WEAPONS-1; i++)
 	{
-		// render hotbar
-		RenderTools()->SelectSprite(SPRITE_HOTBAR);
-		int HotbarLeft = m_Width-x-24-(NUM_WEAPONS-2)*26;
-		i = 0;
-		for(; i < NUM_WEAPONS-1; i++)
-			Array[i] = IGraphics::CQuadItem(HotbarLeft+i*26,y,24,24);
-		Graphics()->QuadsDrawTL(Array, i);
+		CUIRect Rect = {HotbarLeft+i*26.0f,float(y),24,24};
+		Graphics()->BlendNormal();
+		RenderTools()->DrawUIRect(&Rect, i == pCharacter->m_Weapon ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	}
 
-		// render weapons in hotbar
-		i = 0;
-		for(; i < NUM_WEAPONS-1; i++)
-		{
-			CDataWeaponspec Weapon = g_pData->m_Weapons.m_aId[i];
-			RenderTools()->SelectSprite(Weapon.m_pSpriteBody);
-			RenderTools()->DrawSprite(HotbarLeft+12+i*26,y+4+8,Weapon.m_VisualSize/5);
-		}
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->WrapClamp();
 
-		// render selected slot sprite over hotbar
-		if(pCharacter->m_Weapon != WEAPON_NINJA)
-		{
-			RenderTools()->SelectSprite(SPRITE_HOTBAR_SELECTED);
-			IGraphics::CQuadItem QuadItem(HotbarLeft+pCharacter->m_Weapon*26,y,24,24);
-			Graphics()->QuadsDrawTL(&QuadItem, 1);
-		}
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	// render weapons
+	i = 0;
+	for(; i < NUM_WEAPONS-1; i++)
+	{
+		CDataWeaponspec Weapon = g_pData->m_Weapons.m_aId[i];
+		RenderTools()->SelectSprite(Weapon.m_pSpriteBody);
+		RenderTools()->DrawSprite(HotbarLeft+12+i*26,y+4+8,Weapon.m_VisualSize/5);
 	}
 
 	Graphics()->QuadsEnd();
@@ -1015,6 +1020,7 @@ void CHud::OnRender()
 		if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 		{
 			RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
+			if(Config()->m_ClShowhotbar) RenderHotbar(m_pClient->m_Snap.m_pLocalCharacter);
 			if(Race)
 			{
 				RenderRaceTime(m_pClient->m_Snap.m_paPlayerInfosRace[m_pClient->m_LocalClientID]);
