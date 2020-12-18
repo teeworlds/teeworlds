@@ -87,6 +87,6 @@ public:
 	const char *GetCandidate(int Index) { return m_aaCandidates[Index]; }
 	int GetCandidateCount() { return m_CandidateCount; }
 	int GetCandidateSelectedIndex() { return m_CandidateSelectedIndex; }
-	void SetCompositionWindowPosition(float X, float Y);
+	void SetCompositionWindowPosition(float X, float Y, float H);
 };
 #endif

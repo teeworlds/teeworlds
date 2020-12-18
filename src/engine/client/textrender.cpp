@@ -1272,7 +1272,7 @@ int CTextRender::CharToGlyph(CTextCursor *pCursor, int NumChars, float *pLineWid
 	{
 		int Line = pCursor->m_Glyphs[LastGlyphIndex].m_Line;
 		
-		for (LastGlyphIndex = LastGlyphIndex; LastGlyphIndex < NumGlyphs; ++LastGlyphIndex)
+		for (; LastGlyphIndex < NumGlyphs; ++LastGlyphIndex)
 		{
 			if(LastGlyphIndex + 1 >= NumGlyphs)
 				break;

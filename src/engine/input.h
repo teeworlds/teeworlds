@@ -103,7 +103,7 @@ public:
 	virtual const char *GetCandidate(int Index) = 0;
 	virtual int GetCandidateCount() = 0;
 	virtual int GetCandidateSelectedIndex() = 0;
-	virtual void SetCompositionWindowPosition(float X, float Y) = 0;
+	virtual void SetCompositionWindowPosition(float X, float Y, float H) = 0;
 
 	int CursorRelative(float *pX, float *pY)
 	{

@@ -86,9 +86,7 @@ CInput::~CInput()
 
 void CInput::Init()
 {
-	// enable system messages
-	SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
-	SDL_StopTextInput();
+	StopTextInput();
 
 	m_pGraphics = Kernel()->RequestInterface<IEngineGraphics>();
 	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
@@ -315,12 +313,16 @@ void CInput::SetClipboardText(const char *pText)
 
 void CInput::StartTextInput()
 {
+	// enable system messages for ime
+	SDL_EventState(SDL_SYSWMEVENT, SDL_ENABLE);
 	SDL_StartTextInput();
 }
 
 void CInput::StopTextInput()
 {
 	SDL_StopTextInput();
+	// disable system messages for performance
+	SDL_EventState(SDL_SYSWMEVENT, SDL_DISABLE);
 	m_CompositionLength = COMP_LENGTH_INACTIVE;
 	m_CompositionCursor = 0;
 	m_aComposition[0] = 0;
@@ -342,15 +344,13 @@ bool CInput::KeyState(int Key) const
 		&& m_aInputState[Key>=KEY_MOUSE_1 ? Key : SDL_GetScancodeFromKey(KeyToKeycode(Key))];
 }
 
-void CInput::SetCompositionWindowPosition(float X, float Y)
+void CInput::SetCompositionWindowPosition(float X, float Y, float H)
 {
 	SDL_Rect Rect;
-	Rect.x = X;
-	Rect.y = Y;
-	Rect.h = Graphics()->ScreenHeight() / 2;  // unused by SDL2
-	Rect.w = Graphics()->ScreenWidth();	      // unused by SDL2
-
-	// TODO: use window coordinate instead of canvas coordinate (requires #2827)
+	Rect.x = X / m_pGraphics->ScreenHiDPIScale();
+	Rect.y = Y / m_pGraphics->ScreenHiDPIScale();
+	Rect.h = H / m_pGraphics->ScreenHiDPIScale();
+	Rect.w = 0;
 	SDL_SetTextInputRect(&Rect);
 }
 
