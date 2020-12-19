@@ -34,6 +34,7 @@ void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 	{
 		UpdateStrData();
 	}
+	m_TextVersion = 0;
 }
 
 void CLineInput::DrawSelection(float HeightWeight, int Start, int End, vec4 Color)
@@ -92,6 +93,7 @@ void CLineInput::Clear()
 {
 	mem_zero(m_pStr, m_MaxSize);
 	UpdateStrData();
+	m_TextVersion++;
 }
 
 void CLineInput::Set(const char *pString)
@@ -99,6 +101,7 @@ void CLineInput::Set(const char *pString)
 	str_copy(m_pStr, pString, m_MaxSize);
 	UpdateStrData();
 	SetCursorOffset(m_Len);
+	m_TextVersion++;
 }
 
 void CLineInput::SetRange(const char *pString, int Begin, int End)
@@ -133,6 +136,7 @@ void CLineInput::SetRange(const char *pString, int Begin, int End)
 		m_pStr[m_Len] = '\0';
 		m_SelectionStart = m_SelectionEnd = m_CursorPos;
 	}
+	m_TextVersion++;
 }
 
 void CLineInput::UpdateStrData()
@@ -337,13 +341,13 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 
 	m_WasChanged |= OldCursorPos != m_CursorPos;
 	m_WasChanged |= SelectionLength != GetSelectionLength();
+	m_TextVersion += m_WasChanged;
+
 	return m_WasChanged;
 }
 
 void CLineInput::Render()
 {
-	m_TextCursor.Reset();
-
 	if(!m_pStr)
 		return;
 
@@ -358,6 +362,7 @@ void CLineInput::Render()
 
 		if(HasComposition)
 		{
+			m_TextCursor.Reset(-1); // composition is dynamic
 			s_pTextRender->TextDeferred(&m_TextCursor, m_pStr, GetCursorOffset());
 			s_pTextRender->TextDeferred(&m_TextCursor, s_pInput->GetComposition(), -1);
 			s_pTextRender->TextDeferred(&m_TextCursor, m_pStr + GetCursorOffset(), -1);
@@ -366,6 +371,7 @@ void CLineInput::Render()
 		}
 		else
 		{
+			m_TextCursor.Reset(m_TextVersion);
 			s_pTextRender->TextOutlined(&m_TextCursor, m_pStr, -1);
 		}
 
@@ -398,6 +404,7 @@ void CLineInput::Render()
 	}
 	else
 	{
+		m_TextCursor.Reset(m_TextVersion);
 		s_pTextRender->TextOutlined(&m_TextCursor, m_pStr, -1);
 	}
 }

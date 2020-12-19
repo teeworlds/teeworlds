@@ -629,6 +629,8 @@ private:
 	int m_AddressSelection;
 	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
 	static CColumn ms_aDemoCols[NUM_DEMO_COLS];
+	CLineInput m_ServerAddressInput;
+	CLineInput m_ServerAddressLanInput;
 
 	CBrowserFilter* GetSelectedBrowserFilter()
 	{

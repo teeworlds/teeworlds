@@ -23,6 +23,8 @@ class CLineInput
 	static float s_CompositionLineHeight;
 
 	class CTextCursor m_TextCursor;
+	unsigned int m_TextVersion;
+
 	char *m_pStr;
 	int m_MaxSize;
 	int m_MaxChars;

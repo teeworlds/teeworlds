@@ -987,6 +987,10 @@ void CMenus::OnInit()
 
 	RenderLoading(1);
 
+	// setup browser address input
+	m_ServerAddressInput.SetBuffer(Config()->m_UiServerAddress, sizeof(Config()->m_UiServerAddress));
+	m_ServerAddressLanInput.SetBuffer(Config()->m_UiServerAddressLan, sizeof(Config()->m_UiServerAddressLan));
+
 	ServerBrowser()->SetType(Config()->m_UiBrowserPage == PAGE_LAN ? IServerBrowser::TYPE_LAN : IServerBrowser::TYPE_INTERNET);
 }
 

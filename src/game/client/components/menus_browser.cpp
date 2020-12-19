@@ -1162,7 +1162,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		static CButtonContainer s_ClearButton;
 		if(DoButton_SpriteID(&s_ClearButton, IMAGE_TOOLICONS, SPRITE_TOOL_X_A, false, &Button, CUIRect::CORNER_ALL, 5.0f, true))
 		{
-			Config()->m_BrFilterString[0] = 0;
+			s_FilterInput.Clear();
 			UI()->SetActiveItem(&Config()->m_BrFilterString);
 			Client()->ServerBrowserUpdate();
 		}
@@ -1176,16 +1176,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	if(BrowserType == IServerBrowser::TYPE_INTERNET)
 	{
-		static CLineInput s_AddressInput(Config()->m_UiServerAddress, sizeof(Config()->m_UiServerAddress));
-		if(UI()->DoEditBox(&s_AddressInput, &EditBox, FontSize))
+		if(UI()->DoEditBox(&m_ServerAddressInput, &EditBox, FontSize))
 		{
 			m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
 		}
 	}
 	else if(BrowserType == IServerBrowser::TYPE_LAN)
 	{
-		static CLineInput s_AddressInput(Config()->m_UiServerAddressLan, sizeof(Config()->m_UiServerAddressLan));
-		if(UI()->DoEditBox(&s_AddressInput, &EditBox, FontSize))
+		if(UI()->DoEditBox(&m_ServerAddressLanInput, &EditBox, FontSize))
 		{
 			m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
 		}
@@ -1505,8 +1503,8 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 		m_pClient->Friends()->AddFriend(s_aName, s_aClan);
 		FriendlistOnUpdate();
 		Client()->ServerBrowserUpdate();
-		s_aName[0] = 0;
-		s_aClan[0] = 0;
+		s_NameInput.Clear();
+		s_ClanInput.Clear();
 	}
 
 	// delete friend
@@ -1552,7 +1550,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		{
 			m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, ServerBrowser()));
 			m_lFilters[m_lFilters.size()-1].Switch();
-			s_aFilterName[0] = 0;
+			s_FilterInput.Clear();
 			Client()->ServerBrowserUpdate();
 		}
 	}
@@ -1717,7 +1715,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 					str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
 					FilterInfo.m_aGametypeExclusive[i] = false;
 					UpdateFilter = true;
-					s_aGametype[0] = 0;
+					s_GametypeInput.Clear();
 					break;
 				}
 			}
@@ -1734,7 +1732,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 					str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
 					FilterInfo.m_aGametypeExclusive[i] = true;
 					UpdateFilter = true;
-					s_aGametype[0] = 0;
+					s_GametypeInput.Clear();
 					break;
 				}
 			}
@@ -2238,9 +2236,9 @@ void CMenus::SetServerBrowserAddress(const char *pAddress)
 {
 	const int Type = ServerBrowser()->GetType();
 	if(Type == IServerBrowser::TYPE_INTERNET)
-		str_copy(Config()->m_UiServerAddress, pAddress, sizeof(Config()->m_UiServerAddress));
+		m_ServerAddressInput.Set(pAddress);
 	else if(Type == IServerBrowser::TYPE_LAN)
-		str_copy(Config()->m_UiServerAddressLan, pAddress, sizeof(Config()->m_UiServerAddressLan));
+		m_ServerAddressLanInput.Set(pAddress);
 }
 
 void CMenus::ServerBrowserFilterOnUpdate()
