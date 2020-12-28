@@ -17,6 +17,8 @@ unsigned CLineInput::s_NumActiveInputs = 0;
 vec2 CLineInput::s_CompositionWindowPosition = vec2(0, 0);
 float CLineInput::s_CompositionLineHeight = 0.0f;
 
+char CLineInput::s_aStars[128] = { 0 };
+
 void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 {
 	if(m_pStr && m_pStr == pStr)
@@ -358,8 +360,6 @@ void CLineInput::Render()
 		const int CompositionStart = GetCursorOffset() + CompositionCursor;
 		const int CompositionEnd = CompositionStart + s_pInput->GetCompositionSelectedLength();
 
-		const int VAlign = m_TextCursor.m_Align&TEXTALIGN_MASK_VERT;
-
 		if(HasComposition)
 		{
 			m_TextCursor.Reset(-1); // composition is dynamic
@@ -386,7 +386,7 @@ void CLineInput::Render()
 		static CTextCursor s_MarkerCursor;
 		s_MarkerCursor.m_FontSize = m_TextCursor.m_FontSize;
 		s_MarkerCursor.Reset(s_MarkerCursor.m_FontSize);
-		s_MarkerCursor.m_Align = VAlign | TEXTALIGN_CENTER;
+		s_MarkerCursor.m_Align = (m_TextCursor.m_Align&TEXTALIGN_MASK_VERT) | TEXTALIGN_CENTER;
 		s_pTextRender->TextDeferred(&s_MarkerCursor, "｜", -1);
 		vec2 Offset = s_pTextRender->CaretPosition(&m_TextCursor, HasComposition ? CompositionStart : GetCursorOffset());
 		s_MarkerCursor.MoveTo(Offset);
@@ -404,8 +404,21 @@ void CLineInput::Render()
 	}
 	else
 	{
+		const char *pDisplayStr;
+		if(IsHidden())
+		{
+			unsigned NumStars = GetNumChars();
+			if(NumStars >= sizeof(s_aStars))
+				NumStars = sizeof(s_aStars)-1;
+			for(unsigned int i = 0; i < NumStars; ++i)
+				s_aStars[i] = '*';
+			s_aStars[NumStars] = 0;
+			pDisplayStr = s_aStars;
+		}
+		else
+			pDisplayStr = m_pStr;
 		m_TextCursor.Reset(m_TextVersion);
-		s_pTextRender->TextOutlined(&m_TextCursor, m_pStr, -1);
+		s_pTextRender->TextOutlined(&m_TextCursor, pDisplayStr, -1);
 	}
 }
 
@@ -537,9 +550,13 @@ void CLineInput::SetActive(bool Active)
 void CLineInput::OnActivate()
 {
 	s_pInput->StartTextInput();
+	if(IsHidden())
+		m_TextVersion++;
 }
 
 void CLineInput::OnDeactivate()
 {
 	s_pInput->StopTextInput();
+	if(IsHidden())
+		m_TextVersion++;
 }

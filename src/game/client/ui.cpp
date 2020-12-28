@@ -344,7 +344,7 @@ void CUI::DoLabelSelected(const CUIRect *pRect, const char *pText, bool Selected
 	}
 }
 
-bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool Hidden, int Corners, const IButtonColorFunction *pColorFunction)
+bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const IButtonColorFunction *pColorFunction)
 {
 	CTextCursor *pCursor = pLineInput->GetCursor();
 	pCursor->m_FontSize = FontSize;
@@ -459,18 +459,6 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	if(Inside)
 		SetHotItem(pLineInput);
 
-	char aStars[128];
-	if(Hidden)
-	{
-		unsigned NumStars = pLineInput->GetNumChars();
-		if(NumStars >= sizeof(aStars))
-			NumStars = sizeof(aStars)-1;
-		for(unsigned int i = 0; i < NumStars; ++i)
-			aStars[i] = '*';
-		aStars[NumStars] = 0;
-		pDisplayStr = aStars;
-	}
-
 	// check if the text has to be moved
 	if(Active && !JustGotActive && (UpdateOffset || Changed))
 	{
@@ -510,7 +498,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	return Changed;
 }
 
-void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const char *pStr, float VSplitVal, bool Hidden)
+void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const char *pStr, float VSplitVal)
 {
 	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
@@ -522,7 +510,7 @@ void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const ch
 	str_format(aBuf, sizeof(aBuf), "%s:", pStr);
 	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_MC);
 
-	DoEditBox(pLineInput, &EditBox, FontSize, Hidden);
+	DoEditBox(pLineInput, &EditBox, FontSize);
 }
 
 float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)

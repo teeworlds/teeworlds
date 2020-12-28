@@ -22,6 +22,8 @@ class CLineInput
 	static vec2 s_CompositionWindowPosition;
 	static float s_CompositionLineHeight;
 
+	static char s_aStars[128];
+
 	class CTextCursor m_TextCursor;
 	unsigned int m_TextVersion;
 
@@ -36,7 +38,7 @@ class CLineInput
 	int m_SelectionEnd;
 
 	float m_ScrollOffset;
-
+	bool m_Hidden;
 	bool m_WasChanged;
 
 	void UpdateStrData();
@@ -82,6 +84,9 @@ public:
 	// used either for vertical or horizontal scrolling
 	float GetScrollOffset() const { return m_ScrollOffset; }
 	void SetScrollOffset(float ScrollOffset) { m_ScrollOffset = ScrollOffset; }
+
+	bool IsHidden() const { return m_Hidden; }
+	void SetHidden(bool Hidden) { m_Hidden = Hidden; }
 
 	bool ProcessInput(const IInput::CEvent &Event);
 	bool WasChanged() { bool Changed = m_WasChanged; m_WasChanged = false; return Changed; }

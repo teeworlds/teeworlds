@@ -1538,7 +1538,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	Button.VSplitLeft(60.0f, &Icon, &Button);
 	static char s_aFilterName[32] = { 0 };
 	static CLineInput s_FilterInput(s_aFilterName, sizeof(s_aFilterName));
-	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, false, CUIRect::CORNER_L);
+	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, CUIRect::CORNER_L);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 5.0f, CUIRect::CORNER_R);
 	Button.VSplitLeft(Button.h, &Icon, &Label);
 	UI()->DoLabel(&Label, Localize("New filter"), FontSize, TEXTALIGN_ML);
@@ -1703,7 +1703,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 
 		static char s_aGametype[16] = { 0 };
 		static CLineInput s_GametypeInput(s_aGametype, sizeof(s_aGametype));
-		UI()->DoEditBox(&s_GametypeInput, &EditBox, FontSize, false, CUIRect::CORNER_L);
+		UI()->DoEditBox(&s_GametypeInput, &EditBox, FontSize, CUIRect::CORNER_L);
 
 		static CButtonContainer s_AddInclusiveGametype;
 		if(DoButton_Menu(&s_AddInclusiveGametype, "+", 0, &AddIncButton, 0, 0) && s_aGametype[0])

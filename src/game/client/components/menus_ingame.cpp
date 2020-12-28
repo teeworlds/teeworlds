@@ -791,7 +791,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Reason.VSplitLeft(TextRender()->TextWidth(FontSize, pReasonLabel, -1) + 10.0f, &Label, &Reason);
 				Label.y += 2.0f;
 				UI()->DoLabel(&Label, pReasonLabel, FontSize, TEXTALIGN_LEFT);
-				UI()->DoEditBox(&s_ReasonInput, &Reason, FontSize, false, CUIRect::CORNER_L);
+				UI()->DoEditBox(&s_ReasonInput, &Reason, FontSize, CUIRect::CORNER_L);
 
 				// clear button
 				static CButtonContainer s_ClearButton;
