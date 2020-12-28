@@ -234,8 +234,8 @@ public:
 	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor);
 
 	// editboxes
-	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool Hidden = false, int Corners = CUIRect::CORNER_ALL, const IButtonColorFunction *pColorFunction = &DarkButtonColorFunction);
-	void DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const char *pStr, float VSplitVal, bool Hidden = false);
+	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners = CUIRect::CORNER_ALL, const IButtonColorFunction *pColorFunction = &DarkButtonColorFunction);
+	void DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const char *pStr, float VSplitVal);
 
 	// scrollbars
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);

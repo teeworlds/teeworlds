@@ -500,16 +500,8 @@ void CGameConsole::OnRender()
 
 		x = s_PromptCursor.AdvancePosition().x;
 
-		//hide rcon password
-		char aInputString[256];
-		str_copy(aInputString, pConsole->m_Input.GetString(), sizeof(aInputString));
-		if(m_ConsoleType == CONSOLETYPE_REMOTE && (Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_LOADING) && !Client()->RconAuthed())
-		{
-			for(int i = 0; i < pConsole->m_Input.GetLength(); ++i)
-				aInputString[i] = '*';
-		}
-
 		// render console input (wrap line)
+		pConsole->m_Input.SetHidden(m_ConsoleType == CONSOLETYPE_REMOTE && (Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_LOADING) && !Client()->RconAuthed());
 		CTextCursor *pInputCursor = pConsole->m_Input.GetCursor();
 		pInputCursor->m_Align = TEXTALIGN_BL;
 		pInputCursor->m_MaxLines = -1;

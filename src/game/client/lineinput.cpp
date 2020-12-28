@@ -19,6 +19,8 @@ EInputPriority CLineInput::s_ActiveInputPriority = NONE;
 vec2 CLineInput::s_CompositionWindowPosition = vec2(0, 0);
 float CLineInput::s_CompositionLineHeight = 0.0f;
 
+char CLineInput::s_aStars[128] = { '\0' };
+
 void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 {
 	if(m_pStr && m_pStr == pStr)
@@ -103,6 +105,20 @@ void CLineInput::UpdateStrData()
 		SetCursorOffset(m_CursorPos);
 }
 
+const char *CLineInput::GetDisplayedString()
+{
+	if(!IsHidden())
+		return m_pStr;
+
+	unsigned NumStars = GetNumChars();
+	if(NumStars >= sizeof(s_aStars))
+		NumStars = sizeof(s_aStars)-1;
+	for(unsigned int i = 0; i < NumStars; ++i)
+		s_aStars[i] = '*';
+	s_aStars[NumStars] = '\0';
+	return s_aStars;
+}
+
 void CLineInput::MoveCursor(EMoveDirection Direction, bool MoveWord, const char *pStr, int MaxSize, int *pCursorPos)
 {
 	// Check whether cursor position is initially on space or non-space character.
@@ -144,6 +160,38 @@ void CLineInput::SetSelection(int Start, int End)
 		std::swap(Start, End);
 	m_SelectionStart = clamp(Start, 0, m_Len);
 	m_SelectionEnd = clamp(End, 0, m_Len);
+}
+
+int CLineInput::OffsetFromActualToDisplay(int ActualOffset) const
+{
+	if(!IsHidden())
+		return ActualOffset;
+	int DisplayOffset = 0;
+	int CurrentOffset = 0;
+	while(CurrentOffset < ActualOffset)
+	{
+		const int PrevOffset = CurrentOffset;
+		CurrentOffset = str_utf8_forward(m_pStr, CurrentOffset);
+		if(CurrentOffset == PrevOffset)
+			break;
+		DisplayOffset++;
+	}
+	return DisplayOffset;
+}
+
+int CLineInput::OffsetFromDisplayToActual(int DisplayOffset) const
+{
+	if(!IsHidden())
+		return DisplayOffset;
+	int ActualOffset = 0;
+	for(int i = 0; i < DisplayOffset; i++)
+	{
+		const int PrevOffset = ActualOffset;
+		ActualOffset = str_utf8_forward(m_pStr, ActualOffset);
+		if(ActualOffset == PrevOffset)
+			break;
+	}
+	return ActualOffset;
 }
 
 bool CLineInput::ProcessInput(const IInput::CEvent &Event)
@@ -309,56 +357,58 @@ void CLineInput::Render()
 	if(!m_pStr)
 		return;
 
+	const char *pDisplayStr = GetDisplayedString();
+
 	if(IsActive())
 	{
-		const int CompositionCursor = s_pInput->GetCompositionCursor();
+		const int CursorOffset = GetCursorOffset();
+		const int DisplayCursorOffset = OffsetFromActualToDisplay(CursorOffset);
 		const bool HasComposition = s_pInput->HasComposition();
-		const int CompositionStart = GetCursorOffset() + CompositionCursor;
-		const int CompositionEnd = CompositionStart + s_pInput->GetCompositionSelectedLength();
-
-		const int VAlign = m_TextCursor.m_Align&TEXTALIGN_MASK_VERT;
+		const int CompositionStart = CursorOffset + s_pInput->GetCompositionCursor();
+		const int DisplayCompositionStart = OffsetFromActualToDisplay(CompositionStart);
 
 		if(HasComposition)
 		{
-			s_pTextRender->TextDeferred(&m_TextCursor, m_pStr, GetCursorOffset());
+			const int DisplayCompositionEnd = DisplayCursorOffset + s_pInput->GetCompositionLength();
+			s_pTextRender->TextDeferred(&m_TextCursor, pDisplayStr, DisplayCursorOffset);
 			s_pTextRender->TextDeferred(&m_TextCursor, s_pInput->GetComposition(), -1);
-			s_pTextRender->TextDeferred(&m_TextCursor, m_pStr + GetCursorOffset(), -1);
+			s_pTextRender->TextDeferred(&m_TextCursor, pDisplayStr + DisplayCursorOffset, -1);
 			s_pTextRender->DrawTextOutlined(&m_TextCursor);
-			DrawSelection(0.1f, GetCursorOffset(), GetCursorOffset()+s_pInput->GetCompositionLength(), vec4(0.7f, 0.7f, 0.7f, 0.7f));
+			DrawSelection(0.1f, DisplayCursorOffset, DisplayCompositionEnd, vec4(0.7f, 0.7f, 0.7f, 0.7f));
 		}
 		else
 		{
-			s_pTextRender->TextOutlined(&m_TextCursor, m_pStr, -1);
+			s_pTextRender->TextOutlined(&m_TextCursor, pDisplayStr, -1);
 		}
 
 		// render selection
 		if(GetSelectionLength() || HasComposition)
 		{
-			const int Start = HasComposition ? CompositionStart : GetSelectionStart();
-			const int End = HasComposition ? CompositionEnd : GetSelectionEnd();
+			const int DisplayCompositionEnd = DisplayCompositionStart + s_pInput->GetCompositionSelectedLength();
+			const int Start = HasComposition ? DisplayCompositionStart : OffsetFromActualToDisplay(GetSelectionStart());
+			const int End = HasComposition ? DisplayCompositionEnd : OffsetFromActualToDisplay(GetSelectionEnd());
 			DrawSelection(1.0f, Start, End, vec4(0.3f, 0.3f, 0.3f, 0.3f));
 		}
 
 		static CTextCursor s_MarkerCursor;
 		s_MarkerCursor.m_FontSize = m_TextCursor.m_FontSize;
 		s_MarkerCursor.Reset(s_MarkerCursor.m_FontSize);
-		s_MarkerCursor.m_Align = VAlign | TEXTALIGN_CENTER;
+		s_MarkerCursor.m_Align = (m_TextCursor.m_Align&TEXTALIGN_MASK_VERT) | TEXTALIGN_CENTER;
 		s_pTextRender->TextDeferred(&s_MarkerCursor, "｜", -1);
-		vec2 Offset = s_pTextRender->CaretPosition(&m_TextCursor, HasComposition ? CompositionStart : GetCursorOffset());
-		s_MarkerCursor.MoveTo(Offset);
+		s_MarkerCursor.MoveTo(s_pTextRender->CaretPosition(&m_TextCursor, HasComposition ? DisplayCompositionStart : DisplayCursorOffset));
 
 		// render blinking caret
 		if((2*time_get()/time_freq())%2)
 			s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
 
-		m_CaretPosition = s_pTextRender->CaretPosition(&m_TextCursor, GetCursorOffset());
+		m_CaretPosition = s_pTextRender->CaretPosition(&m_TextCursor, DisplayCursorOffset);
 		s_MarkerCursor.MoveTo(m_CaretPosition);
 		CTextBoundingBox BoundingBox = s_MarkerCursor.BoundingBox();
 		SetCompositionWindowPosition(vec2(BoundingBox.Right(), BoundingBox.Bottom()), BoundingBox.h);
 	}
 	else
 	{
-		s_pTextRender->TextOutlined(&m_TextCursor, m_pStr, -1);
+		s_pTextRender->TextOutlined(&m_TextCursor, pDisplayStr, -1);
 	}
 }
 

@@ -1288,7 +1288,8 @@ void CMenus::RenderMenu(CUIRect Screen)
 			CUIRect EditBox;
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 			static CLineInput s_PasswordInput(Config()->m_Password, sizeof(Config()->m_Password));
-			UI()->DoEditBoxOption(&s_PasswordInput, &EditBox, Localize("Password"), ButtonWidth, true);
+			s_PasswordInput.SetHidden(true);
+			UI()->DoEditBoxOption(&s_PasswordInput, &EditBox, Localize("Password"), ButtonWidth);
 
 			Box.HSplitTop(2.0f, 0, &Box);
 

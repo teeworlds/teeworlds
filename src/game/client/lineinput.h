@@ -26,6 +26,8 @@ class CLineInput
 	static vec2 s_CompositionWindowPosition;
 	static float s_CompositionLineHeight;
 
+	static char s_aStars[128];
+
 	class CTextCursor m_TextCursor;
 	char *m_pStr;
 	int m_MaxSize;
@@ -40,6 +42,7 @@ class CLineInput
 	float m_ScrollOffset;
 	vec2 m_CaretPosition;
 
+	bool m_Hidden;
 	bool m_WasChanged;
 
 	void UpdateStrData();
@@ -76,6 +79,7 @@ public:
 
 	class CTextCursor *GetCursor() { return &m_TextCursor; }
 	const char *GetString() const { return m_pStr; }
+	const char *GetDisplayedString();
 	int GetMaxSize() const { return m_MaxSize; }
 	int GetMaxChars() const { return m_MaxChars; }
 	int GetLength() const { return m_Len; }
@@ -88,11 +92,17 @@ public:
 	int GetSelectionLength() const { return m_SelectionEnd - m_SelectionStart; }
 	void SetSelection(int Start, int End);
 
+	int OffsetFromActualToDisplay(int ActualOffset) const;
+	int OffsetFromDisplayToActual(int DisplayOffset) const;
+
 	// used either for vertical or horizontal scrolling
 	float GetScrollOffset() const { return m_ScrollOffset; }
 	void SetScrollOffset(float ScrollOffset) { m_ScrollOffset = ScrollOffset; }
 
 	vec2 GetCaretPosition() const { return m_CaretPosition; } // only updated while the input is active
+
+	bool IsHidden() const { return m_Hidden; }
+	void SetHidden(bool Hidden) { m_Hidden = Hidden; }
 
 	bool ProcessInput(const IInput::CEvent &Event);
 	bool WasChanged() { bool Changed = m_WasChanged; m_WasChanged = false; return Changed; }
