@@ -3174,11 +3174,12 @@ void CEditor::RenderFileDialog()
 	{
 		for(int i = 0; i < Input()->NumEvents(); i++)
 		{
+			IInput::CEvent Event = Input()->GetEvent(i);
 			int NewIndex = -1;
-			if(Input()->GetEvent(i).m_Flags&IInput::FLAG_PRESS)
+			if(Event.m_Flags&IInput::FLAG_PRESS)
 			{
-				if(Input()->GetEvent(i).m_Key == KEY_DOWN) NewIndex = m_FilesSelectedIndex + 1;
-				if(Input()->GetEvent(i).m_Key == KEY_UP) NewIndex = m_FilesSelectedIndex - 1;
+				if(Event.m_Key == KEY_DOWN) NewIndex = m_FilesSelectedIndex + 1;
+				if(Event.m_Key == KEY_UP) NewIndex = m_FilesSelectedIndex - 1;
 			}
 			if(NewIndex > -1 && NewIndex < m_FileList.size())
 			{
@@ -3245,9 +3246,10 @@ void CEditor::RenderFileDialog()
 
 	for(int i = 0; i < Input()->NumEvents(); i++)
 	{
-		if(Input()->GetEvent(i).m_Flags&IInput::FLAG_PRESS)
+		IInput::CEvent Event = Input()->GetEvent(i);
+		if(Event.m_Flags&IInput::FLAG_PRESS)
 		{
-			if(Input()->GetEvent(i).m_Key == KEY_RETURN || Input()->GetEvent(i).m_Key == KEY_KP_ENTER)
+			if(Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER)
 				m_aFileDialogActivate = true;
 		}
 	}
