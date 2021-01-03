@@ -1348,7 +1348,9 @@ void CMenus::UpdatedFilteredVideoModes()
 	{
 		const int G = gcd(m_aModes[i].m_Width, m_aModes[i].m_Height);
 		if(m_aModes[i].m_Width/G == DesktopWidthG &&
-		   m_aModes[i].m_Height/G == DesktopHeightG)
+			m_aModes[i].m_Height/G == DesktopHeightG &&
+			m_aModes[i].m_Width <= Graphics()->DesktopWidth() &&
+			m_aModes[i].m_Height <= Graphics()->DesktopHeight())
 		{
 			m_lRecommendedVideoModes.add(m_aModes[i]);
 		}
