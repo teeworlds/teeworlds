@@ -944,8 +944,9 @@ void CHud::RenderLocalTime(float x)
 	char aTimeStr[6];
 	str_timestamp_format(aTimeStr, sizeof(aTimeStr), "%H:%M");
 	static CTextCursor s_Cursor(5.0f);
-	s_Cursor.Reset(0);
-	s_Cursor.MoveTo(x - 25.0f, (12.5f - 7.5f) / 2.f);
+	s_Cursor.m_Align = TEXTALIGN_CENTER;
+	s_Cursor.Reset(aTimeStr[4]); // last digit always indicate changes
+	s_Cursor.MoveTo(Rect.x + Rect.w / 2, (12.5f - 7.5f) / 2.f);
 	TextRender()->TextOutlined(&s_Cursor, aTimeStr, -1);
 }
 
