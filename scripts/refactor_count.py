@@ -36,7 +36,7 @@ allowed_words += [ # system.h
 	"net_stats", "sent_bytes", "recv_bytes", "recv_packets", "sent_packets",
 	"time_get", "time_freq", "time_timestamp"]
 	
-allowed_words += ["vec2", "vec3", "vec4", "round", "clamp", "length", "dot", "normalize", "frandom", "mix", "distance", "min",
+allowed_words += ["vec2", "vec3", "vec4", "round", "clamp", "length", "dot", "normalize", "random_float", "mix", "distance", "min",
         "closest_point_on_line", "max", "absolute"] # math.hpp
 allowed_words += [  # tl
 	"array", "sorted_array", "string",
