@@ -24,7 +24,7 @@ public:
 	void Update(bool ForceResort);	
 
 	// interface functions
-	int GetType() { return m_ActServerlistType; };
+	int GetType() { return m_ActServerlistType; }
 	void SetType(int Type);
 	void Refresh(int RefreshFlags);
 	bool IsRefreshing() const { return m_pFirstReqServer != 0; }
@@ -35,12 +35,12 @@ public:
 	int NumServers() const { return m_aServerlist[m_ActServerlistType].m_NumServers; }
 	int NumPlayers() const { return m_aServerlist[m_ActServerlistType].m_NumPlayers; }
 	int NumClients() const { return m_aServerlist[m_ActServerlistType].m_NumClients; }
-	const CServerInfo *Get(int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[Index]->m_Info; };
+	const CServerInfo *Get(int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[Index]->m_Info; }
 
 	int NumSortedServers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedServers(FilterIndex); }
 	int NumSortedPlayers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedPlayers(FilterIndex); }
-	const CServerInfo *SortedGet(int FilterIndex, int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[m_ServerBrowserFilter.GetIndex(FilterIndex, Index)]->m_Info; };
-	const void *GetID(int FilterIndex, int Index) const { return m_ServerBrowserFilter.GetID(FilterIndex, Index); };
+	const CServerInfo *SortedGet(int FilterIndex, int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[m_ServerBrowserFilter.GetIndex(FilterIndex, Index)]->m_Info; }
+	const void *GetID(int FilterIndex, int Index) const { return m_ServerBrowserFilter.GetID(FilterIndex, Index); }
 
 	void AddFavorite(const CServerInfo *pInfo);
 	void RemoveFavorite(const CServerInfo *pInfo);
@@ -48,10 +48,10 @@ public:
 	void SetFavoritePassword(const char *pAddress, const char *pPassword);
 	const char *GetFavoritePassword(const char *pAddress);
 
-	int AddFilter(const CServerFilterInfo *pFilterInfo) { return m_ServerBrowserFilter.AddFilter(pFilterInfo); };
-	void SetFilter(int Index, const CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.SetFilter(Index, pFilterInfo); };
-	void GetFilter(int Index, CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.GetFilter(Index, pFilterInfo); };
-	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); };
+	int AddFilter(const CServerFilterInfo *pFilterInfo) { return m_ServerBrowserFilter.AddFilter(pFilterInfo); }
+	void SetFilter(int Index, const CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.SetFilter(Index, pFilterInfo); }
+	void GetFilter(int Index, CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.GetFilter(Index, pFilterInfo); }
+	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); }
 
 	static void CBFTrackPacket(int TrackID, void *pUser);
 	

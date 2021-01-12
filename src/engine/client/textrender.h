@@ -59,9 +59,9 @@ struct CGlyphIndex
 		if (l.m_FontSizeIndex == r.m_FontSizeIndex) return l.m_ID < r.m_ID;
 		return l.m_FontSizeIndex < r.m_FontSizeIndex;
 	};
-	friend bool operator > (const CGlyphIndex& l, const CGlyphIndex& r) { return r < l; };
-	friend bool operator <=(const CGlyphIndex& l, const CGlyphIndex& r) { return !(l > r); };
-	friend bool operator >=(const CGlyphIndex& l, const CGlyphIndex& r) { return !(l < r); };
+	friend bool operator > (const CGlyphIndex& l, const CGlyphIndex& r) { return r < l; }
+	friend bool operator <=(const CGlyphIndex& l, const CGlyphIndex& r) { return !(l > r); }
+	friend bool operator >=(const CGlyphIndex& l, const CGlyphIndex& r) { return !(l < r); }
 };
 
 class CGlyphMap
@@ -116,7 +116,7 @@ public:
 	~CGlyphMap();
 
 	IGraphics::CTextureHandle GetTexture(int Index) const { return m_aTextures[Index]; }
-	FT_Face GetDefaultFace() const { return m_DefaultFace; };
+	FT_Face GetDefaultFace() const { return m_DefaultFace; }
 	int AddFace(FT_Face Face);
 	void SetDefaultFaceByName(const char *pFamilyName);
 	void AddFallbackFaceByName(const char *pFamilyName);

@@ -277,7 +277,7 @@ enum
 	KEY_LAST,
 };
 
-inline int KeyToKeycode(int Key) { return (Key>=0x80) ? (Key-0x80)|(1<<30) : Key; };
-inline int KeycodeToKey(int Keycode) { return (Keycode&(1<<30)) ? Keycode-(1<<30)+0x80 : Keycode; };
+inline int KeyToKeycode(int Key) { return (Key>=0x80) ? (Key-0x80)|(1<<30) : Key; }
+inline int KeycodeToKey(int Keycode) { return (Keycode&(1<<30)) ? Keycode-(1<<30)+0x80 : Keycode; }
 
 #endif

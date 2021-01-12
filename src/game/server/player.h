@@ -27,8 +27,8 @@ public:
 	void TryRespawn();
 	void Respawn();
 	void SetTeam(int Team, bool DoChatMsg=true);
-	int GetTeam() const { return m_Team; };
-	int GetCID() const { return m_ClientID; };
+	int GetTeam() const { return m_Team; }
+	int GetCID() const { return m_ClientID; }
 	bool IsDummy() const { return m_Dummy; }
 
 	void Tick();
