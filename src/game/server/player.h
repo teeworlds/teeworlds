@@ -68,15 +68,15 @@ public:
 	int m_Vote;
 	int m_VotePos;
 	//
-	int m_LastVoteCall;
-	int m_LastVoteTry;
-	int m_LastChat;
-	int m_LastSetTeam;
-	int m_LastSetSpectatorMode;
-	int m_LastChangeInfo;
-	int m_LastEmote;
-	int m_LastKill;
-	int m_LastReadyChange;
+	int m_LastVoteCallTick;
+	int m_LastVoteTryTick;
+	int m_LastChatTeamTick;
+	int m_LastSetTeamTick;
+	int m_LastSetSpectatorModeTick;
+	int m_LastChangeInfoTick;
+	int m_LastEmoteTick;
+	int m_LastKillTick;
+	int m_LastReadyChangeTick;
 
 	// TODO: clean this up
 	struct
