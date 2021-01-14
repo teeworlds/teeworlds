@@ -657,26 +657,6 @@ private:
 	void Move(bool Up, int Filter);
 	void InitDefaultFilters();
 
-	class CInfoOverlay
-	{
-	public:
-		enum
-		{
-			OVERLAY_SERVERINFO=0,
-			OVERLAY_HEADERINFO,
-			OVERLAY_PLAYERSINFO,
-		};
-
-		int m_Type;
-		const void *m_pData;
-		float m_X;
-		float m_Y;
-		bool m_Reset;
-	};
-
-	CInfoOverlay m_InfoOverlay;
-	bool m_InfoOverlayActive;
-
 	struct CColumn
 	{
 		int m_ID;
@@ -811,7 +791,6 @@ private:
 	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, const vec4 &TextColor, const vec4 &TextOutlineColor);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserBottomBox(CUIRect View);
-	void RenderServerbrowserOverlay();
 	void RenderFilterHeader(CUIRect View, int FilterIndex);
 	void PopupConfirmRemoveFilter();
 	void PopupConfirmCountryFilter();
@@ -822,7 +801,6 @@ private:
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserSortingUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	void DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const void *pID, const CContactInfo *pFriendInfo, const CServerInfo *pServerInfo, bool Checked, bool Clan = false);
-	void SetOverlay(int Type, float x, float y, const void *pData);
 	void UpdateFriendCounter(const CServerInfo *pEntry);
 	void UpdateFriends();
 
