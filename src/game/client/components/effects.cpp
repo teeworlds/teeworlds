@@ -18,12 +18,59 @@
 
 inline vec2 RandomDir() { return normalize(vec2(frandom()-0.5f, frandom()-0.5f)); }
 
+struct CDamageVariation
+{
+	float m_Angle;
+	float m_Length;
+};
+
+static CDamageVariation s_aDamageVariations[] = {
+	{0, 1.0f}, {-0.30f, 1.0f}, {0.30f, 1.0f}, {0.6f, 1.0f}, {-0.6f, 1.0f},
+	{0, 1.2f}, {-0.25f, 1.2f}, {0.25f, 1.2f}, {0.5f, 1.2f}, {-0.5f, 1.2f},
+	{0, 0.8f}, {-0.35f, 0.8f}, {0.35f, 0.8f}, {0.7f, 0.8f}, {-0.7f, 0.8f}
+};
+
+void CEffects::CreateDamageIndicator(CDamageIndInfo *pDamage, int ClientID)
+{
+	// ignore if there is no damage
+	int Amount = pDamage->m_HealthAmount + pDamage->m_ArmorAmount;
+	if(Amount <= 0 || pDamage->m_NumEvents == 0)
+		return;
+
+	int VariationIndex = 0;
+	if(ClientID >= 0 && ClientID < MAX_CLIENTS)
+	{
+		CDamageIndState *pState = &m_aClientDamageState[ClientID];
+		int CurrentTick = Client()->GameTick();
+		if(pState->m_LastDamageTick + 20 < CurrentTick)
+			pState->m_Variation = 0;
+		else if(pState->m_LastDamage % 2 == Amount % 2) // make two-tick shotgun damage look good
+			pState->m_Variation = (pState->m_Variation + 1) % (sizeof(s_aDamageVariations) / sizeof(CDamageVariation));
+
+		pState->m_LastDamageTick = CurrentTick;
+		pState->m_LastDamage = Amount;
+		VariationIndex = pState->m_Variation;
+	}
+	CDamageVariation Variation = s_aDamageVariations[VariationIndex];
+
+	float Angle = atan2f(pDamage->m_SumSin / pDamage->m_NumEvents, pDamage->m_SumCos / pDamage->m_NumEvents) + Variation.m_Angle;
+	vec2 Pos = pDamage->m_Pos / pDamage->m_NumEvents;
+
+	float s = Angle-pi/3;
+	float e = Angle+pi/3;
+	for(int i = 0; i < Amount; i++)
+	{
+		float f = mix(s, e, float(i+1)/float(Amount+1));
+		m_pClient->m_pDamageind->Create(Pos, direction(f)*-1*Variation.m_Length, ClientID);
+	}
+}
+
 CEffects::CEffects()
 {
 	m_Add50hz = false;
 	m_Add100hz = false;
-	m_DamageTaken = 0;
-	m_DamageTakenTick = 0;
+	mem_zero(m_aClientDamage, sizeof(m_aClientDamage));
+	mem_zero(m_aClientDamageState, sizeof(m_aClientDamageState));
 }
 
 void CEffects::AirJump(vec2 Pos)
@@ -49,36 +96,28 @@ void CEffects::AirJump(vec2 Pos)
 	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
-void CEffects::DamageIndicator(vec2 Pos, int Amount)
+void CEffects::DamageIndicator(vec2 Pos, int HealthAmount, int ArmorAmount, float Angle, int ClientID)
 {
-	// ignore if there is no damage
-	if(Amount == 0)
-		return;
-
-	m_DamageTaken++;
-	float Angle;
-	// create healthmod indicator
-	if(Client()->LocalTime() < m_DamageTakenTick+0.5f)
+	if(ClientID < 0 || ClientID >= MAX_CLIENTS)
 	{
-		// make sure that the damage indicators don't group together
-		Angle = m_DamageTaken*0.25f;
+		CDamageIndInfo Damage;
+		Damage.m_Pos = Pos;
+		Damage.m_HealthAmount = HealthAmount;
+		Damage.m_ArmorAmount = ArmorAmount;
+		Damage.m_SumSin = sinf(Angle);
+		Damage.m_SumCos = cosf(Angle);
+		Damage.m_NumEvents = 1;
+		CreateDamageIndicator(&Damage, -1);
 	}
 	else
 	{
-		m_DamageTaken = 0;
-		Angle = 0;
+		m_aClientDamage[ClientID].m_HealthAmount += HealthAmount;
+		m_aClientDamage[ClientID].m_ArmorAmount += ArmorAmount;
+		m_aClientDamage[ClientID].m_SumSin += sinf(Angle);
+		m_aClientDamage[ClientID].m_SumCos += cosf(Angle);
+		m_aClientDamage[ClientID].m_Pos += Pos;
+		m_aClientDamage[ClientID].m_NumEvents++;
 	}
-
-	float a = 3*pi/2 + Angle;
-	float s = a-pi/3;
-	float e = a+pi/3;
-	for(int i = 0; i < Amount; i++)
-	{
-		float f = mix(s, e, float(i+1)/float(Amount+2));
-		m_pClient->m_pDamageind->Create(vec2(Pos.x, Pos.y), direction(f));
-	}
-
-	m_DamageTakenTick = Client()->LocalTime();
 }
 
 void CEffects::PowerupShine(vec2 Pos, vec2 size)
@@ -281,6 +320,19 @@ void CEffects::HammerHit(vec2 Pos)
 	p.m_Rot = frandom()*pi*2;
 	m_pClient->m_pParticles->Add(CParticles::GROUP_EXPLOSIONS, &p);
 	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_HAMMER_HIT, 1.0f, Pos);
+}
+
+void CEffects::ApplyDamageIndicators()
+{
+	for(int i = 0; i < MAX_CLIENTS; i++)
+		CreateDamageIndicator(&m_aClientDamage[i], i);
+	mem_zero(m_aClientDamage, sizeof(m_aClientDamage));
+}
+
+void CEffects::OnReset()
+{
+	mem_zero(m_aClientDamage, sizeof(m_aClientDamage));
+	mem_zero(m_aClientDamageState, sizeof(m_aClientDamageState));
 }
 
 void CEffects::OnRender()
