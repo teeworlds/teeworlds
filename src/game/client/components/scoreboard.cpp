@@ -207,7 +207,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	// ready mode
 	const CGameClient::CSnapState& Snap = m_pClient->m_Snap;
-	const bool ReadyMode = Snap.m_pGameData && (Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) && Snap.m_pGameData->m_GameStateEndTick == 0;
+	const bool ReadyMode = Snap.m_pGameData && Snap.m_pGameData->m_GameStateEndTick == 0;
 
 	bool Race = m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE;
 
