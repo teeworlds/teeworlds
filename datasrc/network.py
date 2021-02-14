@@ -96,6 +96,8 @@ Objects = [
 
 		NetFlag("m_PlayerFlags", PlayerFlags),
 
+		# 0 means "no wanted weapon", `1+weapon` means that `weapon` is wanted,
+		# and ninja is not a valid wanted weapon.
 		NetIntRange("m_WantedWeapon", 0, 'NUM_WEAPONS-1'),
 		NetIntAny("m_NextWeapon"),
 		NetIntAny("m_PrevWeapon"),
