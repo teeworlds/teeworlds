@@ -41,10 +41,10 @@ bool CNetServer::Open(NETADDR BindAddr, CConfig *pConfig, IConsole *pConsole, IE
 	return true;
 }
 
-void CNetServer::Close()
+void CNetServer::Close(const char *pReason)
 {
 	for(int i = 0; i < NET_MAX_CLIENTS; i++)
-		Drop(i, "Server shutdown");
+		Drop(i, pReason);
 
 	Shutdown();
 }

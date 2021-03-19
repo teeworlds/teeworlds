@@ -157,6 +157,7 @@ public:
 	int m_RconClientID;
 	int m_RconAuthLevel;
 	int m_PrintCBIndex;
+	char m_aShutdownReason[128];
 
 	// map
 	enum
