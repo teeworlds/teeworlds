@@ -113,6 +113,7 @@ class CChat : public CComponent
 	static void ConWhisper(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
+	static void ConChatCommand(IConsole::IResult *pResult, void *pUserData);
 	static void ServerCommandCallback(IConsole::IResult *pResult, void *pContext);
 
 public:

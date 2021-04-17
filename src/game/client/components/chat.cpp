@@ -199,6 +199,12 @@ void CChat::ConShowChat(IConsole::IResult *pResult, void *pUserData)
 	((CChat *)pUserData)->m_Show = pResult->GetInteger(0) != 0;
 }
 
+void CChat::ConChatCommand(IConsole::IResult *pResult, void *pUserData)
+{
+	CChat *pChat = (CChat *)pUserData;
+	pChat->m_CommandManager.OnCommand(pResult->GetString(0), pResult->GetString(1), -1);
+}
+
 void CChat::OnInit()
 {
 	m_CommandManager.Init(Console());
@@ -213,6 +219,7 @@ void CChat::OnConsoleInit()
 	Console()->Register("whisper", "i[target] r[text]", CFGFLAG_CLIENT, ConWhisper, this, "Whisper to a client in chat");
 	Console()->Register("chat", "s[text] ?i[whisper-target]", CFGFLAG_CLIENT, ConChat, this, "Enable chat with all/team/whisper mode");
 	Console()->Register("+show_chat", "", CFGFLAG_CLIENT, ConShowChat, this, "Show chat");
+	Console()->Register("chat_command", "s[command] ?r[args]", CFGFLAG_CLIENT, ConChatCommand, this, "Execute a chat command with arguments");
 }
 
 void CChat::ClearChatBuffer()
