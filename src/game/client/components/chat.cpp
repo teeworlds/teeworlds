@@ -389,6 +389,14 @@ bool CChat::OnInput(IInput::CEvent Event)
 				// add part before the name
 				str_truncate(aBuf, sizeof(aBuf), m_Input.GetString(), m_PlaceholderOffset);
 
+				// quote the name
+				char aQuoted[MAX_NAME_LENGTH+2];
+				if(IsTypingCommand() && str_find(pCompletionString, " "))
+				{
+					str_format(aQuoted, sizeof(aQuoted), "\"%s\"", pCompletionString);
+					pCompletionString = aQuoted;
+				}
+
 				// add the name
 				str_append(aBuf, pCompletionString, sizeof(aBuf));
 
