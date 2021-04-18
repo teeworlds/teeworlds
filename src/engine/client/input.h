@@ -27,7 +27,7 @@ class CInput : public IEngineInput
 
 	void AddEvent(char *pText, int Key, int Flags);
 	void Clear();
-	bool IsEventValid(CEvent *pEvent) const { return pEvent->m_InputCount == m_InputCounter; };
+	bool IsEventValid(CEvent *pEvent) const { return pEvent->m_InputCount == m_InputCounter; }
 
 	//quick access to input
 	unsigned short m_aInputCount[g_MaxKeys];	// tw-KEY
@@ -50,7 +50,7 @@ public:
 	bool KeyPress(int Key, bool CheckCounter) const { return CheckCounter ? (m_aInputCount[Key] == m_InputCounter) : m_aInputCount[Key]; }
 
 	int NumJoysticks() const { return m_apJoysticks.size(); }
-	int GetJoystickIndex() const { return m_SelectedJoystickIndex; };
+	int GetJoystickIndex() const { return m_SelectedJoystickIndex; }
 	void SelectNextJoystick();
 	const char* GetJoystickName();
 	int GetJoystickNumAxes();

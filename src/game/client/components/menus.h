@@ -96,7 +96,7 @@ public:
 		static CConfig *m_pConfig;
 
 	public:
-		static void Init(CMenus *pMenus) { m_pMenus = pMenus; m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); m_pConfig = pMenus->Config(); };
+		static void Init(CMenus *pMenus) { m_pMenus = pMenus; m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); m_pConfig = pMenus->Config(); }
 	};
 
 	class CButtonContainer : public CUIElementBase
@@ -283,7 +283,7 @@ private:
 		CListboxItem DoSubheader();
 		int DoEnd();
 		bool FilterMatches(const char *pNeedle) const;
-		bool WasItemActivated() const { return m_ListBoxItemActivated; };
+		bool WasItemActivated() const { return m_ListBoxItemActivated; }
 		float GetScrollBarWidth() const { return m_ScrollRegion.IsScrollbarShown() ? 20 : 0; } // defined in menus_scrollregion.cpp
 	};
 
@@ -413,7 +413,7 @@ private:
 			GAMEICON_SIZE=64,
 			GAMEICON_OLDHEIGHT=192,
 		};
-		CGameIcon() {};
+		CGameIcon() {}
 		CGameIcon(const char *pName) : m_Name(pName) {}
 
 		string m_Name;

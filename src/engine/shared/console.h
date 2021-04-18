@@ -12,7 +12,7 @@ class CConsole : public IConsole
 	class CCommand : public CCommandInfo
 	{
 	public:
-		CCommand(bool BasicAccess) : CCommandInfo(BasicAccess) {};
+		CCommand(bool BasicAccess) : CCommandInfo(BasicAccess) {}
 		CCommand *m_pNext;
 		int m_Flags;
 		bool m_Temp;

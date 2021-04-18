@@ -28,7 +28,7 @@ public:
 	};
 
 	IAutoMapper(class CEditor *pEditor, int Type) : m_pEditor(pEditor), m_Type(Type) {}
-	virtual ~IAutoMapper() {};
+	virtual ~IAutoMapper() {}
 	virtual void Load(const json_value &rElement) = 0;
 	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, RECTi Area) {}
 	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, int Ammount) {} // for convenience purposes

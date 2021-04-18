@@ -38,8 +38,8 @@ public:
 
 	void DoClientBroadcast(const char *pText);
 
-	void ToggleMuteServerBroadcast() { m_MuteServerBroadcast = !m_MuteServerBroadcast; };
-	bool IsMuteServerBroadcast() const { return m_MuteServerBroadcast; };
+	void ToggleMuteServerBroadcast() { m_MuteServerBroadcast = !m_MuteServerBroadcast; }
+	bool IsMuteServerBroadcast() const { return m_MuteServerBroadcast; }
 
 	virtual void OnReset();
 	virtual void OnMessage(int MsgType, void *pRawMsg);

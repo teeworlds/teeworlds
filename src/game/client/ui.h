@@ -115,19 +115,19 @@ public:
 
 	void SetHotItem(const void *pID) { m_pBecommingHotItem = pID; }
 	void SetActiveItem(const void *pID) { m_ActiveItemValid = true; m_pActiveItem = pID; if (pID) m_pLastActiveItem = pID; }
-	bool CheckActiveItem(const void *pID) { if(m_pActiveItem == pID) { m_ActiveItemValid = true; return true; } return false; };
+	bool CheckActiveItem(const void *pID) { if(m_pActiveItem == pID) { m_ActiveItemValid = true; return true; } return false; }
 	void ClearLastActiveItem() { m_pLastActiveItem = 0; }
 	const void *HotItem() const { return m_pHotItem; }
 	const void *NextHotItem() const { return m_pBecommingHotItem; }
 	const void *GetActiveItem() const { return m_pActiveItem; }
 	const void *LastActiveItem() const { return m_pLastActiveItem; }
 
-	void StartCheck() { m_ActiveItemValid = false; };
-	void FinishCheck() { if(!m_ActiveItemValid) SetActiveItem(0); };
+	void StartCheck() { m_ActiveItemValid = false; }
+	void FinishCheck() { if(!m_ActiveItemValid) SetActiveItem(0); }
 
-	bool MouseInside(const CUIRect *pRect) const { return pRect->Inside(m_MouseX, m_MouseY); };
-	bool MouseInsideClip() const { return !IsClipped() || MouseInside(ClipArea()); };
-	bool MouseHovered(const CUIRect *pRect) const { return MouseInside(pRect) && MouseInsideClip(); };
+	bool MouseInside(const CUIRect *pRect) const { return pRect->Inside(m_MouseX, m_MouseY); }
+	bool MouseInsideClip() const { return !IsClipped() || MouseInside(ClipArea()); }
+	bool MouseHovered(const CUIRect *pRect) const { return MouseInside(pRect) && MouseInsideClip(); }
 	void ConvertCursorMove(float *pX, float *pY, int CursorType) const;
 
 	bool KeyPress(int Key) const;
@@ -139,7 +139,7 @@ public:
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
 	const CUIRect *ClipArea() const;
-	inline bool IsClipped() const { return m_NumClips > 0; };
+	inline bool IsClipped() const { return m_NumClips > 0; }
 
 	bool DoButtonLogic(const void *pID, const CUIRect *pRect, int Button = 0);
 	bool DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);

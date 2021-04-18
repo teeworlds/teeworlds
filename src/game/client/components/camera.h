@@ -29,8 +29,8 @@ public:
 
 	void ChangePosition(int PositionNumber);
 	int GetCurrentPosition();
-	const vec2 *GetCenter() const { return &m_Center; };
-	float GetZoom() const { return m_Zoom; };
+	const vec2 *GetCenter() const { return &m_Center; }
+	float GetZoom() const { return m_Zoom; }
 
 	static void ConSetPosition(IConsole::IResult *pResult, void *pUserData);
 
