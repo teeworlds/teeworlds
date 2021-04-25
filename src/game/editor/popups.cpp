@@ -28,7 +28,6 @@ static int g_UiNumPopups = 0;
 
 void CEditor::UiInvokePopupMenu(void *pID, int Flags, float x, float y, float Width, float Height, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra)
 {
-	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", "invoked");
 	if(x + Width > UI()->Screen()->w)
 		x -= Width;
 	if(y + Height > UI()->Screen()->h)

@@ -2639,7 +2639,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 						m_Map.m_lGroups[g]->m_SaveToMap = !m_Map.m_lGroups[g]->m_SaveToMap;
 
 				str_format(aBuf, sizeof(aBuf),"#%d %s", g, m_Map.m_lGroups[g]->m_aName);
-				float FontSize = max(10, (int)(10.0f * TextRender()->TextWidth(10.0f, aBuf, -1) / Slot.w));
+				const float FontSize = clamp(10.0f * Slot.w / TextRender()->TextWidth(10.0f, aBuf, -1), 6.0f, 10.0f);
 
 				if(int Result = DoButton_Ex(&m_Map.m_lGroups[g], aBuf, g==m_SelectedGroup, &Slot,
 					BUTTON_CONTEXT, m_Map.m_lGroups[g]->m_Collapse ? "Select group. Double click to expand." : "Select group. Double click to collapse.", 0, FontSize))
@@ -2691,7 +2691,7 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				else
 					str_copy(aBuf, "Quads", sizeof(aBuf));
 
-				float FontSize = max(10, (int)(10.0f * TextRender()->TextWidth(10.0f, aBuf, -1) / Button.w));
+				const float FontSize = clamp(10.0f * Button.w / TextRender()->TextWidth(10.0f, aBuf, -1), 6.0f, 10.0f);
 
 				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
 					BUTTON_CONTEXT, "Select layer.", 0, FontSize))
@@ -3174,11 +3174,12 @@ void CEditor::RenderFileDialog()
 	{
 		for(int i = 0; i < Input()->NumEvents(); i++)
 		{
+			IInput::CEvent Event = Input()->GetEvent(i);
 			int NewIndex = -1;
-			if(Input()->GetEvent(i).m_Flags&IInput::FLAG_PRESS)
+			if(Event.m_Flags&IInput::FLAG_PRESS)
 			{
-				if(Input()->GetEvent(i).m_Key == KEY_DOWN) NewIndex = m_FilesSelectedIndex + 1;
-				if(Input()->GetEvent(i).m_Key == KEY_UP) NewIndex = m_FilesSelectedIndex - 1;
+				if(Event.m_Key == KEY_DOWN) NewIndex = m_FilesSelectedIndex + 1;
+				if(Event.m_Key == KEY_UP) NewIndex = m_FilesSelectedIndex - 1;
 			}
 			if(NewIndex > -1 && NewIndex < m_FileList.size())
 			{
@@ -3245,9 +3246,10 @@ void CEditor::RenderFileDialog()
 
 	for(int i = 0; i < Input()->NumEvents(); i++)
 	{
-		if(Input()->GetEvent(i).m_Flags&IInput::FLAG_PRESS)
+		IInput::CEvent Event = Input()->GetEvent(i);
+		if(Event.m_Flags&IInput::FLAG_PRESS)
 		{
-			if(Input()->GetEvent(i).m_Key == KEY_RETURN || Input()->GetEvent(i).m_Key == KEY_KP_ENTER)
+			if(Event.m_Key == KEY_RETURN || Event.m_Key == KEY_KP_ENTER)
 				m_aFileDialogActivate = true;
 		}
 	}
