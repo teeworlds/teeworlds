@@ -65,14 +65,14 @@ void CEditor::UiDoPopupMenu()
 				UI()->SetActiveItem(&s_UiPopups[i].m_pId);
 		}
 
-		int Corners = CUI::CORNER_ALL;
+		int Corners = CUIRect::CORNER_ALL;
 		if(s_UiPopups[i].m_IsMenu)
-			Corners = CUI::CORNER_R|CUI::CORNER_B;
+			Corners = CUIRect::CORNER_R|CUIRect::CORNER_B;
 
 		CUIRect r = s_UiPopups[i].m_Rect;
-		RenderTools()->DrawUIRect(&r, vec4(0.5f,0.5f,0.5f,0.75f), Corners, 3.0f);
+		r.Draw(vec4(0.5f,0.5f,0.5f,0.75f), 3.0f, Corners);
 		r.Margin(1.0f, &r);
-		RenderTools()->DrawUIRect(&r, vec4(0,0,0,0.75f), Corners, 3.0f);
+		r.Draw(vec4(0,0,0,0.75f), 3.0f, Corners);
 		r.Margin(4.0f, &r);
 
 		if(s_UiPopups[i].m_pfnFunc(this, r))
@@ -1161,7 +1161,7 @@ int CEditor::PopupColorPicker(CEditor *pEditor, CUIRect View)
 
 	// palette
 	static int s_Palette = 0;
-	pEditor->RenderTools()->DrawUIRect(&Palette, pEditor->m_SelectedColor, 0, 0.0f);
+	Palette.Draw(pEditor->m_SelectedColor, 0.0f, CUIRect::CORNER_NONE);
 	if(pEditor->DoButton_Editor_Common(&s_Palette, 0x0, 0, &Palette, 0, 0x0))
 	{
 		if(pEditor->m_SelectedColor.a > 0.0f)

@@ -214,7 +214,7 @@ void CStats::OnRender()
 	Graphics()->BlendNormal();
 	{
 		CUIRect Rect = {x-10.f, y-10.f, w, h};
-		RenderTools()->DrawRoundRect(&Rect, vec4(0,0,0,0.5f), 17.0f);
+		Rect.Draw(vec4(0,0,0,0.5f), 17.0f);
 	}
 
 	int px = 325;
@@ -335,7 +335,7 @@ void CStats::OnRender()
 		if(HighlightedLine)
 		{
 			CUIRect Rect = {x, y, w-20, LineHeight*0.95f};
-			RenderTools()->DrawRoundRect(&Rect, vec4(1,1,1,0.25f), 17.0f);
+			Rect.Draw(vec4(1,1,1,0.25f), 17.0f);
 		}
 
 		CTeeRenderInfo Teeinfo = m_pClient->m_aClients[apPlayers[j]].m_RenderInfo;
@@ -480,7 +480,7 @@ void CStats::OnRender()
 				{
 					Rect.w = ExploitableLength * pStats->m_aFragsWith[i] / (float)TotalFrags;
 					Rect.w += RoundSize;
-					RenderTools()->DrawRoundRect(&Rect, Colors[i], RoundSize);
+					Rect.Draw(Colors[i], RoundSize);
 					Rect.w -= RoundSize;
 					Rect.x += Rect.w;
 				}
