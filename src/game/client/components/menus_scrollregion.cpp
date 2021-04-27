@@ -42,15 +42,15 @@ void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, CScrollR
 	if(HasScrollBar)
 	{
 		if(m_Params.m_ScrollbarBgColor.a > 0)
-			m_pRenderTools->DrawUIRect(&ScrollBarBg, m_Params.m_ScrollbarBgColor, CUI::CORNER_R, 4.0f);
+			ScrollBarBg.Draw(m_Params.m_ScrollbarBgColor, 4.0f, CUIRect::CORNER_R);
 		if(m_Params.m_RailBgColor.a > 0)
-			m_pRenderTools->DrawRoundRect(&m_RailRect, m_Params.m_RailBgColor, m_RailRect.w/2.0f);
+			m_RailRect.Draw(m_Params.m_RailBgColor, m_RailRect.w/2.0f);
 	}
 	if(!ContentOverflows)
 		m_ContentScrollOff.y = 0;
 
 	if(m_Params.m_ClipBgColor.a > 0)
-		m_pRenderTools->DrawUIRect(pClipRect, m_Params.m_ClipBgColor, HasScrollBar ? CUI::CORNER_L : CUI::CORNER_ALL, 4.0f);
+		pClipRect->Draw(m_Params.m_ClipBgColor, 4.0f, HasScrollBar ? CUIRect::CORNER_L : CUIRect::CORNER_ALL);
 
 	m_pUI->ClipEnable(pClipRect);
 
@@ -177,7 +177,7 @@ void CMenus::CScrollRegion::End()
 		SliderColor = m_Params.m_SliderColorHover;
 	else
 		SliderColor = m_Params.m_SliderColor;
-	m_pRenderTools->DrawRoundRect(&Slider, SliderColor, Slider.w/2.0f);
+	Slider.Draw(SliderColor, Slider.w/2.0f);
 }
 
 void CMenus::CScrollRegion::AddRect(CUIRect Rect)

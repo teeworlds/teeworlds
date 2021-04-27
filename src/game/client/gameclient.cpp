@@ -351,7 +351,7 @@ void CGameClient::OnInit()
 
 	// propagate pointers
 	m_UI.Init(Config(), Graphics(), Input(), TextRender());
-	m_RenderTools.Init(Config(), Graphics(), UI());
+	m_RenderTools.Init(Config(), Graphics());
 
 	int64 Start = time_get();
 

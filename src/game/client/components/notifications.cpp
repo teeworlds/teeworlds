@@ -55,7 +55,7 @@ void CNotifications::RenderSoundNotification()
 
 	vec4 Color = (Config()->m_SndEnable == 0) ? vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.55f) : vec4(1.f/0xff*0x2b, 1.f/0xff*0xf9, 1.f/0xff*0x2b, 0.55f);
 	Color = mix(vec4(Color.r, Color.g, Color.b, 0.0f), Color, 0.8*Fade);
-	RenderTools()->DrawUIRect(&Area, Color, CUI::CORNER_ALL, 3.0f);
+	Area.Draw(Color, 3.0f);
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_SOUNDICONS].m_Id);
 	Graphics()->QuadsBegin();
