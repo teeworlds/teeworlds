@@ -65,7 +65,7 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 
 	Graphics()->BlendNormal();
 	CUIRect Rect = {x, y, w, h};
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	// render goals
 	static CTextCursor s_Cursor(12.0f);
@@ -120,7 +120,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 	float TextStartX = x+10.0f;
 	float TextStartY = y+30.0f;
 	float FontSize = 12.0f;
-	float ClientIDWidth = RenderTools()->GetClientIdRectSize(FontSize);
+	float ClientIDWidth = UI()->GetClientIDRectWidth(FontSize);
 
 	// render all the text without drawing
 	static CTextCursor s_SpectatorCursors[MAX_CLIENTS];
@@ -179,7 +179,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 	float RectHeight = 3*h+((min(Lines, MaxLines)-1) * (FontSize + 3.0f));
 	Graphics()->BlendNormal();
 	CUIRect Rect = {x, y, w, RectHeight};
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	// headline
 	s_LabelCursor.MoveTo(TextStartX, TextStartY);
@@ -192,7 +192,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 		{
 			vec2 ClientIDPos = s_SpectatorCursors[i].CursorPosition();
 			ClientIDPos.x -= ClientIDWidth;
-			RenderTools()->DrawClientID(TextRender(), FontSize,  ClientIDPos, i);
+			UI()->DrawClientID(FontSize,  ClientIDPos, i);
 			TextRender()->DrawTextOutlined(&s_SpectatorCursors[i]);
 		}
 	}
@@ -253,7 +253,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	else
 		Color = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 	CUIRect Rect = {x, y, w, HeadlineHeight};
-	RenderTools()->DrawRoundRect(&Rect, Color, 5.0f);
+	Rect.Draw(Color);
 
 	// render title
 	if(NoTitle)
@@ -365,12 +365,12 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	Graphics()->BlendNormal();
 	{
 		CUIRect Rect = {x, y, w, LineHeight*(PlayerLines+1)};
-		RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+		Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 	}
 	if(PlayerLines)
 	{
 		CUIRect Rect = {x, y+LineHeight, w, LineHeight*(PlayerLines)};
-		RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+		Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 	}
 
 	s_Cursor.m_FontSize = HeadlineFontsize;
@@ -542,7 +542,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			if(HighlightedLine)
 			{
 				CUIRect Rect = {x, y, w, LineHeight};
-				RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f*ColorAlpha), 5.0f);
+				Rect.Draw(vec4(1.0f, 1.0f, 1.0f, 0.75f*ColorAlpha));
 
 				// make color for own entry black
 				TextColor = vec3(0.0f, 0.0f, 0.0f);
@@ -616,7 +616,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 			// id
 			if(Config()->m_ClShowUserId)
-				RenderTools()->DrawClientID(TextRender(), FontSize, vec2(NameOffset+TeeLength-IdSize+Spacing, y+Spacing), pInfo->m_ClientID);
+				UI()->DrawClientID(FontSize, vec2(NameOffset+TeeLength-IdSize+Spacing, y+Spacing), pInfo->m_ClientID);
 
 			// name
 			s_Cursor.Reset();
@@ -717,12 +717,12 @@ void CScoreboard::RenderRecordingNotification(float x, float w)
 	CUIRect RectBox = {x, 0.0f, w, 50.0f};
 	vec4 Color = vec4(0.0f, 0.0f, 0.0f, 0.4f);
 	Graphics()->BlendNormal();
-	RenderTools()->DrawUIRect(&RectBox, Color, CUI::CORNER_B, 15.0f);
+	RectBox.Draw(Color, 15.0f, CUIRect::CORNER_B);
 
 	//draw the red dot
 	CUIRect RectRedDot = {x+20, 15.0f, 20.0f, 20.0f};
 	Color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	RenderTools()->DrawRoundRect(&RectRedDot, Color, 10.0f);
+	RectRedDot.Draw(Color, 10.0f);
 
 	//draw the text
 	char aBuf[64];
@@ -744,7 +744,7 @@ void CScoreboard::RenderNetworkQuality(float x, float w)
 	int Score = Client()->GetInputtimeMarginStabilityScore();
 
 	Graphics()->BlendNormal();
-	RenderTools()->DrawUIRect(&RectBox, Color, CUI::CORNER_B, 15.0f);
+	RectBox.Draw(Color, 15.0f, CUIRect::CORNER_B);
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_NETWORKICONS].m_Id);
 	Graphics()->QuadsBegin();
 	RenderTools()->SelectSprite(SPRITE_NETWORK_GOOD);
@@ -775,7 +775,7 @@ void CScoreboard::RenderNetworkQuality(float x, float w)
 		CUIRect LocalBarRect = BarRect;
 		LocalBarRect.h = BarRect.h*(Bar+2)/(float)NumBars+1.0f;
 		LocalBarRect.y = BarRect.y + BarRect.h - LocalBarRect.h;
-		RenderTools()->DrawUIRect(&LocalBarRect, vec4(0.9f,0.9f,0.9f,1.0f), 0, 0);
+		LocalBarRect.Draw(vec4(0.9f,0.9f,0.9f,1.0f), 0.0f, CUIRect::CORNER_NONE);
 	}
 }
 

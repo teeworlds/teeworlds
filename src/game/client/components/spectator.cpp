@@ -199,7 +199,7 @@ void CSpectator::OnRender()
 
 	CUIRect Rect = {Width/2.0f-300.0f*ScaleX, Height/2.0f-300.0f, 600.0f*ScaleX, 600.0f};
 	Graphics()->BlendNormal();
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.3f), 20.0f);
+	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.3f), 20.0f);
 
 	// clamp mouse position to selector area
 	m_SelectorMouse.x = clamp(m_SelectorMouse.x, -300.0f*ScaleX + 20.0f, 300.0f*ScaleX - 20.0f);
@@ -219,7 +219,7 @@ void CSpectator::OnRender()
 			Rect.y = Height/2.0f-280.0f;
 			Rect.w = 270.0f;
 			Rect.h = 60.0f;
-			RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.25f), 20.0f);
+			Rect.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 20.0f);
 		}
 
 		if(m_SelectorMouse.x >= -280.0f && m_SelectorMouse.x <= -10.0f &&
@@ -248,7 +248,7 @@ void CSpectator::OnRender()
 				Rect.y = Height/2.0f+y-10.0f;
 				Rect.w = 120.0f;
 				Rect.h = 60.0f;
-				RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.25f), 20.0f);
+				Rect.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 20.0f);
 			}
 
 			Selected = false;
@@ -300,7 +300,7 @@ void CSpectator::OnRender()
 			Rect.y = Height/2.0f+y+10.0f-20.0f*ScaleY;
 			Rect.w = 270.0f;
 			Rect.h = 20.0f+40.0f*ScaleY;
-			RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.25f), 20.0f);
+			Rect.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 20.0f);
 		}
 
 		Selected = false;
@@ -320,7 +320,7 @@ void CSpectator::OnRender()
 		s_PlayerNameCursor.Reset();
 		
 		vec2 CursorPosition = vec2(Width/2.0f+x+50.0f, Height/2.0f+y+5.0f);
-		CursorPosition.x += RenderTools()->DrawClientID(TextRender(), s_PlayerNameCursor.m_FontSize, CursorPosition, i);
+		CursorPosition.x += UI()->DrawClientID(s_PlayerNameCursor.m_FontSize, CursorPosition, i);
 		s_PlayerNameCursor.MoveTo(CursorPosition.x, CursorPosition.y);
 		TextRender()->TextOutlined(&s_PlayerNameCursor, aBuf, -1);
 

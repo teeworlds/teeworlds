@@ -51,7 +51,7 @@ void CMotd::OnRender()
 	CUIRect Rect = {x, y, w, h};
 
 	Graphics()->BlendNormal();
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 30.0f);
+	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.5f), 30.0f);
 
 	Rect.Margin(25.0f, &Rect);
 

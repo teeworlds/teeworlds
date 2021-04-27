@@ -67,7 +67,7 @@ void CBroadcast::RenderServerBroadcast()
 	BroadcastView.x = BroadcastView.w * 0.5f;
 	BroadcastView.y = Height - BroadcastView.h;
 
-	RenderTools()->DrawUIRect(&BroadcastView, vec4(0.0f, 0.0f, 0.0f, 0.25f * Fade), CUI::CORNER_T, Rounding);
+	BroadcastView.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f * Fade), Rounding, CUIRect::CORNER_T);
 
 	// draw lines
 	const vec2 ShadowOffset(1.0f, 2.0f);
