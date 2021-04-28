@@ -1763,8 +1763,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		static CButtonContainer s_ButtonScreenId;
 		if(DoButton_Menu(&s_ButtonScreenId, aBuf, 0, &Button))
 		{
-			Config()->m_GfxScreen = (Config()->m_GfxScreen + 1) % Graphics()->GetNumScreens();
-			Client()->SwitchWindowScreen(Config()->m_GfxScreen);
+			Client()->SwitchWindowScreen((Config()->m_GfxScreen + 1) % Graphics()->GetNumScreens());
 		}
 	}
 
@@ -1901,6 +1900,12 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Button.y += 2;
 		UI()->DoLabel(&Button, aBuf, Button.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
+		static int s_LastScreen = Config()->m_GfxScreen;
+		if(s_LastScreen != Config()->m_GfxScreen)
+		{
+			UpdatedFilteredVideoModes();
+			s_LastScreen = Config()->m_GfxScreen;
+		}
 		static CListBox s_RecListBox;
 		static CListBox s_OthListBox;
 		m_CheckVideoSettings |= DoResolutionList(&ListRec, &s_RecListBox, m_lRecommendedVideoModes);
@@ -2119,6 +2124,9 @@ void CMenus::ResetSettingsControls()
 
 void CMenus::ResetSettingsGraphics()
 {
+	if(Config()->m_GfxScreen)
+		Client()->SwitchWindowScreen(0);
+
 	Config()->m_GfxScreenWidth = Graphics()->DesktopWidth();
 	Config()->m_GfxScreenHeight = Graphics()->DesktopHeight();
 	Config()->m_GfxBorderless = 0;
