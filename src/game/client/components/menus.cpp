@@ -106,7 +106,7 @@ CMenus::CMenus()
 
 float CMenus::CButtonContainer::GetFade(bool Checked, float Seconds)
 {
-	if(m_pUI->HotItem() == GetID() || Checked)
+	if(m_pUI->HotItem() == this || Checked)
 	{
 		m_FadeStartTime = m_pClient->LocalTime();
 		return 1.0f;
@@ -203,7 +203,7 @@ bool CMenus::DoButton_Menu(CButtonContainer *pBC, const char *pText, bool Checke
 		TextRender()->TextColor(CUI::ms_DefaultTextColor);
 		TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 	}
-	return UI()->DoButtonLogic(pBC->GetID(), pRect);
+	return UI()->DoButtonLogic(pBC, pRect);
 }
 
 void CMenus::DoButton_KeySelect(CButtonContainer *pBC, const char *pText, const CUIRect *pRect)
@@ -236,7 +236,7 @@ bool CMenus::DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, bool 
 	UI()->DoLabel(&Label, pText, Label.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
 	TextRender()->TextColor(CUI::ms_DefaultTextColor);
 	TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
-	return UI()->DoButtonLogic(pBC->GetID(), pRect);
+	return UI()->DoButtonLogic(pBC, pRect);
 }
 
 bool CMenus::DoButton_GridHeader(const void *pID, const char *pText, bool Checked, CUI::EAlignment Align, const CUIRect *pRect, int Corners)
@@ -340,7 +340,7 @@ bool CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID,
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	return UI()->DoButtonLogic(pBC->GetID(), pRect);
+	return UI()->DoButtonLogic(pBC, pRect);
 }
 
 bool CMenus::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden, int Corners)
@@ -834,10 +834,10 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 	int NewKey = Key;
 	*pNewModifier = Modifier;
 
-	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && s_pGrabbedID == pBC->GetID())
+	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && s_pGrabbedID == pBC)
 		s_MouseReleased = true;
 
-	if(UI()->CheckActiveItem(pBC->GetID()))
+	if(UI()->CheckActiveItem(pBC))
 	{
 		if(m_Binder.m_GotKey)
 		{
@@ -850,7 +850,7 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 			m_Binder.m_GotKey = false;
 			UI()->SetActiveItem(0);
 			s_MouseReleased = false;
-			s_pGrabbedID = pBC->GetID();
+			s_pGrabbedID = pBC;
 		}
 
 		if(s_ButtonUsed == 1 && !UI()->MouseButton(1))
@@ -860,7 +860,7 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 			UI()->SetActiveItem(0);
 		}
 	}
-	else if(UI()->HotItem() == pBC->GetID())
+	else if(UI()->HotItem() == pBC)
 	{
 		if(s_MouseReleased)
 		{
@@ -868,23 +868,23 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 			{
 				m_Binder.m_TakeKey = true;
 				m_Binder.m_GotKey = false;
-				UI()->SetActiveItem(pBC->GetID());
+				UI()->SetActiveItem(pBC);
 				s_ButtonUsed = 0;
 			}
 
 			if(UI()->MouseButton(1))
 			{
-				UI()->SetActiveItem(pBC->GetID());
+				UI()->SetActiveItem(pBC);
 				s_ButtonUsed = 1;
 			}
 		}
 	}
 
 	if(Hovered)
-		UI()->SetHotItem(pBC->GetID());
+		UI()->SetHotItem(pBC);
 
 	// draw
-	if(UI()->CheckActiveItem(pBC->GetID()) && s_ButtonUsed == 0)
+	if(UI()->CheckActiveItem(pBC) && s_ButtonUsed == 0)
 	{
 		DoButton_KeySelect(pBC, "???", pRect);
 		m_KeyReaderIsActive = true;
@@ -1527,10 +1527,8 @@ void CMenus::Render()
 				RenderTools()->DrawUIRect(&Button, Color, CUI::CORNER_BL, 5.0f);
 
 				// draw non-blending X
-				CUIRect XText = Button;
-
-				UI()->DoLabel(&XText, "\xE2\x9C\x95", XText.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
-				if(UI()->DoButtonLogic(s_QuitButton.GetID(), &Button))
+				UI()->DoLabel(&Button, "\xE2\x9C\x95", Button.h*ms_FontmodHeight, CUI::ALIGN_CENTER);
+				if(UI()->DoButtonLogic(&s_QuitButton, &Button))
 					m_Popup = POPUP_QUIT;
 
 				// settings button
