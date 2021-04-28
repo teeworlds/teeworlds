@@ -491,6 +491,7 @@ void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const ch
 
 float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 {
+	Current = clamp(Current, 0.0f, 1.0f);
 	// layout
 	CUIRect Handle;
 	pRect->HSplitTop(minimum(pRect->h/8.0f, 33.0f), &Handle, 0);
@@ -545,25 +546,18 @@ float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 
 	// render
 	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.w/2.0f);
-
-	vec4 Color;
-	if(Grabbed)
-		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
-	else if(InsideHandle)
-		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	else
-		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
-	Handle.Draw(Color, Handle.w/2.0f);
+	Handle.Draw(ScrollBarColorFunction.GetColor(Grabbed, InsideHandle), Handle.w/2.0f);
 
 	return ReturnValue;
 }
 
 float CUI::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
+	Current = clamp(Current, 0.0f, 1.0f);
 	// layout
 	CUIRect Handle;
 	pRect->VSplitLeft(maximum(minimum(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
-	Handle.x += (pRect->w-Handle.w)*clamp(Current, 0.0f, 1.0f);
+	Handle.x += (pRect->w-Handle.w)*Current;
 	Handle.HMargin(5.0f, &Handle);
 
 	CUIRect Rail;
@@ -614,15 +608,7 @@ float CUI::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 
 	// render
 	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.h/2.0f);
-
-	vec4 Color;
-	if(Grabbed)
-		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
-	else if(InsideHandle)
-		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
-	else
-		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
-	Handle.Draw(Color, Handle.h/2.0f);
+	Handle.Draw(ScrollBarColorFunction.GetColor(Grabbed, InsideHandle), Handle.h/2.0f);
 
 	return ReturnValue;
 }
