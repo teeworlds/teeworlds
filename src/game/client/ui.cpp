@@ -47,6 +47,8 @@ CUI::CUI()
 
 	m_pActiveTooltip = 0;
 	m_aTooltipText[0] = '\0';
+
+	m_NumPopupMenus = 0;
 }
 
 void CUI::Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender)
@@ -820,6 +822,61 @@ void CUI::RenderTooltip()
 	// Clear active tooltip. DoTooltip must be called each render call.
 	m_pActiveTooltip = 0;
 	m_aTooltipText[0] = '\0';
+}
+
+void CUI::DoPopupMenu(int X, int Y, int Width, int Height, void *pContext, bool (*pfnFunc)(void *pContext, CUIRect View), int Corners)
+{
+	dbg_assert(m_NumPopupMenus < MAX_POPUP_MENUS, "max popup menus exceeded");
+
+	if(X + Width > Screen()->w)
+		X = Screen()->w - Width;
+	if(Y + Height > Screen()->h)
+		Y = Screen()->h - Height;
+
+	m_aPopupMenus[m_NumPopupMenus].m_Rect.x = X;
+	m_aPopupMenus[m_NumPopupMenus].m_Rect.y = Y;
+	m_aPopupMenus[m_NumPopupMenus].m_Rect.w = Width;
+	m_aPopupMenus[m_NumPopupMenus].m_Rect.h = Height;
+	m_aPopupMenus[m_NumPopupMenus].m_pContext = pContext;
+	m_aPopupMenus[m_NumPopupMenus].m_pfnFunc = pfnFunc;
+	m_aPopupMenus[m_NumPopupMenus].m_Corners = Corners;
+	m_NumPopupMenus++;
+}
+
+void CUI::RenderPopupMenus()
+{
+	for(unsigned i = 0; i < m_NumPopupMenus; i++)
+	{
+		const bool Inside = MouseInside(&m_aPopupMenus[i].m_Rect);
+		SetHotItem(&m_aPopupMenus[i]);
+
+		if(CheckActiveItem(&m_aPopupMenus[i]))
+		{
+			if(!MouseButton(0))
+			{
+				if(!Inside)
+					m_NumPopupMenus--;
+				SetActiveItem(0);
+			}
+		}
+		else if(HotItem() == &m_aPopupMenus[i])
+		{
+			if(MouseButton(0))
+				SetActiveItem(&m_aPopupMenus[i]);
+		}
+
+		CUIRect PopupRect = m_aPopupMenus[i].m_Rect;
+		PopupRect.Draw(vec4(0.5f, 0.5f, 0.5f, 0.75f), 3.0f, m_aPopupMenus[i].m_Corners);
+		PopupRect.Margin(1.0f, &PopupRect);
+		PopupRect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.75f), 3.0f, m_aPopupMenus[i].m_Corners);
+		PopupRect.Margin(4.0f, &PopupRect);
+
+		if(m_aPopupMenus[i].m_pfnFunc(m_aPopupMenus[i].m_pContext, PopupRect) || Input()->KeyPress(KEY_ESCAPE))
+		{
+			m_NumPopupMenus--;
+			SetActiveItem(0);
+		}
+	}
 }
 
 float CUI::GetClientIDRectWidth(float FontSize)

@@ -93,7 +93,8 @@ class CUI
 {
 	enum
 	{
-		MAX_CLIP_NESTING_DEPTH = 16
+		MAX_CLIP_NESTING_DEPTH = 16,
+		MAX_POPUP_MENUS = 8,
 	};
 
 	bool m_Enabled;
@@ -120,6 +121,16 @@ class CUI
 	const void *m_pActiveTooltip;
 	CUIRect m_TooltipAnchor;
 	char m_aTooltipText[256];
+
+	class
+	{
+	public:
+		CUIRect m_Rect;
+		int m_Corners;
+		void *m_pContext;
+		bool (*m_pfnFunc)(void *pContext, CUIRect View); // returns true to close popup
+	} m_aPopupMenus[MAX_POPUP_MENUS];
+	unsigned m_NumPopupMenus;
 
 	class CConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
@@ -223,6 +234,11 @@ public:
 	// tooltips
 	void DoTooltip(const void *pID, const CUIRect *pRect, const char *pText);
 	void RenderTooltip();
+
+	// popup menu
+	void DoPopupMenu(int X, int Y, int Width, int Height, void *pContext, bool (*pfnFunc)(void *pContext, CUIRect View), int Corners = CUIRect::CORNER_ALL);
+	void RenderPopupMenus();
+	bool IsPopupActive() const { return m_NumPopupMenus > 0; }
 
 	// client ID
 	float DrawClientID(float FontSize, vec2 Position, int ID,
