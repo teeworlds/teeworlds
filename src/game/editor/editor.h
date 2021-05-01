@@ -507,8 +507,8 @@ class CEditor : public IEditor
 	class IGraphics *m_pGraphics;
 	class ITextRender *m_pTextRender;
 	class IStorage *m_pStorage;
+	class CUI *m_pUI;
 	CRenderTools m_RenderTools;
-	CUI m_UI;
 public:
 	class IInput *Input() { return m_pInput; }
 	class IClient *Client() { return m_pClient; }
@@ -517,7 +517,7 @@ public:
 	class IGraphics *Graphics() { return m_pGraphics; }
 	class ITextRender *TextRender() { return m_pTextRender; }
 	class IStorage *Storage() { return m_pStorage; }
-	CUI *UI() { return &m_UI; }
+	CUI *UI() { return m_pUI; }
 	CRenderTools *RenderTools() { return &m_RenderTools; }
 
 	CEditor() : m_FileDialogFilterInput(m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString)), m_TilesetPicker(16, 16)

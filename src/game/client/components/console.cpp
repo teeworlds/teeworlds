@@ -387,7 +387,11 @@ void CGameConsole::OnRender()
 		return;
 
 	if(m_ConsoleState == CONSOLE_OPEN)
+	{
+		CurrentConsole()->m_Input.SetActive(true);
 		Input()->MouseModeAbsolute();
+		UI()->SetEnabled(false);
+	}
 
 	float ConsoleHeightScale;
 

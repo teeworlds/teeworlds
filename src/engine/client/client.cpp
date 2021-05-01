@@ -22,6 +22,7 @@
 #include <engine/sound.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
+#include <engine/ui.h>
 
 #include <engine/shared/config.h>
 #include <engine/shared/compression.h>
@@ -1998,6 +1999,8 @@ void CClient::Run()
 	// start refreshing addresses while we load
 	MasterServer()->RefreshAddresses(m_ContactClient.NetType());
 
+	IUI *pUI = Kernel()->RequestInterface<IUI>();
+	pUI->OnInit();
 	GameClient()->OnInit();
 
 	char aBuf[256];
@@ -2088,10 +2091,7 @@ void CClient::Run()
 			Config()->m_DbgGraphs ^= 1;
 
 		if(IsCtrlPressed && IsLShiftPressed && Input()->KeyPress(KEY_E, true))
-		{
-			Config()->m_ClEditor = Config()->m_ClEditor^1;
-			Input()->MouseModeRelative();
-		}
+			Config()->m_ClEditor ^= 1;
 
 		// render
 		{
@@ -2099,14 +2099,18 @@ void CClient::Run()
 			{
 				if(!m_EditorActive)
 				{
+					pUI->OnReset();
 					GameClient()->OnActivateEditor();
 					Input()->MouseModeRelative();
 					m_EditorActive = true;
 				}
 			}
 			else if(m_EditorActive)
+			{
 				m_EditorActive = false;
-			
+				pUI->OnReset();
+			}
+
 			m_pTextRender->Update();
 
 			Update();
@@ -2640,6 +2644,7 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMasterServer*>(pEngineMasterServer)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMasterServer*>(pEngineMasterServer));
 
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateUI());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateEditor());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(CreateGameClient());
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);

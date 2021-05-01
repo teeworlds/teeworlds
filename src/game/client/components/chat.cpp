@@ -930,6 +930,7 @@ void CChat::OnRender()
 		}
 		else
 		{
+			m_Input.SetActive(true);
 			CTextCursor *pCursor = m_Input.GetCursor();
 			pCursor->m_FontSize = InputFontSize;
 			pCursor->m_MaxWidth = Width-190.0f-s_CategoryCursor.Width();

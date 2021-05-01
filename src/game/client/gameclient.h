@@ -47,10 +47,10 @@ class CGameClient : public IGameClient
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
 	class IBlacklist *m_pBlacklist;
+	class CUI *m_pUI;
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
-	CUI m_UI;
 
 	void ProcessEvents();
 	void ProcessTriggeredEvents(int Events, vec2 Pos);
@@ -80,7 +80,7 @@ public:
 	IEngine *Engine() const { return m_pEngine; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class IClient *Client() const { return m_pClient; }
-	class CUI *UI() { return &m_UI; }
+	class CUI *UI() { return m_pUI; }
 	class ISound *Sound() const { return m_pSound; }
 	class IInput *Input() const { return m_pInput; }
 	class IStorage *Storage() const { return m_pStorage; }

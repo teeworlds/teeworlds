@@ -4,6 +4,8 @@
 #define GAME_CLIENT_UI_H
 
 #include <engine/textrender.h>
+#include <engine/ui.h>
+
 #include "lineinput.h"
 #include "ui_rect.h"
 
@@ -89,7 +91,7 @@ public:
 } const LightButtonColorFunction;
 
 
-class CUI
+class CUI : public IUI
 {
 	enum
 	{
@@ -150,14 +152,15 @@ public:
 	static const float ms_ListheaderHeight;
 	static const float ms_FontmodHeight;
 
-	// TODO: Refactor: Fill this in
-	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender);
+	CUI();
+
+	void OnInit();
+	void OnReset();
+
 	class CConfig *Config() const { return m_pConfig; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class IInput *Input() const { return m_pInput; }
 	class ITextRender *TextRender() const { return m_pTextRender; }
-
-	CUI();
 
 	enum
 	{

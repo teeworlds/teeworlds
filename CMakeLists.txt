@@ -1304,6 +1304,7 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   sound.h
   storage.h
   textrender.h
+  ui.h
 )
 set_src(ENGINE_SHARED GLOB src/engine/shared
   compression.cpp

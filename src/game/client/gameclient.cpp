@@ -231,6 +231,7 @@ void CGameClient::OnConsoleInit()
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
 	m_pBlacklist = Kernel()->RequestInterface<IBlacklist>();
+	m_pUI = reinterpret_cast<CUI *>(Kernel()->RequestInterface<IUI>());
 
 	// setup pointers
 	m_pBinds = &::gs_Binds;
@@ -349,9 +350,6 @@ void CGameClient::OnConsoleInit()
 void CGameClient::OnInit()
 {
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
-
-	// propagate pointers
-	m_UI.Init(Config(), Graphics(), Input(), TextRender());
 	m_RenderTools.Init(Config(), Graphics());
 
 	int64 Start = time_get();

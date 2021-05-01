@@ -25,40 +25,45 @@ const vec4 CUI::ms_TransparentTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 
 CUI::CUI()
 {
-	m_pHotItem = 0;
-	m_pActiveItem = 0;
-	m_pLastActiveItem = 0;
-	m_pBecommingHotItem = 0;
-
 	m_MouseX = 0;
 	m_MouseY = 0;
 	m_MouseWorldX = 0;
 	m_MouseWorldY = 0;
 	m_MouseButtons = 0;
 	m_LastMouseButtons = 0;
+
 	m_Enabled = true;
 
-	m_HotkeysPressed = 0;
-
-	m_Screen.x = 0;
-	m_Screen.y = 0;
-
 	m_NumClips = 0;
+
+	OnReset();
+}
+
+void CUI::OnInit()
+{
+	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
+	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
+	m_pInput = Kernel()->RequestInterface<IInput>();
+	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
+	CUIRect::Init(m_pGraphics);
+	CLineInput::Init(m_pInput, m_pTextRender, m_pGraphics);
+}
+
+void CUI::OnReset()
+{
+	m_pHotItem = 0;
+	m_pActiveItem = 0;
+	m_pLastActiveItem = 0;
+	m_pBecommingHotItem = 0;
+
+	m_HotkeysPressed = 0;
 
 	m_pActiveTooltip = 0;
 	m_aTooltipText[0] = '\0';
 
 	m_NumPopupMenus = 0;
-}
 
-void CUI::Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender)
-{
-	m_pConfig = pConfig;
-	m_pGraphics = pGraphics;
-	m_pInput = pInput;
-	m_pTextRender = pTextRender;
-	CUIRect::Init(pGraphics);
-	CLineInput::Init(pInput, pTextRender, pGraphics);
+	CLineInput::DeactivateAllInputs();
 }
 
 void CUI::Update(float MouseX, float MouseY, float MouseWorldX, float MouseWorldY)
@@ -118,7 +123,7 @@ bool CUI::OnInput(const IInput::CEvent &e)
 
 	if(e.m_Flags&IInput::FLAG_PRESS)
 	{
-		unsigned LastHotkeysPressed = m_HotkeysPressed;
+		const unsigned LastHotkeysPressed = m_HotkeysPressed;
 		if(e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER)
 			m_HotkeysPressed |= HOTKEY_ENTER;
 		else if(e.m_Key == KEY_ESCAPE)
@@ -894,4 +899,10 @@ float CUI::GetListHeaderHeight() const
 float CUI::GetListHeaderHeightFactor() const
 {
 	return 1.0f + (m_pConfig->m_UiWideview ? (3.0f/ms_ListheaderHeight) : 0.0f);
+}
+
+
+IUI *CreateUI()
+{
+	return new CUI();
 }

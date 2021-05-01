@@ -4259,7 +4259,7 @@ void CEditor::Init()
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 	m_pTextRender = Kernel()->RequestInterface<ITextRender>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
-	m_UI.Init(m_pConfig, m_pGraphics, m_pInput, m_pTextRender);
+	m_pUI = reinterpret_cast<CUI *>(Kernel()->RequestInterface<IUI>());
 	m_RenderTools.Init(m_pConfig, m_pGraphics);
 	m_Map.m_pEditor = this;
 
@@ -4399,6 +4399,8 @@ void CEditor::UpdateAndRender()
 	else
 		m_AnimateTime = 0;
 	ms_pUiGotContext = 0;
+
+	UI()->SetEnabled(true);
 	UI()->StartCheck();
 
 	for(int i = 0; i < Input()->NumEvents(); i++)
@@ -4467,6 +4469,8 @@ void CEditor::UpdateAndRender()
 	UI()->FinishCheck();
 	UI()->ClearHotkeys();
 	Input()->Clear();
+
+	CLineInput::RenderCandidates();
 }
 
 IEditor *CreateEditor() { return new CEditor; }

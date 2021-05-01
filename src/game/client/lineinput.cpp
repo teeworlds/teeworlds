@@ -502,6 +502,13 @@ void CLineInput::RenderCandidates()
 	}
 }
 
+void CLineInput::DeactivateAllInputs()
+{
+	CLineInput *pInput = 0;
+	while((pInput = GetActiveInput()) != 0)
+		pInput->SetActive(false);
+}
+
 void CLineInput::SetActive(bool Active)
 {
 	if(Active)

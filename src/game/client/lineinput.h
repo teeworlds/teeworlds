@@ -54,6 +54,7 @@ public:
 	static void SetCompositionWindowPosition(vec2 Anchor, float LineHeight);
 
 	static CLineInput *GetActiveInput() { return s_NumActiveInputs ? s_apActiveInputs[s_NumActiveInputs-1] : 0; }
+	static void DeactivateAllInputs();
 
 	CLineInput() { SetBuffer(0, 0, 0); }
 	CLineInput(char *pStr, int MaxSize) { SetBuffer(pStr, MaxSize, MaxSize); }
