@@ -781,26 +781,23 @@ public:
 
 	void RenderGrid(CLayerGroup *pGroup);
 
-	void UiInvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra=0);
-	void UiDoPopupMenu();
-
 	int UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip);
 
-	static int PopupGroup(CEditor *pEditor, CUIRect View);
-	static int PopupLayer(CEditor *pEditor, CUIRect View);
-	static int PopupQuad(CEditor *pEditor, CUIRect View);
-	static int PopupPoint(CEditor *pEditor, CUIRect View);
-	static int PopupNewFolder(CEditor *pEditor, CUIRect View);
-	static int PopupMapInfo(CEditor *pEditor, CUIRect View);
-	static int PopupEvent(CEditor *pEditor, CUIRect View);
-	static int PopupSelectImage(CEditor *pEditor, CUIRect View);
-	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
-	static int PopupImage(CEditor *pEditor, CUIRect View);
-	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
-	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
-	static int PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View);
-	static int PopupDoodadAutoMap(CEditor *pEditor, CUIRect View);
-	static int PopupColorPicker(CEditor *pEditor, CUIRect View);
+	static bool PopupGroup(void *pContext, CUIRect View);
+	static bool PopupLayer(void *pContext, CUIRect View);
+	static bool PopupQuad(void *pContext, CUIRect View);
+	static bool PopupPoint(void *pContext, CUIRect View);
+	static bool PopupNewFolder(void *pContext, CUIRect View);
+	static bool PopupMapInfo(void *pContext, CUIRect View);
+	static bool PopupEvent(void *pContext, CUIRect View);
+	static bool PopupSelectImage(void *pContext, CUIRect View);
+	static bool PopupSelectGametileOp(void *pContext, CUIRect View);
+	static bool PopupImage(void *pContext, CUIRect View);
+	static bool PopupMenuFile(void *pContext, CUIRect View);
+	static bool PopupSelectConfigAutoMap(void *pContext, CUIRect View);
+	static bool PopupSelectDoodadRuleSet(void *pContext, CUIRect View);
+	static bool PopupDoodadAutoMap(void *pContext, CUIRect View);
+	static bool PopupColorPicker(void *pContext, CUIRect View);
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);

@@ -278,7 +278,6 @@ private:
 	bool m_MenuActive;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
-	bool m_PopupActive;
 	int m_ActiveListBox;
 	int m_PopupCountrySelection;
 	bool m_SkinModified;
@@ -770,9 +769,6 @@ private:
 	void DoJoystickAxisPicker(CUIRect View);
 
 	void SetActive(bool Active);
-
-	void InvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CMenus *pMenu, CUIRect Rect), void *pExtra=0);
-	void DoPopupMenu();
 
 	// loading
 	int m_LoadCurrent;

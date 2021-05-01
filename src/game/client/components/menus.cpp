@@ -76,8 +76,6 @@ CMenus::CMenus()
 	SetMenuPage(PAGE_START);
 	m_MenuPageOld = PAGE_START;
 
-	m_PopupActive = false;
-
 	m_aDemoLoadingFile[0] = 0;
 	m_DemoLoadingPopupRendered = false;
 
@@ -1166,8 +1164,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 			}
 		}
 
-		// do overlay popups
-		DoPopupMenu();
+		UI()->RenderPopupMenus();
 	}
 	else
 	{
@@ -1826,7 +1823,7 @@ void CMenus::OnRender()
 
 bool CMenus::CheckHotKey(int Key) const
 {
-	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !UI()->IsInputActive() && !m_PopupActive
+	return !m_KeyReaderIsActive && !m_KeyReaderWasActive && !UI()->IsInputActive() && !UI()->IsPopupActive()
 		&& !Input()->KeyIsPressed(KEY_LSHIFT) && !Input()->KeyIsPressed(KEY_RSHIFT)
 		&& !Input()->KeyIsPressed(KEY_LCTRL) && !Input()->KeyIsPressed(KEY_RCTRL)
 		&& !Input()->KeyIsPressed(KEY_LALT)
