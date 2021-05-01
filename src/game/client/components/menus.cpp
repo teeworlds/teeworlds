@@ -144,7 +144,6 @@ bool CMenus::DoButton_Toggle(const void *pID, bool Checked, const CUIRect *pRect
 	if(UI()->HotItem() == pID && Active)
 	{
 		RenderTools()->SelectSprite(SPRITE_GUIBUTTON_HOVER);
-		IGraphics::CQuadItem QuadItem(pRect->x, pRect->y, pRect->w, pRect->h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	}
 	Graphics()->QuadsEnd();
@@ -255,7 +254,7 @@ bool CMenus::DoButton_GridHeader(const void *pID, const char *pText, bool Checke
 	CUIRect Label;
 	pRect->VMargin(2.0f, &Label);
 	Label.y += 2.0f;
-	UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, Align);
+	UI()->DoLabel(&Label, pText, Label.h*ms_FontmodHeight*0.8f, Align);
 
 	if(Checked)
 	{
@@ -275,11 +274,8 @@ bool CMenus::DoButton_CheckBox(const void *pID, const char *pText, bool Checked,
 
 	RenderTools()->DrawUIRect(pRect, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
 
-	CUIRect Checkbox = *pRect;
-	CUIRect Label = *pRect;
-	Checkbox.w = Checkbox.h;
-	Label.x += Checkbox.w;
-	Label.w -= Checkbox.w;
+	CUIRect Checkbox, Label;
+	pRect->VSplitLeft(pRect->h, &Checkbox, &Label);
 	Label.VSplitLeft(5.0f, 0, &Label);
 
 	Checkbox.Margin(2.0f, &Checkbox);
@@ -290,19 +286,18 @@ bool CMenus::DoButton_CheckBox(const void *pID, const char *pText, bool Checked,
 	else
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
+	IGraphics::CQuadItem QuadItem(Checkbox.x, Checkbox.y, Checkbox.w, Checkbox.h);
 	if(UI()->HotItem() == pID)
 	{
 		RenderTools()->SelectSprite(SPRITE_MENU_CHECKBOX_HOVER);
-		IGraphics::CQuadItem QuadItem(Checkbox.x, Checkbox.y, Checkbox.w, Checkbox.h);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	}
 	RenderTools()->SelectSprite(Checked ? SPRITE_MENU_CHECKBOX_ACTIVE : SPRITE_MENU_CHECKBOX_INACTIVE);
-	IGraphics::CQuadItem QuadItem(Checkbox.x, Checkbox.y, Checkbox.w, Checkbox.h);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
 	Label.y += 1.0f; // lame fix
-	UI()->DoLabel(&Label, pText, pRect->h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&Label, pText, Label.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 
 	if(Locked)
 	{
