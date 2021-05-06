@@ -1730,6 +1730,7 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
     git_revision.cpp
     hash.cpp
     jsonwriter.cpp
+    sorted_array.cpp
     storage.cpp
     str.cpp
     test.cpp
