@@ -1842,6 +1842,8 @@ void CClient::InitInterfaces()
 	m_ServerBrowser.Init(&m_ContactClient, m_pGameClient->NetVersion());
 	m_Friends.Init();
 	m_Blacklist.Init();
+	m_DemoRecorder.Init(Console(), m_pStorage);
+	m_DemoPlayer.Init(Console(), m_pStorage);
 }
 
 bool CClient::LimitFps()
@@ -2304,7 +2306,7 @@ const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
 	// try to start playback
 	m_DemoPlayer.SetListener(this);
 
-	const char *pError = m_DemoPlayer.Load(Storage(), m_pConsole, pFilename, StorageType, GameClient()->NetVersion());
+	const char *pError = m_DemoPlayer.Load(pFilename, StorageType, GameClient()->NetVersion());
 	if(pError)
 		return pError;
 
@@ -2359,7 +2361,7 @@ void CClient::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
 		}
 		else
 			str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pFilename);
-		m_DemoRecorder.Start(Storage(), m_pConsole, aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapSha256, m_CurrentMapCrc, "client");
+		m_DemoRecorder.Start(aFilename, GameClient()->NetVersion(), m_aCurrentMap, m_CurrentMapSha256, m_CurrentMapCrc, "client");
 	}
 }
 
