@@ -36,7 +36,6 @@
 float CMenus::ms_ListheaderHeight = CUI::ms_ListheaderHeight;
 float CMenus::ms_FontmodHeight = CUI::ms_FontmodHeight;
 
-CMenus *CMenus::CUIElementBase::m_pMenus = 0;
 CRenderTools *CMenus::CUIElementBase::m_pRenderTools = 0;
 CUI *CMenus::CUIElementBase::m_pUI = 0;
 IInput *CMenus::CUIElementBase::m_pInput = 0;
