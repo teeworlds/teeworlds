@@ -150,11 +150,6 @@ void CCamera::ChangePosition(int PositionNumber)
 	m_MoveTime = 0.0f;
 }
 
-int CCamera::GetCurrentPosition()
-{
-	return m_CurrentPosition;
-}
-
 void CCamera::ConSetPosition(IConsole::IResult *pResult, void *pUserData)
 {
 	CCamera *pSelf = (CCamera *)pUserData;
