@@ -889,14 +889,14 @@ int CMenus::DoKeyReader(CButtonContainer *pBC, const CUIRect *pRect, int Key, in
 		DoButton_KeySelect(pBC, "???", pRect);
 		m_KeyReaderIsActive = true;
 	}
-	else if(Key == 0)
+	else if(NewKey == 0)
 	{
 		DoButton_KeySelect(pBC, "", pRect);
 	}
 	else
 	{
 		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%s%s", CBinds::GetModifierName(*pNewModifier), Input()->KeyName(Key));
+		str_format(aBuf, sizeof(aBuf), "%s%s", CBinds::GetModifierName(*pNewModifier), Input()->KeyName(NewKey));
 		DoButton_KeySelect(pBC, aBuf, pRect);
 	}
 	return NewKey;
