@@ -315,9 +315,10 @@ int CInput::Update()
 
 	int NumKeyStates;
 	const Uint8 *pState = SDL_GetKeyboardState(&NumKeyStates);
-	if(NumKeyStates >= KEY_LAST)
-		NumKeyStates = KEY_LAST-1;
+	if(NumKeyStates >= KEY_MOUSE_1)
+		NumKeyStates = KEY_MOUSE_1;
 	mem_copy(m_aInputState, pState, NumKeyStates);
+	mem_zero(m_aInputState+NumKeyStates, KEY_LAST-NumKeyStates);
 
 	// these states must always be updated manually because they are not in the GetKeyState from SDL
 	int MouseState = SDL_GetMouseState(NULL, NULL);
