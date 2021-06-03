@@ -66,9 +66,7 @@ CInput::CInput()
 CInput::~CInput()
 {
 	if(m_pClipboardText)
-	{
 		SDL_free(m_pClipboardText);
-	}
 	CloseJoysticks();
 }
 
@@ -123,12 +121,10 @@ void CInput::InitJoysticks()
 	}
 }
 
-SDL_Joystick* CInput::GetActiveJoystick()
+SDL_Joystick *CInput::GetActiveJoystick()
 {
 	if(m_apJoysticks.size() == 0)
-	{
 		return NULL;
-	}
 	if(m_aSelectedJoystickGUID[0] && str_comp(m_aSelectedJoystickGUID, m_pConfig->m_JoystickGUID) != 0)
 	{
 		// Refresh if cached GUID differs from configured GUID
@@ -161,12 +157,8 @@ SDL_Joystick* CInput::GetActiveJoystick()
 void CInput::CloseJoysticks()
 {
 	for(sorted_array<SDL_Joystick*>::range r = m_apJoysticks.all(); !r.empty(); r.pop_front())
-	{
-		if (SDL_JoystickGetAttached(r.front()))
-		{
+		if(SDL_JoystickGetAttached(r.front()))
 			SDL_JoystickClose(r.front());
-		}
-	}
 	m_apJoysticks.clear();
 }
 
@@ -180,23 +172,23 @@ void CInput::SelectNextJoystick()
 	}
 }
 
-const char* CInput::GetJoystickName()
+const char *CInput::GetJoystickName()
 {
-	SDL_Joystick* pJoystick = GetActiveJoystick();
+	SDL_Joystick *pJoystick = GetActiveJoystick();
 	dbg_assert((bool)pJoystick, "Requesting joystick name, but no joysticks were initialized");
 	return SDL_JoystickName(pJoystick);
 }
 
 float CInput::GetJoystickAxisValue(int Axis)
 {
-	SDL_Joystick* pJoystick = GetActiveJoystick();
+	SDL_Joystick *pJoystick = GetActiveJoystick();
 	dbg_assert((bool)pJoystick, "Requesting joystick axis value, but no joysticks were initialized");
 	return (SDL_JoystickGetAxis(pJoystick, Axis)-SDL_JOYSTICK_AXIS_MIN)/float(SDL_JOYSTICK_AXIS_MAX-SDL_JOYSTICK_AXIS_MIN)*2.0f - 1.0f;
 }
 
 int CInput::GetJoystickNumAxes()
 {
-	SDL_Joystick* pJoystick = GetActiveJoystick();
+	SDL_Joystick *pJoystick = GetActiveJoystick();
 	dbg_assert((bool)pJoystick, "Requesting joystick axes count, but no joysticks were initialized");
 	return SDL_JoystickNumAxes(pJoystick);
 }
@@ -292,9 +284,7 @@ bool CInput::MouseDoubleClick()
 const char *CInput::GetClipboardText()
 {
 	if(m_pClipboardText)
-	{
 		SDL_free(m_pClipboardText);
-	}
 	m_pClipboardText = SDL_GetClipboardText();
 	if(m_pClipboardText)
 		str_sanitize_cc(m_pClipboardText);

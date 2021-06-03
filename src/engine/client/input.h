@@ -14,7 +14,7 @@ class CInput : public IEngineInput
 	sorted_array<SDL_Joystick*> m_apJoysticks;
 	int m_SelectedJoystickIndex;
 	char m_aSelectedJoystickGUID[34];
-	SDL_Joystick* GetActiveJoystick();
+	SDL_Joystick *GetActiveJoystick();
 	void InitJoysticks();
 	void CloseJoysticks();
 
@@ -52,7 +52,7 @@ public:
 	int NumJoysticks() const { return m_apJoysticks.size(); }
 	int GetJoystickIndex() const { return m_SelectedJoystickIndex; }
 	void SelectNextJoystick();
-	const char* GetJoystickName();
+	const char *GetJoystickName();
 	int GetJoystickNumAxes();
 	float GetJoystickAxisValue(int Axis);
 	bool JoystickRelative(float *pX, float *pY);
