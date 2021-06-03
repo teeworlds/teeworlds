@@ -331,43 +331,41 @@ int CInput::Update()
 	if(MouseState&SDL_BUTTON(8)) m_aInputState[KEY_MOUSE_8] = 1;
 	if(MouseState&SDL_BUTTON(9)) m_aInputState[KEY_MOUSE_9] = 1;
 
+	SDL_Event Event;
+	while(SDL_PollEvent(&Event))
 	{
-		SDL_Event Event;
-
-		while(SDL_PollEvent(&Event))
+		int Key = -1;
+		int Scancode = 0;
+		int Action = IInput::FLAG_PRESS;
+		switch(Event.type)
 		{
-			int Key = -1;
-			int Scancode = 0;
-			int Action = IInput::FLAG_PRESS;
-			switch (Event.type)
-			{
-				case SDL_TEXTINPUT:
-					AddEvent(Event.text.text, 0, IInput::FLAG_TEXT);
-					break;
+			case SDL_TEXTINPUT:
+				AddEvent(Event.text.text, 0, IInput::FLAG_TEXT);
+				break;
 
-				// handle keys
-				case SDL_KEYDOWN:
-					Key = KeycodeToKey(Event.key.keysym.sym);
-					Scancode = Event.key.keysym.scancode;
-					break;
-				case SDL_KEYUP:
-					Action = IInput::FLAG_RELEASE;
-					Key = KeycodeToKey(Event.key.keysym.sym);
-					Scancode = Event.key.keysym.scancode;
-					break;
+			// handle keys
+			case SDL_KEYDOWN:
+				Key = KeycodeToKey(Event.key.keysym.sym);
+				Scancode = Event.key.keysym.scancode;
+				break;
+			case SDL_KEYUP:
+				Action = IInput::FLAG_RELEASE;
+				Key = KeycodeToKey(Event.key.keysym.sym);
+				Scancode = Event.key.keysym.scancode;
+				break;
 
-				// handle the joystick events
-				case SDL_JOYBUTTONUP:
-					Action = IInput::FLAG_RELEASE;
+			// handle the joystick events
+			case SDL_JOYBUTTONUP:
+				Action = IInput::FLAG_RELEASE;
 
-					// fall through
-				case SDL_JOYBUTTONDOWN:
-					Key = Event.jbutton.button + KEY_JOYSTICK_BUTTON_0;
-					Scancode = Key;
-					break;
+				// fall through
+			case SDL_JOYBUTTONDOWN:
+				Key = Event.jbutton.button + KEY_JOYSTICK_BUTTON_0;
+				Scancode = Key;
+				break;
 
-				case SDL_JOYHATMOTION:
-					switch (Event.jhat.value) {
+			case SDL_JOYHATMOTION:
+				switch(Event.jhat.value) {
 					case SDL_HAT_LEFTUP:
 						Key = KEY_JOY_HAT_LEFTUP;
 						Scancode = Key;
@@ -414,66 +412,63 @@ int CInput::Update()
 						Scancode = Key;
 						m_PreviousHat = Key;
 						break;
-					}
-					break;
+				}
+				break;
 
-				// handle mouse buttons
-				case SDL_MOUSEBUTTONUP:
-					Action = IInput::FLAG_RELEASE;
+			// handle mouse buttons
+			case SDL_MOUSEBUTTONUP:
+				Action = IInput::FLAG_RELEASE;
 
-					// fall through
-				case SDL_MOUSEBUTTONDOWN:
-					if(Event.button.button == SDL_BUTTON_LEFT) Key = KEY_MOUSE_1; // ignore_convention
-					if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2; // ignore_convention
-					if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3; // ignore_convention
-					if(Event.button.button == 4) Key = KEY_MOUSE_4; // ignore_convention
-					if(Event.button.button == 5) Key = KEY_MOUSE_5; // ignore_convention
-					if(Event.button.button == 6) Key = KEY_MOUSE_6; // ignore_convention
-					if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
-					if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention
-					if(Event.button.button == 9) Key = KEY_MOUSE_9; // ignore_convention
-					if(Event.button.button == SDL_BUTTON_LEFT)
-					{
-						if(Event.button.clicks%2 == 0)
-							m_MouseDoubleClick = true;
-						if(Event.button.clicks == 1)
-							m_MouseDoubleClick = false;
-					}
-					Scancode = Key;
-					break;
+				// fall through
+			case SDL_MOUSEBUTTONDOWN:
+				if(Event.button.button == SDL_BUTTON_LEFT) Key = KEY_MOUSE_1; // ignore_convention
+				if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2; // ignore_convention
+				if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3; // ignore_convention
+				if(Event.button.button == 4) Key = KEY_MOUSE_4; // ignore_convention
+				if(Event.button.button == 5) Key = KEY_MOUSE_5; // ignore_convention
+				if(Event.button.button == 6) Key = KEY_MOUSE_6; // ignore_convention
+				if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
+				if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention
+				if(Event.button.button == 9) Key = KEY_MOUSE_9; // ignore_convention
+				if(Event.button.button == SDL_BUTTON_LEFT)
+				{
+					if(Event.button.clicks%2 == 0)
+						m_MouseDoubleClick = true;
+					if(Event.button.clicks == 1)
+						m_MouseDoubleClick = false;
+				}
+				Scancode = Key;
+				break;
 
-				case SDL_MOUSEWHEEL:
-					if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
-					if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
-					Action |= IInput::FLAG_RELEASE;
-					break;
+			case SDL_MOUSEWHEEL:
+				if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
+				if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
+				Action |= IInput::FLAG_RELEASE;
+				break;
 
 #if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (mouse state is faulty on start)
-				case SDL_WINDOWEVENT:
-					if(Event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
-					{
-						MouseModeAbsolute();
-						MouseModeRelative();
-					}
-					break;
+			case SDL_WINDOWEVENT:
+				if(Event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
+				{
+					MouseModeAbsolute();
+					MouseModeRelative();
+				}
+				break;
 #endif
 
-				// other messages
-				case SDL_QUIT:
-					return 1;
-			}
+			// other messages
+			case SDL_QUIT:
+				return 1;
+		}
 
-			//
-			if(Key != -1)
+		if(Key != -1)
+		{
+			if(Action&IInput::FLAG_PRESS)
 			{
-				if(Action&IInput::FLAG_PRESS)
-				{
-					m_aInputState[Scancode] = 1;
-					m_aInputCount[Key] = m_InputCounter;
-				}
-				AddEvent(0, Key, Action);
+				m_aInputState[Scancode] = 1;
+				m_aInputCount[Key] = m_InputCounter;
 			}
-
+			AddEvent(0, Key, Action);
 		}
 	}
 
