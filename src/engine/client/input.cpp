@@ -321,11 +321,11 @@ int CInput::Update()
 
 	// these states must always be updated manually because they are not in the GetKeyState from SDL
 	int MouseState = SDL_GetMouseState(NULL, NULL);
-	if(MouseState&SDL_BUTTON(1)) m_aInputState[KEY_MOUSE_1] = 1; // 1 is left
-	if(MouseState&SDL_BUTTON(3)) m_aInputState[KEY_MOUSE_2] = 1; // 3 is right
-	if(MouseState&SDL_BUTTON(2)) m_aInputState[KEY_MOUSE_3] = 1; // 2 is middle
-	if(MouseState&SDL_BUTTON(4)) m_aInputState[KEY_MOUSE_4] = 1;
-	if(MouseState&SDL_BUTTON(5)) m_aInputState[KEY_MOUSE_5] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_LEFT)) m_aInputState[KEY_MOUSE_1] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_RIGHT)) m_aInputState[KEY_MOUSE_2] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_MIDDLE)) m_aInputState[KEY_MOUSE_3] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_X1)) m_aInputState[KEY_MOUSE_4] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_X2)) m_aInputState[KEY_MOUSE_5] = 1;
 	if(MouseState&SDL_BUTTON(6)) m_aInputState[KEY_MOUSE_6] = 1;
 	if(MouseState&SDL_BUTTON(7)) m_aInputState[KEY_MOUSE_7] = 1;
 	if(MouseState&SDL_BUTTON(8)) m_aInputState[KEY_MOUSE_8] = 1;
