@@ -305,7 +305,9 @@ void CInput::Clear()
 
 bool CInput::KeyState(int Key) const
 {
-	return m_aInputState[Key>=KEY_MOUSE_1 ? Key : SDL_GetScancodeFromKey(KeyToKeycode(Key))];
+	return Key >= KEY_FIRST
+		&& Key < KEY_LAST
+		&& m_aInputState[Key>=KEY_MOUSE_1 ? Key : SDL_GetScancodeFromKey(KeyToKeycode(Key))];
 }
 
 int CInput::Update()
@@ -336,7 +338,7 @@ int CInput::Update()
 	while(SDL_PollEvent(&Event))
 	{
 		int Key = -1;
-		int Scancode = 0;
+		int Scancode = -1;
 		int Action = IInput::FLAG_PRESS;
 		switch(Event.type)
 		{
@@ -442,8 +444,10 @@ int CInput::Update()
 
 			case SDL_MOUSEWHEEL:
 				if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
-				if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
+				else if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
+				else break;
 				Action |= IInput::FLAG_RELEASE;
+				Scancode = Key;
 				break;
 
 #if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (mouse state is faulty on start)
@@ -461,9 +465,9 @@ int CInput::Update()
 				return 1;
 		}
 
-		if(Key != -1)
+		if(Key >= 0)
 		{
-			if(Action&IInput::FLAG_PRESS)
+			if(Action&IInput::FLAG_PRESS && Key < g_MaxKeys && Scancode >= 0 && Scancode < g_MaxKeys)
 			{
 				m_aInputState[Scancode] = 1;
 				m_aInputCount[Key] = m_InputCounter;
