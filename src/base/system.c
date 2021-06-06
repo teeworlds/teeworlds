@@ -100,7 +100,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 
 	str_format(str, sizeof(str), "[%s][%s]: ", timestr, sys);
 
-	len = strlen(str);
+	len = str_length(str);
 	msg = (char *)str + len;
 
 	va_start(args, fmt);
@@ -221,7 +221,7 @@ static void logger_debugger(const char *line)
 static IOHANDLE logfile = 0;
 static void logger_file(const char *line)
 {
-	io_write(logfile, line, strlen(line));
+	io_write(logfile, line, str_length(line));
 	io_write_newline(logfile);
 	io_flush(logfile);
 }
@@ -1656,20 +1656,20 @@ int fs_storage_path(const char *appname, char *path, int max)
 
 	/* old folder location */
 	str_format(path, max, "%s/.%s", home, appname);
-	for(i = strlen(home)+2; path[i]; i++)
+	for(i = str_length(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
 
 	if(!xdgdatahome)
 	{
 		/* use default location */
 		str_format(xdgpath, max, "%s/.local/share/%s", home, appname);
-		for(i = strlen(home)+14; xdgpath[i]; i++)
+		for(i = str_length(home)+14; xdgpath[i]; i++)
 			xdgpath[i] = tolower(xdgpath[i]);
 	}
 	else
 	{
 		str_format(xdgpath, max, "%s/%s", xdgdatahome, appname);
-		for(i = strlen(xdgdatahome)+1; xdgpath[i]; i++)
+		for(i = str_length(xdgdatahome)+1; xdgpath[i]; i++)
 			xdgpath[i] = tolower(xdgpath[i]);
 	}
 
@@ -2028,7 +2028,7 @@ int time_iseasterday()
 
 void str_append(char *dst, const char *src, int dst_size)
 {
-	int s = strlen(dst);
+	int s = str_length(dst);
 	int i = 0;
 	while(s < dst_size)
 	{
