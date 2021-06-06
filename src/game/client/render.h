@@ -66,6 +66,7 @@ public:
 	void SelectSprite(int id, int Flags=0, int sx=0, int sy=0);
 
 	void DrawSprite(float x, float y, float size);
+	void RenderCursor(float CenterX, float CenterY, float Size);
 
 	// rects
 	void DrawRoundRect(const CUIRect *r, vec4 Color, float Rounding);

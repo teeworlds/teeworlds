@@ -1451,11 +1451,8 @@ void CMenus::PopupCountry(int Selection, FPopupButtonCallback pfnOkButtonCallbac
 }
 
 
-void CMenus::Render()
+void CMenus::RenderMenu(CUIRect Screen)
 {
-	CUIRect Screen = *UI()->Screen();
-	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
-
 	static int s_InitTick = 5;
 	if(s_InitTick > 0)
 	{
@@ -2212,13 +2209,6 @@ void CMenus::OnRender()
 	if(Client()->State() != IClient::STATE_ONLINE && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 		SetActive(true);
 
-	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-	{
-		CUIRect Screen = *UI()->Screen();
-		Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
-		RenderDemoPlayer(Screen);
-	}
-
 	if(Client()->State() == IClient::STATE_ONLINE && m_pClient->m_ServerMode == m_pClient->SERVERMODE_PUREMOD)
 	{
 		Client()->Disconnect();
@@ -2226,50 +2216,39 @@ void CMenus::OnRender()
 		PopupMessage(Localize("Disconnected"), Localize("The server is running a non-standard tuning on a pure game type."), Localize("Ok"));
 	}
 
-	if(!IsActive())
+	if(Client()->State() == IClient::STATE_DEMOPLAYBACK || IsActive())
 	{
-		m_EscapePressed = false;
-		m_EnterPressed = false;
-		m_TabPressed = false;
-		m_DeletePressed = false;
-		m_UpArrowPressed = false;
-		m_DownArrowPressed = false;
-		return;
-	}
+		// update the ui
+		const CUIRect *pScreen = UI()->Screen();
+		float MouseX = (m_MousePos.x/(float)Graphics()->ScreenWidth())*pScreen->w;
+		float MouseY = (m_MousePos.y/(float)Graphics()->ScreenHeight())*pScreen->h;
+		UI()->Update(MouseX, MouseY, MouseX*3.0f, MouseY*3.0f);
 
-	// update the ui
-	const CUIRect *pScreen = UI()->Screen();
-	float MouseX = (m_MousePos.x/(float)Graphics()->ScreenWidth())*pScreen->w;
-	float MouseY = (m_MousePos.y/(float)Graphics()->ScreenHeight())*pScreen->h;
-	UI()->Update(MouseX, MouseY, MouseX*3.0f, MouseY*3.0f);
-
-	// render
-	if(Client()->State() != IClient::STATE_DEMOPLAYBACK)
-		Render();
-
-	// render cursor
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CURSOR].m_Id);
-	Graphics()->WrapClamp();
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1,1,1,1);
-	IGraphics::CQuadItem QuadItem(MouseX, MouseY, 24, 24);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-	Graphics()->WrapNormal();
-
-	// render debug information
-	if(Config()->m_Debug)
-	{
+		// render demo player or main menu
 		Graphics()->MapScreen(pScreen->x, pScreen->y, pScreen->w, pScreen->h);
+		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
+			RenderDemoPlayer(*pScreen);
+		else
+			RenderMenu(*pScreen);
 
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%p %p %p", UI()->HotItem(), UI()->GetActiveItem(), UI()->LastActiveItem());
-		static CTextCursor s_Cursor(10, 10, 10);
-		s_Cursor.Reset();
-		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+		if(IsActive())
+		{
+			RenderTools()->RenderCursor(MouseX, MouseY, 24.0f);
+
+			// render debug information
+			if(Config()->m_Debug)
+			{
+				char aBuf[64];
+				str_format(aBuf, sizeof(aBuf), "%p %p %p", UI()->HotItem(), UI()->GetActiveItem(), UI()->LastActiveItem());
+				static CTextCursor s_Cursor(10, 10, 10);
+				s_Cursor.Reset();
+				TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+			}
+
+			UI()->FinishCheck();
+		}
 	}
 
-	UI()->FinishCheck();
 	m_EscapePressed = false;
 	m_EnterPressed = false;
 	m_TabPressed = false;
