@@ -404,7 +404,7 @@ bool CMenus::FetchHeader(CDemoItem *pItem)
 	{
 		char aBuffer[IO_MAX_PATH_LENGTH];
 		str_format(aBuffer, sizeof(aBuffer), "%s/%s", m_aCurrentDemoFolder, pItem->m_aFilename);
-		pItem->m_Valid = DemoPlayer()->GetDemoInfo(Storage(), aBuffer, pItem->m_StorageType, &pItem->m_Info);
+		pItem->m_Valid = DemoPlayer()->GetDemoInfo(aBuffer, pItem->m_StorageType, &pItem->m_Info);
 		pItem->m_InfosLoaded = true;
 	}
 	return pItem->m_Valid;
