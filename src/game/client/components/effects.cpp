@@ -22,8 +22,8 @@ CEffects::CEffects()
 {
 	m_Add50hz = false;
 	m_Add100hz = false;
-	m_DamageTaken = 0;
-	m_DamageTakenTick = 0;
+	mem_zero(m_aDamageTaken, sizeof(m_aDamageTaken));
+	mem_zero(m_aDamageTakenTick, sizeof(m_aDamageTakenTick));
 }
 
 void CEffects::AirJump(vec2 Pos)
@@ -49,23 +49,29 @@ void CEffects::AirJump(vec2 Pos)
 	m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_AIRJUMP, 1.0f, Pos);
 }
 
-void CEffects::DamageIndicator(vec2 Pos, int Amount)
+void CEffects::DamageIndicator(vec2 Pos, int Amount, float Angle, int ClientID)
 {
 	// ignore if there is no damage
 	if(Amount == 0)
 		return;
 
-	m_DamageTaken++;
-	float Angle;
+	if (ClientID < 0 || ClientID >= MAX_CLIENTS)
+	{
+		m_pClient->m_pDamageind->Create(vec2(Pos.x, Pos.y), direction(Angle));
+		return;
+	}
+
+	m_aDamageTaken[ClientID]++;
+
 	// create healthmod indicator
-	if(Client()->LocalTime() < m_DamageTakenTick+0.5f)
+	if(Client()->LocalTime() < m_aDamageTakenTick[ClientID]+0.5f)
 	{
 		// make sure that the damage indicators don't group together
-		Angle = m_DamageTaken*0.25f;
+		Angle = m_aDamageTaken[ClientID]*0.25f;
 	}
 	else
 	{
-		m_DamageTaken = 0;
+		m_aDamageTaken[ClientID] = 0;
 		Angle = 0;
 	}
 
@@ -78,7 +84,7 @@ void CEffects::DamageIndicator(vec2 Pos, int Amount)
 		m_pClient->m_pDamageind->Create(vec2(Pos.x, Pos.y), direction(f));
 	}
 
-	m_DamageTakenTick = Client()->LocalTime();
+	m_aDamageTakenTick[ClientID] = Client()->LocalTime();
 }
 
 void CEffects::PowerupShine(vec2 Pos, vec2 size)
