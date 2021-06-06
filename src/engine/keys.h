@@ -1,9 +1,11 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_KEYS_H
 #define ENGINE_KEYS_H
 #if defined(CONF_FAMILY_WINDOWS)
    #undef KEY_EXECUTE
 #endif
-/* AUTO GENERATED! DO NOT EDIT MANUALLY! */
+
 enum
 {
 	KEY_FIRST = 0,
