@@ -68,7 +68,7 @@ public:
 	virtual int NumJoysticks() const = 0;
 	virtual int GetJoystickIndex() const = 0;
 	virtual void SelectNextJoystick() = 0;
-	virtual const char* GetJoystickName() = 0;
+	virtual const char *GetJoystickName() = 0;
 	virtual int GetJoystickNumAxes() = 0;
 	virtual float GetJoystickAxisValue(int Axis) = 0;
 	virtual bool JoystickRelative(float *pX, float *pY) = 0;
@@ -77,11 +77,11 @@ public:
 	// mouse
 	virtual void MouseModeRelative() = 0;
 	virtual void MouseModeAbsolute() = 0;
-	virtual int MouseDoubleClick() = 0;
+	virtual bool MouseDoubleClick() = 0;
 	virtual bool MouseRelative(float *pX, float *pY) = 0;
 
 	// clipboard
-	virtual const char* GetClipboardText() = 0;
+	virtual const char *GetClipboardText() = 0;
 	virtual void SetClipboardText(const char *pText) = 0;
 
 	int CursorRelative(float *pX, float *pY)
