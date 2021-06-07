@@ -33,7 +33,7 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 
 	// background
 	View.HSplitTop(HeaderHeight+Spacing, &Header, 0);
-	m_pRenderTools->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), m_BackgroundCorners&CUI::CORNER_T, 5.0f);
+	Header.Draw(vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 5.0f, m_BackgroundCorners&CUIRect::CORNER_T);
 
 	// draw header
 	View.HSplitTop(HeaderHeight, &Header, &View);
@@ -60,7 +60,7 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 
 	// background
 	View.HSplitTop(FilterHeight+Spacing, &Filter, 0);
-	m_pRenderTools->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 0, 5.0f);
+	Filter.Draw(vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 5.0f, CUIRect::CORNER_NONE);
 
 	// draw filter
 	View.HSplitTop(FilterHeight, &Filter, &View);
@@ -99,7 +99,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 	// background
 	m_BackgroundCorners = BackgroundCorners;
 	if(Background)
-		m_pRenderTools->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), m_BackgroundCorners&CUI::CORNER_B, 5.0f);
+		View.Draw(vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 5.0f, m_BackgroundCorners&CUIRect::CORNER_B);
 
 	// draw footers
 	if(m_pBottomText)
@@ -203,12 +203,12 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 		}
 
 		CUIRect r = Item.m_Rect;
-		m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f), CUI::CORNER_ALL, 5.0f);
+		r.Draw(vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f));
 	}
 	/*else*/ if(m_pUI->HotItem() == pId && !m_ScrollRegion.IsAnimating())
 	{
 		CUIRect r = Item.m_Rect;
-		m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, 0.33f), CUI::CORNER_ALL, 5.0f);
+		r.Draw(vec4(1, 1, 1, 0.33f));
 	}
 
 	return Item;
@@ -218,7 +218,7 @@ CMenus::CListboxItem CMenus::CListBox::DoSubheader()
 {
 	CListboxItem Item = DoNextRow();
 	CUIRect r = Item.m_Rect;
-	m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, 0.2f), 0, 0.0f);
+	r.Draw(vec4(1, 1, 1, 0.2f), 0.0f, CUIRect::CORNER_NONE);
 	return Item;
 }
 

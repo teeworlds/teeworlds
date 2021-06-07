@@ -1501,6 +1501,8 @@ if(CLIENT)
     render_map.cpp
     ui.cpp
     ui.h
+    ui_rect.cpp
+    ui_rect.h
   )
   set_src(GAME_EDITOR GLOB src/game/editor
     auto_map.cpp

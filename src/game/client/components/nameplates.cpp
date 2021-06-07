@@ -48,19 +48,19 @@ void CNamePlates::RenderNameplate(
 		else if(m_pClient->m_aClients[ClientID].m_Team == TEAM_BLUE)
 			BgIdColor = vec4(0.7f, 0.7f, 1.0f, a * 0.5f);
 	}
-	
+
 	// TODO: cache nameplates
 	static CTextCursor s_Cursor;
 	s_Cursor.m_FontSize = FontSize;
 	s_Cursor.Reset();
 	TextRender()->TextDeferred(&s_Cursor, aName, -1);
 
-	float tw = s_Cursor.Width() + RenderTools()->GetClientIdRectSize(FontSize);
+	float tw = s_Cursor.Width() + UI()->GetClientIDRectWidth(FontSize);
 
 	if(a > 0.001f)
 	{
 		vec2 CursorPosition = vec2(Position.x-tw/2.0f, Position.y-FontSize-38.0f);
-		CursorPosition.x += RenderTools()->DrawClientID(TextRender(), s_Cursor.m_FontSize, CursorPosition, ClientID, BgIdColor, IdTextColor);
+		CursorPosition.x += UI()->DrawClientID(s_Cursor.m_FontSize, CursorPosition, ClientID, BgIdColor, IdTextColor);
 		s_Cursor.MoveTo(CursorPosition.x, CursorPosition.y);
 		TextRender()->DrawTextOutlined(&s_Cursor, a);
 	}
