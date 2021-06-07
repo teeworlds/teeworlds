@@ -21,9 +21,9 @@
 #include "menus.h"
 
 CMenus::CColumn CMenus::ms_aDemoCols[] = { // Localize("Name"); Localize("Length"); Localize("Date"); - these strings are localized within CLocConstString
-	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, "Name", 0, 100.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
-	{COL_DEMO_LENGTH,	CMenus::SORT_LENGTH, "Length", 1, 80.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
-	{COL_DEMO_DATE,		CMenus::SORT_DATE, "Date", 1, 170.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, "Name", 0, 100.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
+	{COL_DEMO_LENGTH,	CMenus::SORT_LENGTH, "Length", 1, 80.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
+	{COL_DEMO_DATE,		CMenus::SORT_DATE, "Date", 1, 170.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
 };
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)
@@ -121,7 +121,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		str_format(aBuffer, sizeof(aBuffer), "%d:%02d / %d:%02d",
 			CurrentTick/SERVER_TICK_SPEED/60, (CurrentTick/SERVER_TICK_SPEED)%60,
 			TotalTicks/SERVER_TICK_SPEED/60, (TotalTicks/SERVER_TICK_SPEED)%60);
-		UI()->DoLabel(&SeekBar, aBuffer, SeekBar.h*0.70f, CUI::ALIGN_CENTER);
+		UI()->DoLabel(&SeekBar, aBuffer, SeekBar.h*0.70f, TEXTALIGN_CENTER);
 
 		// do the logic
 		if(UI()->CheckActiveItem(&s_PrevAmount))
@@ -296,7 +296,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins*3, 0, &ButtonBar);
 		char aBuffer[64];
 		str_format(aBuffer, sizeof(aBuffer), pInfo->m_Speed >= 1.0f ? "x%.0f" : "x%.2f", pInfo->m_Speed);
-		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, CUI::ALIGN_LEFT);
+		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, TEXTALIGN_LEFT);
 
 		// close button
 		ButtonBar.VSplitRight(ButtonbarHeight*3, &ButtonBar, &Button);
@@ -567,7 +567,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				if(ID == COL_DEMO_NAME)
 				{
 					Button.x += FileIcon.w + 10.0f;
-					UI()->DoLabel(&Button, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
+					UI()->DoLabel(&Button, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
 				}
 				else if(ID == COL_DEMO_LENGTH && !DemoItem.m_IsDir && DemoItem.m_InfosLoaded && DemoItem.m_Valid)
 				{
@@ -577,7 +577,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 					Button.VMargin(4.0f, &Button);
 					if(!Item.m_Selected)
 						TextRender()->TextColor(CUI::ms_TransparentTextColor);
-					UI()->DoLabel(&Button, aLength, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
+					UI()->DoLabel(&Button, aLength, Item.m_Rect.h*ms_FontmodHeight*0.8f, TEXTALIGN_RIGHT);
 				}
 				else if(ID == COL_DEMO_DATE && !DemoItem.m_IsDir)
 				{
@@ -585,7 +585,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 					str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
 					if(!Item.m_Selected)
 						TextRender()->TextColor(CUI::ms_TransparentTextColor);
-					UI()->DoLabel(&Button, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+					UI()->DoLabel(&Button, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 				}
 				TextRender()->TextColor(CUI::ms_DefaultTextColor);
 				if(Item.m_Selected)

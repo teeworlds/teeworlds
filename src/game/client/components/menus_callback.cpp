@@ -82,7 +82,7 @@ void CMenus::DoSettingsControlsButtons(int Start, int Stop, CUIRect View, float 
 		str_format(aBuf, sizeof(aBuf), "%s:", (const char *)Key.m_Name);
 
 		Label.y += 2.0f;
-		UI()->DoLabel(&Label, aBuf, 13.0f, CUI::ALIGN_CENTER);
+		UI()->DoLabel(&Label, aBuf, 13.0f, TEXTALIGN_CENTER);
 		int OldId = Key.m_KeyId, OldModifier = Key.m_Modifier, NewModifier;
 		int NewId = DoKeyReader(&gs_aKeys[i].m_BC, &Button, OldId, OldModifier, &NewModifier);
 		if(NewId != OldId || NewModifier != OldModifier)
@@ -242,7 +242,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 		{
 			View.HSplitTop((View.h-ButtonHeight)/2.0f, 0, &View);
 			View.HSplitTop(ButtonHeight, &Button, &View);
-			m_pClient->UI()->DoLabel(&Button, Localize("No joysticks found. Plug in a joystick and restart the game."), 13.0f, CUI::ALIGN_CENTER);
+			m_pClient->UI()->DoLabel(&Button, Localize("No joysticks found. Plug in a joystick and restart the game."), 13.0f, TEXTALIGN_CENTER);
 		}
 	}
 
@@ -396,13 +396,13 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 	View.HSplitTop(Spacing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Row, &View);
 	Row.VSplitLeft(StatusWidth, &Button, &Row);
-	m_pClient->UI()->DoLabel(&Button, Localize("Device"), 13.0f, CUI::ALIGN_CENTER);
+	m_pClient->UI()->DoLabel(&Button, Localize("Device"), 13.0f, TEXTALIGN_CENTER);
 	Row.VSplitLeft(StatusMargin, 0, &Row);
 	Row.VSplitLeft(StatusWidth, &Button, &Row);
-	m_pClient->UI()->DoLabel(&Button, Localize("Status"), 13.0f, CUI::ALIGN_CENTER);
+	m_pClient->UI()->DoLabel(&Button, Localize("Status"), 13.0f, TEXTALIGN_CENTER);
 	Row.VSplitLeft(2*StatusMargin, 0, &Row);
 	Row.VSplitLeft(2*BindWidth, &Button, &Row);
-	m_pClient->UI()->DoLabel(&Button, Localize("Aim bind"), 13.0f, CUI::ALIGN_CENTER);
+	m_pClient->UI()->DoLabel(&Button, Localize("Aim bind"), 13.0f, TEXTALIGN_CENTER);
 
 	static int s_aActive[g_MaxJoystickAxes][2];
 	for(int i = 0; i < min(m_pClient->Input()->GetJoystickNumAxes(), g_MaxJoystickAxes); i++)
@@ -421,7 +421,7 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 			m_pClient->TextRender()->TextColor(0.7f, 0.7f, 0.7f, 1.0f);
 		else
 			m_pClient->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
-		m_pClient->UI()->DoLabel(&Button, aBuf, 13.0f, CUI::ALIGN_CENTER);
+		m_pClient->UI()->DoLabel(&Button, aBuf, 13.0f, TEXTALIGN_CENTER);
 
 		// Device status
 		Row.VSplitLeft(StatusMargin, 0, &Row);
