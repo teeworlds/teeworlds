@@ -309,12 +309,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		DemoPlayer()->GetDemoName(aDemoName, sizeof(aDemoName));
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), Localize("Demofile: %s"), aDemoName);
-		static CTextCursor s_Cursor;
-		s_Cursor.m_FontSize = Button.h*0.5f;
-		s_Cursor.MoveTo(NameBar.x, NameBar.y);
-		s_Cursor.Reset();
-		s_Cursor.m_MaxWidth = MainView.w;
-		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+		UI()->DoLabel(&NameBar, aBuf, NameBar.h*0.7f, TEXTALIGN_ML, NameBar.w);
 	}
 
 	if(IncreaseDemoSpeed)

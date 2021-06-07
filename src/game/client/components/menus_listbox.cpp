@@ -36,8 +36,7 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 
 	// draw header
 	View.HSplitTop(HeaderHeight, &Header, &View);
-	Header.y += 2.0f;
-	m_pUI->DoLabel(&Header, pTitle, Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	m_pUI->DoLabel(&Header, pTitle, Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_MC);
 
 	View.HSplitTop(Spacing, &Header, &View);
 
@@ -106,8 +105,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 		CUIRect Footer;
 		View.HSplitBottom(m_FooterHeight, &View, &Footer);
 		Footer.VSplitLeft(10.0f, 0, &Footer);
-		Footer.y += 2.0f;
-		m_pUI->DoLabel(&Footer, m_pBottomText, Footer.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		m_pUI->DoLabel(&Footer, m_pBottomText, Footer.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_MC);
 	}
 
 	// setup the variables
