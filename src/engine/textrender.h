@@ -138,6 +138,7 @@ public:
 		if (StringVersion < 0 || m_StringVersion != StringVersion)
 		{
 			m_Width = 0;
+			m_Height = 0;
 			m_NextLineAdvanceY = 0;
 			m_Advance = vec2(0, 0);
 			m_LineCount = 1;
@@ -215,6 +216,7 @@ public:
 	virtual void DrawTextShadowed(CTextCursor *pCursor, vec2 ShadowOffset, float Alpha = 1.0f, int StartGlyph = 0, int NumGlyphs = -1) = 0;
 
 	// QoL APIs
+	virtual int CharToGlyph(CTextCursor *pCursor, int NumChars, float *pLineWidth = 0) = 0;
 	virtual vec2 CaretPosition(CTextCursor *pCursor, int NumChars) = 0;
 };
 

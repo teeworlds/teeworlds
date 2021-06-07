@@ -181,7 +181,7 @@ void CHud::RenderNetworkIssueNotification()
 		Graphics()->BlendNormal();
 		CUIRect RectBox = {x, 4-Margin, FontSize+2*Margin, FontSize+2*Margin};
 		vec4 Color = vec4(0.0f, 0.0f, 0.0f, 0.3f);
-		RenderTools()->DrawUIRect(&RectBox, Color, CUI::CORNER_ALL, 1.0f);
+		RectBox.Draw(Color, 1.0f);
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_NETWORKICONS].m_Id);
 		Graphics()->QuadsBegin();
 		RenderTools()->SelectSprite(SPRITE_NETWORK_BAD);
@@ -246,7 +246,7 @@ void CHud::RenderScoreHud()
 				// draw box
 				CUIRect Rect = {Whole-ScoreWidthMax-ImageSize-2*Split, StartY+t*TeamOffset, ScoreWidthMax+ImageSize+2*Split, 18.0f};
 				Graphics()->BlendNormal();
-				RenderTools()->DrawUIRect(&Rect, t == 0 ? vec4(1.0f, 0.0f, 0.0f, 0.25f) : vec4(0.0f, 0.0f, 1.0f, 0.25f), CUI::CORNER_L, 5.0f);
+				Rect.Draw(t == 0 ? vec4(1.0f, 0.0f, 0.0f, 0.25f) : vec4(0.0f, 0.0f, 1.0f, 0.25f), 5.0f, CUIRect::CORNER_L);
 
 				// draw score
 				s_TeamscoreCursors[t].MoveTo(Whole-ScoreWidthMax+(ScoreWidthMax-s_TeamscoreCursors[t].Width())/2-Split, StartY+t*TeamOffset);
@@ -299,11 +299,11 @@ void CHud::RenderScoreHud()
 
 						TextRender()->TextDeferred(&s_CarrierCursor, aName, -1);
 
-						float w = s_CarrierCursor.Width() + RenderTools()->GetClientIdRectSize(8.0f);
+						float w = s_CarrierCursor.Width() + UI()->GetClientIDRectWidth(8.0f);
 						float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split);
 						float y = StartY+(t+1)*TeamOffset-3.0f;
 						
-						float AdvanceID = RenderTools()->DrawClientID(TextRender(), s_CarrierCursor.m_FontSize, vec2(x, y), ID);
+						float AdvanceID = UI()->DrawClientID(s_CarrierCursor.m_FontSize, vec2(x, y), ID);
 						s_CarrierCursor.MoveTo(x + AdvanceID, y);
 						TextRender()->DrawTextOutlined(&s_CarrierCursor);
 
@@ -400,7 +400,7 @@ void CHud::RenderScoreHud()
 				// draw box
 				CUIRect Rect = {Whole-ScoreWidthMax-ImageSize-2*Split-PosSize, StartY+t*TeamOffset, ScoreWidthMax+ImageSize+2*Split+PosSize, 18.0f};
 				Graphics()->BlendNormal();
-				RenderTools()->DrawUIRect(&Rect, t == Local ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_L, 5.0f);
+				Rect.Draw(t == Local ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_L);
 
 				// draw score
 				float Spacing = (GameFlags&GAMEFLAG_RACE) ? 2.f : 0.f;
@@ -419,11 +419,11 @@ void CHud::RenderScoreHud()
 
 					TextRender()->TextDeferred(&s_NameCursor, aName, -1);
 
-					float w = s_NameCursor.Width() + RenderTools()->GetClientIdRectSize(8.0f);
+					float w = s_NameCursor.Width() + UI()->GetClientIDRectWidth(8.0f);
 					float x = min(Whole-w-1.0f, Whole-ScoreWidthMax-ImageSize-2*Split-PosSize);
 					float y = StartY+(t+1)*TeamOffset-3.0f;
 
-					float AdvanceID = RenderTools()->DrawClientID(TextRender(), s_NameCursor.m_FontSize, vec2(x, y), ID);
+					float AdvanceID = UI()->DrawClientID(s_NameCursor.m_FontSize, vec2(x, y), ID);
 					s_NameCursor.MoveTo(x + AdvanceID, y);
 					TextRender()->DrawTextOutlined(&s_NameCursor);
 
@@ -579,7 +579,7 @@ void CHud::RenderVoting()
 		return;
 
 	CUIRect Rect = {-10.0f, 58.0f, 119.0f, 46.0f};
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), 5.0f);
+	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.4f));
 
 	TextRender()->TextColor(1,1,1,1);
 
@@ -612,10 +612,10 @@ void CHud::RenderVoting()
 	m_pClient->m_pBinds->GetKey("vote no", aBufNo, sizeof(aBufNo));
 	str_format(aBuf, sizeof(aBuf), "%s - %s", aBufYes, Localize("Vote yes"));
 	Base.y += Base.h+1;
-	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&Base, aBuf, 6.0f, TEXTALIGN_LEFT);
 
 	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), aBufNo);
-	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_RIGHT);
+	UI()->DoLabel(&Base, aBuf, 6.0f, TEXTALIGN_RIGHT);
 }
 
 void CHud::RenderCursor()
@@ -778,7 +778,7 @@ void CHud::RenderSpectatorHud()
 	// draw the box
 	const float Width = m_Width * 0.25f - 2.0f;
 	CUIRect Rect = {m_Width-Width, m_Height-15.0f, Width, 15.0f};
-	RenderTools()->DrawUIRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.4f), CUI::CORNER_TL, 5.0f);
+	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.4f), 5.0f, CUIRect::CORNER_TL);
 
 	// draw the text
 	char aName[64];
@@ -818,7 +818,7 @@ void CHud::RenderSpectatorHud()
 
 	vec2 NamePosition = vec2(s_SpectateLabelCursor.BoundingBox().Right()+3.0f, m_Height-13.0f);
 	if(SpecMode == SPEC_PLAYER || SpecID != -1)
-		NamePosition.x += RenderTools()->DrawClientID(TextRender(), s_SpectateTargetCursor.m_FontSize, NamePosition, SpecID);
+		NamePosition.x += UI()->DrawClientID(s_SpectateTargetCursor.m_FontSize, NamePosition, SpecID);
 
 	s_SpectateTargetCursor.MoveTo(NamePosition.x, NamePosition.y);
 	TextRender()->TextOutlined(&s_SpectateTargetCursor, aBuf, -1);
@@ -938,7 +938,7 @@ void CHud::RenderLocalTime(float x)
 	Graphics()->BlendNormal();
 	CUIRect Rect = {x-30.0f, 0.0f, 25.0f, 12.5f};
 	vec4 Color = vec4(0.0f, 0.0f, 0.0f, 0.4f);
-	RenderTools()->DrawUIRect(&Rect, Color, CUI::CORNER_B, 3.75f);
+	Rect.Draw(Color, 3.75f, CUIRect::CORNER_B);
 
 	//draw the text
 	char aTimeStr[6];

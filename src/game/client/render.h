@@ -7,8 +7,6 @@
 #include <base/vmath.h>
 #include <generated/protocol.h>
 #include <game/mapitems.h>
-#include "ui.h"
-
 
 // sprite renderings
 enum
@@ -48,31 +46,19 @@ class CTextCursor;
 
 class CRenderTools
 {
-	void DrawRoundRectExt(float x, float y, float w, float h, float r, int Corners);
-	void DrawRoundRectExt4(float x, float y, float w, float h, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, float r, int Corners);
-
-
 	class CConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
-	class CUI *m_pUI;
 public:
 
 	class IGraphics *Graphics() const { return m_pGraphics; }
-	class CUI *UI() const { return m_pUI; }
 
-	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class CUI *pUI);
+	void Init(class CConfig *pConfig, class IGraphics *pGraphics);
 
 	void SelectSprite(struct CDataSprite *pSprite, int Flags=0, int sx=0, int sy=0);
 	void SelectSprite(int id, int Flags=0, int sx=0, int sy=0);
 
 	void DrawSprite(float x, float y, float size);
 	void RenderCursor(float CenterX, float CenterY, float Size);
-
-	// rects
-	void DrawRoundRect(const CUIRect *r, vec4 Color, float Rounding);
-
-	void DrawUIRect(const CUIRect *pRect, vec4 Color, int Corners, float Rounding);
-	void DrawUIRect4(const CUIRect *pRect, vec4 ColorTopLeft, vec4 ColorTopRight, vec4 ColorBottomLeft, vec4 ColorBottomRight, int Corners, float Rounding);
 
 	// object render methods (gc_render_obj.cpp)
 	void RenderTee(class CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
@@ -88,10 +74,6 @@ public:
 	void MapScreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
 		float OffsetX, float OffsetY, float Aspect, float Zoom, float aPoints[4]);
 	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom);
-
-	float DrawClientID(ITextRender* pTextRender, float FontSize, vec2 Position, int ID,
-					  const vec4& BgColor = vec4(1, 1, 1, 0.5f), const vec4& TextColor = vec4(0.1f, 0.1f, 0.1f, 1.0f));
-	float GetClientIdRectSize(float FontSize);
 };
 
 #endif

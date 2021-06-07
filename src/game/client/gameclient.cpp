@@ -17,6 +17,7 @@
 #include <generated/client_data.h>
 
 #include <game/version.h>
+#include "lineinput.h"
 #include "localization.h"
 #include "render.h"
 
@@ -230,6 +231,7 @@ void CGameClient::OnConsoleInit()
 	m_pEditor = Kernel()->RequestInterface<IEditor>();
 	m_pFriends = Kernel()->RequestInterface<IFriends>();
 	m_pBlacklist = Kernel()->RequestInterface<IBlacklist>();
+	m_pUI = reinterpret_cast<CUI *>(Kernel()->RequestInterface<IUI>());
 
 	// setup pointers
 	m_pBinds = &::gs_Binds;
@@ -348,10 +350,7 @@ void CGameClient::OnConsoleInit()
 void CGameClient::OnInit()
 {
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
-
-	// propagate pointers
-	m_UI.Init(Config(), Graphics(), Input(), TextRender());
-	m_RenderTools.Init(Config(), Graphics(), UI());
+	m_RenderTools.Init(Config(), Graphics());
 
 	int64 Start = time_get();
 
@@ -612,6 +611,9 @@ void CGameClient::OnRender()
 
 	// clear all events/input for this frame
 	Input()->Clear();
+
+	// render ime candidates
+	CLineInput::RenderCandidates();
 }
 
 void CGameClient::OnRelease()

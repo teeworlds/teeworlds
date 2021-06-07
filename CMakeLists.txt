@@ -384,7 +384,7 @@ endif()
 
 if(TARGET_OS STREQUAL "windows")
   set(PLATFORM_CLIENT)
-  set(PLATFORM_CLIENT_LIBS opengl32 winmm)
+  set(PLATFORM_CLIENT_LIBS opengl32 winmm imm32)
   set(PLATFORM_LIBS ws2_32) # Windows sockets
 elseif(TARGET_OS STREQUAL "mac")
   find_library(CARBON Carbon)
@@ -1304,6 +1304,7 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   sound.h
   storage.h
   textrender.h
+  ui.h
 )
 set_src(ENGINE_SHARED GLOB src/engine/shared
   compression.cpp
@@ -1464,7 +1465,6 @@ if(CLIENT)
     components/menus_demo.cpp
     components/menus_ingame.cpp
     components/menus_listbox.cpp
-    components/menus_popups.cpp
     components/menus_scrollregion.cpp
     components/menus_settings.cpp
     components/menus_start.cpp
@@ -1501,6 +1501,8 @@ if(CLIENT)
     render_map.cpp
     ui.cpp
     ui.h
+    ui_rect.cpp
+    ui_rect.h
   )
   set_src(GAME_EDITOR GLOB src/game/editor
     auto_map.cpp

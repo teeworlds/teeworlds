@@ -2,39 +2,150 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/keys.h>
 #include <engine/input.h>
+#include <engine/textrender.h>
+#include <engine/graphics.h>
+
 #include "lineinput.h"
 
-CLineInput::CLineInput()
+IInput *CLineInput::s_pInput = 0;
+ITextRender *CLineInput::s_pTextRender = 0;
+IGraphics *CLineInput::s_pGraphics = 0;
+
+CLineInput *CLineInput::s_apActiveInputs[MAX_ACTIVE_INPUTS] = { 0 };
+unsigned CLineInput::s_NumActiveInputs = 0;
+
+vec2 CLineInput::s_CompositionWindowPosition = vec2(0, 0);
+float CLineInput::s_CompositionLineHeight = 0.0f;
+
+char CLineInput::s_aStars[128] = { 0 };
+
+void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 {
-	Clear();
-	m_pInput = 0;
+	if(m_pStr && m_pStr == pStr)
+		return;
+	const char *pLastStr = m_pStr;
+	m_pStr = pStr;
+	m_MaxSize = MaxSize;
+	m_MaxChars = MaxChars;
+	m_WasChanged = m_pStr && pLastStr && m_WasChanged;
+	if(!pLastStr)
+	{
+		m_ScrollOffset = 0;
+	}
+	if(m_pStr && m_pStr != pLastStr)
+	{
+		UpdateStrData();
+	}
+	m_TextVersion = 0;
+}
+
+void CLineInput::DrawSelection(float HeightWeight, int Start, int End, vec4 Color)
+{
+	const int VAlign = m_TextCursor.m_Align&TEXTALIGN_MASK_VERT;
+
+	const vec2 StartPos = s_pTextRender->CaretPosition(&m_TextCursor, Start);
+	const vec2 EndPos = s_pTextRender->CaretPosition(&m_TextCursor, End);
+	const float LineHeight = m_TextCursor.BaseLineY()/m_TextCursor.LineCount();
+	const float VAlignOffset =
+		(VAlign == TEXTALIGN_TOP) ? -LineHeight*(1.0f-HeightWeight)-1.0f :
+		(VAlign == TEXTALIGN_MIDDLE) ? -LineHeight*(1.0f-HeightWeight)+LineHeight/2 :
+		/* TEXTALIGN_BOTTOM */ LineHeight*(1.35f-1.0f+HeightWeight)-1.0f;
+	s_pGraphics->TextureClear();
+	s_pGraphics->QuadsBegin();
+	s_pGraphics->SetColor(Color);
+	if(StartPos.y < EndPos.y) // multi line selection
+	{
+		CTextBoundingBox BoundingBox = m_TextCursor.BoundingBox();
+		int NumQuads = 0;
+		IGraphics::CQuadItem SelectionQuads[3];
+		SelectionQuads[NumQuads++] = IGraphics::CQuadItem(StartPos.x, StartPos.y - VAlignOffset, BoundingBox.Right() - StartPos.x, LineHeight*HeightWeight);
+		const float SecondSegmentY = StartPos.y - VAlignOffset + LineHeight;
+		if(EndPos.y - StartPos.y > LineHeight)
+		{
+			const float MiddleSegmentHeight = EndPos.y - StartPos.y - LineHeight;
+			SelectionQuads[NumQuads++] = IGraphics::CQuadItem(BoundingBox.x, SecondSegmentY, BoundingBox.w, MiddleSegmentHeight);
+			SelectionQuads[NumQuads++] = IGraphics::CQuadItem(BoundingBox.x, SecondSegmentY + MiddleSegmentHeight, EndPos.x - BoundingBox.x, LineHeight*HeightWeight);
+		}
+		else
+			SelectionQuads[NumQuads++] = IGraphics::CQuadItem(BoundingBox.x, SecondSegmentY, EndPos.x - BoundingBox.x, LineHeight*HeightWeight);
+		s_pGraphics->QuadsDrawTL(SelectionQuads, NumQuads);
+	}
+	else // single line selection
+	{
+		IGraphics::CQuadItem SelectionQuad = IGraphics::CQuadItem(StartPos.x, StartPos.y - VAlignOffset, EndPos.x - StartPos.x, LineHeight*HeightWeight);
+		s_pGraphics->QuadsDrawTL(&SelectionQuad, 1);
+	}
+	s_pGraphics->QuadsEnd();
+}
+
+void CLineInput::SetCompositionWindowPosition(vec2 Anchor, float LineHeight)
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	int ScreenWidth = s_pGraphics->ScreenWidth();
+	int ScreenHeight = s_pGraphics->ScreenHeight();
+	s_pGraphics->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	vec2 ScreenScale = vec2(ScreenWidth / (ScreenX1 - ScreenX0), ScreenHeight / (ScreenY1 - ScreenY0));
+	s_CompositionWindowPosition = Anchor * ScreenScale;
+	s_CompositionLineHeight = LineHeight * ScreenScale.y;
+	s_pInput->SetCompositionWindowPosition(s_CompositionWindowPosition.x, s_CompositionWindowPosition.y - s_CompositionLineHeight, s_CompositionLineHeight);
 }
 
 void CLineInput::Clear()
 {
-	mem_zero(m_Str, sizeof(m_Str));
-	m_Len = 0;
-	m_CursorPos = 0;
-	m_NumChars = 0;
-}
-
-void CLineInput::Init(IInput *pInput)
-{
-	m_pInput = pInput;
+	mem_zero(m_pStr, m_MaxSize);
+	UpdateStrData();
+	m_TextVersion++;
 }
 
 void CLineInput::Set(const char *pString)
 {
-	str_copy(m_Str, pString, sizeof(m_Str));
-	m_Len = str_length(m_Str);
-	m_CursorPos = m_Len;
-	m_NumChars = 0;
-	int Offset = 0;
-	while(pString[Offset])
+	str_copy(m_pStr, pString, m_MaxSize);
+	UpdateStrData();
+	SetCursorOffset(m_Len);
+	m_TextVersion++;
+}
+
+void CLineInput::SetRange(const char *pString, int Begin, int End)
+{
+	int RemovedCharSize, RemovedCharCount;
+	str_utf8_stats(m_pStr+Begin, End-Begin+1, &RemovedCharSize, &RemovedCharCount);
+
+	int AddedCharSize, AddedCharCount;
+	str_utf8_stats(pString, m_MaxSize, &AddedCharSize, &AddedCharCount);
+
+	if(m_Len + AddedCharSize - RemovedCharSize >= m_MaxSize || m_NumChars + AddedCharCount - RemovedCharCount > m_MaxChars)
+		str_utf8_stats(pString, m_MaxSize - m_Len + RemovedCharSize, &AddedCharSize, &AddedCharCount);
+
+	if(RemovedCharSize || AddedCharSize)
 	{
-		Offset = str_utf8_forward(pString, Offset);
-		++m_NumChars;
+		if(AddedCharSize < RemovedCharSize)
+		{
+			if(AddedCharSize)
+				mem_copy(m_pStr + Begin, pString, AddedCharSize);
+			mem_move(m_pStr + Begin + AddedCharSize, m_pStr + Begin + RemovedCharSize, m_Len - Begin - AddedCharSize);
+		}
+		else if(AddedCharSize > RemovedCharSize)
+			mem_move(m_pStr + End + AddedCharSize - RemovedCharSize, m_pStr + End, m_Len - End);
+
+		if(AddedCharSize >= RemovedCharSize)
+			mem_copy(m_pStr + Begin, pString, AddedCharSize);
+
+		m_CursorPos = End - RemovedCharSize + AddedCharSize;
+		m_Len += AddedCharSize - RemovedCharSize;
+		m_NumChars += AddedCharCount - RemovedCharCount;
+		m_WasChanged = true;
+		m_pStr[m_Len] = '\0';
+		m_SelectionStart = m_SelectionEnd = m_CursorPos;
 	}
+	m_TextVersion++;
+}
+
+void CLineInput::UpdateStrData()
+{
+	str_utf8_stats(m_pStr, m_MaxSize, &m_Len, &m_NumChars);
+	if(m_CursorPos < 0 || m_CursorPos > m_Len)
+		m_SelectionStart = m_SelectionEnd = m_CursorPos = m_Len;
 }
 
 bool CLineInput::MoveWordStop(char c)
@@ -45,148 +156,414 @@ bool CLineInput::MoveWordStop(char c)
 			(91 <= c && c <= 96));  // [\]^_`
 }
 
-bool CLineInput::Manipulate(IInput::CEvent Event, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr, IInput *pInput)
+void CLineInput::SetCursorOffset(int Offset)
 {
-	int NumChars = *pNumCharsPtr;
-	int CursorPos = *pCursorPosPtr;
-	int Len = *pStrLenPtr;
-	bool Changes = false;
+	m_SelectionStart = m_SelectionEnd = m_CursorPos = clamp(Offset, 0, m_Len);
+}
 
-	if(CursorPos > Len)
-		CursorPos = Len;
-
-	if(Event.m_Flags&IInput::FLAG_TEXT &&
-		!(KEY_LCTRL <= Event.m_Key && Event.m_Key <= KEY_RGUI))
+void CLineInput::SetSelection(int Start, int End)
+{
+	if(Start > End)
 	{
-		// gather string stats
-		int CharCount = 0;
-		int CharSize = 0;
-		while(Event.m_aText[CharSize])
-		{
-			int NewCharSize = str_utf8_forward(Event.m_aText, CharSize);
-			if(NewCharSize != CharSize)
-			{
-				++CharCount;
-				CharSize = NewCharSize;
-			}
-		}
+		int Temp = Start;
+		Start = End;
+		End = Temp;
+	}
+	m_SelectionStart = clamp(Start, 0, m_Len);
+	m_SelectionEnd = clamp(End, 0, m_Len);
+}
 
-		// add new string
-		if(CharCount)
-		{
-			if(Len+CharSize < StrMaxSize && CursorPos+CharSize < StrMaxSize && NumChars+CharCount <= StrMaxChars)
-			{
-				mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len-CursorPos+1); // +1 == null term
-				for(int i = 0; i < CharSize; i++)
-					pStr[CursorPos+i] = Event.m_aText[i];
-				CursorPos += CharSize;
-				Len += CharSize;
-				NumChars += CharCount;
-				Changes = true;
-			}
-		}
+bool CLineInput::ProcessInput(const IInput::CEvent &Event)
+{
+	// update derived attributes to handle external changes to the buffer
+	UpdateStrData();
+
+	const int OldCursorPos = m_CursorPos;
+	const bool Selecting = s_pInput->KeyIsPressed(KEY_LSHIFT) || s_pInput->KeyIsPressed(KEY_RSHIFT);
+	const int SelectionLength = GetSelectionLength();
+
+	if(Event.m_Flags&IInput::FLAG_TEXT && !(KEY_LCTRL <= Event.m_Key && Event.m_Key <= KEY_RGUI))
+	{
+		if(SelectionLength)
+			SetRange(Event.m_aText, m_SelectionStart, m_SelectionEnd);
+		else
+			Append(Event.m_aText);
 	}
 
 	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
-		int Key = Event.m_Key;
-		bool MoveWord = false;
-#ifdef CONF_PLATFORM_MACOSX
-		if(pInput && (pInput->KeyIsPressed(KEY_LALT) || pInput->KeyIsPressed(KEY_RALT)))
-#else
-		if(pInput && (pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)))
-#endif
-			MoveWord = true;
-		if(Key == KEY_BACKSPACE && CursorPos > 0)
-		{
-			int NewCursorPos = CursorPos;
-			do
-			{
-				NewCursorPos = str_utf8_rewind(pStr, NewCursorPos);
-				NumChars -= 1;
-			} while(MoveWord && NewCursorPos > 0 && !MoveWordStop(pStr[NewCursorPos - 1]));
-			int CharSize = CursorPos-NewCursorPos;
-			mem_move(pStr+NewCursorPos, pStr+CursorPos, Len - NewCursorPos - CharSize + 1); // +1 == null term
-			CursorPos = NewCursorPos;
-			Len -= CharSize;
-			Changes = true;
-		}
-		else if(Key == KEY_DELETE && CursorPos < Len)
-		{
-			int EndCursorPos = CursorPos;
-			do
-			{
-				EndCursorPos = str_utf8_forward(pStr, EndCursorPos);
-				NumChars -= 1;
-			} while(MoveWord && EndCursorPos < Len && !MoveWordStop(pStr[EndCursorPos - 1]));
-			int CharSize = EndCursorPos - CursorPos;
-			mem_move(pStr + CursorPos, pStr + CursorPos + CharSize, Len - CursorPos - CharSize + 1); // +1 == null term
-			Len -= CharSize;
-			Changes = true;
-		}
-		else if(Key == KEY_LEFT && CursorPos > 0)
-		{
-			do
-			{
-				CursorPos = str_utf8_rewind(pStr, CursorPos);
-			} while(MoveWord && CursorPos > 0 && !MoveWordStop(pStr[CursorPos - 1]));
-		}
-		else if(Key == KEY_RIGHT && CursorPos < Len)
-		{
-			do
-			{
-				CursorPos = str_utf8_forward(pStr, CursorPos);
-			} while(MoveWord && CursorPos < Len && !MoveWordStop(pStr[CursorPos - 1]));
-		}
-		else if(Key == KEY_HOME)
-			CursorPos = 0;
-		else if(Key == KEY_END)
-			CursorPos = Len;
-		else if((pInput->KeyIsPressed(KEY_LCTRL) || pInput->KeyIsPressed(KEY_RCTRL)) && Key == KEY_V)
-		{
-			// paste clipboard to cursor
-			const char *pClipboardText = pInput->GetClipboardText();
-			if(pClipboardText)
-			{
-				// gather string stats
-				int CharCount = 0;
-				int CharSize = 0;
-				while(pClipboardText[CharSize])
-				{
-					int NewCharSize = str_utf8_forward(pClipboardText, CharSize);
-					if(NewCharSize != CharSize)
-					{
-						++CharCount;
-						CharSize = NewCharSize;
-					}
-				}
+		const bool CtrlPressed = s_pInput->KeyIsPressed(KEY_LCTRL) || s_pInput->KeyIsPressed(KEY_RCTRL);
 
-				// add new string
-				if(CharCount)
+#ifdef CONF_PLATFORM_MACOSX
+		const bool MoveWord = s_pInput->KeyIsPressed(KEY_LALT) || s_pInput->KeyIsPressed(KEY_RALT);
+#else
+		const bool MoveWord = CtrlPressed;
+#endif
+
+		if(Event.m_Key == KEY_BACKSPACE)
+		{
+			if(SelectionLength)
+			{
+				SetRange("", m_SelectionStart, m_SelectionEnd);
+			}
+			else
+			{
+				if(m_CursorPos > 0)
 				{
-					if(Len + CharSize < StrMaxSize && CursorPos + CharSize < StrMaxSize && NumChars + CharCount <= StrMaxChars)
+					int NewCursorPos = m_CursorPos;
+					do
 					{
-						mem_move(pStr + CursorPos + CharSize, pStr + CursorPos, Len - CursorPos + 1); // +1 == null term
-						for(int i = 0; i < CharSize; i++)
-							pStr[CursorPos + i] = pClipboardText[i];
-						CursorPos += CharSize;
-						Len += CharSize;
-						NumChars += CharCount;
-						Changes = true;
-					}
+						NewCursorPos = str_utf8_rewind(m_pStr, NewCursorPos);
+						m_NumChars -= 1;
+					} while(MoveWord && NewCursorPos > 0 && !MoveWordStop(m_pStr[NewCursorPos - 1]));
+					int CharSize = m_CursorPos-NewCursorPos;
+					mem_move(m_pStr+NewCursorPos, m_pStr+m_CursorPos, m_Len - NewCursorPos - CharSize + 1); // +1 == null term
+					m_CursorPos = NewCursorPos;
+					m_Len -= CharSize;
+					m_WasChanged = true;
+				}
+				m_SelectionStart = m_SelectionEnd = m_CursorPos;
+			}
+		}
+		else if(Event.m_Key == KEY_DELETE)
+		{
+			if(SelectionLength)
+			{
+				SetRange("", m_SelectionStart, m_SelectionEnd);
+			}
+			else
+			{
+				if(m_CursorPos < m_Len)
+				{
+					int EndCursorPos = m_CursorPos;
+					do
+					{
+						EndCursorPos = str_utf8_forward(m_pStr, EndCursorPos);
+						m_NumChars -= 1;
+					} while(MoveWord && EndCursorPos < m_Len && !MoveWordStop(m_pStr[EndCursorPos - 1]));
+					int CharSize = EndCursorPos - m_CursorPos;
+					mem_move(m_pStr + m_CursorPos, m_pStr + m_CursorPos + CharSize, m_Len - m_CursorPos - CharSize + 1); // +1 == null term
+					m_Len -= CharSize;
+					m_WasChanged = true;
+				}
+				m_SelectionStart = m_SelectionEnd = m_CursorPos;
+			}
+		}
+		else if(Event.m_Key == KEY_LEFT)
+		{
+			if(SelectionLength && !Selecting)
+			{
+				m_CursorPos = m_SelectionStart;
+			}
+			else if(m_CursorPos > 0)
+			{
+				do
+				{
+					m_CursorPos = str_utf8_rewind(m_pStr, m_CursorPos);
+				} while(MoveWord && m_CursorPos > 0 && !MoveWordStop(m_pStr[m_CursorPos - 1]));
+
+				if(Selecting)
+				{
+					if(m_SelectionStart == OldCursorPos) // expand start first
+						m_SelectionStart = m_CursorPos;
+					else if(m_SelectionEnd == OldCursorPos)
+						m_SelectionEnd = m_CursorPos;
 				}
 			}
+
+			if(!Selecting)
+				m_SelectionStart = m_SelectionEnd = m_CursorPos;
+		}
+		else if(Event.m_Key == KEY_RIGHT)
+		{
+			if(SelectionLength && !Selecting)
+			{
+				m_CursorPos = m_SelectionEnd;
+			}
+			else if(m_CursorPos < m_Len)
+			{
+				do
+				{
+					m_CursorPos = str_utf8_forward(m_pStr, m_CursorPos);
+				} while(MoveWord && m_CursorPos < m_Len && !MoveWordStop(m_pStr[m_CursorPos - 1]));
+
+				if(Selecting)
+				{
+					if(m_SelectionEnd == OldCursorPos) // expand end first
+						m_SelectionEnd = m_CursorPos;
+					else if(m_SelectionStart == OldCursorPos)
+						m_SelectionStart = m_CursorPos;
+				}
+			}
+
+			if(!Selecting)
+				m_SelectionStart = m_SelectionEnd = m_CursorPos;
+		}
+		else if(Event.m_Key == KEY_HOME)
+		{
+			m_CursorPos = 0;
+			m_SelectionStart = 0;
+			if(!Selecting)
+				m_SelectionEnd = 0;
+		}
+		else if(Event.m_Key == KEY_END)
+		{
+			m_CursorPos = m_Len;
+			m_SelectionEnd = m_Len;
+			if(!Selecting)
+				m_SelectionStart = m_Len;
+		}
+		else if(CtrlPressed && Event.m_Key == KEY_V)
+		{
+			const char *pClipboardText = s_pInput->GetClipboardText();
+			if(pClipboardText)
+			{
+				if(SelectionLength)
+					SetRange(pClipboardText, m_SelectionStart, m_SelectionEnd);
+				else
+					Append(pClipboardText);
+			}
+		}
+		else if(CtrlPressed && (Event.m_Key == KEY_C || Event.m_Key == KEY_X) && SelectionLength)
+		{
+			char *pSelection = m_pStr+m_SelectionStart;
+			char TempChar = pSelection[SelectionLength];
+			pSelection[SelectionLength] = 0;
+			s_pInput->SetClipboardText(pSelection);
+			pSelection[SelectionLength] = TempChar;
+			if(Event.m_Key == KEY_X)
+				SetRange("", m_SelectionStart, m_SelectionEnd);
+		}
+		else if(CtrlPressed && Event.m_Key == KEY_A)
+		{
+			m_SelectionStart = 0;
+			m_SelectionEnd = m_CursorPos = m_Len;
 		}
 	}
 
-	*pNumCharsPtr = NumChars;
-	*pCursorPosPtr = CursorPos;
-	*pStrLenPtr = Len;
+	m_WasChanged |= OldCursorPos != m_CursorPos;
+	m_WasChanged |= SelectionLength != GetSelectionLength();
+	m_TextVersion += m_WasChanged;
 
-	return Changes;
+	return m_WasChanged;
 }
 
-bool CLineInput::ProcessInput(IInput::CEvent e)
+void CLineInput::Render()
 {
-	return Manipulate(e, m_Str, MAX_SIZE, MAX_CHARS, &m_Len, &m_CursorPos, &m_NumChars, m_pInput);
+	if(!m_pStr)
+		return;
+
+	if(IsActive())
+	{
+		const int CompositionCursor = s_pInput->GetCompositionCursor();
+		const bool HasComposition = s_pInput->HasComposition();
+		const int CompositionStart = GetCursorOffset() + CompositionCursor;
+		const int CompositionEnd = CompositionStart + s_pInput->GetCompositionSelectedLength();
+
+		if(HasComposition)
+		{
+			m_TextCursor.Reset(-1); // composition is dynamic
+			s_pTextRender->TextDeferred(&m_TextCursor, m_pStr, GetCursorOffset());
+			s_pTextRender->TextDeferred(&m_TextCursor, s_pInput->GetComposition(), -1);
+			s_pTextRender->TextDeferred(&m_TextCursor, m_pStr + GetCursorOffset(), -1);
+			s_pTextRender->DrawTextOutlined(&m_TextCursor);
+			DrawSelection(0.1f, GetCursorOffset(), GetCursorOffset()+s_pInput->GetCompositionLength(), vec4(0.7f, 0.7f, 0.7f, 0.7f));
+		}
+		else
+		{
+			m_TextCursor.Reset(m_TextVersion);
+			s_pTextRender->TextOutlined(&m_TextCursor, m_pStr, -1);
+		}
+
+		// render selection
+		if(GetSelectionLength() || HasComposition)
+		{
+			const int Start = HasComposition ? CompositionStart : GetSelectionStart();
+			const int End = HasComposition ? CompositionEnd : GetSelectionEnd();
+			DrawSelection(1.0f, Start, End, vec4(0.3f, 0.3f, 0.3f, 0.3f));
+		}
+
+		static CTextCursor s_MarkerCursor;
+		s_MarkerCursor.m_FontSize = m_TextCursor.m_FontSize;
+		s_MarkerCursor.Reset(s_MarkerCursor.m_FontSize);
+		s_MarkerCursor.m_Align = (m_TextCursor.m_Align&TEXTALIGN_MASK_VERT) | TEXTALIGN_CENTER;
+		s_pTextRender->TextDeferred(&s_MarkerCursor, "｜", -1);
+		vec2 Offset = s_pTextRender->CaretPosition(&m_TextCursor, HasComposition ? CompositionStart : GetCursorOffset());
+		s_MarkerCursor.MoveTo(Offset);
+
+		// render blinking caret
+		if((2*time_get()/time_freq())%2)
+		{
+			s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
+		}
+
+		vec2 CursorPosition = s_pTextRender->CaretPosition(&m_TextCursor, GetCursorOffset());
+		s_MarkerCursor.MoveTo(CursorPosition);
+		CTextBoundingBox BoundingBox = s_MarkerCursor.BoundingBox();
+		SetCompositionWindowPosition(vec2(BoundingBox.Right(), BoundingBox.Bottom()), BoundingBox.h);
+	}
+	else
+	{
+		const char *pDisplayStr;
+		if(IsHidden())
+		{
+			unsigned NumStars = GetNumChars();
+			if(NumStars >= sizeof(s_aStars))
+				NumStars = sizeof(s_aStars)-1;
+			for(unsigned int i = 0; i < NumStars; ++i)
+				s_aStars[i] = '*';
+			s_aStars[NumStars] = 0;
+			pDisplayStr = s_aStars;
+		}
+		else
+			pDisplayStr = m_pStr;
+		m_TextCursor.Reset(m_TextVersion);
+		s_pTextRender->TextOutlined(&m_TextCursor, pDisplayStr, -1);
+	}
+}
+
+void CLineInput::RenderCandidates()
+{
+	if(s_pInput->HasComposition() && s_pInput->GetCandidateCount() > 0)
+	{
+		const float FontSize = 7.0f;
+		const float HMargin = 8.0f;
+		const float VMargin = 4.0f;
+		const float Height = 300;
+		const float Width = Height*s_pGraphics->ScreenAspect();
+		int ScreenWidth = s_pGraphics->ScreenWidth();
+		int ScreenHeight = s_pGraphics->ScreenHeight();
+
+		s_pGraphics->MapScreen(0, 0, Width, Height);
+
+		static CTextCursor s_CandidateCursor;
+		s_CandidateCursor.Reset();
+		s_CandidateCursor.m_FontSize = FontSize;
+		s_CandidateCursor.m_LineSpacing = FontSize*0.35f;
+		s_CandidateCursor.m_MaxLines = -1;
+
+		vec2 Position = s_CompositionWindowPosition / vec2(ScreenWidth, ScreenHeight) * vec2(Width, Height);
+		float SelectedCandidateY = 0;
+		for(int i = 0; i < s_pInput->GetCandidateCount(); ++i)
+		{
+			char aBuf[32];
+
+			if(i == s_pInput->GetCandidateSelectedIndex())
+				SelectedCandidateY = s_CandidateCursor.Height();
+
+			if(i > 0)
+				s_pTextRender->TextNewline(&s_CandidateCursor);
+			
+			str_format(aBuf, 32, "%d. ", (i+1)%10);
+
+			s_pTextRender->TextColor(0.6f, 0.6f, 0.6f, 1.0f);
+			s_pTextRender->TextDeferred(&s_CandidateCursor, aBuf, -1);
+			s_pTextRender->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			s_pTextRender->TextDeferred(&s_CandidateCursor, s_pInput->GetCandidate(i), -1);
+		}
+
+		CTextBoundingBox BoundingBox = s_CandidateCursor.BoundingBox();
+		BoundingBox.x = Position.x;
+		BoundingBox.y = Position.y;
+		BoundingBox.w += HMargin;
+		BoundingBox.h += VMargin;
+
+		// move candidate window up if needed
+		if(BoundingBox.y + FontSize * 13.5f > Height)
+			BoundingBox.y -= BoundingBox.h + s_CompositionLineHeight / ScreenHeight * Height;
+
+		// move candidate window left if needed
+		if(BoundingBox.x + BoundingBox.w + HMargin > Width)
+			BoundingBox.x -= BoundingBox.x + BoundingBox.w + HMargin - Width;
+
+		s_CandidateCursor.MoveTo(vec2(BoundingBox.x+HMargin/2, BoundingBox.y+VMargin/2));
+
+		s_pGraphics->TextureClear();
+		s_pGraphics->QuadsBegin();
+		s_pGraphics->BlendNormal();
+
+		// window shadow
+		s_pGraphics->SetColor(0.0f, 0.0f, 0.0f, 0.8f);
+		IGraphics::CQuadItem Quad = IGraphics::CQuadItem(BoundingBox.x+0.75f, BoundingBox.y+0.75f, BoundingBox.w, BoundingBox.h);
+		s_pGraphics->QuadsDrawTL(&Quad, 1);
+
+		// window background
+		s_pGraphics->SetColor(0.15f, 0.15f, 0.15f, 1.0f);
+		Quad = IGraphics::CQuadItem(BoundingBox.x, BoundingBox.y, BoundingBox.w, BoundingBox.h);
+		s_pGraphics->QuadsDrawTL(&Quad, 1);
+
+		// highlight
+		s_pGraphics->SetColor(0.1f, 0.4f, 0.8f, 1.0f);
+		Quad = IGraphics::CQuadItem(BoundingBox.x+HMargin/4, BoundingBox.y+VMargin/2+SelectedCandidateY, BoundingBox.w-HMargin/2, FontSize*1.35f);
+		s_pGraphics->QuadsDrawTL(&Quad, 1);
+		s_pGraphics->QuadsEnd();
+
+		s_pTextRender->DrawTextOutlined(&s_CandidateCursor);
+	}
+}
+
+void CLineInput::DeactivateAllInputs()
+{
+	CLineInput *pInput = 0;
+	while((pInput = GetActiveInput()) != 0)
+		pInput->SetActive(false);
+}
+
+void CLineInput::SetActive(bool Active)
+{
+	if(Active)
+	{
+		if(IsActive())
+			return;
+		// Try to restore active input from stack
+		for(unsigned i = 0; i < s_NumActiveInputs; i++)
+		{
+			if(s_apActiveInputs[i] == this)
+			{
+				// Deactivate inputs above in the stack
+				for(unsigned j = s_NumActiveInputs-1; j >= i+1; j--)
+				{
+					if(s_apActiveInputs[j])
+					{
+						s_apActiveInputs[j]->OnDeactivate();
+						s_apActiveInputs[j] = 0;
+					}
+				}
+				s_NumActiveInputs = i+1;
+				OnActivate();
+				return;
+			}
+		}
+		if(s_NumActiveInputs > 0)
+			s_apActiveInputs[s_NumActiveInputs-1]->OnDeactivate();
+		// Activate new input
+		dbg_assert(s_NumActiveInputs < MAX_ACTIVE_INPUTS, "max number of active line inputs exceeded");
+		s_apActiveInputs[s_NumActiveInputs] = this;
+		s_NumActiveInputs++;
+		OnActivate();
+	}
+	else
+	{
+		if(!IsActive() || s_NumActiveInputs == 0)
+			return;
+		s_apActiveInputs[s_NumActiveInputs] = 0;
+		s_NumActiveInputs--;
+		OnDeactivate();
+		if(s_NumActiveInputs > 0)
+			s_apActiveInputs[s_NumActiveInputs-1]->OnActivate();
+	}
+}
+
+void CLineInput::OnActivate()
+{
+	s_pInput->StartTextInput();
+	if(IsHidden())
+		m_TextVersion++;
+}
+
+void CLineInput::OnDeactivate()
+{
+	s_pInput->StopTextInput();
+	if(IsHidden())
+		m_TextVersion++;
 }
