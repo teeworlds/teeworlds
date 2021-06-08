@@ -162,11 +162,11 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 			// use custom colors
 			bool UseCustomColors = false;
-			const json_value &rColour = rPart["custom_colors"];
-			if(rColour.type == json_string)
-				UseCustomColors = str_comp((const char *)rColour, "true") == 0;
-			else if(rColour.type == json_boolean)
-				UseCustomColors = rColour.u.boolean;
+			const json_value &rColor = rPart["custom_colors"];
+			if(rColor.type == json_string)
+				UseCustomColors = str_comp((const char *)rColor, "true") == 0;
+			else if(rColor.type == json_boolean)
+				UseCustomColors = rColor.u.boolean;
 			Skin.m_aUseCustomColors[PartIndex] = UseCustomColors;
 
 			// color components
