@@ -986,9 +986,17 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	// right side
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
+
+	CUIRect CheckBoxShowHud, CheckBoxHideScore;
+	Button.VSplitMid(&CheckBoxShowHud, &CheckBoxHideScore);
+
 	static int s_Showhud = 0;
-	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), Config()->m_ClShowhud, &Button))
+	if(DoButton_CheckBox(&s_Showhud, Localize("Show ingame HUD"), Config()->m_ClShowhud, &CheckBoxShowHud))
 		Config()->m_ClShowhud ^= 1;
+
+	static int s_Hidescore = 0;
+	if(DoButton_CheckBox(&s_Hidescore, Localize("Hide player's score"), Config()->m_ClHideSelfScore, &CheckBoxHideScore))
+		Config()->m_ClHideSelfScore ^= 1;
 
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
