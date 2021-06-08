@@ -173,10 +173,10 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 {
 	NETADDR *pResult = 0;
 
-	// check if hostname lookup for favourites is done
+	// check if hostname lookup for favorites is done
 	if(m_FavLookup.m_Active && m_FavLookup.m_HostLookup.m_Job.Status() == CJob::STATE_DONE)
 	{
-		// check if favourite has not been removed in the meanwhile
+		// check if favorite has not been removed in the meanwhile
 		if(m_FavLookup.m_FavoriteIndex != -1)
 		{
 			if(m_FavLookup.m_HostLookup.m_Job.Result() == 0)
@@ -224,7 +224,7 @@ const NETADDR *CServerBrowserFavorites::UpdateFavorites()
 		m_FavLookup.m_Active = false;
 	}
 
-	// add hostname lookup for favourites
+	// add hostname lookup for favorites
 	if(m_FavLookup.m_LookupCount > 0 && !m_FavLookup.m_Active)
 	{
 		for(int i = 0; i < m_NumFavoriteServers; i++)
