@@ -21,6 +21,7 @@ public:
 		COLFLAG_SOLID=1,
 		COLFLAG_DEATH=2,
 		COLFLAG_NOHOOK=4,
+		COLFLAG_ICE=8,
 	};
 
 	CCollision();
