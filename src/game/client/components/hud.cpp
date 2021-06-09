@@ -773,6 +773,40 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	Graphics()->WrapNormal();
 }
 
+void CHud::RenderHotbar(const CNetObj_Character *pCharacter)
+{
+	int x = m_Width-5;
+	int y = 5;
+
+	// render hotbar
+	int HotbarLeft = x-24-(NUM_WEAPONS-2)*26;
+	int i = 0;
+	for(; i < NUM_WEAPONS-1; i++)
+	{
+		CUIRect Rect = {HotbarLeft+i*26.0f,float(y),24,24};
+		Graphics()->BlendNormal();
+		RenderTools()->DrawUIRect(&Rect, i == pCharacter->m_Weapon ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	}
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->WrapClamp();
+
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+
+	// render weapons
+	i = 0;
+	for(; i < NUM_WEAPONS-1; i++)
+	{
+		CDataWeaponspec Weapon = g_pData->m_Weapons.m_aId[i];
+		RenderTools()->SelectSprite(Weapon.m_pSpriteBody);
+		RenderTools()->DrawSprite(HotbarLeft+12+i*26,y+4+8,Weapon.m_VisualSize/5);
+	}
+
+	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
+}
+
 void CHud::RenderSpectatorHud()
 {
 	// draw the box
@@ -987,6 +1021,7 @@ void CHud::OnRender()
 		if(m_pClient->m_Snap.m_pLocalCharacter && !(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_ROUNDOVER|GAMESTATEFLAG_GAMEOVER)))
 		{
 			RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
+			if(Config()->m_ClShowhotbar) RenderHotbar(m_pClient->m_Snap.m_pLocalCharacter);
 			if(Race)
 			{
 				RenderRaceTime(m_pClient->m_Snap.m_paPlayerInfosRace[m_pClient->m_LocalClientID]);
