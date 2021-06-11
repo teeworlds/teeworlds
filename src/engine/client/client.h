@@ -317,7 +317,7 @@ public:
 	const char *DemoPlayer_Play(const char *pFilename, int StorageType);
 	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp);
 	void DemoRecorder_HandleAutoStart();
-	void DemoRecorder_Stop();
+	void DemoRecorder_Stop(bool ErrorIfNotRecording = false);
 	void DemoRecorder_AddDemoMarker();
 	void RecordGameMessage(bool State) { m_RecordGameMessage = State; }
 
