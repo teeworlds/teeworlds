@@ -79,7 +79,7 @@ public:
 	virtual const char *DemoPlayer_Play(const char *pFilename, int StorageType) = 0;
 	virtual void DemoRecorder_Start(const char *pFilename, bool WithTimestamp) = 0;
 	virtual void DemoRecorder_HandleAutoStart() = 0;
-	virtual void DemoRecorder_Stop() = 0;
+	virtual void DemoRecorder_Stop(bool ErrorIfNotRecording = false) = 0;
 	virtual void RecordGameMessage(bool State) = 0;
 	virtual void AutoStatScreenshot_Start() = 0;
 	virtual void AutoScreenshot_Start() = 0;
