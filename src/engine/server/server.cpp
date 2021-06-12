@@ -1802,7 +1802,10 @@ static CServer *CreateServer() { return new CServer(); }
 
 void HandleSigInt(int Param)
 {
-	InterruptSignaled = true;
+	if(InterruptSignaled)
+		exit(1);
+	else
+		InterruptSignaled = true;
 }
 
 int main(int argc, const char **argv) // ignore_convention
