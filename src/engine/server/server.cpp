@@ -35,25 +35,9 @@
 	#include <windows.h>
 #endif
 
-/*static const char *StrLtrim(const char *pStr)
-{
-	while(*pStr && *pStr >= 0 && *pStr <= 32)
-		pStr++;
-	return pStr;
-}
+#include <signal.h>
 
-static void StrRtrim(char *pStr)
-{
-	int i = str_length(pStr);
-	while(i >= 0)
-	{
-		if(pStr[i] < 0 || pStr[i] > 32)
-			break;
-		pStr[i] = 0;
-		i--;
-	}
-}*/
-
+volatile bool InterruptSignaled = false;
 
 CSnapIDPool::CSnapIDPool()
 {
@@ -1473,6 +1457,12 @@ int CServer::Run()
 
 			// wait for incoming data
 			m_NetServer.Wait(clamp(int((TickStartTime(m_CurrentGameTick+1)-time_get())*1000/time_freq()), 1, 1000/SERVER_TICK_SPEED/2));
+
+			if(InterruptSignaled)
+			{
+				Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "interrupted");
+				break;
+			}
 		}
 	}
 	// disconnect all clients on shutdown
@@ -1809,6 +1799,15 @@ void CServer::SnapSetStaticsize(int ItemType, int Size)
 
 static CServer *CreateServer() { return new CServer(); }
 
+
+void HandleSigInt(int Param)
+{
+	if(InterruptSignaled)
+		exit(1);
+	else
+		InterruptSignaled = true;
+}
+
 int main(int argc, const char **argv) // ignore_convention
 {
 #if defined(CONF_FAMILY_WINDOWS)
@@ -1837,6 +1836,8 @@ int main(int argc, const char **argv) // ignore_convention
 		dbg_msg("secure", "could not initialize secure RNG");
 		return -1;
 	}
+
+	signal(SIGINT, HandleSigInt);
 
 	CServer *pServer = CreateServer();
 	IKernel *pKernel = IKernel::Create();
