@@ -31,13 +31,10 @@ inline vec3 HslToRgb(vec3 HSL)
 {
 	if(HSL.s == 0.0f)
 		return vec3(HSL.l, HSL.l, HSL.l);
-	else
-	{
-		float v2 = HSL.l < 0.5f ? HSL.l * (1.0f + HSL.s) : (HSL.l+HSL.s) - (HSL.s*HSL.l);
-		float v1 = 2.0f * HSL.l - v2;
 
-		return vec3(HueToRgb(v1, v2, HSL.h + (1.0f/3.0f)), HueToRgb(v1, v2, HSL.h), HueToRgb(v1, v2, HSL.h - (1.0f/3.0f)));
-	}
+	float v2 = HSL.l < 0.5f ? HSL.l * (1.0f + HSL.s) : (HSL.l+HSL.s) - (HSL.s*HSL.l);
+	float v1 = 2.0f * HSL.l - v2;
+	return vec3(HueToRgb(v1, v2, HSL.h + (1.0f/3.0f)), HueToRgb(v1, v2, HSL.h), HueToRgb(v1, v2, HSL.h - (1.0f/3.0f)));
 }
 
 /*
@@ -53,7 +50,6 @@ inline vec4 HexToRgba(int hex)
 	c.g = ((hex >> 16) & 0xFF) / 255.0f;
 	c.b = ((hex >> 8) & 0xFF) / 255.0f;
 	c.a = (hex & 0xFF) / 255.0f;
-
 	return c;
 }
 
