@@ -146,6 +146,11 @@ inline vec3 RgbToHsv(vec3 rgb)
 	return vec3(hue, s, v);
 }
 
+inline float RgbToLabH(float val)
+{
+	return val > 0.008856f ? powf(val, 0.333333f) : (7.787f*val + 0.137931f);
+}
+
 /*
 	Function: RgbToLab
 		Converts RGB to Lab
@@ -159,15 +164,11 @@ inline vec3 RgbToLab(vec3 rgb)
 		0.0193324f * rgb.r + 0.119193f * rgb.g + 0.950444f * rgb.b
 	);
 
-#define RGB_TO_LAB_H(VAL) ((VAL > 0.008856f) ? powf(VAL, 0.333333f) : (7.787f*VAL + 0.137931f))
-
 	return vec3(
-		116 * RGB_TO_LAB_H( xyz.y / adapt.y) - 16,
-		500 * (RGB_TO_LAB_H(xyz.x / adapt.x) - RGB_TO_LAB_H(xyz.y / adapt.y)),
-		200 * (RGB_TO_LAB_H(xyz.y / adapt.y) - RGB_TO_LAB_H(xyz.z / adapt.z))
+		116 * RgbToLabH(xyz.y / adapt.y) - 16,
+		500 * (RgbToLabH(xyz.x / adapt.x) - RgbToLabH(xyz.y / adapt.y)),
+		200 * (RgbToLabH(xyz.y / adapt.y) - RgbToLabH(xyz.z / adapt.z))
 	);
-
-#undef RGB_TO_LAB_H
 }
 
 #endif
