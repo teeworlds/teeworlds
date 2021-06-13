@@ -41,7 +41,7 @@ inline vec3 HslToRgb(vec3 HSL)
 
 /*
 	Function: HexToRgba
-		Converts Hex to Rgba
+		Converts Hex to RGBA
 
 	Remarks: Hex should be RGBA8
 */
@@ -58,7 +58,7 @@ inline vec4 HexToRgba(int hex)
 
 /*
 	Function: HsvToRgb
-		Converts Hsv to Rgb
+		Converts HSV to RGB
 */
 inline vec3 HsvToRgb(vec3 hsv)
 {
@@ -114,7 +114,7 @@ inline vec3 HsvToRgb(vec3 hsv)
 
 /*
 	Function: RgbToHsv
-		Converts Rgb to Hsv
+		Converts RGB to HSV
 */
 inline vec3 RgbToHsv(vec3 rgb)
 {
@@ -149,6 +149,10 @@ inline vec3 RgbToHsv(vec3 rgb)
 	return vec3(hue, s, v);
 }
 
+/*
+	Function: RgbToLab
+		Converts RGB to Lab
+*/
 inline vec3 RgbToLab(vec3 rgb)
 {
 	vec3 adapt(0.950467f, 1, 1.088969f);
