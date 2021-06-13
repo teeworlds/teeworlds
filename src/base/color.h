@@ -173,12 +173,4 @@ inline vec3 RgbToLab(vec3 rgb)
 #undef RGB_TO_LAB_H
 }
 
-inline float LabDistance(vec3 labA, vec3 labB)
-{
-	float ld = labA.x - labB.x;
-	float ad = labA.y - labB.y;
-	float bd = labA.z - labB.z;
-	return sqrtf(ld*ld + ad*ad + bd*bd);
-}
-
 #endif
