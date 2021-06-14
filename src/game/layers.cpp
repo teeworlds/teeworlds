@@ -54,7 +54,7 @@ void CLayers::InitGameLayer()
 						m_pGameGroup->m_ClipH = 0;
 					}
 
-					break;
+					return; // there can only be one game layer and game group
 				}
 			}
 		}
