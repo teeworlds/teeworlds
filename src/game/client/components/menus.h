@@ -465,9 +465,6 @@ private:
 	char m_aFilterString[VOTE_REASON_LENGTH];
 	char m_aCallvoteReason[VOTE_REASON_LENGTH];
 
-	// for callbacks
-	int *m_pActiveDropdown;
-
 	// demo
 	enum
 	{
