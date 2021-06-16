@@ -799,10 +799,9 @@ void CScoreboard::OnRender()
 	if(!IsActive())
 		return;
 
-	CUIRect Screen = *UI()->Screen();
-	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
+	UI()->MapScreen();
 
-	float Width = Screen.w;
+	float Width = UI()->Screen()->w;
 	float y = 85.f;
 	float w = 364.0f;
 	float FontSize = 86.0f;
@@ -843,8 +842,9 @@ void CScoreboard::OnRender()
 		}
 	}
 
-	Width = 400*3.0f*Graphics()->ScreenAspect();
-	Graphics()->MapScreen(0, 0, Width, 400*3.0f);
+	const float Height = 400.0f * 3.0f;
+	Width = Height * Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0, 0, Width, Height);
 	static CTextCursor s_Cursor(FontSize);
 	s_Cursor.m_Align = TEXTALIGN_TC;
 	s_Cursor.MoveTo(Width/2, 39);

@@ -585,15 +585,15 @@ void CGameClient::StartRendering()
 	else if(m_pMenus->IsBackgroundNeeded())
 	{
 		// render background color
-		float sw = 300 * Graphics()->ScreenAspect();
-		float sh = 300;
-		Graphics()->MapScreen(0, 0, sw, sh);
+		const float ScreenHeight = 300.0f;
+		const float ScreenWidth = ScreenHeight * Graphics()->ScreenAspect();
+		const vec4 Bottom(0.45f, 0.45f, 0.45f, 1.0f);
+		const vec4 Top(0.45f, 0.45f, 0.45f, 1.0f);
+		Graphics()->MapScreen(0, 0, ScreenWidth, ScreenHeight);
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
-		vec4 Bottom(0.45f, 0.45f, 0.45f, 1.0f);
-		vec4 Top(0.45f, 0.45f, 0.45f, 1.0f);
 		Graphics()->SetColor4(Top, Top, Bottom, Bottom);
-		IGraphics::CQuadItem QuadItem(0, 0, sw, sh);
+		IGraphics::CQuadItem QuadItem(0, 0, ScreenWidth, ScreenHeight);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}

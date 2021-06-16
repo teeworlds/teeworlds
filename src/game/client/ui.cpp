@@ -91,13 +91,19 @@ void CUI::ConvertCursorMove(float *pX, float *pY, int CursorType) const
 const CUIRect *CUI::Screen()
 {
 	m_Screen.h = 600;
-	m_Screen.w = Graphics()->ScreenAspect()*m_Screen.h;
+	m_Screen.w = Graphics()->ScreenAspect() * m_Screen.h;
 	return &m_Screen;
 }
 
 float CUI::PixelSize()
 {
 	return Screen()->w/Graphics()->ScreenWidth();
+}
+
+void CUI::MapScreen()
+{
+	const CUIRect *pScreen = Screen();
+	Graphics()->MapScreen(pScreen->x, pScreen->y, pScreen->w, pScreen->h);
 }
 
 void CUI::ClipEnable(const CUIRect *pRect)

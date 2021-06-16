@@ -192,8 +192,8 @@ void CSpectator::OnRender()
 		ScaleX = 1.5f;
 
 	// draw background
-	float Width = 400*3.0f*Graphics()->ScreenAspect();
-	float Height = 400*3.0f;
+	const float Height = 400.0f * 3.0f;
+	const float Width = Height * Graphics()->ScreenAspect();
 
 	Graphics()->MapScreen(0, 0, Width, Height);
 

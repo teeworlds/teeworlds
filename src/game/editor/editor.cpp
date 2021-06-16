@@ -2024,7 +2024,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 							{
 								for(int k = 0; k < NumEditLayers; k++)
 									pEditLayers[k]->BrushSelecting(r);
-								Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+								UI()->MapScreen();
 							}
 						}
 						else if(s_Operation == OP_BRUSH_PAINT)
@@ -2038,7 +2038,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 							{
 								for(int k = 0; k < NumEditLayers; k++)
 									pEditLayers[k]->BrushSelecting(r);
-								Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+								UI()->MapScreen();
 							}
 						}
 					}
@@ -2185,7 +2185,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 							}
 						}
 
-						Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+						UI()->MapScreen();
 					}
 				}
 			} break;
@@ -2384,7 +2384,7 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		m_ShowEnvelopePreview = SHOWENV_NONE;
 	}
 
-	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+	UI()->MapScreen();
 	//UI()->ClipDisable();
 }
 
@@ -4247,7 +4247,7 @@ void CEditor::Render()
 	else if(m_Mode == MODE_IMAGES)
 		RenderImages(ToolBox, ToolBar, View);
 
-	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+	UI()->MapScreen();
 
 	if(m_GuiActive)
 	{
@@ -4282,7 +4282,7 @@ void CEditor::Render()
 	// todo: fix this
 	if(Config()->m_EdShowkeys)
 	{
-		Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
+		UI()->MapScreen();
 		static CTextCursor s_Cursor(24.0f);
 		s_Cursor.Reset();
 		s_Cursor.MoveTo(View.x+10, View.y+View.h-24-10);

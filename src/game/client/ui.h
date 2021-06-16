@@ -135,6 +135,7 @@ public:
 
 	const CUIRect *Screen();
 	float PixelSize();
+	void MapScreen();
 
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
