@@ -63,7 +63,7 @@ static int m_CenterY = 0;
 static float m_MaxDistance = 1500.0f;
 
 static int m_MixingRate = 48000;
-static volatile int m_SoundVolume = 100;
+static int m_SoundVolume = 100;
 
 static int m_NextVoice = 0;
 static int *m_pMixBuffer = 0;	// buffer only used by the thread callback function
@@ -71,14 +71,9 @@ static unsigned m_MaxFrames = 0;
 
 static IOHANDLE s_File;
 
-// TODO: there should be a faster way todo this
 static short Int2Short(int i)
 {
-	if(i > 0x7fff)
-		return 0x7fff;
-	else if(i < -0x7fff)
-		return -0x7fff;
-	return i;
+	return clamp(i, INT16_MIN, INT16_MAX);
 }
 
 static void Mix(short *pFinalOut, unsigned Frames)
@@ -175,18 +170,16 @@ static void Mix(short *pFinalOut, unsigned Frames)
 	// release the lock
 	lock_unlock(m_SoundLock);
 
+	// clamp accumulated values
+	// TODO: this seams slow
+	for(unsigned i = 0; i < Frames; ++i)
 	{
-		// clamp accumulated values
-		// TODO: this seams slow
-		for(unsigned i = 0; i < Frames; i++)
-		{
-			int j = i<<1;
-			int vl = ((m_pMixBuffer[j]*MasterVol)/101)>>8;
-			int vr = ((m_pMixBuffer[j+1]*MasterVol)/101)>>8;
+		int j = i<<1;
+		int vl = ((m_pMixBuffer[j]*MasterVol)/101)>>8;
+		int vr = ((m_pMixBuffer[j+1]*MasterVol)/101)>>8;
 
-			pFinalOut[j] = Int2Short(vl);
-			pFinalOut[j+1] = Int2Short(vr);
-		}
+		pFinalOut[j] = Int2Short(vl);
+		pFinalOut[j+1] = Int2Short(vr);
 	}
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
