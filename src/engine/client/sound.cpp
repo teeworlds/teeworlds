@@ -17,6 +17,7 @@ extern "C"
 	#include <wavpack.h>
 }
 #include <math.h>
+#include <climits>
 
 enum
 {
@@ -73,7 +74,7 @@ static IOHANDLE s_File;
 
 static short Int2Short(int i)
 {
-	return clamp(i, INT16_MIN, INT16_MAX);
+	return clamp(i, SHRT_MIN, SHRT_MAX);
 }
 
 static void Mix(short *pFinalOut, unsigned Frames)
