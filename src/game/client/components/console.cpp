@@ -14,9 +14,6 @@
 #include <engine/keys.h>
 #include <engine/console.h>
 
-#include <cstring>
-#include <cstdio>
-
 #include <game/client/ui.h>
 
 #include <game/version.h>
