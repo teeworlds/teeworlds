@@ -544,14 +544,13 @@ int CEditor::DoButton_Editor_Common(const void *pID, const char *pText, int Chec
 int CEditor::DoButton_Editor(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	RenderTools()->DrawUIRect(pRect, GetButtonColor(pID, Checked), CUI::CORNER_ALL, 3.0f);
-	CUIRect NewRect = *pRect;
-	NewRect.y += NewRect.h/2.0f-7.0f;
 
-	float tw = min(TextRender()->TextWidth(10.0f, pText, -1), NewRect.w);
 	static CTextCursor s_Cursor(10.0f);
+	s_Cursor.MoveTo(pRect->x + pRect->w/2, pRect->y + pRect->h/2);
 	s_Cursor.Reset();
-	s_Cursor.MoveTo(NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f);
-	s_Cursor.m_MaxWidth = NewRect.w;
+	s_Cursor.m_MaxWidth = pRect->w;
+	s_Cursor.m_MaxLines = 1;
+	s_Cursor.m_Align = TEXTALIGN_MC;
 	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
