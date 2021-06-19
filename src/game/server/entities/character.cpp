@@ -191,11 +191,7 @@ void CCharacter::HandleNinja()
 				aEnts[i]->TakeDamage(vec2(0, -10.0f), m_Ninja.m_ActivationDir*-1, g_pData->m_Weapons.m_Ninja.m_pBase->m_Damage, m_pPlayer->GetCID(), WEAPON_NINJA);
 			}
 		}
-
-		return;
 	}
-
-	return;
 }
 
 
