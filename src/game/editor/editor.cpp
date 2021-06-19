@@ -2860,7 +2860,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 {
 	static int s_ScrollBar = 0;
 	static float s_ScrollValue = 0;
-	float ImagesHeight = 30.0f + 14.0f * m_Map.m_lImages.size() + 27.0f;
+	float ImagesHeight = 40.0f + 14.0f * m_Map.m_lImages.size() + 27.0f;
 	float ScrollDifference = ImagesHeight - ToolBox.h;
 
 	if(ImagesHeight > ToolBox.h)	// Do we even need a scrollbar?
