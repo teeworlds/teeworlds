@@ -2855,7 +2855,7 @@ void CEditor::SortImages()
 }
 
 
-void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
+void CEditor::RenderImagesList(CUIRect ToolBox, CUIRect ToolBar)
 {
 	static float s_ScrollValue = 0.0f;
 	const float RowHeight = 14.0f;
@@ -2953,28 +2953,6 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			}
 
 			ToolBox.HSplitTop(2.0f, 0, &ToolBox);
-
-			// render image
-			if(m_SelectedImage == i)
-			{
-				CUIRect r;
-				View.Margin(10.0f, &r);
-				if(r.h < r.w)
-					r.w = r.h;
-				else
-					r.h = r.w;
-				float Max = (float)(max(m_Map.m_lImages[i]->m_Width, m_Map.m_lImages[i]->m_Height));
-				r.w *= m_Map.m_lImages[i]->m_Width/Max;
-				r.h *= m_Map.m_lImages[i]->m_Height/Max;
-				Graphics()->TextureSet(m_Map.m_lImages[i]->m_Texture);
-				Graphics()->BlendNormal();
-				Graphics()->WrapClamp();
-				Graphics()->QuadsBegin();
-				IGraphics::CQuadItem QuadItem(r.x, r.y, r.w, r.h);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-				Graphics()->QuadsEnd();
-				Graphics()->WrapNormal();
-			}
 		}
 
 		// separator
@@ -2999,6 +2977,29 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 	ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
 	if(DoButton_Editor(&s_NewImageButton, "Add", 0, &Slot, 0, "Load a new image to use in the map"))
 		InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_IMG, "Add Image", "Add", "mapres", "", AddImage, this);
+}
+
+void CEditor::RenderSelectedImage(CUIRect View)
+{
+	if(m_SelectedImage < 0 || m_SelectedImage >= m_Map.m_lImages.size())
+		return;
+
+	View.Margin(10.0f, &View);
+	if(View.h < View.w)
+		View.w = View.h;
+	else
+		View.h = View.w;
+	float Max = (float)(max(m_Map.m_lImages[m_SelectedImage]->m_Width, m_Map.m_lImages[m_SelectedImage]->m_Height));
+	View.w *= m_Map.m_lImages[m_SelectedImage]->m_Width/Max;
+	View.h *= m_Map.m_lImages[m_SelectedImage]->m_Height/Max;
+	Graphics()->TextureSet(m_Map.m_lImages[m_SelectedImage]->m_Texture);
+	Graphics()->BlendNormal();
+	Graphics()->WrapClamp();
+	Graphics()->QuadsBegin();
+	IGraphics::CQuadItem QuadItem(View.x, View.y, View.w, View.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
 }
 
 
@@ -4237,7 +4238,10 @@ void CEditor::Render()
 	if(m_Mode == MODE_LAYERS)
 		RenderLayers(ToolBox, ToolBar, View);
 	else if(m_Mode == MODE_IMAGES)
-		RenderImages(ToolBox, ToolBar, View);
+	{
+		RenderImagesList(ToolBox, ToolBar);
+		RenderSelectedImage(View);
+	}
 
 	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 
