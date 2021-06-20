@@ -194,68 +194,65 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 
 void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 {
-	vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
-	vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
-	vec2 Dir = normalize(Pos-From);
+	const vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
+	const vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
+	const vec2 Dir = normalize(Pos-From);
 
-	float Ticks = (Client()->GameTick() - pCurrent->m_StartTick) + Client()->IntraGameTick();
-	float Ms = (Ticks/50.0f) * 1000.0f;
-	float a = Ms / m_pClient->m_Tuning.m_LaserBounceDelay;
-	a = clamp(a, 0.0f, 1.0f);
-	float Ia = 1-a;
+	static int s_LastGameTick = Client()->GameTick();
+	static float s_LastIntraTick = Client()->IntraGameTick();
+	if(!m_pClient->IsWorldPaused())
+	{
+		s_LastGameTick = Client()->GameTick();
+		s_LastIntraTick = Client()->IntraGameTick();
+	}
 
-	vec2 Out, Border;
+	// This is not using s_LastGameTick because m_StartTick is synchronized by the server
+	const float LifetimeMillis = 1000.0f * (Client()->GameTick() - pCurrent->m_StartTick + s_LastIntraTick) / Client()->GameTickSpeed();
+	const float RemainingRelativeLifetime = 1.0f - clamp(LifetimeMillis / m_pClient->m_Tuning.m_LaserBounceDelay, 0.0f, 1.0f);
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 
-	//vec4 inner_color(0.15f,0.35f,0.75f,1.0f);
-	//vec4 outer_color(0.65f,0.85f,1.0f,1.0f);
-
 	// do outline
-	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
-	Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * (7.0f*Ia);
-
+	const vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
+	const vec2 Outer = vec2(Dir.y, -Dir.x) * (7.0f*RemainingRelativeLifetime);
+	Graphics()->SetColor(OuterColor);
 	IGraphics::CFreeformItem Freeform(
-			From.x-Out.x, From.y-Out.y,
-			From.x+Out.x, From.y+Out.y,
-			Pos.x-Out.x, Pos.y-Out.y,
-			Pos.x+Out.x, Pos.y+Out.y);
+			From.x-Outer.x, From.y-Outer.y,
+			From.x+Outer.x, From.y+Outer.y,
+			Pos.x-Outer.x, Pos.y-Outer.y,
+			Pos.x+Outer.x, Pos.y+Outer.y);
 	Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
 	// do inner
-	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * (5.0f*Ia);
-	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
-
+	const vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
+	const vec2 Inner = vec2(Dir.y, -Dir.x) * (5.0f*RemainingRelativeLifetime);
+	Graphics()->SetColor(InnerColor);
 	Freeform = IGraphics::CFreeformItem(
-			From.x-Out.x, From.y-Out.y,
-			From.x+Out.x, From.y+Out.y,
-			Pos.x-Out.x, Pos.y-Out.y,
-			Pos.x+Out.x, Pos.y+Out.y);
+			From.x-Inner.x, From.y-Inner.y,
+			From.x+Inner.x, From.y+Inner.y,
+			Pos.x-Inner.x, Pos.y-Inner.y,
+			Pos.x+Inner.x, Pos.y+Inner.y);
 	Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
 	Graphics()->QuadsEnd();
 
 	// render head
-	{
-		Graphics()->BlendNormal();
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
-		Graphics()->QuadsBegin();
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
+	Graphics()->QuadsBegin();
 
-		int Sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
-		RenderTools()->SelectSprite(Sprites[Client()->GameTick()%3]);
-		Graphics()->QuadsSetRotation(Client()->GameTick());
-		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
-		IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f);
-		QuadItem = IGraphics::CQuadItem(Pos.x, Pos.y, 20, 20);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
+	const int aSprites[] = { SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03 };
+	RenderTools()->SelectSprite(aSprites[s_LastGameTick%3]);
+	Graphics()->QuadsSetRotation(s_LastGameTick);
+	Graphics()->SetColor(OuterColor);
+	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+	Graphics()->SetColor(InnerColor);
+	QuadItem = IGraphics::CQuadItem(Pos.x, Pos.y, 20, 20);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+	Graphics()->QuadsEnd();
 
 	Graphics()->BlendNormal();
 }
