@@ -544,14 +544,13 @@ int CEditor::DoButton_Editor_Common(const void *pID, const char *pText, int Chec
 int CEditor::DoButton_Editor(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	RenderTools()->DrawUIRect(pRect, GetButtonColor(pID, Checked), CUI::CORNER_ALL, 3.0f);
-	CUIRect NewRect = *pRect;
-	NewRect.y += NewRect.h/2.0f-7.0f;
 
-	float tw = min(TextRender()->TextWidth(10.0f, pText, -1), NewRect.w);
 	static CTextCursor s_Cursor(10.0f);
+	s_Cursor.MoveTo(pRect->x + pRect->w/2, pRect->y + pRect->h/2);
 	s_Cursor.Reset();
-	s_Cursor.MoveTo(NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f);
-	s_Cursor.m_MaxWidth = NewRect.w;
+	s_Cursor.m_MaxWidth = pRect->w;
+	s_Cursor.m_MaxLines = 1;
+	s_Cursor.m_Align = TEXTALIGN_MC;
 	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
@@ -564,13 +563,13 @@ int CEditor::DoButton_Image(const void *pID, const char *pText, int Checked, con
 		ButtonColor *= vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
 	RenderTools()->DrawUIRect(pRect, ButtonColor, CUI::CORNER_ALL, 3.0f);
-	CUIRect NewRect = *pRect;
-	NewRect.y += NewRect.h/2.0f-7.0f;
-	float tw = min(TextRender()->TextWidth(10.0f, pText, -1), NewRect.w);
-	static CTextCursor s_Cursor(10.0f);
-	s_Cursor.MoveTo(NewRect.x + NewRect.w/2-tw/2, NewRect.y - 1.0f);
+	static CTextCursor s_Cursor;
+	s_Cursor.MoveTo(pRect->x + pRect->w/2, pRect->y + pRect->h/2);
 	s_Cursor.Reset();
-	s_Cursor.m_MaxWidth = NewRect.w;
+	s_Cursor.m_FontSize = clamp(8.0f * pRect->w / TextRender()->TextWidth(10.0f, pText, -1), 6.0f, 10.0f);
+	s_Cursor.m_MaxWidth = pRect->w;
+	s_Cursor.m_MaxLines = 1;
+	s_Cursor.m_Align = TEXTALIGN_MC;
 	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
@@ -2856,24 +2855,27 @@ void CEditor::SortImages()
 }
 
 
-void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
+void CEditor::RenderImagesList(CUIRect ToolBox, CUIRect ToolBar)
 {
-	static int s_ScrollBar = 0;
-	static float s_ScrollValue = 0;
-	float ImagesHeight = 30.0f + 14.0f * m_Map.m_lImages.size() + 27.0f;
-	float ScrollDifference = ImagesHeight - ToolBox.h;
+	static float s_ScrollValue = 0.0f;
+	const float RowHeight = 14.0f;
+	const float HeaderHeight = RowHeight + 1.0f;
+	const float HeaderSeparatorHeight = 5.0f;
+	const float AddButtonHeight = 17.0f;
+	const float ImagesHeight = 2 * (HeaderHeight + HeaderSeparatorHeight) + RowHeight * m_Map.m_lImages.size() + AddButtonHeight;
+	const float ScrollDifference = max(ImagesHeight - ToolBox.h, 0.0f);
 
-	if(ImagesHeight > ToolBox.h)	// Do we even need a scrollbar?
+	if(ScrollDifference > 0) // Do we even need a scrollbar?
 	{
 		CUIRect Scroll;
 		ToolBox.VSplitRight(15.0f, &ToolBox, &Scroll);
 		ToolBox.VSplitRight(3.0f, &ToolBox, 0);	// extra spacing
 		Scroll.HMargin(5.0f, &Scroll);
-		s_ScrollValue = UiDoScrollbarV(&s_ScrollBar, &Scroll, s_ScrollValue);
+		s_ScrollValue = UiDoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
 
 		if(UI()->MouseInside(&Scroll) || UI()->MouseInside(&ToolBox))
 		{
-			int ScrollNum = (int)((ImagesHeight-ToolBox.h)/14.0f)+1;
+			int ScrollNum = (int)((ImagesHeight-ToolBox.h)/RowHeight)+1;
 			if(ScrollNum > 0)
 			{
 				if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
@@ -2883,50 +2885,40 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			}
 		}
 	}
+	else
+		s_ScrollValue = 0.0f;
 
-	float ImageStartAt = ScrollDifference * s_ScrollValue;
-	if(ImageStartAt < 0.0f)
-		ImageStartAt = 0.0f;
-
-	float ImageStopAt = ImagesHeight - ScrollDifference * (1 - s_ScrollValue);
+	const float ImageStartAt = ScrollDifference * s_ScrollValue;
+	const float ImageStopAt = ImagesHeight + ScrollDifference * (s_ScrollValue - 1.0f);
 	float ImageCur = 0.0f;
 
 	for(int e = 0; e < 2; e++) // two passes, first embedded, then external
 	{
+		if(ImageCur + HeaderHeight > ImageStopAt)
+			return;
+
 		CUIRect Slot;
-
-		if(ImageCur > ImageStopAt)
-			break;
-		else if(ImageCur >= ImageStartAt)
+		if(ImageCur >= ImageStartAt)
 		{
-
-			ToolBox.HSplitTop(15.0f, &Slot, &ToolBox);
-			if(e == 0)
-				UI()->DoLabel(&Slot, "Embedded", 12.0f, CUI::ALIGN_CENTER);
-			else
-				UI()->DoLabel(&Slot, "External", 12.0f, CUI::ALIGN_CENTER);
+			ToolBox.HSplitTop(HeaderHeight, &Slot, &ToolBox);
+			UI()->DoLabel(&Slot, e == 0 ? "Embedded" : "External", 12.0f, CUI::ALIGN_CENTER);
 		}
-		ImageCur += 15.0f;
+		ImageCur += HeaderHeight;
 
 		for(int i = 0; i < m_Map.m_lImages.size(); i++)
 		{
-			if((e && !m_Map.m_lImages[i]->m_External) ||
-				(!e && m_Map.m_lImages[i]->m_External))
-			{
+			if((e && !m_Map.m_lImages[i]->m_External) || (!e && m_Map.m_lImages[i]->m_External))
 				continue;
-			}
 
-			if(ImageCur > ImageStopAt)
-				break;
+			if(ImageCur + RowHeight > ImageStopAt)
+				return;
 			else if(ImageCur < ImageStartAt)
 			{
-				ImageCur += 14.0f;
+				ImageCur += RowHeight;
 				continue;
 			}
-			ImageCur += 14.0f;
+			ImageCur += RowHeight;
 
-			char aBuf[128];
-			str_copy(aBuf, m_Map.m_lImages[i]->m_aName, sizeof(aBuf));
 			ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
 
 			// check if images is used
@@ -2934,7 +2926,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			for(int g = 0; !Used && (g < m_Map.m_lGroups.size()); g++)
 			{
 				CLayerGroup *pGroup = m_Map.m_lGroups[g];
-				for(int l = 0; !Used && (l < pGroup->m_lLayers.size()); l++)
+				for(int l = 0; !Used && l < pGroup->m_lLayers.size(); l++)
 				{
 					if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_TILES)
 					{
@@ -2951,8 +2943,7 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 				}
 			}
 
-			if(int Result = DoButton_Image(&m_Map.m_lImages[i], aBuf, m_SelectedImage == i, &Slot,
-				BUTTON_CONTEXT, "Select image", Used))
+			if(int Result = DoButton_Image(&m_Map.m_lImages[i], m_Map.m_lImages[i]->m_aName, m_SelectedImage == i, &Slot, BUTTON_CONTEXT, "Select image", Used))
 			{
 				m_SelectedImage = i;
 
@@ -2962,33 +2953,13 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 			}
 
 			ToolBox.HSplitTop(2.0f, 0, &ToolBox);
-
-			// render image
-			if(m_SelectedImage == i)
-			{
-				CUIRect r;
-				View.Margin(10.0f, &r);
-				if(r.h < r.w)
-					r.w = r.h;
-				else
-					r.h = r.w;
-				float Max = (float)(max(m_Map.m_lImages[i]->m_Width, m_Map.m_lImages[i]->m_Height));
-				r.w *= m_Map.m_lImages[i]->m_Width/Max;
-				r.h *= m_Map.m_lImages[i]->m_Height/Max;
-				Graphics()->TextureSet(m_Map.m_lImages[i]->m_Texture);
-				Graphics()->BlendNormal();
-				Graphics()->WrapClamp();
-				Graphics()->QuadsBegin();
-				IGraphics::CQuadItem QuadItem(r.x, r.y, r.w, r.h);
-				Graphics()->QuadsDrawTL(&QuadItem, 1);
-				Graphics()->QuadsEnd();
-				Graphics()->WrapNormal();
-			}
 		}
 
 		// separator
-		ToolBox.HSplitTop(5.0f, &Slot, &ToolBox);
-		ImageCur += 5.0f;
+		if(ImageCur + HeaderSeparatorHeight > ImageStopAt)
+			return;
+		ToolBox.HSplitTop(HeaderSeparatorHeight, &Slot, &ToolBox);
+		ImageCur += HeaderSeparatorHeight;
 		IGraphics::CLineItem LineItem(Slot.x, Slot.y+Slot.h/2, Slot.x+Slot.w, Slot.y+Slot.h/2);
 		Graphics()->TextureClear();
 		Graphics()->LinesBegin();
@@ -2996,17 +2967,39 @@ void CEditor::RenderImages(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
 		Graphics()->LinesEnd();
 	}
 
-	if(ImageCur + 27.0f > ImageStopAt)
+	if(ImageCur + AddButtonHeight > ImageStopAt)
 		return;
-
-	CUIRect Slot;
-	ToolBox.HSplitTop(5.0f, &Slot, &ToolBox);
 
 	// new image
 	static int s_NewImageButton = 0;
+	CUIRect Slot;
+	ToolBox.HSplitTop(5.0f, &Slot, &ToolBox);
 	ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
 	if(DoButton_Editor(&s_NewImageButton, "Add", 0, &Slot, 0, "Load a new image to use in the map"))
 		InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_IMG, "Add Image", "Add", "mapres", "", AddImage, this);
+}
+
+void CEditor::RenderSelectedImage(CUIRect View)
+{
+	if(m_SelectedImage < 0 || m_SelectedImage >= m_Map.m_lImages.size())
+		return;
+
+	View.Margin(10.0f, &View);
+	if(View.h < View.w)
+		View.w = View.h;
+	else
+		View.h = View.w;
+	float Max = (float)(max(m_Map.m_lImages[m_SelectedImage]->m_Width, m_Map.m_lImages[m_SelectedImage]->m_Height));
+	View.w *= m_Map.m_lImages[m_SelectedImage]->m_Width/Max;
+	View.h *= m_Map.m_lImages[m_SelectedImage]->m_Height/Max;
+	Graphics()->TextureSet(m_Map.m_lImages[m_SelectedImage]->m_Texture);
+	Graphics()->BlendNormal();
+	Graphics()->WrapClamp();
+	Graphics()->QuadsBegin();
+	IGraphics::CQuadItem QuadItem(View.x, View.y, View.w, View.h);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+	Graphics()->WrapNormal();
 }
 
 
@@ -4245,7 +4238,10 @@ void CEditor::Render()
 	if(m_Mode == MODE_LAYERS)
 		RenderLayers(ToolBox, ToolBar, View);
 	else if(m_Mode == MODE_IMAGES)
-		RenderImages(ToolBox, ToolBar, View);
+	{
+		RenderImagesList(ToolBox, ToolBar);
+		RenderSelectedImage(View);
+	}
 
 	Graphics()->MapScreen(UI()->Screen()->x, UI()->Screen()->y, UI()->Screen()->w, UI()->Screen()->h);
 
