@@ -122,8 +122,6 @@ void CPlayers::RenderPlayer(
 	CNetObj_Character Player = *pPlayerChar;
 	CTeeRenderInfo RenderInfo = *pRenderInfo;
 
-	const CGameClient::CClientData *pClientData = &m_pClient->m_aClients[ClientID];
-
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
@@ -372,37 +370,34 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsEnd();
 	}
 
-	if(pClientData->m_EmoticonStart != -1 && pClientData->m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
+	CGameClient::CClientData *pClientData = &m_pClient->m_aClients[ClientID];
+	if(pClientData->m_EmoticonStart != -1)
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
-		Graphics()->QuadsBegin();
+		// adjust start tick if world paused; not if demo paused because ticks are synchronized with demo
+		static int s_LastGameTick = Client()->GameTick();
+		if(m_pClient->IsWorldPaused())
+			pClientData->m_EmoticonStart += Client()->GameTick() - s_LastGameTick;
+		s_LastGameTick = Client()->GameTick();
 
-		int SinceStart = Client()->GameTick() - pClientData->m_EmoticonStart;
-		int FromEnd = pClientData->m_EmoticonStart + 2 * Client()->GameTickSpeed() - Client()->GameTick();
+		const float TotalEmoteLifespan = 2 * Client()->GameTickSpeed();
+		const float SinceStart = (Client()->GameTick() - pClientData->m_EmoticonStart) / (float)Client()->GameTickSpeed();
+		const float FromEnd = (pClientData->m_EmoticonStart + TotalEmoteLifespan - Client()->GameTick()) / (float)Client()->GameTickSpeed();
+		if(SinceStart > 0.0f && FromEnd > 0.0f)
+		{
+			const float Size = 64.0f;
+			const float Alpha = FromEnd < 0.2f ? FromEnd / 0.2f : 1.0f;
+			const float HeightFactor = SinceStart < 0.1f ? SinceStart / 0.1f : 1.0f;
+			const float Wiggle = SinceStart < 0.2f ? SinceStart / 0.2f : 0.0f;
 
-		float a = 1;
-
-		if (FromEnd < Client()->GameTickSpeed() / 5)
-			a = FromEnd / (Client()->GameTickSpeed() / 5.0);
-
-		float h = 1;
-		if (SinceStart < Client()->GameTickSpeed() / 10)
-			h = SinceStart / (Client()->GameTickSpeed() / 10.0);
-
-		float Wiggle = 0;
-		if (SinceStart < Client()->GameTickSpeed() / 5)
-			Wiggle = SinceStart / (Client()->GameTickSpeed() / 5.0);
-
-		float WiggleAngle = sinf(5*Wiggle);
-
-		Graphics()->QuadsSetRotation(pi/6*WiggleAngle);
-
-		Graphics()->SetColor(1.0f * a, 1.0f * a, 1.0f * a, a);
-		// client_datas::emoticon is an offset from the first emoticon
-		RenderTools()->SelectSprite(SPRITE_OOP + pClientData->m_Emoticon);
-		IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - 32*h, 64, 64*h);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->QuadsEnd();
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+			Graphics()->QuadsBegin();
+			Graphics()->QuadsSetRotation(pi/6*sinf(5*Wiggle));
+			Graphics()->SetColor(Alpha, Alpha, Alpha, Alpha);
+			RenderTools()->SelectSprite(SPRITE_OOP + pClientData->m_Emoticon); // pClientData->m_Emoticon is an offset from the first emoticon
+			IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - Size * HeightFactor / 2.0f, Size, Size * HeightFactor);
+			Graphics()->QuadsDraw(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+		}
 	}
 }
 
