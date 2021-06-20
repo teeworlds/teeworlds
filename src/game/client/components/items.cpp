@@ -40,7 +40,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	static float s_LastGameTickTime = Client()->GameTickTime();
 	if(!m_pClient->IsWorldPaused() && !m_pClient->IsDemoPlaybackPaused())
 		s_LastGameTickTime = Client()->GameTickTime();
-	
+
 	float Ct;
 	if(m_pClient->ShouldUsePredicted() && Config()->m_ClPredictProjectiles)
 		Ct = ((float)(Client()->PredGameTick() - 1 - pCurrent->m_StartTick) + Client()->PredIntraGameTick())/(float)SERVER_TICK_SPEED;
@@ -54,14 +54,11 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
 	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
 
-
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
 	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1)].m_pSpriteProj);
-	vec2 Vel = Pos-PrevPos;
-	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), Client()->IntraGameTick());
-
+	const vec2 Vel = Pos-PrevPos;
 
 	// add particle for this projectile
 	if(pCurrent->m_Type == WEAPON_GRENADE)
@@ -77,12 +74,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	else
 	{
 		m_pClient->m_pEffects->BulletTrail(Pos);
-
-		if(length(Vel) > 0.00001f)
-			Graphics()->QuadsSetRotation(angle(Vel));
-		else
-			Graphics()->QuadsSetRotation(0);
-
+		Graphics()->QuadsSetRotation(length(Vel) > 0.00001f ? angle(Vel) : 0);
 	}
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 32, 32);
@@ -96,9 +88,8 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
-	float Angle = 0.0f;
 	float Size = 64.0f;
-	const int c[] = {
+	const int aSprites[] = {
 		SPRITE_PICKUP_HEALTH,
 		SPRITE_PICKUP_ARMOR,
 		SPRITE_PICKUP_GRENADE,
@@ -107,8 +98,8 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		SPRITE_PICKUP_NINJA,
 		SPRITE_PICKUP_GUN,
 		SPRITE_PICKUP_HAMMER
-		};
-	RenderTools()->SelectSprite(c[pCurrent->m_Type]);
+	};
+	RenderTools()->SelectSprite(aSprites[pCurrent->m_Type]);
 
 	switch(pCurrent->m_Type)
 	{
@@ -133,9 +124,6 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		Size = g_pData->m_Weapons.m_aId[WEAPON_HAMMER].m_VisualSize;
 		break;
 	}
-	
-
-	Graphics()->QuadsSetRotation(Angle);
 
 	const float Now = Client()->LocalTime();
 	static float s_Time = 0.0f;
@@ -145,26 +133,15 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	Pos.x += cosf(s_Time*2.0f+Offset)*2.5f;
 	Pos.y += sinf(s_Time*2.0f+Offset)*2.5f;
 	s_LastLocalTime = Now;
+
+	Graphics()->QuadsSetRotation(0.0f);
 	RenderTools()->DrawSprite(Pos.x, Pos.y, Size);
 	Graphics()->QuadsEnd();
 }
 
 void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent, const CNetObj_GameDataFlag *pPrevGameDataFlag, const CNetObj_GameDataFlag *pCurGameDataFlag)
 {
-	float Angle = 0.0f;
-	float Size = 42.0f;
-
-	Graphics()->BlendNormal();
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-	Graphics()->QuadsBegin();
-
-	if(pCurrent->m_Team == TEAM_RED)
-		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
-	else
-		RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
-
-	Graphics()->QuadsSetRotation(Angle);
-
+	const float Size = 42.0f;
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 
 	if(pCurGameDataFlag)
@@ -186,6 +163,11 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 			Pos = m_pClient->GetCharPos(FlagCarrier, true);
 	}
 
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(pCurrent->m_Team == TEAM_RED ? SPRITE_FLAG_RED : SPRITE_FLAG_BLUE);
+	Graphics()->QuadsSetRotation(0.0f);
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsEnd();
