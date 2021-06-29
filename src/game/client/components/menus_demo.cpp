@@ -249,6 +249,23 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		m_SeekBarActivatedTime = Now;
 	}
 
+	// Advance single frame forward with period key
+	static bool s_ShouldPaused = false;
+	if(s_ShouldPaused)
+	{
+		DemoPlayer()->Pause();
+		s_ShouldPaused = false;
+	}
+	if(PositionToSeek < 0.0f && UI()->KeyPress(KEY_PERIOD))
+	{
+		s_ShouldPaused = true;
+		DemoPlayer()->Unpause();
+
+		// Show the seek bar for a few seconds after skipping
+		m_SeekBarActive = true;
+		m_SeekBarActivatedTime = Now;
+	}
+
 	if(m_MenuActive)
 	{
 		// do buttons
