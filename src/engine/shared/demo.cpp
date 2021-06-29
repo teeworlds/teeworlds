@@ -718,12 +718,6 @@ const char *CDemoPlayer::Load(const char *pFilename, int StorageType, const char
 	return 0;
 }
 
-int CDemoPlayer::NextFrame()
-{
-	DoTick();
-	return IsPlaying();
-}
-
 int CDemoPlayer::Play()
 {
 	// fill in previous and next tick
