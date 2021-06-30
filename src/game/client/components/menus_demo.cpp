@@ -175,6 +175,9 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			DemoPlayer()->Pause();
 		else
 			DemoPlayer()->Unpause();
+
+		m_SeekBarActive = true;
+		m_SeekBarActivatedTime = Now;
 	}
 
 	// skip forward/backward using left/right arrow keys
