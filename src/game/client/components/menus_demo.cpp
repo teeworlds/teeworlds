@@ -249,17 +249,15 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		m_SeekBarActivatedTime = Now;
 	}
 
-	// Advance single frame forward with period key
-	static bool s_ShouldPaused = false;
-	if(s_ShouldPaused)
+	// Advance single frame forward/backward with period/comma key
+	const bool TickForwards = UI()->KeyPress(KEY_PERIOD);
+	const bool TickBackwards = UI()->KeyPress(KEY_COMMA);
+	if(PositionToSeek < 0.0f && (TickForwards || TickBackwards))
 	{
+		m_pClient->m_SuppressEvents = true;
+		DemoPlayer()->SetPos(pInfo->m_CurrentTick + (TickForwards ? 3 : 0));
+		m_pClient->m_SuppressEvents = false;
 		DemoPlayer()->Pause();
-		s_ShouldPaused = false;
-	}
-	if(PositionToSeek < 0.0f && UI()->KeyPress(KEY_PERIOD))
-	{
-		s_ShouldPaused = true;
-		DemoPlayer()->Unpause();
 
 		// Show the seek bar for a few seconds after skipping
 		m_SeekBarActive = true;
