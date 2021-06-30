@@ -118,6 +118,7 @@ public:
 	int Stop();
 	void SetSpeed(float Speed);
 	int SetPos(float Percent);
+	int SetPos(int WantedTick);
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
 	void GetDemoName(char *pBuffer, int BufferSize) const;
 	bool GetDemoInfo(const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const;

@@ -734,18 +734,23 @@ int CDemoPlayer::SetPos(float Percent)
 {
 	if(!m_File)
 		return -1;
+	return SetPos(m_Info.m_Info.m_FirstTick + (int)((m_Info.m_Info.m_LastTick-m_Info.m_Info.m_FirstTick)*Percent));
+}
 
-	// -5 because we have to have a current tick and previous tick when we do the playback
-	int WantedTick = m_Info.m_Info.m_FirstTick + (int)((m_Info.m_Info.m_LastTick-m_Info.m_Info.m_FirstTick)*Percent) - 5;
+int CDemoPlayer::SetPos(int WantedTick)
+{
+	if(!m_File)
+		return -1;
 
-	int Keyframe = clamp((int)(m_Info.m_SeekablePoints*Percent), 0, m_Info.m_SeekablePoints-1);
+	WantedTick = clamp(WantedTick, m_Info.m_Info.m_FirstTick, m_Info.m_Info.m_LastTick);
+	int KeyframeWantedTick = WantedTick - 5; // -5 because we have to have a current tick and previous tick when we do the playback
+	const float Percent = (KeyframeWantedTick - m_Info.m_Info.m_FirstTick) / float(m_Info.m_Info.m_LastTick - m_Info.m_Info.m_FirstTick);
 
 	// get correct key frame
-	if(m_pKeyFrames[Keyframe].m_Tick < WantedTick)
-		while(Keyframe < m_Info.m_SeekablePoints-1 && m_pKeyFrames[Keyframe].m_Tick < WantedTick)
-			Keyframe++;
-
-	while(Keyframe && m_pKeyFrames[Keyframe].m_Tick > WantedTick)
+	int Keyframe = clamp((int)(m_Info.m_SeekablePoints*Percent), 0, m_Info.m_SeekablePoints-1);
+	while(Keyframe < m_Info.m_SeekablePoints-1 && m_pKeyFrames[Keyframe].m_Tick < KeyframeWantedTick)
+		Keyframe++;
+	while(Keyframe > 0 && m_pKeyFrames[Keyframe].m_Tick > KeyframeWantedTick)
 		Keyframe--;
 
 	// seek to the correct keyframe
@@ -756,7 +761,7 @@ int CDemoPlayer::SetPos(float Percent)
 	m_Info.m_PreviousTick = -1;
 
 	// playback everything until we hit our tick
-	while(m_Info.m_PreviousTick < WantedTick)
+	while(m_Info.m_NextTick < WantedTick)
 		DoTick();
 
 	Play();
