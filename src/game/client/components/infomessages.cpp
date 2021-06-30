@@ -31,6 +31,9 @@ void CInfoMessages::AddInfoMsg(int Type, CInfoMsg NewMsg)
 
 void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 {
+	if(m_pClient->m_SuppressEvents)
+		return;
+
 	// hint TextRender to render text, deferred, with correct fontsize
 	float Width = 400*3.0f*Graphics()->ScreenAspect();
 	float Height = 400*3.0f;
