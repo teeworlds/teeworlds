@@ -1870,6 +1870,31 @@ int fs_file_time(const char *name, time_t *created, time_t *modified)
 	return 0;
 }
 
+int fs_file_name(const char *name, char *buffer, int length)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	WIN32_FIND_DATA finddata;
+	HANDLE handle;
+
+	handle = FindFirstFileA(name, &finddata);
+
+	if (handle == INVALID_HANDLE_VALUE)
+		return -1;
+
+	str_copy(buffer, finddata.cFileName, length);
+
+	FindClose(handle);
+	return 0;
+#else
+	struct stat sb;
+	if (stat(name, &sb) == -1)
+		return -1;
+
+	str_copy(buffer, name, length);
+	return 0;
+#endif
+}
+
 void swap_endian(void *data, unsigned elem_size, unsigned num)
 {
 	char *src = (char*) data;
