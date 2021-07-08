@@ -74,6 +74,11 @@ public:
 		CMD_TEXTURE_DESTROY,
 		CMD_TEXTURE_UPDATE,
 
+		// stencil commands
+		CMD_ALPHAMASK_BEGIN,
+		CMD_ALPHAMASK_END,
+		CMD_ALPHAMASK_CLEAR,
+
 		// rendering
 		CMD_CLEAR,
 		CMD_RENDER,
@@ -244,6 +249,23 @@ public:
 		int m_Slot;
 	};
 
+	struct CAlphaMaskBeginCommand : public CCommand
+	{
+		CAlphaMaskBeginCommand() : CCommand(CMD_ALPHAMASK_BEGIN) {}
+
+		float m_Threshold;
+	};
+
+	struct CAlphaMaskEndCommand : public CCommand
+	{
+		CAlphaMaskEndCommand() : CCommand(CMD_ALPHAMASK_END) {}
+	};
+
+	struct CAlphaMaskClearCommand : public CCommand
+	{
+		CAlphaMaskClearCommand() : CCommand(CMD_ALPHAMASK_CLEAR) {}
+	};
+
 	//
 	CCommandBuffer(unsigned CmdBufferSize, unsigned DataBufferSize)
 	: m_CmdBuffer(CmdBufferSize), m_DataBuffer(DataBufferSize)
@@ -386,6 +408,10 @@ public:
 
 	virtual void ClipEnable(int x, int y, int w, int h);
 	virtual void ClipDisable();
+
+	virtual void AlphaMaskBegin(float Threshold);
+	virtual void AlphaMaskEnd();
+	virtual void AlphaMaskClear();
 
 	virtual void BlendNone();
 	virtual void BlendNormal();
