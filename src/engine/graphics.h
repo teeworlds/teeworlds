@@ -43,7 +43,6 @@ class CVideoMode
 {
 public:
 	int m_Width, m_Height;
-	int m_Red, m_Green, m_Blue;
 
 	bool operator<(const CVideoMode &Other) { return Other.m_Width < m_Width; }
 };
