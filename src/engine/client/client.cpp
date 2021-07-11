@@ -491,7 +491,6 @@ void CClient::OnEnterGame()
 	m_CurrentRecvTick = 0;
 	m_CurGameTick = 0;
 	m_PrevGameTick = 0;
-	m_CurMenuTick = 0;
 }
 
 void CClient::EnterGame()
@@ -1942,8 +1941,6 @@ void CClient::Run()
 		atexit(SDL_Quit); // ignore_convention
 	}
 
-	m_MenuStartTime = time_get();
-
 	// init graphics
 	{
 		m_pGraphics = CreateEngineGraphicsThreaded();
@@ -2144,14 +2141,6 @@ void CClient::Run()
 		if(State() == IClient::STATE_QUITING)
 			break;
 
-		// menu tick
-		if(State() == IClient::STATE_OFFLINE)
-		{
-			int64 t = time_get();
-			while(t > TickStartTime(m_CurMenuTick+1))
-				m_CurMenuTick++;
-		}
-
 		// beNice
 		if(Config()->m_ClCpuThrottle)
 			thread_sleep(Config()->m_ClCpuThrottle);
@@ -2195,14 +2184,12 @@ void CClient::Run()
 	m_ServerBrowser.SaveServerlist();
 
 	// shutdown SDL
-	{
-		SDL_Quit();
-	}
+	SDL_Quit();
 }
 
 int64 CClient::TickStartTime(int Tick)
 {
-	return m_MenuStartTime + (time_freq()*Tick)/m_GameTickSpeed;
+	return m_LocalStartTime + (time_freq()*Tick)/m_GameTickSpeed;
 }
 
 void CClient::Con_Connect(IConsole::IResult *pResult, void *pUserData)

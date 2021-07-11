@@ -828,11 +828,8 @@ int CGraphicsBackend_SDL_OpenGL::GetVideoModes(CVideoMode *pModes, int MaxModes,
 		return 0;
 	}
 
-	if(NumModes > MaxModes)
-		NumModes = MaxModes;
-
 	int ModesCount = 0;
-	for(int i = 0; i < NumModes; i++)
+	for(int i = 0; i < NumModes && ModesCount < MaxModes; i++)
 	{
 		SDL_DisplayMode Mode;
 		if(SDL_GetDisplayMode(Screen, i, &Mode) < 0)
@@ -855,9 +852,6 @@ int CGraphicsBackend_SDL_OpenGL::GetVideoModes(CVideoMode *pModes, int MaxModes,
 
 		pModes[ModesCount].m_Width = Mode.w;
 		pModes[ModesCount].m_Height = Mode.h;
-		pModes[ModesCount].m_Red = 8;
-		pModes[ModesCount].m_Green = 8;
-		pModes[ModesCount].m_Blue = 8;
 		ModesCount++;
 	}
 	return ModesCount;
