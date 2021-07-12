@@ -43,7 +43,7 @@ void CBroadcast::RenderServerBroadcast()
 {
 	if(!Config()->m_ClShowServerBroadcast || m_MuteServerBroadcast || !m_ServerBroadcastCursor.Rendered())
 		return;
-	if(m_pClient->m_pChat->IsActive())
+	if(m_pClient->m_Chat.IsActive())
 		return;
 
 	const float DisplayDuration = 10.0f;
@@ -86,7 +86,7 @@ void CBroadcast::RenderServerBroadcast()
 
 void CBroadcast::RenderClientBroadcast()
 {
-	if(m_pClient->m_pScoreboard->IsActive() || m_pClient->m_pMotd->IsActive() || !m_ClientBroadcastCursor.Rendered())
+	if(m_pClient->m_Scoreboard.IsActive() || m_pClient->m_Motd.IsActive() || !m_ClientBroadcastCursor.Rendered())
 		return;
 	if(Client()->LocalTime() >= m_BroadcastTime)
 		return;

@@ -113,12 +113,12 @@ int CControls::SnapInput(int *pData)
 	bool Send = false;
 
 	// update player state
-	if(m_pClient->m_pChat->IsActive())
+	if(m_pClient->m_Chat.IsActive())
 		m_InputData.m_PlayerFlags = PLAYERFLAG_CHATTING;
 	else
 		m_InputData.m_PlayerFlags = 0;
 
-	if(m_pClient->m_pScoreboard->IsActive())
+	if(m_pClient->m_Scoreboard.IsActive())
 		m_InputData.m_PlayerFlags |= PLAYERFLAG_SCOREBOARD;
 
 	if(m_LastData.m_PlayerFlags != m_InputData.m_PlayerFlags)
@@ -127,7 +127,7 @@ int CControls::SnapInput(int *pData)
 	m_LastData.m_PlayerFlags = m_InputData.m_PlayerFlags;
 
 	// we freeze the input if chat or menu is activated
-	if(m_pClient->m_pChat->IsActive() || m_pClient->m_pMenus->IsActive())
+	if(m_pClient->m_Chat.IsActive() || m_pClient->m_Menus.IsActive())
 	{
 		OnReset();
 
@@ -209,7 +209,7 @@ void CControls::OnRender()
 
 bool CControls::OnCursorMove(float x, float y, int CursorType)
 {
-	if(m_pClient->IsWorldPaused() || (m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_pChat->IsActive()))
+	if(m_pClient->IsWorldPaused() || (m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Chat.IsActive()))
 		return false;
 
 	if(CursorType == IInput::CURSOR_JOYSTICK

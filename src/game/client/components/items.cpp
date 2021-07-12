@@ -63,7 +63,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	// add particle for this projectile
 	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
-		m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
+		m_pClient->m_Effects.SmokeTrail(Pos, Vel*-1);
 		const float Now = Client()->LocalTime();
 		static float s_Time = 0.0f;
 		static float s_LastLocalTime = Now;
@@ -73,7 +73,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	}
 	else
 	{
-		m_pClient->m_pEffects->BulletTrail(Pos);
+		m_pClient->m_Effects.BulletTrail(Pos);
 		Graphics()->QuadsSetRotation(length(Vel) > 0.00001f ? angle(Vel) : 0);
 	}
 
@@ -113,7 +113,7 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		Size = g_pData->m_Weapons.m_aId[WEAPON_LASER].m_VisualSize;
 		break;
 	case PICKUP_NINJA:
-		m_pClient->m_pEffects->PowerupShine(Pos, vec2(96,18));
+		m_pClient->m_Effects.PowerupShine(Pos, vec2(96,18));
 		Size *= 2.0f;
 		Pos.x -= 10.0f;
 		break;

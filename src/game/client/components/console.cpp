@@ -655,7 +655,7 @@ void CGameConsole::Toggle(int Type)
 			UI()->SetEnabled(false);
 			m_ConsoleState = CONSOLE_OPENING;
 			// reset controls
-			m_pClient->m_pControls->OnReset();
+			m_pClient->m_Controls.OnReset();
 		}
 		else
 		{

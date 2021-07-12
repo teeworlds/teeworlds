@@ -733,7 +733,7 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 		{
 			if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
 			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
+				m_pClient->m_Sounds.Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
 				m_aLastSoundPlayed[CHAT_SERVER] = Now;
 			}
 		}
@@ -741,7 +741,7 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 		{
 			if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
 			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
+				m_pClient->m_Sounds.Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
 				m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
 			}
 		}
@@ -749,7 +749,7 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 		{
 			if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
 			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
+				m_pClient->m_Sounds.Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
 				m_aLastSoundPlayed[CHAT_CLIENT] = Now;
 			}
 		}
@@ -944,13 +944,13 @@ void CChat::OnRender()
 
 			//Check if key exists with bind
 			int KeyID, Modifier;
-			m_pClient->m_pBinds->GetKeyID(GetCommandName(m_ChatBufferMode), KeyID, Modifier);
+			m_pClient->m_Binds.GetKeyID(GetCommandName(m_ChatBufferMode), KeyID, Modifier);
 
 			if(KeyID < KEY_LAST)
 			{
 				//find keyname and format text
 				char aKeyName[64];
-				m_pClient->m_pBinds->GetKey(GetCommandName(m_ChatBufferMode), aKeyName, sizeof(aKeyName), KeyID, Modifier);
+				m_pClient->m_Binds.GetKey(GetCommandName(m_ChatBufferMode), aKeyName, sizeof(aKeyName), KeyID, Modifier);
 
 				char aInfoText[128];
 				str_format(aInfoText, sizeof(aInfoText), Localize("Press %s to resume chatting"), aKeyName);
@@ -1009,8 +1009,8 @@ void CChat::OnRender()
 	const int64 TimeFreq = time_freq();
 
 	// get scoreboard data
-	const bool IsScoreboardActive = m_pClient->m_pScoreboard->IsActive();
-	CUIRect ScoreboardRect = m_pClient->m_pScoreboard->GetScoreboardRect();
+	const bool IsScoreboardActive = m_pClient->m_Scoreboard.IsActive();
+	CUIRect ScoreboardRect = m_pClient->m_Scoreboard.GetScoreboardRect();
 	const CUIRect ScoreboardScreen = *UI()->Screen();
 	CUIRect ScoreboardRectFixed;
 	ScoreboardRectFixed.x = ScoreboardRect.x/ScoreboardScreen.w * Width;

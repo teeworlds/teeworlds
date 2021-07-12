@@ -24,7 +24,7 @@ void CNamePlates::RenderNameplate(
 
 	float a = 1;
 	if(Config()->m_ClNameplatesAlways == 0)
-		a = clamp(1-powf(distance(m_pClient->m_pControls->m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
+		a = clamp(1-powf(distance(m_pClient->m_Controls.m_TargetPos, Position)/200.0f,16.0f), 0.0f, 1.0f);
 
 	char aName[64];
 	str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[ClientID].m_aName: "");

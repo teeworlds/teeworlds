@@ -1796,7 +1796,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		}
 		Rect.w = Rect.h * 2;
 		vec4 Color(1.0f, 1.0f, 1.0f, FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY ? 1.0f : 0.5f);
-		m_pClient->m_pCountryFlags->Render(FilterInfo.m_Country, &Color, Rect.x, Rect.y, Rect.w, Rect.h);
+		m_pClient->m_CountryFlags.Render(FilterInfo.m_Country, &Color, Rect.x, Rect.y, Rect.w, Rect.h);
 
 		static int s_BrFilterCountryIndex = 0;
 		if((FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY) && UI()->DoButtonLogic(&s_BrFilterCountryIndex, &Rect))
@@ -2047,7 +2047,7 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 		Flag.HMargin(4.0f, &Flag);
 		Flag.w = Flag.h*2;
 		vec4 FlagColor(1.0f, 1.0f, 1.0f, 0.5f);
-		m_pClient->m_pCountryFlags->Render(pInfo->m_aClients[i].m_Country, &FlagColor, Flag.x, Flag.y, Flag.w, Flag.h);
+		m_pClient->m_CountryFlags.Render(pInfo->m_aClients[i].m_Country, &FlagColor, Flag.x, Flag.y, Flag.w, Flag.h);
 	}
 
 	s_ScrollRegion.End();

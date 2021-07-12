@@ -269,7 +269,7 @@ void CSkins::OnInit()
 			m_aaSkinParts[p].add(DummySkinPart);
 		}
 
-		m_pClient->m_pMenus->RenderLoading(5);
+		m_pClient->m_Menus.RenderLoading(5);
 	}
 
 	// create dummy skin
@@ -288,12 +288,12 @@ void CSkins::OnInit()
 		m_DummySkin.m_aPartColors[p] = p==SKINPART_MARKING ? (255<<24)+65408 : 65408;
 		m_DummySkin.m_aUseCustomColors[p] = 0;
 	}
-	m_pClient->m_pMenus->RenderLoading(1);
+	m_pClient->m_Menus.RenderLoading(1);
 
 	// load skins
 	m_aSkins.clear();
 	Storage()->ListDirectory(IStorage::TYPE_ALL, "skins", SkinScan, this);
-	m_pClient->m_pMenus->RenderLoading(5);
+	m_pClient->m_Menus.RenderLoading(5);
 
 	// add dummy skin
 	if(!m_aSkins.size())
@@ -317,7 +317,7 @@ void CSkins::OnInit()
 			m_XmasHatTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 		}
 	}
-	m_pClient->m_pMenus->RenderLoading(1);
+	m_pClient->m_Menus.RenderLoading(1);
 
 	{
 		// add bot decoration
@@ -337,7 +337,7 @@ void CSkins::OnInit()
 			m_BotTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 		}
 	}
-	m_pClient->m_pMenus->RenderLoading(1);
+	m_pClient->m_Menus.RenderLoading(1);
 }
 
 void CSkins::AddSkin(const char *pSkinName)

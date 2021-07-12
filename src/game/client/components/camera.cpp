@@ -46,17 +46,17 @@ void CCamera::OnRender()
 		{
 			if(m_CamType != CAMTYPE_SPEC)
 			{
-				m_pClient->m_pControls->m_MousePos = m_PrevCenter;
-				m_pClient->m_pControls->ClampMousePos();
+				m_pClient->m_Controls.m_MousePos = m_PrevCenter;
+				m_pClient->m_Controls.ClampMousePos();
 				m_CamType = CAMTYPE_SPEC;
 			}
-			m_Center = m_pClient->m_pControls->m_MousePos;
+			m_Center = m_pClient->m_Controls.m_MousePos;
 		}
 		else
 		{
 			if(m_CamType != CAMTYPE_PLAYER)
 			{
-				m_pClient->m_pControls->ClampMousePos();
+				m_pClient->m_Controls.ClampMousePos();
 				m_CamType = CAMTYPE_PLAYER;
 			}
 
@@ -73,7 +73,7 @@ void CCamera::OnRender()
 				s_SpeedBias += CameraSpeed * DeltaTime;
 				if(Config()->m_ClDynamicCamera)
 				{
-					s_SpeedBias -= length(m_pClient->m_pControls->m_MousePos - s_LastMousePos) * log10f(CameraStabilizingFactor) * 0.02f;
+					s_SpeedBias -= length(m_pClient->m_Controls.m_MousePos - s_LastMousePos) * log10f(CameraStabilizingFactor) * 0.02f;
 					s_SpeedBias = clamp(s_SpeedBias, 0.5f, CameraSpeed);
 				}
 				else
@@ -83,7 +83,7 @@ void CCamera::OnRender()
 			}
 
 			vec2 TargetCameraOffset(0, 0);
-			s_LastMousePos = m_pClient->m_pControls->m_MousePos;
+			s_LastMousePos = m_pClient->m_Controls.m_MousePos;
 			float l = length(s_LastMousePos);
 			if(Config()->m_ClDynamicCamera && l > 0.0001f) // make sure that this isn't 0
 			{
@@ -91,7 +91,7 @@ void CCamera::OnRender()
 				float FollowFactor = Config()->m_ClMouseFollowfactor/100.0f;
 				float OffsetAmount = max(l-DeadZone, 0.0f) * FollowFactor;
 
-				TargetCameraOffset = normalize(m_pClient->m_pControls->m_MousePos)*OffsetAmount;
+				TargetCameraOffset = normalize(m_pClient->m_Controls.m_MousePos)*OffsetAmount;
 			}
 			
 			if(Config()->m_ClCameraSmoothness > 0)

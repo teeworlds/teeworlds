@@ -150,7 +150,7 @@ void CCountryFlags::OnInit()
 		mem_zero(DummyEntry.m_aCountryCodeString, sizeof(DummyEntry.m_aCountryCodeString));
 		m_aCountryFlags.add(DummyEntry);
 	}
-	m_pClient->m_pMenus->RenderLoading(10);
+	m_pClient->m_Menus.RenderLoading(10);
 }
 
 int CCountryFlags::Num() const

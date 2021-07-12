@@ -315,9 +315,9 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 	if(m_RefreshSkinSelector)
 	{
 		s_paSkinList.clear();
-		for(int i = 0; i < m_pClient->m_pSkins->Num(); ++i)
+		for(int i = 0; i < m_pClient->m_Skins.Num(); ++i)
 		{
-			const CSkins::CSkin *s = m_pClient->m_pSkins->Get(i);
+			const CSkins::CSkin *s = m_pClient->m_Skins.Get(i);
 			// no special skins
 			if((s->m_Flags&CSkins::SKINFLAG_SPECIAL) == 0 && s_ListBox.FilterMatches(s->m_aName))
 			{
@@ -353,7 +353,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 				if(s->m_aUseCustomColors[p])
 				{
 					Info.m_aTextures[p] = s->m_apParts[p]->m_ColorTexture;
-					Info.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(s->m_aPartColors[p], p==SKINPART_MARKING);
+					Info.m_aColors[p] = m_pClient->m_Skins.GetColorV4(s->m_aPartColors[p], p==SKINPART_MARKING);
 				}
 				else
 				{
@@ -416,9 +416,9 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
 			s_paList[p].clear();
-			for(int i = 0; i < m_pClient->m_pSkins->NumSkinPart(p); ++i)
+			for(int i = 0; i < m_pClient->m_Skins.NumSkinPart(p); ++i)
 			{
-				const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(p, i);
+				const CSkins::CSkinPart *s = m_pClient->m_Skins.GetSkinPart(p, i);
 				// no special skins
 				if((s->m_Flags&CSkins::SKINFLAG_SPECIAL) == 0 && s_ListBox.FilterMatches(s->m_aName))
 				{
@@ -448,15 +448,15 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			CTeeRenderInfo Info;
 			for(int j = 0; j < NUM_SKINPARTS; j++)
 			{
-				int SkinPart = m_pClient->m_pSkins->FindSkinPart(j, CSkins::ms_apSkinVariables[j], false);
-				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(j, SkinPart);
+				int SkinPart = m_pClient->m_Skins.FindSkinPart(j, CSkins::ms_apSkinVariables[j], false);
+				const CSkins::CSkinPart *pSkinPart = m_pClient->m_Skins.GetSkinPart(j, SkinPart);
 				if(*CSkins::ms_apUCCVariables[j])
 				{
 					if(m_TeePartSelected == j)
 						Info.m_aTextures[j] = s->m_ColorTexture;
 					else
 						Info.m_aTextures[j] = pSkinPart->m_ColorTexture;
-					Info.m_aColors[j] = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[j], j==SKINPART_MARKING);
+					Info.m_aColors[j] = m_pClient->m_Skins.GetColorV4(*CSkins::ms_apColorVariables[j], j==SKINPART_MARKING);
 				}
 				else
 				{
@@ -537,7 +537,7 @@ void CMenus::RenderSkinPartPalette(CUIRect MainView)
 			Button.VSplitLeft(HMargin, 0, &Button);
 			Button.VSplitRight(HMargin, &Button, 0);
 
-			vec4 PartColor = m_pClient->m_pSkins->GetColorV4(*CSkins::ms_apColorVariables[p], p==SKINPART_MARKING);
+			vec4 PartColor = m_pClient->m_Skins.GetColorV4(*CSkins::ms_apColorVariables[p], p==SKINPART_MARKING);
 
 			bool Hovered = UI()->HotItem() == &s_aColorPalettes[p];
 			bool Clicked = UI()->DoButtonLogic(&s_aColorPalettes[p], &Button);
@@ -745,7 +745,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 			Rect.VMargin(6.0f, &Rect);
 			Rect.HMargin(3.0f, &Rect);
 			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
-			m_pClient->m_pCountryFlags->Render(r.front().m_CountryCode, &Color, Rect.x, Rect.y, Rect.w, Rect.h, true);
+			m_pClient->m_CountryFlags.Render(r.front().m_CountryCode, &Color, Rect.x, Rect.y, Rect.w, Rect.h, true);
 			if(Item.m_Selected)
 			{
 				TextRender()->TextColor(CUI::ms_HighlightTextColor);
@@ -862,7 +862,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 		m_ActiveListBox = ACTLB_THEME;
 		str_copy(Config()->m_ClMenuMap, m_lThemes[SelectedTheme].m_Name, sizeof(Config()->m_ClMenuMap));
 		Config()->m_ClShowMenuMap = m_lThemes[SelectedTheme].m_Name[0] ? 1 : 0;
-		m_pClient->m_pMapLayersBackGround->BackgroundMapUpdate();
+		m_pClient->m_MapLayersBackGround.BackgroundMapUpdate();
 	}
 }
 
@@ -1249,16 +1249,16 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			aColorVars[p] = *CSkins::ms_apColorVariables[p];
 		}
 
-		m_pClient->m_pSkins->ValidateSkinParts(apSkinPartsPtr, aUCCVars, aColorVars, 0);
+		m_pClient->m_Skins.ValidateSkinParts(apSkinPartsPtr, aUCCVars, aColorVars, 0);
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, apSkinPartsPtr[p], false);
-			const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
+			int SkinPart = m_pClient->m_Skins.FindSkinPart(p, apSkinPartsPtr[p], false);
+			const CSkins::CSkinPart *pSkinPart = m_pClient->m_Skins.GetSkinPart(p, SkinPart);
 			if(aUCCVars[p])
 			{
 				OwnSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				OwnSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(aColorVars[p], p==SKINPART_MARKING);
+				OwnSkinInfo.m_aColors[p] = m_pClient->m_Skins.GetColorV4(aColorVars[p], p==SKINPART_MARKING);
 			}
 			else
 			{
@@ -1285,7 +1285,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			int TeeEmote = Distance < 20.0f ? EMOTE_HAPPY : EMOTE_NORMAL;
 			RenderTools()->RenderTee(CAnimState::GetIdle(), &OwnSkinInfo, TeeEmote, TeeDirection, TeePosition);
 			if(Distance < 20.0f && UI()->MouseButtonClicked(0))
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_PLAYER_SPAWN, 0);
+				m_pClient->m_Sounds.Play(CSounds::CHN_GUI, SOUND_PLAYER_SPAWN, 0);
 		}
 
 		// handle right (team skins)
@@ -1301,16 +1301,16 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 			aColorVars[p] = *CSkins::ms_apColorVariables[p];
 		}
 
-		m_pClient->m_pSkins->ValidateSkinParts(apSkinPartsPtr, aUCCVars, aColorVars, GAMEFLAG_TEAMS);
+		m_pClient->m_Skins.ValidateSkinParts(apSkinPartsPtr, aUCCVars, aColorVars, GAMEFLAG_TEAMS);
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int SkinPart = m_pClient->m_pSkins->FindSkinPart(p, apSkinPartsPtr[p], false);
-			const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(p, SkinPart);
+			int SkinPart = m_pClient->m_Skins.FindSkinPart(p, apSkinPartsPtr[p], false);
+			const CSkins::CSkinPart *pSkinPart = m_pClient->m_Skins.GetSkinPart(p, SkinPart);
 			if(aUCCVars[p])
 			{
 				TeamSkinInfo.m_aTextures[p] = pSkinPart->m_ColorTexture;
-				TeamSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(aColorVars[p], p==SKINPART_MARKING);
+				TeamSkinInfo.m_aColors[p] = m_pClient->m_Skins.GetColorV4(aColorVars[p], p==SKINPART_MARKING);
 			}
 			else
 			{
@@ -1332,8 +1332,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int TeamColor = m_pClient->m_pSkins->GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_RED, p);
-			TeamSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_MARKING);
+			int TeamColor = m_pClient->m_Skins.GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_RED, p);
+			TeamSkinInfo.m_aColors[p] = m_pClient->m_Skins.GetColorV4(TeamColor, p==SKINPART_MARKING);
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeamSkinInfo, 0, vec2(1, 0), vec2(TeeLeft.x+TeeLeft.w/2.0f, TeeLeft.y+TeeLeft.h/2.0f+6.0f));
 
@@ -1341,8 +1341,8 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
-			int TeamColor = m_pClient->m_pSkins->GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_BLUE, p);
-			TeamSkinInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(TeamColor, p==SKINPART_MARKING);
+			int TeamColor = m_pClient->m_Skins.GetTeamColor(aUCCVars[p], aColorVars[p], TEAM_BLUE, p);
+			TeamSkinInfo.m_aColors[p] = m_pClient->m_Skins.GetColorV4(TeamColor, p==SKINPART_MARKING);
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeamSkinInfo, 0, vec2(-1, 0), vec2(TeeRight.x+TeeRight.w/2.0f, TeeRight.y+TeeRight.h/2.0f+6.0f));
 	}
@@ -1382,7 +1382,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		
 		Button.Margin(10.0f, &Flag);
 		vec4 Color = vec4(1,1,1,1);
-		m_pClient->m_pCountryFlags->Render(Config()->m_PlayerCountry, &Color, Flag.x, Flag.y, Flag.w, Flag.h);
+		m_pClient->m_CountryFlags.Render(Config()->m_PlayerCountry, &Color, Flag.x, Flag.y, Flag.w, Flag.h);
 
 		if(UI()->DoButtonLogic(&Config()->m_PlayerCountry, &Button))
 			PopupCountry(Config()->m_PlayerCountry, &CMenus::PopupConfirmPlayerCountry);
@@ -1420,7 +1420,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		static CButtonContainer s_RandomizeSkinButton;
 		if(DoButton_Menu(&s_RandomizeSkinButton, Localize("Randomize"), 0, &Button))
 		{
-			m_pClient->m_pSkins->RandomizeSkin();
+			m_pClient->m_Skins.RandomizeSkin();
 			Config()->m_PlayerSkin[0] = 0;
 			m_SkinModified = true;
 		}
@@ -1470,7 +1470,7 @@ void CMenus::PopupConfirmDeleteSkin()
 		str_format(aBuf, sizeof(aBuf), "skins/%s.json", m_pSelectedSkin->m_aName);
 		if(Storage()->RemoveFile(aBuf, IStorage::TYPE_SAVE))
 		{
-			m_pClient->m_pSkins->RemoveSkin(m_pSelectedSkin);
+			m_pClient->m_Skins.RemoveSkin(m_pSelectedSkin);
 			m_RefreshSkinSelector = true;
 			m_pSelectedSkin = 0;
 		}
@@ -2119,7 +2119,7 @@ void CMenus::ResetSettingsGeneral()
 
 void CMenus::ResetSettingsControls()
 {
-	m_pClient->m_pBinds->SetDefaults();
+	m_pClient->m_Binds.SetDefaults();
 }
 
 void CMenus::ResetSettingsGraphics()

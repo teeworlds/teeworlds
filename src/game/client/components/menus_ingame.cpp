@@ -415,9 +415,9 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 		CUIRect Button;
 		ServerInfo.HSplitBottom(20.0f, &ServerInfo, &Button);
 		static int s_MuteBroadcast = 0;
-		if(DoButton_CheckBox(&s_MuteBroadcast, Localize("Mute broadcasts"), m_pClient->m_pBroadcast->IsMuteServerBroadcast(), &Button))
+		if(DoButton_CheckBox(&s_MuteBroadcast, Localize("Mute broadcasts"), m_pClient->m_Broadcast.IsMuteServerBroadcast(), &Button))
 		{
-			m_pClient->m_pBroadcast->ToggleMuteServerBroadcast();
+			m_pClient->m_Broadcast.ToggleMuteServerBroadcast();
 		}
 	}
 
@@ -499,7 +499,7 @@ void CMenus::RenderServerInfo(CUIRect MainView)
 	s_MenuMotdCursor.m_MaxLines = -1;
 	s_MenuMotdCursor.m_Flags = TEXTFLAG_ALLOW_NEWLINE | TEXTFLAG_WORD_WRAP;
 	s_MenuMotdCursor.Reset();
-	TextRender()->TextOutlined(&s_MenuMotdCursor, m_pClient->m_pMotd->GetMotd(), -1);
+	TextRender()->TextOutlined(&s_MenuMotdCursor, m_pClient->m_Motd.GetMotd(), -1);
 
 	// define the MOTD text area and make it scrollable
 	CUIRect MotdTextArea;
@@ -514,9 +514,9 @@ bool CMenus::RenderServerControlServer(CUIRect MainView)
 	static CListBox s_ListBox;
 	CUIRect List = MainView;
 	s_ListBox.DoHeader(&List, Localize("Option"), GetListHeaderHeight());
-	s_ListBox.DoStart(20.0f, m_pClient->m_pVoting->NumVoteOptions(), 1, 3, m_CallvoteSelectedOption, 0, true, 0, CUIRect::CORNER_NONE);
+	s_ListBox.DoStart(20.0f, m_pClient->m_Voting.NumVoteOptions(), 1, 3, m_CallvoteSelectedOption, 0, true, 0, CUIRect::CORNER_NONE);
 
-	for(const CVoteOptionClient *pOption = m_pClient->m_pVoting->FirstVoteOption(); pOption; pOption = pOption->m_pNext)
+	for(const CVoteOptionClient *pOption = m_pClient->m_Voting.FirstVoteOption(); pOption; pOption = pOption->m_pNext)
 	{
 		if(m_aFilterString[0] && !pOption->m_IsSubheader && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
 			continue; // no match found
@@ -617,7 +617,7 @@ void CMenus::HandleCallvote(int Page, bool Force)
 	{
 		// find the correct index within the filtered list
 		int RealIndex = 0, FilteredIndex = 0;
-		for(const CVoteOptionClient *pOption = m_pClient->m_pVoting->FirstVoteOption(); pOption; pOption = pOption->m_pNext, RealIndex++)
+		for(const CVoteOptionClient *pOption = m_pClient->m_Voting.FirstVoteOption(); pOption; pOption = pOption->m_pNext, RealIndex++)
 		{
 			if(m_aFilterString[0] && !pOption->m_IsSubheader && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
 				continue; // no match found
@@ -630,14 +630,14 @@ void CMenus::HandleCallvote(int Page, bool Force)
 
 			FilteredIndex++;
 		}
-		m_pClient->m_pVoting->CallvoteOption(RealIndex, m_aCallvoteReason, Force);
+		m_pClient->m_Voting.CallvoteOption(RealIndex, m_aCallvoteReason, Force);
 	}
 	else if(Page == 1)
 	{
 		if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
 			m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
 		{
-			m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason, Force);
+			m_pClient->m_Voting.CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason, Force);
 			SetActive(false);
 		}
 	}
@@ -646,7 +646,7 @@ void CMenus::HandleCallvote(int Page, bool Force)
 		if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
 			m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
 		{
-			m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason, Force);
+			m_pClient->m_Voting.CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason, Force);
 			SetActive(false);
 		}
 	}
@@ -662,11 +662,11 @@ void CMenus::RenderServerControl(CUIRect MainView)
 	char aBuf[64];
 	const bool Authed = Client()->RconAuthed();
 
-	if(m_pClient->m_pVoting->IsVoting())
+	if(m_pClient->m_Voting.IsVoting())
 		pNotification = Localize("Wait for current vote to end before calling a new one.");
-	else if(m_pClient->m_pVoting->CallvoteBlockTime() != 0)
+	else if(m_pClient->m_Voting.CallvoteBlockTime() != 0)
 	{
-		str_format(aBuf, sizeof(aBuf), Localize("You must wait %d seconds before making another vote"), m_pClient->m_pVoting->CallvoteBlockTime());
+		str_format(aBuf, sizeof(aBuf), Localize("You must wait %d seconds before making another vote"), m_pClient->m_Voting.CallvoteBlockTime());
 		pNotification = aBuf;
 	}
 	else if(!Authed && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
@@ -832,7 +832,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Bottom.VSplitRight(ColumnWidth, 0, &Button);
 				static CButtonContainer s_RemoveVoteButton;
 				if(DoButton_Menu(&s_RemoveVoteButton, Localize("Remove"), 0, &Button))
-					m_pClient->m_pVoting->RconRemoveVoteOption(m_CallvoteSelectedOption);
+					m_pClient->m_Voting.RconRemoveVoteOption(m_CallvoteSelectedOption);
 
 				// add vote
 				Extended.HSplitTop(LineHeight, &Bottom, &Extended);
@@ -849,7 +849,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				static CButtonContainer s_AddVoteButton;
 				if(DoButton_Menu(&s_AddVoteButton, Localize("Add"), 0, &Button))
 					if(s_aVoteDescription[0] != 0 && s_aVoteCommand[0] != 0)
-						m_pClient->m_pVoting->RconAddVoteOption(s_aVoteDescription, s_aVoteCommand);
+						m_pClient->m_Voting.RconAddVoteOption(s_aVoteDescription, s_aVoteCommand);
 
 				Bottom.VSplitLeft(2*ColumnWidth+Spacing, &Button, &Bottom);
 				static float s_OffsetDesc = 0.0f;

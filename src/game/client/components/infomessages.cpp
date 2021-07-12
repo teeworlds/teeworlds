@@ -74,20 +74,20 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 		{
 			bool IsTeamplay = (m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS) != 0;
 			int KillerTeam = - 1 - Kill.m_Player2ID;
-			int Skin = m_pClient->m_pSkins->Find("dummy", false);
+			int Skin = m_pClient->m_Skins.Find("dummy", false);
 			if(Skin != -1)
 			{
-				const CSkins::CSkin *pDummy = m_pClient->m_pSkins->Get(Skin);
+				const CSkins::CSkin *pDummy = m_pClient->m_Skins.Get(Skin);
 				for(int p = 0; p < NUM_SKINPARTS; p++)
 				{
 					Kill.m_Player2RenderInfo.m_aTextures[p] = pDummy->m_apParts[p]->m_OrgTexture;
 					if(IsTeamplay)
 					{
-						int ColorVal = m_pClient->m_pSkins->GetTeamColor(0, 0x000000, KillerTeam, p);
-						Kill.m_Player2RenderInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==SKINPART_MARKING);
+						int ColorVal = m_pClient->m_Skins.GetTeamColor(0, 0x000000, KillerTeam, p);
+						Kill.m_Player2RenderInfo.m_aColors[p] = m_pClient->m_Skins.GetColorV4(ColorVal, p==SKINPART_MARKING);
 					}
 					else
-						Kill.m_Player2RenderInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(0x000000, p==SKINPART_MARKING);
+						Kill.m_Player2RenderInfo.m_aColors[p] = m_pClient->m_Skins.GetColorV4(0x000000, p==SKINPART_MARKING);
 					Kill.m_Player2RenderInfo.m_aColors[p].a *= .5f;
 				}
 				Kill.m_Player2RenderInfo.m_Size = 64.0f;
@@ -130,7 +130,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 				str_append(aBuf, aImprovement, sizeof(aBuf));
 			}
 
-			m_pClient->m_pChat->AddLine(aBuf);
+			m_pClient->m_Chat.AddLine(aBuf);
 		}
 
 		if(m_pClient->m_Snap.m_pGameDataRace && m_pClient->m_Snap.m_pGameDataRace->m_RaceFlags&RACEFLAG_FINISHMSG_AS_CHAT)
@@ -138,7 +138,7 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 			if(!pMsg->m_RecordPersonal && !pMsg->m_RecordServer) // don't print the time twice
 			{
 				str_format(aBuf, sizeof(aBuf), Localize("'%s' finished in: %s"), aLabel, aTime);
-				m_pClient->m_pChat->AddLine(aBuf);
+				m_pClient->m_Chat.AddLine(aBuf);
 			}
 		}
 		else

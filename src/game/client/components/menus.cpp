@@ -778,7 +778,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		if(DoButton_MenuTabTop(&s_GeneralButton, Localize("General"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage==SETTINGS_GENERAL, &Button,
 			Config()->m_UiSettingsPage == SETTINGS_GENERAL ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GENERAL);
+			m_pClient->m_Camera.ChangePosition(CCamera::POS_SETTINGS_GENERAL);
 			Config()->m_UiSettingsPage = SETTINGS_GENERAL;
 		}
 
@@ -789,7 +789,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 			if(DoButton_MenuTabTop(&s_PlayerButton, Localize("Player"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage == SETTINGS_PLAYER, &Button,
 				Config()->m_UiSettingsPage == SETTINGS_PLAYER ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 			{
-				m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_PLAYER);
+				m_pClient->m_Camera.ChangePosition(CCamera::POS_SETTINGS_PLAYER);
 				Config()->m_UiSettingsPage = SETTINGS_PLAYER;
 			}
 		}
@@ -803,7 +803,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		// 	if(DoButton_MenuTabTop(&s_TeeButton, Localize("TBD"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage == SETTINGS_TBD, &Button,
 		// 		Config()->m_UiSettingsPage == SETTINGS_TBD ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 		// 	{
-		// 		m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_TBD);
+		// 		m_pClient->m_Camera.ChangePosition(CCamera::POS_SETTINGS_TBD);
 		// 		Config()->m_UiSettingsPage = SETTINGS_TBD;
 		// 	}
 		// }
@@ -814,7 +814,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		if(DoButton_MenuTabTop(&s_ControlsButton, Localize("Controls"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage==SETTINGS_CONTROLS, &Button,
 			Config()->m_UiSettingsPage == SETTINGS_CONTROLS ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_CONTROLS);
+			m_pClient->m_Camera.ChangePosition(CCamera::POS_SETTINGS_CONTROLS);
 			Config()->m_UiSettingsPage = SETTINGS_CONTROLS;
 		}
 
@@ -824,7 +824,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		if(DoButton_MenuTabTop(&s_GraphicsButton, Localize("Graphics"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage==SETTINGS_GRAPHICS, &Button,
 			Config()->m_UiSettingsPage == SETTINGS_GRAPHICS ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_GRAPHICS);
+			m_pClient->m_Camera.ChangePosition(CCamera::POS_SETTINGS_GRAPHICS);
 			Config()->m_UiSettingsPage = SETTINGS_GRAPHICS;
 		}
 
@@ -834,7 +834,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		if(DoButton_MenuTabTop(&s_SoundButton, Localize("Sound"), Client()->State() == IClient::STATE_OFFLINE && Config()->m_UiSettingsPage==SETTINGS_SOUND, &Button,
 			Config()->m_UiSettingsPage == SETTINGS_SOUND ? 1.0f : NotActiveAlpha, 1.0f, Corners))
 		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_SETTINGS_SOUND);
+			m_pClient->m_Camera.ChangePosition(CCamera::POS_SETTINGS_SOUND);
 			Config()->m_UiSettingsPage = SETTINGS_SOUND;
 		}
 	}
@@ -859,7 +859,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		if(DoButton_MenuTabTop(&s_InternetButton, Localize("Global"), m_ActivePage==PAGE_INTERNET && Client()->State() == IClient::STATE_OFFLINE, &Button,
 			m_ActivePage==PAGE_INTERNET ? 1.0f : NotActiveAlpha, 1.0f, Corners) || CheckHotKey(KEY_G))
 		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_INTERNET);
+			m_pClient->m_Camera.ChangePosition(CCamera::POS_INTERNET);
 			ServerBrowser()->SetType(IServerBrowser::TYPE_INTERNET);
 			NewPage = PAGE_INTERNET;
 			Config()->m_UiBrowserPage = PAGE_INTERNET;
@@ -871,7 +871,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 		if(DoButton_MenuTabTop(&s_LanButton, Localize("Local"), m_ActivePage==PAGE_LAN && Client()->State() == IClient::STATE_OFFLINE, &Button,
 			m_ActivePage==PAGE_LAN ? 1.0f : NotActiveAlpha, 1.0f, Corners) || CheckHotKey(KEY_L))
 		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_LAN);
+			m_pClient->m_Camera.ChangePosition(CCamera::POS_LAN);
 			ServerBrowser()->SetType(IServerBrowser::TYPE_LAN);
 			NewPage = PAGE_LAN;
 			Config()->m_UiBrowserPage = PAGE_LAN;
@@ -1249,7 +1249,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 		s_InitTick--;
 		if(s_InitTick == 4)
 		{
-			m_pClient->m_pCamera->ChangePosition(CCamera::POS_START);
+			m_pClient->m_Camera.ChangePosition(CCamera::POS_START);
 			UpdateMusicState();
 		}
 		else if(s_InitTick == 0)
@@ -1632,11 +1632,11 @@ void CMenus::RenderMenu(CUIRect Screen)
 			// selected filter
 			static CListBox s_ListBox;
 			int OldSelected = -1;
-			s_ListBox.DoStart(40.0f, m_pClient->m_pCountryFlags->Num(), 12, 1, OldSelected, &Box, false);
+			s_ListBox.DoStart(40.0f, m_pClient->m_CountryFlags.Num(), 12, 1, OldSelected, &Box, false);
 
-			for(int i = 0; i < m_pClient->m_pCountryFlags->Num(); ++i)
+			for(int i = 0; i < m_pClient->m_CountryFlags.Num(); ++i)
 			{
-				const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
+				const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_CountryFlags.GetByIndex(i);
 				if(pEntry->m_Blocked)
 					continue;
 				if(pEntry->m_CountryCode == m_PopupSelection)
@@ -1675,7 +1675,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 
 			const int NewSelected = s_ListBox.DoEnd();
 			if(OldSelected != NewSelected)
-				m_PopupSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
+				m_PopupSelection = m_pClient->m_CountryFlags.GetByIndex(NewSelected, true)->m_CountryCode;
 
 			Part.VMargin(120.0f, &Part);
 
@@ -1768,7 +1768,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 				if(m_aSaveSkinName[0] && m_aSaveSkinName[0] != 'x' && m_aSaveSkinName[1] != '_')
 				{
 					m_Popup = POPUP_NONE;
-					m_pClient->m_pSkins->SaveSkinfile(m_aSaveSkinName);
+					m_pClient->m_Skins.SaveSkinfile(m_aSaveSkinName);
 					m_RefreshSkinSelector = true;
 				}
 			}
@@ -2033,7 +2033,7 @@ bool CMenus::CheckHotKey(int Key) const
 
 bool CMenus::IsBackgroundNeeded() const
 { 
-	return !m_pClient->m_InitComplete || (Client()->State() != IClient::STATE_ONLINE && !m_pClient->m_pMapLayersBackGround->MenuMapLoaded());
+	return !m_pClient->m_InitComplete || (Client()->State() != IClient::STATE_ONLINE && !m_pClient->m_MapLayersBackGround.MenuMapLoaded());
 }
 
 void CMenus::RenderBackground(float Time)
@@ -2091,10 +2091,10 @@ void CMenus::ConchainUpdateMusicState(IConsole::IResult *pResult, void *pUserDat
 void CMenus::UpdateMusicState()
 {
 	bool ShouldPlay = Client()->State() == IClient::STATE_OFFLINE && Config()->m_SndEnable && Config()->m_SndMusic;
-	if(ShouldPlay && !m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
-		m_pClient->m_pSounds->Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
-	else if(!ShouldPlay && m_pClient->m_pSounds->IsPlaying(SOUND_MENU))
-		m_pClient->m_pSounds->Stop(SOUND_MENU);
+	if(ShouldPlay && !m_pClient->m_Sounds.IsPlaying(SOUND_MENU))
+		m_pClient->m_Sounds.Enqueue(CSounds::CHN_MUSIC, SOUND_MENU);
+	else if(!ShouldPlay && m_pClient->m_Sounds.IsPlaying(SOUND_MENU))
+		m_pClient->m_Sounds.Stop(SOUND_MENU);
 }
 
 void CMenus::SetMenuPage(int NewPage)
@@ -2117,7 +2117,7 @@ void CMenus::SetMenuPage(int NewPage)
 		case PAGE_LAN: CameraPos = CCamera::POS_LAN;
 		}
 
-		if(CameraPos != -1 && m_pClient && m_pClient->m_pCamera)
-			m_pClient->m_pCamera->ChangePosition(CameraPos);
+		if(CameraPos != -1 && m_pClient)
+			m_pClient->m_Camera.ChangePosition(CameraPos);
 	}
 }

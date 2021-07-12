@@ -38,9 +38,9 @@ void CHud::OnReset()
 
 bool CHud::IsLargeWarmupTimerShown()
 {
-	return !m_pClient->m_pMotd->IsActive()
-		&& !m_pClient->m_pScoreboard->IsActive()
-		&& !m_pClient->m_pStats->IsActive()
+	return !m_pClient->m_Motd.IsActive()
+		&& !m_pClient->m_Scoreboard.IsActive()
+		&& !m_pClient->m_Stats.IsActive()
 		&& (m_WarmupHideTick == 0 || (time_get() - m_WarmupHideTick) / time_freq() < 10); // inactivity based
 }
 
@@ -575,7 +575,7 @@ void CHud::RenderTeambalanceWarning()
 
 void CHud::RenderVoting()
 {
-	if(!m_pClient->m_pVoting->IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	if(!m_pClient->m_Voting.IsVoting() || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
 	CUIRect Rect = {-10.0f, 58.0f, 119.0f, 46.0f};
@@ -584,7 +584,7 @@ void CHud::RenderVoting()
 	TextRender()->TextColor(1,1,1,1);
 
 	char aBuf[512];
-	int SecondsLeft = m_pClient->m_pVoting->SecondsLeft();
+	int SecondsLeft = m_pClient->m_Voting.SecondsLeft();
 	str_format(aBuf, sizeof(aBuf), Localize("%ds left"), SecondsLeft);
 	static CTextCursor s_TimerCursor(6.0f, 105.0f, 60.0f);
 	s_TimerCursor.m_Align = TEXTALIGN_RIGHT;
@@ -595,21 +595,21 @@ void CHud::RenderVoting()
 	s_DescriptionCursor.m_MaxWidth = 100.0f - s_TimerCursor.Width();
 	s_DescriptionCursor.m_MaxLines = 3;
 	s_DescriptionCursor.Reset();
-	TextRender()->TextOutlined(&s_DescriptionCursor, m_pClient->m_pVoting->VoteDescription(), -1);
+	TextRender()->TextOutlined(&s_DescriptionCursor, m_pClient->m_Voting.VoteDescription(), -1);
 
 	// reason
 	static CTextCursor s_ReasonCursor(6.0f, 5.0f, 79.0f, TEXTFLAG_ELLIPSIS);
-	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Reason:"), m_pClient->m_pVoting->VoteReason());
+	str_format(aBuf, sizeof(aBuf), "%s %s", Localize("Reason:"), m_pClient->m_Voting.VoteReason());
 	s_ReasonCursor.m_MaxWidth = 100.0f;
 	s_ReasonCursor.Reset();
 	TextRender()->TextOutlined(&s_ReasonCursor, aBuf, -1);
 
 	CUIRect Base = {5, 88, 100, 4};
-	m_pClient->m_pVoting->RenderBars(Base);
+	m_pClient->m_Voting.RenderBars(Base);
 
 	char aBufYes[64], aBufNo[64];
-	m_pClient->m_pBinds->GetKey("vote yes", aBufYes, sizeof(aBufYes));
-	m_pClient->m_pBinds->GetKey("vote no", aBufNo, sizeof(aBufNo));
+	m_pClient->m_Binds.GetKey("vote yes", aBufYes, sizeof(aBufYes));
+	m_pClient->m_Binds.GetKey("vote no", aBufNo, sizeof(aBufNo));
 	str_format(aBuf, sizeof(aBuf), "%s - %s", aBufYes, Localize("Vote yes"));
 	Base.y += Base.h+1;
 	UI()->DoLabel(&Base, aBuf, 6.0f, CUI::ALIGN_LEFT);
@@ -623,15 +623,15 @@ void CHud::RenderCursor()
 	if(!m_pClient->m_Snap.m_pLocalCharacter || Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
 
-	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
-	RenderTools()->MapScreenToGroup(Pos.x, Pos.y, Layers()->GameGroup(), m_pClient->m_pCamera->GetZoom());
+	vec2 Pos = *m_pClient->m_Camera.GetCenter();
+	RenderTools()->MapScreenToGroup(Pos.x, Pos.y, Layers()->GameGroup(), m_pClient->m_Camera.GetZoom());
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
 	// render cursor
 	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[m_pClient->m_Snap.m_pLocalCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteCursor);
 	float CursorSize = 64;
-	RenderTools()->DrawSprite(m_pClient->m_pControls->m_TargetPos.x, m_pClient->m_pControls->m_TargetPos.y, CursorSize);
+	RenderTools()->DrawSprite(m_pClient->m_Controls.m_TargetPos.x, m_pClient->m_Controls.m_TargetPos.y, CursorSize);
 	Graphics()->QuadsEnd();
 }
 
@@ -855,8 +855,8 @@ void CHud::RenderReadyUpNotification()
 
 		char aKey[64], aText[128];
 		int KeyID, Modifier;
-		m_pClient->m_pBinds->GetKeyID("ready_change", KeyID, Modifier);
-		m_pClient->m_pBinds->GetKey("ready_change", aKey, sizeof(aKey), KeyID, Modifier);
+		m_pClient->m_Binds.GetKeyID("ready_change", KeyID, Modifier);
+		m_pClient->m_Binds.GetKey("ready_change", aKey, sizeof(aKey), KeyID, Modifier);
 		str_format(aText, sizeof(aText), Localize("When ready, press <%s>"), aKey);
 
 		s_Cursor.Reset(((int64)g_Localization.Version()) << 32 | KeyID);
@@ -931,7 +931,7 @@ void CHud::RenderCheckpoint()
 
 void CHud::RenderLocalTime(float x)
 {
-	if(!Config()->m_ClShowLocalTimeAlways && !m_pClient->m_pScoreboard->IsActive())
+	if(!Config()->m_ClShowLocalTimeAlways && !m_pClient->m_Scoreboard.IsActive())
 		return;
 
 	//draw the box
@@ -973,7 +973,7 @@ void CHud::OnRender()
 		return;
 
 	// dont render hud if the menu is active
-	if(m_pClient->m_pMenus->IsActive())
+	if(m_pClient->m_Menus.IsActive())
 		return;
 
 	bool Race = m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE;

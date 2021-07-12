@@ -568,7 +568,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 			// country flag
 			const vec4 CFColor(1, 1, 1, 0.75f * ColorAlpha);
-			m_pClient->m_pCountryFlags->Render(m_pClient->m_aClients[pInfo->m_ClientID].m_Country, &CFColor,
+			m_pClient->m_CountryFlags.Render(m_pClient->m_aClients[pInfo->m_ClientID].m_Country, &CFColor,
 				CountryFlagOffset, y + 3.0f, 30.0f, LineHeight-5.0f);
 
 			// flag
@@ -596,7 +596,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 				Graphics()->QuadsBegin();
 				if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 				{
-					vec4 Color = m_pClient->m_pSkins->GetColorV4(m_pClient->m_pSkins->GetTeamColor(true, 0, m_pClient->m_aClients[pInfo->m_ClientID].m_Team, SKINPART_BODY), false);
+					vec4 Color = m_pClient->m_Skins.GetColorV4(m_pClient->m_Skins.GetTeamColor(true, 0, m_pClient->m_aClients[pInfo->m_ClientID].m_Team, SKINPART_BODY), false);
 					Graphics()->SetColor(Color.r, Color.g, Color.b, Color.a);
 				}
 				IGraphics::CQuadItem QuadItem(TeeOffset+TeeLength/2 - 10*TeeSizeMod, y-2.0f+Spacing, 20*TeeSizeMod, 20*TeeSizeMod);
@@ -649,14 +649,14 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			{
 				// K
 				TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
-				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Frags, 0, 999));
+				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_Stats.GetPlayerStats(pInfo->m_ClientID)->m_Frags, 0, 999));
 				s_Cursor.Reset();
 				s_Cursor.MoveTo(KillOffset+KillLength/2, y+Spacing);
 				s_Cursor.m_MaxWidth = KillLength;
 				TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 
 				// D
-				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Deaths, 0, 999));
+				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_Stats.GetPlayerStats(pInfo->m_ClientID)->m_Deaths, 0, 999));
 				s_Cursor.Reset();
 				s_Cursor.MoveTo(DeathOffset+DeathLength/2, y+Spacing);
 				s_Cursor.m_MaxWidth = DeathLength;
@@ -782,7 +782,7 @@ void CScoreboard::RenderNetworkQuality(float x, float w)
 void CScoreboard::OnRender()
 {
 	// don't render scoreboard if menu or statboard is open
-	if(m_pClient->m_pMenus->IsActive() || m_pClient->m_pStats->IsActive())
+	if(m_pClient->m_Menus.IsActive() || m_pClient->m_Stats.IsActive())
 		return;
 
 	// postpone the active state till the render area gets updated during the rendering
@@ -794,7 +794,7 @@ void CScoreboard::OnRender()
 
 	// close the motd if we actively wanna look on the scoreboard
 	if(m_Active)
-		m_pClient->m_pMotd->Clear();
+		m_pClient->m_Motd.Clear();
 
 	if(!IsActive())
 		return;

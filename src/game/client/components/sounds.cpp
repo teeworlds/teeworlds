@@ -29,7 +29,7 @@ static int LoadSoundsThread(void *pUser)
 		}
 
 		if(pData->m_Render)
-			pData->m_pGameClient->m_pMenus->RenderLoading(1);
+			pData->m_pGameClient->m_Menus.RenderLoading(1);
 	}
 
 	return 0;
@@ -121,7 +121,7 @@ void CSounds::OnRender()
 	}
 
 	// set listener pos
-	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
+	vec2 Pos = *m_pClient->m_Camera.GetCenter();
 	Sound()->SetListenerPos(Pos.x, Pos.y);
 
 	// play sound from queue

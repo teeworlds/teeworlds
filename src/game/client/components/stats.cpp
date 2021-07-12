@@ -131,7 +131,7 @@ void CStats::OnRender()
 	}
 
 	// don't render scoreboard if menu is open
-	if(m_pClient->m_pMenus->IsActive())
+	if(m_pClient->m_Menus.IsActive())
 		return;
 
 	// postpone the active state till the render area gets updated during the rendering

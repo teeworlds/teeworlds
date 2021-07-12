@@ -138,7 +138,7 @@ void CPlayers::RenderPlayer(
 	if(m_pClient->m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// just use the direct input if it's local player we are rendering
-		Angle = angle(m_pClient->m_pControls->m_MousePos);
+		Angle = angle(m_pClient->m_Controls.m_MousePos);
 	}
 	else
 	{
@@ -173,7 +173,7 @@ void CPlayers::RenderPlayer(
 	vec2 Position = mix(vec2(Prev.m_X, Prev.m_Y), vec2(Player.m_X, Player.m_Y), IntraTick);
 	vec2 Vel = mix(vec2(Prev.m_VelX/256.0f, Prev.m_VelY/256.0f), vec2(Player.m_VelX/256.0f, Player.m_VelY/256.0f), IntraTick);
 
-	m_pClient->m_pFlow->Add(Position, Vel*100.0f, 10.0f);
+	m_pClient->m_Flow.Add(Position, Vel*100.0f, 10.0f);
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
 
@@ -231,11 +231,11 @@ void CPlayers::RenderPlayer(
 		static int64 SkidSoundTime = 0;
 		if(time_get()-SkidSoundTime > time_freq()/10)
 		{
-			m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
+			m_pClient->m_Sounds.PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
 			SkidSoundTime = time_get();
 		}
 
-		m_pClient->m_pEffects->SkidTrail(
+		m_pClient->m_Effects.SkidTrail(
 			Position+vec2(-Player.m_Direction*6,12),
 			vec2(-Player.m_Direction*100*length(Vel),-50)
 		);
@@ -279,12 +279,12 @@ void CPlayers::RenderPlayer(
 			{
 				Graphics()->QuadsSetRotation(-pi/2-State.GetAttach()->m_Angle*pi*2);
 				p.x -= g_pData->m_Weapons.m_aId[iw].m_Offsetx;
-				m_pClient->m_pEffects->PowerupShine(p+vec2(32,0), vec2(32,12));
+				m_pClient->m_Effects.PowerupShine(p+vec2(32,0), vec2(32,12));
 			}
 			else
 			{
 				Graphics()->QuadsSetRotation(-pi/2+State.GetAttach()->m_Angle*pi*2);
-				m_pClient->m_pEffects->PowerupShine(p-vec2(32,0), vec2(32,12));
+				m_pClient->m_Effects.PowerupShine(p-vec2(32,0), vec2(32,12));
 			}
 			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 
@@ -422,22 +422,22 @@ void CPlayers::OnRender()
 		if(m_pClient->m_Snap.m_aCharacters[i].m_Cur.m_Weapon == WEAPON_NINJA)
 		{
 			// change the skin for the player to the ninja
-			int Skin = m_pClient->m_pSkins->Find("x_ninja", true);
+			int Skin = m_pClient->m_Skins.Find("x_ninja", true);
 			if(Skin != -1)
 			{
-				const CSkins::CSkin *pNinja = m_pClient->m_pSkins->Get(Skin);
+				const CSkins::CSkin *pNinja = m_pClient->m_Skins.Get(Skin);
 				for(int p = 0; p < NUM_SKINPARTS; p++)
 				{
 					if(IsTeamplay)
 					{
 						s_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
-						int ColorVal = m_pClient->m_pSkins->GetTeamColor(true, pNinja->m_aPartColors[p], m_pClient->m_aClients[i].m_Team, p);
-						s_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==SKINPART_MARKING);
+						int ColorVal = m_pClient->m_Skins.GetTeamColor(true, pNinja->m_aPartColors[p], m_pClient->m_aClients[i].m_Team, p);
+						s_aRenderInfo[i].m_aColors[p] = m_pClient->m_Skins.GetColorV4(ColorVal, p==SKINPART_MARKING);
 					}
 					else if(pNinja->m_aUseCustomColors[p])
 					{
 						s_aRenderInfo[i].m_aTextures[p] = pNinja->m_apParts[p]->m_ColorTexture;
-						s_aRenderInfo[i].m_aColors[p] = m_pClient->m_pSkins->GetColorV4(pNinja->m_aPartColors[p], p==SKINPART_MARKING);
+						s_aRenderInfo[i].m_aColors[p] = m_pClient->m_Skins.GetColorV4(pNinja->m_aPartColors[p], p==SKINPART_MARKING);
 					}
 					else
 					{

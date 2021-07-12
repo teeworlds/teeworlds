@@ -82,7 +82,7 @@ void CMapLayers::LoadBackgroundMap()
 	Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 
 	m_pMenuLayers->Init(Kernel(), m_pMenuMap);
-	m_pClient->m_pMapimages->OnMenuMapLoad(m_pMenuMap);
+	m_pClient->m_MapImages.OnMenuMapLoad(m_pMenuMap);
 	LoadEnvPoints(m_pMenuLayers, m_lEnvPointsMenu);
 }
 
@@ -99,11 +99,11 @@ void CMapLayers::OnInit()
 	{
 		m_pMenuLayers = new CLayers;
 		m_pMenuMap = CreateEngineMap();
-		m_pClient->m_pMenus->RenderLoading(1);
+		m_pClient->m_Menus.RenderLoading(1);
 		if(Config()->m_ClShowMenuMap)
 		{
 			LoadBackgroundMap();
-			m_pClient->m_pMenus->RenderLoading(14);
+			m_pClient->m_Menus.RenderLoading(14);
 		}
 	}
 
@@ -259,7 +259,7 @@ void CMapLayers::OnRender()
 	CUIRect Screen;
 	Graphics()->GetScreen(&Screen.x, &Screen.y, &Screen.w, &Screen.h);
 
-	vec2 Center = *m_pClient->m_pCamera->GetCenter();
+	vec2 Center = *m_pClient->m_Camera.GetCenter();
 
 	bool PassedGameLayer = false;
 
@@ -271,7 +271,7 @@ void CMapLayers::OnRender()
 		{
 			// set clipping
 			float Points[4];
-			RenderTools()->MapScreenToGroup(Center.x, Center.y, pLayers->GameGroup(), m_pClient->m_pCamera->GetZoom());
+			RenderTools()->MapScreenToGroup(Center.x, Center.y, pLayers->GameGroup(), m_pClient->m_Camera.GetZoom());
 			Graphics()->GetScreen(&Points[0], &Points[1], &Points[2], &Points[3]);
 			float x0 = (pGroup->m_ClipX - Points[0]) / (Points[2]-Points[0]);
 			float y0 = (pGroup->m_ClipY - Points[1]) / (Points[3]-Points[1]);
@@ -285,7 +285,7 @@ void CMapLayers::OnRender()
 				(int)((x1-x0)*Graphics()->ScreenWidth()), (int)((y1-y0)*Graphics()->ScreenHeight()));
 		}
 
-		RenderTools()->MapScreenToGroup(Center.x, Center.y, pGroup, m_pClient->m_pCamera->GetZoom());
+		RenderTools()->MapScreenToGroup(Center.x, Center.y, pGroup, m_pClient->m_Camera.GetZoom());
 
 		for(int l = 0; l < pGroup->m_NumLayers; l++)
 		{
@@ -348,7 +348,7 @@ void CMapLayers::OnRender()
 						if(pTMap->m_Image == -1)
 							Graphics()->TextureClear();
 						else
-							Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pTMap->m_Image));
+							Graphics()->TextureSet(m_pClient->m_MapImages.Get(pTMap->m_Image));
 
 						CTile *pTiles = (CTile *)pLayers->Map()->GetData(pTMap->m_Data);
 						Graphics()->BlendNone();
@@ -365,7 +365,7 @@ void CMapLayers::OnRender()
 						if(pQLayer->m_Image == -1)
 							Graphics()->TextureClear();
 						else
-							Graphics()->TextureSet(m_pClient->m_pMapimages->Get(pQLayer->m_Image));
+							Graphics()->TextureSet(m_pClient->m_MapImages.Get(pQLayer->m_Image));
 
 						CQuad *pQuads = (CQuad *)pLayers->Map()->GetDataSwapped(pQLayer->m_Data);
 
@@ -383,7 +383,7 @@ void CMapLayers::OnRender()
 				CMapItemLayer *pNextLayer = pLayers->GetLayer(pGroup->m_StartLayer+l+1);
 				if(m_pEggTiles && (l+1) < pGroup->m_NumLayers && pNextLayer == (CMapItemLayer*)pLayers->GameLayer())
 				{
-					Graphics()->TextureSet(m_pClient->m_pMapimages->GetEasterTexture());
+					Graphics()->TextureSet(m_pClient->m_MapImages.GetEasterTexture());
 					Graphics()->BlendNormal();
 					RenderTools()->RenderTilemap(m_pEggTiles, m_EggLayerWidth, m_EggLayerHeight, 32.0f, vec4(1,1,1,1), LAYERRENDERFLAG_TRANSPARENT, EnvelopeEval, this, -1, 0);
 				}

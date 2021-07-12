@@ -89,9 +89,9 @@ void CMenus::DoSettingsControlsButtons(int Start, int Stop, CUIRect View, float 
 		if(NewId != OldId || NewModifier != OldModifier)
 		{
 			if(OldId != 0 || NewId == 0)
-				m_pClient->m_pBinds->Bind(OldId, OldModifier, "");
+				m_pClient->m_Binds.Bind(OldId, OldModifier, "");
 			if(NewId != 0)
-				m_pClient->m_pBinds->Bind(NewId, NewModifier, gs_aKeys[i].m_pCommand);
+				m_pClient->m_Binds.Bind(NewId, NewModifier, gs_aKeys[i].m_pCommand);
 		}
 	}
 }
@@ -126,7 +126,7 @@ static void UpdateBindKeys(CBinds* pBinds)
 
 float CMenus::RenderSettingsControlsMouse(CUIRect View)
 {
-	UpdateBindKeys(m_pClient->m_pBinds);
+	UpdateBindKeys(&m_pClient->m_Binds);
 
 	int NumOptions = 3;
 	float ButtonHeight = 20.0f;
@@ -158,7 +158,7 @@ float CMenus::RenderSettingsControlsMouse(CUIRect View)
 
 float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 {
-	UpdateBindKeys(m_pClient->m_pBinds);
+	UpdateBindKeys(&m_pClient->m_Binds);
 
 	bool JoystickEnabled = Config()->m_JoystickEnable;
 	int NumJoysticks = m_pClient->Input()->NumJoysticks();
@@ -252,7 +252,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 
 float CMenus::RenderSettingsControlsMovement(CUIRect View)
 {
-	UpdateBindKeys(m_pClient->m_pBinds);
+	UpdateBindKeys(&m_pClient->m_Binds);
 
 	int NumOptions = 5;
 	float ButtonHeight = 20.0f;
@@ -269,7 +269,7 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View)
 
 float CMenus::RenderSettingsControlsWeapon(CUIRect View)
 {
-	UpdateBindKeys(m_pClient->m_pBinds);
+	UpdateBindKeys(&m_pClient->m_Binds);
 
 	int NumOptions = 7;
 	float ButtonHeight = 20.0f;
@@ -286,7 +286,7 @@ float CMenus::RenderSettingsControlsWeapon(CUIRect View)
 
 float CMenus::RenderSettingsControlsVoting(CUIRect View)
 {
-	UpdateBindKeys(m_pClient->m_pBinds);
+	UpdateBindKeys(&m_pClient->m_Binds);
 
 	int NumOptions = 2;
 	float ButtonHeight = 20.0f;
@@ -303,7 +303,7 @@ float CMenus::RenderSettingsControlsVoting(CUIRect View)
 
 float CMenus::RenderSettingsControlsChat(CUIRect View)
 {
-	UpdateBindKeys(m_pClient->m_pBinds);
+	UpdateBindKeys(&m_pClient->m_Binds);
 
 	int NumOptions = 4;
 	float ButtonHeight = 20.0f;
@@ -331,7 +331,7 @@ float CMenus::RenderSettingsControlsScoreboard(CUIRect View)
 	{
 		for(int m = 0; m < CBinds::MODIFIER_COUNT; m++)
 		{
-			const char *pBind = m_pClient->m_pBinds->Get(KeyId, m);
+			const char *pBind = m_pClient->m_Binds.Get(KeyId, m);
 			if(!pBind[0])
 				continue;
 
@@ -368,7 +368,7 @@ float CMenus::RenderSettingsControlsScoreboard(CUIRect View)
 
 float CMenus::RenderSettingsControlsMisc(CUIRect View)
 {
-	UpdateBindKeys(m_pClient->m_pBinds);
+	UpdateBindKeys(&m_pClient->m_Binds);
 
 	int NumOptions = 12;
 	int StartOption = 20;

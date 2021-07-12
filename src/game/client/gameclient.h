@@ -383,30 +383,6 @@ public:
 	void SendKill();
 	void SendReadyChange();
 	void SendSkinChange();
-
-	// pointers to all systems
-	class CGameConsole *m_pGameConsole;
-	class CBinds *m_pBinds;
-	class CBroadcast *m_pBroadcast;
-	class CParticles *m_pParticles;
-	class CMenus *m_pMenus;
-	class CSkins *m_pSkins;
-	class CCountryFlags *m_pCountryFlags;
-	class CFlow *m_pFlow;
-	class CChat *m_pChat;
-	class CDamageInd *m_pDamageind;
-	class CCamera *m_pCamera;
-	class CControls *m_pControls;
-	class CEffects *m_pEffects;
-	class CSounds *m_pSounds;
-	class CMotd *m_pMotd;
-	class CMapImages *m_pMapimages;
-	class CVoting *m_pVoting;
-	class CScoreboard *m_pScoreboard;
-	class CStats *m_pStats;
-	class CItems *m_pItems;
-	class CMapLayers *m_pMapLayersBackGround;
-	class CMapLayers *m_pMapLayersForeGround;
 };
 
 
