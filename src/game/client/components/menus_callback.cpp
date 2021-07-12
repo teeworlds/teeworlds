@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/shared/config.h>
 #include <engine/textrender.h>
+#include <game/client/gameclient.h>
 
 #include "binds.h"
 #include "menus.h"

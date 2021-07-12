@@ -2,6 +2,9 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_BROADCAST_H
 #define GAME_CLIENT_COMPONENTS_BROADCAST_H
+
+#include <engine/textrender.h>
+
 #include <game/client/component.h>
 
 class CBroadcast : public CComponent

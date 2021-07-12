@@ -11,11 +11,13 @@
 #include <engine/contacts.h>
 #include <engine/serverbrowser.h>
 #include <engine/config.h>
+#include <engine/shared/config.h>
 
 #include <game/voting.h>
 #include <game/client/component.h>
 #include <game/client/localization.h>
 #include <game/client/ui.h>
+#include <game/client/render.h>
 
 #include "skins.h"
 

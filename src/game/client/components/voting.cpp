@@ -10,6 +10,8 @@
 #include "chat.h"
 #include "voting.h"
 
+#include <game/client/gameclient.h>
+
 
 void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 {

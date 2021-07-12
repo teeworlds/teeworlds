@@ -4,7 +4,11 @@
 #define GAME_CLIENT_COMPONENT_H
 
 #include <engine/input.h>
-#include "gameclient.h"
+
+#include <engine/client.h>
+#include <engine/console.h>
+
+class CGameClient;
 
 class CComponent
 {
@@ -14,22 +18,25 @@ protected:
 	CGameClient *m_pClient;
 
 	// perhaps propagte pointers for these as well
-	class IKernel *Kernel() const { return m_pClient->Kernel(); }
-	class IGraphics *Graphics() const { return m_pClient->Graphics(); }
-	class ITextRender *TextRender() const { return m_pClient->TextRender(); }
-	class IClient *Client() const { return m_pClient->Client(); }
-	class IInput *Input() const { return m_pClient->Input(); }
-	class IStorage *Storage() const { return m_pClient->Storage(); }
-	class CUI *UI() const { return m_pClient->UI(); }
-	class ISound *Sound() const { return m_pClient->Sound(); }
-	class CRenderTools *RenderTools() const { return m_pClient->RenderTools(); }
-	class CConfig *Config() const { return m_pClient->Config(); }
-	class IConsole *Console() const { return m_pClient->Console(); }
-	class IDemoPlayer *DemoPlayer() const { return m_pClient->DemoPlayer(); }
-	class IDemoRecorder *DemoRecorder() const { return m_pClient->DemoRecorder(); }
-	class IServerBrowser *ServerBrowser() const { return m_pClient->ServerBrowser(); }
-	class CLayers *Layers() const { return m_pClient->Layers(); }
-	class CCollision *Collision() const { return m_pClient->Collision(); }
+	class IKernel *Kernel() const;
+	class IGraphics *Graphics() const;
+	class ITextRender *TextRender() const;
+	class IClient *Client() const;
+	class IInput *Input() const;
+	class IStorage *Storage() const;
+	class CUI *UI() const;
+	class ISound *Sound() const;
+	class CRenderTools *RenderTools() const;
+	class CConfig *Config() const;
+	class IConsole *Console() const;
+	class IDemoPlayer *DemoPlayer() const;
+	class IDemoRecorder *DemoRecorder() const;
+	class IServerBrowser *ServerBrowser() const;
+	class CLayers *Layers() const;
+	class CCollision *Collision() const;
+
+	float LocalTime() const;
+
 public:
 	virtual ~CComponent() {}
 

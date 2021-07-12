@@ -9,6 +9,8 @@
 #include <engine/config.h>
 #include <engine/shared/config.h>
 
+#include <game/client/gameclient.h>
+
 #include "menus.h"
 
 CMenus::CListBox::CListBox()

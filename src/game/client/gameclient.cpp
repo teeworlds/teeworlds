@@ -88,40 +88,6 @@ void FormatTimeDiff(char *pBuf, int Size, int Time, int Precision, bool ForceSig
 	AppendDecimals(pBuf, Size, Time, Precision);
 }
 
-// instantiate all systems
-static CInfoMessages gs_InfoMessages;
-static CCamera gs_Camera;
-static CChat gs_Chat;
-static CMotd gs_Motd;
-static CBroadcast gs_Broadcast;
-static CGameConsole gs_GameConsole;
-static CBinds gs_Binds;
-static CParticles gs_Particles;
-static CMenus gs_Menus;
-static CSkins gs_Skins;
-static CCountryFlags gs_CountryFlags;
-static CFlow gs_Flow;
-static CHud gs_Hud;
-static CDebugHud gs_DebugHud;
-static CNotifications gs_Notifications;
-static CControls gs_Controls;
-static CEffects gs_Effects;
-static CScoreboard gs_Scoreboard;
-static CSounds gs_Sounds;
-static CEmoticon gs_Emoticon;
-static CDamageInd gsDamageInd;
-static CVoting gs_Voting;
-static CSpectator gs_Spectator;
-static CStats gs_Stats;
-
-static CPlayers gs_Players;
-static CNamePlates gs_NamePlates;
-static CItems gs_Items;
-static CMapImages gs_MapImages;
-
-static CMapLayers gs_MapLayersBackGround(CMapLayers::TYPE_BACKGROUND);
-static CMapLayers gs_MapLayersForeGround(CMapLayers::TYPE_FOREGROUND);
-
 CGameClient::CStack::CStack() { m_Num = 0; }
 void CGameClient::CStack::Add(class CComponent *pComponent) { m_paComponents[m_Num++] = pComponent; }
 
@@ -232,77 +198,77 @@ void CGameClient::OnConsoleInit()
 	m_pBlacklist = Kernel()->RequestInterface<IBlacklist>();
 
 	// setup pointers
-	m_pBinds = &::gs_Binds;
-	m_pBroadcast = &::gs_Broadcast;
-	m_pGameConsole = &::gs_GameConsole;
-	m_pParticles = &::gs_Particles;
-	m_pMenus = &::gs_Menus;
-	m_pSkins = &::gs_Skins;
-	m_pCountryFlags = &::gs_CountryFlags;
-	m_pChat = &::gs_Chat;
-	m_pFlow = &::gs_Flow;
-	m_pCamera = &::gs_Camera;
-	m_pControls = &::gs_Controls;
-	m_pEffects = &::gs_Effects;
-	m_pSounds = &::gs_Sounds;
-	m_pMotd = &::gs_Motd;
-	m_pDamageind = &::gsDamageInd;
-	m_pMapimages = &::gs_MapImages;
-	m_pVoting = &::gs_Voting;
-	m_pScoreboard = &::gs_Scoreboard;
-	m_pItems = &::gs_Items;
-	m_pMapLayersBackGround = &::gs_MapLayersBackGround;
-	m_pMapLayersForeGround = &::gs_MapLayersForeGround;
-	m_pStats = &::gs_Stats;
+	m_pBinds = &m_Binds;
+	m_pBroadcast = &m_Broadcast;
+	m_pGameConsole = &m_GameConsole;
+	m_pParticles = &m_Particles;
+	m_pMenus = &m_Menus;
+	m_pSkins = &m_Skins;
+	m_pCountryFlags = &m_CountryFlags;
+	m_pChat = &m_Chat;
+	m_pFlow = &m_Flow;
+	m_pCamera = &m_Camera;
+	m_pControls = &m_Controls;
+	m_pEffects = &m_Effects;
+	m_pSounds = &m_Sounds;
+	m_pMotd = &m_Motd;
+	m_pDamageind = &m_DamageInd;
+	m_pMapimages = &m_MapImages;
+	m_pVoting = &m_Voting;
+	m_pScoreboard = &m_Scoreboard;
+	m_pItems = &m_Items;
+	m_pMapLayersBackGround = &m_MapLayersBackGround;
+	m_pMapLayersForeGround = &m_MapLayersForeGround;
+	m_pStats = &m_Stats;
 
 	// make a list of all the systems, make sure to add them in the corrent render order
-	m_All.Add(m_pSkins);
-	m_All.Add(m_pCountryFlags);
-	m_All.Add(m_pMapimages);
-	m_All.Add(m_pEffects); // doesn't render anything, just updates effects
-	m_All.Add(m_pParticles); // doesn't render anything, just updates all the particles
-	m_All.Add(m_pBinds);
-	m_All.Add(&m_pBinds->m_SpecialBinds);
-	m_All.Add(m_pControls);
-	m_All.Add(m_pCamera);
-	m_All.Add(m_pSounds);
-	m_All.Add(m_pVoting);
+	m_All.Add(&m_Skins);
+	m_All.Add(&m_CountryFlags);
+	m_All.Add(&m_MapImages);
+	m_All.Add(&m_Effects); // doesn't render anything, just updates effects
+	m_All.Add(&m_Particles); // doesn't render anything, just updates all the particles
+	m_All.Add(&m_Binds);
+	m_All.Add(&m_Binds.m_SpecialBinds);
+	m_All.Add(&m_Controls);
+	m_All.Add(&m_Camera);
+	m_All.Add(&m_Sounds);
+	m_All.Add(&m_Voting);
 
-	m_All.Add(&gs_MapLayersBackGround); // first to render
-	m_All.Add(&m_pParticles->m_RenderTrail);
-	m_All.Add(m_pItems);
-	m_All.Add(&gs_Players);
-	m_All.Add(&gs_MapLayersForeGround);
-	m_All.Add(&m_pParticles->m_RenderExplosions);
-	m_All.Add(&gs_NamePlates);
-	m_All.Add(&m_pParticles->m_RenderGeneral);
-	m_All.Add(m_pDamageind);
-	m_All.Add(&gs_Hud);
-	m_All.Add(&gs_Spectator);
-	m_All.Add(&gs_Emoticon);
-	m_All.Add(&gs_InfoMessages);
-	m_All.Add(m_pChat);
-	m_All.Add(&gs_Broadcast);
-	m_All.Add(&gs_DebugHud);
-	m_All.Add(&gs_Notifications);
-	m_All.Add(&gs_Scoreboard);
-	m_All.Add(m_pStats);
-	m_All.Add(m_pMotd);
-	m_All.Add(m_pMenus);
-	m_All.Add(&m_pMenus->m_Binder);
-	m_All.Add(m_pGameConsole);
+	m_All.Add(&m_MapLayersBackGround); // first to render
+	m_All.Add(&m_Particles.m_RenderTrail);
+	m_All.Add(&m_Items);
+	m_All.Add(&m_Players);
+	m_All.Add(&m_MapLayersForeGround);
+	m_All.Add(&m_Particles.m_RenderExplosions);
+	m_All.Add(&m_NamePlates);
+	m_All.Add(&m_Particles.m_RenderGeneral);
+	m_All.Add(&m_DamageInd);
+	m_All.Add(&m_Hud);
+	m_All.Add(&m_Spectator);
+	m_All.Add(&m_Emoticon);
+	m_All.Add(&m_InfoMessages);
+	m_All.Add(&m_Chat);
+	m_All.Add(&m_Broadcast);
+	m_All.Add(&m_DebugHud);
+	m_All.Add(&m_Notifications);
+	m_All.Add(&m_Scoreboard);
+	m_All.Add(&m_Stats);
+	m_All.Add(&m_Motd);
+	m_All.Add(&m_Menus);
+	m_All.Add(&m_Menus.m_Binder);
+	m_All.Add(&m_GameConsole);
 
 	// build the input stack
-	m_Input.Add(&m_pMenus->m_Binder); // this will take over all input when we want to bind a key
-	m_Input.Add(&m_pBinds->m_SpecialBinds);
-	m_Input.Add(m_pGameConsole);
-	m_Input.Add(m_pChat); // chat has higher prio due to tha you can quit it by pressing esc
-	m_Input.Add(m_pMotd); // for pressing esc to remove it
-	m_Input.Add(m_pMenus);
-	m_Input.Add(&gs_Spectator);
-	m_Input.Add(&gs_Emoticon);
-	m_Input.Add(m_pControls);
-	m_Input.Add(m_pBinds);
+	m_Input.Add(&m_Menus.m_Binder); // this will take over all input when we want to bind a key
+	m_Input.Add(&m_Binds.m_SpecialBinds);
+	m_Input.Add(&m_GameConsole);
+	m_Input.Add(&m_Chat); // chat has higher prio due to tha you can quit it by pressing esc
+	m_Input.Add(&m_Motd); // for pressing esc to remove it
+	m_Input.Add(&m_Menus);
+	m_Input.Add(&m_Spectator);
+	m_Input.Add(&m_Emoticon);
+	m_Input.Add(&m_Controls);
+	m_Input.Add(&m_Binds);
 
 	// add the some console commands
 	Console()->Register("team", "i[team]", CFGFLAG_CLIENT, ConTeam, this, "Switch team");

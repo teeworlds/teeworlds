@@ -13,6 +13,7 @@
 #include "menus.h"
 #include "countryflags.h"
 
+#include <game/client/gameclient.h>
 
 void CCountryFlags::LoadCountryflagsIndexfile()
 {

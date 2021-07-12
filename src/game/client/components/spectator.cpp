@@ -14,6 +14,7 @@
 
 #include "spectator.h"
 
+#include <game/client/gameclient.h>
 
 void CSpectator::ConKeySpectator(IConsole::IResult *pResult, void *pUserData)
 {

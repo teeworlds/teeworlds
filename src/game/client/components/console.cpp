@@ -23,6 +23,8 @@
 #include <game/client/components/controls.h>
 #include <game/client/components/menus.h>
 
+#include <game/client/gameclient.h>
+
 #include "console.h"
 
 enum

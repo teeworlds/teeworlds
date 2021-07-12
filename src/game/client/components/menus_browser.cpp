@@ -22,6 +22,8 @@
 #include <game/client/ui.h>
 #include <game/client/components/countryflags.h>
 
+#include <game/client/gameclient.h>
+
 #include "menus.h"
 
 CMenus::CColumn CMenus::ms_aBrowserCols[] = {  // Localize("Server"); Localize("Type"); Localize("Map"); Localize("Players"); Localize("Ping"); - these strings are localized within CLocConstString

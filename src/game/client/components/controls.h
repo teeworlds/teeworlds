@@ -5,6 +5,8 @@
 #include <base/vmath.h>
 #include <game/client/component.h>
 
+#include <engine/shared/protocol.h>
+
 class CControls : public CComponent
 {
 public:

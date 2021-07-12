@@ -6,6 +6,8 @@
 #include <game/client/component.h>
 #include <game/client/lineinput.h>
 
+#include <engine/console.h>
+
 class CGameConsole : public CComponent
 {
 	class CInstance

@@ -9,6 +9,8 @@
 
 #include "particles.h"
 
+#include <game/client/gameclient.h>
+
 CParticles::CParticles()
 {
 	OnReset();

@@ -4,6 +4,8 @@
 #define GAME_CLIENT_COMPONENTS_NAMEPLATES_H
 #include <game/client/component.h>
 
+struct CNetObj_Character;
+
 class CNamePlates : public CComponent
 {
 	void RenderNameplate(

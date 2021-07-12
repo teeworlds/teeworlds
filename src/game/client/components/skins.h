@@ -5,6 +5,7 @@
 #include <base/vmath.h>
 #include <base/tl/sorted_array.h>
 #include <game/client/component.h>
+#include <generated/protocol.h>
 
 // todo: fix duplicate skins (different paths)
 class CSkins : public CComponent

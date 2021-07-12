@@ -11,8 +11,75 @@
 #include "render.h"
 #include "ui.h"
 
+// components
+#include "components/binds.h"
+#include "components/broadcast.h"
+#include "components/camera.h"
+#include "components/chat.h"
+#include "components/console.h"
+#include "components/controls.h"
+#include "components/countryflags.h"
+#include "components/damageind.h"
+#include "components/debughud.h"
+#include "components/notifications.h"
+#include "components/effects.h"
+#include "components/emoticon.h"
+#include "components/infomessages.h"
+#include "components/flow.h"
+#include "components/hud.h"
+#include "components/items.h"
+#include "components/mapimages.h"
+#include "components/maplayers.h"
+#include "components/menus.h"
+#include "components/motd.h"
+#include "components/nameplates.h"
+#include "components/particles.h"
+#include "components/players.h"
+#include "components/scoreboard.h"
+#include "components/skins.h"
+#include "components/sounds.h"
+#include "components/spectator.h"
+#include "components/stats.h"
+#include "components/voting.h"
+
 class CGameClient : public IGameClient
 {
+public:
+	// all components
+	CCamera m_Camera;
+	CChat m_Chat;
+	CMotd m_Motd;
+	CBroadcast m_Broadcast;
+	CGameConsole m_GameConsole;
+	CBinds m_Binds;
+	CParticles m_Particles;
+	CMenus m_Menus;
+	CSkins m_Skins;
+	CCountryFlags m_CountryFlags;
+	CFlow m_Flow;
+	CHud m_Hud;
+	CDebugHud m_DebugHud;
+	CNotifications m_Notifications;
+	CControls m_Controls;
+	CEffects m_Effects;
+	CScoreboard m_Scoreboard;
+	CSounds m_Sounds;
+	CEmoticon m_Emoticon;
+	CInfoMessages m_InfoMessages;
+	CDamageInd m_DamageInd;
+	CStats m_Stats;
+	CVoting m_Voting;
+	CSpectator m_Spectator;
+
+	CPlayers m_Players;
+	CNamePlates m_NamePlates;
+	CItems m_Items;
+	CMapImages m_MapImages;
+
+	CMapLayers m_MapLayersBackGround = CMapLayers{CMapLayers::TYPE_BACKGROUND};
+	CMapLayers m_MapLayersForeGround = CMapLayers{CMapLayers::TYPE_FOREGROUND};
+
+private:
 	class CStack
 	{
 	public:

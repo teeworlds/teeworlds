@@ -2,6 +2,8 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/config.h>
 #include <engine/shared/config.h>
+#include <game/client/localization.h>
+#include <game/client/gameclient.h>
 #include "binds.h"
 
 const int CBinds::s_aaDefaultBindKeys[][2] = {

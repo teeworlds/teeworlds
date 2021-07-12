@@ -9,6 +9,8 @@
 #include <game/client/render.h>
 #include "emoticon.h"
 
+#include <game/client/gameclient.h>
+
 CEmoticon::CEmoticon()
 {
 	OnReset();

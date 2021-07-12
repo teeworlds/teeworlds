@@ -12,6 +12,9 @@
 #include <engine/shared/config.h>
 #include <engine/shared/jsonwriter.h>
 
+
+#include <game/client/gameclient.h>
+
 #include "menus.h"
 #include "skins.h"
 

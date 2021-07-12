@@ -5,6 +5,10 @@
 #include <game/client/component.h>
 #include <engine/keys.h>
 
+#include "console.h"
+
+class IConfigManager;
+
 class CBinds : public CComponent
 {
 	int DecodeBindString(const char *pKeyName, int* pModifier);

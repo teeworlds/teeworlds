@@ -12,6 +12,9 @@
 
 #include <generated/client_data.h>
 
+
+#include <game/client/gameclient.h>
+
 #include "menus.h"
 
 void CMenus::RenderStartMenu(CUIRect MainView)

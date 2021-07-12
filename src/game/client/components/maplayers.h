@@ -5,6 +5,11 @@
 #include <base/tl/array.h>
 #include <game/client/component.h>
 
+#include <engine/map.h>
+#include <game/mapitems.h>
+
+#include <base/color.h>
+
 class CMapLayers : public CComponent
 {
 	CLayers *m_pMenuLayers;
