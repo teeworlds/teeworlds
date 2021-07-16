@@ -907,7 +907,7 @@ const char *CClient::LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pW
 	if(pWantedSha256)
 	{
 		FormatMapDownloadFilename(pMapName, 0, WantedCrc, false, aBuf, sizeof(aBuf));
-		pError = LoadMap(pMapName, aBuf, 0, WantedCrc);
+		pError = LoadMap(pMapName, aBuf, pWantedSha256, WantedCrc);
 		if(!pError)
 			return pError;
 	}
