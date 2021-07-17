@@ -149,3 +149,27 @@ jobs:
       if: contains(matrix.os, 'macOS')
       run: |
         sudo python3 scripts/make_release.py master osx
+  bash-completion:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: false
+
+    - name: Check bash completion
+      run: |
+        client_sum="$(sha1sum other/bash-completion/teeworlds | cut -d' ' -f1)"
+        server_sum="$(sha1sum other/bash-completion/teeworlds_srv | cut -d' ' -f1)"
+        ./scripts/bash_completion.sh
+        client_sum_new="$(sha1sum other/bash-completion/teeworlds | cut -d' ' -f1)"
+        server_sum_new="$(sha1sum other/bash-completion/teeworlds_srv | cut -d' ' -f1)"
+        if [ "$client_sum_new" != "$client_sum" ]
+        then
+          echo "[!] outdated client bash completion run ./scripts/bash_completion.sh"
+          exit 1
+        fi
+        if [ "$server_sum_new" != "$server_sum" ]
+        then
+          echo "[!] outdated server bash completion run ./scripts/bash_completion.sh"
+          exit 1
+        fi
