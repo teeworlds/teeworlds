@@ -14,12 +14,18 @@ check_path file ./other/bash-completion/teeworlds
 check_path directory ./src/
 
 function tw_configs() {
-	local flag="$1"
+	local flag
 	local line
-	grep -r "MACRO_CONFIG_.*CFGFLAG_$flag" src/ --include={variables.h,config_variables.h} | LC_ALL=C sort | while IFS= read -r line
+	for flag in "$@"
 	do
-		line="$(echo "$line" | cut -d'(' -f2 | cut -d',' -f2)"
-		printf '%s ' "${line:1}"
+		grep -r "MACRO_CONFIG_.*CFGFLAG_$flag" \
+			src/ \
+			--include={variables.h,config_variables.h} |
+			LC_ALL=C sort | while IFS= read -r line
+		do
+			line="$(echo "$line" | cut -d'(' -f2 | cut -d',' -f2)"
+			printf '%s ' "${line:1}"
+		done
 	done
 }
 
@@ -37,7 +43,7 @@ function tw_update_server() {
 	local cfgs
 	local cmds
 	local comp_helper
-	cfgs="$(tw_configs SERVER)"
+	cfgs="$(tw_configs SERVER ECON)"
 	cfgs="\"${cfgs::-1}\""
 	cmds="$(tw_commands SERVER)"
 	cmds="\"${cmds::-1}\""
