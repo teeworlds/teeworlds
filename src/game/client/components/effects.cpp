@@ -193,8 +193,10 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 	{
 		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
 		{
-			int ColorVal = m_pClient->m_pSkins->GetTeamColor(m_pClient->m_aClients[ClientID].m_aUseCustomColors[SKINPART_BODY], m_pClient->m_aClients[ClientID].m_aSkinPartColors[SKINPART_BODY],
-																m_pClient->m_aClients[ClientID].m_Team, SKINPART_BODY);
+			int ColorVal = m_pClient->m_pSkins->GetTeamColor(
+				m_pClient->m_aClients[ClientID].m_aUseCustomColors[SKINPART_BODY],
+				m_pClient->m_aClients[ClientID].m_aSkinPartColors[SKINPART_BODY],
+				m_pClient->m_aClients[ClientID].m_Team, SKINPART_BODY);
 			BloodColor = m_pClient->m_pSkins->GetColorV3(ColorVal);
 		}
 		else
@@ -203,9 +205,9 @@ void CEffects::PlayerDeath(vec2 Pos, int ClientID)
 				BloodColor = m_pClient->m_pSkins->GetColorV3(m_pClient->m_aClients[ClientID].m_aSkinPartColors[SKINPART_BODY]);
 			else
 			{
-				const CSkins::CSkinPart *s = m_pClient->m_pSkins->GetSkinPart(SKINPART_BODY, m_pClient->m_aClients[ClientID].m_SkinPartIDs[SKINPART_BODY]);
-				if(s)
-					BloodColor = s->m_BloodColor;
+				const CSkins::CSkinPart *pSkinPart = m_pClient->m_pSkins->GetSkinPart(SKINPART_BODY, m_pClient->m_aClients[ClientID].m_SkinPartIDs[SKINPART_BODY]);
+				if(pSkinPart)
+					BloodColor = pSkinPart->m_BloodColor;
 			}
 		}
 	}
@@ -291,10 +293,13 @@ void CEffects::HammerHit(vec2 Pos)
 
 void CEffects::OnRender()
 {
+	const float Speed = m_pClient->GetAnimationPlaybackSpeed();
+	if(Speed <= 0.0f)
+		return;
+
 	static int64 s_LastUpdate100hz = 0;
 	static int64 s_LastUpdate50hz = 0;
 
-	const float Speed = GetEffectsSpeed();
 	const int64 Now = time_get();
 	const int64 Freq = time_freq();
 
@@ -316,11 +321,4 @@ void CEffects::OnRender()
 
 	if(m_Add50hz)
 		m_pClient->m_pFlow->Update();
-}
-
-float CEffects::GetEffectsSpeed()
-{
-	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
-		return DemoPlayer()->BaseInfo()->m_Speed;
-	return 1.0f;
 }

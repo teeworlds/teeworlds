@@ -26,6 +26,5 @@ public:
 	void HammerHit(vec2 Pos);
 
 	virtual void OnRender();
-	float GetEffectsSpeed();
 };
 #endif
