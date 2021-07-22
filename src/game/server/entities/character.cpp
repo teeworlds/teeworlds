@@ -119,7 +119,7 @@ void CCharacter::HandleNinja()
 	if(m_ActiveWeapon != WEAPON_NINJA)
 		return;
 
-	if ((Server()->Tick() - m_Ninja.m_ActivationTick) > (g_pData->m_Weapons.m_Ninja.m_Duration * Server()->TickSpeed() / 1000))
+	if((Server()->Tick() - m_Ninja.m_ActivationTick) > (g_pData->m_Weapons.m_Ninja.m_Duration * Server()->TickSpeed() / 1000))
 	{
 		// time's up, return
 		m_aWeapons[WEAPON_NINJA].m_Got = false;
@@ -139,13 +139,13 @@ void CCharacter::HandleNinja()
 
 	m_Ninja.m_CurrentMoveTime--;
 
-	if (m_Ninja.m_CurrentMoveTime == 0)
+	if(m_Ninja.m_CurrentMoveTime == 0)
 	{
 		// reset velocity
 		m_Core.m_Vel = m_Ninja.m_ActivationDir*m_Ninja.m_OldVelAmount;
 	}
 
-	if (m_Ninja.m_CurrentMoveTime > 0)
+	if(m_Ninja.m_CurrentMoveTime > 0)
 	{
 		// Set velocity
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
@@ -163,23 +163,23 @@ void CCharacter::HandleNinja()
 			vec2 Center = OldPos + Dir * 0.5f;
 			int Num = GameWorld()->FindEntities(Center, Radius, (CEntity**)aEnts, MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 
-			for (int i = 0; i < Num; ++i)
+			for(int i = 0; i < Num; ++i)
 			{
-				if (aEnts[i] == this)
+				if(aEnts[i] == this)
 					continue;
 
 				// make sure we haven't Hit this object before
 				bool bAlreadyHit = false;
-				for (int j = 0; j < m_NumObjectsHit; j++)
+				for(int j = 0; j < m_NumObjectsHit; j++)
 				{
-					if (m_apHitObjects[j] == aEnts[i])
+					if(m_apHitObjects[j] == aEnts[i])
 						bAlreadyHit = true;
 				}
-				if (bAlreadyHit)
+				if(bAlreadyHit)
 					continue;
 
 				// check so we are sufficiently close
-				if (distance(aEnts[i]->m_Pos, m_Pos) > (GetProximityRadius() * 2.0f))
+				if(distance(aEnts[i]->m_Pos, m_Pos) > (GetProximityRadius() * 2.0f))
 					continue;
 
 				// Hit a player, give him damage and stuffs...
@@ -305,11 +305,11 @@ void CCharacter::FireWeapon()
 			int Num = GameWorld()->FindEntities(ProjStartPos, GetProximityRadius()*0.5f, (CEntity**)apEnts,
 														MAX_CLIENTS, CGameWorld::ENTTYPE_CHARACTER);
 
-			for (int i = 0; i < Num; ++i)
+			for(int i = 0; i < Num; ++i)
 			{
 				CCharacter *pTarget = apEnts[i];
 
-				if ((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
+				if((pTarget == this) || GameServer()->Collision()->IntersectLine(ProjStartPos, pTarget->m_Pos, NULL, NULL))
 					continue;
 
 				// set his velocity to fast upward (for now)
@@ -319,7 +319,7 @@ void CCharacter::FireWeapon()
 					GameServer()->CreateHammerHit(ProjStartPos);
 
 				vec2 Dir;
-				if (length(pTarget->m_Pos - m_Pos) > 0.0f)
+				if(length(pTarget->m_Pos - m_Pos) > 0.0f)
 					Dir = normalize(pTarget->m_Pos - m_Pos);
 				else
 					Dir = vec2(0.f, -1.f);
@@ -430,12 +430,12 @@ void CCharacter::HandleWeapons()
 	if(AmmoRegenTime && m_aWeapons[m_ActiveWeapon].m_Ammo >= 0)
 	{
 		// If equipped and not active, regen ammo?
-		if (m_ReloadTimer <= 0)
+		if(m_ReloadTimer <= 0)
 		{
-			if (m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart < 0)
+			if(m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart < 0)
 				m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart = Server()->Tick();
 
-			if ((Server()->Tick() - m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
+			if((Server()->Tick() - m_aWeapons[m_ActiveWeapon].m_AmmoRegenStart) >= AmmoRegenTime * Server()->TickSpeed() / 1000)
 			{
 				// Add some ammo
 				m_aWeapons[m_ActiveWeapon].m_Ammo = min(m_aWeapons[m_ActiveWeapon].m_Ammo + 1,
@@ -468,7 +468,7 @@ void CCharacter::GiveNinja()
 	m_Ninja.m_ActivationTick = Server()->Tick();
 	m_aWeapons[WEAPON_NINJA].m_Got = true;
 	m_aWeapons[WEAPON_NINJA].m_Ammo = -1;
-	if (m_ActiveWeapon != WEAPON_NINJA)
+	if(m_ActiveWeapon != WEAPON_NINJA)
 		m_LastWeapon = m_ActiveWeapon;
 	m_ActiveWeapon = WEAPON_NINJA;
 
@@ -666,16 +666,20 @@ void CCharacter::Die(int Killer, int Weapon)
 	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, (Killer < 0) ? 0 : GameServer()->m_apPlayers[Killer], Weapon);
 
 	char aBuf[256];
-	if (Killer < 0)
+	if(Killer < 0)
+	{
 		str_format(aBuf, sizeof(aBuf), "kill killer='%d:%d:' victim='%d:%d:%s' weapon=%d special=%d",
 			Killer, - 1 - Killer,
 			m_pPlayer->GetCID(), m_pPlayer->GetTeam(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, ModeSpecial
 		);
+	}
 	else
+	{
 		str_format(aBuf, sizeof(aBuf), "kill killer='%d:%d:%s' victim='%d:%d:%s' weapon=%d special=%d",
 			Killer, GameServer()->m_apPlayers[Killer]->GetTeam(), Server()->ClientName(Killer),
 			m_pPlayer->GetCID(), m_pPlayer->GetTeam(), Server()->ClientName(m_pPlayer->GetCID()), Weapon, ModeSpecial
 		);
+	}
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
 
 	// send the kill message
@@ -781,10 +785,10 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 		Die(From, Weapon);
 
 		// set attacker's face to happy (taunt!)
-		if (From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
+		if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 		{
 			CCharacter *pChr = GameServer()->m_apPlayers[From]->GetCharacter();
-			if (pChr)
+			if(pChr)
 			{
 				pChr->SetEmote(EMOTE_HAPPY, Server()->Tick() + Server()->TickSpeed());
 			}
@@ -793,7 +797,7 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 		return false;
 	}
 
-	if (Dmg > 2)
+	if(Dmg > 2)
 		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_LONG);
 	else
 		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
@@ -827,7 +831,7 @@ void CCharacter::Snap(int SnappingClient)
 	}
 
 	// set emote
-	if (m_EmoteStop < Server()->Tick())
+	if(m_EmoteStop < Server()->Tick())
 	{
 		SetEmote(EMOTE_NORMAL, -1);
 	}
