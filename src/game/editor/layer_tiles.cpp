@@ -512,7 +512,6 @@ void CLayerTiles::ShowInfo()
 		}
 
 	Graphics()->QuadsEnd();
-	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)

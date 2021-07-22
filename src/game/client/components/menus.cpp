@@ -2225,7 +2225,7 @@ void CMenus::OnRender()
 		UI()->Update(MouseX, MouseY, MouseX*3.0f, MouseY*3.0f);
 
 		// render demo player or main menu
-		Graphics()->MapScreen(pScreen->x, pScreen->y, pScreen->w, pScreen->h);
+		UI()->MapScreen();
 		if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 			RenderDemoPlayer(*pScreen);
 		else
@@ -2273,8 +2273,8 @@ bool CMenus::IsBackgroundNeeded() const
 
 void CMenus::RenderBackground(float Time)
 {
-	float ScreenHeight = 300;
-	float ScreenWidth = ScreenHeight*Graphics()->ScreenAspect();
+	const float ScreenHeight = 300.0f;
+	const float ScreenWidth = ScreenHeight * Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0, 0, ScreenWidth, ScreenHeight);
 
 	// render the tiles
@@ -2300,9 +2300,7 @@ void CMenus::RenderBackground(float Time)
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	// restore screen
-	{CUIRect Screen = *UI()->Screen();
-	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);}
+	UI()->MapScreen();
 }
 
 void CMenus::RenderBackgroundShadow(const CUIRect *pRect, bool TopToBottom, float Rounding)

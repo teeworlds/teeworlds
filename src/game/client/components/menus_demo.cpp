@@ -365,6 +365,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		DemoPlayer()->SetPos(PositionToSeek);
 		m_pClient->m_SuppressEvents = false;
 	}
+
+	UI()->MapScreen();
 }
 
 int CMenus::DemolistFetchCallback(const CFsFileInfo* pFileInfo, int IsDir, int StorageType, void *pUser)

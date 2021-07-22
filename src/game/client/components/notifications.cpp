@@ -33,7 +33,7 @@ void CNotifications::Con_SndToggle(IConsole::IResult *pResult, void *pUserData)
 void CNotifications::RenderSoundNotification()
 {
 	const float Height = 300.0f;
-	const float Width = Height*Graphics()->ScreenAspect();
+	const float Width = Height * Graphics()->ScreenAspect();
 	const float ItemHeight = 20.f;
 	const float ItemWidth = 20.f;
 	const float DisplayTime = 1.5f; // includes FadeTime

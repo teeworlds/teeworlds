@@ -144,8 +144,8 @@ void CStats::OnRender()
 	if(!IsActive())
 		return;
 
-	float Width = 400*3.0f*Graphics()->ScreenAspect();
-	float Height = 400*3.0f;
+	const float Height = 400.0f * 3.0f;
+	const float Width = Height * Graphics()->ScreenAspect();
 	float w = 250.0f;
 	float h = 750.0f;
 

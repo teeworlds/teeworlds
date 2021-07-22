@@ -36,8 +36,8 @@ void CMotd::OnRender()
 	if(!IsActive())
 		return;
 
-	const float Width = 400*3.0f*Graphics()->ScreenAspect();
-	const float Height = 400*3.0f;
+	const float Height = 400.0f * 3.0f;
+	const float Width = Height * Graphics()->ScreenAspect();
 
 	Graphics()->MapScreen(0, 0, Width, Height);
 
