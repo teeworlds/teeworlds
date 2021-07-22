@@ -830,7 +830,8 @@ public:
 	static void ReplaceImage(const char *pFilename, int StorageType, void *pUser);
 	static void AddImage(const char *pFilename, int StorageType, void *pUser);
 
-	void RenderImages(CUIRect Toolbox, CUIRect Toolbar, CUIRect View);
+	void RenderImagesList(CUIRect Toolbox, CUIRect Toolbar);
+	void RenderSelectedImage(CUIRect View);
 	void RenderLayers(CUIRect Toolbox, CUIRect Toolbar, CUIRect View);
 	void RenderModebar(CUIRect View);
 	void RenderStatusbar(CUIRect View);
