@@ -553,8 +553,7 @@ void CClient::Connect(const char *pAddress)
 	m_NetClient.Connect(&m_ServerAddress);
 	SetState(IClient::STATE_CONNECTING);
 
-	if(m_DemoRecorder.IsRecording())
-		DemoRecorder_Stop();
+	DemoRecorder_Stop();
 
 	m_InputtimeMarginGraph.Init(-150.0f, 150.0f);
 	m_GametimeMarginGraph.Init(-150.0f, 150.0f);
@@ -2367,9 +2366,10 @@ void CClient::DemoRecorder_HandleAutoStart()
 	}
 }
 
-void CClient::DemoRecorder_Stop()
+void CClient::DemoRecorder_Stop(bool ErrorIfNotRecording)
 {
-	m_DemoRecorder.Stop();
+	if(ErrorIfNotRecording || m_DemoRecorder.IsRecording())
+		m_DemoRecorder.Stop();
 }
 
 void CClient::DemoRecorder_AddDemoMarker()
@@ -2389,7 +2389,7 @@ void CClient::Con_Record(IConsole::IResult *pResult, void *pUserData)
 void CClient::Con_StopRecord(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->DemoRecorder_Stop();
+	pSelf->DemoRecorder_Stop(true);
 }
 
 void CClient::Con_AddDemoMarker(IConsole::IResult *pResult, void *pUserData)

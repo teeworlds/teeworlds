@@ -1254,7 +1254,8 @@ int CServer::LoadMap(const char *pMapName)
 		return 0;
 
 	// stop recording when we change map
-	m_DemoRecorder.Stop();
+	if(m_DemoRecorder.IsRecording())
+		m_DemoRecorder.Stop();
 
 	// reinit snapshot ids
 	m_IDPool.TimeoutIDs();
@@ -1577,7 +1578,8 @@ void CServer::DemoRecorder_HandleAutoStart()
 {
 	if(Config()->m_SvAutoDemoRecord)
 	{
-		m_DemoRecorder.Stop();
+		if(m_DemoRecorder.IsRecording())
+			m_DemoRecorder.Stop();
 		char aFilename[128];
 		char aDate[20];
 		str_timestamp(aDate, sizeof(aDate));
