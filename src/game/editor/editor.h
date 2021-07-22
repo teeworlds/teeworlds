@@ -278,7 +278,7 @@ public:
 
 	~CEditorImage();
 
-	void AnalyseTileFlags();
+	void AnalyzeTileFlags();
 	void LoadAutoMapper();
 
 	IGraphics::CTextureHandle m_Texture;

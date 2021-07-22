@@ -165,7 +165,7 @@ int CLayerGroup::SwapLayers(int Index0, int Index1)
 	return Index1;
 }
 
-void CEditorImage::AnalyseTileFlags()
+void CEditorImage::AnalyzeTileFlags()
 {
 	if(m_Format == CImageInfo::FORMAT_RGB)
 	{
@@ -1613,7 +1613,7 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 			float OffsetY = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[1]);
 			float Rot = fx2f(apEnvelope[j]->m_lPoints[i].m_aValues[2])/360.0f*pi*2;
 
-			//Set Colours
+			//Set Colors
 			float Alpha = (m_SelectedQuadEnvelope == lQuads[j].m_PosEnv && m_SelectedEnvelopePoint == i) ? 0.65f : 0.35f;
 			IGraphics::CColorVertex aArray[4] = {
 				IGraphics::CColorVertex(0, lQuads[j].m_aColors[0].r, lQuads[j].m_aColors[0].g, lQuads[j].m_aColors[0].b, Alpha),

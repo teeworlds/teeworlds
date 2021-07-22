@@ -66,9 +66,9 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	{
 		CEditorImage *pImg = m_lImages[i];
 
-		// analyse the image for when saving (should be done when we load the image)
+		// analyze the image for when saving (should be done when we load the image)
 		// TODO!
-		pImg->AnalyseTileFlags();
+		pImg->AnalyzeTileFlags();
 
 		CMapItemImage Item;
 		Item.m_Version = CMapItemImage::CURRENT_VERSION;
