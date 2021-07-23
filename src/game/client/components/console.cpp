@@ -722,6 +722,58 @@ void CGameConsole::ConDumpRemoteConsole(IConsole::IResult *pResult, void *pUserD
 	((CGameConsole *)pUserData)->Dump(CONSOLETYPE_REMOTE);
 }
 
+#ifdef CONF_DEBUG
+struct CDumpCommandsCallbackInfo
+{
+	CGameConsole *m_pConsole;
+	int m_FlagMask;
+	IOHANDLE m_File;
+	int m_Count;
+};
+
+void CGameConsole::DumpCommandsCallback(int Index, const char *pStr, void *pUser)
+{
+	CDumpCommandsCallbackInfo *pInfo = (CDumpCommandsCallbackInfo *)pUser;
+	const IConsole::CCommandInfo *pCommand = pInfo->m_pConsole->Console()->GetCommandInfo(pStr, pInfo->m_FlagMask, false);
+	io_write(pInfo->m_File, pCommand->m_pName, str_length(pCommand->m_pName));
+	io_write(pInfo->m_File, ";", 1);
+	io_write(pInfo->m_File, pCommand->m_pParams, str_length(pCommand->m_pParams));
+	io_write(pInfo->m_File, ";", 1);
+	io_write(pInfo->m_File, pCommand->m_pHelp, str_length(pCommand->m_pHelp));
+	io_write_newline(pInfo->m_File);
+	pInfo->m_Count++;
+}
+
+void CGameConsole::ConDumpCommands(IConsole::IResult *pResult, void *pUserData)
+{
+	CGameConsole *pConsole = (CGameConsole *)pUserData;
+	char aBuf[128];
+	char aFilename[64];
+	for(int i = 0; i < 2; i++) // client and server commands separately
+	{
+		const char *pSide = i == 0 ? "client" : "server";
+		str_format(aFilename, sizeof(aFilename), "dumps/%s_commands.csv", pSide);
+		IOHANDLE File = pConsole->Storage()->OpenFile(aFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		if(File)
+		{
+			CDumpCommandsCallbackInfo Info;
+			Info.m_pConsole = pConsole;
+			Info.m_FlagMask = i == 0 ? CFGFLAG_CLIENT : CFGFLAG_SERVER;
+			Info.m_File = File;
+			Info.m_Count = 0;
+			pConsole->Console()->PossibleCommands("", Info.m_FlagMask, false, DumpCommandsCallback, &Info);
+			io_close(File);
+			str_format(aBuf, sizeof(aBuf), "%d %s commands were written to '%s'", Info.m_Count, pSide, aFilename);
+		}
+		else
+		{
+			str_format(aBuf, sizeof(aBuf), "Failed to open '%s'", aFilename);
+		}
+		pConsole->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
+	}
+}
+#endif
+
 void CGameConsole::ClientConsolePrintCallback(const char *pStr, void *pUserData, bool Highlighted)
 {
 	((CGameConsole *)pUserData)->m_LocalConsole.PrintLine(pStr, Highlighted);
@@ -766,6 +818,10 @@ void CGameConsole::OnConsoleInit()
 	Console()->Register("clear_remote_console", "", CFGFLAG_CLIENT, ConClearRemoteConsole, this, "Clear remote console");
 	Console()->Register("dump_local_console", "", CFGFLAG_CLIENT, ConDumpLocalConsole, this, "Write local console contents to a text file");
 	Console()->Register("dump_remote_console", "", CFGFLAG_CLIENT, ConDumpRemoteConsole, this, "Write remote console contents to a text file");
+
+#ifdef CONF_DEBUG
+	Console()->Register("dump_commands", "", CFGFLAG_CLIENT, ConDumpCommands, this, "Write list of all commands to a text file");
+#endif
 
 	Console()->Chain("console_output_level", ConchainConsoleOutputLevelUpdate, this);
 }
