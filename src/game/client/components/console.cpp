@@ -729,12 +729,13 @@ struct CDumpCommandsCallbackInfo
 	int m_FlagMask;
 	IOHANDLE m_File;
 	int m_Count;
+	bool m_Temp;
 };
 
 void CGameConsole::DumpCommandsCallback(int Index, const char *pStr, void *pUser)
 {
 	CDumpCommandsCallbackInfo *pInfo = (CDumpCommandsCallbackInfo *)pUser;
-	const IConsole::CCommandInfo *pCommand = pInfo->m_pConsole->Console()->GetCommandInfo(pStr, pInfo->m_FlagMask, false);
+	const IConsole::CCommandInfo *pCommand = pInfo->m_pConsole->Console()->GetCommandInfo(pStr, pInfo->m_FlagMask, pInfo->m_Temp);
 	io_write(pInfo->m_File, pCommand->m_pName, str_length(pCommand->m_pName));
 	io_write(pInfo->m_File, ";", 1);
 	io_write(pInfo->m_File, pCommand->m_pParams, str_length(pCommand->m_pParams));
@@ -761,7 +762,10 @@ void CGameConsole::ConDumpCommands(IConsole::IResult *pResult, void *pUserData)
 			Info.m_FlagMask = i == 0 ? CFGFLAG_CLIENT : CFGFLAG_SERVER;
 			Info.m_File = File;
 			Info.m_Count = 0;
-			pConsole->Console()->PossibleCommands("", Info.m_FlagMask, false, DumpCommandsCallback, &Info);
+			Info.m_Temp = false;
+			pConsole->Console()->PossibleCommands("", Info.m_FlagMask, Info.m_Temp, DumpCommandsCallback, &Info);
+			Info.m_Temp = true;
+			pConsole->Console()->PossibleCommands("", Info.m_FlagMask, Info.m_Temp, DumpCommandsCallback, &Info);
 			io_close(File);
 			str_format(aBuf, sizeof(aBuf), "%d %s commands were written to '%s'", Info.m_Count, pSide, aFilename);
 		}
