@@ -244,7 +244,7 @@ int CSound::Init()
 		dbg_msg("client/sound", "sound init successful");
 
 	m_MaxFrames = m_pConfig->m_SndBufferSize*2;
-	m_pMixBuffer = (int *)mem_alloc(m_MaxFrames*2*sizeof(int), 1);
+	m_pMixBuffer = (int *)mem_alloc(m_MaxFrames*2*sizeof(int));
 
 	SDL_PauseAudio(0);
 
@@ -308,7 +308,7 @@ void CSound::RateConvert(int SampleID)
 
 	// allocate new data
 	NumFrames = (int)((pSample->m_NumFrames/(float)pSample->m_Rate)*m_MixingRate);
-	pNewData = (short *)mem_alloc(NumFrames*pSample->m_Channels*sizeof(short), 1);
+	pNewData = (short *)mem_alloc(NumFrames*pSample->m_Channels*sizeof(short));
 
 	for(int i = 0; i < NumFrames; i++)
 	{
@@ -458,11 +458,11 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 			return CSampleHandle();
 		}
 
-		pData = (int *)mem_alloc(4*m_aSamples*m_aChannels, 1);
+		pData = (int *)mem_alloc(4*m_aSamples*m_aChannels);
 		WavpackUnpackSamples(pContext, pData, m_aSamples); // TODO: check return value
 		pSrc = pData;
 
-		pSample->m_pData = (short *)mem_alloc(2*m_aSamples*m_aChannels, 1);
+		pSample->m_pData = (short *)mem_alloc(2*m_aSamples*m_aChannels);
 		pDst = pSample->m_pData;
 
 		for (i = 0; i < m_aSamples*m_aChannels; i++)

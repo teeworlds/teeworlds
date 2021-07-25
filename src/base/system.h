@@ -77,20 +77,18 @@ GNUC_ATTRIBUTE((format(printf, 2, 3)));
 
 	Parameters:
 		size - Size of the needed block.
-		alignment - Alignment for the block.
 
 	Returns:
 		Returns a pointer to the newly allocated block. Returns a
 		null pointer if the memory couldn't be allocated.
 
 	Remarks:
-		- Passing 0 to size will allocated the smallest amount possible
-		and return a unique pointer.
+		- The behavior when passing 0 as size is unspecified.
 
 	See Also:
 		<mem_free>
 */
-void *mem_alloc(unsigned size, unsigned alignment);
+void *mem_alloc(unsigned size);
 
 /*
 	Function: mem_free

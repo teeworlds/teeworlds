@@ -275,7 +275,7 @@ void dbg_console_cleanup()
 #endif
 /* */
 
-void *mem_alloc(unsigned size, unsigned alignment)
+void *mem_alloc(unsigned size)
 {
 	return malloc(size);
 }
@@ -569,7 +569,7 @@ typedef CRITICAL_SECTION LOCKINTERNAL;
 
 LOCK lock_create()
 {
-	LOCKINTERNAL *lock = (LOCKINTERNAL*)mem_alloc(sizeof(LOCKINTERNAL), 4);
+	LOCKINTERNAL *lock = (LOCKINTERNAL*)mem_alloc(sizeof(LOCKINTERNAL));
 
 #if defined(CONF_FAMILY_UNIX)
 	pthread_mutex_init(lock, 0x0);

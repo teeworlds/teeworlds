@@ -459,13 +459,13 @@ CServerEntry *CServerBrowser::Add(int ServerlistType, const NETADDR &Addr)
 		{
 			// alloc start size
 			m_aServerlist[ServerlistType].m_NumServerCapacity = 1000;
-			m_aServerlist[ServerlistType].m_ppServerlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*), 1);
+			m_aServerlist[ServerlistType].m_ppServerlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*));
 		}
 		else
 		{
 			// increase size
 			m_aServerlist[ServerlistType].m_NumServerCapacity += 100;
-			CServerEntry **ppNewlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*), 1);
+			CServerEntry **ppNewlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*));
 			mem_copy(ppNewlist, m_aServerlist[ServerlistType].m_ppServerlist, m_aServerlist[ServerlistType].m_NumServers*sizeof(CServerEntry*));
 			mem_free(m_aServerlist[ServerlistType].m_ppServerlist);
 			m_aServerlist[ServerlistType].m_ppServerlist = ppNewlist;
@@ -613,7 +613,7 @@ void CServerBrowser::LoadServerlist()
 	if(!File)
 		return;
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize, 1);
+	char *pFileData = (char *)mem_alloc(FileSize);
 	io_read(File, pFileData, FileSize);
 	io_close(File);
 
