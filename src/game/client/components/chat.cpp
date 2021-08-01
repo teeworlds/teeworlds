@@ -40,7 +40,6 @@ void CChat::OnReset()
 		}
 
 		Disable();
-		// m_WhisperTarget = -1;
 		m_LastWhisperFrom = -1;
 		m_ReverseCompletion = false;
 		m_Show = false;
