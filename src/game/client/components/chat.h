@@ -64,6 +64,9 @@ class CChat : public CComponent
 	char m_ChatBuffer[MAX_LINE_LENGTH];
 	char m_ChatCmdBuffer[1024];
 
+	void ClearInput();
+	void ClearChatBuffer();
+
 	struct CHistoryEntry
 	{
 		int m_Mode;
@@ -93,6 +96,7 @@ class CChat : public CComponent
 	void HandleCommands(float x, float y, float w);
 	bool ExecuteCommand();
 	bool CompleteCommand();
+	const char *GetCommandName(int Mode) const;
 
 	static void Com_All(IConsole::IResult *pResult, void *pContext);
 	static void Com_Team(IConsole::IResult *pResult, void *pContext);
@@ -100,8 +104,6 @@ class CChat : public CComponent
 	static void Com_Whisper(IConsole::IResult *pResult, void *pContext);
 	static void Com_Mute(IConsole::IResult *pResult, void *pContext);
 	static void Com_Befriend(IConsole::IResult *pResult, void *pContext);
-
-	void ClearInput();
 
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
@@ -126,8 +128,6 @@ public:
 	void Disable();
 	void EnableMode(int Mode, const char *pText = 0x0);
 	void Say(int Mode, const char *pLine);
-	void ClearChatBuffer();
-	const char *GetCommandName(int Mode) const;
 
 	CChat();
 	virtual void OnInit();
