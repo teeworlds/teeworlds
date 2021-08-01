@@ -86,8 +86,8 @@ class CChat : public CComponent
 	int m_FilteredCount;
 	int FilterChatCommands(const char *pLine);
 	int GetFirstActiveCommand();
-	int NextActiveCommand(int *Index);
-	int PreviousActiveCommand(int *Index);
+	int NextActiveCommand(int *pIndex);
+	int PreviousActiveCommand(int *pIndex);
 	int GetActiveCountRange(int i, int j);
 
 	CCommandManager m_CommandManager;
@@ -129,7 +129,7 @@ public:
 	void EnableMode(int Mode, const char *pText = 0x0);
 	void Say(int Mode, const char *pLine);
 	void ClearChatBuffer();
-	const char* GetCommandName(int Mode) const;
+	const char *GetCommandName(int Mode) const;
 
 	CChat();
 	virtual void OnInit();

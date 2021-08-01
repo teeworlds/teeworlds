@@ -500,7 +500,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 }
 
 
-void CChat::EnableMode(int Mode, const char* pText)
+void CChat::EnableMode(int Mode, const char *pText)
 {
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
 		return;
@@ -753,7 +753,7 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 	}
 }
 
-const char* CChat::GetCommandName(int Mode) const
+const char *CChat::GetCommandName(int Mode) const
 {
 	switch(Mode)
 	{
@@ -1635,37 +1635,32 @@ int CChat::GetFirstActiveCommand()
 	for(int i = 0; i < m_CommandManager.CommandCount(); i++)
 		if(!m_aFilter[i])
 			return i;
-
 	return -1;
 }
 
-int CChat::NextActiveCommand(int *Index)
+int CChat::NextActiveCommand(int *pIndex)
 {
-	(*Index)++;
-	while(*Index < m_aFilter.size() && m_aFilter[*Index])
-		(*Index)++;
-
-	return *Index;
+	(*pIndex)++;
+	while(*pIndex < m_aFilter.size() && m_aFilter[*pIndex])
+		(*pIndex)++;
+	return *pIndex;
 }
 
-int CChat::PreviousActiveCommand(int *Index)
+int CChat::PreviousActiveCommand(int *pIndex)
 {
-	(*Index)--;
-	while(*Index >= 0 && m_aFilter[*Index])
-		(*Index)--;
-
-	return *Index;
+	(*pIndex)--;
+	while(*pIndex >= 0 && m_aFilter[*pIndex])
+		(*pIndex)--;
+	return *pIndex;
 }
 
 int CChat::GetActiveCountRange(int i, int j)
 {
 	int Count = 0;
-
 	while(i < j)
 	{
 		if(!m_aFilter[i++])
 			Count++;
 	}
-
 	return Count;
 }
