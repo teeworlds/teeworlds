@@ -75,8 +75,6 @@ class CChat : public CComponent
 	int64 m_LastChatSend;
 	int64 m_aLastSoundPlayed[CHAT_NUM];
 
-	typedef void (*COMMAND_CALLBACK)(CChat *pChatData, const char *pArgs);
-
 	// chat commands
 	bool m_IgnoreCommand;
 	int m_SelectedCommand;
