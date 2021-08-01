@@ -68,6 +68,8 @@ class CChat : public CComponent
 	void ClearInput();
 	void ClearChatBuffer();
 
+	bool IsClientIgnored(int ClientID);
+
 	struct CHistoryEntry
 	{
 		int m_Mode;
