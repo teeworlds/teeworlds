@@ -711,36 +711,36 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 	}
 
 	if(Mode == CHAT_WHISPER && m_pClient->m_LocalClientID != ClientID)
-		m_LastWhisperFrom = ClientID; // we received a a whisper
+		m_LastWhisperFrom = ClientID; // we received a whisper
 
 	// play sound
 	if(Config()->m_ClShowChat)
 	{
-		int64 Now = time_get();
+		int ChatType;
 		if(ClientID < 0)
-		{
-			if(Now-m_aLastSoundPlayed[CHAT_SERVER] >= time_freq()*3/10)
-			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_SERVER, 0);
-				m_aLastSoundPlayed[CHAT_SERVER] = Now;
-			}
-		}
+			ChatType = CHAT_SERVER;
 		else if(Highlighted || Mode == CHAT_WHISPER)
-		{
-			if(Now-m_aLastSoundPlayed[CHAT_HIGHLIGHT] >= time_freq()*3/10)
-			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_HIGHLIGHT, 0);
-				m_aLastSoundPlayed[CHAT_HIGHLIGHT] = Now;
-			}
-		}
+			ChatType = CHAT_HIGHLIGHT;
 		else
+			ChatType = CHAT_CLIENT;
+
+		const int64 Now = time_get();
+		if(Now - m_aLastSoundPlayed[ChatType] >= time_freq() * 0.3f)
 		{
-			if(Now-m_aLastSoundPlayed[CHAT_CLIENT] >= time_freq()*3/10)
-			{
-				m_pClient->m_pSounds->Play(CSounds::CHN_GUI, SOUND_CHAT_CLIENT, 0);
-				m_aLastSoundPlayed[CHAT_CLIENT] = Now;
-			}
+			m_pClient->m_pSounds->Play(CSounds::CHN_GUI, GetChatSound(ChatType), 0);
+			m_aLastSoundPlayed[ChatType] = Now;
 		}
+	}
+}
+
+int CChat::GetChatSound(int ChatType)
+{
+	switch(ChatType)
+	{
+		case CHAT_SERVER: return SOUND_CHAT_SERVER;
+		case CHAT_HIGHLIGHT: return SOUND_CHAT_HIGHLIGHT;
+		case CHAT_CLIENT: return SOUND_CHAT_CLIENT;
+		default: return -1;
 	}
 }
 

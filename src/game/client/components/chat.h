@@ -40,11 +40,12 @@ class CChat : public CComponent
 	// chat sounds
 	enum
 	{
-		CHAT_SERVER=0,
+		CHAT_SERVER = 0,
 		CHAT_HIGHLIGHT,
 		CHAT_CLIENT,
 		CHAT_NUM,
 	};
+	int GetChatSound(int ChatType);
 
 	int m_Mode;
 	int m_WhisperTarget;
