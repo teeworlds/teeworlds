@@ -706,16 +706,8 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 		}
 
 		char aBuf[1024];
-		char aBufMode[32];
-		if(Mode == CHAT_WHISPER)
-			str_copy(aBufMode, "whisper", sizeof(aBufMode));
-		else if(Mode == CHAT_TEAM)
-			str_copy(aBufMode, "teamchat", sizeof(aBufMode));
-		else
-			str_copy(aBufMode, "chat", sizeof(aBufMode));
-
 		str_format(aBuf, sizeof(aBuf), "%2d: %s: %s", NameCID, pCurLine->m_aName, pCurLine->m_aText);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, aBufMode, aBuf, Highlighted || Mode == CHAT_WHISPER);
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, GetModeName(Mode), aBuf, Highlighted || Mode == CHAT_WHISPER);
 	}
 
 	if(Mode == CHAT_WHISPER && m_pClient->m_LocalClientID != ClientID)
@@ -752,13 +744,13 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 	}
 }
 
-const char *CChat::GetCommandName(int Mode) const
+const char *CChat::GetModeName(int Mode) const
 {
 	switch(Mode)
 	{
-		case CHAT_ALL: return "chat all";
-		case CHAT_WHISPER: return "chat whisper";
-		case CHAT_TEAM: return "chat team";
+		case CHAT_ALL: return "all";
+		case CHAT_WHISPER: return "whisper";
+		case CHAT_TEAM: return "team";
 		default: return "";
 	}
 }
@@ -915,14 +907,18 @@ void CChat::OnRender()
 			s_InfoCursor.Reset();
 
 			//Check if key exists with bind
+			char aCommand[64];
+			str_copy(aCommand, "chat ", sizeof(aCommand));
+			str_append(aCommand, GetModeName(m_ChatBufferMode), sizeof(aCommand));
+
 			int KeyID, Modifier;
-			m_pClient->m_pBinds->GetKeyID(GetCommandName(m_ChatBufferMode), KeyID, Modifier);
+			m_pClient->m_pBinds->GetKeyID(aCommand, KeyID, Modifier);
 
 			if(KeyID < KEY_LAST)
 			{
 				//find keyname and format text
 				char aKeyName[64];
-				m_pClient->m_pBinds->GetKey(GetCommandName(m_ChatBufferMode), aKeyName, sizeof(aKeyName), KeyID, Modifier);
+				m_pClient->m_pBinds->GetKey(aCommand, aKeyName, sizeof(aKeyName), KeyID, Modifier);
 
 				char aInfoText[128];
 				str_format(aInfoText, sizeof(aInfoText), Localize("Press %s to resume chatting"), aKeyName);
