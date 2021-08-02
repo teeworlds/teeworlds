@@ -82,6 +82,22 @@ jobs:
         ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target run_tests
         ./teeworlds_srv shutdown
 
+    - name: Build client release mode (no graphics)
+      env: ${{ matrix.env }}
+      run: |
+        python3 ./scripts/strip_gfx.py -i
+        mkdir release_no_gfx
+        cd release_no_gfx
+        ${{ matrix.cmake-path }}cmake -E env CXXFLAGS='' ${{ matrix.cmake-path }}cmake ${{ matrix.cmake-args }} -DCMAKE_BUILD_TYPE=Release -Werror=dev -DDOWNLOAD_GTEST=ON -DCMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE=. ..
+        ${{ matrix.cmake-path }}cmake -E env CXXFLAGS='' ${{ matrix.cmake-path }}cmake --build . --config Release --target everything ${{ matrix.build-args }}
+    - name: Test client release (no graphics)
+      run: |
+        cd release_no_gfx
+        ${{ matrix.cmake-path }}cmake -E env CXXFLAGS='' ${{ matrix.cmake-path }}cmake --build . --config Release --target run_tests ${{ matrix.build-args }}
+        ./teeworlds quit
+        cd ..
+        git checkout -- src
+
     - name: Package
       run: |
         cd release
