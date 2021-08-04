@@ -44,7 +44,7 @@
 	{
 		return _InterlockedIncrement((volatile long *)pValue);
 	}
-	
+
 	inline unsigned atomic_dec(volatile unsigned *pValue)
 	{
 		return _InterlockedDecrement((volatile long *)pValue);
