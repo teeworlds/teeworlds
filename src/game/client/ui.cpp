@@ -3,10 +3,13 @@
 #include <base/system.h>
 
 #include <engine/shared/config.h>
+
+#include <engine/client.h>
 #include <engine/graphics.h>
-#include <engine/textrender.h>
-#include <engine/keys.h>
 #include <engine/input.h>
+#include <engine/keys.h>
+#include <engine/textrender.h>
+
 #include "ui.h"
 
 /********************************************************
@@ -21,6 +24,26 @@ const vec4 CUI::ms_DefaultTextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 const vec4 CUI::ms_HighlightTextColor(0.0f, 0.0f, 0.0f, 1.0f);
 const vec4 CUI::ms_HighlightTextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
 const vec4 CUI::ms_TransparentTextColor(1.0f, 1.0f, 1.0f, 0.5f);
+
+CUI *CUIElementBase::s_pUI = 0;
+
+IClient *CUIElementBase::Client() const { return s_pUI->Client(); }
+CConfig *CUIElementBase::Config() const { return s_pUI->Config(); }
+IGraphics *CUIElementBase::Graphics() const { return s_pUI->Graphics(); }
+IInput *CUIElementBase::Input() const { return s_pUI->Input(); }
+ITextRender *CUIElementBase::TextRender() const { return s_pUI->TextRender(); }
+
+float CButtonContainer::GetFade(bool Checked, float Seconds)
+{
+	if(UI()->HotItem() == this || Checked)
+	{
+		m_FadeStartTime = Client()->LocalTime();
+		return 1.0f;
+	}
+
+	return maximum(0.0f, m_FadeStartTime -  Client()->LocalTime() + Seconds)/Seconds;
+}
+
 
 CUI::CUI()
 {
@@ -50,14 +73,16 @@ CUI::CUI()
 	m_NumPopupMenus = 0;
 }
 
-void CUI::Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender)
+void CUI::Init(class IKernel *pKernel)
 {
-	m_pConfig = pConfig;
-	m_pGraphics = pGraphics;
-	m_pInput = pInput;
-	m_pTextRender = pTextRender;
-	CUIRect::Init(pGraphics);
-	CLineInput::Init(pInput, pTextRender, pGraphics);
+	m_pClient = pKernel->RequestInterface<IClient>();
+	m_pConfig = pKernel->RequestInterface<IConfigManager>()->Values();
+	m_pGraphics = pKernel->RequestInterface<IGraphics>();
+	m_pInput = pKernel->RequestInterface<IInput>();
+	m_pTextRender = pKernel->RequestInterface<ITextRender>();
+	CUIRect::Init(m_pGraphics);
+	CLineInput::Init(m_pInput, m_pTextRender, m_pGraphics);
+	CUIElementBase::Init(this);
 }
 
 void CUI::Update(float MouseX, float MouseY, float MouseWorldX, float MouseWorldY)

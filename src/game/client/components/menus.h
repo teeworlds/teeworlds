@@ -34,30 +34,6 @@ public:
 
 class CMenus : public CComponent
 {
-public:
-	class CUIElementBase
-	{
-	protected:
-		static CRenderTools *m_pRenderTools;
-		static CUI *m_pUI;
-		static IInput *m_pInput;
-		static IClient *m_pClient;
-		static CConfig *m_pConfig;
-
-	public:
-		static void Init(CMenus *pMenus) { m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); m_pConfig = pMenus->Config(); }
-	};
-
-	class CButtonContainer : public CUIElementBase
-	{
-		bool m_CleanBackground;
-		float m_FadeStartTime;
-	public:
-		CButtonContainer(bool CleanBackground = false) : m_FadeStartTime(0.0f) { m_CleanBackground = CleanBackground; }
-		float GetFade(bool Checked = false, float Seconds = 0.6f);
-		bool IsCleanBackground() const { return m_CleanBackground; }
-	};
-
 private:
 	typedef float (CMenus::*FDropdownCallback)(CUIRect View);
 
