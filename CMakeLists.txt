@@ -1469,7 +1469,6 @@ if(CLIENT)
     components/menus_demo.cpp
     components/menus_ingame.cpp
     components/menus_listbox.cpp
-    components/menus_scrollregion.cpp
     components/menus_settings.cpp
     components/menus_start.cpp
     components/motd.cpp
@@ -1507,6 +1506,8 @@ if(CLIENT)
     ui.h
     ui_rect.cpp
     ui_rect.h
+    ui_scrollregion.cpp
+    ui_scrollregion.h
   )
   set_src(GAME_EDITOR GLOB src/game/editor
     auto_map.cpp
