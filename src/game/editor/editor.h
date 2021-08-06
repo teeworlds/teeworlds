@@ -827,7 +827,7 @@ public:
 
 	void RenderImagesList(CUIRect Toolbox);
 	void RenderSelectedImage(CUIRect View);
-	void RenderLayers(CUIRect Toolbox, CUIRect View);
+	void RenderLayers(CUIRect LayersBox);
 	void RenderModebar(CUIRect View);
 	void RenderStatusbar(CUIRect View);
 	void RenderEnvelopeEditor(CUIRect View);
