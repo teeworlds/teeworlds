@@ -2602,69 +2602,39 @@ void CEditor::SortImages()
 
 void CEditor::RenderImagesList(CUIRect ToolBox)
 {
-	static float s_ScrollValue = 0.0f;
-	const float RowHeight = 14.0f;
-	const float HeaderHeight = RowHeight + 1.0f;
-	const float HeaderSeparatorHeight = 5.0f;
-	const float AddButtonHeight = 17.0f;
-	const float ImagesHeight = 2 * (HeaderHeight + HeaderSeparatorHeight) + RowHeight * m_Map.m_lImages.size() + AddButtonHeight;
-	const float ScrollDifference = maximum(ImagesHeight - ToolBox.h, 0.0f);
+	const float RowHeight = 12.0f;
 
-	if(ScrollDifference > 0) // Do we even need a scrollbar?
-	{
-		CUIRect Scroll;
-		ToolBox.VSplitRight(15.0f, &ToolBox, &Scroll);
-		ToolBox.VSplitRight(3.0f, &ToolBox, 0);	// extra spacing
-		s_ScrollValue = UI()->DoScrollbarV(&s_ScrollValue, &Scroll, s_ScrollValue);
-		if(UI()->MouseInside(&Scroll) || UI()->MouseInside(&ToolBox))
-		{
-			int ScrollNum = (int)((ImagesHeight-ToolBox.h)/RowHeight)+1;
-			if(ScrollNum > 0)
-			{
-				if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-					s_ScrollValue = clamp(s_ScrollValue - 1.0f/ScrollNum, 0.0f, 1.0f);
-				if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-					s_ScrollValue = clamp(s_ScrollValue + 1.0f/ScrollNum, 0.0f, 1.0f);
-			}
-		}
-	}
-	else
-		s_ScrollValue = 0.0f;
-
-	const float ImageStartAt = ScrollDifference * s_ScrollValue;
-	const float ImageStopAt = ImagesHeight + ScrollDifference * (s_ScrollValue - 1.0f);
-	float ImageCur = 0.0f;
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0.0f, 0.0f);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	ScrollParams.m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	ScrollParams.m_ScrollbarWidth = 10.0f;
+	ScrollParams.m_ScrollbarMargin = 3.0f;
+	ScrollParams.m_ScrollUnit = RowHeight * 5;
+	s_ScrollRegion.Begin(&ToolBox, &ScrollOffset, &ScrollParams);
+	ToolBox.y += ScrollOffset.y;
 
 	for(int e = 0; e < 2; e++) // two passes, first embedded, then external
 	{
-		if(ImageCur + HeaderHeight > ImageStopAt)
-			return;
-
 		CUIRect Slot;
-		if(ImageCur >= ImageStartAt)
-		{
-			ToolBox.HSplitTop(HeaderHeight, &Slot, &ToolBox);
+		ToolBox.HSplitTop(RowHeight+3.0f, &Slot, &ToolBox);
+		s_ScrollRegion.AddRect(Slot);
+		if(!s_ScrollRegion.IsRectClipped(Slot))
 			UI()->DoLabel(&Slot, e == 0 ? "Embedded" : "External", 12.0f, TEXTALIGN_CENTER);
-		}
-		ImageCur += HeaderHeight;
 
 		for(int i = 0; i < m_Map.m_lImages.size(); i++)
 		{
 			if((e && !m_Map.m_lImages[i]->m_External) || (!e && m_Map.m_lImages[i]->m_External))
 				continue;
 
-			if(ImageCur + RowHeight > ImageStopAt)
-				return;
-			else if(ImageCur < ImageStartAt)
-			{
-				ImageCur += RowHeight;
+			ToolBox.HSplitTop(RowHeight+2.0f, &Slot, &ToolBox);
+			s_ScrollRegion.AddRect(Slot);
+			if(s_ScrollRegion.IsRectClipped(Slot))
 				continue;
-			}
-			ImageCur += RowHeight;
+			Slot.HSplitTop(RowHeight, &Slot, 0);
 
-			ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
-
-			// check if images is used
+			// check if image is used
 			bool Used = false;
 			for(int g = 0; !Used && (g < m_Map.m_lGroups.size()); g++)
 			{
@@ -2673,14 +2643,12 @@ void CEditor::RenderImagesList(CUIRect ToolBox)
 				{
 					if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_TILES)
 					{
-						CLayerTiles *pLayer = static_cast<CLayerTiles *>(pGroup->m_lLayers[l]);
-						if(pLayer->m_Image == i)
+						if(static_cast<CLayerTiles *>(pGroup->m_lLayers[l])->m_Image == i)
 							Used = true;
 					}
 					else if(pGroup->m_lLayers[l]->m_Type == LAYERTYPE_QUADS)
 					{
-						CLayerQuads *pLayer = static_cast<CLayerQuads *>(pGroup->m_lLayers[l]);
-						if(pLayer->m_Image == i)
+						if(static_cast<CLayerQuads *>(pGroup->m_lLayers[l])->m_Image == i)
 							Used = true;
 					}
 				}
@@ -2693,32 +2661,34 @@ void CEditor::RenderImagesList(CUIRect ToolBox)
 				if(Result == 2)
 					UI()->DoPopupMenu(UI()->MouseX(), UI()->MouseY(), 120, 80, this, PopupImage);
 			}
-
-			ToolBox.HSplitTop(2.0f, 0, &ToolBox);
 		}
 
 		// separator
-		if(ImageCur + HeaderSeparatorHeight > ImageStopAt)
-			return;
-		ToolBox.HSplitTop(HeaderSeparatorHeight, &Slot, &ToolBox);
-		ImageCur += HeaderSeparatorHeight;
-		IGraphics::CLineItem LineItem(Slot.x, Slot.y+Slot.h/2, Slot.x+Slot.w, Slot.y+Slot.h/2);
-		Graphics()->TextureClear();
-		Graphics()->LinesBegin();
-		Graphics()->LinesDraw(&LineItem, 1);
-		Graphics()->LinesEnd();
+		ToolBox.HSplitTop(5.0f, &Slot, &ToolBox);
+		s_ScrollRegion.AddRect(Slot);
+		if(!s_ScrollRegion.IsRectClipped(Slot))
+		{
+			IGraphics::CLineItem LineItem(Slot.x, Slot.y+Slot.h/2, Slot.x+Slot.w, Slot.y+Slot.h/2);
+			Graphics()->TextureClear();
+			Graphics()->LinesBegin();
+			Graphics()->LinesDraw(&LineItem, 1);
+			Graphics()->LinesEnd();
+		}
 	}
 
-	if(ImageCur + AddButtonHeight > ImageStopAt)
-		return;
-
 	// new image
-	static int s_NewImageButton = 0;
-	CUIRect Slot;
-	ToolBox.HSplitTop(5.0f, &Slot, &ToolBox);
-	ToolBox.HSplitTop(12.0f, &Slot, &ToolBox);
-	if(DoButton_Editor(&s_NewImageButton, "Add", 0, &Slot, 0, "Load a new image to use in the map"))
-		InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_IMG, "Add Image", "Add", "mapres", "", AddImage, this);
+	static int s_AddImageButton = 0;
+	CUIRect AddImageButton;
+	ToolBox.HSplitTop(5.0f + RowHeight + 1.0f, &AddImageButton, &ToolBox);
+	s_ScrollRegion.AddRect(AddImageButton);
+	if(!s_ScrollRegion.IsRectClipped(AddImageButton))
+	{
+		AddImageButton.HSplitTop(5.0f, 0, &AddImageButton);
+		AddImageButton.HSplitTop(RowHeight, &AddImageButton, 0);
+		if(DoButton_Editor(&s_AddImageButton, "Add", 0, &AddImageButton, 0, "Load a new image to use in the map"))
+			InvokeFileDialog(IStorage::TYPE_ALL, FILETYPE_IMG, "Add Image", "Add", "mapres", "", AddImage, this);
+	}
+	s_ScrollRegion.End();
 }
 
 void CEditor::RenderSelectedImage(CUIRect View)
