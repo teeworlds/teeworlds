@@ -341,19 +341,6 @@ int CEditor::DoButton_Image(const void *pID, const char *pText, int Checked, con
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
-int CEditor::DoButton_File(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
-{
-	if(Checked)
-		pRect->Draw(GetButtonColor(pID, Checked), 3.0f);
-	else if(UI()->HotItem() == pID)
-		pRect->Draw(vec4(1,1,1,0.33f), 3.0f);
-
-	CUIRect Label = *pRect;
-	Label.VMargin(5.0f, &Label);
-	UI()->DoLabel(&Label, pText, 10.0f, TEXTALIGN_ML);
-	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
-}
-
 int CEditor::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	pRect->Draw(vec4(0.5f, 0.5f, 0.5f, 1.0f), 3.0f, CUIRect::CORNER_T);
@@ -2775,41 +2762,6 @@ static int EditorListdirCallback(const char *pName, int IsDir, int StorageType, 
 	return 0;
 }
 
-void CEditor::AddFileDialogEntry(int Index, CUIRect *pView)
-{
-	if(m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[Index].m_aName, m_aFileDialogFilterString))
-		return;
-	m_FilesCur++;
-	if(m_FilesCur-1 < m_FilesStartAt || m_FilesCur >= m_FilesStopAt)
-		return;
-
-	CUIRect Button, FileIcon;
-	pView->HSplitTop(15.0f, &Button, pView);
-	pView->HSplitTop(2.0f, 0, pView);
-	Button.VSplitLeft(Button.h, &FileIcon, &Button);
-	Button.VSplitLeft(5.0f, 0, &Button);
-
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FILEICONS].m_Id);
-	Graphics()->QuadsBegin();
-	RenderTools()->SelectSprite(m_FileList[Index].m_IsDir?SPRITE_FILE_FOLDER:SPRITE_FILE_MAP2);
-	IGraphics::CQuadItem QuadItem(FileIcon.x, FileIcon.y, FileIcon.w, FileIcon.h);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	if(DoButton_File(&m_FileList[Index], m_FileList[Index].m_aName, m_FilesSelectedIndex == Index, &Button, 0, 0))
-	{
-		if(!m_FileList[Index].m_IsDir)
-			str_copy(m_aFileDialogFileName, m_FileList[Index].m_aFilename, sizeof(m_aFileDialogFileName));
-		else
-			m_aFileDialogFileName[0] = 0;
-		m_FilesSelectedIndex = Index;
-		m_PreviewImageIsLoaded = false;
-
-		if(Input()->MouseDoubleClick())
-			m_aFileDialogActivate = true;
-	}
-}
-
 void CEditor::RenderFileDialog()
 {
 	// GUI coordsys
@@ -2889,53 +2841,8 @@ void CEditor::RenderFileDialog()
 		}
 	}
 
-	int Num = (int)(View.h/17.0f)+1;
-	m_FileDialogScrollValue = UI()->DoScrollbarV(&m_FileDialogScrollValue, &Scroll, m_FileDialogScrollValue);
-
-	int ScrollNum = m_FileList.size()-Num+1;
-	if(ScrollNum > 0)
-	{
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_UP))
-			m_FileDialogScrollValue -= 3.0f/ScrollNum;
-		if(Input()->KeyPress(KEY_MOUSE_WHEEL_DOWN))
-			m_FileDialogScrollValue += 3.0f/ScrollNum;
-	}
-	else
-		ScrollNum = 0;
-
 	if(m_FilesSelectedIndex > -1)
 	{
-		for(int i = 0; i < Input()->NumEvents(); i++)
-		{
-			IInput::CEvent Event = Input()->GetEvent(i);
-			int NewIndex = -1;
-			if(Event.m_Flags&IInput::FLAG_PRESS)
-			{
-				if(Event.m_Key == KEY_DOWN) NewIndex = m_FilesSelectedIndex + 1;
-				if(Event.m_Key == KEY_UP) NewIndex = m_FilesSelectedIndex - 1;
-			}
-			if(NewIndex > -1 && NewIndex < m_FileList.size())
-			{
-				//scroll
-				float IndexY = View.y - m_FileDialogScrollValue*ScrollNum*17.0f + NewIndex*17.0f;
-				int Scroll = View.y > IndexY ? -1 : View.y+View.h < IndexY+17.0f ? 1 : 0;
-				if(Scroll)
-				{
-					if(Scroll < 0)
-						m_FileDialogScrollValue = ((float)(NewIndex)+0.5f)/ScrollNum;
-					else
-						m_FileDialogScrollValue = ((float)(NewIndex-Num)+2.5f)/ScrollNum;
-				}
-
-				if(!m_FileList[NewIndex].m_IsDir)
-					str_copy(m_aFileDialogFileName, m_FileList[NewIndex].m_aFilename, sizeof(m_aFileDialogFileName));
-				else
-					m_aFileDialogFileName[0] = 0;
-				m_FilesSelectedIndex = NewIndex;
-				m_PreviewImageIsLoaded = false;
-			}
-		}
-
 		if (m_FileDialogFileType == CEditor::FILETYPE_IMG && !m_PreviewImageIsLoaded && m_FilesSelectedIndex > -1)
 		{
 			int Length = str_length(m_FileList[m_FilesSelectedIndex].m_aFilename);
@@ -2987,25 +2894,45 @@ void CEditor::RenderFileDialog()
 		}
 	}
 
-	if(m_FileDialogScrollValue < 0) m_FileDialogScrollValue = 0;
-	if(m_FileDialogScrollValue > 1) m_FileDialogScrollValue = 1;
-
-	m_FilesStartAt = (int)(ScrollNum*m_FileDialogScrollValue);
-	if(m_FilesStartAt < 0)
-		m_FilesStartAt = 0;
-
-	m_FilesStopAt = m_FilesStartAt+Num;
-
-	m_FilesCur = 0;
-
-	// set clipping
-	UI()->ClipEnable(&View);
+	static CListBox s_ListBox;
+	s_ListBox.DoStart(15.0f, m_FileList.size(), 1, 5, m_FilesSelectedIndex, &View);
 
 	for(int i = 0; i < m_FileList.size(); i++)
-		AddFileDialogEntry(i, &View);
+	{
+		if(m_aFileDialogFilterString[0] && !str_find_nocase(m_FileList[i].m_aName, m_aFileDialogFilterString))
+			continue;
 
-	// disable clipping again
-	UI()->ClipDisable();
+		CListboxItem Item = s_ListBox.DoNextItem(&m_FileList[i], m_FilesSelectedIndex == i);
+		if(!Item.m_Visible)
+			continue;
+
+		CUIRect Label, FileIcon;
+		Item.m_Rect.VSplitLeft(Item.m_Rect.h, &FileIcon, &Label);
+		FileIcon.Margin(2.0f, &FileIcon);
+		Label.VSplitLeft(5.0f, 0, &Label);
+
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_FILEICONS].m_Id);
+		Graphics()->QuadsBegin();
+		RenderTools()->SelectSprite(m_FileList[i].m_IsDir ? SPRITE_FILE_FOLDER : SPRITE_FILE_MAP2);
+		IGraphics::CQuadItem QuadItem(FileIcon.x, FileIcon.y, FileIcon.w, FileIcon.h);
+		Graphics()->QuadsDrawTL(&QuadItem, 1);
+		Graphics()->QuadsEnd();
+
+		UI()->DoLabelSelected(&Label, m_FileList[i].m_aName, Item.m_Selected, 10.0f, TEXTALIGN_ML);
+	}
+
+	int NewSelection = s_ListBox.DoEnd();
+	if(NewSelection != m_FilesSelectedIndex)
+	{
+		m_FilesSelectedIndex = NewSelection;
+		if(!m_FileList[m_FilesSelectedIndex].m_IsDir)
+			str_copy(m_aFileDialogFileName, m_FileList[m_FilesSelectedIndex].m_aFilename, sizeof(m_aFileDialogFileName));
+		else
+			m_aFileDialogFileName[0] = 0;
+		m_PreviewImageIsLoaded = false;
+	}
+	if(s_ListBox.WasItemActivated())
+		m_aFileDialogActivate = true;
 
 	// the buttons
 	static int s_OkButton = 0;
