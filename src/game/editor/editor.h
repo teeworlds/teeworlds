@@ -771,7 +771,6 @@ public:
 	int DoButton_ButtonDec(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_ButtonInc(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 
-	int DoButton_File(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_Image(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, bool Used);
 
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
@@ -836,7 +835,6 @@ public:
 	void RenderMenubar(CUIRect Menubar);
 	void RenderFileDialog();
 
-	void AddFileDialogEntry(int Index, CUIRect *pView);
 	void SortImages();
 	static void ExtractName(const char *pFileName, char *pName, int BufferSize)
 	{
