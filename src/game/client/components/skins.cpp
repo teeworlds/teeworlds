@@ -31,6 +31,11 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	if(IsDir || !str_endswith(pName, ".png"))
 		return 0;
 
+	CSkinPart Part;
+	str_utf8_copy_num(Part.m_aName, pName, minimum(str_length(pName) - 3, int(sizeof(Part.m_aName))), MAX_SKIN_LENGTH);
+	if(pSelf->FindSkinPart(pSelf->m_ScanningPart, Part.m_aName, true) != -1)
+		return 0;
+
 	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s/%s", CSkins::ms_apSkinPartNames[pSelf->m_ScanningPart], pName);
 	CImageInfo Info;
@@ -41,7 +46,6 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		return 0;
 	}
 
-	CSkinPart Part;
 	Part.m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	Part.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 
@@ -92,7 +96,6 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		Part.m_Flags |= SKINFLAG_SPECIAL;
 	if(DirType != IStorage::TYPE_SAVE)
 		Part.m_Flags |= SKINFLAG_STANDARD;
-	str_utf8_copy_num(Part.m_aName, pName, minimum(str_length(pName) - 3, int(sizeof(Part.m_aName))), MAX_SKIN_LENGTH);
 	if(pSelf->Config()->m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin part %s", Part.m_aName);
