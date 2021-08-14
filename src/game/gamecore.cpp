@@ -203,7 +203,7 @@ void CCharacterCore::Tick(bool UseInput)
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, pCharCore->m_Pos);
 				if(distance(pCharCore->m_Pos, ClosestPoint) < PHYS_SIZE+2.0f)
 				{
-					if (m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Distance)
+					if(m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Distance)
 					{
 						m_TriggeredEvents |= COREEVENTFLAG_HOOK_ATTACH_PLAYER;
 						m_HookState = HOOK_GRABBED;
@@ -308,7 +308,7 @@ void CCharacterCore::Tick(bool UseInput)
 
 				// make sure that we don't add excess force by checking the
 				// direction against the current velocity. if not zero.
-				if (length(m_Vel) > 0.0001)
+				if(length(m_Vel) > 0.0001)
 					Velocity = 1-(dot(normalize(m_Vel), Dir)+1)/2;
 
 				m_Vel += Dir*a*(Velocity*0.75f);
