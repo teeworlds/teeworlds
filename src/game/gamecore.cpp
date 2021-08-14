@@ -43,11 +43,6 @@ bool CTuningParams::Get(const char *pName, float *pValue) const
 }
 
 
-float HermiteBasis1(float v)
-{
-	return 2*v*v*v - 3*v*v+1;
-}
-
 float VelocityRamp(float Value, float Start, float Range, float Curvature)
 {
 	if(Value < Start)
