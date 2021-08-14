@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "gamecore.h"
 
-const char *CTuningParams::m_apNames[] =
+const char *CTuningParams::s_apNames[] =
 {
 	#define MACRO_TUNING_PARAM(Name,ScriptName,Value) #ScriptName,
 	#include "tuning.h"
@@ -29,7 +29,7 @@ bool CTuningParams::Get(int Index, float *pValue) const
 bool CTuningParams::Set(const char *pName, float Value)
 {
 	for(int i = 0; i < Num(); i++)
-		if(str_comp_nocase(pName, m_apNames[i]) == 0)
+		if(str_comp_nocase(pName, GetName(i)) == 0)
 			return Set(i, Value);
 	return false;
 }
@@ -37,11 +37,11 @@ bool CTuningParams::Set(const char *pName, float Value)
 bool CTuningParams::Get(const char *pName, float *pValue) const
 {
 	for(int i = 0; i < Num(); i++)
-		if(str_comp_nocase(pName, m_apNames[i]) == 0)
+		if(str_comp_nocase(pName, GetName(i)) == 0)
 			return Get(i, pValue);
-
 	return false;
 }
+
 
 float HermiteBasis1(float v)
 {
