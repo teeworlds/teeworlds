@@ -463,20 +463,11 @@ void CGameConsole::OnRender()
 		float x = 3;
 		float y = ConsoleHeight - RowHeight - 5.0f;
 
-		CRenderInfo Info;
-		Info.m_pSelf = this;
-		Info.m_WantedCompletion = pConsole->m_CompletionChosen;
-		Info.m_EnumCount = 0;
-		Info.m_Offset = pConsole->m_CompletionRenderOffset;
-		Info.m_Width = Screen.w;
-		Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
-
 		static CTextCursor s_InfoCursor;
 		s_InfoCursor.Reset();
-		s_InfoCursor.MoveTo(x+Info.m_Offset, y+RowHeight+2.0f);
+		s_InfoCursor.MoveTo(x+pConsole->m_CompletionRenderOffset, y+RowHeight+2.0f);
 		s_InfoCursor.m_FontSize = FontSize;
 		s_InfoCursor.m_MaxWidth = -1.0f;
-		Info.m_pCursor = &s_InfoCursor;
 
 		// render prompt
 		static CTextCursor s_Cursor;
@@ -523,23 +514,45 @@ void CGameConsole::OnRender()
 		{
 			if(pConsole->m_Input.GetString()[0] != 0)
 			{
-				m_pConsole->PossibleCommands(pConsole->m_aCompletionBuffer, pConsole->m_CompletionFlagmask, m_ConsoleType != CGameConsole::CONSOLETYPE_LOCAL &&
+				CRenderInfo Info;
+				Info.m_pSelf = this;
+				Info.m_WantedCompletion = pConsole->m_CompletionChosen;
+				Info.m_EnumCount = 0;
+				Info.m_Offset = pConsole->m_CompletionRenderOffset;
+				Info.m_Width = Screen.w;
+				Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
+				Info.m_pCursor = &s_InfoCursor;
+				m_pConsole->PossibleCommands(Info.m_pCurrentCmd, pConsole->m_CompletionFlagmask, m_ConsoleType != CGameConsole::CONSOLETYPE_LOCAL &&
 					Client()->RconAuthed() && Client()->UseTempRconCommands(), PossibleCommandsRenderCallback, &Info);
 				pConsole->m_CompletionRenderOffset = Info.m_Offset;
 
 				if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
 				{
-					char aBuf[512];
-					str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_aCommandHelp);
-					TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
-					TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1);
-					str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
-					TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
+					if(IsMapCommandPrefix(Info.m_pCurrentCmd))
+					{
+						Info.m_WantedCompletion = pConsole->m_CompletionMapChosen;
+						Info.m_EnumCount = 0;
+						Info.m_Offset = pConsole->m_CompletionRenderOffset;
+						Info.m_Width = Screen.w;
+						Info.m_pCurrentCmd = pConsole->m_aCompletionMapBuffer;
+						m_pConsole->PossibleMaps(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
+						pConsole->m_CompletionRenderOffset = Info.m_Offset;
+					}
+
+					if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
+					{
+						char aBuf[512];
+						str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_aCommandHelp);
+						TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
+						TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1);
+						str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
+						TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
+					}
 				}
 			}
 		}
 
-		TextRender()->DrawTextOutlined(Info.m_pCursor);
+		TextRender()->DrawTextOutlined(&s_InfoCursor);
 
 		TextRender()->TextColor(1,1,1,1);
 
