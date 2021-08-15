@@ -25,6 +25,16 @@
 
 #include "console.h"
 
+static const char *s_apMapCommands[] = { "sv_map ", "change_map " };
+
+bool IsMapCommandPrefix(const char *pStr)
+{
+	for(unsigned i = 0; i < sizeof(s_apMapCommands)/sizeof(const char *); i++)
+		if(str_startswith_nocase(pStr, s_apMapCommands[i]))
+			return true;
+	return false;
+}
+
 enum
 {
 	CONSOLE_CLOSED,
@@ -185,7 +195,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			}
 
 			// maplist completion
-			if(m_Type == CGameConsole::CONSOLETYPE_REMOTE && m_pGameConsole->Client()->RconAuthed() && str_startswith_nocase(GetString(), "sv_map "))
+			if(m_Type == CGameConsole::CONSOLETYPE_REMOTE && m_pGameConsole->Client()->RconAuthed() && IsMapCommandPrefix(GetString()))
 			{
 				m_CompletionMapEnumerationCount = m_pGameConsole->m_pConsole->PossibleMaps(m_aCompletionMapBuffer);
 				if(m_CompletionMapEnumerationCount)
@@ -219,10 +229,13 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			m_CompletionChosen = -1;
 			str_copy(m_aCompletionBuffer, m_Input.GetString(), sizeof(m_aCompletionBuffer));
 
-			if(str_startswith_nocase(GetString(), "sv_map "))
+			for(unsigned i = 0; i < sizeof(s_apMapCommands)/sizeof(const char *); i++)
 			{
-				m_CompletionMapChosen = -1;
-				str_copy(m_aCompletionMapBuffer, &m_Input.GetString()[7], sizeof(m_aCompletionBuffer));
+				if(str_startswith_nocase(GetString(), s_apMapCommands[i]))
+				{
+					m_CompletionMapChosen = -1;
+					str_copy(m_aCompletionMapBuffer, &m_Input.GetString()[str_length(s_apMapCommands[i])], sizeof(m_aCompletionBuffer));
+				}
 			}
 		}
 
