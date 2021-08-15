@@ -328,7 +328,7 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
-		pInfo->m_pSelf->TextRender()->TextColor(0.05f, 0.05f, 0.05f,1);
+		pInfo->m_pSelf->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 		const float BeginX = pInfo->m_pCursor->AdvancePosition().x - pInfo->m_Offset;
 		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
 		CTextBoundingBox Box = pInfo->m_pCursor->BoundingBox();
