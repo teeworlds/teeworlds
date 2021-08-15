@@ -581,6 +581,7 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_RconAuthed = 0;
 	m_UseTempRconCommands = 0;
 	m_pConsole->DeregisterTempAll();
+	m_pConsole->DeregisterTempMapAll();
 	m_NetClient.Disconnect(pReason);
 	SetState(IClient::STATE_OFFLINE);
 	m_pMap->Unload();
