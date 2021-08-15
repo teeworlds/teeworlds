@@ -8,47 +8,47 @@
 
 class CMap : public IEngineMap
 {
-	CDataFileReader m_DataFile;
+	CDataFileReader *m_pDataFile;
 public:
-	CMap() {}
+	CMap() { m_pDataFile = new CDataFileReader; }
+	~CMap() { Unload(); delete m_pDataFile; }
 
-	virtual void *GetData(int Index) { return m_DataFile.GetData(Index); }
-	virtual void *GetDataSwapped(int Index) { return m_DataFile.GetDataSwapped(Index); }
-	virtual void UnloadData(int Index) { m_DataFile.UnloadData(Index); }
-	virtual void *GetItem(int Index, int *pType, int *pID) { return m_DataFile.GetItem(Index, pType, pID); }
-	virtual void GetType(int Type, int *pStart, int *pNum) { m_DataFile.GetType(Type, pStart, pNum); }
-	virtual void *FindItem(int Type, int ID) { return m_DataFile.FindItem(Type, ID); }
-	virtual int NumItems() { return m_DataFile.NumItems(); }
+	virtual void *GetData(int Index) { return m_pDataFile->GetData(Index); }
+	virtual void *GetDataSwapped(int Index) { return m_pDataFile->GetDataSwapped(Index); }
+	virtual void UnloadData(int Index) { m_pDataFile->UnloadData(Index); }
+	virtual void *GetItem(int Index, int *pType, int *pID) { return m_pDataFile->GetItem(Index, pType, pID); }
+	virtual void GetType(int Type, int *pStart, int *pNum) { m_pDataFile->GetType(Type, pStart, pNum); }
+	virtual void *FindItem(int Type, int ID) { return m_pDataFile->FindItem(Type, ID); }
+	virtual int NumItems() { return m_pDataFile->NumItems(); }
 
 	virtual void Unload()
 	{
-		m_DataFile.Close();
+		m_pDataFile->Close();
 	}
 
-	virtual bool Load(const char *pMapName, IStorage *pStorage)
+	bool LoadImpl(const char *pMapName, IStorage *pStorage)
 	{
 		if(!pStorage)
 			pStorage = Kernel()->RequestInterface<IStorage>();
 		if(!pStorage)
 			return false;
-		if(!m_DataFile.Open(pStorage, pMapName, IStorage::TYPE_ALL))
+		if(!m_pDataFile->Open(pStorage, pMapName, IStorage::TYPE_ALL))
 			return false;
 		// check version
-		CMapItemVersion *pItem = (CMapItemVersion *)m_DataFile.FindItem(MAPITEMTYPE_VERSION, 0);
+		CMapItemVersion *pItem = (CMapItemVersion *)m_pDataFile->FindItem(MAPITEMTYPE_VERSION, 0);
 		if(!pItem || pItem->m_Version != CMapItemVersion::CURRENT_VERSION)
 			return false;
 
 		// replace compressed tile layers with uncompressed ones
 		int GroupsStart, GroupsNum, LayersStart, LayersNum;
-		m_DataFile.GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
-		m_DataFile.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
+		m_pDataFile->GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
+		m_pDataFile->GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
 		for(int g = 0; g < GroupsNum; g++)
 		{
-			CMapItemGroup *pGroup = static_cast<CMapItemGroup *>(m_DataFile.GetItem(GroupsStart + g, 0, 0));
+			CMapItemGroup *pGroup = static_cast<CMapItemGroup *>(m_pDataFile->GetItem(GroupsStart + g, 0, 0));
 			for(int l = 0; l < pGroup->m_NumLayers; l++)
 			{
-				CMapItemLayer *pLayer = static_cast<CMapItemLayer *>(m_DataFile.GetItem(LayersStart + pGroup->m_StartLayer + l, 0, 0));
-
+				CMapItemLayer *pLayer = static_cast<CMapItemLayer *>(m_pDataFile->GetItem(LayersStart + pGroup->m_StartLayer + l, 0, 0));
 				if(pLayer->m_Type == LAYERTYPE_TILES)
 				{
 					CMapItemLayerTilemap *pTilemap = reinterpret_cast<CMapItemLayerTilemap *>(pLayer);
@@ -69,7 +69,7 @@ public:
 
 						// extract original tile data
 						int i = 0;
-						CTile *pSavedTiles = static_cast<CTile *>(m_DataFile.GetData(pTilemap->m_Data));
+						CTile *pSavedTiles = static_cast<CTile *>(m_pDataFile->GetData(pTilemap->m_Data));
 						while(i < TilemapCount)
 						{
 							for(unsigned Counter = 0; Counter <= pSavedTiles->m_Skip && i < TilemapCount; Counter++)
@@ -81,29 +81,45 @@ public:
 							pSavedTiles++;
 						}
 
-						m_DataFile.ReplaceData(pTilemap->m_Data, reinterpret_cast<char *>(pTiles), TilemapSize);
+						m_pDataFile->ReplaceData(pTilemap->m_Data, reinterpret_cast<char *>(pTiles), TilemapSize);
 					}
 				}
 			}
-			
 		}
-		
+
 		return true;
+	}
+
+	virtual bool Load(const char *pMapName, IStorage *pStorage)
+	{
+		CDataFileReader *pLastDataFile = m_pDataFile;
+		m_pDataFile = new CDataFileReader;
+		if(LoadImpl(pMapName, pStorage))
+		{
+			delete pLastDataFile;
+			return true;
+		}
+		else
+		{
+			delete m_pDataFile;
+			m_pDataFile = pLastDataFile;
+			return false;
+		}
 	}
 
 	virtual bool IsLoaded()
 	{
-		return m_DataFile.IsOpen();
+		return m_pDataFile->IsOpen();
 	}
 
 	virtual SHA256_DIGEST Sha256()
 	{
-		return m_DataFile.Sha256();
+		return m_pDataFile->Sha256();
 	}
 
 	virtual unsigned Crc()
 	{
-		return m_DataFile.Crc();
+		return m_pDataFile->Crc();
 	}
 };
 
