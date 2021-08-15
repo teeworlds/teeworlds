@@ -187,7 +187,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			}
 
 			// maplist completion
-			if(m_pGameConsole->Client()->RconAuthed() && str_startswith_nocase(GetString(), "sv_map "))
+			if(m_Type == CGameConsole::CONSOLETYPE_REMOTE && m_pGameConsole->Client()->RconAuthed() && str_startswith_nocase(GetString(), "sv_map "))
 			{
 				m_CompletionMapEnumerationCount = m_pGameConsole->m_pConsole->PossibleMaps(m_aCompletionMapBuffer);
 				if(m_CompletionMapEnumerationCount)
