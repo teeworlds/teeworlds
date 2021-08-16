@@ -833,8 +833,16 @@ CConsole::~CConsole()
 	{
 		CCommand *pNext = pCommand->m_pNext;
 
-		if(pCommand->m_pfnCallback == Con_Chain)
-			mem_free(static_cast<CChain *>(pCommand->m_pUserData));
+		FCommandCallback pfnCallback = pCommand->m_pfnCallback;
+		void *pUserData = pCommand->m_pUserData;
+		while(pfnCallback == Con_Chain)
+		{
+			CChain *pChainInfo = static_cast<CChain *>(pUserData);
+			pfnCallback = pChainInfo->m_pfnCallback;
+			pUserData = pChainInfo->m_pCallbackUserData;
+			mem_free(pChainInfo);
+		}
+
 		mem_free(pCommand);
 
 		pCommand = pNext;
