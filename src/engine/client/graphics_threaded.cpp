@@ -7,7 +7,7 @@
 
 #include <base/system.h>
 
-#include <pnglite.h>
+#include <engine/external/stb/stb.h>
 
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
@@ -386,7 +386,7 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTexture(const char *pFilename,
 			StoreFormat = Img.m_Format;
 
 		ID = LoadTextureRaw(Img.m_Width, Img.m_Height, Img.m_Format, Img.m_pData, StoreFormat, Flags);
-		mem_free(Img.m_pData);
+		stbi_image_free(Img.m_pData);
 		if(ID.Id() != m_InvalidTexture.Id() && m_pConfig->m_Debug)
 			dbg_msg("graphics/texture", "loaded %s", pFilename);
 		return ID;
@@ -397,7 +397,6 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTexture(const char *pFilename,
 
 int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
 {
-	// open file for reading
 	char aCompleteFilename[IO_MAX_PATH_LENGTH];
 	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType, aCompleteFilename, sizeof(aCompleteFilename));
 	if(!File)
@@ -406,32 +405,27 @@ int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int Sto
 		return 0;
 	}
 
-	png_init(0, 0); // ignore_convention
-	png_t Png; // ignore_convention
-	int Error = png_open_read(&Png, 0, File); // ignore_convention
-	if(Error != PNG_NO_ERROR)
-	{
-		dbg_msg("game/png", "failed to read file. filename='%s'", aCompleteFilename);
-		io_close(File);
-		return 0;
-	}
-
-	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA) || Png.width > (2<<12) || Png.height > (2<<12)) // ignore_convention
-	{
-		dbg_msg("game/png", "invalid format. filename='%s'", aCompleteFilename);
-		io_close(File);
-		return 0;
-	}
-
-	unsigned char *pBuffer = (unsigned char *)mem_alloc(Png.width * Png.height * Png.bpp); // ignore_convention
-	png_get_data(&Png, pBuffer); // ignore_convention
+	int Width, Height, Channels;
+	unsigned char *pBuffer = stbi_load_from_file((FILE *)File, &Width, &Height, &Channels, 0);
 	io_close(File);
+	if(!pBuffer)
+	{
+		dbg_msg("game/png", "failed to load image. filename='%s' reason='%s'", aCompleteFilename, stbi_failure_reason());
+		return 0;
+	}
 
-	pImg->m_Width = Png.width; // ignore_convention
-	pImg->m_Height = Png.height; // ignore_convention
-	if(Png.color_type == PNG_TRUECOLOR) // ignore_convention
+	if((Channels != 3 && Channels != 4) || Width > (1<<13) || Height > (1<<13))
+	{
+		dbg_msg("game/png", "invalid image format/dimensions. filename='%s' channels='%d' width='%d' height='%d'", aCompleteFilename, Channels, Width, Height);
+		stbi_image_free(pBuffer);
+		return 0;
+	}
+
+	pImg->m_Width = Width;
+	pImg->m_Height = Height;
+	if(Channels == 3)
 		pImg->m_Format = CImageInfo::FORMAT_RGB;
-	else if(Png.color_type == PNG_TRUECOLOR_ALPHA) // ignore_convention
+	else if(Channels == 4)
 		pImg->m_Format = CImageInfo::FORMAT_RGBA;
 	pImg->m_pData = pBuffer;
 	return 1;
@@ -467,23 +461,27 @@ void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 	{
 		// find filename
 		char aWholePath[IO_MAX_PATH_LENGTH];
-		char aBuf[IO_MAX_PATH_LENGTH+32];
+		char aBuf[IO_MAX_PATH_LENGTH + 32];
+
 		IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE, aWholePath, sizeof(aWholePath));
-		if(File)
-		{
-			// save png
-			png_t Png; // ignore_convention
-			png_open_write(&Png, 0, File); // ignore_convention
-			png_set_data(&Png, Image.m_Width, Image.m_Height, 8, PNG_TRUECOLOR, (unsigned char *)Image.m_pData); // ignore_convention
-			io_close(File);
-			str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
-		}
-		else
+		if(!File)
 		{
 			str_format(aBuf, sizeof(aBuf), "failed to open file '%s'", pFilename);
+			return;
 		}
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/screenshot", aBuf);
+
+		// save png
+		if(!stbi_write_png(aWholePath, Image.m_Width, Image.m_Height, 3, (unsigned char *)Image.m_pData, 0))
+		{
+			str_format(aBuf, sizeof(aBuf), "failed to write png file to '%s'", aWholePath);
+			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/screenshot", aBuf);
+			mem_free(Image.m_pData);
+			return;
+		}
 		mem_free(Image.m_pData);
+
+		str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/screenshot", aBuf);
 	}
 }
 

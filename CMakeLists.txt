@@ -303,7 +303,6 @@ find_package(Crypto)
 find_package(Freetype)
 find_package(Git)
 find_package(GTest)
-find_package(Pnglite)
 find_package(SDL2)
 find_package(Threads)
 find_package(Wavpack)
@@ -354,7 +353,6 @@ if(TARGET_OS AND TARGET_OS STREQUAL "mac")
   show_dependency_status("Hdiutil" HDIUTIL)
 endif()
 show_dependency_status("OpenSSL Crypto" CRYPTO)
-show_dependency_status("Pnglite" PNGLITE)
 show_dependency_status("PythonInterp" PYTHONINTERP)
 show_dependency_status("SDL2" SDL2)
 show_dependency_status("Wavpack" WAVPACK)
@@ -487,9 +485,13 @@ add_library(json EXCLUDE_FROM_ALL OBJECT ${DEP_JSON_SRC})
 set_src(DEP_MD5_SRC GLOB src/engine/external/md5 md5.c md5.h)
 add_library(md5 EXCLUDE_FROM_ALL OBJECT ${DEP_MD5_SRC})
 
-list(APPEND TARGETS_DEP json md5)
+set_src(DEP_STB_SRC GLOB src/engine/external/stb stb.c stb.h stb_image.h stb_image_write.h)
+add_library(stb EXCLUDE_FROM_ALL OBJECT ${DEP_STB_SRC})
+
+list(APPEND TARGETS_DEP json md5 stb)
 set(DEP_JSON $<TARGET_OBJECTS:json>)
 set(DEP_MD5)
+set(DEP_STB $<TARGET_OBJECTS:stb>)
 if(NOT CRYPTO_FOUND)
   set(DEP_MD5 $<TARGET_OBJECTS:md5>)
 endif()
@@ -1525,13 +1527,13 @@ if(CLIENT)
   )
   set(CLIENT_SRC ${PLATFORM_CLIENT} ${ENGINE_CLIENT} ${GAME_CLIENT} ${GAME_EDITOR} ${GAME_GENERATED_CLIENT})
 
-  set(DEPS_CLIENT ${DEPS} ${PNGLITE_DEP} ${WAVPACK_DEP})
+  set(DEPS_CLIENT ${DEPS} ${DEP_STB} ${WAVPACK_DEP})
 
   # Libraries
   set(LIBS_CLIENT
     ${LIBS}
     ${FREETYPE_LIBRARIES}
-    ${PNGLITE_LIBRARIES}
+    ${STB_LIBRARIES}
     ${SDL2_LIBRARIES}
     ${WAVPACK_LIBRARIES}
     ${PLATFORM_CLIENT_LIBS}
@@ -1562,7 +1564,6 @@ if(CLIENT)
 
   target_include_directories(${TARGET_CLIENT} PRIVATE
     ${FREETYPE_INCLUDE_DIRS}
-    ${PNGLITE_INCLUDE_DIRS}
     ${SDL2_INCLUDE_DIRS}
     ${WAVPACK_INCLUDE_DIRS}
   )

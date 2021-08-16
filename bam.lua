@@ -101,11 +101,11 @@ function GenerateCommonSettings(settings, conf, arch, compiler)
 
 	local md5 = Compile(settings, Collect("src/engine/external/md5/*.c"))
 	local wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
-	local png = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
+	local stb = Compile(settings, Collect("src/engine/external/stb/*.c"))
 	local json = Compile(settings, Collect("src/engine/external/json-parser/*.c"))
 
 	-- globally available libs
-	libs = {zlib=zlib, wavpack=wavpack, png=png, md5=md5, json=json}
+	libs = {zlib=zlib, wavpack=wavpack, png=stb, md5=md5, json=json}
 end
 
 function GenerateMacOSXSettings(settings, conf, arch, compiler)
@@ -457,7 +457,6 @@ function GenerateSettings(conf, arch, builddir, compiler, headless)
 	end
 	
 	settings.cc.includes:Add("src")
-	settings.cc.includes:Add("src/engine/external/pnglite")
 	settings.cc.includes:Add("src/engine/external/wavpack")
 	settings.cc.includes:Add(generated_src_dir)
 	
