@@ -54,6 +54,8 @@ class CConsole : public IConsole
 	CCommand *m_pRecycleList;
 	CHeap m_TempCommands;
 
+	void TraverseChain(FCommandCallback *ppfnCallback, void **ppUserData);
+
 	static void Con_Chain(IResult *pResult, void *pUserData);
 	static void Con_Echo(IResult *pResult, void *pUserData);
 	static void Con_Exec(IResult *pResult, void *pUserData);
