@@ -81,10 +81,26 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 			Item.m_ImageData = -1;
 		else
 		{
-			int PixelSize = pImg->m_Format == CImageInfo::FORMAT_RGB ? 3 : 4;
-			Item.m_ImageData = df.AddData(Item.m_Width*Item.m_Height*PixelSize, pImg->m_pData);
+			if(pImg->m_Format == CImageInfo::FORMAT_RGB)
+			{
+				unsigned char *pSrc = (unsigned char *)pImg->m_pData;
+				unsigned char *pBuf = (unsigned char *)mem_alloc(Item.m_Width*Item.m_Height*4, 1);
+				for(int i = 0; i < Item.m_Width*Item.m_Height; i++)
+				{
+					pBuf[4 * i + 0] = pSrc[3 * i + 0]; // r
+					pBuf[4 * i + 1] = pSrc[3 * i + 1]; // g
+					pBuf[4 * i + 2] = pSrc[3 * i + 2]; // b
+					pBuf[4 * i + 3] = 0xff;            // a
+				}
+				Item.m_ImageData = df.AddData(Item.m_Width*Item.m_Height*4, pBuf);
+				mem_free(pBuf);
+			}
+			else
+			{
+				Item.m_ImageData = df.AddData(Item.m_Width*Item.m_Height*4, pImg->m_pData);
+			}
 		}
-		Item.m_Format = pImg->m_Format;
+		Item.m_MustBe1 = 1;
 		df.AddItem(MAPITEMTYPE_IMAGE, i, sizeof(Item), &Item);
 	}
 
@@ -303,7 +319,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 				CEditorImage *pImg = new CEditorImage(m_pEditor);
 				pImg->m_External = pItem->m_External;
 
-				if(pItem->m_External || (pItem->m_Version > 1 && pItem->m_Format != CImageInfo::FORMAT_RGB && pItem->m_Format != CImageInfo::FORMAT_RGBA))
+				if(pItem->m_External || (pItem->m_Version > 1 && pItem->m_MustBe1 != 1))
 				{
 					char aBuf[IO_MAX_PATH_LENGTH];
 					str_format(aBuf, sizeof(aBuf),"mapres/%s.png", pName);
@@ -322,13 +338,12 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 				{
 					pImg->m_Width = pItem->m_Width;
 					pImg->m_Height = pItem->m_Height;
-					pImg->m_Format = pItem->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pItem->m_Format;
-					int PixelSize = pImg->m_Format == CImageInfo::FORMAT_RGB ? 3 : 4;
+					pImg->m_Format = CImageInfo::FORMAT_RGBA;
 
 					// copy image data
 					void *pData = DataFile.GetData(pItem->m_ImageData);
-					pImg->m_pData = mem_alloc(pImg->m_Width*pImg->m_Height*PixelSize, 1);
-					mem_copy(pImg->m_pData, pData, pImg->m_Width*pImg->m_Height*PixelSize);
+					pImg->m_pData = mem_alloc(pImg->m_Width*pImg->m_Height*4, 1);
+					mem_copy(pImg->m_pData, pData, pImg->m_Width*pImg->m_Height*4);
 					pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Format, pImg->m_pData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 				}
 
