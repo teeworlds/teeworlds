@@ -1336,12 +1336,10 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 
 typedef struct
 {
-	const char* m_pName;
+	const char *m_pName;
 	time_t m_TimeCreated; // seconds since UNIX Epoch
 	time_t m_TimeModified; // seconds since UNIX Epoch
 } CFsFileInfo;
-
-/* Group: Filesystem */
 
 /*
 	Function: fs_listdir_fileinfo
@@ -1353,7 +1351,7 @@ typedef struct
 		type - Type of the directory
 		user - Pointer to give to the callback
 */
-typedef int (*FS_LISTDIR_CALLBACK_FILEINFO)(const CFsFileInfo* info, int is_dir, int dir_type, void *user);
+typedef int (*FS_LISTDIR_CALLBACK_FILEINFO)(const CFsFileInfo *info, int is_dir, int dir_type, void *user);
 void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void *user);
 
 /*

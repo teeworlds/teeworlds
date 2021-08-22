@@ -1483,15 +1483,18 @@ static inline time_t filetime_to_unixtime(LPFILETIME filetime)
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	WIN32_FIND_DATA finddata;
+	WIN32_FIND_DATAW finddata;
 	HANDLE handle;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
+	char buffer2[IO_MAX_PATH_LENGTH];
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	int length;
+
 	str_format(buffer, sizeof(buffer), "%s/*", dir);
+	MultiByteToWideChar(CP_UTF8, 0, buffer, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
 
-	handle = FindFirstFileA(buffer, &finddata);
-
-	if (handle == INVALID_HANDLE_VALUE)
+	handle = FindFirstFileW(wBuffer, &finddata);
+	if(handle == INVALID_HANDLE_VALUE)
 		return;
 
 	str_format(buffer, sizeof(buffer), "%s/", dir);
@@ -1500,17 +1503,17 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	/* add all the entries */
 	do
 	{
-		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
-		if(cb(finddata.cFileName, fs_is_dir(buffer), type, user))
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, IO_MAX_PATH_LENGTH, NULL, NULL);
+		str_copy(buffer+length, buffer2, (int)sizeof(buffer)-length);
+		if(cb(buffer2, fs_is_dir(buffer), type, user))
 			break;
 	}
-	while (FindNextFileA(handle, &finddata));
+	while(FindNextFileW(handle, &finddata));
 
 	FindClose(handle);
-	return;
 #else
 	struct dirent *entry;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
 	int length;
 	DIR *d = opendir(dir);
 
@@ -1529,22 +1532,24 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 
 	/* close the directory and return */
 	closedir(d);
-	return;
 #endif
 }
 
-void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void* user)
+void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	WIN32_FIND_DATA finddata;
+	WIN32_FIND_DATAW finddata;
 	HANDLE handle;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
+	char buffer2[IO_MAX_PATH_LENGTH];
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	int length;
+
 	str_format(buffer, sizeof(buffer), "%s/*", dir);
+	MultiByteToWideChar(CP_UTF8, 0, buffer, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
 
-	handle = FindFirstFileA(buffer, &finddata);
-
-	if (handle == INVALID_HANDLE_VALUE)
+	handle = FindFirstFileW(wBuffer, &finddata);
+	if(handle == INVALID_HANDLE_VALUE)
 		return;
 
 	str_format(buffer, sizeof(buffer), "%s/", dir);
@@ -1553,24 +1558,24 @@ void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 	/* add all the entries */
 	do
 	{
-		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, IO_MAX_PATH_LENGTH, NULL, NULL);
+		str_copy(buffer+length, buffer2, (int)sizeof(buffer)-length);
 
 		CFsFileInfo info;
-		info.m_pName = finddata.cFileName;
+		info.m_pName = buffer2;
 		info.m_TimeCreated = filetime_to_unixtime(&finddata.ftCreationTime);
 		info.m_TimeModified = filetime_to_unixtime(&finddata.ftLastWriteTime);
 
 		if(cb(&info, fs_is_dir(buffer), type, user))
 			break;
 	}
-	while (FindNextFileA(handle, &finddata));
+	while(FindNextFileW(handle, &finddata));
 
 	FindClose(handle);
-	return;
 #else
 	struct dirent *entry;
 	time_t created = -1, modified = -1;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
 	int length;
 	DIR *d = opendir(dir);
 
@@ -1597,7 +1602,6 @@ void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 
 	/* close the directory and return */
 	closedir(d);
-	return;
 #endif
 }
 
