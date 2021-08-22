@@ -42,6 +42,7 @@
 	#include <errno.h>
 	#include <process.h>
 	#include <wincrypt.h>
+	#include <share.h>
 #else
 	#error NOT IMPLEMENTED
 #endif
@@ -303,34 +304,51 @@ void mem_zero(void *block,unsigned size)
 IOHANDLE io_open(const char *filename, int flags)
 {
 	dbg_assert(flags == IOFLAG_READ || flags == IOFLAG_WRITE || flags == IOFLAG_APPEND, "flags must be read, write or append");
+#if defined(CONF_FAMILY_WINDOWS)
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	if(flags == IOFLAG_READ)
 	{
-#if defined(CONF_FAMILY_WINDOWS)
 		// check for filename case sensitive
-		WIN32_FIND_DATA finddata;
+		WIN32_FIND_DATAW finddata;
 		HANDLE handle;
-		int length;
+		char buffer[IO_MAX_PATH_LENGTH];
 
-		length = str_length(filename);
+		int length = str_length(filename);
 		if(!filename || !length || filename[length-1] == '\\')
 			return 0x0;
-		handle = FindFirstFile(filename, &finddata);
+		MultiByteToWideChar(CP_UTF8, 0, filename, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+		handle = FindFirstFileW(wBuffer, &finddata);
 		if(handle == INVALID_HANDLE_VALUE)
 			return 0x0;
-		else if(str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName) != 0)
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer, IO_MAX_PATH_LENGTH, NULL, NULL);
+		if(str_comp(filename+length-str_length(buffer), buffer) != 0)
 		{
 			FindClose(handle);
 			return 0x0;
 		}
 		FindClose(handle);
-#endif
-		return (IOHANDLE)fopen(filename, "rb");
+		return (IOHANDLE)_wfsopen(wBuffer, L"rb", _SH_DENYNO);
 	}
+	if(flags == IOFLAG_WRITE)
+	{
+		MultiByteToWideChar(CP_UTF8, 0, filename, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+		return (IOHANDLE)_wfsopen(wBuffer, L"wb", _SH_DENYNO);
+	}
+	if(flags == IOFLAG_APPEND)
+	{
+		MultiByteToWideChar(CP_UTF8, 0, filename, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+		return (IOHANDLE)_wfsopen(wBuffer, L"ab", _SH_DENYNO);
+	}
+	return 0x0;
+#else
+	if(flags == IOFLAG_READ)
+		return (IOHANDLE)fopen(filename, "rb");
 	if(flags == IOFLAG_WRITE)
 		return (IOHANDLE)fopen(filename, "wb");
 	if(flags == IOFLAG_APPEND)
 		return (IOHANDLE)fopen(filename, "ab");
 	return 0x0;
+#endif
 }
 
 unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
