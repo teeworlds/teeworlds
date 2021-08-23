@@ -302,9 +302,10 @@ void mem_zero(void *block,unsigned size)
 
 IOHANDLE io_open(const char *filename, int flags)
 {
+	dbg_assert(flags == IOFLAG_READ || flags == IOFLAG_WRITE || flags == IOFLAG_APPEND, "flags must be read, write or append");
 	if(flags == IOFLAG_READ)
 	{
-	#if defined(CONF_FAMILY_WINDOWS)
+#if defined(CONF_FAMILY_WINDOWS)
 		// check for filename case sensitive
 		WIN32_FIND_DATA finddata;
 		HANDLE handle;
@@ -322,11 +323,13 @@ IOHANDLE io_open(const char *filename, int flags)
 			return 0x0;
 		}
 		FindClose(handle);
-	#endif
+#endif
 		return (IOHANDLE)fopen(filename, "rb");
 	}
 	if(flags == IOFLAG_WRITE)
 		return (IOHANDLE)fopen(filename, "wb");
+	if(flags == IOFLAG_APPEND)
+		return (IOHANDLE)fopen(filename, "ab");
 	return 0x0;
 }
 
