@@ -462,214 +462,221 @@ void CGameConsole::OnRender()
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	ConsoleHeight -= 22.0f;
+	ConsoleHeight -= 36.0f;
 
 	CInstance *pConsole = CurrentConsole();
 
+	const float FontSize = 10.0f;
+	const float RowHeight = FontSize*1.25f;
+
+	float x = 3;
+	float y = ConsoleHeight - RowHeight - 5.0f;
+
+	static CTextCursor s_CompletionOptionsCursor;
+	s_CompletionOptionsCursor.Reset();
+	s_CompletionOptionsCursor.MoveTo(x + pConsole->m_CompletionRenderOffset, y + RowHeight + 2.0f);
+	s_CompletionOptionsCursor.m_FontSize = FontSize;
+	s_CompletionOptionsCursor.m_MaxWidth = -1.0f;
+
+	static CTextCursor s_InfoCursor;
+	s_InfoCursor.Reset();
+	s_InfoCursor.MoveTo(x, y + 2.0f * RowHeight + 4.0f);
+	s_InfoCursor.m_FontSize = FontSize;
+	s_InfoCursor.m_MaxWidth = -1.0f;
+
+	// render prompt
+	static CTextCursor s_Cursor;
+	s_Cursor.Reset();
+	s_Cursor.MoveTo(x, y);
+	s_Cursor.m_FontSize = FontSize;
+	s_Cursor.m_MaxLines = -1;
+	const char *pPrompt = "> ";
+	if(m_ConsoleType == CONSOLETYPE_REMOTE)
 	{
-		float FontSize = 10.0f;
-		float RowHeight = FontSize*1.25f;
-		float x = 3;
-		float y = ConsoleHeight - RowHeight - 5.0f;
-
-		static CTextCursor s_InfoCursor;
-		s_InfoCursor.Reset();
-		s_InfoCursor.MoveTo(x+pConsole->m_CompletionRenderOffset, y+RowHeight+2.0f);
-		s_InfoCursor.m_FontSize = FontSize;
-		s_InfoCursor.m_MaxWidth = -1.0f;
-
-		// render prompt
-		static CTextCursor s_Cursor;
-		s_Cursor.Reset();
-		s_Cursor.MoveTo(x, y);
-		s_Cursor.m_FontSize = FontSize;
-		s_Cursor.m_MaxLines = -1;
-		const char *pPrompt = "> ";
-		if(m_ConsoleType == CONSOLETYPE_REMOTE)
+		if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_LOADING)
 		{
-			if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_LOADING)
-			{
-				if(Client()->RconAuthed())
-					pPrompt = "rcon> ";
-				else
-					pPrompt = "ENTER PASSWORD> ";
-			}
+			if(Client()->RconAuthed())
+				pPrompt = "rcon> ";
 			else
-				pPrompt = "NOT CONNECTED> ";
+				pPrompt = "ENTER PASSWORD> ";
 		}
-		TextRender()->TextOutlined(&s_Cursor, pPrompt, -1);
+		else
+			pPrompt = "NOT CONNECTED> ";
+	}
+	TextRender()->TextOutlined(&s_Cursor, pPrompt, -1);
 
-		x = s_Cursor.AdvancePosition().x;
+	x = s_Cursor.AdvancePosition().x;
 
-		//hide rcon password
-		char aInputString[256];
-		str_copy(aInputString, pConsole->m_Input.GetString(), sizeof(aInputString));
-		if(m_ConsoleType == CONSOLETYPE_REMOTE && (Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_LOADING) && !Client()->RconAuthed())
+	//hide rcon password
+	char aInputString[256];
+	str_copy(aInputString, pConsole->m_Input.GetString(), sizeof(aInputString));
+	if(m_ConsoleType == CONSOLETYPE_REMOTE && (Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_LOADING) && !Client()->RconAuthed())
+	{
+		for(int i = 0; i < pConsole->m_Input.GetLength(); ++i)
+			aInputString[i] = '*';
+	}
+
+	// render console input (wrap line)
+	s_Cursor.Reset();
+	s_Cursor.m_MaxWidth = Screen.w - 10.0f - x;
+	TextRender()->TextDeferred(&s_Cursor, aInputString, -1);
+	int Lines = s_Cursor.LineCount();
+
+	y -= (Lines - 1) * FontSize;
+	s_Cursor.MoveTo(x, y);
+
+	static CTextCursor s_MarkerCursor;
+	s_MarkerCursor.Reset();
+	s_MarkerCursor.m_FontSize = FontSize;
+	TextRender()->TextDeferred(&s_MarkerCursor, "|", -1);
+	s_MarkerCursor.m_Align = TEXTALIGN_CENTER;
+	vec2 MarkerPosition = TextRender()->CaretPosition(&s_Cursor, pConsole->m_Input.GetCursorOffset());
+	s_MarkerCursor.MoveTo(MarkerPosition);
+
+	TextRender()->DrawTextOutlined(&s_Cursor);
+	TextRender()->DrawTextOutlined(&s_MarkerCursor);
+
+	// render possible commands
+	static float s_LastRender = Now;
+	if((m_ConsoleType == CONSOLETYPE_LOCAL || Client()->RconAuthed()) && pConsole->m_Input.GetString()[0])
+	{
+		CCompletionOptionRenderInfo Info;
+		Info.m_pSelf = this;
+		Info.m_WantedCompletion = pConsole->m_CompletionChosen;
+		Info.m_EnumCount = 0;
+		Info.m_Offset = pConsole->m_CompletionRenderOffset;
+		Info.m_pOffsetChange = &pConsole->m_CompletionRenderOffsetChange;
+		Info.m_Width = Screen.w;
+		Info.m_TotalWidth = 0.0f;
+		Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
+		Info.m_pCursor = &s_CompletionOptionsCursor;
+		m_pConsole->PossibleCommands(Info.m_pCurrentCmd, pConsole->m_CompletionFlagmask, m_ConsoleType != CGameConsole::CONSOLETYPE_LOCAL &&
+			Client()->RconAuthed() && Client()->UseTempRconCommands(), PossibleCommandsRenderCallback, &Info);
+
+		if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
 		{
-			for(int i = 0; i < pConsole->m_Input.GetLength(); ++i)
-				aInputString[i] = '*';
-		}
-
-		// render console input (wrap line)
-		s_Cursor.Reset();
-		s_Cursor.m_MaxWidth = Screen.w - 10.0f - x;
-		TextRender()->TextDeferred(&s_Cursor, aInputString, -1);
-		int Lines = s_Cursor.LineCount();
-		
-		y -= (Lines - 1) * FontSize;
-		s_Cursor.MoveTo(x, y);
-
-		static CTextCursor s_MarkerCursor;
-		s_MarkerCursor.Reset();
-		s_MarkerCursor.m_FontSize = FontSize;
-		TextRender()->TextDeferred(&s_MarkerCursor, "|", -1);
-		s_MarkerCursor.m_Align = TEXTALIGN_CENTER;
-		vec2 MarkerPosition = TextRender()->CaretPosition(&s_Cursor, pConsole->m_Input.GetCursorOffset());
-		s_MarkerCursor.MoveTo(MarkerPosition);
-
-		TextRender()->DrawTextOutlined(&s_Cursor);
-		TextRender()->DrawTextOutlined(&s_MarkerCursor);
-
-		// render possible commands
-		static float s_LastRender = Now;
-		if((m_ConsoleType == CONSOLETYPE_LOCAL || Client()->RconAuthed()) && pConsole->m_Input.GetString()[0])
-		{
-			CCompletionOptionRenderInfo Info;
-			Info.m_pSelf = this;
-			Info.m_WantedCompletion = pConsole->m_CompletionChosen;
-			Info.m_EnumCount = 0;
-			Info.m_Offset = pConsole->m_CompletionRenderOffset;
-			Info.m_pOffsetChange = &pConsole->m_CompletionRenderOffsetChange;
-			Info.m_Width = Screen.w;
-			Info.m_TotalWidth = 0.0f;
-			Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
-			Info.m_pCursor = &s_InfoCursor;
-			m_pConsole->PossibleCommands(Info.m_pCurrentCmd, pConsole->m_CompletionFlagmask, m_ConsoleType != CGameConsole::CONSOLETYPE_LOCAL &&
-				Client()->RconAuthed() && Client()->UseTempRconCommands(), PossibleCommandsRenderCallback, &Info);
-
-			if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
+			if(IsMapCommandPrefix(Info.m_pCurrentCmd))
 			{
-				if(IsMapCommandPrefix(Info.m_pCurrentCmd))
-				{
-					Info.m_WantedCompletion = pConsole->m_CompletionMapChosen;
-					Info.m_EnumCount = 0;
-					Info.m_TotalWidth = 0.0f;
-					Info.m_pCurrentCmd = pConsole->m_aCompletionMapBuffer;
-					m_pConsole->PossibleMaps(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
-				}
-
-				if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
-				{
-					char aBuf[512];
-					str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_aCommandHelp);
-					TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
-					TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1);
-					str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
-					TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
-				}
-			}
-
-			// instant scrolling if distance too long
-			if(abs(pConsole->m_CompletionRenderOffsetChange) > Info.m_Width)
-			{
-				pConsole->m_CompletionRenderOffset += pConsole->m_CompletionRenderOffsetChange;
-				pConsole->m_CompletionRenderOffsetChange = 0.0f;
-			}
-			// smooth scrolling
-			if(pConsole->m_CompletionRenderOffsetChange)
-			{
-				const float Delta = pConsole->m_CompletionRenderOffsetChange * clamp((Now - s_LastRender)/0.1f, 0.0f, 1.0f);
-				pConsole->m_CompletionRenderOffset += Delta;
-				pConsole->m_CompletionRenderOffsetChange -= Delta;
-			}
-			// clamp to first item
-			if(pConsole->m_CompletionRenderOffset > 0.0f)
-			{
-				pConsole->m_CompletionRenderOffset = 0.0f;
-				pConsole->m_CompletionRenderOffsetChange = 0.0f;
-			}
-			// clamp to last item
-			if(Info.m_TotalWidth > Info.m_Width && pConsole->m_CompletionRenderOffset < Info.m_Width - Info.m_TotalWidth)
-			{
-				pConsole->m_CompletionRenderOffset = Info.m_Width - Info.m_TotalWidth;
-				pConsole->m_CompletionRenderOffsetChange = 0.0f;
+				Info.m_WantedCompletion = pConsole->m_CompletionMapChosen;
+				Info.m_EnumCount = 0;
+				Info.m_TotalWidth = 0.0f;
+				Info.m_pCurrentCmd = pConsole->m_aCompletionMapBuffer;
+				m_pConsole->PossibleMaps(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
 			}
 		}
-		s_LastRender = Now;
 
-		TextRender()->DrawTextOutlined(&s_InfoCursor);
-
-		TextRender()->TextColor(1,1,1,1);
-
-		//	render log (actual page, wrap lines)
-
-		CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.Last();
-		float OffsetY = 0.0f;
-		float LineOffset = 1.0f;
-		s_Cursor.m_MaxWidth = Screen.w-10;
-		for(int Page = 0; Page <= pConsole->m_BacklogActPage; ++Page, OffsetY = 0.0f)
+		if(pConsole->m_IsCommand)
 		{
-			while(pEntry)
+			char aBuf[512];
+			TextRender()->TextColor(0.9f, 0.9f, 0.9f, 1.0f);
+			str_format(aBuf, sizeof(aBuf), "Help: %s    ", pConsole->m_aCommandHelp);
+			TextRender()->TextDeferred(&s_InfoCursor, aBuf, -1);
+			TextRender()->TextColor(0.7f, 0.7f, 0.7f, 1.0f);
+			str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
+			TextRender()->TextDeferred(&s_InfoCursor, aBuf, -1);
+		}
+
+		// instant scrolling if distance too long
+		if(abs(pConsole->m_CompletionRenderOffsetChange) > Info.m_Width)
+		{
+			pConsole->m_CompletionRenderOffset += pConsole->m_CompletionRenderOffsetChange;
+			pConsole->m_CompletionRenderOffsetChange = 0.0f;
+		}
+		// smooth scrolling
+		if(pConsole->m_CompletionRenderOffsetChange)
+		{
+			const float Delta = pConsole->m_CompletionRenderOffsetChange * clamp((Now - s_LastRender)/0.1f, 0.0f, 1.0f);
+			pConsole->m_CompletionRenderOffset += Delta;
+			pConsole->m_CompletionRenderOffsetChange -= Delta;
+		}
+		// clamp to first item
+		if(pConsole->m_CompletionRenderOffset > 0.0f)
+		{
+			pConsole->m_CompletionRenderOffset = 0.0f;
+			pConsole->m_CompletionRenderOffsetChange = 0.0f;
+		}
+		// clamp to last item
+		if(Info.m_TotalWidth > Info.m_Width && pConsole->m_CompletionRenderOffset < Info.m_Width - Info.m_TotalWidth)
+		{
+			pConsole->m_CompletionRenderOffset = Info.m_Width - Info.m_TotalWidth;
+			pConsole->m_CompletionRenderOffsetChange = 0.0f;
+		}
+	}
+	s_LastRender = Now;
+
+	TextRender()->DrawTextOutlined(&s_CompletionOptionsCursor);
+	TextRender()->DrawTextOutlined(&s_InfoCursor);
+
+	TextRender()->TextColor(1,1,1,1);
+
+	//	render log (actual page, wrap lines)
+
+	CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.Last();
+	float OffsetY = 0.0f;
+	float LineOffset = 1.0f;
+	s_Cursor.m_MaxWidth = Screen.w-10;
+	for(int Page = 0; Page <= pConsole->m_BacklogActPage; ++Page, OffsetY = 0.0f)
+	{
+		while(pEntry)
+		{
+			s_Cursor.Reset();
+			if(pEntry->m_Highlighted)
+				TextRender()->TextColor(1,0.75,0.75,1);
+			TextRender()->TextDeferred(&s_Cursor, pEntry->m_aText, -1);
+			TextRender()->TextColor(1,1,1,1);
+
+			// get y offset (calculate it if we haven't yet)
+			if(pEntry->m_YOffset < 0.0f)
+			{
+				pEntry->m_YOffset = s_Cursor.BaseLineY()+LineOffset;
+			}
+			OffsetY += pEntry->m_YOffset;
+
+			//	next page when lines reach the top
+			if(y-OffsetY <= RowHeight)
+				break;
+
+			//	just render output from actual backlog page (render bottom up)
+			if(Page == pConsole->m_BacklogActPage)
+			{
+				s_Cursor.MoveTo(0.0f, y-OffsetY);
+				TextRender()->DrawTextOutlined(&s_Cursor);
+			}
+			pEntry = pConsole->m_Backlog.Prev(pEntry);
+		}
+
+		//	actual backlog page number is too high, render last available page (current checked one, render top down)
+		if(!pEntry && Page < pConsole->m_BacklogActPage)
+		{
+			pConsole->m_BacklogActPage = Page;
+			pEntry = pConsole->m_Backlog.First();
+			while(OffsetY > 0.0f && pEntry)
 			{
 				s_Cursor.Reset();
-				if(pEntry->m_Highlighted)
-					TextRender()->TextColor(1,0.75,0.75,1);
-				TextRender()->TextDeferred(&s_Cursor, pEntry->m_aText, -1);
-				TextRender()->TextColor(1,1,1,1);
-
-				// get y offset (calculate it if we haven't yet)
-				if(pEntry->m_YOffset < 0.0f)
-				{
-					pEntry->m_YOffset = s_Cursor.BaseLineY()+LineOffset;
-				}
-				OffsetY += pEntry->m_YOffset;
-
-				//	next page when lines reach the top
-				if(y-OffsetY <= RowHeight)
-					break;
-
-				//	just render output from actual backlog page (render bottom up)
-				if(Page == pConsole->m_BacklogActPage)
-				{
-					s_Cursor.MoveTo(0.0f, y-OffsetY);
-					TextRender()->DrawTextOutlined(&s_Cursor);
-				}
-				pEntry = pConsole->m_Backlog.Prev(pEntry);
+				s_Cursor.MoveTo(0.0f, y-OffsetY);
+				TextRender()->TextOutlined(&s_Cursor, pEntry->m_aText, -1);
+				OffsetY -= pEntry->m_YOffset;
+				pEntry = pConsole->m_Backlog.Next(pEntry);
 			}
-
-			//	actual backlog page number is too high, render last available page (current checked one, render top down)
-			if(!pEntry && Page < pConsole->m_BacklogActPage)
-			{
-				pConsole->m_BacklogActPage = Page;
-				pEntry = pConsole->m_Backlog.First();
-				while(OffsetY > 0.0f && pEntry)
-				{
-					s_Cursor.Reset();
-					s_Cursor.MoveTo(0.0f, y-OffsetY);
-					TextRender()->TextOutlined(&s_Cursor, pEntry->m_aText, -1);
-					OffsetY -= pEntry->m_YOffset;
-					pEntry = pConsole->m_Backlog.Next(pEntry);
-				}
-				break;
-			}
+			break;
 		}
-
-		s_Cursor.Reset();
-		s_Cursor.m_MaxWidth = -1;
-		// render page
-		char aBuf[128];
-		str_format(aBuf, sizeof(aBuf), Localize("-Page %d-"), pConsole->m_BacklogActPage+1);
-		s_Cursor.MoveTo(10.0f, 0.0f);
-		TextRender()->TextOutlined(&s_Cursor, aBuf, -1.0f);
-
-		// render version
-		str_format(aBuf, sizeof(aBuf), "v%s", GAME_RELEASE_VERSION);
-		s_Cursor.Reset();
-		s_Cursor.MoveTo(Screen.w-10.0f, 0.0f);
-		s_Cursor.m_Align = TEXTALIGN_RIGHT;
-		TextRender()->TextOutlined(&s_Cursor, aBuf, -1.0f);
-		s_Cursor.m_Align = TEXTALIGN_LEFT;
 	}
+
+	s_Cursor.Reset();
+	s_Cursor.m_MaxWidth = -1;
+	// render page
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), Localize("-Page %d-"), pConsole->m_BacklogActPage+1);
+	s_Cursor.MoveTo(10.0f, 0.0f);
+	TextRender()->TextOutlined(&s_Cursor, aBuf, -1.0f);
+
+	// render version
+	str_format(aBuf, sizeof(aBuf), "v%s", GAME_RELEASE_VERSION);
+	s_Cursor.Reset();
+	s_Cursor.MoveTo(Screen.w-10.0f, 0.0f);
+	s_Cursor.m_Align = TEXTALIGN_RIGHT;
+	TextRender()->TextOutlined(&s_Cursor, aBuf, -1.0f);
+	s_Cursor.m_Align = TEXTALIGN_LEFT;
 }
 
 bool CGameConsole::OnInput(IInput::CEvent Event)
