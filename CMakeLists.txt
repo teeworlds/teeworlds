@@ -1302,6 +1302,7 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   kernel.h
   keys.h
   map.h
+  mapchecker.h
   masterserver.h
   message.h
   server.h
