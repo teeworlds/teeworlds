@@ -23,7 +23,7 @@ private:
 	int m_ListBoxSelectedIndex;
 	int m_ListBoxNewSelected;
 	int m_ListBoxNewSelOffset;
-	int m_ListBoxUpdateScroll;
+	bool m_ListBoxUpdateScroll;
 	bool m_ListBoxDoneEvents;
 	int m_ListBoxNumItems;
 	int m_ListBoxItemsPerRow;
@@ -55,6 +55,7 @@ public:
 	bool FilterMatches(const char *pNeedle) const;
 	bool WasItemActivated() const { return m_ListBoxItemActivated; }
 	float GetScrollBarWidth() const { return m_ScrollRegion.IsScrollbarShown() ? 20 : 0; }
+	void ScrollToSelection() { m_ListBoxUpdateScroll = true; }
 };
 
 #endif
