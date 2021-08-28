@@ -545,21 +545,18 @@ public:
 		m_PopupEventWasActivated = false;
 
 		m_FileDialogStorageType = 0;
+		m_aFileDialogFileName[0] = '\0';
+		m_FileDialogFileNameInput.SetBuffer(m_aFileDialogFileName, sizeof(m_aFileDialogFileName));
 		m_aFileDialogFilterString[0] = '\0';
 		m_FileDialogFilterInput.SetBuffer(m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString));
 		m_pFileDialogTitle = 0;
 		m_pFileDialogButtonText = 0;
 		m_pFileDialogUser = 0;
-		m_aFileDialogFileName[0] = 0;
 		m_aFileDialogCurrentFolder[0] = 0;
 		m_aFileDialogCurrentLink[0] = 0;
 		m_pFileDialogPath = m_aFileDialogCurrentFolder;
-		m_aFileDialogActivate = false;
-		m_FileDialogScrollValue = 0.0f;
 		m_FilesSelectedIndex = -1;
-		m_FilesStartAt = 0;
-		m_FilesCur = 0;
-		m_FilesStopAt = 999;
+		m_aFilesSelectedName[0] = '\0';
 
 		m_WorldOffsetX = 0;
 		m_WorldOffsetY = 0;
@@ -602,6 +599,7 @@ public:
 	virtual void UpdateAndRender();
 	virtual bool HasUnsavedData() const { return m_Map.m_Modified; }
 
+	void RefreshFilteredFileList();
 	void FilelistPopulate(int StorageType);
 	void InvokeFileDialog(int StorageType, int FileType, const char *pTitle, const char *pButtonText,
 		const char *pBasepath, const char *pDefaultName,
@@ -665,14 +663,14 @@ public:
 	const char *m_pFileDialogButtonText;
 	void (*m_pfnFileDialogFunc)(const char *pFileName, int StorageType, void *pUser);
 	void *m_pFileDialogUser;
+	CLineInput m_FileDialogFileNameInput;
 	char m_aFileDialogFileName[IO_MAX_PATH_LENGTH];
 	char m_aFileDialogCurrentFolder[IO_MAX_PATH_LENGTH];
 	char m_aFileDialogCurrentLink[IO_MAX_PATH_LENGTH];
 	char *m_pFileDialogPath;
-	bool m_aFileDialogActivate;
 	int m_FileDialogFileType;
-	float m_FileDialogScrollValue;
 	int m_FilesSelectedIndex;
+	char m_aFilesSelectedName[IO_MAX_PATH_LENGTH];
 	char m_aFileDialogFilterString[64];
 	CLineInput m_FileDialogFilterInput;
 	char m_aFileDialogNewFolderName[64];
@@ -694,10 +692,8 @@ public:
 														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
 														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
 	};
-	sorted_array<CFilelistItem> m_FileList;
-	int m_FilesStartAt;
-	int m_FilesCur;
-	int m_FilesStopAt;
+	sorted_array<CFilelistItem> m_CompleteFileList;
+	sorted_array<CFilelistItem *> m_FilteredFileList;
 
 	float m_WorldOffsetX;
 	float m_WorldOffsetY;

@@ -23,7 +23,7 @@ private:
 	int m_ListBoxSelectedIndex;
 	int m_ListBoxNewSelected;
 	int m_ListBoxNewSelOffset;
-	int m_ListBoxUpdateScroll;
+	bool m_ListBoxUpdateScroll;
 	bool m_ListBoxDoneEvents;
 	int m_ListBoxNumItems;
 	int m_ListBoxItemsPerRow;
