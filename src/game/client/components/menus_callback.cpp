@@ -161,23 +161,24 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 
 	bool JoystickEnabled = Config()->m_JoystickEnable;
 	int NumJoysticks = m_pClient->Input()->NumJoysticks();
-	int NumOptions = 2; // expandable header & message
-	if(JoystickEnabled && NumJoysticks > 0)
+	int NumOptions = 1; // expandable header
+	if(JoystickEnabled)
 	{
-		if(NumJoysticks > 1)
+		if(NumJoysticks == 0)
+			NumOptions++; // message
+		else
 		{
-			NumOptions++; // joystick selection
+			if(NumJoysticks > 1)
+				NumOptions++; // joystick selection
+			NumOptions += 3; // mode, ui sens, tolerance
+			if(!Config()->m_JoystickAbsolute)
+				NumOptions++; // ingame sens
+			NumOptions += Input()->GetActiveJoystick()->GetNumAxes() + 1; // axis selection + header
 		}
-		NumOptions += 3; // mode, ui sens, tolerance
-		if(!Config()->m_JoystickAbsolute)
-		{
-			NumOptions++; // ingame sens
-		}
-		NumOptions += Input()->GetActiveJoystick()->GetNumAxes(); // axis selection
 	}
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
-	const float BackgroundHeight = NumOptions*(ButtonHeight+Spacing)+Spacing;
+	const float BackgroundHeight = NumOptions * (ButtonHeight + Spacing) + (NumOptions == 1 ? 0 : Spacing);
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
