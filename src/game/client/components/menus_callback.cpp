@@ -422,7 +422,7 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 		if(!Active)
 			m_pClient->TextRender()->TextColor(0.7f, 0.7f, 0.7f, 1.0f);
 		else
-			m_pClient->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			m_pClient->TextRender()->TextColor(CUI::ms_DefaultTextColor);
 		m_pClient->UI()->DoLabel(&Button, aBuf, 13.0f, TEXTALIGN_CENTER);
 
 		// Device status
@@ -449,4 +449,5 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 		}
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 	}
+	m_pClient->TextRender()->TextColor(CUI::ms_DefaultTextColor);
 }
