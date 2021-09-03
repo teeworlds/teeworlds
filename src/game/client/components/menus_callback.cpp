@@ -200,20 +200,17 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 				View.HSplitTop(Spacing, 0, &View);
 				View.HSplitTop(ButtonHeight, &Button, &View);
 				static CButtonContainer s_ButtonJoystickId;
-				char aBuf[64];
+				char aBuf[96];
 				str_format(aBuf, sizeof(aBuf), "Joystick %d: %s", Input()->GetActiveJoystick()->GetIndex(), Input()->GetActiveJoystick()->GetName());
 				if(DoButton_Menu(&s_ButtonJoystickId, aBuf, 0, &Button))
-				{
 					m_pClient->Input()->SelectNextJoystick();
-				}
 			}
 
 			{
 				View.HSplitTop(Spacing, 0, &View);
 				View.HSplitTop(ButtonHeight, &Button, &View);
-				const int NumLabels = 2;
-				const char *aLabels[NumLabels] = { Localize("Relative", "Ingame joystick mode"), Localize("Absolute", "Ingame joystick mode")};
-				UI()->DoScrollbarOptionLabeled(&Config()->m_JoystickAbsolute, &Config()->m_JoystickAbsolute, &Button, Localize("Ingame joystick mode"), aLabels, NumLabels);
+				const char *apLabels[] = { Localize("Relative", "Ingame joystick mode"), Localize("Absolute", "Ingame joystick mode") };
+				UI()->DoScrollbarOptionLabeled(&Config()->m_JoystickAbsolute, &Config()->m_JoystickAbsolute, &Button, Localize("Ingame joystick mode"), apLabels, sizeof(apLabels)/sizeof(apLabels[0]));
 			}
 
 			if(!Config()->m_JoystickAbsolute)
