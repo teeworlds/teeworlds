@@ -173,7 +173,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 		{
 			NumOptions++; // ingame sens
 		}
-		NumOptions += m_pClient->Input()->GetJoystickNumAxes(); // axis selection
+		NumOptions += Input()->GetActiveJoystick()->GetNumAxes(); // axis selection
 	}
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
@@ -200,7 +200,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 				View.HSplitTop(ButtonHeight, &Button, &View);
 				static CButtonContainer s_ButtonJoystickId;
 				char aBuf[64];
-				str_format(aBuf, sizeof(aBuf), "Joystick %d: %s", m_pClient->Input()->GetJoystickIndex(), m_pClient->Input()->GetJoystickName());
+				str_format(aBuf, sizeof(aBuf), "Joystick %d: %s", Input()->GetActiveJoystick()->GetIndex(), Input()->GetActiveJoystick()->GetName());
 				if(DoButton_Menu(&s_ButtonJoystickId, aBuf, 0, &Button))
 				{
 					m_pClient->Input()->SelectNextJoystick();
@@ -404,8 +404,9 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 	Row.VSplitLeft(2*BindWidth, &Button, &Row);
 	m_pClient->UI()->DoLabel(&Button, Localize("Aim bind"), 13.0f, TEXTALIGN_CENTER);
 
-	static int s_aActive[g_MaxJoystickAxes][2];
-	for(int i = 0; i < minimum(m_pClient->Input()->GetJoystickNumAxes(), g_MaxJoystickAxes); i++)
+	IInput::IJoystick *pJoystick = Input()->GetActiveJoystick();
+	static int s_aActive[IInput::JOYSTICK_AXES_MAX_NUM][2];
+	for(int i = 0; i < minimum(pJoystick->GetNumAxes(), (int)IInput::JOYSTICK_AXES_MAX_NUM); i++)
 	{
 		bool Active = Config()->m_JoystickX == i || Config()->m_JoystickY == i;
 
@@ -427,7 +428,7 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 		Row.VSplitLeft(StatusWidth, &Button, &Row);
 		Button.HMargin((ButtonHeight-14.0f)/2.0f, &Button);
-		DoJoystickBar(&Button, (m_pClient->Input()->GetJoystickAxisValue(i)+1.0f)/2.0f, Config()->m_JoystickTolerance/50.0f, Active);
+		DoJoystickBar(&Button, (pJoystick->GetAxisValue(i)+1.0f)/2.0f, Config()->m_JoystickTolerance/50.0f, Active);
 
 		// Bind to X,Y
 		Row.VSplitLeft(2*StatusMargin, 0, &Row);

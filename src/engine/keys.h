@@ -277,6 +277,8 @@ enum
 	KEY_JOY_HAT_DOWN = 440,
 	KEY_JOY_HAT_RIGHTDOWN = 441,
 	KEY_LAST,
+
+	NUM_JOYSTICK_BUTTONS = KEY_JOYSTICK_BUTTON_11 - KEY_JOYSTICK_BUTTON_0 + 1,
 };
 
 inline int KeyToKeycode(int Key) { return (Key>=0x80) ? (Key-0x80)|(1<<30) : Key; }

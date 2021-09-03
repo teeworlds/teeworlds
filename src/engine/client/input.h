@@ -7,16 +7,51 @@
 
 class CInput : public IEngineInput
 {
+public:
+	class CJoystick : public IJoystick
+	{
+		CInput *m_pInput;
+		int m_Index;
+		char m_aName[64];
+		char m_aGUID[34];
+		int m_NumAxes;
+		int m_NumButtons;
+		int m_NumBalls;
+		int m_NumHats;
+		SDL_Joystick *m_pDelegate;
+
+		CInput *Input() { return m_pInput; }
+	public:
+		CJoystick() { /* empty constructor for sorted_array */ }
+		CJoystick(CInput *pInput, int Index, SDL_Joystick *pDelegate);
+		int GetIndex() const { return m_Index; }
+		const char *GetName() const { return m_aName; }
+		const char *GetGUID() const { return m_aGUID; }
+		int GetNumAxes() const { return m_NumAxes; }
+		int GetNumButtons() const { return m_NumButtons; }
+		int GetNumBalls() const { return m_NumBalls; }
+		int GetNumHats() const { return m_NumHats; }
+		float GetAxisValue(int Axis);
+		bool Relative(float *pX, float *pY);
+		bool Absolute(float *pX, float *pY);
+		void Close();
+	};
+private:
 	IEngineGraphics *m_pGraphics;
 	CConfig *m_pConfig;
 	IConsole *m_pConsole;
 
-	sorted_array<SDL_Joystick*> m_apJoysticks;
-	int m_SelectedJoystickIndex;
-	char m_aSelectedJoystickGUID[34];
-	SDL_Joystick *GetActiveJoystick();
+	IEngineGraphics *Graphics() { return m_pGraphics; }
+	CConfig *Config() { return m_pConfig; }
+	IConsole *Console() { return m_pConsole; }
+
+	// joystick
+	array<CJoystick> m_aJoysticks;
+	CJoystick *m_pActiveJoystick;
 	void InitJoysticks();
 	void CloseJoysticks();
+	void UpdateActiveJoystick();
+	static void ConchainJoystickGuidChanged(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 
 	bool m_MouseInputRelative;
 	char *m_pClipboardText;
@@ -36,9 +71,6 @@ class CInput : public IEngineInput
 
 	void ClearKeyStates();
 	bool KeyState(int Key) const;
-
-	IEngineGraphics *Graphics() { return m_pGraphics; }
-
 public:
 	CInput();
 	~CInput();
@@ -49,14 +81,9 @@ public:
 	bool KeyIsPressed(int Key) const { return KeyState(Key); }
 	bool KeyPress(int Key, bool CheckCounter) const { return CheckCounter ? (m_aInputCount[Key] == m_InputCounter) : m_aInputCount[Key]; }
 
-	int NumJoysticks() const { return m_apJoysticks.size(); }
-	int GetJoystickIndex() const { return m_SelectedJoystickIndex; }
+	int NumJoysticks() const { return m_aJoysticks.size(); }
+	IJoystick *GetActiveJoystick() { return m_pActiveJoystick; }
 	void SelectNextJoystick();
-	const char *GetJoystickName();
-	int GetJoystickNumAxes();
-	float GetJoystickAxisValue(int Axis);
-	bool JoystickRelative(float *pX, float *pY);
-	bool JoystickAbsolute(float *pX, float *pY);
 
 	void MouseModeRelative();
 	void MouseModeAbsolute();

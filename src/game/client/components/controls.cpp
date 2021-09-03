@@ -217,9 +217,9 @@ bool CControls::OnCursorMove(float x, float y, int CursorType)
 		&& m_pClient->m_Snap.m_pGameData
 		&& !m_pClient->m_Snap.m_SpecInfo.m_Active)
 	{
-		float absX = 0.0f, absY = 0.0f;
-		if(Input()->JoystickAbsolute(&absX, &absY))
-			m_MousePos = vec2(absX, absY) * GetMaxMouseDistance();
+		float AbsX = 0.0f, AbsY = 0.0f;
+		if(Input()->GetActiveJoystick()->Absolute(&AbsX, &AbsY))
+			m_MousePos = vec2(AbsX, AbsY) * GetMaxMouseDistance();
 		return true;
 	}
 
@@ -248,8 +248,8 @@ void CControls::ClampMousePos()
 	else
 	{
 		const float MouseMax = GetMaxMouseDistance();
-		if(length(m_MousePos) > MouseMax)
-			m_MousePos = normalize(m_MousePos)*MouseMax;
+		if(dot(m_MousePos, m_MousePos) > MouseMax * MouseMax)
+			m_MousePos = normalize(m_MousePos) * MouseMax;
 	}
 }
 

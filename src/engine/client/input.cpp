@@ -53,8 +53,7 @@ CInput::CInput()
 	m_MouseInputRelative = false;
 	m_pClipboardText = 0;
 
-	m_SelectedJoystickIndex = -1;
-	m_aSelectedJoystickGUID[0] = '\0';
+	m_pActiveJoystick = 0x0;
 
 	m_PreviousHat = 0;
 
@@ -88,7 +87,7 @@ void CInput::InitJoysticks()
 	{
 		if(SDL_InitSubSystem(SDL_INIT_JOYSTICK) < 0)
 		{
-			dbg_msg("joystick", "unable to init SDL joystick: %s", SDL_GetError());
+			dbg_msg("joystick", "Unable to init SDL joystick system: %s", SDL_GetError());
 			return;
 		}
 	}
@@ -97,22 +96,25 @@ void CInput::InitJoysticks()
 	if(NumJoysticks > 0)
 	{
 		dbg_msg("joystick", "%d joystick(s) found", NumJoysticks);
-
+		int ActualIndex = 0;
 		for(int i = 0; i < NumJoysticks; i++)
 		{
 			SDL_Joystick *pJoystick = SDL_JoystickOpen(i);
 			if(!pJoystick)
 			{
-				dbg_msg("joystick", "Could not open joystick %d: %s", i, SDL_GetError());
+				dbg_msg("joystick", "Could not open joystick %d: '%s'", i, SDL_GetError());
 				continue;
 			}
-			m_apJoysticks.add(pJoystick);
-
-			dbg_msg("joystick", "Opened Joystick %d", i);
-			dbg_msg("joystick", "Name: %s", SDL_JoystickNameForIndex(i));
-			dbg_msg("joystick", "Number of Axes: %d", SDL_JoystickNumAxes(pJoystick));
-			dbg_msg("joystick", "Number of Buttons: %d", SDL_JoystickNumButtons(pJoystick));
-			dbg_msg("joystick", "Number of Balls: %d", SDL_JoystickNumBalls(pJoystick));
+			CJoystick Joystick(this, ActualIndex, pJoystick);
+			m_aJoysticks.add(Joystick);
+			dbg_msg("joystick", "Opened Joystick %d '%s' (%d axes, %d buttons, %d balls, %d hats)", i, Joystick.GetName(),
+					Joystick.GetNumAxes(), Joystick.GetNumButtons(), Joystick.GetNumBalls(), Joystick.GetNumHats());
+			ActualIndex++;
+		}
+		if(ActualIndex > 0)
+		{
+			UpdateActiveJoystick();
+			Console()->Chain("joystick_guid", ConchainJoystickGuidChanged, this);
 		}
 	}
 	else
@@ -121,111 +123,103 @@ void CInput::InitJoysticks()
 	}
 }
 
-SDL_Joystick *CInput::GetActiveJoystick()
+void CInput::UpdateActiveJoystick()
 {
-	if(m_apJoysticks.size() == 0)
-		return NULL;
-	if(m_aSelectedJoystickGUID[0] && str_comp(m_aSelectedJoystickGUID, m_pConfig->m_JoystickGUID) != 0)
+	if(m_aJoysticks.size() == 0)
+		return;
+	m_pActiveJoystick = 0x0;
+	for(array<CJoystick>::range r = m_aJoysticks.all(); !r.empty(); r.pop_front())
 	{
-		// Refresh if cached GUID differs from configured GUID
-		m_SelectedJoystickIndex = -1;
-	}
-	if(m_SelectedJoystickIndex == -1)
-	{
-		for(int i = 0; i < m_apJoysticks.size(); i++)
+		CJoystick &Joystick = r.front();
+		if(str_comp(Joystick.GetGUID(), Config()->m_JoystickGUID) == 0)
 		{
-			char aGUID[sizeof(m_aSelectedJoystickGUID)];
-			SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(m_apJoysticks[i]), aGUID, sizeof(aGUID));
-			if(str_comp(m_pConfig->m_JoystickGUID, aGUID) == 0)
-			{
-				m_SelectedJoystickIndex = i;
-				str_copy(m_aSelectedJoystickGUID, m_pConfig->m_JoystickGUID, sizeof(m_aSelectedJoystickGUID));
-				break;
-			}
-		}
-		// could not find configured joystick, falling back to first available
-		if(m_SelectedJoystickIndex == -1)
-		{
-			m_SelectedJoystickIndex = 0;
-			SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(m_apJoysticks[0]), m_pConfig->m_JoystickGUID, sizeof(m_pConfig->m_JoystickGUID));
-			str_copy(m_aSelectedJoystickGUID, m_pConfig->m_JoystickGUID, sizeof(m_aSelectedJoystickGUID));
+			m_pActiveJoystick = &Joystick;
+			return;
 		}
 	}
-	return m_apJoysticks[m_SelectedJoystickIndex];
+	// Fall back to first joystick if no match was found
+	if(!m_pActiveJoystick)
+		m_pActiveJoystick = &m_aJoysticks[0];
+}
+
+void CInput::ConchainJoystickGuidChanged(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData)
+{
+	pfnCallback(pResult, pCallbackUserData);
+	static_cast<CInput *>(pUserData)->UpdateActiveJoystick();
+}
+
+CInput::CJoystick::CJoystick(CInput *pInput, int Index, SDL_Joystick *pDelegate)
+{
+	m_pInput = pInput;
+	m_Index = Index;
+	m_pDelegate = pDelegate;
+	m_NumAxes = SDL_JoystickNumAxes(pDelegate);
+	m_NumButtons = SDL_JoystickNumButtons(pDelegate);
+	m_NumBalls = SDL_JoystickNumBalls(pDelegate);
+	m_NumHats = SDL_JoystickNumHats(pDelegate);
+	str_copy(m_aName, SDL_JoystickName(pDelegate), sizeof(m_aName));
+	SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(pDelegate), m_aGUID, sizeof(m_aGUID));
 }
 
 void CInput::CloseJoysticks()
 {
-	for(sorted_array<SDL_Joystick*>::range r = m_apJoysticks.all(); !r.empty(); r.pop_front())
-		if(SDL_JoystickGetAttached(r.front()))
-			SDL_JoystickClose(r.front());
-	m_apJoysticks.clear();
+	for(array<CJoystick>::range r = m_aJoysticks.all(); !r.empty(); r.pop_front())
+		r.front().Close();
+	m_aJoysticks.clear();
+	m_pActiveJoystick = 0x0;
+}
+
+void CInput::CJoystick::Close()
+{
+	if(SDL_JoystickGetAttached(m_pDelegate))
+		SDL_JoystickClose(m_pDelegate);
 }
 
 void CInput::SelectNextJoystick()
 {
-	const int Num = m_apJoysticks.size();
+	const int Num = m_aJoysticks.size();
 	if(Num > 1)
 	{
-		const int NextIndex = (m_SelectedJoystickIndex + 1) % Num;
-		SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(m_apJoysticks[NextIndex]), m_pConfig->m_JoystickGUID, sizeof(m_pConfig->m_JoystickGUID));
+		m_pActiveJoystick = &m_aJoysticks[(m_pActiveJoystick->GetIndex() + 1) % Num];
+		str_copy(Config()->m_JoystickGUID, m_pActiveJoystick->GetGUID(), sizeof(Config()->m_JoystickGUID));
 	}
 }
 
-const char *CInput::GetJoystickName()
+float CInput::CJoystick::GetAxisValue(int Axis)
 {
-	SDL_Joystick *pJoystick = GetActiveJoystick();
-	dbg_assert((bool)pJoystick, "Requesting joystick name, but no joysticks were initialized");
-	return SDL_JoystickName(pJoystick);
+	return (SDL_JoystickGetAxis(m_pDelegate, Axis) - SDL_JOYSTICK_AXIS_MIN) / float(SDL_JOYSTICK_AXIS_MAX - SDL_JOYSTICK_AXIS_MIN) * 2.0f - 1.0f;
 }
 
-float CInput::GetJoystickAxisValue(int Axis)
+bool CInput::CJoystick::Relative(float *pX, float *pY)
 {
-	SDL_Joystick *pJoystick = GetActiveJoystick();
-	dbg_assert((bool)pJoystick, "Requesting joystick axis value, but no joysticks were initialized");
-	return (SDL_JoystickGetAxis(pJoystick, Axis)-SDL_JOYSTICK_AXIS_MIN)/float(SDL_JOYSTICK_AXIS_MAX-SDL_JOYSTICK_AXIS_MIN)*2.0f - 1.0f;
-}
-
-int CInput::GetJoystickNumAxes()
-{
-	SDL_Joystick *pJoystick = GetActiveJoystick();
-	dbg_assert((bool)pJoystick, "Requesting joystick axes count, but no joysticks were initialized");
-	return SDL_JoystickNumAxes(pJoystick);
-}
-
-bool CInput::JoystickRelative(float *pX, float *pY)
-{
-	if(!m_MouseInputRelative)
+	if(!Input()->Config()->m_JoystickEnable)
 		return false;
 
-	if(m_pConfig->m_JoystickEnable && GetActiveJoystick())
+	const vec2 RawJoystickPos = vec2(GetAxisValue(Input()->Config()->m_JoystickX), GetAxisValue(Input()->Config()->m_JoystickY));
+	const float Len = length(RawJoystickPos);
+	const float DeadZone = Input()->Config()->m_JoystickTolerance/50.0f;
+	if(Len > DeadZone)
 	{
-		const vec2 RawJoystickPos = vec2(GetJoystickAxisValue(m_pConfig->m_JoystickX), GetJoystickAxisValue(m_pConfig->m_JoystickY));
-		const float Len = length(RawJoystickPos);
-		const float DeadZone = m_pConfig->m_JoystickTolerance/50.0f;
-		if(Len > DeadZone)
-		{
-			const float Factor = 0.1f * maximum((Len - DeadZone) / (1 - DeadZone), 0.001f) / Len;
-			*pX = RawJoystickPos.x * Factor;
-			*pY = RawJoystickPos.y * Factor;
-			return true;
-		}
+		const float Factor = 0.1f * maximum((Len - DeadZone) / (1 - DeadZone), 0.001f) / Len;
+		*pX = RawJoystickPos.x * Factor;
+		*pY = RawJoystickPos.y * Factor;
+		return true;
 	}
 	return false;
 }
 
-bool CInput::JoystickAbsolute(float *pX, float *pY)
+bool CInput::CJoystick::Absolute(float *pX, float *pY)
 {
-	if(m_pConfig->m_JoystickEnable && GetActiveJoystick())
+	if(!Input()->m_MouseInputRelative || !Input()->Config()->m_JoystickEnable)
+		return false;
+
+	const vec2 RawJoystickPos = vec2(GetAxisValue(Input()->Config()->m_JoystickX), GetAxisValue(Input()->Config()->m_JoystickY));
+	const float DeadZone = Input()->Config()->m_JoystickTolerance/50.0f;
+	if(dot(RawJoystickPos, RawJoystickPos) > DeadZone*DeadZone)
 	{
-		const vec2 RawJoystickPos = vec2(GetJoystickAxisValue(m_pConfig->m_JoystickX), GetJoystickAxisValue(m_pConfig->m_JoystickY));
-		const float DeadZone = m_pConfig->m_JoystickTolerance/50.0f;
-		if(length(RawJoystickPos) > DeadZone)
-		{
-			*pX = RawJoystickPos.x;
-			*pY = RawJoystickPos.y;
-			return true;
-		}
+		*pX = RawJoystickPos.x;
+		*pY = RawJoystickPos.y;
+		return true;
 	}
 	return false;
 }
@@ -262,9 +256,9 @@ void CInput::MouseModeRelative()
 	{
 		m_MouseInputRelative = true;
 		SDL_ShowCursor(SDL_DISABLE);
-		if(SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, m_pConfig->m_InpGrab ? "0" : "1", SDL_HINT_OVERRIDE) == SDL_FALSE)
+		if(SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, Config()->m_InpGrab ? "0" : "1", SDL_HINT_OVERRIDE) == SDL_FALSE)
 		{
-			m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "input", "unable to switch relative mouse mode");
+			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "input", "unable to switch relative mouse mode");
 		}
 		SDL_SetRelativeMouseMode(SDL_TRUE);
 		SDL_GetRelativeMouseState(NULL, NULL);
@@ -322,7 +316,7 @@ int CInput::Update()
 	mem_copy(m_aInputState, pState, NumKeyStates);
 	mem_zero(m_aInputState+NumKeyStates, KEY_LAST-NumKeyStates);
 
-	// these states must always be updated manually because they are not in the GetKeyState from SDL
+	// these states must always be updated manually because they are not in the SDL_GetKeyboardState from SDL
 	int MouseState = SDL_GetMouseState(NULL, NULL);
 	if(MouseState&SDL_BUTTON(SDL_BUTTON_LEFT)) m_aInputState[KEY_MOUSE_1] = 1;
 	if(MouseState&SDL_BUTTON(SDL_BUTTON_RIGHT)) m_aInputState[KEY_MOUSE_2] = 1;
@@ -358,10 +352,14 @@ int CInput::Update()
 
 			// handle the joystick events
 			case SDL_JOYBUTTONUP:
+				if(Event.jbutton.button >= NUM_JOYSTICK_BUTTONS)
+					break;
 				Action = IInput::FLAG_RELEASE;
 
 				// fall through
 			case SDL_JOYBUTTONDOWN:
+				if(Event.jbutton.button >= NUM_JOYSTICK_BUTTONS)
+					break;
 				Key = Event.jbutton.button + KEY_JOYSTICK_BUTTON_0;
 				Scancode = Key;
 				break;
@@ -431,14 +429,14 @@ int CInput::Update()
 					else if(Event.button.clicks == 1)
 						m_MouseDoubleClick = false;
 				}
-				if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2; // ignore_convention
-				if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3; // ignore_convention
-				if(Event.button.button == SDL_BUTTON_X1) Key = KEY_MOUSE_4; // ignore_convention
-				if(Event.button.button == SDL_BUTTON_X2) Key = KEY_MOUSE_5; // ignore_convention
-				if(Event.button.button == 6) Key = KEY_MOUSE_6; // ignore_convention
-				if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
-				if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention
-				if(Event.button.button == 9) Key = KEY_MOUSE_9; // ignore_convention
+				else if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2; // ignore_convention
+				else if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3; // ignore_convention
+				else if(Event.button.button == SDL_BUTTON_X1) Key = KEY_MOUSE_4; // ignore_convention
+				else if(Event.button.button == SDL_BUTTON_X2) Key = KEY_MOUSE_5; // ignore_convention
+				else if(Event.button.button == 6) Key = KEY_MOUSE_6; // ignore_convention
+				else if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
+				else if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention
+				else if(Event.button.button == 9) Key = KEY_MOUSE_9; // ignore_convention
 				Scancode = Key;
 				break;
 
