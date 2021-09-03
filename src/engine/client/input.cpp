@@ -148,6 +148,11 @@ void CInput::ConchainJoystickGuidChanged(IConsole::IResult *pResult, void *pUser
 	static_cast<CInput *>(pUserData)->UpdateActiveJoystick();
 }
 
+float CInput::GetJoystickDeadzone()
+{
+	return Config()->m_JoystickTolerance/50.0f;
+}
+
 CInput::CJoystick::CJoystick(CInput *pInput, int Index, SDL_Joystick *pDelegate)
 {
 	m_pInput = pInput;
@@ -197,7 +202,7 @@ bool CInput::CJoystick::Relative(float *pX, float *pY)
 
 	const vec2 RawJoystickPos = vec2(GetAxisValue(Input()->Config()->m_JoystickX), GetAxisValue(Input()->Config()->m_JoystickY));
 	const float Len = length(RawJoystickPos);
-	const float DeadZone = Input()->Config()->m_JoystickTolerance/50.0f;
+	const float DeadZone = Input()->GetJoystickDeadzone();
 	if(Len > DeadZone)
 	{
 		const float Factor = 0.1f * maximum((Len - DeadZone) / (1 - DeadZone), 0.001f) / Len;
@@ -214,7 +219,7 @@ bool CInput::CJoystick::Absolute(float *pX, float *pY)
 		return false;
 
 	const vec2 RawJoystickPos = vec2(GetAxisValue(Input()->Config()->m_JoystickX), GetAxisValue(Input()->Config()->m_JoystickY));
-	const float DeadZone = Input()->Config()->m_JoystickTolerance/50.0f;
+	const float DeadZone = Input()->GetJoystickDeadzone();
 	if(dot(RawJoystickPos, RawJoystickPos) > DeadZone*DeadZone)
 	{
 		*pX = RawJoystickPos.x;
@@ -304,6 +309,36 @@ bool CInput::KeyState(int Key) const
 		&& m_aInputState[Key>=KEY_MOUSE_1 ? Key : SDL_GetScancodeFromKey(KeyToKeycode(Key))];
 }
 
+void CInput::UpdateMouseState()
+{
+	int MouseState = SDL_GetMouseState(NULL, NULL);
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_LEFT)) m_aInputState[KEY_MOUSE_1] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_RIGHT)) m_aInputState[KEY_MOUSE_2] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_MIDDLE)) m_aInputState[KEY_MOUSE_3] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_X1)) m_aInputState[KEY_MOUSE_4] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_X2)) m_aInputState[KEY_MOUSE_5] = 1;
+	if(MouseState&SDL_BUTTON(6)) m_aInputState[KEY_MOUSE_6] = 1;
+	if(MouseState&SDL_BUTTON(7)) m_aInputState[KEY_MOUSE_7] = 1;
+	if(MouseState&SDL_BUTTON(8)) m_aInputState[KEY_MOUSE_8] = 1;
+	if(MouseState&SDL_BUTTON(9)) m_aInputState[KEY_MOUSE_9] = 1;
+}
+
+void CInput::UpdateJoystickState()
+{
+	IJoystick *pJoystick = GetActiveJoystick();
+	if(!pJoystick)
+		return;
+	const float DeadZone = GetJoystickDeadzone();
+	for(int Axis = 0; Axis < pJoystick->GetNumAxes(); Axis++)
+	{
+		const float Value = pJoystick->GetAxisValue(Axis);
+		const int LeftKey = KEY_JOY_AXIS_0_LEFT + 2 * Axis;
+		const int RightKey = LeftKey + 1;
+		m_aInputState[LeftKey] = Value <= -DeadZone;
+		m_aInputState[RightKey] = Value >= DeadZone;
+	}
+}
+
 int CInput::Update()
 {
 	// keep the counter between 1..0xFFFF, 0 means not pressed
@@ -317,16 +352,8 @@ int CInput::Update()
 	mem_zero(m_aInputState+NumKeyStates, KEY_LAST-NumKeyStates);
 
 	// these states must always be updated manually because they are not in the SDL_GetKeyboardState from SDL
-	int MouseState = SDL_GetMouseState(NULL, NULL);
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_LEFT)) m_aInputState[KEY_MOUSE_1] = 1;
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_RIGHT)) m_aInputState[KEY_MOUSE_2] = 1;
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_MIDDLE)) m_aInputState[KEY_MOUSE_3] = 1;
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_X1)) m_aInputState[KEY_MOUSE_4] = 1;
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_X2)) m_aInputState[KEY_MOUSE_5] = 1;
-	if(MouseState&SDL_BUTTON(6)) m_aInputState[KEY_MOUSE_6] = 1;
-	if(MouseState&SDL_BUTTON(7)) m_aInputState[KEY_MOUSE_7] = 1;
-	if(MouseState&SDL_BUTTON(8)) m_aInputState[KEY_MOUSE_8] = 1;
-	if(MouseState&SDL_BUTTON(9)) m_aInputState[KEY_MOUSE_9] = 1;
+	UpdateMouseState();
+	UpdateJoystickState();
 
 	SDL_Event Event;
 	while(SDL_PollEvent(&Event))
@@ -351,6 +378,38 @@ int CInput::Update()
 				break;
 
 			// handle the joystick events
+			case SDL_JOYAXISMOTION:
+			{
+				if(Event.jaxis.axis >= NUM_JOYSTICK_AXES)
+					break;
+				const int LeftKey = KEY_JOY_AXIS_0_LEFT + 2 * Event.jaxis.axis;
+				const int RightKey = LeftKey + 1;
+				const float DeadZone = GetJoystickDeadzone();
+				if(Event.jaxis.value <= SDL_JOYSTICK_AXIS_MIN * DeadZone && !m_aInputState[LeftKey])
+				{
+					m_aInputState[LeftKey] = 1;
+					m_aInputCount[LeftKey] = m_InputCounter;
+					AddEvent(0, LeftKey, IInput::FLAG_PRESS);
+				}
+				else if(Event.jaxis.value > SDL_JOYSTICK_AXIS_MIN * DeadZone && m_aInputState[LeftKey])
+				{
+					m_aInputState[LeftKey] = 0;
+					AddEvent(0, LeftKey, IInput::FLAG_RELEASE);
+				}
+				if(Event.jaxis.value >= SDL_JOYSTICK_AXIS_MAX * DeadZone && !m_aInputState[RightKey])
+				{
+					m_aInputState[RightKey] = 1;
+					m_aInputCount[RightKey] = m_InputCounter;
+					AddEvent(0, RightKey, IInput::FLAG_PRESS);
+				}
+				else if(Event.jaxis.value < SDL_JOYSTICK_AXIS_MAX * DeadZone && m_aInputState[RightKey])
+				{
+					m_aInputState[RightKey] = 0;
+					AddEvent(0, RightKey, IInput::FLAG_RELEASE);
+				}
+				break;
+			}
+
 			case SDL_JOYBUTTONUP:
 				if(Event.jbutton.button >= NUM_JOYSTICK_BUTTONS)
 					break;
@@ -465,7 +524,7 @@ int CInput::Update()
 
 		if(Key >= 0)
 		{
-			if(Action&IInput::FLAG_PRESS && Key < g_MaxKeys && Scancode >= 0 && Scancode < g_MaxKeys)
+			if((Action&IInput::FLAG_PRESS) && Key < g_MaxKeys && Scancode >= 0 && Scancode < g_MaxKeys)
 			{
 				m_aInputState[Scancode] = 1;
 				m_aInputCount[Key] = m_InputCounter;

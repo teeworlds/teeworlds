@@ -406,8 +406,8 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 	m_pClient->UI()->DoLabel(&Button, Localize("Aim bind"), 13.0f, TEXTALIGN_CENTER);
 
 	IInput::IJoystick *pJoystick = Input()->GetActiveJoystick();
-	static int s_aActive[IInput::JOYSTICK_AXES_MAX_NUM][2];
-	for(int i = 0; i < minimum(pJoystick->GetNumAxes(), (int)IInput::JOYSTICK_AXES_MAX_NUM); i++)
+	static int s_aActive[NUM_JOYSTICK_AXES][2];
+	for(int i = 0; i < minimum(pJoystick->GetNumAxes(), (int)NUM_JOYSTICK_AXES); i++)
 	{
 		bool Active = Config()->m_JoystickX == i || Config()->m_JoystickY == i;
 

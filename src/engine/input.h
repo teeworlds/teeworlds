@@ -42,8 +42,6 @@ public:
 		CURSOR_NONE = 0,
 		CURSOR_MOUSE,
 		CURSOR_JOYSTICK,
-
-		JOYSTICK_AXES_MAX_NUM = 12,
 	};
 
 	// events

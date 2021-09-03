@@ -52,6 +52,7 @@ private:
 	void CloseJoysticks();
 	void UpdateActiveJoystick();
 	static void ConchainJoystickGuidChanged(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
+	float GetJoystickDeadzone();
 
 	bool m_MouseInputRelative;
 	char *m_pClipboardText;
@@ -68,6 +69,8 @@ private:
 	unsigned short m_aInputCount[g_MaxKeys];	// tw-KEY
 	unsigned char m_aInputState[g_MaxKeys];	// SDL_SCANCODE
 	int m_InputCounter;
+	void UpdateMouseState();
+	void UpdateJoystickState();
 
 	void ClearKeyStates();
 	bool KeyState(int Key) const;
