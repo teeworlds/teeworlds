@@ -162,6 +162,7 @@ CInput::CJoystick::CJoystick(CInput *pInput, int Index, SDL_Joystick *pDelegate)
 	m_NumHats = SDL_JoystickNumHats(pDelegate);
 	str_copy(m_aName, SDL_JoystickName(pDelegate), sizeof(m_aName));
 	SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(pDelegate), m_aGUID, sizeof(m_aGUID));
+	m_InstanceID = SDL_JoystickInstanceID(pDelegate);
 }
 
 void CInput::CloseJoysticks()
@@ -365,6 +366,9 @@ void CInput::UpdateJoystickState()
 
 void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
 {
+	CJoystick *pJoystick = GetActiveJoystick();
+	if(!pJoystick || pJoystick->GetInstanceID() != Event.jaxis.which)
+		return;
 	if(Event.jaxis.axis >= NUM_JOYSTICK_AXES)
 		return;
 
@@ -399,6 +403,9 @@ void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
 
 void CInput::HandleJoystickButtonEvent(const SDL_Event &Event)
 {
+	CJoystick *pJoystick = GetActiveJoystick();
+	if(!pJoystick || pJoystick->GetInstanceID() != Event.jbutton.which)
+		return;
 	if(Event.jbutton.button >= NUM_JOYSTICK_BUTTONS)
 		return;
 
@@ -419,6 +426,10 @@ void CInput::HandleJoystickButtonEvent(const SDL_Event &Event)
 
 void CInput::HandleJoystickHatMotionEvent(const SDL_Event &Event)
 {
+	CJoystick *pJoystick = GetActiveJoystick();
+	if(!pJoystick || pJoystick->GetInstanceID() != Event.jhat.which)
+		return;
+
 	// It is assumed that there is at most one hat per joystick.
 	if(Event.jhat.hat != 0)
 		return;

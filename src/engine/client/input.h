@@ -14,6 +14,7 @@ public:
 		int m_Index;
 		char m_aName[64];
 		char m_aGUID[34];
+		SDL_JoystickID m_InstanceID;
 		int m_NumAxes;
 		int m_NumButtons;
 		int m_NumBalls;
@@ -29,6 +30,7 @@ public:
 		int GetIndex() const { return m_Index; }
 		const char *GetName() const { return m_aName; }
 		const char *GetGUID() const { return m_aGUID; }
+		SDL_JoystickID GetInstanceID() const { return m_InstanceID; }
 		int GetNumAxes() const { return m_NumAxes; }
 		int GetNumButtons() const { return m_NumButtons; }
 		int GetNumBalls() const { return m_NumBalls; }
@@ -92,7 +94,7 @@ public:
 	bool KeyPress(int Key, bool CheckCounter) const { return CheckCounter ? (m_aInputCount[Key] == m_InputCounter) : m_aInputCount[Key]; }
 
 	int NumJoysticks() const { return m_aJoysticks.size(); }
-	IJoystick *GetActiveJoystick() { return m_pActiveJoystick; }
+	CJoystick *GetActiveJoystick() { return m_pActiveJoystick; }
 	void SelectNextJoystick();
 
 	void MouseModeRelative();
