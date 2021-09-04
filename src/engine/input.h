@@ -74,6 +74,7 @@ public:
 		virtual int GetNumBalls() const = 0;
 		virtual int GetNumHats() const = 0;
 		virtual float GetAxisValue(int Axis) = 0;
+		virtual int GetHatValue(int Hat) = 0;
 		virtual bool Relative(float *pX, float *pY) = 0;
 		virtual bool Absolute(float *pX, float *pY) = 0;
 	};

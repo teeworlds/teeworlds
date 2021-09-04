@@ -21,9 +21,11 @@ public:
 		SDL_Joystick *m_pDelegate;
 
 		CInput *Input() { return m_pInput; }
+
 	public:
 		CJoystick() { /* empty constructor for sorted_array */ }
 		CJoystick(CInput *pInput, int Index, SDL_Joystick *pDelegate);
+
 		int GetIndex() const { return m_Index; }
 		const char *GetName() const { return m_aName; }
 		const char *GetGUID() const { return m_aGUID; }
@@ -32,9 +34,12 @@ public:
 		int GetNumBalls() const { return m_NumBalls; }
 		int GetNumHats() const { return m_NumHats; }
 		float GetAxisValue(int Axis);
+		int GetHatValue(int Hat);
 		bool Relative(float *pX, float *pY);
 		bool Absolute(float *pX, float *pY);
 		void Close();
+
+		static int GetJoystickHatKey(int HatValue);
 	};
 private:
 	IEngineGraphics *m_pGraphics;
@@ -57,8 +62,6 @@ private:
 	bool m_MouseInputRelative;
 	char *m_pClipboardText;
 
-	int m_PreviousHat;
-
 	bool m_MouseDoubleClick;
 
 	void AddEvent(char *pText, int Key, int Flags);
@@ -71,6 +74,9 @@ private:
 	int m_InputCounter;
 	void UpdateMouseState();
 	void UpdateJoystickState();
+	void HandleJoystickAxisMotionEvent(const SDL_Event &Event);
+	void HandleJoystickButtonEvent(const SDL_Event &Event);
+	void HandleJoystickHatMotionEvent(const SDL_Event &Event);
 
 	void ClearKeyStates();
 	bool KeyState(int Key) const;

@@ -55,8 +55,6 @@ CInput::CInput()
 
 	m_pActiveJoystick = 0x0;
 
-	m_PreviousHat = 0;
-
 	m_MouseDoubleClick = false;
 
 	m_NumEvents = 0;
@@ -195,6 +193,27 @@ float CInput::CJoystick::GetAxisValue(int Axis)
 	return (SDL_JoystickGetAxis(m_pDelegate, Axis) - SDL_JOYSTICK_AXIS_MIN) / float(SDL_JOYSTICK_AXIS_MAX - SDL_JOYSTICK_AXIS_MIN) * 2.0f - 1.0f;
 }
 
+int CInput::CJoystick::GetJoystickHatKey(int HatValue)
+{
+	switch(HatValue)
+	{
+		case SDL_HAT_LEFTUP: return KEY_JOY_HAT_LEFTUP;
+		case SDL_HAT_UP: return KEY_JOY_HAT_UP;
+		case SDL_HAT_RIGHTUP: return KEY_JOY_HAT_RIGHTUP;
+		case SDL_HAT_LEFT: return KEY_JOY_HAT_LEFT;
+		case SDL_HAT_RIGHT: return KEY_JOY_HAT_RIGHT;
+		case SDL_HAT_LEFTDOWN: return KEY_JOY_HAT_LEFTDOWN;
+		case SDL_HAT_DOWN: return KEY_JOY_HAT_DOWN;
+		case SDL_HAT_RIGHTDOWN: return KEY_JOY_HAT_RIGHTDOWN;
+	}
+	return -1;
+}
+
+int CInput::CJoystick::GetHatValue(int Hat)
+{
+	return GetJoystickHatKey(SDL_JoystickGetHat(m_pDelegate, Hat));
+}
+
 bool CInput::CJoystick::Relative(float *pX, float *pY)
 {
 	if(!Input()->Config()->m_JoystickEnable)
@@ -328,6 +347,7 @@ void CInput::UpdateJoystickState()
 	IJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick)
 		return;
+
 	const float DeadZone = GetJoystickDeadzone();
 	for(int Axis = 0; Axis < pJoystick->GetNumAxes(); Axis++)
 	{
@@ -336,6 +356,89 @@ void CInput::UpdateJoystickState()
 		const int RightKey = LeftKey + 1;
 		m_aInputState[LeftKey] = Value <= -DeadZone;
 		m_aInputState[RightKey] = Value >= DeadZone;
+	}
+
+	const int HatState = pJoystick->GetHatValue(0);
+	for(int Key = KEY_JOY_HAT_LEFTUP; Key <= KEY_JOY_HAT_RIGHTDOWN; Key++)
+		m_aInputState[Key] = (Key == HatState) ? 1 : 0;
+}
+
+void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
+{
+	if(Event.jaxis.axis >= NUM_JOYSTICK_AXES)
+		return;
+
+	const int LeftKey = KEY_JOY_AXIS_0_LEFT + 2 * Event.jaxis.axis;
+	const int RightKey = LeftKey + 1;
+	const float DeadZone = GetJoystickDeadzone();
+
+	if(Event.jaxis.value <= SDL_JOYSTICK_AXIS_MIN * DeadZone && !m_aInputState[LeftKey])
+	{
+		m_aInputState[LeftKey] = 1;
+		m_aInputCount[LeftKey] = m_InputCounter;
+		AddEvent(0, LeftKey, IInput::FLAG_PRESS);
+	}
+	else if(Event.jaxis.value > SDL_JOYSTICK_AXIS_MIN * DeadZone && m_aInputState[LeftKey])
+	{
+		m_aInputState[LeftKey] = 0;
+		AddEvent(0, LeftKey, IInput::FLAG_RELEASE);
+	}
+
+	if(Event.jaxis.value >= SDL_JOYSTICK_AXIS_MAX * DeadZone && !m_aInputState[RightKey])
+	{
+		m_aInputState[RightKey] = 1;
+		m_aInputCount[RightKey] = m_InputCounter;
+		AddEvent(0, RightKey, IInput::FLAG_PRESS);
+	}
+	else if(Event.jaxis.value < SDL_JOYSTICK_AXIS_MAX * DeadZone && m_aInputState[RightKey])
+	{
+		m_aInputState[RightKey] = 0;
+		AddEvent(0, RightKey, IInput::FLAG_RELEASE);
+	}
+}
+
+void CInput::HandleJoystickButtonEvent(const SDL_Event &Event)
+{
+	if(Event.jbutton.button >= NUM_JOYSTICK_BUTTONS)
+		return;
+
+	const int Key = Event.jbutton.button + KEY_JOYSTICK_BUTTON_0;
+
+	if(Event.type == SDL_JOYBUTTONDOWN)
+	{
+		m_aInputState[Key] = 1;
+		m_aInputCount[Key] = m_InputCounter;
+		AddEvent(0, Key, IInput::FLAG_PRESS);
+	}
+	else if(Event.type == SDL_JOYBUTTONUP)
+	{
+		m_aInputState[Key] = 0;
+		AddEvent(0, Key, IInput::FLAG_RELEASE);
+	}
+}
+
+void CInput::HandleJoystickHatMotionEvent(const SDL_Event &Event)
+{
+	// It is assumed that there is at most one hat per joystick.
+	if(Event.jhat.hat != 0)
+		return;
+
+	const int CurrentKey = CJoystick::GetJoystickHatKey(Event.jhat.value);
+
+	for(int Key = KEY_JOY_HAT_LEFTUP; Key <= KEY_JOY_HAT_RIGHTDOWN; Key++)
+	{
+		if(Key != CurrentKey && m_aInputState[Key])
+		{
+			m_aInputState[Key] = 0;
+			AddEvent(0, Key, IInput::FLAG_RELEASE);
+		}
+	}
+
+	if(CurrentKey >= 0)
+	{
+		m_aInputState[CurrentKey] = 1;
+		m_aInputCount[CurrentKey] = m_InputCounter;
+		AddEvent(0, CurrentKey, IInput::FLAG_PRESS);
 	}
 }
 
@@ -379,99 +482,16 @@ int CInput::Update()
 
 			// handle the joystick events
 			case SDL_JOYAXISMOTION:
-			{
-				if(Event.jaxis.axis >= NUM_JOYSTICK_AXES)
-					break;
-				const int LeftKey = KEY_JOY_AXIS_0_LEFT + 2 * Event.jaxis.axis;
-				const int RightKey = LeftKey + 1;
-				const float DeadZone = GetJoystickDeadzone();
-				if(Event.jaxis.value <= SDL_JOYSTICK_AXIS_MIN * DeadZone && !m_aInputState[LeftKey])
-				{
-					m_aInputState[LeftKey] = 1;
-					m_aInputCount[LeftKey] = m_InputCounter;
-					AddEvent(0, LeftKey, IInput::FLAG_PRESS);
-				}
-				else if(Event.jaxis.value > SDL_JOYSTICK_AXIS_MIN * DeadZone && m_aInputState[LeftKey])
-				{
-					m_aInputState[LeftKey] = 0;
-					AddEvent(0, LeftKey, IInput::FLAG_RELEASE);
-				}
-				if(Event.jaxis.value >= SDL_JOYSTICK_AXIS_MAX * DeadZone && !m_aInputState[RightKey])
-				{
-					m_aInputState[RightKey] = 1;
-					m_aInputCount[RightKey] = m_InputCounter;
-					AddEvent(0, RightKey, IInput::FLAG_PRESS);
-				}
-				else if(Event.jaxis.value < SDL_JOYSTICK_AXIS_MAX * DeadZone && m_aInputState[RightKey])
-				{
-					m_aInputState[RightKey] = 0;
-					AddEvent(0, RightKey, IInput::FLAG_RELEASE);
-				}
+				HandleJoystickAxisMotionEvent(Event);
 				break;
-			}
 
 			case SDL_JOYBUTTONUP:
-				if(Event.jbutton.button >= NUM_JOYSTICK_BUTTONS)
-					break;
-				Action = IInput::FLAG_RELEASE;
-
-				// fall through
 			case SDL_JOYBUTTONDOWN:
-				if(Event.jbutton.button >= NUM_JOYSTICK_BUTTONS)
-					break;
-				Key = Event.jbutton.button + KEY_JOYSTICK_BUTTON_0;
-				Scancode = Key;
+				HandleJoystickButtonEvent(Event);
 				break;
 
 			case SDL_JOYHATMOTION:
-				switch(Event.jhat.value) {
-					case SDL_HAT_LEFTUP:
-						Key = KEY_JOY_HAT_LEFTUP;
-						Scancode = Key;
-						m_PreviousHat = Key;
-						break;
-					case SDL_HAT_UP:
-						Key = KEY_JOY_HAT_UP;
-						Scancode = Key;
-						m_PreviousHat = Key;
-						break;
-					case SDL_HAT_RIGHTUP:
-						Key = KEY_JOY_HAT_RIGHTUP;
-						Scancode = Key;
-						m_PreviousHat = Key;
-						break;
-					case SDL_HAT_LEFT:
-						Key = KEY_JOY_HAT_LEFT;
-						Scancode = Key;
-						m_PreviousHat = Key;
-						break;
-					case SDL_HAT_CENTERED:
-						Action = IInput::FLAG_RELEASE;
-						Key = m_PreviousHat;
-						Scancode = m_PreviousHat;
-						m_PreviousHat = 0;
-						break;
-					case SDL_HAT_RIGHT:
-						Key = KEY_JOY_HAT_RIGHT;
-						Scancode = Key;
-						m_PreviousHat = Key;
-						break;
-					case SDL_HAT_LEFTDOWN:
-						Key = KEY_JOY_HAT_LEFTDOWN;
-						Scancode = Key;
-						m_PreviousHat = Key;
-						break;
-					case SDL_HAT_DOWN:
-						Key = KEY_JOY_HAT_DOWN;
-						Scancode = Key;
-						m_PreviousHat = Key;
-						break;
-					case SDL_HAT_RIGHTDOWN:
-						Key = KEY_JOY_HAT_RIGHTDOWN;
-						Scancode = Key;
-						m_PreviousHat = Key;
-						break;
-				}
+				HandleJoystickHatMotionEvent(Event);
 				break;
 
 			// handle mouse buttons
