@@ -331,15 +331,15 @@ bool CInput::KeyState(int Key) const
 void CInput::UpdateMouseState()
 {
 	int MouseState = SDL_GetMouseState(NULL, NULL);
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_LEFT)) m_aInputState[KEY_MOUSE_1] = 1;
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_RIGHT)) m_aInputState[KEY_MOUSE_2] = 1;
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_MIDDLE)) m_aInputState[KEY_MOUSE_3] = 1;
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_X1)) m_aInputState[KEY_MOUSE_4] = 1;
-	if(MouseState&SDL_BUTTON(SDL_BUTTON_X2)) m_aInputState[KEY_MOUSE_5] = 1;
-	if(MouseState&SDL_BUTTON(6)) m_aInputState[KEY_MOUSE_6] = 1;
-	if(MouseState&SDL_BUTTON(7)) m_aInputState[KEY_MOUSE_7] = 1;
-	if(MouseState&SDL_BUTTON(8)) m_aInputState[KEY_MOUSE_8] = 1;
-	if(MouseState&SDL_BUTTON(9)) m_aInputState[KEY_MOUSE_9] = 1;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_LEFT)) m_aInputState[KEY_MOUSE_1] = true;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_RIGHT)) m_aInputState[KEY_MOUSE_2] = true;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_MIDDLE)) m_aInputState[KEY_MOUSE_3] = true;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_X1)) m_aInputState[KEY_MOUSE_4] = true;
+	if(MouseState&SDL_BUTTON(SDL_BUTTON_X2)) m_aInputState[KEY_MOUSE_5] = true;
+	if(MouseState&SDL_BUTTON(6)) m_aInputState[KEY_MOUSE_6] = true;
+	if(MouseState&SDL_BUTTON(7)) m_aInputState[KEY_MOUSE_7] = true;
+	if(MouseState&SDL_BUTTON(8)) m_aInputState[KEY_MOUSE_8] = true;
+	if(MouseState&SDL_BUTTON(9)) m_aInputState[KEY_MOUSE_9] = true;
 }
 
 void CInput::UpdateJoystickState()
@@ -360,7 +360,7 @@ void CInput::UpdateJoystickState()
 
 	const int HatState = pJoystick->GetHatValue(0);
 	for(int Key = KEY_JOY_HAT_LEFTUP; Key <= KEY_JOY_HAT_RIGHTDOWN; Key++)
-		m_aInputState[Key] = (Key == HatState) ? 1 : 0;
+		m_aInputState[Key] = Key == HatState;
 }
 
 void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
@@ -374,25 +374,25 @@ void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
 
 	if(Event.jaxis.value <= SDL_JOYSTICK_AXIS_MIN * DeadZone && !m_aInputState[LeftKey])
 	{
-		m_aInputState[LeftKey] = 1;
+		m_aInputState[LeftKey] = true;
 		m_aInputCount[LeftKey] = m_InputCounter;
 		AddEvent(0, LeftKey, IInput::FLAG_PRESS);
 	}
 	else if(Event.jaxis.value > SDL_JOYSTICK_AXIS_MIN * DeadZone && m_aInputState[LeftKey])
 	{
-		m_aInputState[LeftKey] = 0;
+		m_aInputState[LeftKey] = false;
 		AddEvent(0, LeftKey, IInput::FLAG_RELEASE);
 	}
 
 	if(Event.jaxis.value >= SDL_JOYSTICK_AXIS_MAX * DeadZone && !m_aInputState[RightKey])
 	{
-		m_aInputState[RightKey] = 1;
+		m_aInputState[RightKey] = true;
 		m_aInputCount[RightKey] = m_InputCounter;
 		AddEvent(0, RightKey, IInput::FLAG_PRESS);
 	}
 	else if(Event.jaxis.value < SDL_JOYSTICK_AXIS_MAX * DeadZone && m_aInputState[RightKey])
 	{
-		m_aInputState[RightKey] = 0;
+		m_aInputState[RightKey] = false;
 		AddEvent(0, RightKey, IInput::FLAG_RELEASE);
 	}
 }
@@ -406,13 +406,13 @@ void CInput::HandleJoystickButtonEvent(const SDL_Event &Event)
 
 	if(Event.type == SDL_JOYBUTTONDOWN)
 	{
-		m_aInputState[Key] = 1;
+		m_aInputState[Key] = true;
 		m_aInputCount[Key] = m_InputCounter;
 		AddEvent(0, Key, IInput::FLAG_PRESS);
 	}
 	else if(Event.type == SDL_JOYBUTTONUP)
 	{
-		m_aInputState[Key] = 0;
+		m_aInputState[Key] = false;
 		AddEvent(0, Key, IInput::FLAG_RELEASE);
 	}
 }
@@ -429,14 +429,14 @@ void CInput::HandleJoystickHatMotionEvent(const SDL_Event &Event)
 	{
 		if(Key != CurrentKey && m_aInputState[Key])
 		{
-			m_aInputState[Key] = 0;
+			m_aInputState[Key] = false;
 			AddEvent(0, Key, IInput::FLAG_RELEASE);
 		}
 	}
 
 	if(CurrentKey >= 0)
 	{
-		m_aInputState[CurrentKey] = 1;
+		m_aInputState[CurrentKey] = true;
 		m_aInputCount[CurrentKey] = m_InputCounter;
 		AddEvent(0, CurrentKey, IInput::FLAG_PRESS);
 	}
@@ -546,7 +546,7 @@ int CInput::Update()
 		{
 			if((Action&IInput::FLAG_PRESS) && Key < g_MaxKeys && Scancode >= 0 && Scancode < g_MaxKeys)
 			{
-				m_aInputState[Scancode] = 1;
+				m_aInputState[Scancode] = true;
 				m_aInputCount[Key] = m_InputCounter;
 			}
 			AddEvent(0, Key, Action);

@@ -68,10 +68,11 @@ private:
 	void Clear();
 	bool IsEventValid(CEvent *pEvent) const { return pEvent->m_InputCount == m_InputCounter; }
 
-	//quick access to input
-	unsigned short m_aInputCount[g_MaxKeys];	// tw-KEY
-	unsigned char m_aInputState[g_MaxKeys];	// SDL_SCANCODE
+	// quick access to input
+	unsigned short m_aInputCount[g_MaxKeys];
+	bool m_aInputState[g_MaxKeys];
 	int m_InputCounter;
+
 	void UpdateMouseState();
 	void UpdateJoystickState();
 	void HandleJoystickAxisMotionEvent(const SDL_Event &Event);
