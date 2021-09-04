@@ -41,7 +41,7 @@ public:
 		bool Absolute(float *pX, float *pY);
 		void Close();
 
-		static int GetJoystickHatKey(int HatValue);
+		static int GetJoystickHatKey(int Hat, int HatValue);
 	};
 private:
 	IEngineGraphics *m_pGraphics;

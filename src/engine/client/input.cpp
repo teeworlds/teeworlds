@@ -194,25 +194,25 @@ float CInput::CJoystick::GetAxisValue(int Axis)
 	return (SDL_JoystickGetAxis(m_pDelegate, Axis) - SDL_JOYSTICK_AXIS_MIN) / float(SDL_JOYSTICK_AXIS_MAX - SDL_JOYSTICK_AXIS_MIN) * 2.0f - 1.0f;
 }
 
-int CInput::CJoystick::GetJoystickHatKey(int HatValue)
+int CInput::CJoystick::GetJoystickHatKey(int Hat, int HatValue)
 {
 	switch(HatValue)
 	{
-		case SDL_HAT_LEFTUP: return KEY_JOY_HAT_LEFTUP;
-		case SDL_HAT_UP: return KEY_JOY_HAT_UP;
-		case SDL_HAT_RIGHTUP: return KEY_JOY_HAT_RIGHTUP;
-		case SDL_HAT_LEFT: return KEY_JOY_HAT_LEFT;
-		case SDL_HAT_RIGHT: return KEY_JOY_HAT_RIGHT;
-		case SDL_HAT_LEFTDOWN: return KEY_JOY_HAT_LEFTDOWN;
-		case SDL_HAT_DOWN: return KEY_JOY_HAT_DOWN;
-		case SDL_HAT_RIGHTDOWN: return KEY_JOY_HAT_RIGHTDOWN;
+		case SDL_HAT_LEFTUP: return KEY_JOY_HAT0_LEFTUP + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT;
+		case SDL_HAT_UP: return KEY_JOY_HAT0_UP + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT;
+		case SDL_HAT_RIGHTUP: return KEY_JOY_HAT0_RIGHTUP + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT;
+		case SDL_HAT_LEFT: return KEY_JOY_HAT0_LEFT + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT;
+		case SDL_HAT_RIGHT: return KEY_JOY_HAT0_RIGHT + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT;
+		case SDL_HAT_LEFTDOWN: return KEY_JOY_HAT0_LEFTDOWN + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT;
+		case SDL_HAT_DOWN: return KEY_JOY_HAT0_DOWN + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT;
+		case SDL_HAT_RIGHTDOWN: return KEY_JOY_HAT0_RIGHTDOWN + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT;
 	}
 	return -1;
 }
 
 int CInput::CJoystick::GetHatValue(int Hat)
 {
-	return GetJoystickHatKey(SDL_JoystickGetHat(m_pDelegate, Hat));
+	return GetJoystickHatKey(Hat, SDL_JoystickGetHat(m_pDelegate, Hat));
 }
 
 bool CInput::CJoystick::Relative(float *pX, float *pY)
@@ -359,9 +359,12 @@ void CInput::UpdateJoystickState()
 		m_aInputState[RightKey] = Value >= DeadZone;
 	}
 
-	const int HatState = pJoystick->GetHatValue(0);
-	for(int Key = KEY_JOY_HAT_LEFTUP; Key <= KEY_JOY_HAT_RIGHTDOWN; Key++)
-		m_aInputState[Key] = Key == HatState;
+	for(int Hat = 0; Hat < pJoystick->GetNumHats(); Hat++)
+	{
+		const int HatState = pJoystick->GetHatValue(Hat);
+		for(int Key = KEY_JOY_HAT0_LEFTUP + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT; Key <= KEY_JOY_HAT0_RIGHTDOWN + Hat * NUM_JOYSTICK_BUTTONS_PER_HAT; Key++)
+			m_aInputState[Key] = Key == HatState;
+	}
 }
 
 void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
@@ -429,14 +432,12 @@ void CInput::HandleJoystickHatMotionEvent(const SDL_Event &Event)
 	CJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick || pJoystick->GetInstanceID() != Event.jhat.which)
 		return;
-
-	// It is assumed that there is at most one hat per joystick.
-	if(Event.jhat.hat != 0)
+	if(Event.jhat.hat >= NUM_JOYSTICK_HATS)
 		return;
 
-	const int CurrentKey = CJoystick::GetJoystickHatKey(Event.jhat.value);
+	const int CurrentKey = CJoystick::GetJoystickHatKey(Event.jhat.hat, Event.jhat.value);
 
-	for(int Key = KEY_JOY_HAT_LEFTUP; Key <= KEY_JOY_HAT_RIGHTDOWN; Key++)
+	for(int Key = KEY_JOY_HAT0_LEFTUP + Event.jhat.hat * NUM_JOYSTICK_BUTTONS_PER_HAT; Key <= KEY_JOY_HAT0_RIGHTDOWN + Event.jhat.hat * NUM_JOYSTICK_BUTTONS_PER_HAT; Key++)
 	{
 		if(Key != CurrentKey && m_aInputState[Key])
 		{
