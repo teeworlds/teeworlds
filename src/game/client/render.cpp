@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include <base/math.h>
+#include <base/tl/base.h>
 
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
@@ -40,21 +41,11 @@ void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 	float y1 = y/(float)cy + 0.5f/(float)(cy*32);
 	float y2 = (y+h)/(float)cy - 0.5f/(float)(cy*32);
 
-	float Temp = 0;
-
 	if(Flags&SPRITE_FLAG_FLIP_Y)
-	{
-		Temp = y1;
-		y1 = y2;
-		y2 = Temp;
-	}
+		tl_swap(y1, y2);
 
 	if(Flags&SPRITE_FLAG_FLIP_X)
-	{
-		Temp = x1;
-		x1 = x2;
-		x2 = Temp;
-	}
+		tl_swap(x1, x2);
 
 	Graphics()->QuadsSetSubset(x1, y1, x2, y2);
 }
