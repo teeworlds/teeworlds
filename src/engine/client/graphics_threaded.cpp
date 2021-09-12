@@ -18,6 +18,7 @@
 #include <math.h> // cosf, sinf
 
 #include "graphics_threaded.h"
+#include "graphics_threaded_null.h"
 
 static CVideoMode g_aFakeModes[] = {
 	{320,200}, {320,240}, {400,300},
@@ -1014,4 +1015,11 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes, int Scre
 	return m_pBackend->GetVideoModes(pModes, MaxModes, Screen);
 }
 
-extern IEngineGraphics *CreateEngineGraphicsThreaded() { return new CGraphics_Threaded(); }
+extern IEngineGraphics *CreateEngineGraphicsThreaded()
+{
+#ifdef CONF_HEADLESS_CLIENT
+	return new CGraphics_ThreadedNull();
+#else
+	return new CGraphics_Threaded();
+#endif
+}
