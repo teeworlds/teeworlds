@@ -493,8 +493,7 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 		if(!aUseCustomColors[SKINPART_BODY])
 			BodyHsl = vec3(0, 0, 1);
 
-		vec3 BodyRgb = HslToRgb(BodyHsl);
-		vec3 BodyLab = RgbToLab(BodyRgb);
+		const vec3 BodyLab = RgbToLab(HslToRgb(BodyHsl));
 
 		if(str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
 		{
@@ -504,11 +503,8 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 			vec3 OrgEyeHsl = EyeHsl;
 			EyeHsl.l *= 0.925f;
 
-			vec3 EyeRgb = HslToRgb(EyeHsl);
-			vec3 EyeLab = RgbToLab(EyeRgb);
-			float Dist = LabDistance(BodyLab, EyeLab);
-
-			if(Dist < MIN_EYE_BODY_COLOR_DIST)
+			const vec3 EyeLab = RgbToLab(HslToRgb(EyeHsl));
+			if(distance(BodyLab, EyeLab) < MIN_EYE_BODY_COLOR_DIST)
 			{
 				OrgEyeHsl.l = clamp(OrgEyeHsl.l - 0.22f, 0.f, 1.f);
 
@@ -532,12 +528,8 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 			vec3 OrgEyeHsl = EyeHsl;
 			EyeHsl.l = clamp(EyeHsl.l * 0.0823f, 0.f, 1.f);
 
-
-			vec3 EyeRgb = HslToRgb(EyeHsl);
-			vec3 EyeLab = RgbToLab(EyeRgb);
-			float Dist = LabDistance(BodyLab, EyeLab);
-
-			if(Dist < MIN_EYE_BODY_COLOR_DIST)
+			const vec3 EyeLab = RgbToLab(HslToRgb(EyeHsl));
+			if(distance(BodyLab, EyeLab) < MIN_EYE_BODY_COLOR_DIST)
 			{
 				OrgEyeHsl.l -= 0.6f;
 				OrgEyeHsl.l = clamp(OrgEyeHsl.l, 0.f, 1.f);
