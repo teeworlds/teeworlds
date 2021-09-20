@@ -32,9 +32,9 @@ TEST(Datafile, RoundtripItemDataAndSize)
 	EXPECT_TRUE(mem_comp(Reader.GetData(Index), TEST_DATA, 4) == 0);
 
 	static const char REPL_DATA[] = "Replacement";
-	char *pReplace4 = (char *)mem_alloc(4, 1);
+	char *pReplace4 = (char *)mem_alloc(4);
 	mem_copy(pReplace4, REPL_DATA, 4);
-	char *pReplace = (char *)mem_alloc(sizeof(REPL_DATA), 1);
+	char *pReplace = (char *)mem_alloc(sizeof(REPL_DATA));
 	mem_copy(pReplace, REPL_DATA, sizeof(REPL_DATA));
 	Reader.ReplaceData(Index, pReplace4, 4);
 	Reader.ReplaceData(Index4, pReplace, sizeof(REPL_DATA));

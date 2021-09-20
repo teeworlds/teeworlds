@@ -131,7 +131,7 @@ void *CCommandProcessorFragment_OpenGL::Rescale(int Width, int Height, int NewWi
 	if(Format == CCommandBuffer::TEXFORMAT_RGBA)
 		Bpp = 4;
 
-	unsigned char *pTmpData = (unsigned char *)mem_alloc(NewWidth*NewHeight*Bpp, 1);
+	unsigned char *pTmpData = (unsigned char *)mem_alloc(NewWidth*NewHeight*Bpp);
 
 	for(int y = 0; y < NewHeight; y++)
 		for(int x = 0; x < NewWidth; x++)
@@ -402,7 +402,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 
 		// copy and reorder texture data
 		int MemSize = Width*Height*IGraphics::NUMTILES_DIMENSION*IGraphics::NUMTILES_DIMENSION*pCommand->m_PixelSize;
-		char *pTmpData = (char *)mem_alloc(MemSize, sizeof(void*));
+		char *pTmpData = (char *)mem_alloc(MemSize);
 
 		const int TileSize = (Height * Width) * pCommand->m_PixelSize;
 		const int TileRowSize = Width * pCommand->m_PixelSize;
@@ -482,7 +482,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Screenshot(const CCommandBuffer::CScr
 	int y = aViewport[3] - pCommand->m_Y - 1 - (h - 1);
 
 	// we allocate one more row to use when we are flipping the texture
-	unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
+	unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3);
 	unsigned char *pTempRow = pPixelData+w*h*3;
 
 	// fetch the pixels

@@ -31,9 +31,6 @@ extern "C" {
 		test - Result of the test.
 		msg - Message that should be printed if the test fails.
 
-	Remarks:
-		Does nothing in release version of the library.
-
 	See Also:
 		<dbg_break>
 */
@@ -52,9 +49,6 @@ void dbg_assert_imp(const char *filename, int line, int test, const char *msg);
 	Function: dbg_break
 		Breaks into the debugger.
 
-	Remarks:
-		Does nothing in release version of the library.
-
 	See Also:
 		<dbg_assert>
 */
@@ -68,9 +62,6 @@ void dbg_break();
 	Parameters:
 		sys - A string that describes what system the message belongs to
 		fmt - A printf styled format string.
-
-	Remarks:
-		Does nothing in release version of the library.
 
 	See Also:
 		<dbg_assert>
@@ -86,30 +77,22 @@ GNUC_ATTRIBUTE((format(printf, 2, 3)));
 
 	Parameters:
 		size - Size of the needed block.
-		alignment - Alignment for the block.
 
 	Returns:
 		Returns a pointer to the newly allocated block. Returns a
 		null pointer if the memory couldn't be allocated.
 
 	Remarks:
-		- Passing 0 to size will allocated the smallest amount possible
-		and return a unique pointer.
+		- The behavior when passing 0 as size is unspecified.
 
 	See Also:
 		<mem_free>
 */
-void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned alignment);
-#define mem_alloc(s,a) mem_alloc_debug(__FILE__, __LINE__, (s), (a))
+void *mem_alloc(unsigned size);
 
 /*
 	Function: mem_free
 		Frees a block allocated through <mem_alloc>.
-
-	Remarks:
-		- In the debug version of the library the function will assert if
-		a non-valid block is passed, like a null pointer or a block that
-		isn't allocated.
 
 	See Also:
 		<mem_alloc>

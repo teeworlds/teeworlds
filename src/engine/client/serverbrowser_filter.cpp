@@ -79,7 +79,7 @@ CServerBrowserFilter::CServerFilter& CServerBrowserFilter::CServerFilter::operat
 		m_NumSortedServers = Other.m_NumSortedServers;
 		m_SortedServersCapacity = Other.m_SortedServersCapacity;
 
-		m_pSortedServerlist = (int *)mem_alloc(m_SortedServersCapacity * sizeof(int), 1);
+		m_pSortedServerlist = (int *)mem_alloc(m_SortedServersCapacity * sizeof(int));
 		for(int i = 0; i < m_SortedServersCapacity; ++i)
 			m_pSortedServerlist[i] = Other.m_pSortedServerlist[i];
 	}
@@ -98,7 +98,7 @@ void CServerBrowserFilter::CServerFilter::Filter()
 		if(m_pSortedServerlist)
 			mem_free(m_pSortedServerlist);
 		m_SortedServersCapacity = max(1000, NumServers+NumServers/2);
-		m_pSortedServerlist = (int *)mem_alloc(m_SortedServersCapacity*sizeof(int), 1);
+		m_pSortedServerlist = (int *)mem_alloc(m_SortedServersCapacity*sizeof(int));
 	}
 
 	// filter the servers

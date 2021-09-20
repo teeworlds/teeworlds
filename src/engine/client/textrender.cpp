@@ -154,7 +154,7 @@ void CGlyphMap::InitTexture(int Width, int Height)
 
 	int TextureSize = Width*Height;
 
-	void *pMem = mem_alloc(TextureSize, 1);
+	void *pMem = mem_alloc(TextureSize);
 	mem_zero(pMem, TextureSize);
 
 	for(int i = 0; i < 2; i++)
@@ -208,7 +208,7 @@ int CGlyphMap::FitGlyph(int Width, int Height, ivec2 *pPosition)
 	int W = m_aAtlasPages[Atlas].m_Width;
 	int H = m_aAtlasPages[Atlas].m_Height;
 
-	unsigned char *pMem = (unsigned char *)mem_alloc(W*H, 1);
+	unsigned char *pMem = (unsigned char *)mem_alloc(W*H);
 	mem_zero(pMem, W*H);
 
 	UploadGlyph(0, X, Y, W, H, pMem);
@@ -764,7 +764,7 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 		return;
 	}
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize, 1);
+	char *pFileData = (char *)mem_alloc(FileSize);
 	io_read(File, pFileData, FileSize);
 	io_close(File);
 
@@ -794,7 +794,7 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 			if(File)
 			{
 				long FileSize = io_length(File);
-				m_apFontData[i] = mem_alloc(FileSize, 1);
+				m_apFontData[i] = mem_alloc(FileSize);
 				io_read(File, m_apFontData[i], FileSize);
 				io_close(File);
 				if(LoadFontCollection(aFilename, m_apFontData[i], FileSize))
@@ -830,7 +830,7 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 	{
 		m_NumVariants = rVariant.u.object.length;
 		json_object_entry *Entries = rVariant.u.object.values;
-		m_paVariants = (CFontLanguageVariant *)mem_alloc(sizeof(CFontLanguageVariant)*m_NumVariants, 1);
+		m_paVariants = (CFontLanguageVariant *)mem_alloc(sizeof(CFontLanguageVariant)*m_NumVariants);
 		for(int i = 0; i < m_NumVariants; ++i)
 		{
 			char aFileName[128];
