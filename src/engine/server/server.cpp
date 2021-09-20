@@ -261,6 +261,8 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 	m_CurrentGameTick = 0;
 	m_RunServer = true;
 
+	str_copy(m_aShutdownReason, "Server shutdown", sizeof(m_aShutdownReason));
+
 	m_pCurrentMapData = 0;
 	m_CurrentMapSize = 0;
 
@@ -1467,7 +1469,7 @@ int CServer::Run()
 		}
 	}
 	// disconnect all clients on shutdown
-	m_NetServer.Close();
+	m_NetServer.Close(m_aShutdownReason);
 	m_Econ.Shutdown();
 
 	GameServer()->OnShutdown();
@@ -1571,7 +1573,13 @@ void CServer::ConStatus(IConsole::IResult *pResult, void *pUser)
 
 void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 {
-	((CServer *)pUser)->m_RunServer = false;
+	CServer *pThis = static_cast<CServer *>(pUser);
+	pThis->m_RunServer = false;
+	const char *pReason = pResult->GetString(0);
+	if(pReason[0])
+	{
+		str_copy(pThis->m_aShutdownReason, pReason, sizeof(pThis->m_aShutdownReason));
+	}
 }
 
 void CServer::DemoRecorder_HandleAutoStart()
@@ -1749,7 +1757,7 @@ void CServer::RegisterCommands()
 	// register console commands
 	Console()->Register("kick", "i[id] ?r[reason]", CFGFLAG_SERVER, ConKick, this, "Kick player with specified id for any reason");
 	Console()->Register("status", "", CFGFLAG_SERVER, ConStatus, this, "List players");
-	Console()->Register("shutdown", "", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
+	Console()->Register("shutdown", "?r[reason]", CFGFLAG_SERVER, ConShutdown, this, "Shut down");
 	Console()->Register("logout", "", CFGFLAG_SERVER|CFGFLAG_BASICACCESS, ConLogout, this, "Logout of rcon");
 
 	Console()->Register("record", "?s[file]", CFGFLAG_SERVER|CFGFLAG_STORE, ConRecord, this, "Record to a file");
