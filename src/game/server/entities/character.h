@@ -70,7 +70,7 @@ private:
 	bool m_Alive;
 
 	// weapon info
-	CEntity *m_apHitObjects[10];
+	CEntity *m_apHitObjects[MAX_PLAYERS];
 	int m_NumObjectsHit;
 
 	struct WeaponStat
