@@ -87,7 +87,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 	MainView.VSplitMid(&Picker, &Sliders, 5.0f);
 	float PickerSize = min(Picker.w, Picker.h) - 20.0f;
-	RenderTools()->DrawUIRect(&Picker, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Picker.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	float Dark = CSkins::DARKEST_COLOR_LGT/255.0f;
 	IGraphics::CColorVertex ColorArray[4];
@@ -173,7 +173,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 			Sliders.HSplitTop(SectionHeight, &Section, &Sliders);
 			Sliders.HSplitTop(Spacing, 0, &Sliders);
-			RenderTools()->DrawUIRect(&Section, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+			Section.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 			Section.HSplitTop(SectionHeight-SliderHeight, &Label, &Section);
 
@@ -190,7 +190,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 			// button <
 			Section.VSplitLeft(SliderHeight, &Button, &Bar);
-			if(DoButton_Menu(&s_aButtons[i*3], "<", 0, &Button, 0, CUI::CORNER_TL|CUI::CORNER_BL))
+			if(DoButton_Menu(&s_aButtons[i*3], "<", 0, &Button, 0, CUIRect::CORNER_TL|CUIRect::CORNER_BL))
 			{
 				*apVars[i] = max(0, *apVars[i]-1);
 				Modified = true;
@@ -277,7 +277,7 @@ void CMenus::RenderHSLPicker(CUIRect MainView)
 
 			// button >
 			Button.VSplitLeft(SliderHeight, &Button, &Label);
-			if(DoButton_Menu(&s_aButtons[i*3+1], ">", 0, &Button, 0, CUI::CORNER_TR|CUI::CORNER_BR))
+			if(DoButton_Menu(&s_aButtons[i*3+1], ">", 0, &Button, 0, CUIRect::CORNER_TR|CUIRect::CORNER_BR))
 			{
 				*apVars[i] = min(255, *apVars[i]+1);
 				Modified = true;
@@ -545,11 +545,11 @@ void CMenus::RenderSkinPartPalette(CUIRect MainView)
 			if(Selected)
 			{
 				CUIRect Underline = {Button.x, Button.y + ButtonHeight + 2*Margin + 2.0f, Button.w, 1.0f};
-				RenderTools()->DrawUIRect(&Underline, vec4(1.0f, 1.0f, 1.0f, 1.5f), 0, 0);
+				Underline.Draw(vec4(1.0f, 1.0f, 1.0f, 1.5f), 0, 0);
 			}
-			RenderTools()->DrawUIRect(&Button, (Hovered ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f)), CUI::CORNER_ALL, 5.0f);
+			Button.Draw((Hovered ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f)));
 			Button.Margin(Margin, &Button);
-			RenderTools()->DrawUIRect(&Button, PartColor, CUI::CORNER_ALL, 3.0f);
+			Button.Draw(PartColor, 3.0f);
 			if(Clicked && p != m_TeePartSelected)
 			{
 				int& TeePartSelectedColor = *CSkins::ms_apColorVariables[m_TeePartSelected];
@@ -884,10 +884,10 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), this->Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	Background.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 5.0f, this->Client()->State() == IClient::STATE_OFFLINE ? CUIRect::CORNER_ALL : CUIRect::CORNER_B);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &Game, &MainView);
-	RenderTools()->DrawUIRect(&Game, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Game.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	// render client menu background
 	NumOptions = 4;
@@ -897,7 +897,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &Client, &MainView);
-	RenderTools()->DrawUIRect(&Client, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Client.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	CUIRect GameLeft, GameRight;
 	// render game menu
@@ -1007,7 +1007,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	{
 		GameRight.HSplitTop(Spacing, 0, &GameRight);
 		GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
-		/*RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		/*Button.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 		CUIRect Text;
 		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
 		Button.VSplitLeft(200.0f, &Text, &Button);
@@ -1128,7 +1128,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	float SpacingW = 3.0f;
 	float ButtonHeight = 20.0f;
 
-	RenderTools()->DrawUIRect(&MainView, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	MainView.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	MainView.HSplitTop(ButtonHeight, &Label, &MainView);
 	Label.y += 2.0f;
@@ -1137,7 +1137,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	// skin part selection
 	MainView.HSplitTop(SpacingH, 0, &MainView);
 	MainView.HSplitTop(ButtonHeight, &Patterns, &MainView);
-	RenderTools()->DrawUIRect(&Patterns, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Patterns.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	float ButtonWidth = (Patterns.w/6.0f)-(SpacingW*5.0)/6.0f;
 
@@ -1172,7 +1172,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 	Right.HSplitBottom(45.0f, &Picker, &Palette);
 	if(s_CustomColors)
 	{
-		RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Right.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 		RenderHSLPicker(Picker);
 		RenderSkinPartPalette(Palette);
 	}
@@ -1211,12 +1211,12 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	Background.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 5.0f, Client()->State() == IClient::STATE_OFFLINE ? CUIRect::CORNER_ALL : CUIRect::CORNER_B);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &TopView, &MainView);
 	TopView.VSplitMid(&Left, &Right, 3.0f);
-	RenderTools()->DrawUIRect(&Left, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
-	RenderTools()->DrawUIRect(&Right, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Left.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
+	Right.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	Left.HSplitTop(ButtonHeight, &Label, &Left);
 	Label.y += 2.0f;
@@ -1268,13 +1268,13 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		}
 
 		// draw preview
-		RenderTools()->DrawUIRect(&Top, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Top.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 		Top.VSplitLeft(Top.w/3.0f+SpacingW/2.0f, &Label, &Top);
 		Label.y += 17.0f;
 		UI()->DoLabel(&Label, Localize("Normal:"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
-		RenderTools()->DrawUIRect(&Top, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Top.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 		{
 			// interactive tee: tee looking towards cursor, and it is happy when you touch it
@@ -1320,7 +1320,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		}
 
 		// draw preview
-		RenderTools()->DrawUIRect(&Bottom, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Bottom.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 		Bottom.VSplitLeft(Bottom.w/3.0f+SpacingW/2.0f, &Label, &Bottom);
 		Label.y += 17.0f;
@@ -1328,7 +1328,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 
 		Bottom.VSplitMid(&TeeLeft, &TeeRight, SpacingW);
 
-		RenderTools()->DrawUIRect(&TeeLeft, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		TeeLeft.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
@@ -1337,7 +1337,7 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &TeamSkinInfo, 0, vec2(1, 0), vec2(TeeLeft.x+TeeLeft.w/2.0f, TeeLeft.y+TeeLeft.h/2.0f+6.0f));
 
-		RenderTools()->DrawUIRect(&TeeRight, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		TeeRight.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 		for(int p = 0; p < NUM_SKINPARTS; p++)
 		{
@@ -1369,16 +1369,16 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		DoEditBoxOptionUTF8(Config()->m_PlayerClan, Config()->m_PlayerClan, sizeof(Config()->m_PlayerClan), MAX_CLAN_LENGTH, &Button, Localize("Clan"),  100.0f, &s_OffsetClan);
 
 		// country selector
-		RenderTools()->DrawUIRect(&Bottom, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Bottom.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 		Bottom.VSplitLeft(100.0f, &Label, &Button);
 		Label.y += 17.0f;
 		UI()->DoLabel(&Label, Localize("Flag:"), ButtonHeight*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 		Button.w = (SkinHeight - 20.0f) * 2 + 20.0f;
-		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Button.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 		if(UI()->MouseHovered(&Button))
-			RenderTools()->DrawUIRect(&Button, vec4(0.5f, 0.5f, 0.5f, 0.25f), CUI::CORNER_ALL, 5.0f);
+			Button.Draw(vec4(0.5f, 0.5f, 0.5f, 0.25f));
 		
 		Button.Margin(10.0f, &Flag);
 		vec4 Color = vec4(1,1,1,1);
@@ -1488,7 +1488,7 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	Background.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 5.0f, Client()->State() == IClient::STATE_OFFLINE ? CUIRect::CORNER_ALL : CUIRect::CORNER_B);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	BottomView.HSplitTop(20.f, 0, &BottomView);
 
@@ -1709,10 +1709,10 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	Background.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 5.0f, Client()->State() == IClient::STATE_OFFLINE ? CUIRect::CORNER_ALL : CUIRect::CORNER_B);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &ScreenLeft, &MainView);
-	RenderTools()->DrawUIRect(&ScreenLeft, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	ScreenLeft.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	// render textures menu background
 	NumOptions = 3;
@@ -1720,7 +1720,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &Texture, &MainView);
-	RenderTools()->DrawUIRect(&Texture, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Texture.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	// render screen menu
 	ScreenLeft.HSplitTop(ButtonHeight, &Label, &ScreenLeft);
@@ -1750,7 +1750,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		char aBuf[64];
 		ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
 		ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
-		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Button.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 		CUIRect Text;
 		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
 		Button.VSplitLeft(100.0f-25.0f, &Text, &Button); // make button appear centered with FSAA
@@ -1771,7 +1771,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	{
 		ScreenLeft.HSplitTop(Spacing, 0, &ScreenLeft);
 		ScreenLeft.HSplitTop(ButtonHeight, &Button, &ScreenLeft);
-		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Button.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 		CUIRect Text;
 		Button.VSplitLeft(ButtonHeight+5.0f, 0, &Button);
 		Button.VSplitLeft(100.0f, &Text, &Button);
@@ -1862,7 +1862,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 		CUIRect Header, Button;
 		MainView.HSplitTop(ButtonHeight*(float)(NumOptions+1)+Spacing*(float)(NumOptions+1), &Header, 0);
-		RenderTools()->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
+		Header.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_T);
 
 		// draw header
 		MainView.HSplitTop(ButtonHeight, &Header, &MainView);
@@ -1874,8 +1874,8 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 		CUIRect HeaderLeft, HeaderRight;
 		Button.VSplitMid(&HeaderLeft, &HeaderRight, 3.0f);
 
-		RenderTools()->DrawUIRect(&HeaderLeft, vec4(0.30f, 0.4f, 1.0f, 0.5f), CUI::CORNER_T, 5.0f);
-		RenderTools()->DrawUIRect(&HeaderRight, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_T, 5.0f);
+		HeaderLeft.Draw(vec4(0.30f, 0.4f, 1.0f, 0.5f), 5.0f, CUIRect::CORNER_T);
+		HeaderRight.Draw(vec4(0.0f, 0.0f, 0.0f, 0.5f), 5.0f, CUIRect::CORNER_T);
 
 		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), "%s", Localize("Recommended"));
@@ -1893,7 +1893,7 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 
 		ListRec.HSplitBottom(ButtonHeight, &ListRec, &Button);
 		ListRec.HSplitBottom(Spacing, &ListRec, 0);
-		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.5f), CUI::CORNER_B, 5.0f);
+		Button.Draw(vec4(0.0f, 0.0f, 0.0f, 0.5f), 5.0f, CUIRect::CORNER_B);
 		int g = gcd(s_GfxScreenWidth, s_GfxScreenHeight);
 		const float HiDPIScale = Graphics()->ScreenHiDPIScale();
 		str_format(aBuf, sizeof(aBuf), Localize("Current: %dx%d (%d:%d)"), (int)(s_GfxScreenWidth*HiDPIScale), (int)(s_GfxScreenHeight*HiDPIScale), s_GfxScreenWidth/g, s_GfxScreenHeight/g);
@@ -1960,10 +1960,10 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		Background = MainView;
 	else
 		MainView.HSplitTop(20.0f, 0, &Background);
-	RenderTools()->DrawUIRect(&Background, vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), Client()->State() == IClient::STATE_OFFLINE ? CUI::CORNER_ALL : CUI::CORNER_B, 5.0f);
+	Background.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 5.0f, Client()->State() == IClient::STATE_OFFLINE ? CUIRect::CORNER_ALL : CUIRect::CORNER_B);
 	MainView.HSplitTop(20.0f, 0, &MainView);
 	MainView.HSplitTop(BackgroundHeight, &Sound, &MainView);
-	RenderTools()->DrawUIRect(&Sound, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+	Sound.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	// render detail menu background
 	if(Config()->m_SndEnable)
@@ -1972,7 +1972,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 
 		MainView.HSplitTop(10.0f, 0, &MainView);
 		MainView.HSplitTop(BackgroundHeight, &Detail, &MainView);
-		RenderTools()->DrawUIRect(&Detail, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Detail.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 	}
 
 	static int s_SndInit = Config()->m_SndInit;
@@ -2020,7 +2020,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		{
 			Left.HSplitTop(ButtonHeight, &Button, &Left);
 
-			RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+			Button.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 			CUIRect Text, Value, Unit;
 			Button.VSplitLeft(Button.w/3.0f, &Text, &Button);
 			Button.VSplitMid(&Value, &Unit);
@@ -2195,7 +2195,7 @@ void CMenus::RenderSettings(CUIRect MainView)
 		CUIRect RestartWarning;
 		MainView.HSplitTop(25.0f, &RestartWarning, 0);
 		RestartWarning.VMargin(Config()->m_UiWideview ? 210.0f : 140.0f, &RestartWarning);
-		RenderTools()->DrawUIRect(&RestartWarning, vec4(1.0f, 1.0f, 1.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		RestartWarning.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f));
 
 		// text
 		TextRender()->TextColor(0.973f, 0.863f, 0.207f, 1.0f);

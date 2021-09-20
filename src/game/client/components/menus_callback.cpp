@@ -74,7 +74,7 @@ void CMenus::DoSettingsControlsButtons(int Start, int Stop, CUIRect View, float 
 		CKeyInfo &Key = gs_aKeys[i];
 		CUIRect Button, Label;
 		View.HSplitTop(ButtonHeight, &Button, &View);
-		RenderTools()->DrawUIRect(&Button, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_ALL, 5.0f);
+		Button.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 		Button.VSplitMid(&Label, &Button);
 
@@ -133,7 +133,7 @@ float CMenus::RenderSettingsControlsMouse(CUIRect View)
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
 
 	CUIRect Button;
 	View.HSplitTop(Spacing, 0, &View);
@@ -180,7 +180,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 	const float BackgroundHeight = NumOptions*(ButtonHeight+Spacing)+Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
 
 	CUIRect Button;
 	View.HSplitTop(Spacing, 0, &View);
@@ -234,7 +234,7 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 			View.HSplitTop(Spacing, 0, &View);
 			View.VSplitLeft(View.w/6, 0, &View);
 			View.VSplitRight(View.w/5, &View, 0);
-			RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.125f), CUI::CORNER_ALL, 5.0f);
+			View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.125f));
 
 			DoJoystickAxisPicker(View);
 		}
@@ -259,7 +259,7 @@ float CMenus::RenderSettingsControlsMovement(CUIRect View)
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
 
 	DoSettingsControlsButtons(0, 5, View, ButtonHeight, Spacing);
 
@@ -276,7 +276,7 @@ float CMenus::RenderSettingsControlsWeapon(CUIRect View)
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
 
 	DoSettingsControlsButtons(5, 12, View, ButtonHeight, Spacing);
 
@@ -293,7 +293,7 @@ float CMenus::RenderSettingsControlsVoting(CUIRect View)
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
 
 	DoSettingsControlsButtons(12, 14, View, ButtonHeight, Spacing);
 
@@ -310,7 +310,7 @@ float CMenus::RenderSettingsControlsChat(CUIRect View)
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
 
 	DoSettingsControlsButtons(14, 18, View, ButtonHeight, Spacing);
 
@@ -351,7 +351,7 @@ float CMenus::RenderSettingsControlsScoreboard(CUIRect View)
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
 
 	DoSettingsControlsButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spacing);
 
@@ -376,7 +376,7 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View)
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing;
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
-	RenderTools()->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
 
 	DoSettingsControlsButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spacing);
 
@@ -411,7 +411,7 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 
 		View.HSplitTop(Spacing, 0, &View);
 		View.HSplitTop(ButtonHeight, &Row, &View);
-		RenderTools()->DrawUIRect(&Row, vec4(0.0f, 0.0f, 0.0f, 0.125f), CUI::CORNER_ALL, 5.0f);
+		Row.Draw(vec4(0.0f, 0.0f, 0.0f, 0.125f));
 
 		// Device label
 		Row.VSplitLeft(DeviceLabelWidth, &Button, &Row);

@@ -3,24 +3,7 @@
 #ifndef GAME_CLIENT_UI_H
 #define GAME_CLIENT_UI_H
 
-class CUIRect
-{
-public:
-	float x, y, w, h;
-
-	void HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing = 0.0f) const;
-	void HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
-	void HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
-	void VSplitMid(CUIRect *pLeft, CUIRect *pRight, float Spacing = 0.0f) const;
-	void VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const;
-	void VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const;
-
-	void Margin(float Cut, CUIRect *pOtherRect) const;
-	void VMargin(float Cut, CUIRect *pOtherRect) const;
-	void HMargin(float Cut, CUIRect *pOtherRect) const;
-
-	bool Inside(float x, float y) const;
-};
+#include "ui_rect.h"
 
 class CUI
 {
@@ -61,39 +44,13 @@ public:
 	static const vec4 ms_TransparentTextColor;
 
 	// TODO: Refactor: Fill this in
-	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender) { m_pConfig = pConfig; m_pGraphics = pGraphics; m_pInput = pInput; m_pTextRender = pTextRender; }
+	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender) { m_pConfig = pConfig; m_pGraphics = pGraphics; m_pInput = pInput; m_pTextRender = pTextRender; CUIRect::Init(pGraphics); }
 	class CConfig *Config() const { return m_pConfig; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class IInput *Input() const { return m_pInput; }
 	class ITextRender *TextRender() const { return m_pTextRender; }
 
 	CUI();
-
-	enum
-	{
-		CORNER_NONE=0,
-		CORNER_TL=1,
-		CORNER_TR=2,
-		CORNER_BL=4,
-		CORNER_BR=8,
-		CORNER_ITL=16,
-		CORNER_ITR=32,
-		CORNER_IBL=64,
-		CORNER_IBR=128,
-
-		CORNER_T=CORNER_TL|CORNER_TR,
-		CORNER_B=CORNER_BL|CORNER_BR,
-		CORNER_R=CORNER_TR|CORNER_BR,
-		CORNER_L=CORNER_TL|CORNER_BL,
-
-		CORNER_IT=CORNER_ITL|CORNER_ITR,
-		CORNER_IB=CORNER_IBL|CORNER_IBR,
-		CORNER_IR=CORNER_ITR|CORNER_IBR,
-		CORNER_IL=CORNER_ITL|CORNER_IBL,
-
-		CORNER_ALL=CORNER_T|CORNER_B,
-		CORNER_INV_ALL=CORNER_IT|CORNER_IB
-	};
 
 	enum EAlignment
 	{
@@ -147,6 +104,10 @@ public:
 
 	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
 	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor);
+
+	float DrawClientID(float FontSize, vec2 Position, int ID,
+					const vec4& BgColor = vec4(1.0f, 1.0f, 1.0f, 0.5f), const vec4& TextColor = vec4(0.1f, 0.1f, 0.1f, 1.0f));
+	float GetClientIDRectWidth(float FontSize);
 };
 
 

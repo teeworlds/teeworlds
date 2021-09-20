@@ -155,175 +155,6 @@ void CUI::UpdateClipping()
 	}
 }
 
-void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing) const
-{
-	CUIRect r = *this;
-	const float Cut = r.h/2;
-	const float HalfSpacing = Spacing/2;
-
-	if(pTop)
-	{
-		pTop->x = r.x;
-		pTop->y = r.y;
-		pTop->w = r.w;
-		pTop->h = Cut - HalfSpacing;
-	}
-
-	if(pBottom)
-	{
-		pBottom->x = r.x;
-		pBottom->y = r.y + Cut + HalfSpacing;
-		pBottom->w = r.w;
-		pBottom->h = r.h - Cut - HalfSpacing;
-	}
-}
-
-void CUIRect::HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const
-{
-	CUIRect r = *this;
-
-	if (pTop)
-	{
-		pTop->x = r.x;
-		pTop->y = r.y;
-		pTop->w = r.w;
-		pTop->h = Cut;
-	}
-
-	if (pBottom)
-	{
-		pBottom->x = r.x;
-		pBottom->y = r.y + Cut;
-		pBottom->w = r.w;
-		pBottom->h = r.h - Cut;
-	}
-}
-
-void CUIRect::HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const
-{
-	CUIRect r = *this;
-
-	if (pTop)
-	{
-		pTop->x = r.x;
-		pTop->y = r.y;
-		pTop->w = r.w;
-		pTop->h = r.h - Cut;
-	}
-
-	if (pBottom)
-	{
-		pBottom->x = r.x;
-		pBottom->y = r.y + r.h - Cut;
-		pBottom->w = r.w;
-		pBottom->h = Cut;
-	}
-}
-
-
-void CUIRect::VSplitMid(CUIRect *pLeft, CUIRect *pRight, float Spacing) const
-{
-	CUIRect r = *this;
-	const float Cut = r.w/2;
-	const float HalfSpacing = Spacing/2;
-
-	if (pLeft)
-	{
-		pLeft->x = r.x;
-		pLeft->y = r.y;
-		pLeft->w = Cut - HalfSpacing;
-		pLeft->h = r.h;
-	}
-
-	if (pRight)
-	{
-		pRight->x = r.x + Cut + HalfSpacing;
-		pRight->y = r.y;
-		pRight->w = r.w - Cut - HalfSpacing;
-		pRight->h = r.h;
-	}
-}
-
-void CUIRect::VSplitLeft(float Cut, CUIRect *pLeft, CUIRect *pRight) const
-{
-	CUIRect r = *this;
-
-	if (pLeft)
-	{
-		pLeft->x = r.x;
-		pLeft->y = r.y;
-		pLeft->w = Cut;
-		pLeft->h = r.h;
-	}
-
-	if (pRight)
-	{
-		pRight->x = r.x + Cut;
-		pRight->y = r.y;
-		pRight->w = r.w - Cut;
-		pRight->h = r.h;
-	}
-}
-
-void CUIRect::VSplitRight(float Cut, CUIRect *pLeft, CUIRect *pRight) const
-{
-	CUIRect r = *this;
-
-	if (pLeft)
-	{
-		pLeft->x = r.x;
-		pLeft->y = r.y;
-		pLeft->w = r.w - Cut;
-		pLeft->h = r.h;
-	}
-
-	if (pRight)
-	{
-		pRight->x = r.x + r.w - Cut;
-		pRight->y = r.y;
-		pRight->w = Cut;
-		pRight->h = r.h;
-	}
-}
-
-void CUIRect::Margin(float Cut, CUIRect *pOtherRect) const
-{
-	CUIRect r = *this;
-
-	pOtherRect->x = r.x + Cut;
-	pOtherRect->y = r.y + Cut;
-	pOtherRect->w = r.w - 2*Cut;
-	pOtherRect->h = r.h - 2*Cut;
-}
-
-void CUIRect::VMargin(float Cut, CUIRect *pOtherRect) const
-{
-	CUIRect r = *this;
-
-	pOtherRect->x = r.x + Cut;
-	pOtherRect->y = r.y;
-	pOtherRect->w = r.w - 2*Cut;
-	pOtherRect->h = r.h;
-}
-
-void CUIRect::HMargin(float Cut, CUIRect *pOtherRect) const
-{
-	CUIRect r = *this;
-
-	pOtherRect->x = r.x;
-	pOtherRect->y = r.y + Cut;
-	pOtherRect->w = r.w;
-	pOtherRect->h = r.h - 2*Cut;
-}
-
-bool CUIRect::Inside(float x, float y) const
-{
-	return x >= this->x
-		&& x < this->x + this->w
-		&& y >= this->y
-		&& y < this->y + this->h;
-}
-
 bool CUI::DoButtonLogic(const void *pID, const CUIRect *pRect, int Button)
 {
 	// logic
@@ -435,4 +266,45 @@ void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char
 		TextRender()->TextDeferred(&s_Cursor, pText, -1);
 
 	TextRender()->DrawTextOutlined(&s_Cursor);
+}
+
+float CUI::DrawClientID(float FontSize, vec2 CursorPosition, int ID, const vec4& BgColor, const vec4& TextColor)
+{
+	if(!m_pConfig->m_ClShowUserId)
+		return 0;
+
+	char aBuf[4];
+	str_format(aBuf, sizeof(aBuf), "%d", ID);
+
+	static CTextCursor s_Cursor;
+	s_Cursor.Reset();
+	s_Cursor.m_FontSize = FontSize;
+	s_Cursor.m_Align = TEXTALIGN_CENTER;
+
+	vec4 OldColor = TextRender()->GetColor();
+	TextRender()->TextColor(TextColor);
+	TextRender()->TextDeferred(&s_Cursor, aBuf, -1);
+	TextRender()->TextColor(OldColor);
+
+	const float LinebaseY = CursorPosition.y + s_Cursor.BaseLineY();
+	const float Width = 1.4f * FontSize;
+
+	CUIRect Rect;
+	Rect.x = CursorPosition.x;
+	Rect.y = LinebaseY - FontSize + 0.15f * FontSize;
+	Rect.w = Width;
+	Rect.h = FontSize;
+	Rect.Draw(BgColor, 0.25f * FontSize);
+
+	s_Cursor.MoveTo(Rect.x + Rect.w / 2.0f, CursorPosition.y);
+	TextRender()->DrawTextPlain(&s_Cursor);
+
+	return Width + 0.2f * FontSize;
+}
+
+float CUI::GetClientIDRectWidth(float FontSize)
+{
+	if(!m_pConfig->m_ClShowUserId)
+		return 0;
+	return 1.4f * FontSize + 0.2f * FontSize;
 }
