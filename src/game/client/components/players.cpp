@@ -177,8 +177,15 @@ void CPlayers::RenderPlayer(
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
 
-	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
-	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
+
+	bool RightGround = Collision()->CheckPoint(Player.m_X+28/2, Player.m_Y+28/2+5);
+	bool LeftGround = Collision()->CheckPoint(Player.m_X-28/2, Player.m_Y+28/2+5);
+
+	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16); // why 16 and not 19?
+	bool OnIce = (RightGround || LeftGround) &&
+        (Collision()->CheckPoint(Player.m_X+28/2, Player.m_Y+28/2+5, CCollision::COLFLAG_ICE) || !RightGround) &&
+        (Collision()->CheckPoint(Player.m_X+28/2, Player.m_Y+28/2+5, CCollision::COLFLAG_ICE) || !LeftGround);
+	bool Stationary = OnIce ? Player.m_Direction == 0 : (Player.m_VelX <= 1 && Player.m_VelX >= -1);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
 
 	// evaluate animation
@@ -228,17 +235,26 @@ void CPlayers::RenderPlayer(
 	// do skidding
 	if(!InAir && WantOtherDir && length(Vel*50) > 500.0f)
 	{
-		static int64 SkidSoundTime = 0;
-		if(time_get()-SkidSoundTime > time_freq()/10)
+		if (!OnIce)
 		{
-			m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
-			SkidSoundTime = time_get();
+			static int64 SkidSoundTime = 0;
+			if(time_get()-SkidSoundTime > time_freq()/10)
+			{
+				m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
+				SkidSoundTime = time_get();
+			}
+			m_pClient->m_pEffects->SkidTrail(
+				Position+vec2(-Player.m_Direction*6,12),
+				vec2(-Player.m_Direction*100*length(Vel),-50)
+			);
 		}
-
-		m_pClient->m_pEffects->SkidTrail(
-			Position+vec2(-Player.m_Direction*6,12),
-			vec2(-Player.m_Direction*100*length(Vel),-50)
-		);
+		else
+		{
+			m_pClient->m_pEffects->IceTrail(
+				Position+vec2(-Player.m_Direction*6,12),
+				vec2(-Player.m_Direction*100*length(Vel),-50)
+			);
+		}
 	}
 
 	// draw gun
