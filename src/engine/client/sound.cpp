@@ -17,7 +17,7 @@ extern "C"
 	#include <wavpack.h>
 }
 #include <math.h>
-#include <climits>
+#include <limits.h>
 
 enum
 {
