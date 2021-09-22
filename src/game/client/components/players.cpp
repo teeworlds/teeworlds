@@ -17,8 +17,10 @@
 #include <game/client/components/effects.h>
 #include <game/client/components/sounds.h>
 #include <game/client/components/controls.h>
+#include <game/client/components/water.h>
 
 #include "players.h"
+
 
 inline float NormalizeAngular(float f)
 {
@@ -110,6 +112,103 @@ void CPlayers::RenderHook(
 	}
 }
 
+void CPlayers::RenderHarpoon(
+	CNetObj_Character* pOwnerChar,
+	CNetObj_Character* pOwnerPrev,
+	CNetObj_Character* pVictimChar,
+	CNetObj_Character* pVictimPrev,
+	const CNetObj_HarpoonDragPlayer* DragInfo
+) const
+{
+	float IntraTick = Client()->IntraGameTick();
+
+	vec2 VictimPos;
+	if (DragInfo->m_VictimID!=-1)
+		VictimPos = m_pClient->GetCharPos(DragInfo->m_VictimID, m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(DragInfo->m_VictimID));
+	else
+		VictimPos = vec2(DragInfo->m_X / 100.0f, DragInfo->m_Y / 100.f);
+
+	vec2 PlayerPos;
+	if(DragInfo->m_OwnerID!=-1)
+		PlayerPos = m_pClient->GetCharPos(DragInfo->m_OwnerID, m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(DragInfo->m_OwnerID));
+	else
+		PlayerPos = vec2(DragInfo->m_Owner_X / 100.0f, DragInfo->m_Owner_Y / 100.f);
+
+	vec2 HarpoonPos;
+	vec2 HarpoonLinePos;
+	vec2 HarpoonDir = normalize(VictimPos - PlayerPos);
+	float AngleDir = angle(HarpoonDir);
+	HarpoonLinePos = HarpoonPos;
+	HarpoonPos = VictimPos - HarpoonDir * 24;
+	float AccountForAlignment = direction(AngleDir).x > 0 ? 0.10f : -0.10f; //Magic Values acquired through trial and error
+	HarpoonLinePos = VictimPos - direction(AngleDir + AccountForAlignment) * 36;
+
+	float Angle;
+	if (DragInfo->m_OwnerID != -1)
+		Angle = mix((float)pOwnerPrev->m_Angle, (float)pOwnerChar->m_Angle, IntraTick) / 256.0f;
+	else
+		Angle = 1; //doesn't matter, offscreen!
+	vec2 WeaponPos = HarpoonMouthAlignment(PlayerPos, Angle);
+
+	RenderTools()->RenderRope(WeaponPos, HarpoonLinePos, 8);
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->QuadsSetRotation(AngleDir);
+	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_pSpriteProj, HarpoonDir.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+	RenderTools()->DrawSprite(HarpoonPos.x, HarpoonPos.y, g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_VisualSize * 0.67f);
+	Graphics()->QuadsEnd();
+}
+
+void CPlayers::RenderEntityHarpoon(
+	CNetObj_Character* pOwnerChar,
+	CNetObj_Character* pOwnerPrev,
+	const CNetObj_HarpoonDragPlayer* DragInfo
+) const
+{
+	float IntraTick = Client()->IntraGameTick();
+
+	vec2 PlayerPos;
+	if (DragInfo->m_OwnerID != -1)
+		PlayerPos = m_pClient->GetCharPos(DragInfo->m_OwnerID, m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(DragInfo->m_OwnerID));
+	else
+		PlayerPos = vec2(DragInfo->m_Owner_X / 100.0f, DragInfo->m_Owner_Y / 100.f);
+
+	vec2 VictimEntityPos = vec2(DragInfo->m_X / 100.0f, DragInfo->m_Y / 100.0f);
+
+	vec2 HarpoonPos;
+	vec2 HarpoonLinePos;
+	vec2 HarpoonDir = normalize(VictimEntityPos - PlayerPos);
+	float AngleDir = angle(HarpoonDir);
+	HarpoonLinePos = HarpoonPos;
+	HarpoonPos = VictimEntityPos - HarpoonDir * 24;
+	float AccountForAlignment = direction(AngleDir).x > 0 ? 0.10f : -0.10f; //Magic Values acquired through trial and error
+	HarpoonLinePos = VictimEntityPos - direction(AngleDir + AccountForAlignment) * 36;
+
+	float Angle;
+	if (DragInfo->m_OwnerID != -1)
+		Angle = mix((float)pOwnerPrev->m_Angle, (float)pOwnerChar->m_Angle, IntraTick) / 256.0f;
+	else
+		Angle = 1; //doesn't matter, offscreen!
+	vec2 WeaponPos = HarpoonMouthAlignment(PlayerPos, Angle);
+
+	RenderTools()->RenderRope(WeaponPos, HarpoonLinePos, 8);
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->QuadsBegin();
+	Graphics()->QuadsSetRotation(AngleDir);
+	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_pSpriteProj, HarpoonDir.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+	RenderTools()->DrawSprite(HarpoonPos.x, HarpoonPos.y, g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_VisualSize * 0.67f);
+	Graphics()->QuadsEnd();
+}
+vec2 CPlayers::HarpoonMouthAlignment(vec2 PlayerPos, float Angle) const
+{
+	CAnimState State;
+	State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
+	float AccountForAlignment = direction(Angle).x > 0 ? -0.05f : 0.03f; //Magic Values acquired through trial and error
+	return PlayerPos + direction(State.GetAttach()->m_Angle * pi * 2 + Angle + AccountForAlignment) * 52;
+}
+
 void CPlayers::RenderPlayer(
 	const CNetObj_Character *pPrevChar,
 	const CNetObj_Character *pPlayerChar,
@@ -124,6 +223,12 @@ void CPlayers::RenderPlayer(
 
 	// set size
 	RenderInfo.m_Size = 64.0f;
+
+	if (!(random_int() % 20))
+	{
+		if (pPlayerChar->m_BreathBubbles != -1)
+			m_pClient->m_pEffects->WaterBubble(vec2(pPlayerChar->m_X, pPlayerChar->m_Y));
+	}
 
 	float IntraTick = Client()->IntraGameTick();
 
@@ -176,11 +281,26 @@ void CPlayers::RenderPlayer(
 	m_pClient->m_pFlow->Add(Position, Vel*100.0f, 10.0f);
 
 	RenderInfo.m_GotAirJump = Player.m_Jumped&2?0:1;
-
+	// && Player.m_VelY<0;
+	bool Swimming = Collision()->CheckPoint(Player.m_X, Player.m_Y, 8); //is in water and has floating tendency
 	bool Stationary = Player.m_VelX <= 1 && Player.m_VelX >= -1;
 	bool InAir = !Collision()->CheckPoint(Player.m_X, Player.m_Y+16);
 	bool WantOtherDir = (Player.m_Direction == -1 && Vel.x > 0) || (Player.m_Direction == 1 && Vel.x < 0);
+	//bool DivingGear = Player.m_DivingGear;
 
+	if (Player.m_DivingGear)
+	{
+		if (m_pClient->Config()->m_ClShowDivingGear)
+		{
+			RenderInfo.m_DivingGearTexture = m_pClient->m_pSkins->m_DivingGearTexture;
+		}
+		else if (Collision()->CheckPoint(Player.m_X, Player.m_Y, 8))
+			RenderInfo.m_DivingGearTexture = m_pClient->m_pSkins->m_DivingGearTexture;
+		else
+			RenderInfo.m_DivingGearTexture.Invalidate();
+	}
+	else
+		RenderInfo.m_DivingGearTexture.Invalidate();
 	// evaluate animation
 	const float WalkTimeMagic = 100.0f;
 	float WalkTime =
@@ -188,10 +308,28 @@ void CPlayers::RenderPlayer(
 			? fmod(Position.x, WalkTimeMagic)
 			: WalkTimeMagic - fmod(-Position.x, WalkTimeMagic))
 		/ WalkTimeMagic;
+	float FloatTime =
+		((Position.y >= 0)
+			? fmod(Position.y, WalkTimeMagic)
+			: WalkTimeMagic - fmod(-Position.y, WalkTimeMagic))
+		/ WalkTimeMagic;
 	CAnimState State;
 	State.Set(&g_pData->m_aAnimations[ANIM_BASE], 0);
 
-	if(InAir)
+	if (Swimming)
+	{
+		State.Add(&g_pData->m_aAnimations[ANIM_SWIM], FloatTime, 1.0f);
+		float HorizontalSpeed = clamp(Vel.x, -10.0f, 10.0f);
+		//float FeetAngle = State.GetBackFoot()->m_Angle + ;
+		float Scale = Vel.x < 0 ? HorizontalSpeed / 10.0f : HorizontalSpeed / 10.0f * 3.0f;
+		State.GetBackFoot()->m_Angle += 0.05f;
+		State.GetFrontFoot()->m_Angle += 0.05f;
+		State.GetBackFoot()->m_Angle += 0.05f * Scale;
+		State.GetBackFoot()->m_X -= 5.0f * Scale / 3.0f;
+		State.GetFrontFoot()->m_Angle += 0.05f * Scale;
+		State.GetFrontFoot()->m_X -= 5.0f * Scale / 1.5f;
+	}
+	else if(InAir)
 		State.Add(&g_pData->m_aAnimations[ANIM_INAIR], 0, 1.0f); // TODO: some sort of time here
 	else if(Stationary)
 		State.Add(&g_pData->m_aAnimations[ANIM_IDLE], 0, 1.0f); // TODO: some sort of time here
@@ -216,10 +354,10 @@ void CPlayers::RenderPlayer(
 
 	if (Player.m_Weapon == WEAPON_HAMMER)
 	{
-		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
-		State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], clamp(ct*5.0f,0.0f,1.0f), 1.0f);
+		float ct = (Client()->PrevGameTick() - Player.m_AttackTick) / (float)SERVER_TICK_SPEED + s_LastGameTickTime;
+		State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], clamp(ct * 5.0f, 0.0f, 1.0f), 1.0f);
 	}
-	if (Player.m_Weapon == WEAPON_NINJA)
+	else if (Player.m_Weapon == WEAPON_NINJA)
 	{
 		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 		State.Add(&g_pData->m_aAnimations[ANIM_NINJA_SWING], clamp(ct*2.0f,0.0f,1.0f), 1.0f);
@@ -241,18 +379,39 @@ void CPlayers::RenderPlayer(
 		);
 	}
 
+	vec2 PreWaterPos = vec2(pPrevChar->m_X / 100.0f, pPrevChar->m_Y / 100.0);
+	if (Collision()->TestBox(PreWaterPos, vec2(32, 32), CCollision::COLFLAG_WATER) ^ Collision()->TestBox(Position, vec2(32, 32), CCollision::COLFLAG_WATER))
+		if (Collision()->IntersectWater(PreWaterPos, Position, &PreWaterPos, vec2(32, 32)))
+			m_pClient->m_pWater->HitWater(PreWaterPos.x, PreWaterPos.y, abs(pPrevChar->m_VelY) / Config()->m_GfxWaveDivider); //trial and erorr
+
 	// draw gun
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
+		vec2 Dir = Direction;
+		float Recoil = 0.0f;
+		vec2 p;
+		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS - 1);
+		if (Player.m_Weapon == WEAPON_HARPOON&&Player.m_AmmoCount)
+		{
+			p = Position + Dir * g_pData->m_Weapons.m_aId[iw].m_Offsetx - Dir*Recoil*10.0f;
+			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
+			RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteProj, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+			float OffsetY = -g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsety;
+			if (Direction.x < 0)
+				OffsetY = -OffsetY;
 
+			vec2 DirY(-Dir.y, Dir.x);
+			vec2 MuzzlePos = p + Dir * (g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx + 20.0f) + DirY * OffsetY;
+
+			RenderTools()->DrawSprite(MuzzlePos.x, MuzzlePos.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize*0.67f);
+		}
 		// normal weapons
-		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
+		
 		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteBody, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
 
-		vec2 Dir = Direction;
-		vec2 p;
 		if (Player.m_Weapon == WEAPON_HAMMER)
 		{
 			// Static position for hammer
@@ -315,6 +474,7 @@ void CPlayers::RenderPlayer(
 			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
 			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 		}
+		
 
 		if(Player.m_Weapon == WEAPON_GUN || Player.m_Weapon == WEAPON_SHOTGUN)
 		{
@@ -449,6 +609,70 @@ void CPlayers::OnRender()
 		}
 	}
 
+	for (int i = 0; i < m_pClient->m_Snap.HarpoonDragCount;i++)
+	{
+		if (m_pClient->m_Snap.m_paHarpoonDragData[i]->m_Type == HARPOON_IN_CHARACTER)
+		{
+			const CNetObj_HarpoonDragPlayer* HarpoonDragInfo = m_pClient->m_Snap.m_paHarpoonDragData[i];
+			CNetObj_Character* pOwnerChar;
+			CNetObj_Character* pPrevOwnerChar;
+			CNetObj_Character* pVictimChar;
+			CNetObj_Character* pPrevVictimChar;
+			if (HarpoonDragInfo->m_VictimID != -1)
+			{
+				pVictimChar = &m_pClient->m_Snap.m_aCharacters[HarpoonDragInfo->m_VictimID].m_Cur;
+				pPrevVictimChar = &m_pClient->m_Snap.m_aCharacters[HarpoonDragInfo->m_VictimID].m_Prev;
+			}
+			else
+			{
+				pVictimChar = 0x0; // Don't worry.
+				pPrevVictimChar = 0x0;
+			}
+
+			if (HarpoonDragInfo->m_OwnerID != -1)
+			{
+				pOwnerChar = &m_pClient->m_Snap.m_aCharacters[HarpoonDragInfo->m_OwnerID].m_Cur;
+				pPrevOwnerChar = &m_pClient->m_Snap.m_aCharacters[HarpoonDragInfo->m_OwnerID].m_Prev;
+			}
+			else
+			{
+				pOwnerChar = 0x0; // Don't worry.
+				pPrevOwnerChar = 0x0;
+			}
+
+			RenderHarpoon(
+				pOwnerChar,
+				pPrevOwnerChar,
+				pVictimChar,
+				pPrevVictimChar,
+				HarpoonDragInfo
+			);
+		}
+		else //if(m_pClient->m_Snap.m_paHarpoonPrevDragData[i]) //we will need prev snapshot data
+		{
+			const CNetObj_HarpoonDragPlayer* HarpoonDragInfo = m_pClient->m_Snap.m_paHarpoonDragData[i];
+			CNetObj_Character* pOwnerChar;
+			CNetObj_Character* pPrevOwnerChar;
+			//const CNetObj_HarpoonDragPlayer* HarpoonPrevDragInfo = m_pClient->m_Snap.m_paHarpoonPrevDragData[i];
+			if (HarpoonDragInfo->m_OwnerID != -1)
+			{
+				pOwnerChar = &m_pClient->m_Snap.m_aCharacters[HarpoonDragInfo->m_OwnerID].m_Cur;
+				pPrevOwnerChar = &m_pClient->m_Snap.m_aCharacters[HarpoonDragInfo->m_OwnerID].m_Prev;
+			}
+			else
+			{
+				pOwnerChar = 0x0; // Don't worry.
+				pPrevOwnerChar = 0x0;
+			}
+
+
+			RenderEntityHarpoon(
+				pOwnerChar,
+				pPrevOwnerChar,
+				HarpoonDragInfo
+			);
+		}
+	}
 	// render other players in two passes, first pass we render the other, second pass we render our self
 	for(int p = 0; p < 4; p++)
 	{

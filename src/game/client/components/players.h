@@ -19,9 +19,22 @@ class CPlayers : public CComponent
 		const CTeeRenderInfo *pRenderInfo,
 		int ClientID
 	) const;
+	void RenderHarpoon(
+		CNetObj_Character* pOwnerChar,
+		CNetObj_Character* pOwnerPrev,
+		CNetObj_Character* pVictimChar,
+		CNetObj_Character* pVictimPrev,
+		const CNetObj_HarpoonDragPlayer* DragInfo
+	) const;
+	void RenderEntityHarpoon(
+		CNetObj_Character* pOwnerChar,
+		CNetObj_Character* pOwnerPrev,
+		const CNetObj_HarpoonDragPlayer* DragInfo
+	) const;
 
 public:
 	virtual void OnRender();
+	vec2 HarpoonMouthAlignment(vec2 PlayerPos, float Angle) const;
 };
 
 #endif

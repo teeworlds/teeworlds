@@ -52,6 +52,7 @@
 #include "components/spectator.h"
 #include "components/stats.h"
 #include "components/voting.h"
+#include "components/water.h"
 
 inline void AppendDecimals(char *pBuf, int Size, int Time, int Precision)
 {
@@ -114,6 +115,7 @@ static CDamageInd gsDamageInd;
 static CVoting gs_Voting;
 static CSpectator gs_Spectator;
 static CStats gs_Stats;
+static CWater gs_Water;
 
 static CPlayers gs_Players;
 static CNamePlates gs_NamePlates;
@@ -255,6 +257,8 @@ void CGameClient::OnConsoleInit()
 	m_pMapLayersBackGround = &::gs_MapLayersBackGround;
 	m_pMapLayersForeGround = &::gs_MapLayersForeGround;
 	m_pStats = &::gs_Stats;
+	m_pWater = &::gs_Water;
+	m_pPlayerRender = &::gs_Players;
 
 	// make a list of all the systems, make sure to add them in the corrent render order
 	m_All.Add(m_pSkins);
@@ -271,6 +275,7 @@ void CGameClient::OnConsoleInit()
 
 	m_All.Add(&gs_MapLayersBackGround); // first to render
 	m_All.Add(&m_pParticles->m_RenderTrail);
+	m_All.Add(m_pWater);
 	m_All.Add(m_pItems);
 	m_All.Add(&gs_Players);
 	m_All.Add(&gs_MapLayersForeGround);
@@ -453,8 +458,7 @@ int CGameClient::OnSnapInput(int *pData)
 void CGameClient::OnConnected()
 {
 	m_Layers.Init(Kernel());
-	m_Collision.Init(Layers());
-
+	m_Collision.Init(Layers(), &WaterSplash);
 	for(int i = 0; i < m_All.m_Num; i++)
 	{
 		m_All.m_paComponents[i]->OnMapLoad();
@@ -1070,7 +1074,7 @@ void CGameClient::ProcessEvents()
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
 		{
 			CNetEvent_Explosion *ev = (CNetEvent_Explosion *)pData;
-			m_pEffects->Explosion(vec2(ev->m_X, ev->m_Y));
+			m_pEffects->Explosion(vec2(ev->m_X, ev->m_Y), ev->m_Radius / 100);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_HAMMERHIT)
 		{
@@ -1186,6 +1190,7 @@ void CGameClient::OnNewSnapshot()
 
 	// go trough all the items in the snapshot and gather the info we want
 	{
+		m_Snap.HarpoonDragCount = 0;
 		int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
 		for(int i = 0; i < Num; i++)
 		{
@@ -1375,6 +1380,14 @@ void CGameClient::OnNewSnapshot()
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 			{
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
+			}
+			else if (Item.m_Type == NETOBJTYPE_HARPOONDRAGPLAYER)
+			{
+				if (m_Snap.HarpoonDragCount < 64) //64 packets are enough. Surely nobody is gonna send more than this
+				{
+					m_Snap.m_paHarpoonDragData[m_Snap.HarpoonDragCount] = (const CNetObj_HarpoonDragPlayer*)pData;
+					m_Snap.HarpoonDragCount++;
+				}
 			}
 		}
 	}
@@ -1606,6 +1619,7 @@ void CGameClient::OnPredict()
 				continue;
 
 			World.m_apCharacters[c]->AddDragVelocity();
+			World.m_apCharacters[c]->AddHarpoonDragVelocity();
 			World.m_apCharacters[c]->ResetDragVelocity();
 			World.m_apCharacters[c]->Move();
 			World.m_apCharacters[c]->Quantize();
@@ -1685,6 +1699,11 @@ vec2 CGameClient::GetCharPos(int ClientID, bool Predicted) const
 			Client()->IntraGameTick()
 		);
 	}
+}
+
+vec2 CGameClient::GetHarpoonAlignment(vec2 WeaponPos, float Angle) const
+{
+	return m_pPlayerRender->HarpoonMouthAlignment(WeaponPos, Angle);
 }
 
 void CGameClient::OnActivateEditor()
@@ -2000,6 +2019,11 @@ void CGameClient::ConchainXmasHatUpdate(IConsole::IResult *pResult, void *pUserD
 		if(pClient->m_aClients[i].m_Active)
 			pClient->m_aClients[i].UpdateRenderInfo(pClient, i, true);
 	}
+}
+
+void CGameClient::WaterSplash(float x, float y, float Force)
+{
+	gs_Water.HitWater(x, y, Force);
 }
 
 IGameClient *CreateGameClient()

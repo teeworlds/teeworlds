@@ -893,6 +893,7 @@ set(EXPECTED_DATA
   editor/checker.png
   editor/cursor.png
   editor/entities.png
+  editor/water.png
   emoticons.png
   fonts/DejaVuSans.ttf
   fonts/SourceHanSans.ttc
@@ -967,6 +968,7 @@ set(EXPECTED_DATA
   mapres/snow.png
   mapres/stars.png
   mapres/sun.png
+  mapres/water.png
   mapres/winter_doodads.png
   mapres/winter_main.png
   mapres/winter_mountains.png
@@ -992,6 +994,7 @@ set(EXPECTED_DATA
   maps/readme.txt
   particles.png
   race_flag.png
+  rope.png
   skins/beaver.json
   skins/bluekitty.json
   skins/bluestripe.json
@@ -1025,6 +1028,7 @@ set(EXPECTED_DATA
   skins/decoration/unimelo.png
   skins/decoration/unipento.png
   skins/default.json
+  skins/diving_gear.png
   skins/eyes/colorable.png
   skins/eyes/negative.png
   skins/eyes/standard.png
@@ -1480,6 +1484,7 @@ if(CLIENT)
     components/notifications.h
     components/particles.cpp
     components/particles.h
+    components/particles_functions.cpp
     components/players.cpp
     components/players.h
     components/scoreboard.cpp
@@ -1494,6 +1499,8 @@ if(CLIENT)
     components/stats.h
     components/voting.cpp
     components/voting.h
+    components/water.cpp
+    components/water.h
     gameclient.cpp
     gameclient.h
     lineinput.cpp
@@ -1605,6 +1612,8 @@ set_src(GAME_SERVER GLOB_RECURSE src/game/server
   entities/character.h
   entities/flag.cpp
   entities/flag.h
+  entities/harpoon.cpp
+  entities/harpoon.h
   entities/laser.cpp
   entities/laser.h
   entities/pickup.cpp

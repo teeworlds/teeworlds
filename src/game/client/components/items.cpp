@@ -12,15 +12,19 @@
 
 #include <game/client/components/flow.h>
 #include <game/client/components/effects.h>
+#include <game/client/components/water.h>
+#include <game/client/components/controls.h>
 
 #include "items.h"
+//#include "players.h"
 
 
-void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
+void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID, const CNetObj_Projectile* pPrev)
 {
 	// get positions
 	float Curvature = 0;
 	float Speed = 0;
+	float WaterResistance = m_pClient->m_Tuning.m_LiquidProjectileResistance;
 	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
 		Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
@@ -30,12 +34,14 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	{
 		Curvature = m_pClient->m_Tuning.m_ShotgunCurvature;
 		Speed = m_pClient->m_Tuning.m_ShotgunSpeed;
+		WaterResistance = m_pClient->m_Tuning.m_ShotgunWaterResistance;
 	}
 	else if(pCurrent->m_Type == WEAPON_GUN)
 	{
 		Curvature = m_pClient->m_Tuning.m_GunCurvature;
 		Speed = m_pClient->m_Tuning.m_GunSpeed;
 	}
+	
 
 	static float s_LastGameTickTime = Client()->GameTickTime();
 	if(!m_pClient->IsWorldPaused() && !m_pClient->IsDemoPlaybackPaused())
@@ -71,8 +77,30 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 
 	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
 	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
-	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
-	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
+
+	vec2 Pos;
+	vec2 PrevPos;
+	if (pCurrent->m_Water)
+	{
+		
+		Pos = CalcPos(StartPos, StartVel, Curvature, Speed* WaterResistance, Ct);
+		PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed* WaterResistance, Ct - 0.001f);
+		if (!pPrev->m_Water)
+		{
+			//Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "A");
+			
+			vec2 PreWaterPos = CalcPos(vec2(pPrev->m_X, pPrev->m_Y), vec2(pPrev->m_VelX, pPrev->m_VelY), Curvature, Speed, Ct - 0.1f);
+			if (Collision()->IntersectWater(PreWaterPos, Pos, &PreWaterPos, vec2(32, 32)))
+			{
+				m_pClient->m_pWater->HitWater(PreWaterPos.x, PreWaterPos.y, distance(PreWaterPos,Pos) * 5);
+			}
+		}
+	}
+	else
+	{
+		Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
+		PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct - 0.001f);
+	}
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
@@ -96,7 +124,6 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 		m_pClient->m_pEffects->BulletTrail(Pos);
 		Graphics()->QuadsSetRotation(length(Vel) > 0.00001f ? angle(Vel) : 0);
 	}
-
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 32, 32);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsSetRotation(0);
@@ -105,7 +132,28 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 
 void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCurrent)
 {
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	if (pCurrent->m_DisturbedTick)
+	{
+		int DisturbedTick = pCurrent->m_DisturbedTick;
+		int DisturbedMax = m_pClient->m_Tuning.m_PickUpDisturbedTime * m_pClient->Client()->GameTickSpeed();
+
+		if (DisturbedMax * 0.2 >= DisturbedTick) //20% and less, flicker quicker
+		{
+			if ((m_pClient->Client()->GameTick() % 10) / 5)
+				return;
+		}
+		else if (DisturbedMax * 0.5 >= DisturbedTick) //we are halfway, do not render every 10 ticks
+		{
+			if ((m_pClient->Client()->GameTick() % 20) / 10)
+				return;
+		}
+	}
+
+
+	if (pCurrent->m_Type == PICKUP_DIVING)
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_DIVING_GEAR].m_Id);
+	else
+		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 	float Size = 64.0f;
@@ -117,8 +165,11 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		SPRITE_PICKUP_LASER,
 		SPRITE_PICKUP_NINJA,
 		SPRITE_PICKUP_GUN,
-		SPRITE_PICKUP_HAMMER
-	};
+		SPRITE_PICKUP_HAMMER,
+		SPRITE_PICKUP_HARPOON,
+		SPRITE_DIVING_GEAR,
+		};
+
 	RenderTools()->SelectSprite(aSprites[pCurrent->m_Type]);
 
 	switch(pCurrent->m_Type)
@@ -142,6 +193,12 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		break;
 	case PICKUP_HAMMER:
 		Size = g_pData->m_Weapons.m_aId[WEAPON_HAMMER].m_VisualSize;
+		break;
+	case PICKUP_DIVING:
+		Size = 88.0f;
+		break;
+	case PICKUP_HARPOON:
+		Size = g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_VisualSize;
 		break;
 	}
 
@@ -192,7 +249,6 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 }
-
 
 void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 {
@@ -259,6 +315,14 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	Graphics()->BlendNormal();
 }
 
+void CItems::RenderPlayer(const CNetObj_Character* pCurrent)
+{
+	if (!(random_int() % 20))
+	{
+		if(pCurrent->m_BreathBubbles!=-1)
+			m_pClient->m_pEffects->WaterBubble(vec2(pCurrent->m_X,pCurrent->m_Y));
+	}
+}
 void CItems::OnRender()
 {
 	if(Client()->State() < IClient::STATE_ONLINE)
@@ -272,7 +336,10 @@ void CItems::OnRender()
 
 		if(Item.m_Type == NETOBJTYPE_PROJECTILE)
 		{
-			RenderProjectile((const CNetObj_Projectile *)pData, Item.m_ID);
+			const void* pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
+			if (pPrev)
+				RenderProjectile((const CNetObj_Projectile*)pData, Item.m_ID, (const CNetObj_Projectile*)pPrev);
+			//RenderProjectile((const CNetObj_Projectile *)pData, Item.m_ID);
 		}
 		else if(Item.m_Type == NETOBJTYPE_PICKUP)
 		{
@@ -283,6 +350,15 @@ void CItems::OnRender()
 		else if(Item.m_Type == NETOBJTYPE_LASER)
 		{
 			RenderLaser((const CNetObj_Laser *)pData);
+		}
+		else if (Item.m_Type == NETOBJTYPE_CHARACTER)
+		{
+			
+			RenderPlayer((const CNetObj_Character*)pData);
+		}
+		else if (Item.m_Type == NETOBJTYPE_HARPOON)
+		{
+			RenderHarpoon((const CNetObj_Harpoon*)pData);
 		}
 	}
 
@@ -305,3 +381,75 @@ void CItems::OnRender()
 	}
 }
 
+void CItems::RenderHarpoon(const CNetObj_Harpoon* pCurrent)
+{
+	static float s_LastGameTickTime = Client()->GameTickTime();
+	if (!m_pClient->IsWorldPaused())
+		s_LastGameTickTime = Client()->GameTickTime();
+	
+	float Ct;
+	if (m_pClient->ShouldUsePredicted() && Config()->m_ClPredictProjectiles)
+		Ct = ((float)(Client()->PredGameTick() - 1 - pCurrent->m_SpawnTick) + Client()->PredIntraGameTick()) / (float)SERVER_TICK_SPEED;
+	else
+		Ct = (Client()->PrevGameTick() - pCurrent->m_SpawnTick) / (float)SERVER_TICK_SPEED + s_LastGameTickTime;
+	if (Ct < 0)
+		return; // projectile haven't been shot yet
+
+	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
+	vec2 StartVel(pCurrent->m_Dir_X / 100.0f, pCurrent->m_Dir_Y / 100.0f);
+
+	vec2 Pos;
+	vec2 PrevPos;
+	Pos = CalcPos(StartPos, StartVel, m_pClient->m_Tuning.m_HarpoonCurvature, m_pClient->m_Tuning.m_HarpoonSpeed, Ct);
+	PrevPos = CalcPos(StartPos, StartVel, m_pClient->m_Tuning.m_HarpoonCurvature, m_pClient->m_Tuning.m_HarpoonSpeed, Ct - 0.001f);
+
+
+	const vec2 Vel = Pos - PrevPos;
+
+	float Angle;
+	vec2 PlayerPos;
+	if (pCurrent->m_OwnerID != -1)
+	{
+		Angle = mix((float)m_pClient->m_Snap.m_aCharacters[pCurrent->m_OwnerID].m_Prev.m_Angle, (float)m_pClient->m_Snap.m_aCharacters[pCurrent->m_OwnerID].m_Cur.m_Angle, Client()->IntraGameTick()) / 256.0f;
+		PlayerPos = m_pClient->GetCharPos(pCurrent->m_OwnerID, m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(pCurrent->m_OwnerID));
+	}
+	else
+	{
+		Angle = 1.0f; //doesn't matter, offscreen!
+		PlayerPos = vec2(pCurrent->m_Owner_X / 100.0f, pCurrent->m_Owner_Y / 100.0f);
+	}
+	
+	
+	
+	if (m_pClient->m_LocalClientID == pCurrent->m_OwnerID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+	{
+		// just use the direct input if it's local player we are rendering
+		Angle = angle(m_pClient->m_pControls->m_MousePos);
+	}
+	vec2 WeaponPos = m_pClient->GetHarpoonAlignment(PlayerPos, Angle);
+
+	float HarpoonAngle = angle(Vel);
+
+	HarpoonAngle += direction(Angle).x > 0 ? 0.23f : -0.23f;
+
+	vec2 HarpoonPos = Pos + direction(HarpoonAngle) * -15;//Config()->m_GfxLineMultiplier / 100.0f;
+	RenderTools()->RenderRope(WeaponPos, HarpoonPos, 8);
+
+	HarpoonAngle = angle(Vel);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->QuadsBegin();
+
+	//float Size = g_pData->m_Weapons.m_aId[;
+	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_pSpriteProj, Vel.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+	//, 
+	
+	
+	Graphics()->QuadsSetRotation(length(direction(HarpoonAngle)) > 0.00001f ? angle(direction(HarpoonAngle)) : 0);
+
+	//RenderTools()->DrawSprite(Pos.x, Pos.y, 64.0f);
+	//Graphics()->QuadsDraw(&QuadItem, 1);
+	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 48, 32);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsEnd();
+}

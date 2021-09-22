@@ -403,6 +403,13 @@ int CEditor::DoButton_ButtonDec(const void *pID, const char *pText, int Checked,
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
+int CEditor::DoButton_AddWaterLayer(const void* pID, const char* pText, int Checked, const CUIRect* pRect, int Flags, const char* pToolTip)
+{
+	pRect->Draw(GetButtonColor(pID, Checked), CUIRect::CORNER_L, 3.0f);
+	UI()->DoLabel(pRect, pText ? pText : "-", 10, CUI::ALIGN_CENTER);
+	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
+}
+
 void CEditor::RenderGrid(CLayerGroup *pGroup)
 {
 	if(!m_GridActive)
@@ -1559,12 +1566,20 @@ void CEditor::DoMapEditor(CUIRect View)
 		}
 
 		// render the game above everything else
-		if(m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
+		if (m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
 		{
 			m_Map.m_pGameGroup->MapScreen();
 			m_Map.m_pGameLayer->Render();
 		}
-
+		//and the Watertile
+		if (m_Map.m_pGameGroup && m_Map.m_pWaterLayer)
+		{
+			if (m_Map.m_pGameGroup->m_Visible && m_Map.m_pWaterLayer->m_Visible)
+			{
+				m_Map.m_pGameGroup->MapScreen();
+				m_Map.m_pWaterLayer->Render();
+			}
+		}
 		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
 		if(m_ShowTileInfo && pT && pT->m_Visible && m_ZoomLevel <= 300)
 		{
@@ -1622,6 +1637,7 @@ void CEditor::DoMapEditor(CUIRect View)
 			m_TilesetPicker.m_Image = t->m_Image;
 			m_TilesetPicker.m_Texture = t->m_Texture;
 			m_TilesetPicker.m_Game = t->m_Game;
+			m_TilesetPicker.m_Water = t->m_Water;
 			m_TilesetPicker.Render();
 			if(m_ShowTileInfo)
 				m_TilesetPicker.ShowInfo();
@@ -4179,6 +4195,12 @@ void CEditorMap::MakeGameLayer(CLayer *pLayer)
 	m_pGameLayer->m_pEditor = m_pEditor;
 	m_pGameLayer->m_Texture = m_pEditor->m_EntitiesTexture;
 }
+void CEditorMap::MakeWaterLayer(CLayer* pLayer)
+{
+	m_pWaterLayer = (CLayerWater*)pLayer;
+	m_pWaterLayer->m_pEditor = m_pEditor;
+	m_pWaterLayer->m_Texture = m_pEditor->m_WaterLayerTexture;
+}
 
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 {
@@ -4199,6 +4221,7 @@ void CEditorMap::Clean()
 
 	m_pGameLayer = 0x0;
 	m_pGameGroup = 0x0;
+	m_pWaterLayer = 0x0;
 
 	m_Modified = false;
 }
@@ -4231,6 +4254,8 @@ void CEditorMap::CreateDefault()
 	MakeGameGroup(NewGroup());
 	MakeGameLayer(new CLayerGame(50, 50));
 	m_pGameGroup->AddLayer(m_pGameLayer);
+	MakeWaterLayer(new CLayerWater(50, 50));
+	m_pGameGroup->AddLayer(m_pWaterLayer);
 }
 
 void CEditor::Init()
@@ -4250,6 +4275,7 @@ void CEditor::Init()
 	m_BackgroundTexture = Graphics()->LoadTexture("editor/background.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_WaterLayerTexture = Graphics()->LoadTexture("editor/water.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();

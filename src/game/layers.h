@@ -14,6 +14,7 @@ class CLayers
 	int m_LayersStart;
 	CMapItemGroup *m_pGameGroup;
 	CMapItemLayerTilemap *m_pGameLayer;
+	CMapItemLayerTilemap *m_pWaterLayer;
 	class IMap *m_pMap;
 
 	void InitGameLayer();
@@ -27,6 +28,7 @@ public:
 	class IMap *Map() const { return m_pMap; }
 	CMapItemGroup *GameGroup() const { return m_pGameGroup; }
 	CMapItemLayerTilemap *GameLayer() const { return m_pGameLayer; }
+	CMapItemLayerTilemap* WaterLayer() const { return m_pWaterLayer; }
 	CMapItemGroup *GetGroup(int Index) const;
 	CMapItemLayer *GetLayer(int Index) const;
 };

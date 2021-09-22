@@ -11,9 +11,13 @@ CPickup::CPickup(CGameWorld *pGameWorld, int Type, vec2 Pos)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_PICKUP, Pos, PickupPhysSize)
 {
 	m_Type = Type;
-
+	m_Vel = vec2(0, 0);
 	Reset();
 
+	m_AmountOfHarpoons = 0;
+	m_MarkForHarpoonDeallocation = false;
+	m_OriginalPos = m_Pos;
+	m_DisturbedTick = 0;
 	GameWorld()->InsertEntity(this);
 }
 
@@ -23,15 +27,43 @@ void CPickup::Reset()
 		m_SpawnTick = Server()->Tick() + Server()->TickSpeed() * g_pData->m_aPickups[m_Type].m_Spawndelay;
 	else
 		m_SpawnTick = -1;
+
+	m_MarkForHarpoonDeallocation = false;
 }
 
 void CPickup::Tick()
 {
+	if (m_DisturbedTick > 0)
+	{
+		m_DisturbedTick--;
+		if (m_DisturbedTick == 0)
+		{
+			m_Pos = m_OriginalPos;
+			m_MarkForHarpoonDeallocation = false;
+		}
+		else 
+		{
+			if (m_Type >= PICKUP_GRENADE && m_Type <= PICKUP_HARPOON)
+			{
+				m_Vel.y += GameWorld()->m_Core.m_Tuning.m_Gravity;
+				GameServer()->Collision()->MoveWaterBox(&m_Pos, &m_Vel, vec2(16.0f, 16.0f), 0.25f, 0, 0.8f);
+			}
+			else
+			{
+				m_Vel.y += GameServer()->Collision()->TestBox(m_Pos, vec2(16.0f, 16.0f), 8) ? -GameWorld()->m_Core.m_Tuning.m_Gravity : GameWorld()->m_Core.m_Tuning.m_Gravity;
+				GameServer()->Collision()->MoveWaterBox(&m_Pos, &m_Vel, vec2(16.0f, 16.0f), 0.75f, 0, 0.9f);
+			}
+			
+		}
+	}
 	// wait for respawn
 	if(m_SpawnTick > 0)
 	{
 		if(Server()->Tick() > m_SpawnTick)
 		{
+			m_Pos = m_OriginalPos;
+			m_Vel = vec2(0, 0);
+			m_MarkForHarpoonDeallocation = false;
 			// respawn
 			m_SpawnTick = -1;
 
@@ -110,13 +142,33 @@ void CPickup::Tick()
 					pChr->SetEmote(EMOTE_ANGRY, Server()->Tick() + 1200 * Server()->TickSpeed() / 1000);
 					break;
 				}
-
+			case PICKUP_HARPOON:
+				{
+					if (pChr->GiveHarpoon(1))
+					{
+						Picked = true;
+						GameServer()->CreateSound(m_Pos, SOUND_PICKUP_SHOTGUN);
+						if (pChr->GetPlayer())
+							GameServer()->SendWeaponPickup(pChr->GetPlayer()->GetCID(), WEAPON_HARPOON);
+					}
+					break;
+				}
+			case PICKUP_DIVING:
+				{
+					if (!pChr->HasDivingGear())
+					{
+						Picked = true;
+						pChr->GiveDiving();
+					}
+					break;
+				}
 			default:
 				break;
 		};
 
 		if(Picked)
 		{
+			m_MarkForHarpoonDeallocation = true;
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "pickup player='%d:%s' item=%d",
 				pChr->GetPlayer()->GetCID(), Server()->ClientName(pChr->GetPlayer()->GetCID()), m_Type);
@@ -146,4 +198,34 @@ void CPickup::Snap(int SnappingClient)
 	pP->m_X = round_to_int(m_Pos.x);
 	pP->m_Y = round_to_int(m_Pos.y);
 	pP->m_Type = m_Type;
+	pP->m_DisturbedTick = m_DisturbedTick;
+}
+
+void CPickup::DeallocateHarpoon()
+{
+	m_DisturbedTick = GameServer()->Server()->TickSpeed() * GameServer()->Tuning()->m_PickUpDisturbedTime;
+	m_Vel = vec2(0, 0);
+
+	/*int i = 0;
+	while (true)
+	{
+		if(m_apHarpoons)
+	}*/
+}
+
+void CPickup::AllocateHarpoon(CHarpoon* pHarpoon)
+{
+	m_DisturbedTick = 0;
+	
+	/*m_apHarpoons[m_AmountOfHarpoons] = pHarpoon;
+	m_AmountOfHarpoons++;*/
+}
+
+bool CPickup::IsValidForHarpoon(CHarpoon* pHarpoon)
+{
+	if (m_SpawnTick > 0)
+		return false;
+	if (pHarpoon->GetOwner() && distance(m_Pos, pHarpoon->GetOwner()->GetPos()) < 16.0f * GameServer()->Tuning()->m_HarpoonPickupIgnoreRange)
+		return false;
+	return true;
 }

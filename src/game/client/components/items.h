@@ -6,10 +6,12 @@
 
 class CItems : public CComponent
 {
-	void RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID);
+	void RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID, const CNetObj_Projectile* pPrev);
 	void RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCurrent);
 	void RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent, const CNetObj_GameDataFlag *pPrevGameDataFlag, const CNetObj_GameDataFlag *pCurGameDataFlag);
 	void RenderLaser(const struct CNetObj_Laser *pCurrent);
+	void RenderPlayer(const CNetObj_Character* pCurrent);
+	void RenderHarpoon(const struct CNetObj_Harpoon* pCurrent);
 
 public:
 	virtual void OnRender();
