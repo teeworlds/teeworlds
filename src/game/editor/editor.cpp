@@ -2561,10 +2561,6 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 void CEditor::RenderLayers(CUIRect ToolBox, CUIRect View)
 {
 	CUIRect LayersBox = ToolBox;
-
-	if(!m_GuiActive)
-		return;
-
 	CUIRect Slot, Button;
 	char aBuf[64];
 
@@ -4232,11 +4228,12 @@ void CEditor::Render()
 		}
 	}
 
-	if(m_Mode == MODE_LAYERS)
+	if(m_Mode == MODE_LAYERS && m_GuiActive)
 		RenderLayers(ToolBox, View);
 	else if(m_Mode == MODE_IMAGES)
 	{
-		RenderImagesList(ToolBox);
+		if(m_GuiActive)
+			RenderImagesList(ToolBox);
 		RenderSelectedImage(View);
 	}
 
