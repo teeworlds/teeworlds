@@ -118,7 +118,7 @@ Objects = [
 
 		NetIntRange("m_Type", 0, 'NUM_WEAPONS-1'),
 		NetTick("m_StartTick"),
-                NetBool("m_Water"),
+                NetIntAny("m_Water"),
 	]),
 
 	NetObject("Laser", [

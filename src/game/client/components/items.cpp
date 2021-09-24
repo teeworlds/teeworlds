@@ -19,16 +19,18 @@
 //#include "players.h"
 
 
-void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID, const CNetObj_Projectile* pPrev)
+void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
 	// get positions
 	float Curvature = 0;
 	float Speed = 0;
 	float WaterResistance = m_pClient->m_Tuning.m_LiquidProjectileResistance;
+	float BulletSize = 1.0f;
 	if(pCurrent->m_Type == WEAPON_GRENADE)
 	{
 		Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
 		Speed = m_pClient->m_Tuning.m_GrenadeSpeed;
+		BulletSize = 7.5f;
 	}
 	else if(pCurrent->m_Type == WEAPON_SHOTGUN)
 	{
@@ -82,18 +84,38 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID, co
 	vec2 PrevPos;
 	if (pCurrent->m_Water)
 	{
-		
-		Pos = CalcPos(StartPos, StartVel, Curvature, Speed* WaterResistance, Ct);
-		PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed* WaterResistance, Ct - 0.001f);
-		if (!pPrev->m_Water)
+		if (pCurrent->m_Water == 1)
 		{
-			//Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "A");
-			
-			vec2 PreWaterPos = CalcPos(vec2(pPrev->m_X, pPrev->m_Y), vec2(pPrev->m_VelX, pPrev->m_VelY), Curvature, Speed, Ct - 0.1f);
-			if (Collision()->IntersectWater(PreWaterPos, Pos, &PreWaterPos, vec2(32, 32)))
+			Pos = CalcPos(StartPos, StartVel, Curvature, Speed * WaterResistance, Ct);
+			PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed * WaterResistance, Ct - 0.001f);
+
+			//vec2 PreWaterPos = CalcPos(vec2(pPrev->m_X, pPrev->m_Y), vec2(pPrev->m_VelX/100.0f, pPrev->m_VelY/100.0f), Curvature, Speed, Ct - 0.001f);
+			vec2 PreWaterPos = CalcPos(StartPos, StartVel, Curvature, Speed * WaterResistance, Ct - 0.001f);
+
+			// Need to figure out a smart way for this. Perhaps let server help out?
+			if (Collision()->IntersectWater(PreWaterPos, Pos, &PreWaterPos, vec2(1, 1)))
 			{
-				m_pClient->m_pWater->HitWater(PreWaterPos.x, PreWaterPos.y, distance(PreWaterPos,Pos) * 5);
+				//m_pClient->m_pEffects->PowerupShine(PreWaterPos,vec2(1.0f,1.0f));
+				//Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", "Water Surface Found");
+				if (m_pClient->m_pWater->HitWater(PreWaterPos.x, PreWaterPos.y, distance(PrevPos, Pos) * BulletSize * 25))
+				{
+					/*char aBuf[128];
+					char aBuf2[128];
+					char aBuf3[128];
+					str_format(aBuf, sizeof(aBuf), "%f", distance(PrevPos, Pos));
+					str_format(aBuf2, sizeof(aBuf2), "PreWater: %f  %f", PrevPos.x, PrevPos.y);
+					str_format(aBuf3, sizeof(aBuf3), "Pos: %f  %f", Pos.x, Pos.y);
+					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
+					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf2);
+					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf3);*/
+				}
+
 			}
+		}
+		else
+		{
+			Pos = CalcPos(StartPos, StartVel, Curvature * 2, Speed * 0.6f, Ct);
+			PrevPos = CalcPos(StartPos, StartVel, Curvature * 2, Speed * 0.6f, Ct - 0.001f);
 		}
 	}
 	else
@@ -336,9 +358,8 @@ void CItems::OnRender()
 
 		if(Item.m_Type == NETOBJTYPE_PROJECTILE)
 		{
-			const void* pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
-			if (pPrev)
-				RenderProjectile((const CNetObj_Projectile*)pData, Item.m_ID, (const CNetObj_Projectile*)pPrev);
+			//const void* pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
+			RenderProjectile((const CNetObj_Projectile*)pData, Item.m_ID);
 			//RenderProjectile((const CNetObj_Projectile *)pData, Item.m_ID);
 		}
 		else if(Item.m_Type == NETOBJTYPE_PICKUP)

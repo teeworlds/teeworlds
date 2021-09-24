@@ -187,17 +187,21 @@ void CWater::WaterFreeformOutline(float X, float Y, int A, int B, float Size, CW
 	Graphics()->QuadsDrawFreeform(&Item, 1);
 }
 
-void CWater::HitWater(float x, float y, float Force)
+bool CWater::HitWater(float x, float y, float Force)
 {
 	//Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "HitWater");
 	CWaterSurface* Target;
 	if(FindSurface(&Target, x, y))
 	{
-		//Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "HitWater2");
-		if(Target->HitWater(x, y, Force))
-			if (absolute(Force) >= 5)
+		Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "HitWater2");
+		if (Target->HitWater(x, y, Force))
+		{
+			if (absolute(Force) >= 5.0f)
 				m_pClient->m_pEffects->Droplet(vec2(x, y), vec2(0, Force));
+			return true;
+		}
 	}
+	return false;
 }
 
 bool CWater::FindSurface(CWaterSurface** Pointer, float x, float y)
@@ -306,13 +310,13 @@ bool CWaterSurface::HitWater(float x, float y, float Force)
 	m_aVertex[RealX]->m_Velo += Force;
 
 	//Set the cooldown
-	m_aVertex[RealX]->m_RecentWave += 1;
-	for (int i = 0; i < 8; i++)
+	m_aVertex[RealX]->m_RecentWave += 0.5;
+	for (int i = 0; i < 16; i++)
 	{
 		if(RealX - i >= 0)
-			m_aVertex[RealX - i]->m_RecentWave += 1;
+			m_aVertex[RealX - i]->m_RecentWave += 0.5;
 		if (RealX + i < m_AmountOfVertex)
-			m_aVertex[RealX + i]->m_RecentWave += 1;
+			m_aVertex[RealX + i]->m_RecentWave += 0.5;
 	}
 
 	return true;

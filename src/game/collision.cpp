@@ -452,21 +452,23 @@ void CCollision::MoveWaterBox(vec2* pInoutPos, vec2* pInoutVel, vec2 Size, float
 
 bool CCollision::IntersectWater(vec2 Pos0, vec2 Pos1, vec2* Position, vec2 Size)
 {
-	float Distance = distance(Pos0, Pos1);
-	int Max = (int)Distance;
-	float Inverse = 1.0f / Max+1;
+	//const int End = distance(Pos0, Pos1) + 1;
+	//const float InverseEnd = 1.0f / End;
+	//vec2 Last = Pos0;
 
-	if (Distance > 0.00001f)
+	const int End = distance(Pos0, Pos1) + 1;
+	//float Distance = distance(Pos0, Pos1) + 1;
+	//int Max = (int)Distance;
+	//float Inverse = 1.0f / Max+1;
+	const float InverseEnd = 1.0f / End;
+	for (int i = 0; i <= End +1; i++)
 	{
-		for (int i = 0; i <= Max+1; i++)
-		{
-			vec2 NewPos = mix(Pos0, Pos1, i * Inverse);
+		vec2 NewPos = mix(Pos0, Pos1, i * InverseEnd);
 
-			if (TestBox(vec2(NewPos.x, NewPos.y), Size * (2.0f / 3.0f), COLFLAG_WATER))
-			{
-				*Position = NewPos;
-				return true;
-			}
+		if (TestBox(vec2(NewPos.x, NewPos.y), Size * (2.0f / 3.0f), COLFLAG_WATER))
+		{
+			*Position = NewPos;
+			return true;
 		}
 	}
 	return false;

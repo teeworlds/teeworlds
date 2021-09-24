@@ -379,7 +379,7 @@ void CPlayers::RenderPlayer(
 		);
 	}
 
-	vec2 PreWaterPos = vec2(pPrevChar->m_X / 100.0f, pPrevChar->m_Y / 100.0);
+	vec2 PreWaterPos = vec2(pPrevChar->m_X, pPrevChar->m_Y);
 	if (Collision()->TestBox(PreWaterPos, vec2(32, 32), CCollision::COLFLAG_WATER) ^ Collision()->TestBox(Position, vec2(32, 32), CCollision::COLFLAG_WATER))
 		if (Collision()->IntersectWater(PreWaterPos, Position, &PreWaterPos, vec2(32, 32)))
 			m_pClient->m_pWater->HitWater(PreWaterPos.x, PreWaterPos.y, abs(pPrevChar->m_VelY) / Config()->m_GfxWaveDivider); //trial and erorr

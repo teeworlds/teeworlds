@@ -23,7 +23,7 @@ public:
 	void Tick(float TimePassed);
 
 	int AmountOfSurfaceTiles(int Coord, int End);
-	void HitWater(float x, float y, float Force);
+	bool HitWater(float x, float y, float Force);
 	void WaterFreeform(float X, float Y, int A, int B, float Size, CWaterSurface* Surface);
 	void WaterFreeformOutline(float X, float Y, int A, int B, float Size, CWaterSurface* Surface);
 	bool IsUnderWater(vec2 Pos);
