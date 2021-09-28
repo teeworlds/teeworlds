@@ -107,10 +107,14 @@ CBroadcast::CBroadcast()
 
 void CBroadcast::DoClientBroadcast(const char *pText)
 {
+	const float Height = 300;
+	const float Width = Height*Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0, 0, Width, Height);
+
 	m_ClientBroadcastCursor.Reset();
 	m_ClientBroadcastCursor.m_FontSize = 12.0f;
 	m_ClientBroadcastCursor.m_Align = TEXTALIGN_TC;
-	m_ClientBroadcastCursor.m_MaxWidth = 300*Graphics()->ScreenAspect();
+	m_ClientBroadcastCursor.m_MaxWidth = Width;
 
 	TextRender()->TextDeferred(&m_ClientBroadcastCursor, pText, -1);
 	m_BroadcastTime = Client()->LocalTime() + 10.0f;
