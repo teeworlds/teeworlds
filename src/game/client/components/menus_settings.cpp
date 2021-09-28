@@ -545,7 +545,7 @@ void CMenus::RenderSkinPartPalette(CUIRect MainView)
 			if(Selected)
 			{
 				CUIRect Underline = {Button.x, Button.y + ButtonHeight + 2*Margin + 2.0f, Button.w, 1.0f};
-				Underline.Draw(vec4(1.0f, 1.0f, 1.0f, 1.5f), 0, 0);
+				Underline.Draw(vec4(1.0f, 1.0f, 1.0f, 1.5f), 0.0f, CUIRect::CORNER_NONE);
 			}
 			Button.Draw((Hovered ? vec4(1.0f, 1.0f, 1.0f, 0.25f) : vec4(0.0f, 0.0f, 0.0f, 0.25f)));
 			Button.Margin(Margin, &Button);
