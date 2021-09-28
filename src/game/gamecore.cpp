@@ -2,7 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "gamecore.h"
 
-const char *CTuningParams::m_apNames[] =
+const char *CTuningParams::s_apNames[] =
 {
 	#define MACRO_TUNING_PARAM(Name,ScriptName,Value) #ScriptName,
 	#include "tuning.h"
@@ -29,7 +29,7 @@ bool CTuningParams::Get(int Index, float *pValue) const
 bool CTuningParams::Set(const char *pName, float Value)
 {
 	for(int i = 0; i < Num(); i++)
-		if(str_comp_nocase(pName, m_apNames[i]) == 0)
+		if(str_comp_nocase(pName, GetName(i)) == 0)
 			return Set(i, Value);
 	return false;
 }
@@ -37,16 +37,11 @@ bool CTuningParams::Set(const char *pName, float Value)
 bool CTuningParams::Get(const char *pName, float *pValue) const
 {
 	for(int i = 0; i < Num(); i++)
-		if(str_comp_nocase(pName, m_apNames[i]) == 0)
+		if(str_comp_nocase(pName, GetName(i)) == 0)
 			return Get(i, pValue);
-
 	return false;
 }
 
-float HermiteBasis1(float v)
-{
-	return 2*v*v*v - 3*v*v+1;
-}
 
 float VelocityRamp(float Value, float Start, float Range, float Curvature)
 {
@@ -83,11 +78,9 @@ void CCharacterCore::Tick(bool UseInput)
 	m_TriggeredEvents = 0;
 
 	// get ground state
-	bool Grounded = false;
-	if(m_pCollision->CheckPoint(m_Pos.x+PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5))
-		Grounded = true;
-	if(m_pCollision->CheckPoint(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5))
-		Grounded = true;
+	const bool Grounded =
+		m_pCollision->CheckPoint(m_Pos.x+PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5)
+		|| m_pCollision->CheckPoint(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5);
 
 	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
 
@@ -210,7 +203,7 @@ void CCharacterCore::Tick(bool UseInput)
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, pCharCore->m_Pos);
 				if(distance(pCharCore->m_Pos, ClosestPoint) < PHYS_SIZE+2.0f)
 				{
-					if (m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Distance)
+					if(m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Distance)
 					{
 						m_TriggeredEvents |= COREEVENTFLAG_HOOK_ATTACH_PLAYER;
 						m_HookState = HOOK_GRABBED;
@@ -315,7 +308,7 @@ void CCharacterCore::Tick(bool UseInput)
 
 				// make sure that we don't add excess force by checking the
 				// direction against the current velocity. if not zero.
-				if (length(m_Vel) > 0.0001)
+				if(length(m_Vel) > 0.0001)
 					Velocity = 1-(dot(normalize(m_Vel), Dir)+1)/2;
 
 				m_Vel += Dir*a*(Velocity*0.75f);
