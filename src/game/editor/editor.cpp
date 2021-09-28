@@ -1729,7 +1729,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int PIndex)
 	Graphics()->QuadsDraw(&QuadItem, 1);
 }
 
-void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
+void CEditor::DoMapEditor(CUIRect View)
 {
 	// render all good stuff
 	if(!m_ShowTilePicker)
@@ -1738,7 +1738,6 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 		{
 			if(m_Map.m_lGroups[g]->m_Visible)
 				m_Map.m_lGroups[g]->Render();
-			//UI()->ClipEnable(&view);
 		}
 
 		// render the game above everything else
@@ -2322,7 +2321,6 @@ void CEditor::DoMapEditor(CUIRect View, CUIRect ToolBar)
 	}
 
 	UI()->MapScreen();
-	//UI()->ClipDisable();
 }
 
 
@@ -2497,13 +2495,9 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 	return Change;
 }
 
-void CEditor::RenderLayers(CUIRect ToolBox, CUIRect ToolBar, CUIRect View)
+void CEditor::RenderLayers(CUIRect ToolBox, CUIRect View)
 {
 	CUIRect LayersBox = ToolBox;
-
-	if(!m_GuiActive)
-		return;
-
 	CUIRect Slot, Button;
 	char aBuf[64];
 
@@ -2791,7 +2785,7 @@ void CEditor::SortImages()
 }
 
 
-void CEditor::RenderImagesList(CUIRect ToolBox, CUIRect ToolBar)
+void CEditor::RenderImagesList(CUIRect ToolBox)
 {
 	static float s_ScrollValue = 0.0f;
 	const float RowHeight = 14.0f;
@@ -4087,7 +4081,6 @@ void CEditor::Render()
 
 	if(m_GuiActive)
 	{
-
 		View.HSplitTop(16.0f, &MenuBar, &View);
 		View.HSplitTop(53.0f, &ToolBar, &View);
 		View.VSplitLeft(100.0f, &ToolBox, &View);
@@ -4106,7 +4099,7 @@ void CEditor::Render()
 
 	//	a little hack for now
 	if(m_Mode == MODE_LAYERS)
-		DoMapEditor(View, ToolBar);
+		DoMapEditor(View);
 
 	// do zooming
 	if(Input()->KeyPress(KEY_KP_MINUS))
@@ -4166,12 +4159,12 @@ void CEditor::Render()
 		}
 	}
 
-
-	if(m_Mode == MODE_LAYERS)
-		RenderLayers(ToolBox, ToolBar, View);
+	if(m_Mode == MODE_LAYERS && m_GuiActive)
+		RenderLayers(ToolBox, View);
 	else if(m_Mode == MODE_IMAGES)
 	{
-		RenderImagesList(ToolBox, ToolBar);
+		if(m_GuiActive)
+			RenderImagesList(ToolBox);
 		RenderSelectedImage(View);
 	}
 

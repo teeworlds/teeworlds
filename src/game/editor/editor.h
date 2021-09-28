@@ -819,7 +819,7 @@ public:
 	void DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int pIndex);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
 
-	void DoMapEditor(CUIRect View, CUIRect Toolbar);
+	void DoMapEditor(CUIRect View);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
 	vec4 GetButtonColor(const void *pID, int Checked);
@@ -827,9 +827,9 @@ public:
 	static void ReplaceImage(const char *pFilename, int StorageType, void *pUser);
 	static void AddImage(const char *pFilename, int StorageType, void *pUser);
 
-	void RenderImagesList(CUIRect Toolbox, CUIRect Toolbar);
+	void RenderImagesList(CUIRect Toolbox);
 	void RenderSelectedImage(CUIRect View);
-	void RenderLayers(CUIRect Toolbox, CUIRect Toolbar, CUIRect View);
+	void RenderLayers(CUIRect Toolbox, CUIRect View);
 	void RenderModebar(CUIRect View);
 	void RenderStatusbar(CUIRect View);
 	void RenderEnvelopeEditor(CUIRect View);
