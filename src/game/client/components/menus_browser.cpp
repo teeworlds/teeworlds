@@ -1141,7 +1141,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	UI()->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_LEFT);
 	EditBox.VSplitRight(EditBox.h, &EditBox, &Button);
 	static float s_ClearOffset = 0.0f;
-	if(DoEditBox(&Config()->m_BrFilterString, &EditBox, Config()->m_BrFilterString, sizeof(Config()->m_BrFilterString), FontSize, &s_ClearOffset, false, CUIRect::CORNER_ALL))
+	if(DoEditBox(&Config()->m_BrFilterString, &EditBox, Config()->m_BrFilterString, sizeof(Config()->m_BrFilterString), FontSize, &s_ClearOffset, false, CUIRect::CORNER_L))
 	{
 		Client()->ServerBrowserUpdate();
 		ServerBrowserFilterOnUpdate();
@@ -1150,7 +1150,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	// clear button
 	{
 		static CButtonContainer s_ClearButton;
-		if(DoButton_SpriteID(&s_ClearButton, IMAGE_TOOLICONS, SPRITE_TOOL_X_A, false, &Button, CUIRect::CORNER_ALL, 5.0f, true))
+		if(DoButton_SpriteID(&s_ClearButton, IMAGE_TOOLICONS, SPRITE_TOOL_X_A, false, &Button, CUIRect::CORNER_R, 5.0f, true))
 		{
 			Config()->m_BrFilterString[0] = 0;
 			UI()->SetActiveItem(&Config()->m_BrFilterString);
