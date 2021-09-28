@@ -13,6 +13,9 @@
  UI
 *********************************************************/
 
+const float CUI::ms_ListheaderHeight = 17.0f;
+const float CUI::ms_FontmodHeight = 0.8f;
+
 const vec4 CUI::ms_DefaultTextColor(1.0f, 1.0f, 1.0f, 1.0f);
 const vec4 CUI::ms_DefaultTextOutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
 const vec4 CUI::ms_HighlightTextColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -266,6 +269,209 @@ void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char
 		TextRender()->TextDeferred(&s_Cursor, pText, -1);
 
 	TextRender()->DrawTextOutlined(&s_Cursor);
+}
+
+float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
+{
+	// layout
+	CUIRect Handle;
+	pRect->HSplitTop(min(pRect->h/8.0f, 33.0f), &Handle, 0);
+	Handle.y += (pRect->h-Handle.h)*Current;
+	Handle.VMargin(5.0f, &Handle);
+
+	CUIRect Rail;
+	pRect->VMargin(5.0f, &Rail);
+
+	// logic
+	static float s_OffsetY;
+	const bool InsideHandle = MouseHovered(&Handle);
+	const bool InsideRail = MouseHovered(&Rail);
+	float ReturnValue = Current;
+	bool Grabbed = false; // whether to apply the offset
+
+	if(CheckActiveItem(pID))
+	{
+		if(MouseButton(0))
+			Grabbed = true;
+		else
+			SetActiveItem(0);
+	}
+	else if(HotItem() == pID)
+	{
+		if(MouseButton(0))
+		{
+			s_OffsetY = MouseY()-Handle.y;
+			SetActiveItem(pID);
+			Grabbed = true;
+		}
+	}
+	else if(MouseButtonClicked(0) && !InsideHandle && InsideRail)
+	{
+		s_OffsetY = Handle.h * 0.5f;
+		SetActiveItem(pID);
+		Grabbed = true;
+	}
+
+	if(InsideHandle)
+	{
+		SetHotItem(pID);
+	}
+
+	if(Grabbed)
+	{
+		const float Min = pRect->y;
+		const float Max = pRect->h-Handle.h;
+		const float Cur = MouseY()-s_OffsetY;
+		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
+	}
+
+	// render
+	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.w/2.0f);
+
+	vec4 Color;
+	if(Grabbed)
+		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
+	else if(InsideHandle)
+		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	else
+		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
+	Handle.Draw(Color, Handle.w/2.0f);
+
+	return ReturnValue;
+}
+
+float CUI::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
+{
+	// layout
+	CUIRect Handle;
+	pRect->VSplitLeft(max(min(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
+	Handle.x += (pRect->w-Handle.w)*clamp(Current, 0.0f, 1.0f);
+	Handle.HMargin(5.0f, &Handle);
+
+	CUIRect Rail;
+	pRect->HMargin(5.0f, &Rail);
+
+	// logic
+	static float s_OffsetX;
+	const bool InsideHandle = MouseHovered(&Handle);
+	const bool InsideRail = MouseHovered(&Rail);
+	float ReturnValue = Current;
+	bool Grabbed = false; // whether to apply the offset
+
+	if(CheckActiveItem(pID))
+	{
+		if(MouseButton(0))
+			Grabbed = true;
+		else
+			SetActiveItem(0);
+	}
+	else if(HotItem() == pID)
+	{
+		if(MouseButton(0))
+		{
+			s_OffsetX = MouseX()-Handle.x;
+			SetActiveItem(pID);
+			Grabbed = true;
+		}
+	}
+	else if(MouseButtonClicked(0) && !InsideHandle && InsideRail)
+	{
+		s_OffsetX = Handle.w * 0.5f;
+		SetActiveItem(pID);
+		Grabbed = true;
+	}
+
+	if(InsideHandle)
+	{
+		SetHotItem(pID);
+	}
+
+	if(Grabbed)
+	{
+		const float Min = pRect->x;
+		const float Max = pRect->w-Handle.w;
+		const float Cur = MouseX()-s_OffsetX;
+		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
+	}
+
+	// render
+	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.h/2.0f);
+
+	vec4 Color;
+	if(Grabbed)
+		Color = vec4(0.9f, 0.9f, 0.9f, 1.0f);
+	else if(InsideHandle)
+		Color = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	else
+		Color = vec4(0.8f, 0.8f, 0.8f, 1.0f);
+	Handle.Draw(Color, Handle.h/2.0f);
+
+	return ReturnValue;
+}
+
+void CUI::DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, bool Infinite)
+{
+	int Value = *pOption;
+	if(Infinite)
+	{
+		Min += 1;
+		Max += 1;
+		if(Value == 0)
+			Value = Max;
+	}
+
+	char aBufMax[128];
+	str_format(aBufMax, sizeof(aBufMax), "%s: %i", pStr, Max);
+	char aBuf[128];
+	if(!Infinite || Value != Max)
+		str_format(aBuf, sizeof(aBuf), "%s: %i", pStr, Value);
+	else
+		str_format(aBuf, sizeof(aBuf), "%s: \xe2\x88\x9e", pStr);
+
+	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
+	float VSplitVal = max(TextRender()->TextWidth(FontSize, aBuf, -1), TextRender()->TextWidth(FontSize, aBufMax, -1));
+
+	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
+
+	CUIRect Label, ScrollBar;
+	pRect->VSplitLeft(pRect->h+10.0f+VSplitVal, &Label, &ScrollBar);
+	Label.VSplitLeft(Label.h+5.0f, 0, &Label);
+	Label.y += 2.0f;
+	DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
+
+	ScrollBar.VMargin(4.0f, &ScrollBar);
+	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, Min, Max)), Min, Max);
+	if(Infinite && Value == Max)
+		Value = 0;
+
+	*pOption = Value;
+}
+
+void CUI::DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char* aLabels[], int NumLabels, const IScrollbarScale *pScale)
+{
+	int Value = clamp(*pOption, 0, NumLabels - 1);
+	const int Max = NumLabels - 1;
+
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "%s: %s", pStr, aLabels[Value]);
+
+	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
+
+	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
+
+	CUIRect Label, ScrollBar;
+	pRect->VSplitLeft(pRect->h+5.0f, 0, &Label);
+	Label.VSplitRight(60.0f, &Label, &ScrollBar);
+	Label.y += 2.0f;
+	DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
+
+	ScrollBar.VMargin(4.0f, &ScrollBar);
+	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, 0, Max)), 0, Max);
+
+	if(HotItem() != pID && !CheckActiveItem(pID) && MouseHovered(pRect) && MouseButtonClicked(0))
+		Value = (Value + 1) % NumLabels;
+
+	*pOption = clamp(Value, 0, Max);
 }
 
 float CUI::DrawClientID(float FontSize, vec2 CursorPosition, int ID, const vec4& BgColor, const vec4& TextColor)

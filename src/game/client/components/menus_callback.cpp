@@ -146,11 +146,11 @@ float CMenus::RenderSettingsControlsMouse(CUIRect View)
 
 	View.HSplitTop(Spacing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
-	DoScrollbarOption(&Config()->m_InpMousesens, &Config()->m_InpMousesens, &Button, Localize("Ingame mouse sens."), 1, 500, &LogarithmicScrollbarScale);
+	UI()->DoScrollbarOption(&Config()->m_InpMousesens, &Config()->m_InpMousesens, &Button, Localize("Ingame mouse sens."), 1, 500, &LogarithmicScrollbarScale);
 
 	View.HSplitTop(Spacing, 0, &View);
 	View.HSplitTop(ButtonHeight, &Button, &View);
-	DoScrollbarOption(&Config()->m_UiMousesens, &Config()->m_UiMousesens, &Button, Localize("Menu mouse sens."), 1, 500, &LogarithmicScrollbarScale);
+	UI()->DoScrollbarOption(&Config()->m_UiMousesens, &Config()->m_UiMousesens, &Button, Localize("Menu mouse sens."), 1, 500, &LogarithmicScrollbarScale);
 
 	return BackgroundHeight;
 }
@@ -212,23 +212,23 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 				View.HSplitTop(ButtonHeight, &Button, &View);
 				const int NumLabels = 2;
 				const char *aLabels[NumLabels] = { Localize("Relative", "Ingame joystick mode"), Localize("Absolute", "Ingame joystick mode")};
-				DoScrollbarOptionLabeled(&Config()->m_JoystickAbsolute, &Config()->m_JoystickAbsolute, &Button, Localize("Ingame joystick mode"), aLabels, NumLabels);
+				UI()->DoScrollbarOptionLabeled(&Config()->m_JoystickAbsolute, &Config()->m_JoystickAbsolute, &Button, Localize("Ingame joystick mode"), aLabels, NumLabels);
 			}
 
 			if(!Config()->m_JoystickAbsolute)
 			{
 				View.HSplitTop(Spacing, 0, &View);
 				View.HSplitTop(ButtonHeight, &Button, &View);
-				DoScrollbarOption(&Config()->m_JoystickSens, &Config()->m_JoystickSens, &Button, Localize("Ingame joystick sensitivity"), 1, 500, &LogarithmicScrollbarScale);
+				UI()->DoScrollbarOption(&Config()->m_JoystickSens, &Config()->m_JoystickSens, &Button, Localize("Ingame joystick sensitivity"), 1, 500, &LogarithmicScrollbarScale);
 			}
 
 			View.HSplitTop(Spacing, 0, &View);
 			View.HSplitTop(ButtonHeight, &Button, &View);
-			DoScrollbarOption(&Config()->m_UiJoystickSens, &Config()->m_UiJoystickSens, &Button, Localize("Menu/Editor joystick sensitivity"), 1, 500, &LogarithmicScrollbarScale);
+			UI()->DoScrollbarOption(&Config()->m_UiJoystickSens, &Config()->m_UiJoystickSens, &Button, Localize("Menu/Editor joystick sensitivity"), 1, 500, &LogarithmicScrollbarScale);
 
 			View.HSplitTop(Spacing, 0, &View);
 			View.HSplitTop(ButtonHeight, &Button, &View);
-			DoScrollbarOption(&Config()->m_JoystickTolerance, &Config()->m_JoystickTolerance, &Button, Localize("Joystick jitter tolerance"), 0, 50);
+			UI()->DoScrollbarOption(&Config()->m_JoystickTolerance, &Config()->m_JoystickTolerance, &Button, Localize("Joystick jitter tolerance"), 0, 50);
 
 			// shrink view and draw background
 			View.HSplitTop(Spacing, 0, &View);
