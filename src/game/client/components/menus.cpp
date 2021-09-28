@@ -1776,7 +1776,6 @@ void CMenus::RenderMenu(CUIRect Screen)
 				{
 					m_Popup = POPUP_NONE;
 					m_pClient->m_pSkins->SaveSkinfile(m_aSaveSkinName);
-					m_aSaveSkinName[0] = 0;
 					m_RefreshSkinSelector = true;
 				}
 			}
