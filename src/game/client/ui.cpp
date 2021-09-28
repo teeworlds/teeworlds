@@ -37,6 +37,8 @@ CUI::CUI()
 	m_LastMouseButtons = 0;
 	m_Enabled = true;
 
+	m_HotkeysPressed = 0;
+
 	m_Screen.x = 0;
 	m_Screen.y = 0;
 
@@ -73,6 +75,32 @@ bool CUI::KeyPress(int Key) const
 bool CUI::KeyIsPressed(int Key) const
 {
 	return Enabled() && Input()->KeyIsPressed(Key);
+}
+
+bool CUI::ConsumeHotkey(unsigned Hotkey)
+{
+	bool Pressed = m_HotkeysPressed&Hotkey;
+	m_HotkeysPressed &= ~Hotkey;
+	return Pressed;
+}
+
+void CUI::OnInput(const IInput::CEvent &e)
+{
+	if(e.m_Flags&IInput::FLAG_PRESS)
+	{
+		if(e.m_Key == KEY_RETURN || e.m_Key == KEY_KP_ENTER)
+			m_HotkeysPressed |= HOTKEY_ENTER;
+		else if(e.m_Key == KEY_ESCAPE)
+			m_HotkeysPressed |= HOTKEY_ESCAPE;
+		else if(e.m_Key == KEY_TAB && !Input()->KeyIsPressed(KEY_LALT) && !Input()->KeyIsPressed(KEY_RALT))
+			m_HotkeysPressed |= HOTKEY_TAB;
+		else if(e.m_Key == KEY_DELETE)
+			m_HotkeysPressed |= HOTKEY_DELETE;
+		else if(e.m_Key == KEY_UP)
+			m_HotkeysPressed |= HOTKEY_UP;
+		else if(e.m_Key == KEY_DOWN)
+			m_HotkeysPressed |= HOTKEY_DOWN;
+	}
 }
 
 void CUI::ConvertCursorMove(float *pX, float *pY, int CursorType) const

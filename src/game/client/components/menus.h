@@ -384,14 +384,6 @@ private:
 	bool m_RefreshSkinSelector;
 	const CSkins::CSkin *m_pSelectedSkin;
 
-	//
-	bool m_EscapePressed;
-	bool m_EnterPressed;
-	bool m_TabPressed;
-	bool m_DeletePressed;
-	bool m_UpArrowPressed;
-	bool m_DownArrowPressed;
-
 	// for map download popup
 	int64 m_DownloadLastCheckTime;
 	int m_DownloadLastCheckSize;
