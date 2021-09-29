@@ -32,6 +32,7 @@ void CLineInput::Set(const char *pString)
 {
 	str_copy(m_pStr, pString, m_MaxSize);
 	UpdateStrData();
+	m_CursorPos = m_Len;
 }
 
 void CLineInput::Append(const char *pString)
@@ -65,7 +66,8 @@ void CLineInput::Append(const char *pString)
 void CLineInput::UpdateStrData()
 {
 	m_Len = str_length(m_pStr);
-	m_CursorPos = m_Len;
+	if(m_CursorPos < 0 || m_CursorPos > m_Len)
+		m_CursorPos = m_Len;
 	m_NumChars = 0;
 	int Offset = 0;
 	while(m_pStr[Offset])
@@ -85,10 +87,8 @@ bool CLineInput::MoveWordStop(char c)
 
 bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 {
-	if(m_pStr[0] == 0 && m_Len > 0)
-		UpdateStrData();
-	if(m_CursorPos > m_Len)
-		m_CursorPos = m_Len;
+	// update derived attributes to handle external changes to the buffer
+	UpdateStrData();
 
 	int OldCursorPos = m_CursorPos;
 
