@@ -67,6 +67,7 @@ if(TARGET_OS STREQUAL "windows")
 endif()
 
 option(CLIENT "Compile client" ON)
+option(HEADLESS_CLIENT "Build the client without graphics" OFF)
 option(DOWNLOAD_DEPENDENCIES "Download dependencies (only available on Windows)" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DOWNLOAD_GTEST "Download and compile GTest if not found" ${AUTO_DEPENDENCIES_DEFAULT})
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
@@ -1407,6 +1408,7 @@ if(CLIENT)
     contacts.h
     graphics_threaded.cpp
     graphics_threaded.h
+    graphics_threaded_null.h
     input.cpp
     input.h
     keynames.h
@@ -2130,6 +2132,9 @@ foreach(target ${TARGETS_OWN})
   if(CRYPTO_FOUND)
     target_compile_definitions(${target} PRIVATE CONF_OPENSSL)
     target_include_directories(${target} PRIVATE ${CRYPTO_INCLUDE_DIRS})
+  endif()
+  if(HEADLESS_CLIENT)
+    target_compile_definitions(${target} PRIVATE CONF_HEADLESS_CLIENT)
   endif()
 endforeach()
 
