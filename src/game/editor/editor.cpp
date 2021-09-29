@@ -149,8 +149,8 @@ void CLayerGroup::GetSize(float *w, float *h) const
 	{
 		float lw, lh;
 		m_lLayers[i]->GetSize(&lw, &lh);
-		*w = max(*w, lw);
-		*h = max(*h, lh);
+		*w = maximum(*w, lw);
+		*h = maximum(*h, lh);
 	}
 }
 
@@ -323,20 +323,20 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 			// do scrolling
 			if(UI()->MouseX() < pRect->x && s_ScrollStart-UI()->MouseX() > 10.0f)
 			{
-				s_AtIndex = max(0, s_AtIndex-1);
+				s_AtIndex = maximum(0, s_AtIndex-1);
 				s_ScrollStart = UI()->MouseX();
 				UpdateOffset = true;
 			}
 			else if(UI()->MouseX() > pRect->x+pRect->w && UI()->MouseX()-s_ScrollStart > 10.0f)
 			{
-				s_AtIndex = min(Len, s_AtIndex+1);
+				s_AtIndex = minimum(Len, s_AtIndex+1);
 				s_ScrollStart = UI()->MouseX();
 				UpdateOffset = true;
 			}
 		}
 		else if(!Inside && UI()->MouseButton(0))
 		{
-			s_AtIndex = min(s_AtIndex, str_length(pStr));
+			s_AtIndex = minimum(s_AtIndex, str_length(pStr));
 			s_DoScroll = false;
 			UI()->SetActiveItem(0);
 			UI()->ClearLastActiveItem();
@@ -359,7 +359,7 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 	{
 		if(!UI()->MouseButton(0))
 		{
-			s_AtIndex = min(s_AtIndex, str_length(pStr));
+			s_AtIndex = minimum(s_AtIndex, str_length(pStr));
 			s_DoScroll = false;
 			UI()->SetActiveItem(0);
 		}
@@ -405,7 +405,7 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 			float wt = TextRender()->TextWidth(FontSize, pDisplayStr, -1);
 			do
 			{
-				*Offset += min(wt-*Offset-Textbox.w, Textbox.w/3);
+				*Offset += minimum(wt-*Offset-Textbox.w, Textbox.w/3);
 			}
 			while(w-*Offset > Textbox.w);
 		}
@@ -414,7 +414,7 @@ int CEditor::DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned Str
 			// move to the right
 			do
 			{
-				*Offset = max(0.0f, *Offset-Textbox.w/3);
+				*Offset = maximum(0.0f, *Offset-Textbox.w/3);
 			}
 			while(w-*Offset < 0.0f);
 		}
@@ -947,7 +947,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 			if(m_Brush.m_lLayers[i]->m_Type == LAYERTYPE_TILES)
 			{
 				TileLayer = true;
-				s_RotationAmount = max(90, (s_RotationAmount/90)*90);
+				s_RotationAmount = maximum(90, (s_RotationAmount/90)*90);
 				break;
 			}
 		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 359, TileLayer?90:1, TileLayer?10.0f:2.0f, "Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.");
@@ -1757,7 +1757,7 @@ void CEditor::DoMapEditor(CUIRect View)
 	else
 	{
 		// fix aspect ratio of the image in the picker
-		float Max = min(View.w, View.h);
+		float Max = minimum(View.w, View.h);
 		View.w = View.h = Max;
 	}
 
@@ -2793,7 +2793,7 @@ void CEditor::RenderImagesList(CUIRect ToolBox)
 	const float HeaderSeparatorHeight = 5.0f;
 	const float AddButtonHeight = 17.0f;
 	const float ImagesHeight = 2 * (HeaderHeight + HeaderSeparatorHeight) + RowHeight * m_Map.m_lImages.size() + AddButtonHeight;
-	const float ScrollDifference = max(ImagesHeight - ToolBox.h, 0.0f);
+	const float ScrollDifference = maximum(ImagesHeight - ToolBox.h, 0.0f);
 
 	if(ScrollDifference > 0) // Do we even need a scrollbar?
 	{
@@ -2917,7 +2917,7 @@ void CEditor::RenderSelectedImage(CUIRect View)
 		View.w = View.h;
 	else
 		View.h = View.w;
-	float Max = (float)(max(m_Map.m_lImages[m_SelectedImage]->m_Width, m_Map.m_lImages[m_SelectedImage]->m_Height));
+	float Max = (float)(maximum(m_Map.m_lImages[m_SelectedImage]->m_Width, m_Map.m_lImages[m_SelectedImage]->m_Height));
 	View.w *= m_Map.m_lImages[m_SelectedImage]->m_Width/Max;
 	View.h *= m_Map.m_lImages[m_SelectedImage]->m_Height/Max;
 	Graphics()->TextureSet(m_Map.m_lImages[m_SelectedImage]->m_Texture);

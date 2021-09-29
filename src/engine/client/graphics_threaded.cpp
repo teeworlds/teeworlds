@@ -1007,7 +1007,7 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes, int Scre
 {
 	if(m_pConfig->m_GfxDisplayAllModes)
 	{
-		int Count = min((int)(sizeof(g_aFakeModes)/sizeof(CVideoMode)), MaxModes);
+		int Count = minimum((int)(sizeof(g_aFakeModes)/sizeof(CVideoMode)), MaxModes);
 		mem_copy(pModes, g_aFakeModes, sizeof(CVideoMode) * Count);
 		return Count;
 	}

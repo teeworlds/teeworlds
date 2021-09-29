@@ -851,7 +851,7 @@ public:
 				pEnd = pFileName;
 		}
 
-		int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
+		int Length = pEnd > pExtractedName ? minimum(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
 		str_copy(pName, pExtractedName, Length);
 	}
 

@@ -103,7 +103,7 @@ int CEditor::PopupGroup(CEditor *pEditor, CUIRect View)
 		if(pEditor->DoButton_Editor(&s_DeleteButton, "Delete group", 0, &Button, 0, "Delete group"))
 		{
 			pEditor->m_Map.DeleteGroup(pEditor->m_SelectedGroup);
-			pEditor->m_SelectedGroup = max(0, pEditor->m_SelectedGroup-1);
+			pEditor->m_SelectedGroup = maximum(0, pEditor->m_SelectedGroup-1);
 			return 1;
 		}
 	}
@@ -862,7 +862,7 @@ int CEditor::PopupSelectImage(CEditor *pEditor, CUIRect View)
 			ImageView.w = ImageView.h;
 		else
 			ImageView.h = ImageView.w;
-		float Max = (float)(max(pEditor->m_Map.m_lImages[ShowImage]->m_Width, pEditor->m_Map.m_lImages[ShowImage]->m_Height));
+		float Max = (float)(maximum(pEditor->m_Map.m_lImages[ShowImage]->m_Width, pEditor->m_Map.m_lImages[ShowImage]->m_Height));
 		ImageView.w *= pEditor->m_Map.m_lImages[ShowImage]->m_Width/Max;
 		ImageView.h *= pEditor->m_Map.m_lImages[ShowImage]->m_Height/Max;
 		pEditor->Graphics()->TextureSet(pEditor->m_Map.m_lImages[ShowImage]->m_Texture);

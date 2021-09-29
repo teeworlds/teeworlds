@@ -85,7 +85,7 @@ static void Mix(short *pFinalOut, unsigned Frames)
 {
 	int MasterVol;
 	mem_zero(m_pMixBuffer, m_MaxFrames*2*sizeof(int));
-	Frames = min(Frames, m_MaxFrames);
+	Frames = minimum(Frames, m_MaxFrames);
 
 	// aquire lock while we are mixing
 	lock_wait(m_SoundLock);

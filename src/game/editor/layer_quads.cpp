@@ -190,8 +190,8 @@ void CLayerQuads::GetSize(float *w, float *h) const
 	{
 		for(int p = 0; p < 5; p++)
 		{
-			*w = max(*w, fx2f(m_lQuads[i].m_aPoints[p].x));
-			*h = max(*h, fx2f(m_lQuads[i].m_aPoints[p].y));
+			*w = maximum(*w, fx2f(m_lQuads[i].m_aPoints[p].x));
+			*h = maximum(*h, fx2f(m_lQuads[i].m_aPoints[p].y));
 		}
 	}
 }

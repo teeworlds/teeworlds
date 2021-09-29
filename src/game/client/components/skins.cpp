@@ -92,7 +92,7 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		Part.m_Flags |= SKINFLAG_SPECIAL;
 	if(DirType != IStorage::TYPE_SAVE)
 		Part.m_Flags |= SKINFLAG_STANDARD;
-	str_utf8_copy_num(Part.m_aName, pName, min(str_length(pName) - 3, int(sizeof(Part.m_aName))), MAX_SKIN_LENGTH);
+	str_utf8_copy_num(Part.m_aName, pName, minimum(str_length(pName) - 3, int(sizeof(Part.m_aName))), MAX_SKIN_LENGTH);
 	if(pSelf->Config()->m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin part %s", Part.m_aName);
@@ -123,7 +123,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	// init
 	CSkin Skin = pSelf->m_DummySkin;
-	str_utf8_copy_num(Skin.m_aName, pName, min(str_length(pName) - 4, int(sizeof(Skin.m_aName))), MAX_SKIN_LENGTH);
+	str_utf8_copy_num(Skin.m_aName, pName, minimum(str_length(pName) - 4, int(sizeof(Skin.m_aName))), MAX_SKIN_LENGTH);
 	if(pSelf->Find(Skin.m_aName, true) != -1)
 		return 0;
 	bool SpecialSkin = pName[0] == 'x' && pName[1] == '_';
@@ -374,7 +374,7 @@ int CSkins::NumSkinPart(int Part)
 
 const CSkins::CSkin *CSkins::Get(int Index)
 {
-	return &m_aSkins[max(0, Index%m_aSkins.size())];
+	return &m_aSkins[maximum(0, Index%m_aSkins.size())];
 }
 
 int CSkins::Find(const char *pName, bool AllowSpecialSkin)
@@ -390,7 +390,7 @@ int CSkins::Find(const char *pName, bool AllowSpecialSkin)
 const CSkins::CSkinPart *CSkins::GetSkinPart(int Part, int Index)
 {
 	int Size = m_aaSkinParts[Part].size();
-	return &m_aaSkinParts[Part][max(0, Index%Size)];
+	return &m_aaSkinParts[Part][maximum(0, Index%Size)];
 }
 
 int CSkins::FindSkinPart(int Part, const char *pName, bool AllowSpecialPart)

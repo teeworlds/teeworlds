@@ -259,7 +259,7 @@ float CControls::GetMaxMouseDistance() const
 	{
 		float CameraMaxDistance = 200.0f;
 		float FollowFactor = Config()->m_ClMouseFollowfactor/100.0f;
-		return min(CameraMaxDistance/FollowFactor + Config()->m_ClMouseDeadzone, (float)Config()->m_ClMouseMaxDistanceDynamic);
+		return minimum(CameraMaxDistance/FollowFactor + Config()->m_ClMouseDeadzone, (float)Config()->m_ClMouseMaxDistanceDynamic);
 	}
 	else
 		return (float)Config()->m_ClMouseMaxDistanceStatic;

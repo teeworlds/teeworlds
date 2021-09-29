@@ -57,13 +57,13 @@ void CBroadcast::RenderServerBroadcast()
 	const float Width = Height*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0, 0, Width, Height);
 
-	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
+	const float Fade = 1.0f - maximum(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
 	const float TextHeight = m_ServerBroadcastCursor.BoundingBox().h;
 	const float Rounding = 5.0f;
 
 	CUIRect BroadcastView;
 	BroadcastView.w = Width * 0.5f;
-	BroadcastView.h = max(TextHeight, 2*Rounding) + 2.0f;
+	BroadcastView.h = maximum(TextHeight, 2*Rounding) + 2.0f;
 	BroadcastView.x = BroadcastView.w * 0.5f;
 	BroadcastView.y = Height - BroadcastView.h;
 

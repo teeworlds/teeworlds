@@ -936,7 +936,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 
 	float NextAdvanceY = pCursor->m_Advance.y + pCursor->m_FontSize;
 	NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
-	pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
+	pCursor->m_NextLineAdvanceY = maximum(NextAdvanceY, pCursor->m_NextLineAdvanceY);
 
 	while(pCur < pEnd && !pCursor->m_Truncated)
 	{
@@ -968,7 +968,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 
 					float NextAdvanceY = pCursor->m_Advance.y + pCursor->m_FontSize;
 					NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
-					pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
+					pCursor->m_NextLineAdvanceY = maximum(NextAdvanceY, pCursor->m_NextLineAdvanceY);
 
 					if(Render)
 					{
@@ -990,7 +990,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 			}
 		}
 
-		pCursor->m_Width = max(pCursor->m_Advance.x, pCursor->m_Width);
+		pCursor->m_Width = maximum(pCursor->m_Advance.x, pCursor->m_Width);
 
 		// newline \n
 		bool ForceNewLine = WordWidth.m_EndsWithNewline && (Flags & TEXTFLAG_ALLOW_NEWLINE);
@@ -1005,7 +1005,7 @@ void CTextRender::TextDeferred(CTextCursor *pCursor, const char *pText, int Leng
 
 				float NextAdvanceY = pCursor->m_Advance.y + pCursor->m_FontSize;
 				NextAdvanceY = (int)(NextAdvanceY * ScreenScale.y) / ScreenScale.y;
-				pCursor->m_NextLineAdvanceY = max(NextAdvanceY, pCursor->m_NextLineAdvanceY);
+				pCursor->m_NextLineAdvanceY = maximum(NextAdvanceY, pCursor->m_NextLineAdvanceY);
 			}
 			else
 			{
