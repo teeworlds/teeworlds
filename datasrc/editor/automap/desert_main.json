@@ -291,7 +291,7 @@
 				"index": 98,
 				"condition": [
 					{"x": 0, "y": 1, "value": "empty"}
-				],
+				]
 			},
 			{
 				"index": 99,
