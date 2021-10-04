@@ -1795,9 +1795,17 @@ int fs_parent_dir(char *path)
 
 int fs_remove(const char *filename)
 {
-	if(remove(filename) != 0)
+#if defined(CONF_FAMILY_WINDOWS)
+	WCHAR wFilename[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, filename, IO_MAX_PATH_LENGTH, wFilename, IO_MAX_PATH_LENGTH);
+	if(DeleteFileW(wFilename) == 0)
 		return 1;
 	return 0;
+#else
+	if(remove(filename))
+		return 1;
+	return 0;
+#endif
 }
 
 int fs_rename(const char *oldname, const char *newname)
