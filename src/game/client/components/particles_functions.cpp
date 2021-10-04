@@ -104,15 +104,9 @@ bool CDroplet::CheckDeathConditions(CPointers* pPointers)
 
 void CDroplet::OnUpdate(CPointers* pPointers)
 {
-	//pPointers->m_Vel
-	float Rotation = angle(vec2(m_Vel.y, m_Vel.x * -1));
-	m_Rot = Rotation;
+	m_Rot = angle(vec2(m_Vel.y, m_Vel.x * -1));
 	
-	m_Color = pPointers->pWater->WaterColor();
-	m_Color.a *= (m_AlphaMultiplier / 5.0f);
-	m_Color.r *= (m_AlphaMultiplier / 5.0f);
-	m_Color.b *= (m_AlphaMultiplier / 5.0f);
-	m_Color.g *= (m_AlphaMultiplier / 5.0f);
+	m_Color = pPointers->pWater->WaterColor() * (m_AlphaMultiplier / 5.0f);
 }
 
 void CParticle::Delete()
@@ -124,12 +118,11 @@ void CParticle::Delete()
 bool CDroplet::OnDeath(CPointers* pPointers)
 {
 	if (pPointers->pWater->IsUnderWater(m_Pos) && m_Life > 0.2f)
-	{
 		return true;
-	}
 
 	m_AlphaMultiplier -= pPointers->TimePassed;
 	if (m_AlphaMultiplier < 0)
 		return true;
+
 	return false;
 }
