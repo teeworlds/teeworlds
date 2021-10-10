@@ -2159,8 +2159,8 @@ void CMenus::ResetSettingsSound()
 
 void CMenus::PopupConfirmPlayerCountry()
 {
-	if(m_PopupSelection != -2)
-		Config()->m_PlayerCountry = m_PopupSelection;
+	if(m_PopupCountrySelection != -2)
+		Config()->m_PlayerCountry = m_PopupCountrySelection;
 }
 
 void CMenus::RenderSettings(CUIRect MainView)
