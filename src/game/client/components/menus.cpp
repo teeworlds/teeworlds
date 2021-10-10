@@ -1677,8 +1677,6 @@ void CMenus::RenderMenu(CUIRect Screen)
 			if(OldSelected != NewSelected)
 				m_PopupCountrySelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
-			Part.VMargin(120.0f, &Part);
-
 			static CButtonContainer s_ButtonCountry;
 			if(DoButton_Menu(&s_ButtonCountry, Localize("Ok"), 0, &BottomBar) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 			{
