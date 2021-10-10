@@ -1677,16 +1677,20 @@ void CMenus::RenderMenu(CUIRect Screen)
 			if(OldSelected != NewSelected)
 				m_PopupCountrySelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
-			static CButtonContainer s_ButtonCountry;
-			if(DoButton_Menu(&s_ButtonCountry, Localize("Ok"), 0, &BottomBar) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
+			CUIRect OkButton, CancelButton;
+			BottomBar.VSplitMid(&CancelButton, &OkButton, SpacingW);
+
+			static CButtonContainer s_CancelButton;
+			if(DoButton_Menu(&s_CancelButton, Localize("Cancel"), 0, &CancelButton) || UI()->ConsumeHotkey(CUI::HOTKEY_ESCAPE))
 			{
-				(this->*m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback)();
+				m_PopupCountrySelection = -2;
 				m_Popup = POPUP_NONE;
 			}
 
-			if(UI()->ConsumeHotkey(CUI::HOTKEY_ESCAPE))
+			static CButtonContainer s_OkButton;
+			if(DoButton_Menu(&s_OkButton, Localize("Ok"), 0, &OkButton) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 			{
-				m_PopupCountrySelection = -2;
+				(this->*m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback)();
 				m_Popup = POPUP_NONE;
 			}
 		}
