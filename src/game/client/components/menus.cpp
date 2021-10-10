@@ -1688,7 +1688,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 			}
 
 			static CButtonContainer s_OkButton;
-			if(DoButton_Menu(&s_OkButton, Localize("Ok"), 0, &OkButton) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
+			if(DoButton_Menu(&s_OkButton, Localize("Ok"), 0, &OkButton) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER) || s_ListBox.WasItemActivated())
 			{
 				(this->*m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback)();
 				m_Popup = POPUP_NONE;
