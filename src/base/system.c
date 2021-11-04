@@ -1774,7 +1774,11 @@ char *fs_getcwd(char *buffer, int buffer_size)
 	if(buffer == 0)
 		return 0;
 #if defined(CONF_FAMILY_WINDOWS)
-	return _getcwd(buffer, buffer_size);
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+	if(_wgetcwd(wBuffer, buffer_size) == 0)
+		return 0;
+	WideCharToMultiByte(CP_UTF8, 0, wBuffer, IO_MAX_PATH_LENGTH, buffer, buffer_size, NULL, NULL);
+	return buffer;
 #else
 	return getcwd(buffer, buffer_size);
 #endif
