@@ -1683,8 +1683,10 @@ int fs_storage_path(const char *appname, char *path, int max)
 int fs_makedir(const char *path)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	if(_mkdir(path) == 0)
-			return 0;
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, IO_MAX_PATH_LENGTH);
+	if(_wmkdir(wBuffer) == 0)
+		return 0;
 	if(errno == EEXIST)
 		return 0;
 	return -1;
