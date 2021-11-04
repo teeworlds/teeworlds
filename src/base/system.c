@@ -1626,10 +1626,12 @@ void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 int fs_storage_path(const char *appname, char *path, int max)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	char *home = getenv("APPDATA");
+	WCHAR *home = _wgetenv(L"APPDATA");
+	char buffer[IO_MAX_PATH_LENGTH];
 	if(!home)
 		return -1;
-	str_format(path, max, "%s/%s", home, appname);
+	WideCharToMultiByte(CP_UTF8, 0, home, -1, buffer, IO_MAX_PATH_LENGTH, NULL, NULL);
+	str_format(path, max, "%s/%s", buffer, appname);
 	return 0;
 #else
 	char *home = getenv("HOME");
