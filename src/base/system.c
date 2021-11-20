@@ -213,8 +213,10 @@ static void logger_stdout(const char *line)
 static void logger_debugger(const char *line)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	OutputDebugString(line);
-	OutputDebugString("\n");
+	WCHAR wBuffer[512];
+	MultiByteToWideChar(CP_UTF8, 0, line, -1, wBuffer, sizeof(wBuffer));
+	OutputDebugStringW(wBuffer);
+	OutputDebugStringW(L"\n");
 #endif
 }
 
@@ -919,7 +921,7 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 			int size;
 			sa6.sin6_family = AF_INET6;
 			size = (int)sizeof(sa6);
-			if(WSAStringToAddress(buf, AF_INET6, NULL, (struct sockaddr *)&sa6, &size) != 0)
+			if(WSAStringToAddressA(buf, AF_INET6, NULL, (struct sockaddr *)&sa6, &size) != 0)
 				return -1;
 		}
 #else
@@ -1006,9 +1008,11 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 	{
 #if defined(CONF_FAMILY_WINDOWS)
 		char buf[128];
+		WCHAR wBuffer[128];
 		int error = WSAGetLastError();
-		if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
-			buf[0] = 0;
+		if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, wBuffer, sizeof(wBuffer) / sizeof(WCHAR), 0) == 0)
+			wBuffer[0] = 0;
+		WideCharToMultiByte(CP_UTF8, 0, wBuffer, sizeof(wBuffer), buf, sizeof(buf), NULL, NULL);
 		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
 		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
@@ -1045,11 +1049,13 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 		{
 #if defined(CONF_FAMILY_WINDOWS)
 			char buf[128];
+			WCHAR wBuffer[128];
 			int error = WSAGetLastError();
 			if(error == WSAEADDRINUSE && use_random_port)
 				continue;
-			if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
-				buf[0] = 0;
+			if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, wBuffer, sizeof(wBuffer) / sizeof(WCHAR), 0) == 0)
+				wBuffer[0] = 0;
+			WideCharToMultiByte(CP_UTF8, 0, wBuffer, sizeof(wBuffer), buf, sizeof(buf), NULL, NULL);
 			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
 			if(errno == EADDRINUSE && use_random_port)
