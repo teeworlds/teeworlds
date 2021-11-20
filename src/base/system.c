@@ -210,16 +210,15 @@ static void logger_stdout(const char *line)
 	fflush(stdout);
 }
 
-static void logger_debugger(const char *line)
-{
 #if defined(CONF_FAMILY_WINDOWS)
+static void logger_win_debugger(const char *line)
+{
 	WCHAR wBuffer[512];
 	MultiByteToWideChar(CP_UTF8, 0, line, -1, wBuffer, sizeof(wBuffer));
 	OutputDebugStringW(wBuffer);
 	OutputDebugStringW(L"\n");
-#endif
 }
-
+#endif
 
 static IOHANDLE logfile = 0;
 static void logger_file(const char *line)
@@ -241,7 +240,13 @@ void dbg_logger_stdout()
 	dbg_logger(logger_stdout);
 }
 
-void dbg_logger_debugger() { dbg_logger(logger_debugger); }
+void dbg_logger_debugger()
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	dbg_logger(logger_win_debugger);
+#endif
+}
+
 void dbg_logger_file(const char *filename)
 {
 	IOHANDLE handle = io_open(filename, IOFLAG_WRITE);
