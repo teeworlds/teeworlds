@@ -214,7 +214,7 @@ static void logger_stdout(const char *line)
 static void logger_win_debugger(const char *line)
 {
 	WCHAR wBuffer[512];
-	MultiByteToWideChar(CP_UTF8, 0, line, -1, wBuffer, sizeof(wBuffer));
+	MultiByteToWideChar(CP_UTF8, 0, line, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 	OutputDebugStringW(wBuffer);
 	OutputDebugStringW(L"\n");
 }
@@ -323,11 +323,11 @@ IOHANDLE io_open(const char *filename, int flags)
 		int length = str_length(filename);
 		if(!filename || !length || filename[length-1] == '\\')
 			return 0x0;
-		MultiByteToWideChar(CP_UTF8, 0, filename, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+		MultiByteToWideChar(CP_UTF8, 0, filename, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 		handle = FindFirstFileW(wBuffer, &finddata);
 		if(handle == INVALID_HANDLE_VALUE)
 			return 0x0;
-		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer, IO_MAX_PATH_LENGTH, NULL, NULL);
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer, sizeof(buffer), NULL, NULL);
 		if(str_comp(filename+length-str_length(buffer), buffer) != 0)
 		{
 			FindClose(handle);
@@ -338,12 +338,12 @@ IOHANDLE io_open(const char *filename, int flags)
 	}
 	if(flags == IOFLAG_WRITE)
 	{
-		MultiByteToWideChar(CP_UTF8, 0, filename, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+		MultiByteToWideChar(CP_UTF8, 0, filename, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 		return (IOHANDLE)_wfsopen(wBuffer, L"wb", _SH_DENYNO);
 	}
 	if(flags == IOFLAG_APPEND)
 	{
-		MultiByteToWideChar(CP_UTF8, 0, filename, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+		MultiByteToWideChar(CP_UTF8, 0, filename, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 		return (IOHANDLE)_wfsopen(wBuffer, L"ab", _SH_DENYNO);
 	}
 	return 0x0;
@@ -1017,7 +1017,7 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 		int error = WSAGetLastError();
 		if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, wBuffer, sizeof(wBuffer) / sizeof(WCHAR), 0) == 0)
 			wBuffer[0] = 0;
-		WideCharToMultiByte(CP_UTF8, 0, wBuffer, sizeof(wBuffer), buf, sizeof(buf), NULL, NULL);
+		WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buf, sizeof(buf), NULL, NULL);
 		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
 		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
@@ -1060,7 +1060,7 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 				continue;
 			if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, wBuffer, sizeof(wBuffer) / sizeof(WCHAR), 0) == 0)
 				wBuffer[0] = 0;
-			WideCharToMultiByte(CP_UTF8, 0, wBuffer, sizeof(wBuffer), buf, sizeof(buf), NULL, NULL);
+			WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buf, sizeof(buf), NULL, NULL);
 			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
 			if(errno == EADDRINUSE && use_random_port)
@@ -1520,7 +1520,7 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	int length;
 
 	str_format(buffer, sizeof(buffer), "%s/*", dir);
-	MultiByteToWideChar(CP_UTF8, 0, buffer, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 
 	handle = FindFirstFileW(wBuffer, &finddata);
 	if(handle == INVALID_HANDLE_VALUE)
@@ -1532,7 +1532,7 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	/* add all the entries */
 	do
 	{
-		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, IO_MAX_PATH_LENGTH, NULL, NULL);
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, sizeof(buffer2), NULL, NULL);
 		str_copy(buffer+length, buffer2, (int)sizeof(buffer)-length);
 		if(cb(buffer2, fs_is_dir(buffer), type, user))
 			break;
@@ -1575,7 +1575,7 @@ void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 	int length;
 
 	str_format(buffer, sizeof(buffer), "%s/*", dir);
-	MultiByteToWideChar(CP_UTF8, 0, buffer, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 
 	handle = FindFirstFileW(wBuffer, &finddata);
 	if(handle == INVALID_HANDLE_VALUE)
@@ -1587,7 +1587,7 @@ void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 	/* add all the entries */
 	do
 	{
-		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, IO_MAX_PATH_LENGTH, NULL, NULL);
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, sizeof(buffer2), NULL, NULL);
 		str_copy(buffer+length, buffer2, (int)sizeof(buffer)-length);
 
 		CFsFileInfo info;
@@ -1641,7 +1641,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 	char buffer[IO_MAX_PATH_LENGTH];
 	if(!home)
 		return -1;
-	WideCharToMultiByte(CP_UTF8, 0, home, -1, buffer, IO_MAX_PATH_LENGTH, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, home, -1, buffer, sizeof(buffer), NULL, NULL);
 	str_format(path, max, "%s/%s", buffer, appname);
 	return 0;
 #else
@@ -1695,7 +1695,7 @@ int fs_makedir(const char *path)
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
-	MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, IO_MAX_PATH_LENGTH);
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 	if(_wmkdir(wBuffer) == 0)
 		return 0;
 	if(errno == EEXIST)
@@ -1744,7 +1744,7 @@ int fs_is_dir(const char *path)
 	char buffer[IO_MAX_PATH_LENGTH];
 	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	str_format(buffer, sizeof(buffer), "%s/*", path);
-	MultiByteToWideChar(CP_UTF8, 0, buffer, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 
 	if((handle = FindFirstFileW(wBuffer, &finddata)) == INVALID_HANDLE_VALUE)
 		return 0;
@@ -1773,7 +1773,7 @@ int fs_chdir(const char *path)
 	{
 #if defined(CONF_FAMILY_WINDOWS)
 		WCHAR wBuffer[IO_MAX_PATH_LENGTH];
-		MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, IO_MAX_PATH_LENGTH);
+		MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 		if(_wchdir(wBuffer))
 			return 1;
 		else
@@ -1797,7 +1797,7 @@ char *fs_getcwd(char *buffer, int buffer_size)
 	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	if(_wgetcwd(wBuffer, buffer_size) == 0)
 		return 0;
-	WideCharToMultiByte(CP_UTF8, 0, wBuffer, IO_MAX_PATH_LENGTH, buffer, buffer_size, NULL, NULL);
+	WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buffer, buffer_size, NULL, NULL);
 	return buffer;
 #else
 	return getcwd(buffer, buffer_size);
@@ -1825,7 +1825,7 @@ int fs_remove(const char *filename)
 {
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wFilename[IO_MAX_PATH_LENGTH];
-	MultiByteToWideChar(CP_UTF8, 0, filename, IO_MAX_PATH_LENGTH, wFilename, IO_MAX_PATH_LENGTH);
+	MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, sizeof(wFilename) / sizeof(WCHAR));
 	if(DeleteFileW(wFilename) == 0)
 		return 1;
 	return 0;
@@ -1841,8 +1841,8 @@ int fs_rename(const char *oldname, const char *newname)
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wOldname[IO_MAX_PATH_LENGTH];
 	WCHAR wNewname[IO_MAX_PATH_LENGTH];
-	MultiByteToWideChar(CP_UTF8, 0, oldname, IO_MAX_PATH_LENGTH, wOldname, IO_MAX_PATH_LENGTH);
-	MultiByteToWideChar(CP_UTF8, 0, newname, IO_MAX_PATH_LENGTH, wNewname, IO_MAX_PATH_LENGTH);
+	MultiByteToWideChar(CP_UTF8, 0, oldname, -1, wOldname, sizeof(wOldname) / sizeof(WCHAR));
+	MultiByteToWideChar(CP_UTF8, 0, newname, -1, wNewname, sizeof(wNewname) / sizeof(WCHAR));
 	if(MoveFileExW(wOldname, wNewname, MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) == 0)
 		return 1;
 	return 0;
@@ -1887,7 +1887,7 @@ int fs_file_time(const char *name, time_t *created, time_t *modified)
 	HANDLE handle;
 	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 
-	MultiByteToWideChar(CP_UTF8, 0, name, IO_MAX_PATH_LENGTH, wBuffer, IO_MAX_PATH_LENGTH);
+	MultiByteToWideChar(CP_UTF8, 0, name, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 	handle = FindFirstFileW(wBuffer, &finddata);
 	if(handle == INVALID_HANDLE_VALUE)
 		return 1;
