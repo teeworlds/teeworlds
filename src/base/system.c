@@ -1750,15 +1750,6 @@ int fs_is_dir(const char *path)
 #endif
 }
 
-time_t fs_getmtime(const char *path)
-{
-	struct stat sb;
-	if(stat(path, &sb) == -1)
-		return 0;
-
-	return sb.st_mtime;
-}
-
 int fs_chdir(const char *path)
 {
 	if(fs_is_dir(path))

@@ -1407,12 +1407,6 @@ int fs_storage_path(const char *appname, char *path, int max);
 int fs_is_dir(const char *path);
 
 /*
-	Function: fs_getmtime
-		Gets the modification time of a file
-*/
-time_t fs_getmtime(const char *path);
-
-/*
 	Function: fs_chdir
 		Changes current working directory
 
