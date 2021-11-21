@@ -1738,18 +1738,10 @@ int fs_makedir_recursive(const char *path)
 int fs_is_dir(const char *path)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	/* TODO: do this smarter */
-	WIN32_FIND_DATAW finddata;
-	HANDLE handle;
-	char buffer[IO_MAX_PATH_LENGTH];
-	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
-	str_format(buffer, sizeof(buffer), "%s/*", path);
-	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
-
-	if((handle = FindFirstFileW(wBuffer, &finddata)) == INVALID_HANDLE_VALUE)
-		return 0;
-	FindClose(handle);
-	return 1;
+	WCHAR wPath[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, wPath, sizeof(wPath) / sizeof(WCHAR));
+	DWORD attributes = GetFileAttributesW(wPath);
+	return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) ? 1 : 0;
 #else
 	struct stat sb;
 	if(stat(path, &sb) == -1)
