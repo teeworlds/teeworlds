@@ -79,11 +79,10 @@ void SendVer(NETADDR *pAddr, TOKEN ResponseToken)
 	g_NetOp.Send(&p, ResponseToken);
 }
 
-int main(int argc, const char **argv) // ignore_convention
+int main(int argc, const char **argv)
 {
-	NETADDR BindAddr;
-
 	dbg_logger_stdout();
+	cmdline_fix(&argc, &argv);
 
 	int FlagMask = 0;
 	IKernel *pKernel = IKernel::Create();
@@ -100,6 +99,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pConfigManager->Init(FlagMask);
 	pConsole->Init();
 
+	NETADDR BindAddr;
 	mem_zero(&BindAddr, sizeof(BindAddr));
 	BindAddr.type = NETTYPE_ALL;
 	BindAddr.port = VERSIONSRV_PORT;
@@ -155,5 +155,6 @@ int main(int argc, const char **argv) // ignore_convention
 		thread_sleep(1);
 	}
 
+	cmdline_free(argc, argv);
 	return 0;
 }

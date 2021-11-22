@@ -2559,6 +2559,7 @@ extern "C" int TWMain(int argc, const char **argv) // ignore_convention
 int main(int argc, const char **argv) // ignore_convention
 #endif
 {
+	cmdline_fix(&argc, &argv);
 #if defined(CONF_FAMILY_WINDOWS)
 	bool QuickEditMode = false;
 	for(int i = 1; i < argc; i++) // ignore_convention
@@ -2723,5 +2724,6 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pEngineMap;
 	delete pEngineMasterServer;
 
+	cmdline_free(argc, argv);
 	return 0;
 }
