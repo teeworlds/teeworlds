@@ -37,7 +37,7 @@
 
 #include <signal.h>
 
-volatile bool InterruptSignaled = false;
+volatile sig_atomic_t InterruptSignaled = 0;
 
 CSnapIDPool::CSnapIDPool()
 {
@@ -735,20 +735,19 @@ void CServer::SendRconLine(int ClientID, const char *pLine)
 
 void CServer::SendRconLineAuthed(const char *pLine, void *pUser, bool Highlighted)
 {
+	static bool s_ReentryGuard = false;
+	if(s_ReentryGuard)
+		return;
+	s_ReentryGuard = true;
+
 	CServer *pThis = (CServer *)pUser;
-	static volatile int ReentryGuard = 0;
-	int i;
-
-	if(ReentryGuard) return;
-	ReentryGuard++;
-
-	for(i = 0; i < MAX_CLIENTS; i++)
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(pThis->m_aClients[i].m_State != CClient::STATE_EMPTY && pThis->m_aClients[i].m_Authed >= pThis->m_RconAuthLevel)
 			pThis->SendRconLine(i, pLine);
 	}
 
-	ReentryGuard--;
+	s_ReentryGuard = false;
 }
 
 void CServer::SendRconCmdAdd(const IConsole::CCommandInfo *pCommandInfo, int ClientID)
@@ -1813,9 +1812,9 @@ static CServer *CreateServer() { return new CServer(); }
 void HandleSigInt(int Param)
 {
 	if(InterruptSignaled)
-		exit(1);
+		_Exit(1); // exit is not async-signal-safe and must not be called from a signal handler
 	else
-		InterruptSignaled = true;
+		InterruptSignaled = 1;
 }
 
 int main(int argc, const char **argv) // ignore_convention
