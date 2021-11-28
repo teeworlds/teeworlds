@@ -90,7 +90,7 @@ CMenus::CMenus()
 
 	m_ActiveListBox = ACTLB_NONE;
 
-	m_PopupSelection = -2;
+	m_PopupCountrySelection = -2;
 }
 
 float CMenus::CButtonContainer::GetFade(bool Checked, float Seconds)
@@ -1037,7 +1037,7 @@ void CMenus::PopupConfirm(const char *pTitle, const char *pMessage, const char *
 
 void CMenus::PopupCountry(int Selection, FPopupButtonCallback pfnOkButtonCallback)
 {
-	m_PopupSelection = Selection;
+	m_PopupCountrySelection = Selection;
 	m_aPopupButtons[BUTTON_CONFIRM].m_NextPopup = POPUP_NONE;
 	m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback = pfnOkButtonCallback;
 	m_Popup = POPUP_COUNTRY;
@@ -1442,7 +1442,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 				const CCountryFlags::CCountryFlag *pEntry = m_pClient->m_pCountryFlags->GetByIndex(i);
 				if(pEntry->m_Blocked)
 					continue;
-				if(pEntry->m_CountryCode == m_PopupSelection)
+				if(pEntry->m_CountryCode == m_PopupCountrySelection)
 					OldSelected = i;
 
 				CListboxItem Item = s_ListBox.DoNextItem(pEntry, OldSelected == i);
@@ -1478,20 +1478,22 @@ void CMenus::RenderMenu(CUIRect Screen)
 
 			const int NewSelected = s_ListBox.DoEnd();
 			if(OldSelected != NewSelected)
-				m_PopupSelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
+				m_PopupCountrySelection = m_pClient->m_pCountryFlags->GetByIndex(NewSelected, true)->m_CountryCode;
 
-			Part.VMargin(120.0f, &Part);
+			CUIRect OkButton, CancelButton;
+			BottomBar.VSplitMid(&CancelButton, &OkButton, SpacingW);
 
-			static CButtonContainer s_ButtonCountry;
-			if(DoButton_Menu(&s_ButtonCountry, Localize("Ok"), 0, &BottomBar) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
+			static CButtonContainer s_CancelButton;
+			if(DoButton_Menu(&s_CancelButton, Localize("Cancel"), 0, &CancelButton) || UI()->ConsumeHotkey(CUI::HOTKEY_ESCAPE))
 			{
-				(this->*m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback)();
+				m_PopupCountrySelection = -2;
 				m_Popup = POPUP_NONE;
 			}
 
-			if(UI()->ConsumeHotkey(CUI::HOTKEY_ESCAPE))
+			static CButtonContainer s_OkButton;
+			if(DoButton_Menu(&s_OkButton, Localize("Ok"), 0, &OkButton) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER) || s_ListBox.WasItemActivated())
 			{
-				m_PopupSelection = -2;
+				(this->*m_aPopupButtons[BUTTON_CONFIRM].m_pfnCallback)();
 				m_Popup = POPUP_NONE;
 			}
 		}

@@ -281,7 +281,7 @@ private:
 	vec2 m_PrevMousePos;
 	bool m_PopupActive;
 	int m_ActiveListBox;
-	int m_PopupSelection;
+	int m_PopupCountrySelection;
 	bool m_SkinModified;
 	bool m_KeyReaderWasActive;
 	bool m_KeyReaderIsActive;

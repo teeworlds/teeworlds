@@ -747,8 +747,8 @@ void CMenus::PopupConfirmCountryFilter()
 	CServerFilterInfo FilterInfo;
 	pFilter->GetFilter(&FilterInfo);
 
-	if(m_PopupSelection != -2)
-		FilterInfo.m_Country = m_PopupSelection;
+	if(m_PopupCountrySelection != -2)
+		FilterInfo.m_Country = m_PopupCountrySelection;
 
 	pFilter->SetFilter(&FilterInfo);
 }
