@@ -1140,8 +1140,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Label.y += 2.0f;
 	UI()->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_LEFT);
 	EditBox.VSplitRight(EditBox.h, &EditBox, &Button);
-	static float s_ClearOffset = 0.0f;
-	if(DoEditBox(&Config()->m_BrFilterString, &EditBox, Config()->m_BrFilterString, sizeof(Config()->m_BrFilterString), FontSize, &s_ClearOffset, false, CUIRect::CORNER_L))
+	static CLineInput s_FilterInput(Config()->m_BrFilterString, sizeof(Config()->m_BrFilterString));
+	if(UI()->DoEditBox(&s_FilterInput, &EditBox, FontSize, false, CUIRect::CORNER_L))
 	{
 		Client()->ServerBrowserUpdate();
 		ServerBrowserFilterOnUpdate();
@@ -1167,16 +1167,16 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	if(BrowserType == IServerBrowser::TYPE_INTERNET)
 	{
-		static float s_InternetAddressOffset = 0.0f;
-		if(DoEditBox(&Config()->m_UiServerAddress, &EditBox, Config()->m_UiServerAddress, sizeof(Config()->m_UiServerAddress), FontSize, &s_InternetAddressOffset, false, CUIRect::CORNER_ALL))
+		static CLineInput s_AddressInput(Config()->m_UiServerAddress, sizeof(Config()->m_UiServerAddress));
+		if(UI()->DoEditBox(&s_AddressInput, &EditBox, FontSize))
 		{
 			m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
 		}
 	}
 	else if(BrowserType == IServerBrowser::TYPE_LAN)
 	{
-		static float s_LanAddressOffset = 0.0f;
-		if(DoEditBox(&Config()->m_UiServerAddressLan, &EditBox, Config()->m_UiServerAddressLan, sizeof(Config()->m_UiServerAddressLan), FontSize, &s_LanAddressOffset, false, CUIRect::CORNER_ALL))
+		static CLineInput s_AddressInput(Config()->m_UiServerAddressLan, sizeof(Config()->m_UiServerAddressLan));
+		if(UI()->DoEditBox(&s_AddressInput, &EditBox, FontSize))
 		{
 			m_AddressSelection |= ADDR_SELECTION_CHANGE | ADDR_SELECTION_RESET_SERVER_IF_NOT_FOUND | ADDR_SELECTION_REVEAL;
 		}
@@ -1469,16 +1469,16 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Name"), FontSize, CUI::ALIGN_LEFT);
 	static char s_aName[MAX_NAME_ARRAY_SIZE] = { 0 };
-	static float s_OffsetName = 0.0f;
-	DoEditBox(&s_aName, &Button, s_aName, sizeof(s_aName), Button.h*ms_FontmodHeight*0.8f, &s_OffsetName);
+	static CLineInput s_NameInput(s_aName, sizeof(s_aName), MAX_NAME_LENGTH);
+	UI()->DoEditBox(&s_NameInput, &Button, Button.h*ms_FontmodHeight*0.8f);
 
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Clan"), FontSize, CUI::ALIGN_LEFT);
 	static char s_aClan[MAX_CLAN_ARRAY_SIZE] = { 0 };
-	static float s_OffsetClan = 0.0f;
-	DoEditBox(&s_aClan, &Button, s_aClan, sizeof(s_aClan), Button.h*ms_FontmodHeight*0.8f, &s_OffsetClan);
+	static CLineInput s_ClanInput(s_aClan, sizeof(s_aClan), MAX_CLAN_LENGTH);
+	UI()->DoEditBox(&s_ClanInput, &Button, Button.h*ms_FontmodHeight*0.8f);
 
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f));
@@ -1531,8 +1531,8 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
 	Button.VSplitLeft(60.0f, &Icon, &Button);
 	static char s_aFilterName[32] = { 0 };
-	static float s_FilterOffset = 0.0f;
-	DoEditBox(&s_FilterOffset, &Icon, s_aFilterName, sizeof(s_aFilterName), FontSize, &s_FilterOffset, false, CUIRect::CORNER_L);
+	static CLineInput s_FilterInput(s_aFilterName, sizeof(s_aFilterName));
+	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, false, CUIRect::CORNER_L);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 5.0f, CUIRect::CORNER_R);
 	Button.VSplitLeft(Button.h, &Icon, &Label);
 	Label.HMargin(2.0f, &Label);
@@ -1698,8 +1698,8 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		ButtonLine.VSplitRight(ButtonLine.h, &EditBox, &AddIncButton);
 
 		static char s_aGametype[16] = { 0 };
-		static float s_OffsetGametype = 0.0f;
-		DoEditBox(&s_OffsetGametype, &EditBox, s_aGametype, sizeof(s_aGametype), FontSize, &s_OffsetGametype, false, CUIRect::CORNER_L);
+		static CLineInput s_GametypeInput(s_aGametype, sizeof(s_aGametype));
+		UI()->DoEditBox(&s_GametypeInput, &EditBox, FontSize, false, CUIRect::CORNER_L);
 
 		static CButtonContainer s_AddInclusiveGametype;
 		if(DoButton_Menu(&s_AddInclusiveGametype, "+", 0, &AddIncButton, 0, 0) && s_aGametype[0])
@@ -1774,9 +1774,13 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	UI()->DoLabel(&Button, Localize("Server address:"), FontSize, CUI::ALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
-	static float s_OffsetAddr = 0.0f;
-	if(DoEditBox(&s_OffsetAddr, &Button, FilterInfo.m_aAddress, sizeof(FilterInfo.m_aAddress), FontSize, &s_OffsetAddr))
+	static char s_aAddressFilter[sizeof(FilterInfo.m_aAddress)];
+	static CLineInput s_AddressInput(s_aAddressFilter, sizeof(s_aAddressFilter));
+	if(UI()->DoEditBox(&s_AddressInput, &Button, FontSize))
+	{
+		str_copy(FilterInfo.m_aAddress, s_aAddressFilter, sizeof(FilterInfo.m_aAddress));
 		UpdateFilter = true;
+	}
 
 	// player country
 	{

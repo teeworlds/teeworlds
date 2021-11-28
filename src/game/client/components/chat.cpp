@@ -21,6 +21,9 @@
 #include "chat.h"
 #include "binds.h"
 
+CChat::CChat() : m_Input(m_aInputBuf, sizeof(m_aInputBuf))
+{
+}
 
 void CChat::OnReset()
 {
@@ -208,7 +211,6 @@ void CChat::ConChatCommand(IConsole::IResult *pResult, void *pUserData)
 void CChat::OnInit()
 {
 	m_CommandManager.Init(Console());
-	m_Input.Init(Input());
 }
 
 void CChat::OnConsoleInit()
