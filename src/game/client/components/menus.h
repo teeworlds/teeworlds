@@ -38,7 +38,6 @@ public:
 	class CUIElementBase
 	{
 	protected:
-		static CMenus *m_pMenus;	// TODO: Refactor in order to remove this reference to menus
 		static CRenderTools *m_pRenderTools;
 		static CUI *m_pUI;
 		static IInput *m_pInput;
@@ -46,7 +45,7 @@ public:
 		static CConfig *m_pConfig;
 
 	public:
-		static void Init(CMenus *pMenus) { m_pMenus = pMenus; m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); m_pConfig = pMenus->Config(); }
+		static void Init(CMenus *pMenus) { m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); m_pConfig = pMenus->Config(); }
 	};
 
 	class CButtonContainer : public CUIElementBase
