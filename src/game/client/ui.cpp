@@ -492,20 +492,19 @@ void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const ch
 float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 {
 	Current = clamp(Current, 0.0f, 1.0f);
-	// layout
-	CUIRect Handle;
-	pRect->HSplitTop(minimum(pRect->h/8.0f, 33.0f), &Handle, 0);
-	Handle.y += (pRect->h-Handle.h)*Current;
-	Handle.VMargin(5.0f, &Handle);
 
+	// layout
 	CUIRect Rail;
 	pRect->VMargin(5.0f, &Rail);
+
+	CUIRect Handle;
+	Rail.HSplitTop(clamp(33.0f, Rail.w, Rail.h / 8.0f), &Handle, 0);
+	Handle.y += (Rail.h - Handle.h) * Current;
 
 	// logic
 	static float s_OffsetY;
 	const bool InsideHandle = MouseHovered(&Handle);
 	const bool InsideRail = MouseHovered(&Rail);
-	float ReturnValue = Current;
 	bool Grabbed = false; // whether to apply the offset
 
 	if(CheckActiveItem(pID))
@@ -519,14 +518,14 @@ float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 	{
 		if(MouseButton(0))
 		{
-			s_OffsetY = MouseY()-Handle.y;
+			s_OffsetY = MouseY() - Handle.y;
 			SetActiveItem(pID);
 			Grabbed = true;
 		}
 	}
 	else if(MouseButtonClicked(0) && !InsideHandle && InsideRail)
 	{
-		s_OffsetY = Handle.h * 0.5f;
+		s_OffsetY = Handle.h / 2.0f;
 		SetActiveItem(pID);
 		Grabbed = true;
 	}
@@ -536,17 +535,18 @@ float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 		SetHotItem(pID);
 	}
 
+	float ReturnValue = Current;
 	if(Grabbed)
 	{
-		const float Min = pRect->y;
-		const float Max = pRect->h-Handle.h;
-		const float Cur = MouseY()-s_OffsetY;
-		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
+		const float Min = Rail.y;
+		const float Max = Rail.h - Handle.h;
+		const float Cur = MouseY() - s_OffsetY;
+		ReturnValue = clamp((Cur - Min) / Max, 0.0f, 1.0f);
 	}
 
 	// render
-	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.w/2.0f);
-	Handle.Draw(ScrollBarColorFunction.GetColor(Grabbed, InsideHandle), Handle.w/2.0f);
+	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.w / 2.0f);
+	Handle.Draw(ScrollBarColorFunction.GetColor(Grabbed, InsideHandle), Handle.w / 2.0f);
 
 	return ReturnValue;
 }
@@ -554,20 +554,19 @@ float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)
 float CUI::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 {
 	Current = clamp(Current, 0.0f, 1.0f);
-	// layout
-	CUIRect Handle;
-	pRect->VSplitLeft(maximum(minimum(pRect->w/8.0f, 33.0f), pRect->h), &Handle, 0);
-	Handle.x += (pRect->w-Handle.w)*Current;
-	Handle.HMargin(5.0f, &Handle);
 
+	// layout
 	CUIRect Rail;
 	pRect->HMargin(5.0f, &Rail);
+
+	CUIRect Handle;
+	Rail.VSplitLeft(clamp(33.0f, Rail.h, Rail.w / 8.0f), &Handle, 0);
+	Handle.x += (Rail.w - Handle.w) * Current;
 
 	// logic
 	static float s_OffsetX;
 	const bool InsideHandle = MouseHovered(&Handle);
 	const bool InsideRail = MouseHovered(&Rail);
-	float ReturnValue = Current;
 	bool Grabbed = false; // whether to apply the offset
 
 	if(CheckActiveItem(pID))
@@ -581,14 +580,14 @@ float CUI::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	{
 		if(MouseButton(0))
 		{
-			s_OffsetX = MouseX()-Handle.x;
+			s_OffsetX = MouseX() - Handle.x;
 			SetActiveItem(pID);
 			Grabbed = true;
 		}
 	}
 	else if(MouseButtonClicked(0) && !InsideHandle && InsideRail)
 	{
-		s_OffsetX = Handle.w * 0.5f;
+		s_OffsetX = Handle.w / 2.0f;
 		SetActiveItem(pID);
 		Grabbed = true;
 	}
@@ -598,17 +597,18 @@ float CUI::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 		SetHotItem(pID);
 	}
 
+	float ReturnValue = Current;
 	if(Grabbed)
 	{
-		const float Min = pRect->x;
-		const float Max = pRect->w-Handle.w;
-		const float Cur = MouseX()-s_OffsetX;
-		ReturnValue = clamp((Cur-Min)/Max, 0.0f, 1.0f);
+		const float Min = Rail.x;
+		const float Max = Rail.w - Handle.w;
+		const float Cur = MouseX() - s_OffsetX;
+		ReturnValue = clamp((Cur - Min) / Max, 0.0f, 1.0f);
 	}
 
 	// render
-	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.h/2.0f);
-	Handle.Draw(ScrollBarColorFunction.GetColor(Grabbed, InsideHandle), Handle.h/2.0f);
+	Rail.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), Rail.h / 2.0f);
+	Handle.Draw(ScrollBarColorFunction.GetColor(Grabbed, InsideHandle), Handle.h / 2.0f);
 
 	return ReturnValue;
 }
