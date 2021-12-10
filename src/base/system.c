@@ -2705,20 +2705,17 @@ void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
 	str_copy(dst, src, cursor < dst_size ? cursor+1 : dst_size);
 }
 
-void str_utf8_stats(const char *str, int max_size, int *size, int *count)
+void str_utf8_stats(const char *str, int max_size, int max_count, int *size, int *count)
 {
 	*size = 0;
 	*count = 0;
-	while(str[*size] && *size < max_size)
+	while(*size < max_size && *count < max_count)
 	{
 		int new_size = str_utf8_forward(str, *size);
-		if(new_size != *size)
-		{
-			if(new_size >= max_size)
-				break;
-			*size = new_size;
-			++(*count);
-		}
+		if(new_size == *size || new_size >= max_size)
+			break;
+		*size = new_size;
+		++(*count);
 	}
 }
 
