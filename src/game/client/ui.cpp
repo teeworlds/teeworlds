@@ -409,7 +409,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	CUIRect Textbox = *pRect;
 	Textbox.Draw(pColorFunction->GetColor(LastActiveItem() == pLineInput, Inside), 5.0f, Corners);
 	Textbox.VMargin(Spacing, &Textbox);
-	Textbox.HMargin((Textbox.h-FontSize/ms_FontmodHeight)/2, &Textbox);
+	Textbox.HMargin((Textbox.h-FontSize/CUI::ms_FontmodHeight)/2, &Textbox);
 
 	const char *pDisplayStr = pLineInput->GetString();
 	char aStars[128];
@@ -480,7 +480,7 @@ void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const ch
 	CUIRect Label, EditBox;
 	pRect->VSplitLeft(VSplitVal, &Label, &EditBox);
 
-	const float FontSize = pRect->h*ms_FontmodHeight*0.8f;
+	const float FontSize = pRect->h*CUI::ms_FontmodHeight*0.8f;
 	char aBuf[32];
 	str_format(aBuf, sizeof(aBuf), "%s:", pStr);
 	Label.y += 2.0f;
@@ -632,7 +632,7 @@ void CUI::DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect,
 	else
 		str_format(aBuf, sizeof(aBuf), "%s: \xe2\x88\x9e", pStr);
 
-	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
+	float FontSize = pRect->h*CUI::ms_FontmodHeight*0.8f;
 	float VSplitVal = maximum(TextRender()->TextWidth(FontSize, aBuf, -1), TextRender()->TextWidth(FontSize, aBufMax, -1));
 
 	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
@@ -659,7 +659,7 @@ void CUI::DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect 
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "%s: %s", pStr, aLabels[Value]);
 
-	float FontSize = pRect->h*ms_FontmodHeight*0.8f;
+	float FontSize = pRect->h*CUI::ms_FontmodHeight*0.8f;
 
 	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
