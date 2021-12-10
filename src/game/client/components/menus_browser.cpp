@@ -767,8 +767,8 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	const float SpacingH = 2.0f;
 	const float ButtonHeight = 20.0f;
-	const float HeaderHeight = GetListHeaderHeight();
-	const float HeightFactor = GetListHeaderHeightFactor();
+	const float HeaderHeight = UI()->GetListHeaderHeight();
+	const float HeightFactor = UI()->GetListHeaderHeightFactor();
 
 	// background
 	View.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 5.0f, (Client()->State() == IClient::STATE_OFFLINE) ? CUIRect::CORNER_ALL : CUIRect::CORNER_B|CUIRect::CORNER_TR);
@@ -1252,7 +1252,7 @@ void CMenus::RenderServerbrowserSidebar(CUIRect View)
 	}
 
 	// header
-	View.HSplitTop(GetListHeaderHeight(), &Header, &View);
+	View.HSplitTop(UI()->GetListHeaderHeight(), &Header, &View);
 	float Width = Header.w;
 	Header.VSplitLeft(Width*0.30f, &Button, &Header);
 	static CButtonContainer s_TabInfo;
@@ -1293,7 +1293,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	const float FontSize = 10.0f;
 	static bool s_ListExtended[NUM_FRIEND_TYPES] = { 1, 1, 0 };
 	static vec3 s_ListColor[NUM_FRIEND_TYPES] = { vec3(0.5f, 1.0f, 0.5f), vec3(0.4f, 0.4f, 1.0f), vec3(1.0f, 0.5f, 0.5f) };
-	const float HeaderHeight = GetListHeaderHeight();
+	const float HeaderHeight = UI()->GetListHeaderHeight();
 	const float SpacingH = 2.0f;
 
 	View.HSplitBottom(3*HeaderHeight+2*SpacingH, &View, &BottomArea);
@@ -1558,7 +1558,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	pFilter->GetFilter(&FilterInfo);
 
 	// server filter
-	ServerFilter.HSplitTop(GetListHeaderHeight(), &FilterHeader, &ServerFilter);
+	ServerFilter.HSplitTop(UI()->GetListHeaderHeight(), &FilterHeader, &ServerFilter);
 	FilterHeader.Draw(vec4(1, 1, 1, 0.25f), 4.0f, CUIRect::CORNER_T);
 	ServerFilter.Draw(vec4(0, 0, 0, 0.15f), 4.0f, CUIRect::CORNER_B);
 	FilterHeader.HMargin(2.0f, &FilterHeader);
@@ -1873,7 +1873,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo, const vec4
 	TextRender()->TextSecondaryColor(TextOutlineColor);
 
 	CUIRect ServerHeader;
-	View.HSplitTop(GetListHeaderHeight(), &ServerHeader, &View);
+	View.HSplitTop(UI()->GetListHeaderHeight(), &ServerHeader, &View);
 	ServerHeader.Draw(vec4(1, 1, 1, 0.25f), 5.0f, CUIRect::CORNER_T);
 	View.Draw(vec4(0, 0, 0, 0.15f), 5.0f, CUIRect::CORNER_B);
 	ServerHeader.HMargin(2.0f, &ServerHeader);
@@ -2066,7 +2066,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 	RenderDetailInfo(ServerDetails, pInfo, CUI::ms_DefaultTextColor, CUI::ms_DefaultTextOutlineColor);
 
 	// server scoreboard
-	ServerScoreboard.HSplitTop(GetListHeaderHeight(), &ServerHeader, &ServerScoreboard);
+	ServerScoreboard.HSplitTop(UI()->GetListHeaderHeight(), &ServerHeader, &ServerScoreboard);
 	ServerHeader.Draw(vec4(1, 1, 1, 0.25f), 4.0f, CUIRect::CORNER_T);
 	ServerHeader.HMargin(2.0f, &ServerHeader);
 	UI()->DoLabel(&ServerHeader, Localize("Scoreboard"), 12.0f, TEXTALIGN_CENTER);

@@ -329,7 +329,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 
 	m_pSelectedSkin = 0;
 	int OldSelected = -1;
-	s_ListBox.DoHeader(&MainView, Localize("Skins"), GetListHeaderHeight());
+	s_ListBox.DoHeader(&MainView, Localize("Skins"), UI()->GetListHeaderHeight());
 	m_RefreshSkinSelector = s_ListBox.DoFilter();
 	s_ListBox.DoStart(60.0f, s_paSkinList.size(), 10, 1, OldSelected);
 
@@ -728,7 +728,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 	int OldSelected = s_SelectedLanguage;
 
 	if(Header)
-		s_ListBox.DoHeader(&MainView, Localize("Language"), GetListHeaderHeight());
+		s_ListBox.DoHeader(&MainView, Localize("Language"), UI()->GetListHeaderHeight());
 	bool IsActive = m_ActiveListBox == ACTLB_LANG;
 	s_ListBox.DoStart(20.0f, s_Languages.size(), 1, 3, s_SelectedLanguage, Header?0:&MainView, Header, &IsActive);
 
@@ -796,7 +796,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 	const int OldSelected = SelectedTheme;
 
 	if(Header)
-		s_ListBox.DoHeader(&MainView, Localize("Theme"), GetListHeaderHeight());
+		s_ListBox.DoHeader(&MainView, Localize("Theme"), UI()->GetListHeaderHeight());
 
 	bool IsActive = m_ActiveListBox == ACTLB_THEME;
 	s_ListBox.DoStart(20.0f, m_lThemes.size(), 1, 3, SelectedTheme, Header?0:&MainView, Header, &IsActive);

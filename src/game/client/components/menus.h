@@ -363,7 +363,6 @@ private:
 
 	int64 m_LastInput;
 
-	static float ms_ListheaderHeight;
 	static float ms_FontmodHeight;
 
 	// for settings
@@ -678,8 +677,6 @@ private:
 	void RenderMenubar(CUIRect r);
 	void RenderNews(CUIRect MainView);
 	void RenderBackButton(CUIRect MainView);
-	inline float GetListHeaderHeight() const { return ms_ListheaderHeight + (Config()->m_UiWideview ? 3.0f : 0.0f); }
-	inline float GetListHeaderHeightFactor() const { return 1.0f + (Config()->m_UiWideview ? (3.0f/ms_ListheaderHeight) : 0.0f); }
 	static void ConchainUpdateMusicState(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	void UpdateMusicState();
 

@@ -246,6 +246,9 @@ public:
 	float DrawClientID(float FontSize, vec2 Position, int ID,
 					const vec4& BgColor = vec4(1.0f, 1.0f, 1.0f, 0.5f), const vec4& TextColor = vec4(0.1f, 0.1f, 0.1f, 1.0f));
 	float GetClientIDRectWidth(float FontSize);
+
+	float GetListHeaderHeight() const;
+	float GetListHeaderHeightFactor() const;
 };
 
 
