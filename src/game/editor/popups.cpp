@@ -105,7 +105,7 @@ bool CEditor::PopupGroup(void *pContext, CUIRect View)
 	{
 		View.HSplitBottom(5.0f, &View, &Button);
 		View.HSplitBottom(16.0f, &View, &Button);
-		pEditor->UI()->DoLabel(&Button, "Name:", 10.0f, CUI::ALIGN_LEFT);
+		pEditor->UI()->DoLabel(&Button, "Name:", 10.0f, TEXTALIGN_LEFT);
 		Button.VSplitLeft(40.0f, 0, &Button);
 		static CLineInput s_NameInput;
 		s_NameInput.SetBuffer(pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_aName, sizeof(pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_aName));
@@ -197,7 +197,7 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 	{
 		View.HSplitBottom(5.0f, &View, &Button);
 		View.HSplitBottom(16.0f, &View, &Button);
-		pEditor->UI()->DoLabel(&Button, "Name:", 10.0f, CUI::ALIGN_LEFT);
+		pEditor->UI()->DoLabel(&Button, "Name:", 10.0f, TEXTALIGN_LEFT);
 		Button.VSplitLeft(40.0f, 0, &Button);
 		static CLineInput s_NameInput;
 		s_NameInput.SetBuffer(pCurrentLayer->m_aName, sizeof(pCurrentLayer->m_aName));
@@ -553,7 +553,7 @@ bool CEditor::PopupNewFolder(void *pContext, CUIRect View)
 	// title
 	View.HSplitTop(10.0f, 0, &View);
 	View.HSplitTop(30.0f, &Label, &View);
-	pEditor->UI()->DoLabel(&Label, "Create new folder", 20.0f, CUI::ALIGN_CENTER);
+	pEditor->UI()->DoLabel(&Label, "Create new folder", 20.0f, TEXTALIGN_CENTER);
 
 	View.HSplitBottom(10.0f, &View, 0);
 	View.HSplitBottom(20.0f, &View, &ButtonBar);
@@ -567,7 +567,7 @@ bool CEditor::PopupNewFolder(void *pContext, CUIRect View)
 		static CLineInput s_FolderInput(pEditor->m_aFileDialogNewFolderName, sizeof(pEditor->m_aFileDialogNewFolderName));
 		pEditor->DoEditBox(&s_FolderInput, &Label, 15.0f);
 		View.HSplitBottom(20.0f, &View, &Label);
-		pEditor->UI()->DoLabel(&Label, "Name:", 10.0f, CUI::ALIGN_LEFT);
+		pEditor->UI()->DoLabel(&Label, "Name:", 10.0f, TEXTALIGN_LEFT);
 
 		// button bar
 		ButtonBar.VSplitLeft(30.0f, 0, &ButtonBar);
@@ -601,9 +601,9 @@ bool CEditor::PopupNewFolder(void *pContext, CUIRect View)
 		View.HSplitTop(30.0f, 0, &View);
 		View.VMargin(40.0f, &View);
 		View.HSplitTop(20.0f, &Label, &View);
-		pEditor->UI()->DoLabel(&Label, "Error:", 10.0f, CUI::ALIGN_LEFT);
+		pEditor->UI()->DoLabel(&Label, "Error:", 10.0f, TEXTALIGN_LEFT);
 		View.HSplitTop(20.0f, &Label, &View);
-		pEditor->UI()->DoLabel(&Label, "Unable to create the folder", 10.0f, CUI::ALIGN_LEFT, View.w);
+		pEditor->UI()->DoLabel(&Label, "Unable to create the folder", 10.0f, TEXTALIGN_LEFT, View.w);
 
 		// button
 		ButtonBar.VMargin(ButtonBar.w/2.0f-55.0f, &ButtonBar);
@@ -623,7 +623,7 @@ bool CEditor::PopupMapInfo(void *pContext, CUIRect View)
 	// title
 	View.HSplitTop(10.0f, 0, &View);
 	View.HSplitTop(30.0f, &Label, &View);
-	pEditor->UI()->DoLabel(&Label, "Map details", 20.0f, CUI::ALIGN_CENTER);
+	pEditor->UI()->DoLabel(&Label, "Map details", 20.0f, TEXTALIGN_CENTER);
 
 	View.HSplitBottom(10.0f, &View, 0);
 	View.HSplitBottom(20.0f, &View, &ButtonBar);
@@ -632,7 +632,7 @@ bool CEditor::PopupMapInfo(void *pContext, CUIRect View)
 
 	// author box
 	View.HSplitTop(20.0f, &Label, &View);
-	pEditor->UI()->DoLabel(&Label, "Author:", 10.0f, CUI::ALIGN_LEFT);
+	pEditor->UI()->DoLabel(&Label, "Author:", 10.0f, TEXTALIGN_LEFT);
 	Label.VSplitLeft(40.0f, 0, &Button);
 	Button.HSplitTop(16.0f, &Button, 0);
 	static CLineInput s_AuthorInput;
@@ -641,7 +641,7 @@ bool CEditor::PopupMapInfo(void *pContext, CUIRect View)
 
 	// version box
 	View.HSplitTop(20.0f, &Label, &View);
-	pEditor->UI()->DoLabel(&Label, "Version:", 10.0f, CUI::ALIGN_LEFT);
+	pEditor->UI()->DoLabel(&Label, "Version:", 10.0f, TEXTALIGN_LEFT);
 	Label.VSplitLeft(40.0f, 0, &Button);
 	Button.HSplitTop(16.0f, &Button, 0);
 	static CLineInput s_VersionInput;
@@ -650,7 +650,7 @@ bool CEditor::PopupMapInfo(void *pContext, CUIRect View)
 
 	// credits box
 	View.HSplitTop(20.0f, &Label, &View);
-	pEditor->UI()->DoLabel(&Label, "Credits:", 10.0f, CUI::ALIGN_LEFT);
+	pEditor->UI()->DoLabel(&Label, "Credits:", 10.0f, TEXTALIGN_LEFT);
 	Label.VSplitLeft(40.0f, 0, &Button);
 	Button.HSplitTop(16.0f, &Button, 0);
 	static CLineInput s_CreditsInput;
@@ -659,7 +659,7 @@ bool CEditor::PopupMapInfo(void *pContext, CUIRect View)
 
 	// license box
 	View.HSplitTop(20.0f, &Label, &View);
-	pEditor->UI()->DoLabel(&Label, "License:", 10.0f, CUI::ALIGN_LEFT);
+	pEditor->UI()->DoLabel(&Label, "License:", 10.0f, TEXTALIGN_LEFT);
 	Label.VSplitLeft(40.0f, 0, &Button);
 	Button.HSplitTop(16.0f, &Button, 0);
 	static CLineInput s_LicenseInput;
@@ -697,15 +697,15 @@ bool CEditor::PopupEvent(void *pContext, CUIRect View)
 	View.HSplitTop(10.0f, 0, &View);
 	View.HSplitTop(30.0f, &Label, &View);
 	if(pEditor->m_PopupEventType == POPEVENT_EXIT)
-		pEditor->UI()->DoLabel(&Label, "Exit the editor", 20.0f, CUI::ALIGN_CENTER);
+		pEditor->UI()->DoLabel(&Label, "Exit the editor", 20.0f, TEXTALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
-		pEditor->UI()->DoLabel(&Label, "Load map", 20.0f, CUI::ALIGN_CENTER);
+		pEditor->UI()->DoLabel(&Label, "Load map", 20.0f, TEXTALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
-		pEditor->UI()->DoLabel(&Label, "Load current map", 20.0f, CUI::ALIGN_CENTER);
+		pEditor->UI()->DoLabel(&Label, "Load current map", 20.0f, TEXTALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
-		pEditor->UI()->DoLabel(&Label, "New map", 20.0f, CUI::ALIGN_CENTER);
+		pEditor->UI()->DoLabel(&Label, "New map", 20.0f, TEXTALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
-		pEditor->UI()->DoLabel(&Label, "Save map", 20.0f, CUI::ALIGN_CENTER);
+		pEditor->UI()->DoLabel(&Label, "Save map", 20.0f, TEXTALIGN_CENTER);
 
 	View.HSplitBottom(10.0f, &View, 0);
 	View.HSplitBottom(20.0f, &View, &ButtonBar);
@@ -715,15 +715,15 @@ bool CEditor::PopupEvent(void *pContext, CUIRect View)
 	View.VMargin(40.0f, &View);
 	View.HSplitTop(20.0f, &Label, &View);
 	if(pEditor->m_PopupEventType == POPEVENT_EXIT)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you exit the editor.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you exit the editor.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load a new map.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load the current map.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load the current map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you create a new map.\nContinue anyway?", 10.0f, CUI::ALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you create a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
-		pEditor->UI()->DoLabel(&Label, "The file already exists.\nDo you want to overwrite the map?", 10.0f, CUI::ALIGN_LEFT);
+		pEditor->UI()->DoLabel(&Label, "The file already exists.\nDo you want to overwrite the map?", 10.0f, TEXTALIGN_LEFT);
 
 	// button bar
 	ButtonBar.VSplitLeft(30.0f, 0, &ButtonBar);
@@ -952,7 +952,7 @@ bool CEditor::PopupSelectConfigAutoMap(void *pContext, CUIRect View)
 
 	CUIRect Label, Full, Live;
 	View.VSplitMid(&Label, &View);
-	pEditor->UI()->DoLabel(&Label, "Type", 10.0f, CUI::ALIGN_LEFT);
+	pEditor->UI()->DoLabel(&Label, "Type", 10.0f, TEXTALIGN_LEFT);
 
 	View.VSplitMid(&Full, &Live);
 	if(pEditor->DoButton_ButtonDec(&s_aIds[0], "Full", !pLayer->m_LiveAutoMap, &Full, 0, ""))

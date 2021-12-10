@@ -269,7 +269,7 @@ bool CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float 
 	return true;
 }
 
-void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlignment Align, float LineWidth, bool MultiLine)
+void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int Align, float LineWidth, bool MultiLine)
 {
 	// TODO: FIX ME!!!!
 	// Graphics()->BlendNormal();
@@ -281,21 +281,19 @@ void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlig
 	s_Cursor.m_MaxWidth = LineWidth;
 	s_Cursor.m_Align = Align;
 
-	switch(Align)
-	{
-	case CUI::ALIGN_LEFT:
-		s_Cursor.m_Align = TEXTALIGN_LEFT;
-		s_Cursor.MoveTo(pRect->x, pRect->y);
-		break;
-	case CUI::ALIGN_CENTER:
-		s_Cursor.m_Align = TEXTALIGN_CENTER;
-		s_Cursor.MoveTo(pRect->x + pRect->w / 2.0f, pRect->y);
-		break;
-	case CUI::ALIGN_RIGHT:
-		s_Cursor.m_Align = TEXTALIGN_RIGHT;
-		s_Cursor.MoveTo(pRect->x + pRect->w, pRect->y);
-		break;
-	}
+	float x = pRect->x;
+	if(Align&TEXTALIGN_CENTER)
+		x += pRect->w / 2.0f;
+	else if(Align&TEXTALIGN_RIGHT)
+		x += pRect->w;
+
+	float y = pRect->y;
+	if(Align&TEXTALIGN_MIDDLE)
+		y += pRect->h / 2.0f;
+	else if(Align&TEXTALIGN_BOTTOM)
+		y += pRect->h;
+
+	s_Cursor.MoveTo(x, y);
 	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 }
 
@@ -454,7 +452,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	ClipEnable(pRect);
 	Textbox.x -= ScrollOffset;
 
-	DoLabel(&Textbox, pDisplayStr, FontSize, CUI::ALIGN_LEFT);
+	DoLabel(&Textbox, pDisplayStr, FontSize, TEXTALIGN_LEFT);
 
 	// render the cursor
 	if(LastActiveItem() == pLineInput && !JustGotActive)
@@ -465,7 +463,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 			Textbox = *pRect;
 			Textbox.VSplitLeft(Spacing, 0, &Textbox);
 			Textbox.x += TextWidth - ScrollOffset - TextRender()->TextWidth(FontSize, "|", -1)/2;
-			DoLabel(&Textbox, "|", FontSize, CUI::ALIGN_LEFT);
+			DoLabel(&Textbox, "|", FontSize, TEXTALIGN_LEFT);
 		}
 	}
 	ClipDisable();
@@ -486,7 +484,7 @@ void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const ch
 	char aBuf[32];
 	str_format(aBuf, sizeof(aBuf), "%s:", pStr);
 	Label.y += 2.0f;
-	DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_CENTER);
+	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_CENTER);
 
 	DoEditBox(pLineInput, &EditBox, FontSize, Hidden);
 }
@@ -643,7 +641,7 @@ void CUI::DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect,
 	pRect->VSplitLeft(pRect->h+10.0f+VSplitVal, &Label, &ScrollBar);
 	Label.VSplitLeft(Label.h+5.0f, 0, &Label);
 	Label.y += 2.0f;
-	DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
+	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_LEFT);
 
 	ScrollBar.VMargin(4.0f, &ScrollBar);
 	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, Min, Max)), Min, Max);
@@ -669,7 +667,7 @@ void CUI::DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect 
 	pRect->VSplitLeft(pRect->h+5.0f, 0, &Label);
 	Label.VSplitRight(60.0f, &Label, &ScrollBar);
 	Label.y += 2.0f;
-	DoLabel(&Label, aBuf, FontSize, CUI::ALIGN_LEFT);
+	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_LEFT);
 
 	ScrollBar.VMargin(4.0f, &ScrollBar);
 	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, 0, Max)), 0, Max);

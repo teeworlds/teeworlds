@@ -319,18 +319,10 @@ int CEditor::DoButton_Editor_Common(const void *pID, const char *pText, int Chec
 	return 0;
 }
 
-
 int CEditor::DoButton_Editor(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	pRect->Draw(GetButtonColor(pID, Checked), 3.0f);
-
-	static CTextCursor s_Cursor(10.0f);
-	s_Cursor.MoveTo(pRect->x + pRect->w/2, pRect->y + pRect->h/2);
-	s_Cursor.Reset();
-	s_Cursor.m_MaxWidth = pRect->w;
-	s_Cursor.m_MaxLines = 1;
-	s_Cursor.m_Align = TEXTALIGN_MC;
-	TextRender()->TextOutlined(&s_Cursor, pText, -1);
+	UI()->DoLabel(pRect, pText, 10.0f, TEXTALIGN_MC);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -341,16 +333,9 @@ int CEditor::DoButton_Image(const void *pID, const char *pText, int Checked, con
 	if(!Used)
 		ButtonColor *= vec4(0.5f, 0.5f, 0.5f, 1.0f);
 
+	const float FontSize = clamp(8.0f * pRect->w / TextRender()->TextWidth(10.0f, pText, -1), 6.0f, 10.0f);
 	pRect->Draw(ButtonColor, 3.0f);
-
-	static CTextCursor s_Cursor;
-	s_Cursor.MoveTo(pRect->x + pRect->w/2, pRect->y + pRect->h/2);
-	s_Cursor.Reset();
-	s_Cursor.m_FontSize = clamp(8.0f * pRect->w / TextRender()->TextWidth(10.0f, pText, -1), 6.0f, 10.0f);
-	s_Cursor.m_MaxWidth = pRect->w;
-	s_Cursor.m_MaxLines = 1;
-	s_Cursor.m_Align = TEXTALIGN_MC;
-	TextRender()->TextOutlined(&s_Cursor, pText, -1);
+	UI()->DoLabel(pRect, pText, FontSize, TEXTALIGN_MC);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -361,20 +346,19 @@ int CEditor::DoButton_File(const void *pID, const char *pText, int Checked, cons
 	else if(UI()->HotItem() == pID)
 		pRect->Draw(vec4(1,1,1,0.33f), 3.0f);
 
-	CUIRect t = *pRect;
-	t.VMargin(5.0f, &t);
-	UI()->DoLabel(&t, pText, 10, CUI::ALIGN_LEFT);
+	CUIRect Label = *pRect;
+	Label.VMargin(5.0f, &Label);
+	UI()->DoLabel(&Label, pText, 10.0f, TEXTALIGN_ML);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
 int CEditor::DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
-	CUIRect r = *pRect;
-	r.Draw(vec4(0.5f, 0.5f, 0.5f, 1.0f), 3.0f, CUIRect::CORNER_T);
+	pRect->Draw(vec4(0.5f, 0.5f, 0.5f, 1.0f), 3.0f, CUIRect::CORNER_T);
 
-	r = *pRect;
-	r.VMargin(5.0f, &r);
-	UI()->DoLabel(&r, pText, 10, CUI::ALIGN_LEFT);
+	CUIRect Label = *pRect;
+	Label.VMargin(5.0f, &Label);
+	UI()->DoLabel(&Label, pText, 10.0f, TEXTALIGN_ML);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -383,45 +367,37 @@ int CEditor::DoButton_MenuItem(const void *pID, const char *pText, int Checked, 
 	if(UI()->HotItem() == pID || Checked)
 		pRect->Draw(GetButtonColor(pID, Checked), 3.0f);
 
-	CUIRect t = *pRect;
-	t.VMargin(5.0f, &t);
-	static CTextCursor s_Cursor(10.0f);
-	s_Cursor.Reset();
-	s_Cursor.MoveTo(t.x, t.y - 1.0f);
-	s_Cursor.m_MaxWidth = t.w;
-	TextRender()->TextOutlined(&s_Cursor, pText, -1);
+	CUIRect Label = *pRect;
+	Label.VMargin(5.0f, &Label);
+	UI()->DoLabel(&Label, pText, 10.0f, TEXTALIGN_ML);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
 int CEditor::DoButton_Tab(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	pRect->Draw(GetButtonColor(pID, Checked), 5.0f, CUIRect::CORNER_T);
-	CUIRect NewRect = *pRect;
-	NewRect.y += NewRect.h/2.0f-7.0f;
-	UI()->DoLabel(&NewRect, pText, 10, CUI::ALIGN_CENTER);
+	UI()->DoLabel(pRect, pText, 10.0f, TEXTALIGN_MC);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
 int CEditor::DoButton_Ex(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, int Corners, float FontSize)
 {
 	pRect->Draw(GetButtonColor(pID, Checked), 3.0f, Corners);
-	CUIRect NewRect = *pRect;
-	NewRect.HMargin(NewRect.h/2.0f-FontSize/2.0f-1.0f, &NewRect);
-	UI()->DoLabel(&NewRect, pText, FontSize, CUI::ALIGN_CENTER);
+	UI()->DoLabel(pRect, pText, FontSize, TEXTALIGN_MC);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
 int CEditor::DoButton_ButtonInc(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	pRect->Draw(GetButtonColor(pID, Checked), 3.0f, CUIRect::CORNER_R);
-	UI()->DoLabel(pRect, pText?pText:"+", 10, CUI::ALIGN_CENTER);
+	UI()->DoLabel(pRect, pText?pText:"+", 10.0f, TEXTALIGN_MC);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
 int CEditor::DoButton_ButtonDec(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip)
 {
 	pRect->Draw(GetButtonColor(pID, Checked), 3.0f, CUIRect::CORNER_L);
-	UI()->DoLabel(pRect, pText?pText:"-", 10, CUI::ALIGN_CENTER);
+	UI()->DoLabel(pRect, pText?pText:"-", 10.0f, TEXTALIGN_MC);
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 
@@ -537,7 +513,7 @@ int CEditor::UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, in
 	str_format(aBuf, sizeof(aBuf),"%s %d", pLabel, Current);
 	pRect->Draw(GetButtonColor(pID, 0));
 	pRect->y += pRect->h/2.0f-7.0f;
-	UI()->DoLabel(pRect, aBuf, 10, CUI::ALIGN_CENTER);
+	UI()->DoLabel(pRect, aBuf, 10, TEXTALIGN_CENTER);
 
 	return Current;
 }
@@ -2175,7 +2151,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 		CUIRect Label, Shifter;
 		Slot.VSplitMid(&Label, &Shifter);
 		Shifter.HMargin(1.0f, &Shifter);
-		UI()->DoLabel(&Label, pProps[i].m_pName, 10.0f, CUI::ALIGN_LEFT);
+		UI()->DoLabel(&Label, pProps[i].m_pName, 10.0f, TEXTALIGN_LEFT);
 
 		if(pProps[i].m_Type == PROPTYPE_INT_STEP)
 		{
@@ -2186,7 +2162,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 			Shifter.VSplitLeft(10.0f, &Dec, &Shifter);
 			str_format(aBuf, sizeof(aBuf),"%d", pProps[i].m_Value);
 			Shifter.Draw(vec4(1,1,1,0.5f), 0.0f, CUIRect::CORNER_NONE);
-			UI()->DoLabel(&Shifter, aBuf, 10.0f,CUI::ALIGN_CENTER);
+			UI()->DoLabel(&Shifter, aBuf, 10.0f,TEXTALIGN_CENTER);
 
 			if(DoButton_ButtonDec(&pIDs[i], 0, 0, &Dec, 0, "Decrease"))
 			{
@@ -2303,11 +2279,11 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 			Left.VSplitLeft(10.0f, &Left, &Shifter);
 			Shifter.VSplitRight(10.0f, &Shifter, &Right);
 			Shifter.Draw(vec4(1,1,1,0.5f), 0.0f, CUIRect::CORNER_NONE);
-			UI()->DoLabel(&Shifter, "X", 10.0f, CUI::ALIGN_CENTER);
+			UI()->DoLabel(&Shifter, "X", 10.0f, TEXTALIGN_CENTER);
 			Up.VSplitLeft(10.0f, &Up, &Shifter);
 			Shifter.VSplitRight(10.0f, &Shifter, &Down);
 			Shifter.Draw(vec4(1,1,1,0.5f), 0.0f, CUIRect::CORNER_NONE);
-			UI()->DoLabel(&Shifter, "Y", 10.0f, CUI::ALIGN_CENTER);
+			UI()->DoLabel(&Shifter, "Y", 10.0f, TEXTALIGN_CENTER);
 			if(DoButton_ButtonDec(&pIDs[i], "-", 0, &Left, 0, "Left"))
 			{
 				*pNewVal = 1;
@@ -2666,7 +2642,7 @@ void CEditor::RenderImagesList(CUIRect ToolBox)
 		if(ImageCur >= ImageStartAt)
 		{
 			ToolBox.HSplitTop(HeaderHeight, &Slot, &ToolBox);
-			UI()->DoLabel(&Slot, e == 0 ? "Embedded" : "External", 12.0f, CUI::ALIGN_CENTER);
+			UI()->DoLabel(&Slot, e == 0 ? "Embedded" : "External", 12.0f, TEXTALIGN_CENTER);
 		}
 		ImageCur += HeaderHeight;
 
@@ -2863,7 +2839,7 @@ void CEditor::RenderFileDialog()
 	// title
 	Title.Draw(vec4(1, 1, 1, 0.25f), 4.0f);
 	Title.VMargin(10.0f, &Title);
-	UI()->DoLabel(&Title, m_pFileDialogTitle, 12.0f, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&Title, m_pFileDialogTitle, 12.0f, TEXTALIGN_LEFT);
 
 	// pathbox
 	char aPath[128], aBuf[128];
@@ -2872,12 +2848,12 @@ void CEditor::RenderFileDialog()
 	else
 		aPath[0] = 0;
 	str_format(aBuf, sizeof(aBuf), "Current path: %s", aPath);
-	UI()->DoLabel(&PathBox, aBuf, 10.0f, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&PathBox, aBuf, 10.0f, TEXTALIGN_LEFT);
 
 	// filebox
 	if(m_FileDialogStorageType == IStorage::TYPE_SAVE)
 	{
-		UI()->DoLabel(&FileBoxLabel, "Filename:", 10.0f, CUI::ALIGN_LEFT);
+		UI()->DoLabel(&FileBoxLabel, "Filename:", 10.0f, TEXTALIGN_LEFT);
 		static CLineInput s_FileNameInput(m_aFileDialogFileName, sizeof(m_aFileDialogFileName));
 		if(DoEditBox(&s_FileNameInput, &FileBox, 10.0f))
 		{
@@ -2891,7 +2867,7 @@ void CEditor::RenderFileDialog()
 	else
 	{
 		// render search bar
-		UI()->DoLabel(&FileBoxLabel, "Search:", 10.0f, CUI::ALIGN_LEFT);
+		UI()->DoLabel(&FileBoxLabel, "Search:", 10.0f, TEXTALIGN_LEFT);
 		if(DoEditBox(&m_FileDialogFilterInput, &FileBox, 10.0f))
 		{
 			// reset scrolling
@@ -3210,10 +3186,10 @@ void CEditor::RenderStatusbar(CUIRect View)
 		{
 			char aBuf[512];
 			str_format(aBuf, sizeof(aBuf), "%s Right click for context menu.", m_pTooltip);
-			UI()->DoLabel(&View, aBuf, 10.0f, CUI::ALIGN_LEFT);
+			UI()->DoLabel(&View, aBuf, 10.0f, TEXTALIGN_LEFT);
 		}
 		else
-			UI()->DoLabel(&View, m_pTooltip, 10.0f, CUI::ALIGN_LEFT);
+			UI()->DoLabel(&View, m_pTooltip, 10.0f, TEXTALIGN_LEFT);
 	}
 }
 
@@ -3291,7 +3267,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		char aBuf[IO_MAX_PATH_LENGTH];
 		str_format(aBuf, sizeof(aBuf),"%d/%d", m_SelectedEnvelope+1, m_Map.m_lEnvelopes.size());
 		Shifter.Draw(vec4(1,1,1,0.5f), 0.0f, CUIRect::CORNER_NONE);
-		UI()->DoLabel(&Shifter, aBuf, 10.0f, CUI::ALIGN_CENTER);
+		UI()->DoLabel(&Shifter, aBuf, 10.0f, TEXTALIGN_CENTER);
 
 		static int s_PrevButton = 0;
 		if(DoButton_ButtonDec(&s_PrevButton, 0, 0, &Dec, 0, "Previous Envelope"))
@@ -3305,7 +3281,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 		{
 			ToolBar.VSplitLeft(15.0f, &Button, &ToolBar);
 			ToolBar.VSplitLeft(35.0f, &Button, &ToolBar);
-			UI()->DoLabel(&Button, "Name:", 10.0f, CUI::ALIGN_LEFT);
+			UI()->DoLabel(&Button, "Name:", 10.0f, TEXTALIGN_LEFT);
 
 			ToolBar.VSplitLeft(80.0f, &Button, &ToolBar);
 
@@ -3368,7 +3344,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 			ToolBar.VSplitLeft(4.0f, &Button, &ToolBar);
 			ToolBar.VSplitLeft(80.0f, &Button, &ToolBar);
-			UI()->DoLabel(&Button, "Synchronized", 10.0f, CUI::ALIGN_LEFT);
+			UI()->DoLabel(&Button, "Synchronized", 10.0f, TEXTALIGN_LEFT);
 		}
 
 		float EndTime = pEnvelope->EndTime();
@@ -3854,7 +3830,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 			char aBuf[512];
 			str_format(aBuf, sizeof(aBuf),"%.3f %.3f", CurrentTime/1000.0f, fx2f(CurrentValue));
-			UI()->DoLabel(&ToolBar, aBuf, 10.0f, CUI::ALIGN_CENTER);
+			UI()->DoLabel(&ToolBar, aBuf, 10.0f, TEXTALIGN_CENTER);
 		}
 	}
 }
@@ -3875,10 +3851,10 @@ void CEditor::RenderMenubar(CUIRect MenuBar)
 
 	char aBuf[128];
 	str_format(aBuf, sizeof(aBuf), "File: %s", m_aFileName);
-	UI()->DoLabel(&MenuBar, aBuf, 10.0f, CUI::ALIGN_LEFT);
+	UI()->DoLabel(&MenuBar, aBuf, 10.0f, TEXTALIGN_LEFT);
 
 	str_format(aBuf, sizeof(aBuf), "Z: %i, A: %.1f, G: %i", m_ZoomLevel, m_AnimateSpeed, m_GridFactor);
-	UI()->DoLabel(&Info, aBuf, 10.0f, CUI::ALIGN_RIGHT);
+	UI()->DoLabel(&Info, aBuf, 10.0f, TEXTALIGN_RIGHT);
 
 	// Exit editor button
 	static int s_ExitButton;

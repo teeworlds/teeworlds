@@ -3,7 +3,7 @@
 #ifndef GAME_CLIENT_UI_H
 #define GAME_CLIENT_UI_H
 
-#include <engine/input.h>
+#include <engine/textrender.h>
 #include "lineinput.h"
 #include "ui_rect.h"
 
@@ -165,13 +165,6 @@ public:
 
 	CUI();
 
-	enum EAlignment
-	{
-		ALIGN_LEFT,
-		ALIGN_CENTER,
-		ALIGN_RIGHT,
-	};
-
 	enum
 	{
 		HOTKEY_ENTER = 1,
@@ -231,7 +224,7 @@ public:
 	bool DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
 
 	// labels
-	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
+	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_LEFT|TEXTALIGN_TOP, float LineWidth = -1.0f, bool MultiLine = true);
 	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor);
 
 	// editboxes
