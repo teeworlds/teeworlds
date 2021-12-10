@@ -408,7 +408,12 @@ void CMenus::InitDefaultFilters()
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser()));
 	// expand the all filter tab by default
 	if(UseDefaultFilters)
-		m_lFilters[m_lFilters.size()-1].Switch();
+	{
+		const int AllFilterIndex = m_lFilters.size()-1;
+		for(unsigned i = 0; i < IServerBrowser::NUM_TYPES; ++i)
+			m_aSelectedFilters[i] = AllFilterIndex; // default to "all" if not set
+		m_lFilters[AllFilterIndex].Switch();
+	}
 }
 
 // 1 = browser entry click, 2 = server info click

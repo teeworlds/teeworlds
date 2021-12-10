@@ -628,17 +628,17 @@ private:
 	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
 	static CColumn ms_aDemoCols[NUM_DEMO_COLS];
 
-	CBrowserFilter* GetSelectedBrowserFilter()
+	CBrowserFilter *GetSelectedBrowserFilter()
 	{
 		const int Tab = ServerBrowser()->GetType();
-		if(m_aSelectedFilters[Tab] == -1)
+		if(m_aSelectedFilters[Tab] < 0 || m_aSelectedFilters[Tab] >= m_lFilters.size())
 			return 0;
 		return &m_lFilters[m_aSelectedFilters[Tab]];
 	}
 
-	const CServerInfo* GetSelectedServerInfo()
+	const CServerInfo *GetSelectedServerInfo()
 	{
-		CBrowserFilter* pSelectedFilter = GetSelectedBrowserFilter();
+		CBrowserFilter *pSelectedFilter = GetSelectedBrowserFilter();
 		if(!pSelectedFilter)
 			return 0;
 		const int Tab = ServerBrowser()->GetType();
