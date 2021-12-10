@@ -138,8 +138,12 @@ void CCamera::OnRender()
 
 void CCamera::ChangePosition(int PositionNumber)
 {
+	if(m_pClient->Client()->State() == IClient::STATE_ONLINE)
+		return; //Do not change Main Menu Camera Positions while we are changing settings in-game
+
 	if(PositionNumber < 0 || PositionNumber > NUM_POS-1)
 		return;
+
 	m_AnimationStartPos = m_Center;
 	m_RotationCenter = m_Positions[PositionNumber];
 	m_CurrentPosition = PositionNumber;
