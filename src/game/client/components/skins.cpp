@@ -1,10 +1,8 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <math.h>
-
 #include <base/color.h>
-#include <base/system.h>
 #include <base/math.h>
+#include <base/system.h>
 
 #include <engine/graphics.h>
 #include <engine/storage.h>
@@ -31,6 +29,11 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	if(IsDir || !str_endswith(pName, ".png"))
 		return 0;
 
+	CSkinPart Part;
+	str_utf8_copy_num(Part.m_aName, pName, minimum(str_length(pName) - 3, int(sizeof(Part.m_aName))), MAX_SKIN_LENGTH);
+	if(pSelf->FindSkinPart(pSelf->m_ScanningPart, Part.m_aName, true) != -1)
+		return 0;
+
 	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s/%s", CSkins::ms_apSkinPartNames[pSelf->m_ScanningPart], pName);
 	CImageInfo Info;
@@ -41,11 +44,10 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		return 0;
 	}
 
-	CSkinPart Part;
 	Part.m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	Part.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 
-	unsigned char *d = (unsigned char *)Info.m_pData;
+	unsigned char *pData = (unsigned char *)Info.m_pData;
 	int Pitch = Info.m_Width*4;
 
 	// dig out blood color
@@ -60,11 +62,11 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		for(int y = PartY; y < PartY+PartHeight; y++)
 			for(int x = PartX; x < PartX+PartWidth; x++)
 			{
-				if(d[y*Pitch+x*4+3] > 128)
+				if(pData[y*Pitch+x*4+3] > 128)
 				{
-					aColors[0] += d[y*Pitch+x*4+0];
-					aColors[1] += d[y*Pitch+x*4+1];
-					aColors[2] += d[y*Pitch+x*4+2];
+					aColors[0] += pData[y*Pitch+x*4+0];
+					aColors[1] += pData[y*Pitch+x*4+1];
+					aColors[2] += pData[y*Pitch+x*4+2];
 				}
 			}
 
@@ -77,10 +79,10 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	// make the texture gray scale
 	for(int i = 0; i < Info.m_Width*Info.m_Height; i++)
 	{
-		int v = (d[i*Step]+d[i*Step+1]+d[i*Step+2])/3;
-		d[i*Step] = v;
-		d[i*Step+1] = v;
-		d[i*Step+2] = v;
+		const int Average = (pData[i*Step]+pData[i*Step+1]+pData[i*Step+2])/3;
+		pData[i*Step] = Average;
+		pData[i*Step+1] = Average;
+		pData[i*Step+2] = Average;
 	}
 
 	Part.m_ColorTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
@@ -92,7 +94,6 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		Part.m_Flags |= SKINFLAG_SPECIAL;
 	if(DirType != IStorage::TYPE_SAVE)
 		Part.m_Flags |= SKINFLAG_STANDARD;
-	str_utf8_copy_num(Part.m_aName, pName, minimum(str_length(pName) - 3, int(sizeof(Part.m_aName))), MAX_SKIN_LENGTH);
 	if(pSelf->Config()->m_Debug)
 	{
 		str_format(aBuf, sizeof(aBuf), "load skin part %s", Part.m_aName);
@@ -470,34 +471,34 @@ int CSkins::GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part)
 	return ColorVal;
 }
 
-bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomColors, int* aPartColors, int GameFlags) const
+bool CSkins::ValidateSkinParts(char *apPartNames[NUM_SKINPARTS], int *pUseCustomColors, int *pPartColors, int GameFlags) const
 {
 	// force standard (black) eyes on team skins
 	if(GameFlags&GAMEFLAG_TEAMS)
 	{
 		// TODO: adjust eye color here as well?
-		if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0 || str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
+		if(str_comp(apPartNames[SKINPART_EYES], "colorable") == 0 || str_comp(apPartNames[SKINPART_EYES], "negative") == 0)
 		{
-			str_copy(aPartNames[SKINPART_EYES], "standard", MAX_SKIN_ARRAY_SIZE);
+			str_copy(apPartNames[SKINPART_EYES], "standard", MAX_SKIN_ARRAY_SIZE);
 			return false;
 		}
 	}
 	else
 	{
-		const int BodyColor = aPartColors[SKINPART_BODY];
-		const int EyeColor = aPartColors[SKINPART_EYES];
+		const int BodyColor = pPartColors[SKINPART_BODY];
+		const int EyeColor = pPartColors[SKINPART_EYES];
 
 		vec3 BodyHsl(((BodyColor>>16)&0xff)/255.0f, ((BodyColor>>8)&0xff)/255.0f, (BodyColor&0xff)/255.0f);
 		vec3 EyeHsl(((EyeColor>>16)&0xff)/255.0f, ((EyeColor>>8)&0xff)/255.0f, (EyeColor&0xff)/255.0f);
 
-		if(!aUseCustomColors[SKINPART_BODY])
+		if(!pUseCustomColors[SKINPART_BODY])
 			BodyHsl = vec3(0, 0, 1);
 
 		const vec3 BodyLab = RgbToLab(HslToRgb(BodyHsl));
 
-		if(str_comp(aPartNames[SKINPART_EYES], "negative") == 0)
+		if(str_comp(apPartNames[SKINPART_EYES], "negative") == 0)
 		{
-			if(!aUseCustomColors[SKINPART_EYES])
+			if(!pUseCustomColors[SKINPART_EYES])
 				EyeHsl = vec3(0, 0, 1);
 
 			vec3 OrgEyeHsl = EyeHsl;
@@ -510,19 +511,19 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 
 				// white eye can't go to black because of our DARKEST_COLOR_LGT restriction, so switch to standard (black) eyes
 				if(OrgEyeHsl.l < DARKEST_COLOR_LGT/255.f)
-					str_copy(aPartNames[SKINPART_EYES], "standard", MAX_SKIN_ARRAY_SIZE); // black
+					str_copy(apPartNames[SKINPART_EYES], "standard", MAX_SKIN_ARRAY_SIZE); // black
 				else
 				{
-					aUseCustomColors[SKINPART_EYES] = 1;
-					aPartColors[SKINPART_EYES] = (int(OrgEyeHsl.h*255) << 16) | (int(OrgEyeHsl.s*255) << 8) | (int(OrgEyeHsl.l*255));
+					pUseCustomColors[SKINPART_EYES] = 1;
+					pPartColors[SKINPART_EYES] = (int(OrgEyeHsl.h*255) << 16) | (int(OrgEyeHsl.s*255) << 8) | (int(OrgEyeHsl.l*255));
 				}
 
 				return false;
 			}
 		}
-		else if(str_comp(aPartNames[SKINPART_EYES], "colorable") == 0)
+		else if(str_comp(apPartNames[SKINPART_EYES], "colorable") == 0)
 		{
-			if(!aUseCustomColors[SKINPART_EYES])
+			if(!pUseCustomColors[SKINPART_EYES])
 				EyeHsl = vec3(0, 0, 1);
 
 			vec3 OrgEyeHsl = EyeHsl;
@@ -534,8 +535,8 @@ bool CSkins::ValidateSkinParts(char* aPartNames[NUM_SKINPARTS], int* aUseCustomC
 				OrgEyeHsl.l -= 0.6f;
 				OrgEyeHsl.l = clamp(OrgEyeHsl.l, 0.f, 1.f);
 
-				aUseCustomColors[SKINPART_EYES] = 1;
-				aPartColors[SKINPART_EYES] = (int(OrgEyeHsl.h*255) << 16) | (int(OrgEyeHsl.s*255) << 8) | (int(OrgEyeHsl.l*255));
+				pUseCustomColors[SKINPART_EYES] = 1;
+				pPartColors[SKINPART_EYES] = (int(OrgEyeHsl.h*255) << 16) | (int(OrgEyeHsl.s*255) << 8) | (int(OrgEyeHsl.l*255));
 
 				return false;
 			}
