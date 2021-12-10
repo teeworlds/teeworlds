@@ -1469,7 +1469,6 @@ if(CLIENT)
     components/menus_demo.cpp
     components/menus_ingame.cpp
     components/menus_listbox.cpp
-    components/menus_popups.cpp
     components/menus_scrollregion.cpp
     components/menus_settings.cpp
     components/menus_start.cpp

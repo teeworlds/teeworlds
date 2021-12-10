@@ -105,7 +105,8 @@ class CUI
 {
 	enum
 	{
-		MAX_CLIP_NESTING_DEPTH = 16
+		MAX_CLIP_NESTING_DEPTH = 16,
+		MAX_POPUP_MENUS = 8,
 	};
 
 	bool m_Enabled;
@@ -129,6 +130,16 @@ class CUI
 	CUIRect m_aClips[MAX_CLIP_NESTING_DEPTH];
 	unsigned m_NumClips;
 	void UpdateClipping();
+
+	class
+	{
+	public:
+		CUIRect m_Rect;
+		int m_Corners;
+		void *m_pContext;
+		bool (*m_pfnFunc)(void *pContext, CUIRect View); // returns true to close popup
+	} m_aPopupMenus[MAX_POPUP_MENUS];
+	unsigned m_NumPopupMenus;
 
 	class CConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
@@ -232,6 +243,11 @@ public:
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
 	void DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite = false);
 	void DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int NumLabels, const IScrollbarScale *pScale = &LinearScrollbarScale);
+
+	// popup menu
+	void DoPopupMenu(int X, int Y, int Width, int Height, void *pContext, bool (*pfnFunc)(void *pContext, CUIRect View), int Corners = CUIRect::CORNER_ALL);
+	void RenderPopupMenus();
+	bool IsPopupActive() const { return m_NumPopupMenus > 0; }
 
 	// client ID
 	float DrawClientID(float FontSize, vec2 Position, int ID,

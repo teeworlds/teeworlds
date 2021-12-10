@@ -44,6 +44,8 @@ CUI::CUI()
 	m_Screen.y = 0;
 
 	m_NumClips = 0;
+
+	m_NumPopupMenus = 0;
 }
 
 void CUI::Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender)
@@ -710,6 +712,54 @@ float CUI::DrawClientID(float FontSize, vec2 CursorPosition, int ID, const vec4&
 	TextRender()->DrawTextPlain(&s_Cursor);
 
 	return Width + 0.2f * FontSize;
+}
+
+void CUI::DoPopupMenu(int X, int Y, int Width, int Height, void *pContext, bool (*pfnFunc)(void *pContext, CUIRect View), int Corners)
+{
+	dbg_assert(m_NumPopupMenus < MAX_POPUP_MENUS, "max popup menus exceeded");
+
+	if(X + Width > Screen()->w)
+		X = Screen()->w - Width;
+	if(Y + Height > Screen()->h)
+		Y = Screen()->h - Height;
+
+	m_aPopupMenus[m_NumPopupMenus].m_Rect.x = X;
+	m_aPopupMenus[m_NumPopupMenus].m_Rect.y = Y;
+	m_aPopupMenus[m_NumPopupMenus].m_Rect.w = Width;
+	m_aPopupMenus[m_NumPopupMenus].m_Rect.h = Height;
+	m_aPopupMenus[m_NumPopupMenus].m_pContext = pContext;
+	m_aPopupMenus[m_NumPopupMenus].m_pfnFunc = pfnFunc;
+	m_aPopupMenus[m_NumPopupMenus].m_Corners = Corners;
+	m_NumPopupMenus++;
+}
+
+void CUI::RenderPopupMenus()
+{
+	const bool MousePressed = MouseButton(0) || MouseButton(1);
+	static bool s_MousePressed = MousePressed;
+
+	for(unsigned i = 0; i < m_NumPopupMenus; i++)
+	{
+		const bool Inside = MouseInside(&m_aPopupMenus[i].m_Rect);
+		const bool Active = i == m_NumPopupMenus - 1;
+
+		// prevent activation of UI elements outside of active popup
+		if(Active)
+			SetHotItem(&m_aPopupMenus[i]);
+
+		CUIRect PopupRect = m_aPopupMenus[i].m_Rect;
+		PopupRect.Draw(vec4(0.5f, 0.5f, 0.5f, 0.75f), 3.0f, m_aPopupMenus[i].m_Corners);
+		PopupRect.Margin(1.0f, &PopupRect);
+		PopupRect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.75f), 3.0f, m_aPopupMenus[i].m_Corners);
+		PopupRect.Margin(4.0f, &PopupRect);
+
+		if(m_aPopupMenus[i].m_pfnFunc(m_aPopupMenus[i].m_pContext, PopupRect))
+			m_NumPopupMenus = i; // close this popup and all above it
+		if(Active && ((!Inside && s_MousePressed && !MousePressed) || ConsumeHotkey(HOTKEY_ESCAPE)))
+			m_NumPopupMenus--; // close top-most popup by clicking outside and with escape
+	}
+
+	s_MousePressed = MousePressed;
 }
 
 float CUI::GetClientIDRectWidth(float FontSize)
