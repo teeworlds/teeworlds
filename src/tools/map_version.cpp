@@ -46,8 +46,10 @@ io_write(s_File, aBuf, str_length(aBuf));
 	return 0;
 }
 
-int main(int argc, const char **argv) // ignore_convention
+int main(int argc, const char **argv)
 {
+	cmdline_fix(&argc, &argv);
+
 	IKernel *pKernel = IKernel::Create();
 	s_pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
 	s_pEngineMap = CreateEngineMap();
@@ -67,5 +69,6 @@ int main(int argc, const char **argv) // ignore_convention
 		io_close(s_File);
 	}
 
+	cmdline_free(argc, argv);
 	return 0;
 }

@@ -6,40 +6,40 @@
 
 int main(int argc, const char **argv)
 {
-	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
-	int Index, ID = 0, Type = 0, Size;
-	void *pPtr;
-	char aFileName[1024];
-	CDataFileReader DataFile;
-	CDataFileWriter df;
+	cmdline_fix(&argc, &argv);
 
+	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_BASIC, argc, argv);
 	if(!pStorage || argc != 3)
 		return -1;
 
-	str_format(aFileName, sizeof(aFileName), "%s", argv[2]);
-
-	if(!DataFile.Open(pStorage, argv[1], IStorage::TYPE_ALL))
+	CDataFileReader Reader;
+	if(!Reader.Open(pStorage, argv[1], IStorage::TYPE_ALL))
 		return -1;
-	if(!df.Open(pStorage, aFileName))
+
+	CDataFileWriter Writer;
+	if(!Writer.Open(pStorage, argv[2]))
 		return -1;
 
 	// add all items
-	for(Index = 0; Index < DataFile.NumItems(); Index++)
+	for(int Index = 0; Index < Reader.NumItems(); Index++)
 	{
-		pPtr = DataFile.GetItem(Index, &Type, &ID);
-		Size = DataFile.GetItemSize(Index);
-		df.AddItem(Type, ID, Size, pPtr);
+		int Type, ID;
+		void *pPtr = Reader.GetItem(Index, &Type, &ID);
+		int Size = Reader.GetItemSize(Index);
+		Writer.AddItem(Type, ID, Size, pPtr);
 	}
 
 	// add all data
-	for(Index = 0; Index < DataFile.NumData(); Index++)
+	for(int Index = 0; Index < Reader.NumData(); Index++)
 	{
-		pPtr = DataFile.GetData(Index);
-		Size = DataFile.GetDataSize(Index);
-		df.AddData(Size, pPtr);
+		void *pPtr = Reader.GetData(Index);
+		int Size = Reader.GetDataSize(Index);
+		Writer.AddData(Size, pPtr);
 	}
 
-	DataFile.Close();
-	df.Finish();
+	Reader.Close();
+	Writer.Finish();
+
+	cmdline_free(argc, argv);
 	return 0;
 }

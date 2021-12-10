@@ -2120,6 +2120,10 @@ foreach(target ${TARGETS_OWN})
     target_compile_options(${target} PRIVATE /wd4267) # Possible loss of data (size_t - int on win64).
     target_compile_options(${target} PRIVATE /wd4800) # Implicit conversion of int to bool.
   endif()
+  if(TARGET_OS STREQUAL "windows")
+    target_compile_definitions(${target} PRIVATE UNICODE) # Windows headers
+    target_compile_definitions(${target} PRIVATE _UNICODE) # C-runtime
+  endif()
   if(OUR_FLAGS_OWN)
     target_compile_options(${target} PRIVATE ${OUR_FLAGS_OWN})
   endif()

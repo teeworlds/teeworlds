@@ -179,7 +179,7 @@ int mem_has_null(const void *block, unsigned size);
 enum {
 	IOFLAG_READ = 1,
 	IOFLAG_WRITE = 2,
-	IOFLAG_RANDOM = 4,
+	IOFLAG_APPEND = 4,
 
 	IOSEEK_START = 0,
 	IOSEEK_CUR = 1,
@@ -196,7 +196,7 @@ typedef struct IOINTERNAL *IOHANDLE;
 
 	Parameters:
 		filename - File to open.
-		flags - A set of flags. IOFLAG_READ, IOFLAG_WRITE, IOFLAG_RANDOM.
+		flags - A set of flags. IOFLAG_READ, IOFLAG_WRITE, IOFLAG_APPEND.
 
 	Returns:
 		Returns a handle to the file on success and 0 on failure.
@@ -1336,12 +1336,10 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user);
 
 typedef struct
 {
-	const char* m_pName;
+	const char *m_pName;
 	time_t m_TimeCreated; // seconds since UNIX Epoch
 	time_t m_TimeModified; // seconds since UNIX Epoch
 } CFsFileInfo;
-
-/* Group: Filesystem */
 
 /*
 	Function: fs_listdir_fileinfo
@@ -1353,7 +1351,7 @@ typedef struct
 		type - Type of the directory
 		user - Pointer to give to the callback
 */
-typedef int (*FS_LISTDIR_CALLBACK_FILEINFO)(const CFsFileInfo* info, int is_dir, int dir_type, void *user);
+typedef int (*FS_LISTDIR_CALLBACK_FILEINFO)(const CFsFileInfo *info, int is_dir, int dir_type, void *user);
 void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void *user);
 
 /*
@@ -1407,12 +1405,6 @@ int fs_storage_path(const char *appname, char *path, int max);
 		Returns 1 on success, 0 on failure.
 */
 int fs_is_dir(const char *path);
-
-/*
-	Function: fs_getmtime
-		Gets the modification time of a file
-*/
-time_t fs_getmtime(const char *path);
 
 /*
 	Function: fs_chdir
@@ -1792,6 +1784,32 @@ void secure_random_fill(void *bytes, unsigned length);
 		The process ID of the current process.
 */
 int pid();
+
+/*
+	Function: cmdline_fix
+		Fixes the command line arguments to be encoded in UTF-8 on all
+		systems.
+
+	Parameters:
+		argc - A pointer to the argc parameter that was passed to the main function.
+		argv - A pointer to the argv parameter that was passed to the main function.
+
+	Remarks:
+		- You need to call cmdline_free once you're no longer using the
+		results.
+*/
+void cmdline_fix(int *argc, const char ***argv);
+
+/*
+	Function: cmdline_free
+		Frees memory that was allocated by cmdline_fix.
+
+	Parameters:
+		argc - The argc obtained from cmdline_fix.
+		argv - The argv obtained from cmdline_fix.
+
+*/
+void cmdline_free(int argc, const char **argv);
 
 /*
 	Function: bytes_be_to_uint

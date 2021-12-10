@@ -240,6 +240,10 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 		settings.cc.defines:Add("_WIN32_WINNT=0x0501")
 	end
 
+	-- Unicode support
+	settings.cc.defines:Add("UNICODE") -- Windows headers
+	settings.cc.defines:Add("_UNICODE") -- C-runtime
+
 	local icons = SharedIcons(compiler)
 	local manifests = SharedManifests(compiler)
 
