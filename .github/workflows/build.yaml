@@ -11,26 +11,26 @@ jobs:
         include:
         - os: ubuntu-latest
           cmake-args: -G Ninja
-          package-file: teeworlds-*-linux_x86_64.tar.xz
+          package-file: "*-linux_x86_64.tar.xz"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: ubuntu-20.04
           cmake-path: /usr/bin/
           cmake-args: -G Ninja
-          package-file: teeworlds-*-linux_x86_64.tar.xz
+          package-file: "*-linux_x86_64.tar.xz"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: macOS-latest
           cmake-args: -G Ninja
-          package-file: teeworlds-*-macos.dmg
+          package-file: "*-macos.dmg"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: windows-latest
           cmake-args: -A x64
-          package-file: teeworlds-*-win64.zip
+          package-file: "*-win64.zip"
           env:
             CFLAGS: /WX
             CXXFLAGS: /WX
