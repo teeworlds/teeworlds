@@ -725,9 +725,10 @@ void CUI::DoPopupMenu(int X, int Y, int Width, int Height, void *pContext, bool 
 	m_aPopupMenus[m_NumPopupMenus].m_Rect.y = Y;
 	m_aPopupMenus[m_NumPopupMenus].m_Rect.w = Width;
 	m_aPopupMenus[m_NumPopupMenus].m_Rect.h = Height;
+	m_aPopupMenus[m_NumPopupMenus].m_Corners = Corners;
 	m_aPopupMenus[m_NumPopupMenus].m_pContext = pContext;
 	m_aPopupMenus[m_NumPopupMenus].m_pfnFunc = pfnFunc;
-	m_aPopupMenus[m_NumPopupMenus].m_Corners = Corners;
+	m_aPopupMenus[m_NumPopupMenus].m_New = true;
 	m_NumPopupMenus++;
 }
 
@@ -753,7 +754,9 @@ void CUI::RenderPopupMenus()
 
 		if(m_aPopupMenus[i].m_pfnFunc(m_aPopupMenus[i].m_pContext, PopupRect))
 			m_NumPopupMenus = i; // close this popup and all above it
-		if(Active && ((!Inside && s_MousePressed && !MousePressed) || ConsumeHotkey(HOTKEY_ESCAPE)))
+		else if(m_aPopupMenus[i].m_New)
+			m_aPopupMenus[i].m_New = false; // prevent popup from being closed by the click that opens it
+		else if(Active && ((!Inside && s_MousePressed && !MousePressed) || ConsumeHotkey(HOTKEY_ESCAPE)))
 			m_NumPopupMenus--; // close top-most popup by clicking outside and with escape
 	}
 
