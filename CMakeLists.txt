@@ -1339,6 +1339,7 @@ set_src(ENGINE_SHARED GLOB src/engine/shared
   map.cpp
   mapchecker.cpp
   mapchecker.h
+  mapitems.cpp
   masterserver.cpp
   memheap.cpp
   memheap.h
