@@ -24,6 +24,7 @@ class CMapImages : public CComponent
 	bool m_EasterIsLoaded;
 
 	void LoadMapImages(class IMap *pMap, class CLayers *pLayers, int MapType);
+	int GetActiveMapType() const;
 
 public:
 	CMapImages();
