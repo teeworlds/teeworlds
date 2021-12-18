@@ -14,6 +14,11 @@
 
 CCollision::CCollision()
 {
+	Clear();
+}
+
+void CCollision::Clear()
+{
 	m_pTiles = 0;
 	m_Width = 0;
 	m_Height = 0;
@@ -23,11 +28,30 @@ CCollision::CCollision()
 void CCollision::Init(class CLayers *pLayers)
 {
 	m_pLayers = pLayers;
-	m_Width = m_pLayers->GameLayer()->m_Width;
-	m_Height = m_pLayers->GameLayer()->m_Height;
-	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
+	const CMapItemLayerTilemap *pGameLayer = m_pLayers->GameLayer();
+	if(!pGameLayer)
+	{
+		Clear();
+		return;
+	}
 
-	for(int i = 0; i < m_Width*m_Height; i++)
+	m_Width = pGameLayer->m_Width;
+	m_Height = pGameLayer->m_Height;
+	const int NumTiles = m_pLayers->Map()->GetDataSize(pGameLayer->m_Data) / sizeof(CTile);
+	if(m_Width * m_Height != NumTiles)
+	{
+		Clear();
+		return;
+	}
+
+	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(pGameLayer->m_Data));
+	if(!m_pTiles)
+	{
+		Clear();
+		return;
+	}
+
+	for(int i = 0; i < NumTiles; i++)
 	{
 		int Index = m_pTiles[i].m_Index;
 
@@ -53,6 +77,9 @@ void CCollision::Init(class CLayers *pLayers)
 
 int CCollision::GetTile(int x, int y) const
 {
+	if(!m_pTiles)
+		return 0;
+
 	int Nx = clamp(x/32, 0, m_Width-1);
 	int Ny = clamp(y/32, 0, m_Height-1);
 
