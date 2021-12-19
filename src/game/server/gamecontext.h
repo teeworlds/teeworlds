@@ -165,6 +165,7 @@ public:
 
 	//
 	void SwapTeams();
+	void CreateAllEntities();
 
 	// engine events
 	virtual void OnInit();

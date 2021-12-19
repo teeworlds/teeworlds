@@ -501,6 +501,34 @@ void CGameContext::SwapTeams()
 	m_pController->SwapTeamscore();
 }
 
+void CGameContext::CreateAllEntities()
+{
+	const CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
+	if(!pTileMap)
+		return;
+
+	IMap *pMap = Kernel()->RequestInterface<IMap>();
+	const int NumTiles = pMap->GetDataSize(pTileMap->m_Data) / sizeof(CTile);
+	if(pTileMap->m_Width * pTileMap->m_Height != NumTiles)
+		return;
+	const CTile *pTiles = static_cast<CTile *>(pMap->GetData(pTileMap->m_Data));
+	if(!pTiles)
+		return;
+
+	for(int y = 0; y < pTileMap->m_Height; y++)
+	{
+		for(int x = 0; x < pTileMap->m_Width; x++)
+		{
+			const int Index = pTiles[y * pTileMap->m_Width + x].m_Index;
+			if(Index >= ENTITY_OFFSET)
+			{
+				const vec2 Pos((x + 0.5f) * 32.0f, (y + 0.5f) * 32.0f);
+				m_pController->OnEntity(Index - ENTITY_OFFSET, Pos);
+			}
+		}
+	}
+}
+
 void CGameContext::OnTick()
 {
 	// check tuning
@@ -1622,22 +1650,7 @@ void CGameContext::OnInit()
 
 	m_pController->RegisterChatCommands(CommandManager());
 
-	// create all entities from the game layer
-	CMapItemLayerTilemap *pTileMap = m_Layers.GameLayer();
-	CTile *pTiles = (CTile *)Kernel()->RequestInterface<IMap>()->GetData(pTileMap->m_Data);
-	for(int y = 0; y < pTileMap->m_Height; y++)
-	{
-		for(int x = 0; x < pTileMap->m_Width; x++)
-		{
-			int Index = pTiles[y*pTileMap->m_Width+x].m_Index;
-
-			if(Index >= ENTITY_OFFSET)
-			{
-				vec2 Pos(x*32.0f+16.0f, y*32.0f+16.0f);
-				m_pController->OnEntity(Index-ENTITY_OFFSET, Pos);
-			}
-		}
-	}
+	CreateAllEntities();
 
 	Console()->Chain("sv_motd", ConchainSpecialMotdupdate, this);
 
