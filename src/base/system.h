@@ -1419,8 +1419,15 @@ int fs_chdir(const char *path);
 	Function: fs_getcwd
 		Gets the current working directory.
 
+	Parameters:
+		buffer - Pointer to a buffer that will hold the result.
+		buffer_size - The size of the buffer in bytes.
+
 	Returns:
 		Returns a pointer to the buffer on success, 0 on failure.
+		On success, the buffer contains the result as a zero-terminated string.
+		On failure, the buffer contains an empty zero-terminated string.
+
 */
 char *fs_getcwd(char *buffer, int buffer_size);
 

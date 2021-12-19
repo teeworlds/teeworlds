@@ -1775,16 +1775,26 @@ int fs_chdir(const char *path)
 
 char *fs_getcwd(char *buffer, int buffer_size)
 {
-	if(buffer == 0)
-		return 0;
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+#endif
+	dbg_assert(buffer != 0, "buffer invalid");
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
+#if defined(CONF_FAMILY_WINDOWS)
 	if(_wgetcwd(wBuffer, buffer_size) == 0)
+	{
+		buffer[0] = '\0';
 		return 0;
+	}
 	WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buffer, buffer_size, NULL, NULL);
 	return buffer;
 #else
-	return getcwd(buffer, buffer_size);
+	if(getcwd(buffer, buffer_size) == 0)
+	{
+		buffer[0] = '\0';
+		return 0;
+	}
+	return buffer;
 #endif
 }
 
@@ -2050,8 +2060,10 @@ int time_iseasterday()
 
 void str_append(char *dst, const char *src, int dst_size)
 {
-	int s = str_length(dst);
+	int s;
 	int i = 0;
+	dbg_assert(dst_size > 0, "dst_size invalid");
+	s = str_length(dst);
 	while(s < dst_size)
 	{
 		dst[s] = src[i];
@@ -2066,6 +2078,8 @@ void str_append(char *dst, const char *src, int dst_size)
 
 void str_copy(char *dst, const char *src, int dst_size)
 {
+	dbg_assert(dst_size > 0, "dst_size invalid");
+
 	strncpy(dst, src, dst_size-1);
 	dst[dst_size-1] = 0; /* assure null termination */
 }
@@ -2087,17 +2101,17 @@ int str_length(const char *str)
 
 void str_format(char *buffer, int buffer_size, const char *format, ...)
 {
+	va_list ap;
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
+	va_start(ap, format);
+
 #if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
-	va_list ap;
-	va_start(ap, format);
 	_vsprintf_p(buffer, buffer_size, format, ap);
-	va_end(ap);
 #else
-	va_list ap;
-	va_start(ap, format);
 	vsnprintf(buffer, buffer_size, format, ap);
-	va_end(ap);
 #endif
+
+	va_end(ap);
 
 	buffer[buffer_size-1] = 0; /* assure null termination */
 }
@@ -2485,6 +2499,7 @@ int str_is_number(const char *str)
 void str_timestamp_ex(time_t time_data, char *buffer, int buffer_size, const char *format)
 {
 	struct tm *time_info;
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
 	time_info = localtime(&time_data);
 	strftime(buffer, buffer_size, format, time_info);
 	buffer[buffer_size-1] = 0;	/* assure null termination */
@@ -2747,6 +2762,7 @@ void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
 {
 	int new_cursor;
 	int cursor = 0;
+	dbg_assert(dst_size > 0, "dst_size invalid");
 
 	while(src[cursor] && num > 0)
 	{

@@ -46,8 +46,7 @@ public:
 		FindDataDir();
 
 		// get currentdir
-		if(!fs_getcwd(m_aCurrentDir, sizeof(m_aCurrentDir)))
-			m_aCurrentDir[0] = 0;
+		fs_getcwd(m_aCurrentDir, sizeof(m_aCurrentDir));
 
 		// load paths from storage.cfg
 		LoadPaths();
