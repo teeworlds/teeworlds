@@ -125,7 +125,7 @@ float SolveBezier(float x, float p0, float p1, float p2, float p3)
 	}
 }
 
-void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult)
+void CRenderTools::RenderEvalEnvelope(const CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult)
 {
 	if(NumPoints == 0)
 	{
@@ -216,7 +216,7 @@ void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Cha
 	return;
 }
 
-static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
+static void Rotate(const CPoint *pCenter, CPoint *pPoint, float Rotation)
 {
 	int x = pPoint->x - pCenter->x;
 	int y = pPoint->y - pCenter->y;
@@ -224,13 +224,13 @@ static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
 	pPoint->y = (int)(x * sinf(Rotation) + y * cosf(Rotation) + pCenter->y);
 }
 
-void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser)
+void CRenderTools::RenderQuads(const CQuad *pQuads, int NumQuads, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser)
 {
 	Graphics()->QuadsBegin();
 	float Conv = 1/255.0f;
 	for(int i = 0; i < NumQuads; i++)
 	{
-		CQuad *q = &pQuads[i];
+		const CQuad *q = &pQuads[i];
 
 		float r=1, g=1, b=1, a=1;
 
@@ -302,7 +302,7 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 			IGraphics::CColorVertex(3, q->m_aColors[3].r*Conv*r*q->m_aColors[3].a*Conv*a, q->m_aColors[3].g*Conv*g*q->m_aColors[3].a*Conv*a, q->m_aColors[3].b*Conv*b*q->m_aColors[3].a*Conv*a, q->m_aColors[3].a*Conv*a)};
 		Graphics()->SetColorVertex(Array, 4);
 
-		CPoint *pPoints = q->m_aPoints;
+		const CPoint *pPoints = q->m_aPoints;
 
 		if(Rot != 0)
 		{
@@ -330,7 +330,7 @@ void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENV
 	Graphics()->WrapNormal();
 }
 
-void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
+void CRenderTools::RenderTilemap(const CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
 									ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;

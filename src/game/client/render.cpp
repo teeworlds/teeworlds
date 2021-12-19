@@ -23,7 +23,7 @@ void CRenderTools::Init(CConfig *pConfig, IGraphics *pGraphics)
 	m_pGraphics = pGraphics;
 }
 
-void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
+void CRenderTools::SelectSprite(const CDataSprite *pSpr, int Flags, int sx, int sy)
 {
 	int x = pSpr->m_X+sx;
 	int y = pSpr->m_Y+sy;
@@ -362,7 +362,7 @@ void CRenderTools::MapScreenToWorld(float CenterX, float CenterY, float Parallax
 	aPoints[3] = aPoints[1]+Height;
 }
 
-void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom)
+void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, const CMapItemGroup *pGroup, float Zoom)
 {
 	float aPoints[4];
 	MapScreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX/100.0f, pGroup->m_ParallaxY/100.0f,
