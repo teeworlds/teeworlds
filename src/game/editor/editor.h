@@ -49,16 +49,16 @@ struct CEntity
 
 class CEnvelope
 {
-public:
 	int m_Channels;
+public:
 	array<CEnvPoint> m_lPoints;
 	char m_aName[32];
 	float m_Bottom, m_Top;
 	bool m_Synchronized;
 
-	CEnvelope(int Chan)
+	CEnvelope(int Channels)
 	{
-		m_Channels = Chan;
+		SetChannels(Channels);
 		m_aName[0] = 0;
 		m_Bottom = 0;
 		m_Top = 0;
@@ -123,7 +123,7 @@ public:
 		p.m_aValues[2] = v2;
 		p.m_aValues[3] = v3;
 		p.m_Curvetype = CURVETYPE_LINEAR;
-		for(int c = 0; c < 4; c++)
+		for(int c = 0; c < CEnvPoint::MAX_CHANNELS; c++)
 		{
 			p.m_aInTangentdx[c] = 0;
 			p.m_aInTangentdy[c] = 0;
@@ -140,6 +140,9 @@ public:
 			return m_lPoints[m_lPoints.size()-1].m_Time*(1.0f/1000.0f);
 		return 0;
 	}
+
+	int GetChannels() const { return m_Channels; }
+	void SetChannels(int Channels) { m_Channels = clamp(Channels, 1, (int)CEnvPoint::MAX_CHANNELS); }
 };
 
 
@@ -390,6 +393,11 @@ public:
 
 struct CProperty
 {
+	enum
+	{
+		MIN = -1000000,
+		MAX = 1000000,
+	};
 	const char *m_pName;
 	int m_Value;
 	int m_Type;
@@ -442,7 +450,6 @@ public:
 	virtual void ModifyEnvelopeIndex(INDEX_MODIFY_FUNC pfnFunc);
 
 	void PrepareForSave();
-	void ExtractTiles(CTile *pSavedTiles);
 
 	void GetSize(float *w, float *h) const { *w = m_Width*32.0f; *h = m_Height*32.0f; }
 

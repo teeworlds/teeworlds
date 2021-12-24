@@ -104,7 +104,7 @@ void CLayerGroup::Render()
 	MapScreen();
 	IGraphics *pGraphics = m_pMap->m_pEditor->Graphics();
 
-	if(m_UseClipping)
+	if(m_UseClipping && m_pMap->m_pGameGroup)
 	{
 		float aPoints[4];
 		m_pMap->m_pGameGroup->Mapping(aPoints);
@@ -548,7 +548,7 @@ void CEditor::CallbackOpenMap(const char *pFileName, int StorageType, void *pUse
 	CEditor *pEditor = (CEditor*)pUser;
 	if(pEditor->Load(pFileName, StorageType))
 	{
-		str_copy(pEditor->m_aFileName, pFileName, 512);
+		str_copy(pEditor->m_aFileName, pFileName, sizeof(pEditor->m_aFileName));
 		pEditor->m_ValidSaveFilename = StorageType == IStorage::TYPE_SAVE && pEditor->m_pFileDialogPath == pEditor->m_aFileDialogCurrentFolder;
 		pEditor->SortImages();
 		pEditor->m_Dialog = DIALOG_NONE;
@@ -1546,7 +1546,7 @@ void CEditor::DoMapEditor(CUIRect View)
 		}
 
 		// render the game above everything else
-		if(m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
+		if(m_Map.m_pGameGroup && m_Map.m_pGameLayer && m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
 		{
 			m_Map.m_pGameGroup->MapScreen();
 			m_Map.m_pGameLayer->Render();
@@ -2006,8 +2006,8 @@ void CEditor::DoMapEditor(CUIRect View)
 
 	if(!m_ShowTilePicker && GetSelectedGroup() && GetSelectedGroup()->m_UseClipping)
 	{
-		CLayerGroup *g = m_Map.m_pGameGroup;
-		g->MapScreen();
+		if(m_Map.m_pGameGroup)
+			m_Map.m_pGameGroup->MapScreen();
 
 		Graphics()->TextureClear();
 		Graphics()->LinesBegin();
@@ -2032,8 +2032,8 @@ void CEditor::DoMapEditor(CUIRect View)
 	// render screen sizes
 	if(!m_ShowTilePicker && m_ProofBorders)
 	{
-		CLayerGroup *g = m_Map.m_pGameGroup;
-		g->MapScreen();
+		if(m_Map.m_pGameGroup)
+			m_Map.m_pGameGroup->MapScreen();
 
 		Graphics()->TextureClear();
 		Graphics()->LinesBegin();
@@ -2080,7 +2080,6 @@ void CEditor::DoMapEditor(CUIRect View)
 			mem_copy(aLastPoints, aPoints, sizeof(aPoints));
 		}
 
-		if(1)
 		{
 			Graphics()->SetColor(1,0,0,1);
 			for(int i = 0; i < 2; i++)
@@ -2245,11 +2244,14 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 		}
 		else if(pProps[i].m_Type == PROPTYPE_IMAGE)
 		{
-			char aBuf[64];
+			if(pProps[i].m_Value >= m_Map.m_lImages.size())
+				pProps[i].m_Value = m_Map.m_lImages.size() - 1;
+
+			char aBuf[128];
 			if(pProps[i].m_Value < 0)
 				str_copy(aBuf, "None", sizeof(aBuf));
 			else
-				str_format(aBuf, sizeof(aBuf),"%s", m_Map.m_lImages[pProps[i].m_Value]->m_aName);
+				str_copy(aBuf, m_Map.m_lImages[pProps[i].m_Value]->m_aName, sizeof(aBuf));
 
 			if(DoButton_Editor(&pIDs[i], aBuf, 0, &Shifter, 0, 0))
 				PopupSelectImageInvoke(pProps[i].m_Value, UI()->MouseX(), UI()->MouseY());
@@ -3149,7 +3151,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 		if(pNewEnv) // add the default points
 		{
-			if(pNewEnv->m_Channels == 4)
+			if(pNewEnv->GetChannels() == 4)
 			{
 				pNewEnv->AddPoint(0, f2fx(1.0f), f2fx(1.0f), f2fx(1.0f), f2fx(1.0f));
 				pNewEnv->AddPoint(1000, f2fx(1.0f), f2fx(1.0f), f2fx(1.0f), f2fx(1.0f));
@@ -3194,7 +3196,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 	}
 
 	bool ShowColorBar = false;
-	if(pEnvelope && pEnvelope->m_Channels == 4)
+	if(pEnvelope && pEnvelope->GetChannels() == 4)
 	{
 		ShowColorBar = true;
 		View.HSplitTop(20.0f, &ColorBar, &View);
@@ -3215,24 +3217,24 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 			ToolBar.VSplitLeft(15.0f, &Button, &ToolBar);
 
-			static const char *s_paNames[2][4] = {
+			static const char *s_paNames[2][CEnvPoint::MAX_CHANNELS] = {
 				{"X", "Y", "R", ""},
 				{"R", "G", "B", "A"},
 			};
 
-			const char *paDescriptions[2][4] = {
+			const char *paDescriptions[2][CEnvPoint::MAX_CHANNELS] = {
 				{"X-axis of the envelope", "Y-axis of the envelope", "Rotation of the envelope", ""},
 				{"Red value of the envelope", "Green value of the envelope", "Blue value of the envelope", "Alpha value of the envelope"},
 			};
 
-			static int s_aChannelButtons[4] = {0};
+			static int s_aChannelButtons[CEnvPoint::MAX_CHANNELS] = {0};
 			int Bit = 1;
 
-			for(int i = 0; i < pEnvelope->m_Channels; i++, Bit<<=1)
+			for(int i = 0; i < pEnvelope->GetChannels(); i++, Bit<<=1)
 			{
 				ToolBar.VSplitLeft(15.0f, &Button, &ToolBar);
 
-				if(DoButton_Editor(&s_aChannelButtons[i], s_paNames[pEnvelope->m_Channels-3][i], s_ActiveChannels&Bit, &Button, 0, paDescriptions[pEnvelope->m_Channels-3][i]))
+				if(DoButton_Editor(&s_aChannelButtons[i], s_paNames[pEnvelope->GetChannels()-3][i], s_ActiveChannels&Bit, &Button, 0, paDescriptions[pEnvelope->GetChannels()-3][i]))
 					s_ActiveChannels ^= Bit;
 			}
 
@@ -3293,7 +3295,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			UI()->ClipEnable(&View);
 			Graphics()->TextureClear();
 			Graphics()->LinesBegin();
-			for(int c = 0; c < pEnvelope->m_Channels; c++)
+			for(int c = 0; c < pEnvelope->GetChannels(); c++)
 			{
 				if(!(s_ActiveChannels&(1<<c)))
 					continue;
@@ -3343,7 +3345,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 			UI()->ClipEnable(&View);
 			Graphics()->TextureClear();
 			Graphics()->LinesBegin();
-			for(int c = 0; c < pEnvelope->m_Channels; c++)
+			for(int c = 0; c < pEnvelope->GetChannels(); c++)
 			{
 				if(s_ActiveChannels&(1<<c))
 					Graphics()->SetColor(aColors[c].r,aColors[c].g,aColors[c].b,1);
@@ -3441,7 +3443,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 			Graphics()->TextureClear();
 			Graphics()->QuadsBegin();
-			for(int c = 0; c < pEnvelope->m_Channels; c++)
+			for(int c = 0; c < pEnvelope->GetChannels(); c++)
 			{
 				if(!(s_ActiveChannels&(1<<c)))
 					continue;

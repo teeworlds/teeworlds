@@ -31,7 +31,7 @@ bool CEditor::PopupGroup(void *pContext, CUIRect View)
 			return true;
 		}
 	}
-	else
+	else if(pEditor->m_Map.m_pGameGroup && pEditor->m_Map.m_pGameLayer)
 	{
 		if(pEditor->DoButton_Editor(&s_DeleteButton, "Clean-up game tiles", 0, &Button, 0, "Removes game tiles that aren't based on a layer"))
 		{
@@ -92,7 +92,9 @@ bool CEditor::PopupGroup(void *pContext, CUIRect View)
 	static int s_NewTileLayerButton = 0;
 	if(pEditor->DoButton_Editor(&s_NewTileLayerButton, "Add tile layer", 0, &Button, 0, "Creates a new tile layer"))
 	{
-		CLayer *l = new CLayerTiles(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+		CLayer *l = new CLayerTiles(
+			pEditor->m_Map.m_pGameLayer ? pEditor->m_Map.m_pGameLayer->m_Width : 50,
+			pEditor->m_Map.m_pGameLayer ? pEditor->m_Map.m_pGameLayer->m_Height : 50);
 		l->m_pEditor = pEditor;
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
 		pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
@@ -130,16 +132,16 @@ bool CEditor::PopupGroup(void *pContext, CUIRect View)
 
 	CProperty aProps[] = {
 		{"Order", pEditor->m_SelectedGroup, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lGroups.size()-1},
-		{"Pos X", -pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_OffsetX, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Pos Y", -pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_OffsetY, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Para X", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ParallaxX, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Para Y", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ParallaxY, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos X", -pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_OffsetX, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
+		{"Pos Y", -pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_OffsetY, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
+		{"Para X", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ParallaxX, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
+		{"Para Y", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ParallaxY, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
 
 		{"Use Clipping", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_UseClipping, PROPTYPE_BOOL, 0, 1},
-		{"Clip X", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipX, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Clip Y", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipY, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Clip W", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipW, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Clip H", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipH, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Clip X", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipX, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
+		{"Clip Y", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipY, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
+		{"Clip W", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipW, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
+		{"Clip H", pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_ClipH, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
 		{0},
 	};
 
@@ -390,12 +392,12 @@ bool CEditor::PopupQuad(void *pContext, CUIRect View)
 	};
 
 	CProperty aProps[] = {
-		{"Pos X", fx2i(pQuad->m_aPoints[4].x), PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Pos Y", fx2i(pQuad->m_aPoints[4].y), PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos X", fx2i(pQuad->m_aPoints[4].x), PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
+		{"Pos Y", fx2i(pQuad->m_aPoints[4].y), PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
 		{"Pos. Env", pQuad->m_PosEnv+1, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lEnvelopes.size()+1},
-		{"Pos. TO", pQuad->m_PosEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos. TO", pQuad->m_PosEnvOffset, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
 		{"Color Env", pQuad->m_ColorEnv+1, PROPTYPE_INT_STEP, 0, pEditor->m_Map.m_lEnvelopes.size()+1},
-		{"Color TO", pQuad->m_ColorEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Color TO", pQuad->m_ColorEnvOffset, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
 
 		{0},
 	};
@@ -425,7 +427,7 @@ bool CEditor::PopupQuad(void *pContext, CUIRect View)
 		if(Step != 0)
 		{
 			for(; Index >= -1 && Index < pEditor->m_Map.m_lEnvelopes.size(); Index += Step)
-				if(Index == -1 || pEditor->m_Map.m_lEnvelopes[Index]->m_Channels == 3)
+				if(Index == -1 || pEditor->m_Map.m_lEnvelopes[Index]->GetChannels() == 3)
 				{
 					pQuad->m_PosEnv = Index;
 					break;
@@ -440,7 +442,7 @@ bool CEditor::PopupQuad(void *pContext, CUIRect View)
 		if(Step != 0)
 		{
 			for(; Index >= -1 && Index < pEditor->m_Map.m_lEnvelopes.size(); Index += Step)
-				if(Index == -1 || pEditor->m_Map.m_lEnvelopes[Index]->m_Channels == 4)
+				if(Index == -1 || pEditor->m_Map.m_lEnvelopes[Index]->GetChannels() == 4)
 				{
 					pQuad->m_ColorEnv = Index;
 					break;
@@ -490,11 +492,11 @@ bool CEditor::PopupPoint(void *pContext, CUIRect View)
 
 
 	CProperty aProps[] = {
-		{"Pos X", x, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Pos Y", y, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Pos X", x, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
+		{"Pos Y", y, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
 		{"Color", Color, PROPTYPE_COLOR, -1, pEditor->m_Map.m_lEnvelopes.size()},
-		{"Tex U", tu, PROPTYPE_INT_SCROLL, -1000000, 1000000},
-		{"Tex V", tv, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Tex U", tu, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
+		{"Tex V", tv, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
 		{0},
 	};
 

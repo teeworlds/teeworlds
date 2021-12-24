@@ -61,7 +61,7 @@ void CLayerTiles::PrepareForSave()
 				m_pTiles[y*m_Width+x].m_Flags = 0;
 		}
 
-	if(m_Image != -1 && m_Color.a == 255)
+	if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size() && m_Color.a == 255)
 	{
 		for(int y = 0; y < m_Height; y++)
 			for(int x = 0; x < m_Width; x++)
@@ -130,21 +130,6 @@ void CLayerTiles::PrepareForSave()
 				Tile.m_Skip = 0;
 			}
 		}
-	}
-}
-
-void CLayerTiles::ExtractTiles(CTile *pSavedTiles)
-{
-	int i = 0;
-	while(i < m_Width * m_Height)
-	{
-		for(unsigned Counter = 0; Counter <= pSavedTiles->m_Skip && i < m_Width * m_Height; Counter++)
-		{
-			m_pTiles[i] = *pSavedTiles;
-			m_pTiles[i++].m_Skip = 0;
-		}
-
-		pSavedTiles++;
 	}
 }
 
@@ -518,8 +503,10 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 {
 	CUIRect Button;
 
-	bool IsGameLayer = m_pEditor->m_Map.m_pGameLayer == this;
-	bool InGameGroup = !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
+	const bool IsGameLayer = m_pEditor->m_Map.m_pGameLayer == this;
+	const bool InGameGroup = !IsGameLayer && m_pEditor->m_Map.m_pGameLayer && m_pEditor->m_Map.m_pGameGroup
+			&& !find_linear(m_pEditor->m_Map.m_pGameGroup->m_lLayers.all(), this).empty();
+
 	if(!IsGameLayer)
 	{
 		if(m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size() && m_pEditor->m_Map.m_lImages[m_Image]->m_pAutoMapper)
@@ -543,8 +530,6 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 			}
 		}
 	}
-	else
-		InGameGroup = false;
 
 	if(InGameGroup)
 	{
@@ -588,13 +573,13 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 	Color |= m_Color.a;
 
 	CProperty aProps[] = {
-		{"Width", m_Width, PROPTYPE_INT_SCROLL, 1, 1000000000},
-		{"Height", m_Height, PROPTYPE_INT_SCROLL, 1, 1000000000},
+		{"Width", m_Width, PROPTYPE_INT_SCROLL, CMapItemLayerTilemap::MIN_DIMENSION, CMapItemLayerTilemap::MAX_DIMENSION},
+		{"Height", m_Height, PROPTYPE_INT_SCROLL, CMapItemLayerTilemap::MIN_DIMENSION, CMapItemLayerTilemap::MAX_DIMENSION},
 		{"Shift", 0, PROPTYPE_SHIFT, 0, 0},
 		{"Image", m_Image, PROPTYPE_IMAGE, 0, 0},
 		{"Color", Color, PROPTYPE_COLOR, 0, 0},
 		{"Color Env", m_ColorEnv+1, PROPTYPE_INT_STEP, 0, m_pEditor->m_Map.m_lEnvelopes.size()+1},
-		{"Color TO", m_ColorEnvOffset, PROPTYPE_INT_SCROLL, -1000000, 1000000},
+		{"Color TO", m_ColorEnvOffset, PROPTYPE_INT_SCROLL, CProperty::MIN, CProperty::MAX},
 		{0},
 	};
 
@@ -625,8 +610,9 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		}
 		else
 		{
-			bool HasNameOfOldImage = m_Image != -1 && str_comp(m_aName, m_pEditor->m_Map.m_lImages[m_Image]->m_aName) == 0;
-			m_Image = NewVal%m_pEditor->m_Map.m_lImages.size();
+			bool HasNameOfOldImage = m_Image >= 0 && m_Image < m_pEditor->m_Map.m_lImages.size()
+				&& str_comp(m_aName, m_pEditor->m_Map.m_lImages[m_Image]->m_aName) == 0;
+			m_Image = NewVal % m_pEditor->m_Map.m_lImages.size();
 			m_SelectedRuleSet = 0;
 			m_LiveAutoMap = false;
 			if(str_comp(m_aName, pDefaultLayerName) == 0 || HasNameOfOldImage)
@@ -640,22 +626,24 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		m_Color.b = (NewVal>>8)&0xff;
 		m_Color.a = NewVal&0xff;
 	}
-	if(Prop == PROP_COLOR_ENV)
+	else if(Prop == PROP_COLOR_ENV)
 	{
 		int Index = clamp(NewVal-1, -1, m_pEditor->m_Map.m_lEnvelopes.size()-1);
 		int Step = (Index-m_ColorEnv)%2;
 		if(Step != 0)
 		{
 			for(; Index >= -1 && Index < m_pEditor->m_Map.m_lEnvelopes.size(); Index += Step)
-				if(Index == -1 || m_pEditor->m_Map.m_lEnvelopes[Index]->m_Channels == 4)
+				if(Index == -1 || m_pEditor->m_Map.m_lEnvelopes[Index]->GetChannels() == 4)
 				{
 					m_ColorEnv = Index;
 					break;
 				}
 		}
 	}
-	if(Prop == PROP_COLOR_ENV_OFFSET)
+	else if(Prop == PROP_COLOR_ENV_OFFSET)
+	{
 		m_ColorEnvOffset = NewVal;
+	}
 
 	return 0;
 }
