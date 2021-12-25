@@ -47,7 +47,27 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	else
 		Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 	if(Ct < 0)
-		return; // projectile haven't been shot yet
+	{
+		if(Ct > -s_LastGameTickTime / 2)
+		{
+			// Fixup the timing which might be screwed during demo playback because
+			// s_LastGameTickTime depends on the system timer, while the other part
+			// Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED
+			// is virtually constant (for projectiles fired on the current game tick):
+			// (x - (x+2)) / 50 = -0.04
+			//
+			// We have a strict comparison for the passed time being more than the time between ticks
+			// if(CurtickStart > m_Info.m_CurrentTime) in CDemoPlayer::Update()
+			// so on the practice the typical value of s_LastGameTickTime varies from 0.02386 to 0.03999
+			// which leads to Ct from -0.00001 to -0.01614.
+			// Round up those to 0.0 to fix missing rendering of the projectile.
+			Ct = 0;
+		}
+		else
+		{
+			return; // projectile haven't been shot yet
+		}
+	}
 
 	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
 	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
