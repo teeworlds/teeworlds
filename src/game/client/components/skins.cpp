@@ -313,6 +313,7 @@ void CSkins::OnInit()
 			str_format(aBuf, sizeof(aBuf), "loaded xmas hat '%s'", pFileName);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 			m_XmasHatTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+			mem_free(Info.m_pData);
 		}
 	}
 	m_pClient->m_pMenus->RenderLoading(1);
@@ -333,6 +334,7 @@ void CSkins::OnInit()
 			str_format(aBuf, sizeof(aBuf), "loaded bot '%s'", pFileName);
 			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 			m_BotTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+			mem_free(Info.m_pData);
 		}
 	}
 	m_pClient->m_pMenus->RenderLoading(1);
