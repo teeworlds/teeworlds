@@ -1986,7 +1986,7 @@ void CClient::Run()
 	}
 
 	// init font rendering
-	Kernel()->RequestInterface<IEngineTextRender>()->Init();
+	m_pTextRender->Init();
 
 	// init the input
 	Input()->Init();
