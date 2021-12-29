@@ -416,12 +416,12 @@ private:
 		{
 			if(!m_Valid || !m_InfosLoaded)
 				return -1;
-			return bytes_be_to_uint(m_Info.m_aNumTimelineMarkers);
+			return bytes_be_to_int(m_Info.m_aNumTimelineMarkers);
 		}
 
 		int Length() const
 		{
-			return bytes_be_to_uint(m_Info.m_aLength);
+			return bytes_be_to_int(m_Info.m_aLength);
 		}
 
 		bool operator<(const CDemoItem &Other) const
