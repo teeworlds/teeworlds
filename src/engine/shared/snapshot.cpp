@@ -319,9 +319,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 	// unpack deleted stuff
 	pDeleted = pData;
 	if(pDelta->m_NumDeletedItems < 0)
-	{
 		return -1;
-	}
 	pData += pDelta->m_NumDeletedItems;
 	if(pData > pEnd)
 		return -1;
@@ -406,6 +404,11 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 
 // CSnapshotStorage
 
+CSnapshotStorage::~CSnapshotStorage()
+{
+	PurgeAll();
+}
+
 void CSnapshotStorage::Init()
 {
 	m_pFirst = 0;
@@ -415,11 +418,10 @@ void CSnapshotStorage::Init()
 void CSnapshotStorage::PurgeAll()
 {
 	CHolder *pHolder = m_pFirst;
-	CHolder *pNext;
 
 	while(pHolder)
 	{
-		pNext = pHolder->m_pNext;
+		CHolder *pNext = pHolder->m_pNext;
 		mem_free(pHolder);
 		pHolder = pNext;
 	}
@@ -432,11 +434,10 @@ void CSnapshotStorage::PurgeAll()
 void CSnapshotStorage::PurgeUntil(int Tick)
 {
 	CHolder *pHolder = m_pFirst;
-	CHolder *pNext;
 
 	while(pHolder)
 	{
-		pNext = pHolder->m_pNext;
+		CHolder *pNext = pHolder->m_pNext;
 		if(pHolder->m_Tick >= Tick)
 			return; // no more to remove
 		mem_free(pHolder);
@@ -583,8 +584,7 @@ CSnapshotItem *CSnapshotBuilder::GetItem(int Index)
 
 int *CSnapshotBuilder::GetItemData(int Key)
 {
-	int i;
-	for(i = 0; i < m_NumItems; i++)
+	for(int i = 0; i < m_NumItems; i++)
 	{
 		if(GetItem(i)->Key() == Key)
 			return GetItem(i)->Data();
