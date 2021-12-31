@@ -13,10 +13,10 @@ class CImageInfo
 public:
 	enum
 	{
-		FORMAT_AUTO=-1,
-		FORMAT_RGB=0,
-		FORMAT_RGBA=1,
-		FORMAT_ALPHA=2,
+		FORMAT_AUTO = -1,
+		FORMAT_RGB = 0,
+		FORMAT_RGBA = 1,
+		FORMAT_ALPHA = 2,
 	};
 
 	/* Variable: width
@@ -34,6 +34,22 @@ public:
 	/* Variable: data
 		Pointer to the image data. */
 	void *m_pData;
+
+	static int GetPixelSize(int Format)
+	{
+		switch(Format)
+		{
+		case FORMAT_RGB: return 3;
+		case FORMAT_RGBA: return 4;
+		case FORMAT_ALPHA: return 1;
+		}
+		return 0;
+	}
+
+	int GetPixelSize() const
+	{
+		return GetPixelSize(m_Format);
+	}
 };
 
 /*
