@@ -202,8 +202,8 @@ private:
 		float m_FooterHeight;
 		CScrollRegion m_ScrollRegion;
 		vec2 m_ScrollOffset;
-		CLineInput m_FilterInput;
 		char m_aFilterString[64];
+		CLineInput m_FilterInput;
 		int m_BackgroundCorners;
 
 	protected:

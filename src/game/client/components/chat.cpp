@@ -21,8 +21,10 @@
 #include "chat.h"
 #include "binds.h"
 
-CChat::CChat() : m_Input(m_aInputBuf, sizeof(m_aInputBuf))
+CChat::CChat()
 {
+	m_aInputBuf[0] = '\0';
+	m_Input.SetBuffer(m_aInputBuf, sizeof(m_aInputBuf));
 }
 
 void CChat::OnReset()

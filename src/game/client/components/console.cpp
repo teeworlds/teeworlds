@@ -33,7 +33,7 @@ enum
 	CONSOLE_CLOSING,
 };
 
-CGameConsole::CInstance::CInstance(int Type) : m_Input(m_aInputBuf, sizeof(m_aInputBuf))
+CGameConsole::CInstance::CInstance(int Type)
 {
 	m_pHistoryEntry = 0x0;
 
@@ -58,6 +58,8 @@ CGameConsole::CInstance::CInstance(int Type) : m_Input(m_aInputBuf, sizeof(m_aIn
 	m_CompletionRenderOffset = 0.0f;
 
 	m_IsCommand = false;
+	m_aInputBuf[0] = '\0';
+	m_Input.SetBuffer(m_aInputBuf, sizeof(m_aInputBuf));
 }
 
 void CGameConsole::CInstance::Init(CGameConsole *pGameConsole)

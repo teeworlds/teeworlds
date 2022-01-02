@@ -29,9 +29,9 @@ class CLineInput
 public:
 	static void Init(class IInput *pInput, class ITextRender *pTextRender) { s_pInput = pInput; s_pTextRender = pTextRender; }
 
-	CLineInput() { SetBuffer(0, 0, 0); }
-	CLineInput(char *pStr, int MaxSize) { SetBuffer(pStr, MaxSize, MaxSize); }
-	CLineInput(char *pStr, int MaxSize, int MaxChars) { SetBuffer(pStr, MaxSize, MaxChars); }
+	CLineInput() : m_pStr(0) { SetBuffer(0, 0, 0); }
+	CLineInput(char *pStr, int MaxSize) : m_pStr(0)  { SetBuffer(pStr, MaxSize, MaxSize); }
+	CLineInput(char *pStr, int MaxSize, int MaxChars) : m_pStr(0)  { SetBuffer(pStr, MaxSize, MaxChars); }
 
 	void SetBuffer(char *pStr, int MaxSize) { SetBuffer(pStr, MaxSize, MaxSize); }
 	void SetBuffer(char *pStr, int MaxSize, int MaxChars);
