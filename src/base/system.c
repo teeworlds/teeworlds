@@ -1868,7 +1868,7 @@ int fs_read(const char *name, void **result, unsigned *result_len)
 
 char *fs_read_str(const char *name)
 {
-	IOHANDLE file = io_open(name, IOFLAG_READ);
+	IOHANDLE file = io_open(name, IOFLAG_READ | IOFLAG_SKIP_BOM);
 	char *result;
 	if(!file)
 	{
