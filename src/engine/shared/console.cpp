@@ -508,14 +508,13 @@ bool CConsole::ExecuteFile(const char *pFilename)
 	char aBuf[256];
 	if(File)
 	{
-		char *pLine;
-		CLineReader lr;
-
 		str_format(aBuf, sizeof(aBuf), "executing '%s'", pFilename);
 		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
-		lr.Init(File);
 
-		while((pLine = lr.Get()))
+		CLineReader LineReader;
+		LineReader.Init(File);
+		const char *pLine;
+		while((pLine = LineReader.Get()))
 			ExecuteLine(pLine);
 
 		io_close(File);
