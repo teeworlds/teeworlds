@@ -4,7 +4,7 @@
 
 void CLineReader::Init(IOHANDLE io)
 {
-	m_BufferMaxSize = sizeof(m_aBuffer);
+	m_BufferMaxSize = sizeof(m_aBuffer) - 1;
 	m_BufferSize = 0;
 	m_BufferPos = 0;
 	m_IO = io;
