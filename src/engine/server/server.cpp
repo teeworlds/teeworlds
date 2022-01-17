@@ -1809,7 +1809,7 @@ void CServer::SnapSetStaticsize(int ItemType, int Size)
 static CServer *CreateServer() { return new CServer(); }
 
 
-void HandleSigInt(int Param)
+void HandleSigIntTerm(int Param)
 {
 	if(InterruptSignaled)
 		_Exit(1); // exit is not async-signal-safe and must not be called from a signal handler
@@ -1847,7 +1847,8 @@ int main(int argc, const char **argv) // ignore_convention
 		return -1;
 	}
 
-	signal(SIGINT, HandleSigInt);
+	signal(SIGINT, HandleSigIntTerm);
+	signal(SIGTERM, HandleSigIntTerm);
 
 	CServer *pServer = CreateServer();
 	IKernel *pKernel = IKernel::Create();
