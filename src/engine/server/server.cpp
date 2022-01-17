@@ -1811,10 +1811,11 @@ static CServer *CreateServer() { return new CServer(); }
 
 void HandleSigIntTerm(int Param)
 {
-	if(InterruptSignaled)
-		_Exit(1); // exit is not async-signal-safe and must not be called from a signal handler
-	else
-		InterruptSignaled = 1;
+	InterruptSignaled = 1;
+
+	// Exit the next time a signal is received
+	signal(SIGINT, SIG_DFL);
+	signal(SIGTERM, SIG_DFL);
 }
 
 int main(int argc, const char **argv) // ignore_convention
