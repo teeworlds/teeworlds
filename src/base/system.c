@@ -1878,6 +1878,7 @@ int fs_file_time(const char *name, time_t *created, time_t *modified)
 
 	*created = filetime_to_unixtime(&finddata.ftCreationTime);
 	*modified = filetime_to_unixtime(&finddata.ftLastWriteTime);
+	FindClose(handle);
 #elif defined(CONF_FAMILY_UNIX)
 	struct stat sb;
 	if(stat(name, &sb))
