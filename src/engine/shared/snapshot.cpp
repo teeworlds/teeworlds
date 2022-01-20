@@ -177,7 +177,7 @@ void CSnapshotDelta::SetStaticsize(int ItemType, int Size)
 	m_aItemSizes[ItemType] = Size;
 }
 
-CSnapshotDelta::CData *CSnapshotDelta::EmptyDelta()
+const CSnapshotDelta::CData *CSnapshotDelta::EmptyDelta() const
 {
 	return &m_Empty;
 }

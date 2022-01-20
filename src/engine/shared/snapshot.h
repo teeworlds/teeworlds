@@ -89,7 +89,7 @@ public:
 	int GetDataRate(int Index) const { return m_aSnapshotDataRate[Index]; }
 	int GetDataUpdates(int Index) const { return m_aSnapshotDataUpdates[Index]; }
 	void SetStaticsize(int ItemType, int Size);
-	CData *EmptyDelta();
+	const CData *EmptyDelta() const;
 	int CreateDelta(const class CSnapshot *pFrom, class CSnapshot *pTo, void *pData);
 	int UnpackDelta(const class CSnapshot *pFrom, class CSnapshot *pTo, const void *pData, int DataSize);
 };

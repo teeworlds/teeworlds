@@ -1407,7 +1407,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					static CSnapshot Emptysnap;
 					CSnapshot *pDeltaShot = &Emptysnap;
 					int PurgeTick;
-					void *pDeltaData;
 					int DeltaSize;
 					unsigned char aTmpBuffer2[CSnapshot::MAX_SIZE];
 					unsigned char aTmpBuffer3[CSnapshot::MAX_SIZE];
@@ -1446,7 +1445,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					}
 
 					// decompress snapshot
-					pDeltaData = m_SnapshotDelta.EmptyDelta();
+					const void *pDeltaData = m_SnapshotDelta.EmptyDelta();
 					DeltaSize = sizeof(int)*3;
 
 					if(CompleteSize)
