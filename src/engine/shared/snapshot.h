@@ -121,7 +121,7 @@ public:
 	void Init();
 	void PurgeAll();
 	void PurgeUntil(int Tick);
-	void Add(int Tick, int64 Tagtime, int DataSize, void *pData, int CreateAlt);
+	void Add(int Tick, int64 Tagtime, int DataSize, const void *pData, bool CreateAlt);
 	int Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData);
 };
 

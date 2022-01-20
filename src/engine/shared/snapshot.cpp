@@ -460,7 +460,7 @@ void CSnapshotStorage::PurgeUntil(int Tick)
 	m_pLast = 0;
 }
 
-void CSnapshotStorage::Add(int Tick, int64 Tagtime, int DataSize, void *pData, int CreateAlt)
+void CSnapshotStorage::Add(int Tick, int64 Tagtime, int DataSize, const void *pData, bool CreateAlt)
 {
 	// allocate memory for holder + snapshot_data
 	int TotalSize = sizeof(CHolder)+DataSize;
