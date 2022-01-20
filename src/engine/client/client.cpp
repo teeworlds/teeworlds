@@ -1464,7 +1464,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize);
 					if(SnapSize < 0)
 					{
-						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "delta unpack failed!");
+						char aBuf[64];
+						str_format(aBuf, sizeof(aBuf), "delta unpack failed! (%d)", SnapSize);
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", aBuf);
 						return;
 					}
 
