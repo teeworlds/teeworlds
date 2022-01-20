@@ -79,10 +79,7 @@ private:
 	short m_aItemSizes[MAX_NETOBJSIZES];
 	int m_aSnapshotDataRate[CSnapshot::MAX_TYPE + 1];
 	int m_aSnapshotDataUpdates[CSnapshot::MAX_TYPE + 1];
-	int m_SnapshotCurrent;
 	CData m_Empty;
-
-	void UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size);
 
 public:
 	CSnapshotDelta();

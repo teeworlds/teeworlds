@@ -139,19 +139,19 @@ static int DiffItem(const int *pPast, const int *pCurrent, int *pOut, int Size)
 	return Needed;
 }
 
-void CSnapshotDelta::UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size)
+static void UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size, int *pDataRate)
 {
 	while(Size)
 	{
 		*pOut = *pPast+*pDiff;
 
 		if(*pDiff == 0)
-			m_aSnapshotDataRate[m_SnapshotCurrent] += 1;
+			*pDataRate += 1;
 		else
 		{
 			unsigned char aBuf[16];
 			unsigned char *pEnd = CVariableInt::Pack(aBuf, *pDiff);
-			m_aSnapshotDataRate[m_SnapshotCurrent] += (int)(pEnd - (unsigned char*)aBuf) * 8;
+			*pDataRate += (int)(pEnd - (unsigned char*)aBuf) * 8;
 		}
 
 		pOut++;
@@ -166,7 +166,6 @@ CSnapshotDelta::CSnapshotDelta()
 	mem_zero(m_aItemSizes, sizeof(m_aItemSizes));
 	mem_zero(m_aSnapshotDataRate, sizeof(m_aSnapshotDataRate));
 	mem_zero(m_aSnapshotDataUpdates, sizeof(m_aSnapshotDataUpdates));
-	m_SnapshotCurrent = 0;
 	mem_zero(&m_Empty, sizeof(m_Empty));
 }
 
@@ -373,7 +372,6 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 				return -2;
 			ItemSize = (*pData++) * 4;
 		}
-		m_SnapshotCurrent = Type;
 
 		if(RangeCheck(pEnd, pData, ItemSize) || ItemSize < 0) return -3;
 
@@ -390,14 +388,14 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		if(FromIndex != -1)
 		{
 			// we got an update so we need to apply the diff
-			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize/4);
-			m_aSnapshotDataUpdates[m_SnapshotCurrent]++;
+			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize / 4, &m_aSnapshotDataRate[Type]);
+			m_aSnapshotDataUpdates[Type]++;
 		}
 		else // no previous, just copy the pData
 		{
 			mem_copy(pNewData, pData, ItemSize);
-			m_aSnapshotDataRate[m_SnapshotCurrent] += ItemSize*8;
-			m_aSnapshotDataUpdates[m_SnapshotCurrent]++;
+			m_aSnapshotDataRate[Type] += ItemSize * 8;
+			m_aSnapshotDataUpdates[Type]++;
 		}
 
 		pData += ItemSize/4;
