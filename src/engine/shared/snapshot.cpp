@@ -358,9 +358,13 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 			return -1;
 
 		Type = *pData++;
-		if(Type < 0)
-			return -1;
+		if(Type < 0 || Type > CSnapshot::MAX_TYPE)
+			return -3;
+
 		ID = *pData++;
+		if(ID < 0 || ID > CSnapshot::MAX_ID)
+			return -3;
+
 		if(Type < MAX_NETOBJSIZES && m_aItemSizes[Type])
 			ItemSize = m_aItemSizes[Type];
 		else

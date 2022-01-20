@@ -37,6 +37,8 @@ class CSnapshot
 public:
 	enum
 	{
+		MAX_TYPE = 0x7fff,
+		MAX_ID = 0xffff,
 		MAX_PARTS	= 64,
 		MAX_SIZE	= MAX_PARTS*1024
 	};
@@ -75,8 +77,8 @@ private:
 		MAX_NETOBJSIZES=64
 	};
 	short m_aItemSizes[MAX_NETOBJSIZES];
-	int m_aSnapshotDataRate[0xffff];
-	int m_aSnapshotDataUpdates[0xffff];
+	int m_aSnapshotDataRate[CSnapshot::MAX_TYPE + 1];
+	int m_aSnapshotDataUpdates[CSnapshot::MAX_TYPE + 1];
 	int m_SnapshotCurrent;
 	CData m_Empty;
 
