@@ -238,7 +238,7 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 
 	if(Prop == PROP_ORDER)
 		pEditor->m_SelectedLayer = pCurrentGroup->SwapLayers(pEditor->m_SelectedLayer, NewVal);
-	else if(Prop == PROP_GROUP && pCurrentLayer->m_Type != LAYERTYPE_GAME)
+	else if(Prop == PROP_GROUP && !IsGameLayer)
 	{
 		if(NewVal >= 0 && NewVal < pEditor->m_Map.m_lGroups.size())
 		{
