@@ -74,7 +74,7 @@ void CMapLayers::LoadBackgroundMap()
 			str_format(aBuf, sizeof(aBuf), "ui/themes/%s_%s.map", pMenuMap, IsDaytime ? "night" : "day");
 			if(!m_pMenuMap->Load(aBuf, m_pClient->Storage()))
 			{
-				str_format(aBuf, sizeof(aBuf), "map '%s' not found", pMenuMap);
+				str_format(aBuf, sizeof(aBuf), "map '%s' not found (%s)", pMenuMap, m_pMenuMap->GetError());
 				Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client", aBuf);
 				return;
 			}
