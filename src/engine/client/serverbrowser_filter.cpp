@@ -56,25 +56,7 @@ CServerBrowserFilter::CServerFilter& CServerBrowserFilter::CServerFilter::operat
 	if(&Other != this)
 	{
 		m_pServerBrowserFilter = Other.m_pServerBrowserFilter;
-		m_FilterInfo.m_SortHash = Other.m_FilterInfo.m_SortHash;
-		m_FilterInfo.m_Ping = Other.m_FilterInfo.m_Ping;
-		m_FilterInfo.m_Country = Other.m_FilterInfo.m_Country;
-		m_FilterInfo.m_ServerLevel = Other.m_FilterInfo.m_ServerLevel;
-		for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
-		{
-			if(Other.m_FilterInfo.m_aGametype[i][0])
-			{
-				str_copy(m_FilterInfo.m_aGametype[i], Other.m_FilterInfo.m_aGametype[i], sizeof(m_FilterInfo.m_aGametype[i]));
-				m_FilterInfo.m_aGametypeExclusive[i] = Other.m_FilterInfo.m_aGametypeExclusive[i];
-			}
-			else
-			{
-				m_FilterInfo.m_aGametype[i][0] = 0;
-				m_FilterInfo.m_aGametypeExclusive[i] = false;
-			}
-		}
-		str_copy(m_FilterInfo.m_aAddress, Other.m_FilterInfo.m_aAddress, sizeof(m_FilterInfo.m_aAddress));
-
+		m_FilterInfo.Set(&Other.m_FilterInfo);
 		m_NumSortedPlayers = Other.m_NumSortedPlayers;
 		m_NumSortedServers = Other.m_NumSortedServers;
 		m_SortedServersCapacity = Other.m_SortedServersCapacity;
@@ -389,19 +371,24 @@ void CServerBrowserFilter::Sort(CServerEntry **ppServerlist, int NumServers, int
 	}
 }
 
+void CServerFilterInfo::Set(const CServerFilterInfo *pSrc)
+{
+	m_SortHash = pSrc->m_SortHash;
+	m_Ping = pSrc->m_Ping;
+	m_Country = pSrc->m_Country;
+	m_ServerLevel = pSrc->m_ServerLevel;
+	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
+	{
+		str_copy(m_aGametype[i], pSrc->m_aGametype[i], sizeof(m_aGametype[i]));
+		m_aGametypeExclusive[i] = m_aGametype[i][0] && pSrc->m_aGametypeExclusive[i];
+	}
+	str_copy(m_aAddress, pSrc->m_aAddress, sizeof(m_aAddress));
+}
+
 int CServerBrowserFilter::AddFilter(const CServerFilterInfo *pFilterInfo)
 {
 	CServerFilter Filter;
-	Filter.m_FilterInfo.m_SortHash = pFilterInfo->m_SortHash;
-	Filter.m_FilterInfo.m_Ping = pFilterInfo->m_Ping;
-	Filter.m_FilterInfo.m_Country = pFilterInfo->m_Country;
-	Filter.m_FilterInfo.m_ServerLevel = pFilterInfo->m_ServerLevel;
-	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
-	{
-		str_copy(Filter.m_FilterInfo.m_aGametype[i], pFilterInfo->m_aGametype[i], sizeof(Filter.m_FilterInfo.m_aGametype[i]));
-		Filter.m_FilterInfo.m_aGametypeExclusive[i] = pFilterInfo->m_aGametypeExclusive[i];
-	}
-	str_copy(Filter.m_FilterInfo.m_aAddress, pFilterInfo->m_aAddress, sizeof(Filter.m_FilterInfo.m_aAddress));
+	Filter.m_FilterInfo.Set(pFilterInfo);
 	Filter.m_pSortedServerlist = 0;
 	Filter.m_NumSortedPlayers = 0;
 	Filter.m_NumSortedServers = 0;
@@ -414,33 +401,13 @@ int CServerBrowserFilter::AddFilter(const CServerFilterInfo *pFilterInfo)
 
 void CServerBrowserFilter::GetFilter(int Index, CServerFilterInfo *pFilterInfo) const
 {
-	const CServerFilter *pFilter = &m_lFilters[Index];
-	pFilterInfo->m_SortHash = pFilter->m_FilterInfo.m_SortHash;
-	pFilterInfo->m_Ping = pFilter->m_FilterInfo.m_Ping;
-	pFilterInfo->m_Country = pFilter->m_FilterInfo.m_Country;
-	pFilterInfo->m_ServerLevel = pFilter->m_FilterInfo.m_ServerLevel;
-	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
-	{
-		str_copy(pFilterInfo->m_aGametype[i], pFilter->m_FilterInfo.m_aGametype[i], sizeof(pFilterInfo->m_aGametype[i]));
-		pFilterInfo->m_aGametypeExclusive[i] = pFilter->m_FilterInfo.m_aGametypeExclusive[i];
-	}
-	str_copy(pFilterInfo->m_aAddress, pFilter->m_FilterInfo.m_aAddress, sizeof(pFilterInfo->m_aAddress));
+	pFilterInfo->Set(&m_lFilters[Index].m_FilterInfo);
 }
 
 void CServerBrowserFilter::SetFilter(int Index, const CServerFilterInfo *pFilterInfo)
 {
 	CServerFilter *pFilter = &m_lFilters[Index];
-	pFilter->m_FilterInfo.m_SortHash = pFilterInfo->m_SortHash;
-	pFilter->m_FilterInfo.m_Ping = pFilterInfo->m_Ping;
-	pFilter->m_FilterInfo.m_Country = pFilterInfo->m_Country;
-	pFilter->m_FilterInfo.m_ServerLevel = pFilterInfo->m_ServerLevel;
-	for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
-	{
-		str_copy(pFilter->m_FilterInfo.m_aGametype[i], pFilterInfo->m_aGametype[i], sizeof(pFilter->m_FilterInfo.m_aGametype[i]));
-		pFilter->m_FilterInfo.m_aGametypeExclusive[i] = pFilterInfo->m_aGametypeExclusive[i];
-	}
-	str_copy(pFilter->m_FilterInfo.m_aAddress, pFilterInfo->m_aAddress, sizeof(pFilter->m_FilterInfo.m_aAddress));
-
+	pFilter->m_FilterInfo.Set(pFilterInfo);
 	pFilter->Sort();
 }
 
