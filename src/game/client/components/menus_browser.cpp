@@ -709,7 +709,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	EditButtons.VSplitRight(Spacing, &EditButtons, 0);
 	EditButtons.VSplitRight(ButtonHeight, &EditButtons, &Button);
 	Button.Margin(2.0f, &Button);
-	if(FilterIndex > 0 && (pFilter->Custom() > CBrowserFilter::FILTER_ALL || m_lFilters[FilterIndex-1].Custom() != CBrowserFilter::FILTER_STANDARD))
+	if(FilterIndex > 0)
 	{
 		if(DoButton_SpriteID(&pFilter->m_UpButtonContainer, IMAGE_TOOLICONS, SPRITE_TOOL_UP_A, false, &Button))
 		{
@@ -723,7 +723,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	EditButtons.VSplitRight(Spacing, &EditButtons, 0);
 	EditButtons.VSplitRight(ButtonHeight, &EditButtons, &Button);
 	Button.Margin(2.0f, &Button);
-	if(FilterIndex >= 0 && FilterIndex < m_lFilters.size()-1 && (pFilter->Custom() != CBrowserFilter::FILTER_STANDARD || m_lFilters[FilterIndex+1].Custom() > CBrowserFilter::FILTER_ALL))
+	if(FilterIndex < m_lFilters.size() - 1)
 	{
 		if(DoButton_SpriteID(&pFilter->m_DownButtonContainer, IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_A, false, &Button))
 		{
