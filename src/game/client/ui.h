@@ -138,6 +138,7 @@ class CUI
 		int m_Corners;
 		void *m_pContext;
 		bool (*m_pfnFunc)(void *pContext, CUIRect View); // returns true to close popup
+		bool m_New;
 	} m_aPopupMenus[MAX_POPUP_MENUS];
 	unsigned m_NumPopupMenus;
 
