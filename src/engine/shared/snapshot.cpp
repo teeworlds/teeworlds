@@ -149,7 +149,7 @@ void CSnapshotDelta::UndiffItem(const int *pPast, const int *pDiff, int *pOut, i
 			m_aSnapshotDataRate[m_SnapshotCurrent] += 1;
 		else
 		{
-			unsigned char aBuf[16];
+			unsigned char aBuf[CVariableInt::MAX_BYTES_PACKED];
 			unsigned char *pEnd = CVariableInt::Pack(aBuf, *pDiff);
 			m_aSnapshotDataRate[m_SnapshotCurrent] += (int)(pEnd - (unsigned char*)aBuf) * 8;
 		}
