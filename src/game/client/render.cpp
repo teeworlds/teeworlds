@@ -1,9 +1,9 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
+#include <algorithm>
 
 #include <base/math.h>
-#include <base/tl/base.h>
 
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
@@ -42,10 +42,10 @@ void CRenderTools::SelectSprite(const CDataSprite *pSpr, int Flags, int sx, int 
 	float y2 = (y+h)/(float)cy - 0.5f/(float)(cy*32);
 
 	if(Flags&SPRITE_FLAG_FLIP_Y)
-		tl_swap(y1, y2);
+		std::swap(y1, y2);
 
 	if(Flags&SPRITE_FLAG_FLIP_X)
-		tl_swap(x1, x2);
+		std::swap(x1, x2);
 
 	Graphics()->QuadsSetSubset(x1, y1, x2, y2);
 }

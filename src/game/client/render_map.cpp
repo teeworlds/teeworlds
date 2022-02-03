@@ -2,7 +2,6 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
 #include <base/math.h>
-#include <base/tl/base.h>
 #include <engine/graphics.h>
 
 #include "render.h"
@@ -28,8 +27,8 @@ float SolveBezier(float x, float p0, float p1, float p2, float p3)
 {
 	// check for valid f-curve
 	// we only take care of monotonic bezier curves, so there has to be exactly 1 real solution
-	tl_assert(p0 <= x && x <= p3);
-	tl_assert((p0 <= p1 && p1 <= p3) && (p0 <= p2 && p2 <= p3));
+	if(!(p0 <= x && x <= p3) || !(p0 <= p1 && p1 <= p3) || !(p0 <= p2 && p2 <= p3))
+		return 0.0f;
 
 	double a, b, c, t;
 	double x3 = -p0 + 3*p1 - 3*p2 + p3;

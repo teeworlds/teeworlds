@@ -1,7 +1,9 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <base/tl/base.h>
+#include <algorithm>
+
 #include <base/tl/algorithm.h>
+
 #include "snapshot.h"
 #include "compression.h"
 
@@ -635,9 +637,9 @@ int CSnapshotBuilder::Finish(void *pSnapdata)
 			if(pSnap->SortedKeys()[i-1] > pSnap->SortedKeys()[i])
 			{
 				Sorting = true;
-				tl_swap(pSnap->SortedKeys()[i], pSnap->SortedKeys()[i-1]);
-				tl_swap(m_aOffsets[i], m_aOffsets[i-1]);
-				tl_swap(aItemSizes[i], aItemSizes[i-1]);
+				std::swap(pSnap->SortedKeys()[i], pSnap->SortedKeys()[i-1]);
+				std::swap(m_aOffsets[i], m_aOffsets[i-1]);
+				std::swap(aItemSizes[i], aItemSizes[i-1]);
 			}
 		}
 	}
