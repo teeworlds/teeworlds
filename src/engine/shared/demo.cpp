@@ -162,7 +162,7 @@ void CDemoRecorder::WriteTickMarker(int Tick, int Keyframe)
 	{
 		unsigned char aChunk[5];
 		aChunk[0] = CHUNKTYPEFLAG_TICKMARKER;
-		uint_to_bytes_be(aChunk+1, Tick);
+		int_to_bytes_be(aChunk+1, Tick);
 
 		if(Keyframe)
 			aChunk[0] |= CHUNKTICKFLAG_KEYFRAME;
@@ -282,18 +282,18 @@ int CDemoRecorder::Stop()
 	// add the demo length to the header
 	io_seek(m_File, gs_LengthOffset, IOSEEK_START);
 	unsigned char aLength[4];
-	uint_to_bytes_be(aLength, Length());
+	int_to_bytes_be(aLength, Length());
 	io_write(m_File, aLength, sizeof(aLength));
 
 	// add the timeline markers to the header
 	io_seek(m_File, gs_NumMarkersOffset, IOSEEK_START);
 	unsigned char aNumMarkers[4];
-	uint_to_bytes_be(aNumMarkers, m_NumTimelineMarkers);
+	int_to_bytes_be(aNumMarkers, m_NumTimelineMarkers);
 	io_write(m_File, aNumMarkers, sizeof(aNumMarkers));
 	for(int i = 0; i < m_NumTimelineMarkers; i++)
 	{
 		unsigned char aMarker[4];
-		uint_to_bytes_be(aMarker, m_aTimelineMarkers[i]);
+		int_to_bytes_be(aMarker, m_aTimelineMarkers[i]);
 		io_write(m_File, aMarker, sizeof(aMarker));
 	}
 
@@ -383,7 +383,7 @@ int CDemoPlayer::ReadChunkHeader(int *pType, int *pSize, int *pTick)
 			unsigned char aTickData[4];
 			if(io_read(m_File, aTickData, sizeof(aTickData)) != sizeof(aTickData))
 				return -1;
-			*pTick = bytes_be_to_uint(aTickData);
+			*pTick = bytes_be_to_int(aTickData);
 		}
 		else
 		{
@@ -705,11 +705,9 @@ const char *CDemoPlayer::Load(const char *pFilename, int StorageType, const char
 	}
 
 	// get timeline markers
-	m_Info.m_Info.m_NumTimelineMarkers = minimum(bytes_be_to_uint(m_Info.m_Header.m_aNumTimelineMarkers), unsigned(MAX_TIMELINE_MARKERS));
+	m_Info.m_Info.m_NumTimelineMarkers = minimum(bytes_be_to_int(m_Info.m_Header.m_aNumTimelineMarkers), int(MAX_TIMELINE_MARKERS));
 	for(int i = 0; i < m_Info.m_Info.m_NumTimelineMarkers; i++)
-	{
-		m_Info.m_Info.m_aTimelineMarkers[i] = bytes_be_to_uint(m_Info.m_Header.m_aTimelineMarkers[i]);
-	}
+		m_Info.m_Info.m_aTimelineMarkers[i] = bytes_be_to_int(m_Info.m_Header.m_aTimelineMarkers[i]);
 
 	// scan the file for interesting points
 	ScanFile();
