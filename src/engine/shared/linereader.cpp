@@ -2,27 +2,26 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "linereader.h"
 
-void CLineReader::Init(IOHANDLE io)
+void CLineReader::Init(IOHANDLE IoHandle)
 {
-	m_BufferMaxSize = sizeof(m_aBuffer);
+	m_BufferMaxSize = sizeof(m_aBuffer) - 1;
 	m_BufferSize = 0;
 	m_BufferPos = 0;
-	m_IO = io;
+	m_IO = IoHandle;
 }
 
-char *CLineReader::Get()
+const char *CLineReader::Get()
 {
 	unsigned LineStart = m_BufferPos;
 	bool CRLFBreak = false;
 
-	while(1)
+	while(true)
 	{
 		if(m_BufferPos >= m_BufferSize)
 		{
 			// fetch more
 
 			// move the remaining part to the front
-			unsigned Read;
 			unsigned Left = m_BufferSize - LineStart;
 
 			if(LineStart > m_BufferSize)
@@ -32,7 +31,7 @@ char *CLineReader::Get()
 			m_BufferPos = Left;
 
 			// fill the buffer
-			Read = io_read(m_IO, &m_aBuffer[m_BufferPos], m_BufferMaxSize-m_BufferPos);
+			unsigned Read = io_read(m_IO, &m_aBuffer[m_BufferPos], m_BufferMaxSize - m_BufferPos);
 			m_BufferSize = Left + Read;
 			LineStart = 0;
 
@@ -56,14 +55,14 @@ char *CLineReader::Get()
 				// line found
 				if(m_aBuffer[m_BufferPos] == '\r')
 				{
-					if(m_BufferPos+1 >= m_BufferSize)
+					if(m_BufferPos + 1 >= m_BufferSize)
 					{
 						// read more to get the connected '\n'
 						CRLFBreak = true;
 						++m_BufferPos;
 						continue;
 					}
-					else if(m_aBuffer[m_BufferPos+1] == '\n')
+					else if(m_aBuffer[m_BufferPos + 1] == '\n')
 						m_aBuffer[m_BufferPos++] = 0;
 				}
 				m_aBuffer[m_BufferPos++] = 0;

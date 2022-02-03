@@ -104,10 +104,9 @@ public:
 			}
 		}
 
-		char *pLine;
 		CLineReader LineReader;
 		LineReader.Init(File);
-
+		const char *pLine;
 		while((pLine = LineReader.Get()))
 		{
 			const char *pLineWithoutPrefix = str_startswith(pLine, "add_path ");
