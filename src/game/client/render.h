@@ -48,32 +48,31 @@ class CRenderTools
 {
 	class CConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
-public:
 
 	class IGraphics *Graphics() const { return m_pGraphics; }
 
+public:
 	void Init(class CConfig *pConfig, class IGraphics *pGraphics);
 
-	void SelectSprite(struct CDataSprite *pSprite, int Flags=0, int sx=0, int sy=0);
-	void SelectSprite(int id, int Flags=0, int sx=0, int sy=0);
+	void SelectSprite(const struct CDataSprite *pSprite, int Flags = 0, int sx = 0, int sy = 0);
+	void SelectSprite(int Id, int Flags = 0, int sx = 0, int sy = 0);
 
-	void DrawSprite(float x, float y, float size);
+	void DrawSprite(float x, float y, float Size);
 	void RenderCursor(float CenterX, float CenterY, float Size);
 
-	// object render methods (gc_render_obj.cpp)
+	// object render methods
 	void RenderTee(class CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
-	void RenderTeeHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset,
-					   vec2 PostRotOffset);
+	void RenderTeeHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset);
 
-	// map render methods (gc_render_map.cpp)
-	static void RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult);
-	void RenderQuads(CQuad *pQuads, int NumQuads, int Flags, ENVELOPE_EVAL pfnEval, void *pUser);
-	void RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset);
+	// map render methods (render_map.cpp)
+	static void RenderEvalEnvelope(const CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult);
+	void RenderQuads(const CQuad *pQuads, int NumQuads, int Flags, ENVELOPE_EVAL pfnEval, void *pUser);
+	void RenderTilemap(const CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset);
 
 	// helpers
 	void MapScreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,
 		float OffsetX, float OffsetY, float Aspect, float Zoom, float aPoints[4]);
-	void MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom);
+	void MapScreenToGroup(float CenterX, float CenterY, const CMapItemGroup *pGroup, float Zoom);
 };
 
 #endif
