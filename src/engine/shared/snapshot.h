@@ -116,6 +116,7 @@ public:
 	CHolder *m_pFirst;
 	CHolder *m_pLast;
 
+	~CSnapshotStorage();
 	void Init();
 	void PurgeAll();
 	void PurgeUntil(int Tick);

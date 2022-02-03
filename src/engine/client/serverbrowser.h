@@ -87,6 +87,7 @@ private:
 		CServerEntry *m_aServerlistIp[256]; // ip hash list
 		CServerEntry **m_ppServerlist;
 
+		~CServerlist();
 		void Clear();
 	} m_aServerlist[NUM_TYPES];
 

@@ -281,13 +281,10 @@ CGlyphMap::CGlyphMap(IGraphics *pGraphics, FT_Library FtLibrary)
 
 CGlyphMap::~CGlyphMap()
 {
+	FT_Stroker_Done(m_FtStroker);
+
 	for(int i = 0; i < m_Glyphs.size(); ++i)
 		delete m_Glyphs[i].m_pGlyph;
-
-	for(int i = 0; i < m_NumFtFaces; ++i)
-		FT_Done_Face(m_aFtFaces[i]);
-
-	FT_Stroker_Done(m_FtStroker);
 }
 
 int CGlyphMap::GetCharGlyph(int Chr, FT_Face *pFace)
@@ -725,13 +722,6 @@ CTextRender::CTextRender()
 	mem_zero(m_apFontData, sizeof(m_apFontData));
 }
 
-CTextRender::~CTextRender()
-{
-	for(int i = 0; i < MAX_FACES; ++i)
-		if(m_apFontData[i])
-			mem_free(m_apFontData[i]);
-}
-
 void CTextRender::Init()
 {
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
@@ -748,8 +738,15 @@ void CTextRender::Update()
 void CTextRender::Shutdown()
 {
 	delete m_pGlyphMap;
+
+	FT_Done_FreeType(m_FTLibrary);
+
 	if(m_paVariants)
 		mem_free(m_paVariants);
+
+	for(int i = 0; i < MAX_FACES; ++i)
+		if(m_apFontData[i])
+			mem_free(m_apFontData[i]);
 }
 
 void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)

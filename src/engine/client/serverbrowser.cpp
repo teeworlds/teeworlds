@@ -39,7 +39,11 @@ inline int GetNewToken()
 	return random_int();
 }
 
-//
+CServerBrowser::CServerlist::~CServerlist()
+{
+	mem_free(m_ppServerlist);
+}
+
 void CServerBrowser::CServerlist::Clear()
 {
 	m_ServerlistHeap.Reset();

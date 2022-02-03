@@ -1986,7 +1986,7 @@ void CClient::Run()
 	}
 
 	// init font rendering
-	Kernel()->RequestInterface<IEngineTextRender>()->Init();
+	m_pTextRender->Init();
 
 	// init the input
 	Input()->Init();
@@ -2712,6 +2712,7 @@ int main(int argc, const char **argv) // ignore_convention
 		dbg_console_cleanup();
 #endif
 	// free components
+	pClient->~CClient();
 	mem_free(pClient);
 	delete pKernel;
 	delete pEngine;
