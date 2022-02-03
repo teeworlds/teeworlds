@@ -479,7 +479,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 			for(int e = 0; e < Num; e++)
 			{
 				CMapItemEnvelope *pItem = (CMapItemEnvelope *)DataFile.GetItem(Start+e, 0, 0);
-				CEnvelope *pEnv = new CEnvelope(pItem->m_Channels);
+				const int Channels = minimum(pItem->m_Channels, 4);
+				CEnvelope *pEnv = new CEnvelope(Channels);
 				pEnv->m_lPoints.set_size(pItem->m_NumPoints);
 				for(int n = 0; n < pItem->m_NumPoints; n++)
 				{
@@ -496,7 +497,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pEnv->m_lPoints[n].m_Time = pEnvPoint_v1->m_Time;
 						pEnv->m_lPoints[n].m_Curvetype = pEnvPoint_v1->m_Curvetype;
 
-						for(int c = 0; c < pItem->m_Channels; c++)
+						for(int c = 0; c < Channels; c++)
 						{
 							pEnv->m_lPoints[n].m_aValues[c] = pEnvPoint_v1->m_aValues[c];
 						}
