@@ -11,11 +11,12 @@
 
 #include "menus.h"
 
-CMenus::CListBox::CListBox() : m_FilterInput(m_aFilterString, sizeof(m_aFilterString))
+CMenus::CListBox::CListBox()
 {
 	m_ScrollOffset = vec2(0,0);
 	m_ListBoxUpdateScroll = false;
 	m_aFilterString[0] = '\0';
+	m_FilterInput.SetBuffer(m_aFilterString, sizeof(m_aFilterString));
 }
 
 void CMenus::CListBox::DoBegin(const CUIRect *pRect)

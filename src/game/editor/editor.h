@@ -520,7 +520,7 @@ public:
 	CUI *UI() { return &m_UI; }
 	CRenderTools *RenderTools() { return &m_RenderTools; }
 
-	CEditor() : m_FileDialogFilterInput(m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString)), m_TilesetPicker(16, 16)
+	CEditor() : m_TilesetPicker(16, 16)
 	{
 		m_pInput = 0;
 		m_pClient = 0;
@@ -545,6 +545,8 @@ public:
 		m_PopupEventWasActivated = false;
 
 		m_FileDialogStorageType = 0;
+		m_aFileDialogFilterString[0] = '\0';
+		m_FileDialogFilterInput.SetBuffer(m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString));
 		m_pFileDialogTitle = 0;
 		m_pFileDialogButtonText = 0;
 		m_pFileDialogUser = 0;
@@ -671,8 +673,8 @@ public:
 	int m_FileDialogFileType;
 	float m_FileDialogScrollValue;
 	int m_FilesSelectedIndex;
-	CLineInput m_FileDialogFilterInput;
 	char m_aFileDialogFilterString[64];
+	CLineInput m_FileDialogFilterInput;
 	char m_aFileDialogNewFolderName[64];
 	char m_aFileDialogErrString[64];
 	IGraphics::CTextureHandle m_FilePreviewImage;
