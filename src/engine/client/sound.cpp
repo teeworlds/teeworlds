@@ -560,6 +560,9 @@ int CSound::Play(int ChannelID, CSampleHandle SampleID, int Flags)
 
 void CSound::Stop(CSampleHandle SampleID)
 {
+	if(!SampleID.IsValid())
+		return;
+
 	// TODO: a nice fade out
 	lock_wait(m_SoundLock);
 	CSample *pSample = &m_aSamples[SampleID.Id()];
@@ -597,6 +600,9 @@ void CSound::StopAll()
 
 bool CSound::IsPlaying(CSampleHandle SampleID)
 {
+	if(!SampleID.IsValid())
+		return false;
+
 	bool Ret = false;
 	lock_wait(m_SoundLock);
 	CSample *pSample = &m_aSamples[SampleID.Id()];
