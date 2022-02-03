@@ -1408,7 +1408,6 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					static CSnapshot Emptysnap;
 					CSnapshot *pDeltaShot = &Emptysnap;
 					int PurgeTick;
-					void *pDeltaData;
 					int DeltaSize;
 					unsigned char aTmpBuffer2[CSnapshot::MAX_SIZE];
 					unsigned char aTmpBuffer3[CSnapshot::MAX_SIZE];
@@ -1447,7 +1446,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					}
 
 					// decompress snapshot
-					pDeltaData = m_SnapshotDelta.EmptyDelta();
+					const void *pDeltaData = m_SnapshotDelta.EmptyDelta();
 					DeltaSize = sizeof(int)*3;
 
 					if(CompleteSize)
@@ -1465,7 +1464,9 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 					SnapSize = m_SnapshotDelta.UnpackDelta(pDeltaShot, pTmpBuffer3, pDeltaData, DeltaSize);
 					if(SnapSize < 0)
 					{
-						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", "delta unpack failed!");
+						char aBuf[64];
+						str_format(aBuf, sizeof(aBuf), "delta unpack failed! (%d)", SnapSize);
+						m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "client", aBuf);
 						return;
 					}
 

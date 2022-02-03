@@ -38,7 +38,7 @@ void CSnapshot::InvalidateItem(int Index)
 	((CSnapshotItem *)(DataStart() + Offsets()[Index]))->Invalidate();
 }
 
-int CSnapshot::Serialize(char *pDstData)
+int CSnapshot::Serialize(char *pDstData) const
 {
 	int *pData = (int*)pDstData;
 	pData[0] = m_DataSize;
@@ -139,19 +139,19 @@ static int DiffItem(const int *pPast, const int *pCurrent, int *pOut, int Size)
 	return Needed;
 }
 
-void CSnapshotDelta::UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size)
+static void UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size, int *pDataRate)
 {
 	while(Size)
 	{
 		*pOut = *pPast+*pDiff;
 
 		if(*pDiff == 0)
-			m_aSnapshotDataRate[m_SnapshotCurrent] += 1;
+			*pDataRate += 1;
 		else
 		{
 			unsigned char aBuf[CVariableInt::MAX_BYTES_PACKED];
 			unsigned char *pEnd = CVariableInt::Pack(aBuf, *pDiff);
-			m_aSnapshotDataRate[m_SnapshotCurrent] += (int)(pEnd - (unsigned char*)aBuf) * 8;
+			*pDataRate += (int)(pEnd - (unsigned char*)aBuf) * 8;
 		}
 
 		pOut++;
@@ -166,7 +166,6 @@ CSnapshotDelta::CSnapshotDelta()
 	mem_zero(m_aItemSizes, sizeof(m_aItemSizes));
 	mem_zero(m_aSnapshotDataRate, sizeof(m_aSnapshotDataRate));
 	mem_zero(m_aSnapshotDataUpdates, sizeof(m_aSnapshotDataUpdates));
-	m_SnapshotCurrent = 0;
 	mem_zero(&m_Empty, sizeof(m_Empty));
 }
 
@@ -177,7 +176,7 @@ void CSnapshotDelta::SetStaticsize(int ItemType, int Size)
 	m_aItemSizes[ItemType] = Size;
 }
 
-CSnapshotDelta::CData *CSnapshotDelta::EmptyDelta()
+const CSnapshotDelta::CData *CSnapshotDelta::EmptyDelta() const
 {
 	return &m_Empty;
 }
@@ -356,9 +355,13 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 			return -1;
 
 		Type = *pData++;
-		if(Type < 0)
-			return -1;
+		if(Type < 0 || Type > CSnapshot::MAX_TYPE)
+			return -3;
+
 		ID = *pData++;
+		if(ID < 0 || ID > CSnapshot::MAX_ID)
+			return -3;
+
 		if(Type < MAX_NETOBJSIZES && m_aItemSizes[Type])
 			ItemSize = m_aItemSizes[Type];
 		else
@@ -367,7 +370,6 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 				return -2;
 			ItemSize = (*pData++) * 4;
 		}
-		m_SnapshotCurrent = Type;
 
 		if(RangeCheck(pEnd, pData, ItemSize) || ItemSize < 0) return -3;
 
@@ -384,14 +386,14 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		if(FromIndex != -1)
 		{
 			// we got an update so we need to apply the diff
-			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize/4);
-			m_aSnapshotDataUpdates[m_SnapshotCurrent]++;
+			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize / 4, &m_aSnapshotDataRate[Type]);
+			m_aSnapshotDataUpdates[Type]++;
 		}
 		else // no previous, just copy the pData
 		{
 			mem_copy(pNewData, pData, ItemSize);
-			m_aSnapshotDataRate[m_SnapshotCurrent] += ItemSize*8;
-			m_aSnapshotDataUpdates[m_SnapshotCurrent]++;
+			m_aSnapshotDataRate[Type] += ItemSize * 8;
+			m_aSnapshotDataUpdates[Type]++;
 		}
 
 		pData += ItemSize/4;
@@ -457,7 +459,7 @@ void CSnapshotStorage::PurgeUntil(int Tick)
 	m_pLast = 0;
 }
 
-void CSnapshotStorage::Add(int Tick, int64 Tagtime, int DataSize, void *pData, int CreateAlt)
+void CSnapshotStorage::Add(int Tick, int64 Tagtime, int DataSize, const void *pData, bool CreateAlt)
 {
 	// allocate memory for holder + snapshot_data
 	int TotalSize = sizeof(CHolder)+DataSize;
@@ -493,7 +495,7 @@ void CSnapshotStorage::Add(int Tick, int64 Tagtime, int DataSize, void *pData, i
 	m_pLast = pHolder;
 }
 
-int CSnapshotStorage::Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData)
+int CSnapshotStorage::Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData) const
 {
 	CHolder *pHolder = m_pFirst;
 
@@ -577,12 +579,12 @@ bool CSnapshotBuilder::UnserializeSnap(const char *pSrcData, int SrcSize)
 	return true;
 }
 
-CSnapshotItem *CSnapshotBuilder::GetItem(int Index)
+CSnapshotItem *CSnapshotBuilder::GetItem(int Index) const
 {
 	return (CSnapshotItem *)&(m_aData[m_aOffsets[Index]]);
 }
 
-int *CSnapshotBuilder::GetItemData(int Key)
+int *CSnapshotBuilder::GetItemData(int Key) const
 {
 	for(int i = 0; i < m_NumItems; i++)
 	{
