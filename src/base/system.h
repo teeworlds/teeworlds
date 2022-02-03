@@ -422,27 +422,35 @@ void thread_wait(void *thread);
 
 /*
 	Function: thread_destroy
-		Destroys a thread.
+		Frees resources associated with a thread handle.
 
 	Parameters:
-		thread - Thread to destroy.
+		thread - Thread handle to destroy.
+
+	Remarks:
+		- The thread must have already terminated normally.
+		- Detached threads must not be destroyed with this function.
 */
 void thread_destroy(void *thread);
 
 /*
-	Function: thread_yeild
-		Yeild the current threads execution slice.
+	Function: thread_yield
+		Yield the current threads execution slice.
 */
 void thread_yield();
 
 /*
 	Function: thread_detach
-		Puts the thread in the detached thread, guaranteeing that
+		Puts the thread in the detached state, guaranteeing that
 		resources of the thread will be freed immediately when the
 		thread terminates.
 
 	Parameters:
 		thread - Thread to detach
+
+	Remarks:
+		- This invalidates the thread handle, hence it must not be
+		used after detaching the thread.
 */
 void thread_detach(void *thread);
 
