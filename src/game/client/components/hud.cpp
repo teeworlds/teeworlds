@@ -623,7 +623,7 @@ void CHud::RenderVoting()
 
 void CHud::RenderCursor()
 {
-	if(!m_pClient->m_Snap.m_pLocalCharacter || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+	if(!m_pClient->m_Snap.m_pLocalCharacter || Client()->State() == IClient::STATE_DEMOPLAYBACK || !Layers()->GameGroup())
 		return;
 
 	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
