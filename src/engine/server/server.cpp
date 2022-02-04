@@ -599,7 +599,7 @@ void CServer::DoSnapshot()
 			// create delta
 			DeltaSize = m_SnapshotDelta.CreateDelta(pDeltashot, pData, aDeltaData);
 
-			if(DeltaSize)
+			if(DeltaSize > 0)
 			{
 				// compress it
 				int SnapshotSize;
@@ -644,6 +644,13 @@ void CServer::DoSnapshot()
 				Msg.AddInt(m_CurrentGameTick);
 				Msg.AddInt(m_CurrentGameTick-DeltaTick);
 				SendMsg(&Msg, MSGFLAG_FLUSH, i);
+
+				if(DeltaSize < 0)
+				{
+					char aBuf[64];
+					str_format(aBuf, sizeof(aBuf), "delta pack failed! (%d)", DeltaSize);
+					m_pConsole->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+				}
 			}
 		}
 	}
@@ -672,6 +679,7 @@ int CServer::NewClientCallback(int ClientID, void *pUser)
 	pThis->m_aClients[ClientID].m_pMapListEntryToSend = 0;
 	pThis->m_aClients[ClientID].m_NoRconNote = false;
 	pThis->m_aClients[ClientID].m_Quitting = false;
+	pThis->m_aClients[ClientID].m_Latency = 0;
 	pThis->m_aClients[ClientID].Reset();
 
 	return 0;
@@ -1074,20 +1082,10 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 		{
 			if(Config()->m_Debug)
 			{
-				char aHex[] = "0123456789ABCDEF";
-				char aBuf[512];
-
-				for(int b = 0; b < pPacket->m_DataSize && b < 32; b++)
-				{
-					aBuf[b*3] = aHex[((const unsigned char *)pPacket->m_pData)[b]>>4];
-					aBuf[b*3+1] = aHex[((const unsigned char *)pPacket->m_pData)[b]&0xf];
-					aBuf[b*3+2] = ' ';
-					aBuf[b*3+3] = 0;
-				}
-
-				char aBufMsg[256];
-				str_format(aBufMsg, sizeof(aBufMsg), "strange message ClientID=%d msg=%d data_size=%d", ClientID, Msg, pPacket->m_DataSize);
-				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBufMsg);
+				char aBuf[256];
+				str_format(aBuf, sizeof(aBuf), "strange message ClientID=%d msg=%d data_size=%d", ClientID, Msg, pPacket->m_DataSize);
+				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
+				str_hex(aBuf, sizeof(aBuf), pPacket->m_pData, minimum(pPacket->m_DataSize, 32));
 				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
 			}
 		}
@@ -1245,7 +1243,7 @@ int CServer::LoadMap(const char *pMapName)
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
 
 	// check for valid standard map
-	if(!m_MapChecker.ReadAndValidateMap(Storage(), aBuf, IStorage::TYPE_ALL))
+	if(!m_pMapChecker->ReadAndValidateMap(aBuf, IStorage::TYPE_ALL))
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "mapchecker", "invalid standard map");
 		return 0;
@@ -1292,13 +1290,14 @@ void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterS
 	m_Register.Init(pNetServer, pMasterServer, pConfig, pConsole);
 }
 
-void CServer::InitInterfaces(CConfig *pConfig, IConsole *pConsole, IGameServer *pGameServer, IEngineMap *pMap, IStorage *pStorage)
+void CServer::InitInterfaces(IKernel *pKernel)
 {
-	m_pConfig = pConfig;
-	m_pConsole = pConsole;
-	m_pGameServer = pGameServer;
-	m_pMap = pMap;
-	m_pStorage = pStorage;
+	m_pConfig = pKernel->RequestInterface<IConfigManager>()->Values();
+	m_pConsole = pKernel->RequestInterface<IConsole>();
+	m_pGameServer = pKernel->RequestInterface<IGameServer>();
+	m_pMap = pKernel->RequestInterface<IEngineMap>();
+	m_pMapChecker = pKernel->RequestInterface<IMapChecker>();
+	m_pStorage = pKernel->RequestInterface<IStorage>();
 }
 
 int CServer::Run()
@@ -1306,17 +1305,13 @@ int CServer::Run()
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(Config()->m_ConsoleOutputLevel, SendRconLineAuthed, this);
 
-	// list maps
-	m_pMapListHeap = new CHeap();
-	CSubdirCallbackUserdata Userdata;
-	Userdata.m_pServer = this;
-	str_copy(Userdata.m_aName, "", sizeof(Userdata.m_aName));
-	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "maps/", MapListEntryCallback, &Userdata);
+	InitMapList();
 
 	// load map
 	if(!LoadMap(Config()->m_SvMap))
 	{
 		dbg_msg("server", "failed to load map. mapname='%s'", Config()->m_SvMap);
+		Free();
 		return -1;
 	}
 	m_MapChunksPerRequest = Config()->m_SvMapDownloadSpeed;
@@ -1340,6 +1335,7 @@ int CServer::Run()
 		Config()->m_SvMaxClients, Config()->m_SvMaxClientsPerIP, NewClientCallback, DelClientCallback, this))
 	{
 		dbg_msg("server", "couldn't open socket. port %d might already be in use", Config()->m_SvPort);
+		Free();
 		return -1;
 	}
 
@@ -1472,20 +1468,37 @@ int CServer::Run()
 	m_Econ.Shutdown();
 
 	GameServer()->OnShutdown();
-	m_pMap->Unload();
+	Free();
+
+	return 0;
+}
+
+void CServer::Free()
+{
+	if(m_pMap)
+	{
+		m_pMap->Unload();
+	}
 
 	if(m_pCurrentMapData)
 	{
 		mem_free(m_pCurrentMapData);
 		m_pCurrentMapData = 0;
 	}
+
 	if(m_pMapListHeap)
 	{
 		delete m_pMapListHeap;
 		m_pMapListHeap = 0;
 	}
-	return 0;
 }
+
+struct CSubdirCallbackUserdata
+{
+	CServer *m_pServer;
+	char m_aName[IConsole::TEMPMAP_NAME_LENGTH];
+	bool m_StandardOnly;
+};
 
 int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser)
 {
@@ -1504,19 +1517,22 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 	if(IsDir)
 	{
 		CSubdirCallbackUserdata Userdata;
+		Userdata.m_StandardOnly = pUserdata->m_StandardOnly;
 		Userdata.m_pServer = pThis;
 		str_copy(Userdata.m_aName, aFilename, sizeof(Userdata.m_aName));
-		char FindPath[IO_MAX_PATH_LENGTH];
-		str_format(FindPath, sizeof(FindPath), "maps/%s/", aFilename);
-		pThis->m_pStorage->ListDirectory(IStorage::TYPE_ALL, FindPath, MapListEntryCallback, &Userdata);
+		char aFindPath[IO_MAX_PATH_LENGTH];
+		str_format(aFindPath, sizeof(aFindPath), "maps/%s/", aFilename);
+		pThis->m_pStorage->ListDirectory(IStorage::TYPE_ALL, aFindPath, MapListEntryCallback, &Userdata);
 		return 0;
 	}
 
 	const char *pSuffix = str_endswith(aFilename, ".map");
 	if(!pSuffix) // not ending with .map
-	{
-			return 0;
-	}
+		return 0;
+	aFilename[pSuffix - aFilename] = 0; // remove suffix
+
+	if(pUserdata->m_StandardOnly && !pThis->m_pMapChecker->IsStandardMap(aFilename))
+		return 0;
 
 	CMapListEntry *pEntry = (CMapListEntry *)pThis->m_pMapListHeap->Allocate(sizeof(CMapListEntry));
 	pThis->m_NumMapEntries++;
@@ -1528,9 +1544,27 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 	if(!pThis->m_pFirstMapEntry)
 		pThis->m_pFirstMapEntry = pEntry;
 
-	str_truncate(pEntry->m_aName, sizeof(pEntry->m_aName), aFilename, pSuffix-aFilename);
+	str_copy(pEntry->m_aName, aFilename, sizeof(pEntry->m_aName));
 
 	return 0;
+}
+
+void CServer::InitMapList()
+{
+	m_pMapListHeap = new CHeap();
+
+	CSubdirCallbackUserdata Userdata;
+	if(str_comp(Config()->m_SvMaplist, "standard") == 0)
+		Userdata.m_StandardOnly = true;
+	else if(str_comp(Config()->m_SvMaplist, "all") == 0)
+		Userdata.m_StandardOnly = false;
+	else /* "none" or any other value */
+		return;
+
+	Userdata.m_pServer = this;
+	str_copy(Userdata.m_aName, "", sizeof(Userdata.m_aName));
+	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "maps/", MapListEntryCallback, &Userdata);
+	dbg_msg("server", "%d maps added to maplist", m_NumMapEntries);
 }
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser)
@@ -1809,12 +1843,13 @@ void CServer::SnapSetStaticsize(int ItemType, int Size)
 static CServer *CreateServer() { return new CServer(); }
 
 
-void HandleSigInt(int Param)
+void HandleSigIntTerm(int Param)
 {
-	if(InterruptSignaled)
-		_Exit(1); // exit is not async-signal-safe and must not be called from a signal handler
-	else
-		InterruptSignaled = 1;
+	InterruptSignaled = 1;
+
+	// Exit the next time a signal is received
+	signal(SIGINT, SIG_DFL);
+	signal(SIGTERM, SIG_DFL);
 }
 
 int main(int argc, const char **argv) // ignore_convention
@@ -1847,7 +1882,8 @@ int main(int argc, const char **argv) // ignore_convention
 		return -1;
 	}
 
-	signal(SIGINT, HandleSigInt);
+	signal(SIGINT, HandleSigIntTerm);
+	signal(SIGTERM, HandleSigIntTerm);
 
 	CServer *pServer = CreateServer();
 	IKernel *pKernel = IKernel::Create();
@@ -1856,6 +1892,7 @@ int main(int argc, const char **argv) // ignore_convention
 	int FlagMask = CFGFLAG_SERVER|CFGFLAG_ECON;
 	IEngine *pEngine = CreateEngine("Teeworlds_Server");
 	IEngineMap *pEngineMap = CreateEngineMap();
+	IMapChecker *pMapChecker = CreateMapChecker();
 	IGameServer *pGameServer = CreateGameServer();
 	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER|CFGFLAG_ECON);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
@@ -1871,6 +1908,7 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pEngine);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMap*>(pEngineMap)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pMapChecker);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pGameServer);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
@@ -1888,7 +1926,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pEngineMasterServer->Init();
 	pEngineMasterServer->Load();
 
-	pServer->InitInterfaces(pConfigManager->Values(), pConsole, pGameServer, pEngineMap, pStorage);
+	pServer->InitInterfaces(pKernel);
 	if(!UseDefaultConfig)
 	{
 		// register all console commands

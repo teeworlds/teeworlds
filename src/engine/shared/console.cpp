@@ -503,19 +503,18 @@ bool CConsole::ExecuteFile(const char *pFilename)
 	m_pFirstExec = &ThisFile;
 
 	// exec the file
-	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ | IOFLAG_SKIP_BOM, IStorage::TYPE_ALL);
 
 	char aBuf[256];
 	if(File)
 	{
-		char *pLine;
-		CLineReader lr;
-
 		str_format(aBuf, sizeof(aBuf), "executing '%s'", pFilename);
 		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
-		lr.Init(File);
 
-		while((pLine = lr.Get()))
+		CLineReader LineReader;
+		LineReader.Init(File);
+		const char *pLine;
+		while((pLine = LineReader.Get()))
 			ExecuteLine(pLine);
 
 		io_close(File);

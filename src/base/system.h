@@ -180,6 +180,7 @@ enum {
 	IOFLAG_READ = 1,
 	IOFLAG_WRITE = 2,
 	IOFLAG_APPEND = 4,
+	IOFLAG_SKIP_BOM = 8,
 
 	IOSEEK_START = 0,
 	IOSEEK_CUR = 1,
@@ -196,7 +197,7 @@ typedef struct IOINTERNAL *IOHANDLE;
 
 	Parameters:
 		filename - File to open.
-		flags - A set of flags. IOFLAG_READ, IOFLAG_WRITE, IOFLAG_APPEND.
+		flags - A set of flags. IOFLAG_READ, IOFLAG_WRITE, IOFLAG_APPEND, IOFLAG_SKIP_BOM.
 
 	Returns:
 		Returns a handle to the file on success and 0 on failure.
@@ -422,27 +423,35 @@ void thread_wait(void *thread);
 
 /*
 	Function: thread_destroy
-		Destroys a thread.
+		Frees resources associated with a thread handle.
 
 	Parameters:
-		thread - Thread to destroy.
+		thread - Thread handle to destroy.
+
+	Remarks:
+		- The thread must have already terminated normally.
+		- Detached threads must not be destroyed with this function.
 */
 void thread_destroy(void *thread);
 
 /*
-	Function: thread_yeild
-		Yeild the current threads execution slice.
+	Function: thread_yield
+		Yield the current threads execution slice.
 */
 void thread_yield();
 
 /*
 	Function: thread_detach
-		Puts the thread in the detached thread, guaranteeing that
+		Puts the thread in the detached state, guaranteeing that
 		resources of the thread will be freed immediately when the
 		thread terminates.
 
 	Parameters:
 		thread - Thread to detach
+
+	Remarks:
+		- This invalidates the thread handle, hence it must not be
+		used after detaching the thread.
 */
 void thread_detach(void *thread);
 
@@ -1419,8 +1428,15 @@ int fs_chdir(const char *path);
 	Function: fs_getcwd
 		Gets the current working directory.
 
+	Parameters:
+		buffer - Pointer to a buffer that will hold the result.
+		buffer_size - The size of the buffer in bytes.
+
 	Returns:
 		Returns a pointer to the buffer on success, 0 on failure.
+		On success, the buffer contains the result as a zero-terminated string.
+		On failure, the buffer contains an empty zero-terminated string.
+
 */
 char *fs_getcwd(char *buffer, int buffer_size);
 
@@ -1812,6 +1828,29 @@ void cmdline_fix(int *argc, const char ***argv);
 void cmdline_free(int argc, const char **argv);
 
 /*
+	Function: bytes_be_to_int
+		Packs 4 big endian bytes into an int
+
+	Returns:
+		The packed int
+
+	Remarks:
+		- Assumes the passed array is 4 bytes
+		- Assumes int is 4 bytes
+*/
+int bytes_be_to_int(const unsigned char *bytes);
+
+/*
+	Function: int_to_bytes_be
+		Packs an int into 4 big endian bytes
+
+	Remarks:
+		- Assumes the passed array is 4 bytes
+		- Assumes int is 4 bytes
+*/
+void int_to_bytes_be(unsigned char *bytes, int value);
+
+/*
 	Function: bytes_be_to_uint
 		Packs 4 big endian bytes into an unsigned
 
@@ -1833,6 +1872,7 @@ unsigned bytes_be_to_uint(const unsigned char *bytes);
 		- Assumes unsigned is 4 bytes
 */
 void uint_to_bytes_be(unsigned char *bytes, unsigned value);
+
 
 #ifdef __cplusplus
 }

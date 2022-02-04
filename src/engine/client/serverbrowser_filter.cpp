@@ -79,6 +79,8 @@ CServerBrowserFilter::CServerFilter& CServerBrowserFilter::CServerFilter::operat
 		m_NumSortedServers = Other.m_NumSortedServers;
 		m_SortedServersCapacity = Other.m_SortedServersCapacity;
 
+		if(m_pSortedServerlist)
+			mem_free(m_pSortedServerlist);
 		m_pSortedServerlist = (int *)mem_alloc(m_SortedServersCapacity * sizeof(int));
 		for(int i = 0; i < m_SortedServersCapacity; ++i)
 			m_pSortedServerlist[i] = Other.m_pSortedServerlist[i];

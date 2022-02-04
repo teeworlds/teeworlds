@@ -1,9 +1,9 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
+#include <algorithm>
 
 #include <base/math.h>
-#include <base/tl/base.h>
 
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
@@ -23,7 +23,7 @@ void CRenderTools::Init(CConfig *pConfig, IGraphics *pGraphics)
 	m_pGraphics = pGraphics;
 }
 
-void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
+void CRenderTools::SelectSprite(const CDataSprite *pSpr, int Flags, int sx, int sy)
 {
 	int x = pSpr->m_X+sx;
 	int y = pSpr->m_Y+sy;
@@ -42,10 +42,10 @@ void CRenderTools::SelectSprite(CDataSprite *pSpr, int Flags, int sx, int sy)
 	float y2 = (y+h)/(float)cy - 0.5f/(float)(cy*32);
 
 	if(Flags&SPRITE_FLAG_FLIP_Y)
-		tl_swap(y1, y2);
+		std::swap(y1, y2);
 
 	if(Flags&SPRITE_FLAG_FLIP_X)
-		tl_swap(x1, x2);
+		std::swap(x1, x2);
 
 	Graphics()->QuadsSetSubset(x1, y1, x2, y2);
 }
@@ -362,7 +362,7 @@ void CRenderTools::MapScreenToWorld(float CenterX, float CenterY, float Parallax
 	aPoints[3] = aPoints[1]+Height;
 }
 
-void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, CMapItemGroup *pGroup, float Zoom)
+void CRenderTools::MapScreenToGroup(float CenterX, float CenterY, const CMapItemGroup *pGroup, float Zoom)
 {
 	float aPoints[4];
 	MapScreenToWorld(CenterX, CenterY, pGroup->m_ParallaxX/100.0f, pGroup->m_ParallaxY/100.0f,

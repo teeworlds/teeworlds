@@ -19,7 +19,7 @@ void CPacker::AddInt(int i)
 		return;
 
 	// make sure that we have space enough
-	if(m_pEnd - m_pCurrent < 6)
+	if(m_pEnd - m_pCurrent <= CVariableInt::MAX_BYTES_PACKED)
 	{
 		dbg_break();
 		m_Error = 1;

@@ -293,17 +293,6 @@ static int ImageFormatToTexFormat(int Format)
 	return CCommandBuffer::TEXFORMAT_RGBA;
 }
 
-static int ImageFormatToPixelSize(int Format)
-{
-	switch(Format)
-	{
-	case CImageInfo::FORMAT_RGB: return 3;
-	case CImageInfo::FORMAT_ALPHA: return 1;
-	default: return 4;
-	}
-}
-
-
 int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
 {
 	if(!TextureID.IsValid())
@@ -318,7 +307,7 @@ int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 
 	// calculate memory usage
-	int MemSize = Width*Height*ImageFormatToPixelSize(Format);
+	const int MemSize = Width * Height * CImageInfo::GetPixelSize(Format);
 
 	// copy texture data
 	void *pTmpData = mem_alloc(MemSize);
@@ -345,7 +334,7 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	Cmd.m_Slot = Tex;
 	Cmd.m_Width = Width;
 	Cmd.m_Height = Height;
-	Cmd.m_PixelSize = ImageFormatToPixelSize(Format);
+	Cmd.m_PixelSize = CImageInfo::GetPixelSize(Format);
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 	Cmd.m_StoreFormat = ImageFormatToTexFormat(StoreFormat);
 

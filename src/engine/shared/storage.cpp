@@ -46,8 +46,7 @@ public:
 		FindDataDir();
 
 		// get currentdir
-		if(!fs_getcwd(m_aCurrentDir, sizeof(m_aCurrentDir)))
-			m_aCurrentDir[0] = 0;
+		fs_getcwd(m_aCurrentDir, sizeof(m_aCurrentDir));
 
 		// load paths from storage.cfg
 		LoadPaths();
@@ -90,14 +89,14 @@ public:
 	void LoadPaths()
 	{
 		// check current directory
-		IOHANDLE File = io_open("storage.cfg", IOFLAG_READ);
+		IOHANDLE File = io_open("storage.cfg", IOFLAG_READ | IOFLAG_SKIP_BOM);
 		if(!File)
 		{
 			// check usable path in argv[0]
 			char aBuffer[IO_MAX_PATH_LENGTH];
 			str_copy(aBuffer, m_aAppDir, sizeof(aBuffer));
 			str_append(aBuffer, "/storage.cfg", sizeof(aBuffer));
-			File = io_open(aBuffer, IOFLAG_READ);
+			File = io_open(aBuffer, IOFLAG_READ | IOFLAG_SKIP_BOM);
 			if(!File)
 			{
 				dbg_msg("storage", "couldn't open storage.cfg");
@@ -105,10 +104,9 @@ public:
 			}
 		}
 
-		char *pLine;
 		CLineReader LineReader;
 		LineReader.Init(File);
-
+		const char *pLine;
 		while((pLine = LineReader.Get()))
 		{
 			const char *pLineWithoutPrefix = str_startswith(pLine, "add_path ");
@@ -409,7 +407,7 @@ public:
 
 	char *ReadFileStr(const char *pFilename, int Type)
 	{
-		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ, Type);
+		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ | IOFLAG_SKIP_BOM, Type);
 		if(!File)
 		{
 			return 0;

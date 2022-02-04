@@ -309,12 +309,12 @@ void mem_zero(void *block,unsigned size)
 	memset(block, 0, size);
 }
 
-IOHANDLE io_open(const char *filename, int flags)
+IOHANDLE io_open_impl(const char *filename, int flags)
 {
-	dbg_assert(flags == IOFLAG_READ || flags == IOFLAG_WRITE || flags == IOFLAG_APPEND, "flags must be read, write or append");
+	dbg_assert(flags == (IOFLAG_READ | IOFLAG_SKIP_BOM) || flags == IOFLAG_READ || flags == IOFLAG_WRITE || flags == IOFLAG_APPEND, "flags must be read, read+skipbom, write or append");
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
-	if(flags == IOFLAG_READ)
+	if((flags & IOFLAG_READ) != 0)
 	{
 		// check for filename case sensitive
 		WIN32_FIND_DATAW finddata;
@@ -349,7 +349,7 @@ IOHANDLE io_open(const char *filename, int flags)
 	}
 	return 0x0;
 #else
-	if(flags == IOFLAG_READ)
+	if((flags & IOFLAG_READ) != 0)
 		return (IOHANDLE)fopen(filename, "rb");
 	if(flags == IOFLAG_WRITE)
 		return (IOHANDLE)fopen(filename, "wb");
@@ -357,6 +357,21 @@ IOHANDLE io_open(const char *filename, int flags)
 		return (IOHANDLE)fopen(filename, "ab");
 	return 0x0;
 #endif
+}
+
+IOHANDLE io_open(const char *filename, int flags)
+{
+	IOHANDLE result = io_open_impl(filename, flags);
+	unsigned char buf[3];
+	if((flags & IOFLAG_SKIP_BOM) == 0 || !result)
+	{
+		return result;
+	}
+	if(io_read(result, buf, sizeof(buf)) != 3 || buf[0] != 0xef || buf[1] != 0xbb || buf[2] != 0xbf)
+	{
+		io_seek(result, 0, IOSEEK_START);
+	}
+	return result;
 }
 
 unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
@@ -536,11 +551,8 @@ void thread_wait(void *thread)
 
 void thread_destroy(void *thread)
 {
-#if defined(CONF_FAMILY_UNIX)
-	void *r = 0;
-	pthread_join((pthread_t)thread, &r);
-#else
-	/*#error not implemented*/
+#if defined(CONF_FAMILY_WINDOWS)
+	CloseHandle((HANDLE)thread);
 #endif
 }
 
@@ -1775,16 +1787,26 @@ int fs_chdir(const char *path)
 
 char *fs_getcwd(char *buffer, int buffer_size)
 {
-	if(buffer == 0)
-		return 0;
 #if defined(CONF_FAMILY_WINDOWS)
 	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+#endif
+	dbg_assert(buffer != 0, "buffer invalid");
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
+#if defined(CONF_FAMILY_WINDOWS)
 	if(_wgetcwd(wBuffer, buffer_size) == 0)
+	{
+		buffer[0] = '\0';
 		return 0;
+	}
 	WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buffer, buffer_size, NULL, NULL);
 	return buffer;
 #else
-	return getcwd(buffer, buffer_size);
+	if(getcwd(buffer, buffer_size) == 0)
+	{
+		buffer[0] = '\0';
+		return 0;
+	}
+	return buffer;
 #endif
 }
 
@@ -1853,7 +1875,7 @@ int fs_read(const char *name, void **result, unsigned *result_len)
 
 char *fs_read_str(const char *name)
 {
-	IOHANDLE file = io_open(name, IOFLAG_READ);
+	IOHANDLE file = io_open(name, IOFLAG_READ | IOFLAG_SKIP_BOM);
 	char *result;
 	if(!file)
 	{
@@ -1878,6 +1900,7 @@ int fs_file_time(const char *name, time_t *created, time_t *modified)
 
 	*created = filetime_to_unixtime(&finddata.ftCreationTime);
 	*modified = filetime_to_unixtime(&finddata.ftLastWriteTime);
+	FindClose(handle);
 #elif defined(CONF_FAMILY_UNIX)
 	struct stat sb;
 	if(stat(name, &sb))
@@ -2050,8 +2073,10 @@ int time_iseasterday()
 
 void str_append(char *dst, const char *src, int dst_size)
 {
-	int s = str_length(dst);
+	int s;
 	int i = 0;
+	dbg_assert(dst_size > 0, "dst_size invalid");
+	s = str_length(dst);
 	while(s < dst_size)
 	{
 		dst[s] = src[i];
@@ -2066,6 +2091,8 @@ void str_append(char *dst, const char *src, int dst_size)
 
 void str_copy(char *dst, const char *src, int dst_size)
 {
+	dbg_assert(dst_size > 0, "dst_size invalid");
+
 	strncpy(dst, src, dst_size-1);
 	dst[dst_size-1] = 0; /* assure null termination */
 }
@@ -2087,17 +2114,17 @@ int str_length(const char *str)
 
 void str_format(char *buffer, int buffer_size, const char *format, ...)
 {
+	va_list ap;
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
+	va_start(ap, format);
+
 #if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
-	va_list ap;
-	va_start(ap, format);
 	_vsprintf_p(buffer, buffer_size, format, ap);
-	va_end(ap);
 #else
-	va_list ap;
-	va_start(ap, format);
 	vsnprintf(buffer, buffer_size, format, ap);
-	va_end(ap);
 #endif
+
+	va_end(ap);
 
 	buffer[buffer_size-1] = 0; /* assure null termination */
 }
@@ -2485,6 +2512,7 @@ int str_is_number(const char *str)
 void str_timestamp_ex(time_t time_data, char *buffer, int buffer_size, const char *format)
 {
 	struct tm *time_info;
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
 	time_info = localtime(&time_data);
 	strftime(buffer, buffer_size, format, time_info);
 	buffer[buffer_size-1] = 0;	/* assure null termination */
@@ -2747,6 +2775,7 @@ void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
 {
 	int new_cursor;
 	int cursor = 0;
+	dbg_assert(dst_size > 0, "dst_size invalid");
 
 	while(src[cursor] && num > 0)
 	{
@@ -2900,18 +2929,47 @@ void cmdline_free(int argc, const char **argv)
 #endif
 }
 
+int bytes_be_to_int(const unsigned char *bytes)
+{
+	int Result;
+	unsigned char *pResult = (unsigned char *)&Result;
+	for(unsigned i = 0; i < sizeof(int); i++)
+	{
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		pResult[i] = bytes[i];
+#else
+		pResult[i] = bytes[sizeof(int) - i - 1];
+#endif
+	}
+	return Result;
+}
+
+void int_to_bytes_be(unsigned char *bytes, int value)
+{
+	const unsigned char *pValue = (const unsigned char *)&value;
+	for(unsigned i = 0; i < sizeof(int); i++)
+	{
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		bytes[i] = pValue[i];
+#else
+		bytes[sizeof(int) - i - 1] = pValue[i];
+#endif
+	}
+}
+
 unsigned bytes_be_to_uint(const unsigned char *bytes)
 {
-	return (bytes[0]<<24) | (bytes[1]<<16) | (bytes[2]<<8) | bytes[3];
+	return ((bytes[0] & 0xffu) << 24u) | ((bytes[1] & 0xffu) << 16u) | ((bytes[2] & 0xffu) << 8u) | (bytes[3] & 0xffu);
 }
 
 void uint_to_bytes_be(unsigned char *bytes, unsigned value)
 {
-	bytes[0] = (value>>24)&0xff;
-	bytes[1] = (value>>16)&0xff;
-	bytes[2] = (value>>8)&0xff;
-	bytes[3] = value&0xff;
+	bytes[0] = (value >> 24u) & 0xffu;
+	bytes[1] = (value >> 16u) & 0xffu;
+	bytes[2] = (value >> 8u) & 0xffu;
+	bytes[3] = value & 0xffu;
 }
+
 
 #if defined(__cplusplus)
 }

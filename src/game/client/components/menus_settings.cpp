@@ -655,6 +655,7 @@ int CMenus::ThemeIconScan(const char *pName, int IsDir, int DirType, void *pUser
 			pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 
 			r.front().m_IconTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+			mem_free(Info.m_pData);
 			return 0;
 		}
 	}
@@ -980,8 +981,14 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	// right side
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);
-	if(DoButton_CheckBox(&Config()->m_ClShowhud, Localize("Show ingame HUD"), Config()->m_ClShowhud, &Button))
+	CUIRect CheckBoxShowHud, CheckBoxHideScore;
+	Button.VSplitMid(&CheckBoxShowHud, &CheckBoxHideScore);
+
+	if(DoButton_CheckBox(&Config()->m_ClShowhud, Localize("Show ingame HUD"), Config()->m_ClShowhud, &CheckBoxShowHud))
 		Config()->m_ClShowhud ^= 1;
+
+	if(DoButton_CheckBox(&Config()->m_ClHideSelfScore, Localize("Hide player's score"), Config()->m_ClHideSelfScore, &CheckBoxHideScore))
+		Config()->m_ClHideSelfScore ^= 1;
 
 	GameRight.HSplitTop(Spacing, 0, &GameRight);
 	GameRight.HSplitTop(ButtonHeight, &Button, &GameRight);

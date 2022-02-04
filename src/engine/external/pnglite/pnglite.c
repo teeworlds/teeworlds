@@ -65,7 +65,7 @@ static int file_read_ul(png_t* png, unsigned *out)
 	if(file_read(png, buf, 1, 4) != 4)
 		return PNG_FILE_ERROR;
 
-	*out = (buf[0]<<24) | (buf[1]<<16) | (buf[2]<<8) | buf[3];
+	*out = ((buf[0] & 0xffu)<<24u) | ((buf[1] & 0xffu)<<16u) | ((buf[2] & 0xffu)<<8u) | (buf[3] & 0xffu);
 
 	return PNG_NO_ERROR;
 }
@@ -74,10 +74,10 @@ static int file_write_ul(png_t* png, unsigned in)
 {
 	unsigned char buf[4];
 
-	buf[0] = (in>>24) & 0xff;
-	buf[1] = (in>>16) & 0xff;
-	buf[2] = (in>>8) & 0xff;
-	buf[3] = (in) & 0xff;
+	buf[0] = (in>>24u) & 0xffu;
+	buf[1] = (in>>16u) & 0xffu;
+	buf[2] = (in>>8u) & 0xffu;
+	buf[3] = (in) & 0xffu;
 
 	if(file_write(png, buf, 1, 4) != 4)
 		return PNG_FILE_ERROR;
@@ -93,17 +93,17 @@ static unsigned get_ul(unsigned char* buf)
 
 	memcpy(foo, buf, 4);
 
-	result = (foo[0]<<24) | (foo[1]<<16) | (foo[2]<<8) | foo[3];
+	result = ((foo[0] & 0xffu)<<24u) | ((foo[1] & 0xffu)<<16u) | ((foo[2] & 0xffu)<<8u) | (foo[3] & 0xffu);
 
 	return result;
 }
 
 static unsigned set_ul(unsigned char* buf, unsigned in)
 {
-	buf[0] = (in>>24) & 0xff;
-	buf[1] = (in>>16) & 0xff;
-	buf[2] = (in>>8) & 0xff;
-	buf[3] = (in) & 0xff;
+	buf[0] = (in>>24u) & 0xffu;
+	buf[1] = (in>>16u) & 0xffu;
+	buf[2] = (in>>8u) & 0xffu;
+	buf[3] = (in) & 0xffu;
 
 	return PNG_NO_ERROR;
 }

@@ -133,7 +133,7 @@ public:
 			return -1;
 
 		// try to open file
-		IOHANDLE File = m_pStorage->OpenFile("masters.cfg", IOFLAG_READ, IStorage::TYPE_SAVE);
+		IOHANDLE File = m_pStorage->OpenFile("masters.cfg", IOFLAG_READ | IOFLAG_SKIP_BOM, IStorage::TYPE_SAVE);
 		if(!File)
 			return -1;
 

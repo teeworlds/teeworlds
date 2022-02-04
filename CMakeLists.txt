@@ -398,7 +398,7 @@ elseif(TARGET_OS STREQUAL "mac")
   set(PLATFORM_LIBS ${CARBON})
 else()
   set(PLATFORM_CLIENT)
-  find_package(OpenGL COMPONENTS OpenGL REQUIRED)
+  find_package(OpenGL)
   if(CMAKE_VERSION VERSION_LESS 3.10)
     set(PLATFORM_CLIENT_LIBS ${OPENGL_gl_LIBRARY})
   else()
@@ -1282,7 +1282,6 @@ set_src(BASE GLOB_RECURSE src/base
   tl/algorithm.h
   tl/allocator.h
   tl/array.h
-  tl/base.h
   tl/range.h
   tl/sorted_array.h
   tl/string.h
@@ -1302,6 +1301,7 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   kernel.h
   keys.h
   map.h
+  mapchecker.h
   masterserver.h
   message.h
   server.h
@@ -1727,10 +1727,13 @@ add_custom_target(everything DEPENDS ${TARGETS_OWN})
 
 if(GTEST_FOUND OR DOWNLOAD_GTEST)
   set_src(TESTS GLOB src/test
+    bytes_be.cpp
+    compression.cpp
     datafile.cpp
     fs.cpp
     git_revision.cpp
     hash.cpp
+    io.cpp
     jsonwriter.cpp
     sorted_array.cpp
     storage.cpp

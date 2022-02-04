@@ -202,8 +202,8 @@ private:
 		float m_FooterHeight;
 		CScrollRegion m_ScrollRegion;
 		vec2 m_ScrollOffset;
-		CLineInput m_FilterInput;
 		char m_aFilterString[64];
+		CLineInput m_FilterInput;
 		int m_BackgroundCorners;
 
 	protected:
@@ -416,12 +416,12 @@ private:
 		{
 			if(!m_Valid || !m_InfosLoaded)
 				return -1;
-			return bytes_be_to_uint(m_Info.m_aNumTimelineMarkers);
+			return bytes_be_to_int(m_Info.m_aNumTimelineMarkers);
 		}
 
 		int Length() const
 		{
-			return bytes_be_to_uint(m_Info.m_aLength);
+			return bytes_be_to_int(m_Info.m_aLength);
 		}
 
 		bool operator<(const CDemoItem &Other) const

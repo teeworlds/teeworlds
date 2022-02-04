@@ -5,13 +5,15 @@
 
 #include <base/hash.h>
 
+#include <engine/mapchecker.h>
+
 #include "memheap.h"
 
-class CMapChecker
+class CMapChecker : public IMapChecker
 {
 	enum
 	{
-		MAX_MAP_LENGTH=8,
+		MAX_MAP_LENGTH = 8,
 	};
 
 	struct CWhitelistEntry
@@ -26,7 +28,7 @@ class CMapChecker
 	class CHeap m_Whitelist;
 	CWhitelistEntry *m_pFirst;
 
-	bool m_RemoveDefaultList;
+	bool m_ClearListBeforeAdding; // whether to clear the existing list before adding a new map list
 
 	void Init();
 	void SetDefaults();
@@ -35,7 +37,11 @@ public:
 	CMapChecker();
 	void AddMaplist(struct CMapVersion *pMaplist, int Num);
 	bool IsMapValid(const char *pMapName, const SHA256_DIGEST *pMapSha256, unsigned MapCrc, unsigned MapSize);
-	bool ReadAndValidateMap(class IStorage *pStorage, const char *pFilename, int StorageType);
+	bool ReadAndValidateMap(const char *pFilename, int StorageType);
+
+	int NumStandardMaps();
+	const char *GetStandardMapName(int Index);
+	bool IsStandardMap(const char *pMapName);
 };
 
 #endif

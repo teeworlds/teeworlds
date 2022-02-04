@@ -522,6 +522,21 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		}
 	}
 
+	if(Config()->m_ClHideSelfScore)
+	{
+		// Move local player to the bottom of the scoreboard
+		for (int i = 0; i < NumRenderScoreIDs - 1 && RenderScoreIDs[i + 1] >= 0; i++)
+		{
+			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[RenderScoreIDs[i]];
+			if (m_pClient->m_LocalClientID == pInfo->m_ClientID)
+			{
+				const int Temp = RenderScoreIDs[i + 1];
+				RenderScoreIDs[i + 1] = RenderScoreIDs[i];
+				RenderScoreIDs[i] = Temp;
+			}
+		}
+	}
+
 	s_Cursor.m_MaxLines = 1;
 	s_Cursor.m_FontSize = FontSize;
 	for(int i = 0 ; i < NumRenderScoreIDs ; i++)
@@ -536,7 +551,8 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			// color for text
 			vec3 TextColor = vec3(1.0f, 1.0f, 1.0f);
 			vec4 OutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-			const bool HighlightedLine = m_pClient->m_LocalClientID == pInfo->m_ClientID || (Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == Snap.m_SpecInfo.m_SpectatorID);
+			const bool HighlightedLine = m_pClient->m_LocalClientID == pInfo->m_ClientID ||
+				(Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == Snap.m_SpecInfo.m_SpectatorID);
 
 			// background so it's easy to find the local player or the followed one in spectator mode
 			if(HighlightedLine)
@@ -645,7 +661,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			s_Cursor.m_MaxWidth = ClanLength;
 			TextRender()->TextOutlined(&s_Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 
-			if(!Race)
+			if(!Race && !(m_pClient->m_LocalClientID == pInfo->m_ClientID && Config()->m_ClHideSelfScore))
 			{
 				// K
 				TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
@@ -680,7 +696,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			s_Cursor.MoveTo(ScoreOffset+(Race ? ScoreLength-3.f : ScoreLength/2), y+Spacing);
 			s_Cursor.m_MaxWidth = ScoreLength;
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
-			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+			if(!Race && !(m_pClient->m_LocalClientID == pInfo->m_ClientID && Config()->m_ClHideSelfScore))
+			{
+				TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+			}
 
 			y += LineHeight;
 		}

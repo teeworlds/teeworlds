@@ -845,7 +845,7 @@ int CMenus::MenuImageScan(const char *pName, int IsDir, int DirType, void *pUser
 	//int Pitch = Info.m_Width*4;
 
 	// create colorless version
-	int Step = Info.m_Format == CImageInfo::FORMAT_RGBA ? 4 : 3;
+	const int Step = Info.GetPixelSize();
 
 	// make the texture gray scale
 	for(int i = 0; i < Info.m_Width*Info.m_Height; i++)
