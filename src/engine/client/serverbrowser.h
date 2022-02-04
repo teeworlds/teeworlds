@@ -64,7 +64,8 @@ private:
 	class IConsole *m_pConsole;
 	class IStorage *m_pStorage;
 	class IMasterServer *m_pMasterServer;
-		
+	class IMapChecker *m_pMapChecker;
+
 	class CServerBrowserFavorites m_ServerBrowserFavorites;
 	class CServerBrowserFilter m_ServerBrowserFilter;
 

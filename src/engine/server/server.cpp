@@ -1243,7 +1243,7 @@ int CServer::LoadMap(const char *pMapName)
 	str_format(aBuf, sizeof(aBuf), "maps/%s.map", pMapName);
 
 	// check for valid standard map
-	if(!m_MapChecker.ReadAndValidateMap(Storage(), aBuf, IStorage::TYPE_ALL))
+	if(!m_pMapChecker->ReadAndValidateMap(aBuf, IStorage::TYPE_ALL))
 	{
 		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "mapchecker", "invalid standard map");
 		return 0;
@@ -1290,13 +1290,14 @@ void CServer::InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterS
 	m_Register.Init(pNetServer, pMasterServer, pConfig, pConsole);
 }
 
-void CServer::InitInterfaces(CConfig *pConfig, IConsole *pConsole, IGameServer *pGameServer, IEngineMap *pMap, IStorage *pStorage)
+void CServer::InitInterfaces(IKernel *pKernel)
 {
-	m_pConfig = pConfig;
-	m_pConsole = pConsole;
-	m_pGameServer = pGameServer;
-	m_pMap = pMap;
-	m_pStorage = pStorage;
+	m_pConfig = pKernel->RequestInterface<IConfigManager>()->Values();
+	m_pConsole = pKernel->RequestInterface<IConsole>();
+	m_pGameServer = pKernel->RequestInterface<IGameServer>();
+	m_pMap = pKernel->RequestInterface<IEngineMap>();
+	m_pMapChecker = pKernel->RequestInterface<IMapChecker>();
+	m_pStorage = pKernel->RequestInterface<IStorage>();
 }
 
 int CServer::Run()
@@ -1304,12 +1305,7 @@ int CServer::Run()
 	//
 	m_PrintCBIndex = Console()->RegisterPrintCallback(Config()->m_ConsoleOutputLevel, SendRconLineAuthed, this);
 
-	// list maps
-	m_pMapListHeap = new CHeap();
-	CSubdirCallbackUserdata Userdata;
-	Userdata.m_pServer = this;
-	str_copy(Userdata.m_aName, "", sizeof(Userdata.m_aName));
-	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "maps/", MapListEntryCallback, &Userdata);
+	InitMapList();
 
 	// load map
 	if(!LoadMap(Config()->m_SvMap))
@@ -1497,6 +1493,13 @@ void CServer::Free()
 	}
 }
 
+struct CSubdirCallbackUserdata
+{
+	CServer *m_pServer;
+	char m_aName[IConsole::TEMPMAP_NAME_LENGTH];
+	bool m_StandardOnly;
+};
+
 int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser)
 {
 	CSubdirCallbackUserdata *pUserdata = (CSubdirCallbackUserdata *)pUser;
@@ -1514,19 +1517,22 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 	if(IsDir)
 	{
 		CSubdirCallbackUserdata Userdata;
+		Userdata.m_StandardOnly = pUserdata->m_StandardOnly;
 		Userdata.m_pServer = pThis;
 		str_copy(Userdata.m_aName, aFilename, sizeof(Userdata.m_aName));
-		char FindPath[IO_MAX_PATH_LENGTH];
-		str_format(FindPath, sizeof(FindPath), "maps/%s/", aFilename);
-		pThis->m_pStorage->ListDirectory(IStorage::TYPE_ALL, FindPath, MapListEntryCallback, &Userdata);
+		char aFindPath[IO_MAX_PATH_LENGTH];
+		str_format(aFindPath, sizeof(aFindPath), "maps/%s/", aFilename);
+		pThis->m_pStorage->ListDirectory(IStorage::TYPE_ALL, aFindPath, MapListEntryCallback, &Userdata);
 		return 0;
 	}
 
 	const char *pSuffix = str_endswith(aFilename, ".map");
 	if(!pSuffix) // not ending with .map
-	{
-			return 0;
-	}
+		return 0;
+	aFilename[pSuffix - aFilename] = 0; // remove suffix
+
+	if(pUserdata->m_StandardOnly && !pThis->m_pMapChecker->IsStandardMap(aFilename))
+		return 0;
 
 	CMapListEntry *pEntry = (CMapListEntry *)pThis->m_pMapListHeap->Allocate(sizeof(CMapListEntry));
 	pThis->m_NumMapEntries++;
@@ -1538,9 +1544,27 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 	if(!pThis->m_pFirstMapEntry)
 		pThis->m_pFirstMapEntry = pEntry;
 
-	str_truncate(pEntry->m_aName, sizeof(pEntry->m_aName), aFilename, pSuffix-aFilename);
+	str_copy(pEntry->m_aName, aFilename, sizeof(pEntry->m_aName));
 
 	return 0;
+}
+
+void CServer::InitMapList()
+{
+	m_pMapListHeap = new CHeap();
+
+	CSubdirCallbackUserdata Userdata;
+	if(str_comp(Config()->m_SvMaplist, "standard") == 0)
+		Userdata.m_StandardOnly = true;
+	else if(str_comp(Config()->m_SvMaplist, "all") == 0)
+		Userdata.m_StandardOnly = false;
+	else /* "none" or any other value */
+		return;
+
+	Userdata.m_pServer = this;
+	str_copy(Userdata.m_aName, "", sizeof(Userdata.m_aName));
+	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "maps/", MapListEntryCallback, &Userdata);
+	dbg_msg("server", "%d maps added to maplist", m_NumMapEntries);
 }
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser)
@@ -1868,6 +1892,7 @@ int main(int argc, const char **argv) // ignore_convention
 	int FlagMask = CFGFLAG_SERVER|CFGFLAG_ECON;
 	IEngine *pEngine = CreateEngine("Teeworlds_Server");
 	IEngineMap *pEngineMap = CreateEngineMap();
+	IMapChecker *pMapChecker = CreateMapChecker();
 	IGameServer *pGameServer = CreateGameServer();
 	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER|CFGFLAG_ECON);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
@@ -1883,6 +1908,7 @@ int main(int argc, const char **argv) // ignore_convention
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pEngine);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IEngineMap*>(pEngineMap)); // register as both
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(static_cast<IMap*>(pEngineMap));
+		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pMapChecker);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pGameServer);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pConsole);
 		RegisterFail = RegisterFail || !pKernel->RegisterInterface(pStorage);
@@ -1900,7 +1926,7 @@ int main(int argc, const char **argv) // ignore_convention
 	pEngineMasterServer->Init();
 	pEngineMasterServer->Load();
 
-	pServer->InitInterfaces(pConfigManager->Values(), pConsole, pGameServer, pEngineMap, pStorage);
+	pServer->InitInterfaces(pKernel);
 	if(!UseDefaultConfig)
 	{
 		// register all console commands
