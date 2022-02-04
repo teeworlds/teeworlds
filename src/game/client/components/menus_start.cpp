@@ -103,21 +103,19 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	CUIRect Version;
 	MainView.HSplitBottom(50.0f, 0, &Version);
 	Version.VMargin(50.0f, &Version);
-	char aBuf[64];
+	UI()->DoLabel(&Version, GAME_RELEASE_VERSION, 14.0f, TEXTALIGN_TR);
+
 	if(str_comp(Client()->LatestVersion(), "0") != 0)
 	{
+		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), Localize("Teeworlds %s is out! Download it at www.teeworlds.com!"), Client()->LatestVersion());
 		TextRender()->TextColor(1.0f, 0.4f, 0.4f, 1.0f);
-		UI()->DoLabel(&Version, aBuf, 14.0f, TEXTALIGN_CENTER);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		TextRender()->TextSecondaryColor(0.0f, 0.0f, 0.0f, 0.5f);
+		UI()->DoLabel(&TopMenu, aBuf, 14.0f, TEXTALIGN_MC, TopMenu.w * 0.9f, true);
+		TextRender()->TextColor(CUI::ms_DefaultTextColor);
+		TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 	}
-	UI()->DoLabel(&Version, GAME_RELEASE_VERSION, 14.0f, TEXTALIGN_RIGHT);
 
 	if(NewPage != -1)
 		SetMenuPage(NewPage);
-}
-
-void CMenus::RenderLogo(CUIRect MainView)
-{
-	
 }
