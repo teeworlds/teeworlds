@@ -412,6 +412,8 @@ private:
 		bool m_Valid;
 		CDemoHeader m_Info;
 
+		CDemoItem() : m_InfosLoaded(false), m_Valid(false) {}
+
 		int GetMarkerCount() const
 		{
 			if(!m_Valid || !m_InfosLoaded)
