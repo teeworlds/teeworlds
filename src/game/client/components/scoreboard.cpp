@@ -522,7 +522,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		}
 	}
 
-	if (Config()->m_ClHideSelfScore)
+	if(Config()->m_ClHideSelfScore)
 	{
 		// Move local player to the bottom of the scoreboard
 		for (int i = 0; i < NumRenderScoreIDs - 1 && RenderScoreIDs[i + 1] >= 0; i++)
@@ -530,9 +530,9 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[RenderScoreIDs[i]];
 			if (m_pClient->m_LocalClientID == pInfo->m_ClientID)
 			{
-				const int temp = RenderScoreIDs[i + 1];
+				const int Temp = RenderScoreIDs[i + 1];
 				RenderScoreIDs[i + 1] = RenderScoreIDs[i];
-				RenderScoreIDs[i] = temp;
+				RenderScoreIDs[i] = Temp;
 			}
 		}
 	}
@@ -696,7 +696,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			s_Cursor.MoveTo(ScoreOffset+(Race ? ScoreLength-3.f : ScoreLength/2), y+Spacing);
 			s_Cursor.m_MaxWidth = ScoreLength;
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
-			if (!Race && !(m_pClient->m_LocalClientID == pInfo->m_ClientID && Config()->m_ClHideSelfScore))
+			if(!Race && !(m_pClient->m_LocalClientID == pInfo->m_ClientID && Config()->m_ClHideSelfScore))
 			{
 				TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			}
