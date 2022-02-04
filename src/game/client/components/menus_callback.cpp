@@ -161,23 +161,24 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 
 	bool JoystickEnabled = Config()->m_JoystickEnable;
 	int NumJoysticks = m_pClient->Input()->NumJoysticks();
-	int NumOptions = 2; // expandable header & message
-	if(JoystickEnabled && NumJoysticks > 0)
+	int NumOptions = 1; // expandable header
+	if(JoystickEnabled)
 	{
-		if(NumJoysticks > 1)
+		if(NumJoysticks == 0)
+			NumOptions++; // message
+		else
 		{
-			NumOptions++; // joystick selection
+			if(NumJoysticks > 1)
+				NumOptions++; // joystick selection
+			NumOptions += 3; // mode, ui sens, tolerance
+			if(!Config()->m_JoystickAbsolute)
+				NumOptions++; // ingame sens
+			NumOptions += Input()->GetActiveJoystick()->GetNumAxes() + 1; // axis selection + header
 		}
-		NumOptions += 3; // mode, ui sens, tolerance
-		if(!Config()->m_JoystickAbsolute)
-		{
-			NumOptions++; // ingame sens
-		}
-		NumOptions += m_pClient->Input()->GetJoystickNumAxes(); // axis selection
 	}
 	const float ButtonHeight = 20.0f;
 	const float Spacing = 2.0f;
-	const float BackgroundHeight = NumOptions*(ButtonHeight+Spacing)+Spacing;
+	const float BackgroundHeight = NumOptions * (ButtonHeight + Spacing) + (NumOptions == 1 ? 0 : Spacing);
 
 	View.HSplitTop(BackgroundHeight, &View, 0);
 	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
@@ -199,20 +200,17 @@ float CMenus::RenderSettingsControlsJoystick(CUIRect View)
 				View.HSplitTop(Spacing, 0, &View);
 				View.HSplitTop(ButtonHeight, &Button, &View);
 				static CButtonContainer s_ButtonJoystickId;
-				char aBuf[64];
-				str_format(aBuf, sizeof(aBuf), "Joystick %d: %s", m_pClient->Input()->GetJoystickIndex(), m_pClient->Input()->GetJoystickName());
+				char aBuf[96];
+				str_format(aBuf, sizeof(aBuf), "Joystick %d: %s", Input()->GetActiveJoystick()->GetIndex(), Input()->GetActiveJoystick()->GetName());
 				if(DoButton_Menu(&s_ButtonJoystickId, aBuf, 0, &Button))
-				{
 					m_pClient->Input()->SelectNextJoystick();
-				}
 			}
 
 			{
 				View.HSplitTop(Spacing, 0, &View);
 				View.HSplitTop(ButtonHeight, &Button, &View);
-				const int NumLabels = 2;
-				const char *aLabels[NumLabels] = { Localize("Relative", "Ingame joystick mode"), Localize("Absolute", "Ingame joystick mode")};
-				UI()->DoScrollbarOptionLabeled(&Config()->m_JoystickAbsolute, &Config()->m_JoystickAbsolute, &Button, Localize("Ingame joystick mode"), aLabels, NumLabels);
+				const char *apLabels[] = { Localize("Relative", "Ingame joystick mode"), Localize("Absolute", "Ingame joystick mode") };
+				UI()->DoScrollbarOptionLabeled(&Config()->m_JoystickAbsolute, &Config()->m_JoystickAbsolute, &Button, Localize("Ingame joystick mode"), apLabels, sizeof(apLabels)/sizeof(apLabels[0]));
 			}
 
 			if(!Config()->m_JoystickAbsolute)
@@ -404,8 +402,9 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 	Row.VSplitLeft(2*BindWidth, &Button, &Row);
 	m_pClient->UI()->DoLabel(&Button, Localize("Aim bind"), 13.0f, TEXTALIGN_CENTER);
 
-	static int s_aActive[g_MaxJoystickAxes][2];
-	for(int i = 0; i < minimum(m_pClient->Input()->GetJoystickNumAxes(), g_MaxJoystickAxes); i++)
+	IInput::IJoystick *pJoystick = Input()->GetActiveJoystick();
+	static int s_aActive[NUM_JOYSTICK_AXES][2];
+	for(int i = 0; i < minimum(pJoystick->GetNumAxes(), (int)NUM_JOYSTICK_AXES); i++)
 	{
 		bool Active = Config()->m_JoystickX == i || Config()->m_JoystickY == i;
 
@@ -420,14 +419,14 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 		if(!Active)
 			m_pClient->TextRender()->TextColor(0.7f, 0.7f, 0.7f, 1.0f);
 		else
-			m_pClient->TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+			m_pClient->TextRender()->TextColor(CUI::ms_DefaultTextColor);
 		m_pClient->UI()->DoLabel(&Button, aBuf, 13.0f, TEXTALIGN_CENTER);
 
 		// Device status
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 		Row.VSplitLeft(StatusWidth, &Button, &Row);
 		Button.HMargin((ButtonHeight-14.0f)/2.0f, &Button);
-		DoJoystickBar(&Button, (m_pClient->Input()->GetJoystickAxisValue(i)+1.0f)/2.0f, Config()->m_JoystickTolerance/50.0f, Active);
+		DoJoystickBar(&Button, (pJoystick->GetAxisValue(i)+1.0f)/2.0f, Config()->m_JoystickTolerance/50.0f, Active);
 
 		// Bind to X,Y
 		Row.VSplitLeft(2*StatusMargin, 0, &Row);
@@ -447,4 +446,5 @@ void CMenus::DoJoystickAxisPicker(CUIRect View)
 		}
 		Row.VSplitLeft(StatusMargin, 0, &Row);
 	}
+	m_pClient->TextRender()->TextColor(CUI::ms_DefaultTextColor);
 }
