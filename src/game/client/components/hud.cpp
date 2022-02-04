@@ -775,16 +775,16 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 
 void CHud::RenderSpectatorHud()
 {
+	const int SpecID = m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
+	const int SpecMode = m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
+
 	// draw the box
 	const float Width = m_Width * 0.25f - 2.0f;
 	CUIRect Rect = {m_Width-Width, m_Height-15.0f, Width, 15.0f};
 	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.4f), 5.0f, CUIRect::CORNER_TL);
 
 	// draw the text
-	char aName[64];
-	const int SpecID = m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
-	const int SpecMode = m_pClient->m_Snap.m_SpecInfo.m_SpecMode;
-	str_format(aName, sizeof(aName), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_aName : "");
+	const char *pName = Config()->m_ClShowsocial && SpecID != -1 ? m_pClient->m_aClients[SpecID].m_aName : "";
 	char aBuf[128];
 
 	static CTextCursor s_SpectateLabelCursor(8.0f);
@@ -802,7 +802,7 @@ void CHud::RenderSpectatorHud()
 		str_format(aBuf, sizeof(aBuf), "%s", Localize("Free-View"));
 		break;
 	case SPEC_PLAYER:
-		str_format(aBuf, sizeof(aBuf), "%s", aName);
+		str_format(aBuf, sizeof(aBuf), "%s", pName);
 		break;
 	case SPEC_FLAGRED:
 	case SPEC_FLAGBLUE:
@@ -810,7 +810,7 @@ void CHud::RenderSpectatorHud()
 		str_format(aFlag, sizeof(aFlag), SpecMode == SPEC_FLAGRED ? Localize("Red Flag") : Localize("Blue Flag"));
 
 		if(SpecID != -1)
-			str_format(aBuf, sizeof(aBuf), "%s (%s)", aFlag, aName);
+			str_format(aBuf, sizeof(aBuf), "%s (%s)", aFlag, pName);
 		else
 			str_format(aBuf, sizeof(aBuf), "%s", aFlag);
 		break;
