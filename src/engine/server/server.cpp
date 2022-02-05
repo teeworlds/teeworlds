@@ -1956,6 +1956,7 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pKernel;
 	delete pEngine;
 	delete pEngineMap;
+	delete pMapChecker;
 	delete pGameServer;
 	delete pConsole;
 	delete pEngineMasterServer;
