@@ -211,7 +211,7 @@ void CSpectator::OnRender()
 	float LineHeight = 60.0f*ScaleY;
 	bool Selected = false;
 
-	if(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
+	if(m_pClient->m_LocalClientID == -1 || m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
 	{
 		if(m_pClient->m_Snap.m_SpecInfo.m_SpecMode == SPEC_FREEVIEW)
 		{
