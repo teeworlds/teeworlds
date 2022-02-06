@@ -392,12 +392,10 @@ int CMenus::DemolistFetchCallback(const CFsFileInfo* pFileInfo, int IsDir, int S
 	if(IsDir)
 	{
 		str_format(Item.m_aName, sizeof(Item.m_aName), "%s/", pName);
-		Item.m_Valid = false;
 	}
 	else
 	{
 		str_truncate(Item.m_aName, sizeof(Item.m_aName), pName, str_length(pName) - 5);
-		Item.m_InfosLoaded = false;
 		Item.m_Date = pFileInfo->m_TimeModified;
 	}
 	Item.m_IsDir = IsDir != 0;
