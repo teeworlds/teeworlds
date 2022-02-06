@@ -1168,13 +1168,11 @@ void CMenus::RenderMenu(CUIRect Screen)
 		// render full screen popup
 		char aTitleBuf[128];
 		const char *pTitle = "";
-		const char *pExtraText = "";
 		int NumOptions = 4;
 
 		if(m_Popup == POPUP_MESSAGE || m_Popup == POPUP_CONFIRM)
 		{
 			pTitle = m_aPopupTitle;
-			pExtraText = m_aPopupMessage;
 		}
 		else if(m_Popup == POPUP_CONNECTING)
 		{
@@ -1183,14 +1181,12 @@ void CMenus::RenderMenu(CUIRect Screen)
 			{
 				str_format(aTitleBuf, sizeof(aTitleBuf), "%s: %s", Localize("Downloading map"), Client()->MapDownloadName());
 				pTitle = aTitleBuf;
-				pExtraText = "";
 				NumOptions = 5;
 			}
 		}
 		else if(m_Popup == POPUP_LOADING_DEMO)
 		{
 			pTitle = Localize("Loading demo");
-			pExtraText = "";
 		}
 		else if(m_Popup == POPUP_LANGUAGE)
 		{
@@ -1205,29 +1201,24 @@ void CMenus::RenderMenu(CUIRect Screen)
 		else if(m_Popup == POPUP_RENAME_DEMO)
 		{
 			pTitle = Localize("Rename demo");
-			pExtraText = Localize("Are you sure you want to rename the demo?");
 			NumOptions = 6;
 		}
 		else if(m_Popup == POPUP_SAVE_SKIN)
 		{
 			pTitle = Localize("Save skin");
-			pExtraText = Localize("Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced.");
 			NumOptions = 6;
 		}
 		else if(m_Popup == POPUP_PASSWORD)
 		{
 			pTitle = Localize("Password incorrect");
-			pExtraText = Localize("Please enter the password.");
 		}
 		else if(m_Popup == POPUP_QUIT)
 		{
 			pTitle = Localize("Quit");
-			pExtraText = Localize("Are you sure that you want to quit?");
 		}
 		else if(m_Popup == POPUP_FIRST_LAUNCH)
 		{
 			pTitle = Localize("Welcome to Teeworlds");
-			pExtraText = Localize("As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server.");
 			NumOptions = 6;
 		}
 
@@ -1260,19 +1251,19 @@ void CMenus::RenderMenu(CUIRect Screen)
 		if(m_Popup == POPUP_QUIT)
 		{
 			// additional info
+			CUIRect Label;
 			if(m_pClient->Editor()->HasUnsavedData())
 			{
 				Box.HSplitTop(12.0f, 0, &Part);
-				UI()->DoLabel(&Part, pExtraText, FontSize, TEXTALIGN_CENTER);
-				Part.HSplitTop(20.0f, 0, &Part);
+				Part.HSplitTop(20.0f, &Label, &Part);
 				Part.VMargin(5.0f, &Part);
-				UI()->DoLabel(&Part, Localize("There's an unsaved map in the editor, you might want to save it before you quit the game."), FontSize, TEXTALIGN_LEFT, Part.w);
+				UI()->DoLabel(&Part, Localize("There's an unsaved map in the editor, you might want to save it before you quit the game."), FontSize, TEXTALIGN_ML, Part.w);
 			}
 			else
 			{
-				Box.HSplitTop(27.0f, 0, &Box);
-				UI()->DoLabel(&Box, pExtraText, FontSize, TEXTALIGN_CENTER);
+				Box.HSplitTop(27.0f, 0, &Label);
 			}
+			UI()->DoLabel(&Label, Localize("Are you sure that you want to quit?"), FontSize, TEXTALIGN_CENTER);
 
 			// buttons
 			CUIRect Yes, No;
@@ -1292,7 +1283,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 
 			CUIRect Label;
 			Box.HSplitTop(20.0f, &Label, &Box);
-			UI()->DoLabel(&Label, pExtraText, FontSize, TEXTALIGN_CENTER);
+			UI()->DoLabel(&Label, Localize("Please enter the password."), FontSize, TEXTALIGN_CENTER);
 
 			CUIRect EditBox;
 			Box.HSplitTop(20.0f, &EditBox, &Box);
@@ -1494,7 +1485,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 		{
 			Box.HSplitTop(27.0f, 0, &Box);
 			Box.VMargin(10.0f, &Box);
-			UI()->DoLabel(&Box, pExtraText, FontSize, TEXTALIGN_LEFT);
+			UI()->DoLabel(&Box, Localize("Are you sure you want to rename the demo?"), FontSize, TEXTALIGN_LEFT);
 
 			CUIRect EditBox;
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
@@ -1543,7 +1534,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 		{
 			Box.HSplitTop(24.0f, 0, &Box);
 			Box.VMargin(10.0f, &Part);
-			UI()->DoLabel(&Part, pExtraText, FontSize, TEXTALIGN_LEFT, Box.w-20.0f);
+			UI()->DoLabel(&Part, Localize("Are you sure you want to save your skin? If a skin with this name already exists, it will be replaced."), FontSize, TEXTALIGN_LEFT, Part.w);
 
 			CUIRect EditBox;
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
@@ -1575,7 +1566,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 		{
 			Box.HSplitTop(20.0f, 0, &Box);
 			Box.VMargin(10.0f, &Part);
-			UI()->DoLabel(&Part, pExtraText, FontSize, TEXTALIGN_LEFT, Box.w-20.0f);
+			UI()->DoLabel(&Part, Localize("As this is the first time you launch the game, please enter your nick name below. It's recommended that you check the settings to adjust them to your liking before joining a server."), FontSize, TEXTALIGN_LEFT, Part.w);
 
 			CUIRect EditBox;
 			Box.HSplitBottom(ButtonHeight*2.0f, 0, &Box);
@@ -1597,9 +1588,8 @@ void CMenus::RenderMenu(CUIRect Screen)
 		else if(m_Popup == POPUP_MESSAGE || m_Popup == POPUP_CONFIRM)
 		{
 			// message
-			Box.HSplitTop(27.0f, 0, &Box);
-			Box.VMargin(5.0f, &Part);
-			UI()->DoLabel(&Part, pExtraText, FontSize, TEXTALIGN_LEFT, Part.w);
+			Box.Margin(5.0f, &Part);
+			UI()->DoLabel(&Part, m_aPopupMessage, FontSize, TEXTALIGN_ML, Part.w);
 
 			if(m_Popup == POPUP_MESSAGE)
 			{
