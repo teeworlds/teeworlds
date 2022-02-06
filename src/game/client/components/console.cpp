@@ -189,6 +189,8 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_CompletionEnumerationCount = m_pGameConsole->m_pConsole->PossibleCommands(m_aCompletionBuffer, m_CompletionFlagmask, UseTempCommands);
 				if(m_CompletionEnumerationCount)
 				{
+					if(m_CompletionChosen == -1 && Direction < 0)
+						m_CompletionChosen = 0;
 					m_CompletionChosen = (m_CompletionChosen + Direction + m_CompletionEnumerationCount) % m_CompletionEnumerationCount;
 					m_pGameConsole->m_pConsole->PossibleCommands(m_aCompletionBuffer, m_CompletionFlagmask, UseTempCommands, PossibleCommandsCompleteCallback, this);
 				}
@@ -202,6 +204,8 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				m_CompletionMapEnumerationCount = m_pGameConsole->m_pConsole->PossibleMaps(m_aCompletionMapBuffer);
 				if(m_CompletionMapEnumerationCount)
 				{
+					if(m_CompletionMapChosen == -1 && Direction < 0)
+						m_CompletionMapChosen = 0;
 					m_CompletionMapChosen = (m_CompletionMapChosen + Direction + m_CompletionMapEnumerationCount) % m_CompletionMapEnumerationCount;
 					m_pGameConsole->m_pConsole->PossibleMaps(m_aCompletionMapBuffer, PossibleMapsCompleteCallback, this);
 				}
