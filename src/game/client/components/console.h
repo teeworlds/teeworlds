@@ -31,13 +31,12 @@ class CGameConsole : public CComponent
 
 		char m_aCompletionMapBuffer[128];
 		int m_CompletionMapChosen;
-		int m_CompletionMapEnumerationCount;
 
 		char m_aCompletionBuffer[128];
 		int m_CompletionChosen;
 		int m_CompletionFlagmask;
-		int m_CompletionEnumerationCount;
 		float m_CompletionRenderOffset;
+		float m_CompletionRenderOffsetChange;
 
 		bool m_IsCommand;
 		char m_aCommandName[IConsole::TEMPCMD_NAME_LENGTH];
@@ -49,7 +48,7 @@ class CGameConsole : public CComponent
 
 		void ClearBacklog();
 		void ClearHistory();
-		void Reset() { m_CompletionRenderOffset = 0; }
+		void Reset() { m_CompletionRenderOffset = 0.0f; m_CompletionRenderOffsetChange = 0.0f; }
 
 		void ExecuteLine(const char *pLine);
 
