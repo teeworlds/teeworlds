@@ -131,6 +131,10 @@ class CUI
 	unsigned m_NumClips;
 	void UpdateClipping();
 
+	const void *m_pActiveTooltip;
+	CUIRect m_TooltipAnchor;
+	char m_aTooltipText[256];
+
 	class
 	{
 	public:
@@ -146,6 +150,8 @@ class CUI
 	class IGraphics *m_pGraphics;
 	class IInput *m_pInput;
 	class ITextRender *m_pTextRender;
+
+	void ApplyCursorAlign(class CTextCursor *pCursor, const CUIRect *pRect, int Align);
 
 public:
 	static const vec4 ms_DefaultTextColor;
@@ -237,6 +243,10 @@ public:
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
 	void DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite = false);
 	void DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int NumLabels, const IScrollbarScale *pScale = &LinearScrollbarScale);
+
+	// tooltips
+	void DoTooltip(const void *pID, const CUIRect *pRect, const char *pText);
+	void RenderTooltip();
 
 	// popup menu
 	void DoPopupMenu(int X, int Y, int Width, int Height, void *pContext, bool (*pfnFunc)(void *pContext, CUIRect View), int Corners = CUIRect::CORNER_ALL);
