@@ -35,8 +35,8 @@ struct CMapversionPacketData
 static CNetClient s_NetClient;
 
 static unsigned char s_aVersionPacket[sizeof(VERSIONSRV_VERSION) + sizeof(GAME_RELEASE_VERSION)];
-static CMapversionPacketData s_aMapversionPackets[MAX_PACKETS];
-static int s_NumMapversionPackets = 0;
+static CMapversionPacketData s_aMapversionPackets07[MAX_PACKETS];
+static unsigned s_NumMapversionPackets07 = 0;
 
 static void BuildVersionPacket()
 {
@@ -44,30 +44,47 @@ static void BuildVersionPacket()
 	mem_copy(s_aVersionPacket + sizeof(VERSIONSRV_VERSION), GAME_RELEASE_VERSION, sizeof(GAME_RELEASE_VERSION));
 }
 
-static void BuildMapversionPacket()
+static bool GetMapversionPackets(unsigned ClientVersion, CMapversionPacketData **pPacketData, unsigned **pNumPackets)
 {
-	dbg_assert(s_NumMapVersionItems <= MAX_MAPS, "too many maps");
-	const CMapVersion *pCurrent = &s_aMapVersionList[0];
-	int MapsLeft = s_NumMapVersionItems;
-	s_NumMapversionPackets = 0;
-	while(MapsLeft > 0 && s_NumMapversionPackets < MAX_PACKETS)
+	switch(ClientVersion & 0xFFFFFF00u) // ignore minor version
 	{
-		const int Chunk = minimum<int>(MapsLeft, MAX_MAPS_PER_PACKET);
+		case 0x0700: // 0.7.x
+			*pPacketData = s_aMapversionPackets07;
+			*pNumPackets = &s_NumMapversionPackets07;
+			return true;
+	}
+	*pPacketData = 0x0;
+	*pNumPackets = 0x0;
+	return false;
+}
+
+static void BuildMapversionPacket(unsigned ClientVersion, const CMapVersion *pMapVersionList, unsigned NumMapVersionItems)
+{
+	dbg_assert(NumMapVersionItems <= MAX_MAPS, "too many maps");
+	CMapversionPacketData *pPacketData;
+	unsigned *pNumPackets;
+	dbg_assert(GetMapversionPackets(ClientVersion, &pPacketData, &pNumPackets), "unhandled ClientVersion");
+
+	unsigned MapsLeft = NumMapVersionItems;
+	*pNumPackets = 0;
+	while(MapsLeft > 0 && *pNumPackets < MAX_PACKETS)
+	{
+		const unsigned Chunk = minimum<unsigned>(MapsLeft, MAX_MAPS_PER_PACKET);
 		MapsLeft -= Chunk;
 
 		// copy header
-		mem_copy(s_aMapversionPackets[s_NumMapversionPackets].m_Data.m_aHeader, VERSIONSRV_MAPLIST, sizeof(VERSIONSRV_MAPLIST));
+		mem_copy(pPacketData[*pNumPackets].m_Data.m_aHeader, VERSIONSRV_MAPLIST, sizeof(VERSIONSRV_MAPLIST));
 
 		// copy map versions
-		for(int i = 0; i < Chunk; i++)
+		for(unsigned i = 0; i < Chunk; i++)
 		{
-			s_aMapversionPackets[s_NumMapversionPackets].m_Data.m_aMaplist[i] = *pCurrent;
-			pCurrent++;
+			pPacketData[*pNumPackets].m_Data.m_aMaplist[i] = *pMapVersionList;
+			pMapVersionList++;
 		}
 
-		s_aMapversionPackets[s_NumMapversionPackets].m_Size = sizeof(VERSIONSRV_MAPLIST) + sizeof(CMapVersion) * Chunk;
+		pPacketData[*pNumPackets].m_Size = sizeof(VERSIONSRV_MAPLIST) + sizeof(CMapVersion) * Chunk;
 
-		s_NumMapversionPackets++;
+		(*pNumPackets)++;
 	}
 }
 
@@ -82,17 +99,22 @@ static void SendVersion(NETADDR *pAddr, TOKEN ResponseToken)
 	s_NetClient.Send(&Packet, ResponseToken);
 }
 
-static void SendMapversions(NETADDR *pAddr, TOKEN ResponseToken)
+static void SendMapversions(NETADDR *pAddr, TOKEN ResponseToken, unsigned ClientVersion)
 {
+	CMapversionPacketData *pPacketData;
+	unsigned *pNumPackets;
+	if(!GetMapversionPackets(ClientVersion, &pPacketData, &pNumPackets))
+		return;
+
 	CNetChunk Packet;
 	Packet.m_ClientID = -1;
 	Packet.m_Address = *pAddr;
 	Packet.m_Flags = NETSENDFLAG_CONNLESS;
 
-	for(int i = 0; i < s_NumMapversionPackets; i++)
+	for(unsigned i = 0; i < *pNumPackets; i++)
 	{
-		Packet.m_DataSize = s_aMapversionPackets[i].m_Size;
-		Packet.m_pData = &s_aMapversionPackets[i].m_Data;
+		Packet.m_DataSize = pPacketData[i].m_Size;
+		Packet.m_pData = &pPacketData[i].m_Data;
 		s_NetClient.Send(&Packet, ResponseToken);
 	}
 }
@@ -136,7 +158,7 @@ int main(int argc, const char **argv)
 	dbg_msg("versionsrv", "building packets");
 
 	BuildVersionPacket();
-	BuildMapversionPacket();
+	BuildMapversionPacket(0x0700, s_aMapVersionList, s_NumMapVersionItems);
 
 	dbg_msg("versionsrv", "started");
 
@@ -155,10 +177,14 @@ int main(int argc, const char **argv)
 				SendVersion(&Packet.m_Address, ResponseToken);
 			}
 
-			if(Packet.m_DataSize == sizeof(VERSIONSRV_GETMAPLIST)
+			if((Packet.m_DataSize == sizeof(VERSIONSRV_GETMAPLIST)
+					|| Packet.m_DataSize == sizeof(VERSIONSRV_GETMAPLIST) + sizeof(unsigned))
 				&& mem_comp(Packet.m_pData, VERSIONSRV_GETMAPLIST, sizeof(VERSIONSRV_GETMAPLIST)) == 0)
 			{
-				SendMapversions(&Packet.m_Address, ResponseToken);
+				unsigned ClientVersion = 0x0700;
+				if(Packet.m_DataSize == sizeof(VERSIONSRV_GETMAPLIST) + sizeof(unsigned))
+					ClientVersion = bytes_be_to_uint((unsigned char *)Packet.m_pData + sizeof(VERSIONSRV_GETMAPLIST));
+				SendMapversions(&Packet.m_Address, ResponseToken, ClientVersion);
 			}
 		}
 

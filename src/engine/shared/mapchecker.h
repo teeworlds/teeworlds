@@ -33,7 +33,7 @@ class CMapChecker : public IMapChecker
 
 public:
 	CMapChecker();
-	void AddMaplist(const struct CMapVersion *pMaplist, int Num);
+	void AddMaplist(const struct CMapVersion *pMaplist, unsigned Num);
 	bool IsMapValid(const char *pMapName, const SHA256_DIGEST *pMapSha256, unsigned MapCrc, unsigned MapSize);
 	bool ReadAndValidateMap(const char *pFilename, int StorageType);
 
