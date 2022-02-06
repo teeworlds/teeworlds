@@ -684,8 +684,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	View.VSplitRight((ButtonHeight+Spacing)*4.0f, &View, &EditButtons);
 
 	View.VSplitLeft(20.0f, 0, &View); // little space
-	View.y += 2.0f;
-	UI()->DoLabel(&View, pFilter->Name(), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
+	UI()->DoLabel(&View, pFilter->Name(), ButtonHeight*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_ML);
 
 	View.VSplitRight(20.0f, &View, 0); // little space
 	char aBuf[128];
@@ -1154,8 +1153,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Left.HSplitTop(ButtonHeight, &Label, &Left);
 	Label.VSplitLeft(2.0f, 0, &Label);
 	Label.VSplitRight(ButtonWidth*2.0f+SpacingH, &Label, &EditBox);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Search:"), FontSize, TEXTALIGN_LEFT);
+	UI()->DoLabel(&Label, Localize("Search:"), FontSize, TEXTALIGN_ML);
 	EditBox.VSplitRight(EditBox.h, &EditBox, &Button);
 	static CLineInput s_FilterInput(Config()->m_BrFilterString, sizeof(Config()->m_BrFilterString));
 	if(UI()->DoEditBox(&s_FilterInput, &EditBox, FontSize, CUIRect::CORNER_L))
@@ -1179,8 +1177,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	Left.HSplitTop(ButtonHeight, &Label, 0);
 	Label.VSplitLeft(2.0f, 0, &Label);
 	Label.VSplitRight(ButtonWidth*2.0f+SpacingH, &Label, &EditBox);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, Localize("Host address:"), FontSize, TEXTALIGN_LEFT);
+	UI()->DoLabel(&Label, Localize("Host address:"), FontSize, TEXTALIGN_ML);
 
 	if(BrowserType == IServerBrowser::TYPE_INTERNET)
 	{
@@ -1205,8 +1202,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		char aBuf[128];
 		Status.HSplitTop(ButtonHeight + SpacingH, 0, &Status);
 		str_format(aBuf, sizeof(aBuf), Localize("%d%% loaded"), ServerBrowser()->LoadingProgression());
-		Status.y += 2.0f;
-		UI()->DoLabel(&Status, aBuf, 14.0f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&Status, aBuf, 14.0f, TEXTALIGN_MC);
 	}
 	else
 	{
@@ -1236,16 +1232,14 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		Status.HSplitTop(ButtonHeight/1.5f, 0, &Status);
 		Status.HSplitTop(ButtonHeight, &Label, &Status);
 		str_format(aBuf, sizeof(aBuf), Localize("%d servers"), ServerBrowser()->NumServers());
-		Label.y += 2.0f;
 		Label.x += OffsetServer;
-		UI()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_LEFT);
+		UI()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
 
 		Status.HSplitTop(SpacingH, 0, &Status);
 		Status.HSplitTop(ButtonHeight, &Label, 0);
 		str_format(aBuf, sizeof(aBuf), Localize("%d players"), NumPlayers);
-		Label.y += 2.0f;
 		Label.x += OffsetPlayer;
-		UI()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_LEFT);
+		UI()->DoLabel(&Label, aBuf, 14.0f, TEXTALIGN_ML);
 	}
 }
 
@@ -1429,8 +1423,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 						str_format(aBuf, sizeof(aBuf), Localize("Playing '%s' on '%s'", "Playing '(gametype)' on '(map)'"), m_lFriendList[i][f].m_pServerInfo->m_aGameType, m_lFriendList[i][f].m_pServerInfo->m_aMap);
 					else
 						str_format(aBuf, sizeof(aBuf), Localize("Watching '%s' on '%s'", "Watching '(gametype)' on '(map)'"), m_lFriendList[i][f].m_pServerInfo->m_aGameType, m_lFriendList[i][f].m_pServerInfo->m_aMap);
-					Button.HMargin(2.0f, &Button);
-					UI()->DoLabel(&Button, aBuf, FontSize - 2, TEXTALIGN_LEFT);
+					UI()->DoLabel(&Button, aBuf, FontSize - 2, TEXTALIGN_ML);
 				}
 				// delete button
 				Icon.HSplitTop(14.0f, &Rect, 0);
@@ -1474,8 +1467,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 		case 1: str_format(aBuf, sizeof(aBuf), Localize("Online clanmates (%d)"), ListSize); break;
 		case 2: str_format(aBuf, sizeof(aBuf), Localize("Offline (%d)", "friends (server browser)"), ListSize); break;
 		}
-		Label.HMargin(2.0f, &Label);
-		UI()->DoLabel(&Label, aBuf, FontSize, TEXTALIGN_LEFT);
+		UI()->DoLabel(&Label, aBuf, FontSize, TEXTALIGN_ML);
 		static int s_HeaderButton[NUM_FRIEND_TYPES] = { 0 };
 		if(UI()->DoButtonLogic(&s_HeaderButton[i], &Header))
 		{
@@ -1488,7 +1480,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
-	UI()->DoLabel(&Label, Localize("Name"), FontSize, TEXTALIGN_LEFT);
+	UI()->DoLabel(&Label, Localize("Name"), FontSize, TEXTALIGN_ML);
 	static char s_aName[MAX_NAME_ARRAY_SIZE] = { 0 };
 	static CLineInput s_NameInput(s_aName, sizeof(s_aName), MAX_NAME_LENGTH);
 	UI()->DoEditBox(&s_NameInput, &Button, Button.h*CUI::ms_FontmodHeight*0.8f);
@@ -1496,7 +1488,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
-	UI()->DoLabel(&Label, Localize("Clan"), FontSize, TEXTALIGN_LEFT);
+	UI()->DoLabel(&Label, Localize("Clan"), FontSize, TEXTALIGN_ML);
 	static char s_aClan[MAX_CLAN_ARRAY_SIZE] = { 0 };
 	static CLineInput s_ClanInput(s_aClan, sizeof(s_aClan), MAX_CLAN_LENGTH);
 	UI()->DoEditBox(&s_ClanInput, &Button, Button.h*CUI::ms_FontmodHeight*0.8f);
@@ -1507,9 +1499,9 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 		Button.VSplitLeft(Button.h, &Icon, &Label);
 	else
 		Label = Button;
-	Label.HMargin(2.0f, &Label);
+
 	const char *pButtonText = (!s_aName[0] && !s_aClan[0]) ? Localize("Add friend/clan") : s_aName[0] ? Localize("Add friend") : Localize("Add clan");
-	UI()->DoLabel(&Label, pButtonText, FontSize, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, pButtonText, FontSize, TEXTALIGN_MC);
 	if(s_aName[0] || s_aClan[0])
 		DoIcon(IMAGE_FRIENDICONS, UI()->MouseHovered(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Icon);
 	static CButtonContainer s_AddFriend;
@@ -1556,8 +1548,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, CUIRect::CORNER_L);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 5.0f, CUIRect::CORNER_R);
 	Button.VSplitLeft(Button.h, &Icon, &Label);
-	Label.HMargin(2.0f, &Label);
-	UI()->DoLabel(&Label, Localize("New filter"), FontSize, TEXTALIGN_LEFT);
+	UI()->DoLabel(&Label, Localize("New filter"), FontSize, TEXTALIGN_ML);
 	if(s_aFilterName[0])
 	{
 		DoIcon(IMAGE_FRIENDICONS, UI()->MouseHovered(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Icon);
@@ -1585,8 +1576,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	ServerFilter.HSplitTop(UI()->GetListHeaderHeight(), &FilterHeader, &ServerFilter);
 	FilterHeader.Draw(vec4(1, 1, 1, 0.25f), 4.0f, CUIRect::CORNER_T);
 	ServerFilter.Draw(vec4(0, 0, 0, 0.15f), 4.0f, CUIRect::CORNER_B);
-	FilterHeader.HMargin(2.0f, &FilterHeader);
-	UI()->DoLabel(&FilterHeader, Localize("Server filter"), FontSize + 2.0f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&FilterHeader, Localize("Server filter"), FontSize + 2.0f, TEXTALIGN_MC);
 
 	int NewSortHash = FilterInfo.m_SortHash;
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
@@ -1902,8 +1892,7 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo, const vec4
 	View.HSplitTop(UI()->GetListHeaderHeight(), &ServerHeader, &View);
 	ServerHeader.Draw(vec4(1, 1, 1, 0.25f), 5.0f, CUIRect::CORNER_T);
 	View.Draw(vec4(0, 0, 0, 0.15f), 5.0f, CUIRect::CORNER_B);
-	ServerHeader.HMargin(2.0f, &ServerHeader);
-	UI()->DoLabel(&ServerHeader, Localize("Server details"), FontSize + 2.0f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&ServerHeader, Localize("Server details"), FontSize + 2.0f, TEXTALIGN_MC);
 
 	if(!pInfo)
 		return;
@@ -2088,8 +2077,7 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 	// server scoreboard
 	ServerScoreboard.HSplitTop(UI()->GetListHeaderHeight(), &ServerHeader, &ServerScoreboard);
 	ServerHeader.Draw(vec4(1, 1, 1, 0.25f), 4.0f, CUIRect::CORNER_T);
-	ServerHeader.HMargin(2.0f, &ServerHeader);
-	UI()->DoLabel(&ServerHeader, Localize("Scoreboard"), 12.0f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&ServerHeader, Localize("Scoreboard"), 12.0f, TEXTALIGN_MC);
 	RenderDetailScoreboard(ServerScoreboard, pInfo, 0, CUI::ms_DefaultTextColor, CUI::ms_DefaultTextOutlineColor);
 }
 

@@ -518,8 +518,7 @@ void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const ch
 	const float FontSize = pRect->h*CUI::ms_FontmodHeight*0.8f;
 	char aBuf[32];
 	str_format(aBuf, sizeof(aBuf), "%s:", pStr);
-	Label.y += 2.0f;
-	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_CENTER);
+	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_MC);
 
 	DoEditBox(pLineInput, &EditBox, FontSize);
 }
@@ -675,8 +674,7 @@ void CUI::DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect,
 	CUIRect Label, ScrollBar;
 	pRect->VSplitLeft(pRect->h+10.0f+VSplitVal, &Label, &ScrollBar);
 	Label.VSplitLeft(Label.h+5.0f, 0, &Label);
-	Label.y += 2.0f;
-	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_LEFT);
+	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_ML);
 
 	ScrollBar.VMargin(4.0f, &ScrollBar);
 	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, Min, Max)), Min, Max);
@@ -701,8 +699,7 @@ void CUI::DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect 
 	CUIRect Label, ScrollBar;
 	pRect->VSplitLeft(pRect->h+5.0f, 0, &Label);
 	Label.VSplitRight(60.0f, &Label, &ScrollBar);
-	Label.y += 2.0f;
-	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_LEFT);
+	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_ML);
 
 	ScrollBar.VMargin(4.0f, &ScrollBar);
 	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, 0, Max)), 0, Max);
