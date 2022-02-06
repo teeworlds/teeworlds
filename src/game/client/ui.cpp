@@ -312,13 +312,13 @@ void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int A
 	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 }
 
-void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor)
+void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor, int Align)
 {
 	static CTextCursor s_Cursor;
 	s_Cursor.Reset();
 	s_Cursor.m_FontSize = FontSize;
 	s_Cursor.m_MaxWidth = pRect->w;
-	s_Cursor.MoveTo(pRect->x, pRect->y);
+	ApplyCursorAlign(&s_Cursor, pRect, Align);
 
 	TextRender()->TextColor(TextColor);
 	const char *pMatch = pHighlighted && pHighlighted[0] ? str_find_nocase(pText, pHighlighted) : 0;
@@ -334,6 +334,21 @@ void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char
 		TextRender()->TextDeferred(&s_Cursor, pText, -1);
 
 	TextRender()->DrawTextOutlined(&s_Cursor);
+}
+
+void CUI::DoLabelSelected(const CUIRect *pRect, const char *pText, bool Selected, float FontSize, int Align)
+{
+	if(Selected)
+	{
+		TextRender()->TextColor(CUI::ms_HighlightTextColor);
+		TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
+	}
+	DoLabel(pRect, pText, FontSize, Align);
+	if(Selected)
+	{
+		TextRender()->TextColor(CUI::ms_DefaultTextColor);
+		TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
+	}
 }
 
 bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const IButtonColorFunction *pColorFunction)

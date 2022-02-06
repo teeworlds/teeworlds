@@ -693,12 +693,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 			// make the header look like an active tab
 			Box.Draw(vec4(1.0f, 1.0f, 1.0f, 0.75f));
-			Box.HMargin(2.0f, &Box);
-			TextRender()->TextColor(CUI::ms_HighlightTextColor);
-			TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-			UI()->DoLabel(&Box, Localize("Demos"), Box.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
-			TextRender()->TextColor(CUI::ms_DefaultTextColor);
-			TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
+			UI()->DoLabelSelected(&Box, Localize("Demos"), true, Box.h*CUI::ms_FontmodHeight, TEXTALIGN_MC);
 		}
 	}
 
@@ -1447,17 +1442,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 					Graphics()->QuadsEnd();
 
-					if(i == OldSelected)
-					{
-						TextRender()->TextColor(CUI::ms_HighlightTextColor);
-						TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-					}
-					UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, TEXTALIGN_CENTER);
-					if(i == OldSelected)
-					{
-						TextRender()->TextColor(CUI::ms_DefaultTextColor);
-						TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
-					}
+					UI()->DoLabelSelected(&Label, pEntry->m_aCountryCodeString, Item.m_Selected, 10.0f, TEXTALIGN_CENTER);
 				}
 			}
 

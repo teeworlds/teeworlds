@@ -230,8 +230,9 @@ public:
 	bool DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
 
 	// labels
-	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_LEFT|TEXTALIGN_TOP, float LineWidth = -1.0f, bool MultiLine = true);
-	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor);
+	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_TL, float LineWidth = -1.0f, bool MultiLine = true);
+	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor, int Align = TEXTALIGN_TL);
+	void DoLabelSelected(const CUIRect *pRect, const char *pText, bool Selected, float FontSize, int Align = TEXTALIGN_TL);
 
 	// editboxes
 	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners = CUIRect::CORNER_ALL, const IButtonColorFunction *pColorFunction = &DarkButtonColorFunction);

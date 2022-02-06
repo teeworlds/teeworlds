@@ -370,22 +370,12 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 				int TeeEmote = (Item.m_Selected && s_LastSelectionTime + 0.75f > Client()->LocalTime()) ? EMOTE_HAPPY : EMOTE_NORMAL;
 				RenderTools()->RenderTee(CAnimState::GetIdle(), &Info, TeeEmote, vec2(1.0f, 0.0f), vec2(Item.m_Rect.x+Item.m_Rect.w/2, Item.m_Rect.y+Item.m_Rect.h/2));
 			}
-		
+
 			CUIRect Label;
 			Item.m_Rect.Margin(5.0f, &Item.m_Rect);
 			Item.m_Rect.HSplitBottom(10.0f, &Item.m_Rect, &Label);
 
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_HighlightTextColor);
-				TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-			}
-			UI()->DoLabel(&Label, s->m_aName, 10.0f, TEXTALIGN_CENTER);
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_DefaultTextColor);
-				TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
-			}
+			UI()->DoLabelSelected(&Label, s->m_aName, Item.m_Selected, 10.0f, TEXTALIGN_CENTER);
 		}
 	}
 
@@ -487,17 +477,7 @@ void CMenus::RenderSkinPartSelection(CUIRect MainView)
 			Item.m_Rect.Margin(5.0f, &Item.m_Rect);
 			Item.m_Rect.HSplitBottom(10.0f, &Item.m_Rect, &Label);
 
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_HighlightTextColor);
-				TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-			}
-			UI()->DoLabel(&Label, s->m_aName, 10.0f, TEXTALIGN_CENTER);
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_DefaultTextColor);
-				TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
-			}
+			UI()->DoLabelSelected(&Label, s->m_aName, Item.m_Selected, 10.0f, TEXTALIGN_CENTER);
 		}
 	}
 
@@ -747,18 +727,7 @@ void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
 			Rect.HMargin(3.0f, &Rect);
 			vec4 Color(1.0f, 1.0f, 1.0f, 1.0f);
 			m_pClient->m_pCountryFlags->Render(r.front().m_CountryCode, &Color, Rect.x, Rect.y, Rect.w, Rect.h, true);
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_HighlightTextColor);
-				TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-			}
-			Item.m_Rect.y += 2.0f;
-			UI()->DoLabel(&Item.m_Rect, r.front().m_Name, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_DefaultTextColor);
-				TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
-			}
+			UI()->DoLabelSelected(&Item.m_Rect, r.front().m_Name, Item.m_Selected, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_ML);
 		}
 	}
 
@@ -842,18 +811,7 @@ void CMenus::RenderThemeSelection(CUIRect MainView, bool Header)
 		else // generic
 			str_format(aName, sizeof(aName), "%s", Theme.m_Name.cstr());
 
-		if(Item.m_Selected)
-		{
-			TextRender()->TextColor(CUI::ms_HighlightTextColor);
-			TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-		}
-		Item.m_Rect.y += 2.0f;
-		UI()->DoLabel(&Item.m_Rect, aName, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
-		if(Item.m_Selected)
-		{
-			TextRender()->TextColor(CUI::ms_DefaultTextColor);
-			TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
-		}
+		UI()->DoLabelSelected(&Item.m_Rect, aName, Item.m_Selected, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_ML);
 	}
 
 	SelectedTheme = s_ListBox.DoEnd();
@@ -1607,25 +1565,12 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 		if(Item.m_Visible)
 		{
 			int G = gcd(lModes[i].m_Width, lModes[i].m_Height);
-
 			str_format(aBuf, sizeof(aBuf), "%dx%d (%d:%d)",
 					   (int)(lModes[i].m_Width * HiDPIScale),
 					   (int)(lModes[i].m_Height * HiDPIScale),
 					   lModes[i].m_Width/G,
 					   lModes[i].m_Height/G);
-
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_HighlightTextColor);
-				TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-			}
-			Item.m_Rect.y += 2.0f;
-			UI()->DoLabel(&Item.m_Rect, aBuf, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
-			if(Item.m_Selected)
-			{
-				TextRender()->TextColor(CUI::ms_DefaultTextColor);
-				TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
-			}
+			UI()->DoLabelSelected(&Item.m_Rect, aBuf, Item.m_Selected, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_MC);
 		}
 	}
 
