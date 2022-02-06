@@ -687,7 +687,6 @@ private:
 
 	// found in menus_start.cpp
 	void RenderStartMenu(CUIRect MainView);
-	void RenderLogo(CUIRect MainView);
 
 	// found in menus_ingame.cpp
 	void RenderGame(CUIRect MainView);
