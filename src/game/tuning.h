@@ -12,8 +12,8 @@ MACRO_TUNING_PARAM(GroundFriction, ground_friction, 0.5f)
 MACRO_TUNING_PARAM(GroundJumpImpulse, ground_jump_impulse, 13.2f)
 
 // ice tuning
-MACRO_TUNING_PARAM(IceControlSpeed, ice_control_speed, 200.0f)// nice speeds
-MACRO_TUNING_PARAM(IceControlAccel, ice_control_accel, 25.0f / TicksPerSecond)// make acceleration hard
+MACRO_TUNING_PARAM(IceControlSpeed, ice_control_speed, 150.0f)// nice speeds
+MACRO_TUNING_PARAM(IceControlAccel, ice_control_accel, 20.0f / TicksPerSecond)// make acceleration hard
 MACRO_TUNING_PARAM(IceFriction, ice_friction, 0.99f) // same as air friction?
 
 // air tuning
