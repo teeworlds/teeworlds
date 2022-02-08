@@ -67,6 +67,10 @@ jobs:
       run: |
         cd debug
         ${{ matrix.cmake-path }}cmake --build . --config Debug ${{ matrix.build-args }} --target run_tests
+    - name: Run debug server
+      env: ${{ matrix.env }}
+      run: |
+        cd debug
         ./teeworlds_srv shutdown
 
     - name: Build in release mode
@@ -80,6 +84,10 @@ jobs:
       run: |
         cd release
         ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target run_tests
+    - name: Run release server
+      env: ${{ matrix.env }}
+      run: |
+        cd release
         ./teeworlds_srv shutdown
 
     - name: Package
