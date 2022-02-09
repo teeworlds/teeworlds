@@ -150,6 +150,7 @@ public:
 	CServerBan m_ServerBan;
 
 	IEngineMap *m_pMap;
+	IMapChecker *m_pMapChecker;
 
 	int64 m_GameStartTime;
 	bool m_RunServer;
@@ -179,12 +180,6 @@ public:
 		char m_aName[IConsole::TEMPMAP_NAME_LENGTH];
 	};
 
-	struct CSubdirCallbackUserdata
-	{
-		CServer *m_pServer;
-		char m_aName[IConsole::TEMPMAP_NAME_LENGTH];
-	};
-
 	CHeap *m_pMapListHeap;
 	CMapListEntry *m_pLastMapEntry;
 	CMapListEntry *m_pFirstMapEntry;
@@ -195,7 +190,6 @@ public:
 
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
-	CMapChecker m_MapChecker;
 
 	CServer();
 
@@ -257,10 +251,12 @@ public:
 	int LoadMap(const char *pMapName);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, CConfig *pConfig, IConsole *pConsole);
-	void InitInterfaces(CConfig *pConfig, IConsole *pConsole, IGameServer *pGameServer, IEngineMap *pMap, IStorage *pStorage);
+	void InitInterfaces(IKernel *pKernel);
 	int Run();
+	void Free();
 
 	static int MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser);
+	void InitMapList();
 
 	static void ConKick(IConsole::IResult *pResult, void *pUser);
 	static void ConStatus(IConsole::IResult *pResult, void *pUser);

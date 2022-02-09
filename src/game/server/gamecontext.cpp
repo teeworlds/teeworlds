@@ -1195,7 +1195,7 @@ void CGameContext::ConTunes(IConsole::IResult *pResult, void *pUserData)
 	{
 		float Value;
 		pSelf->Tuning()->Get(i, &Value);
-		str_format(aBuf, sizeof(aBuf), "%s %.2f", pSelf->Tuning()->m_apNames[i], Value);
+		str_format(aBuf, sizeof(aBuf), "%s %.2f", pSelf->Tuning()->GetName(i), Value);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
 	}
 }

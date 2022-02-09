@@ -55,7 +55,27 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	else
 		Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 	if(Ct < 0)
-		return; // projectile haven't been shot yet
+	{
+		if(Ct > -s_LastGameTickTime / 2)
+		{
+			// Fixup the timing which might be screwed during demo playback because
+			// s_LastGameTickTime depends on the system timer, while the other part
+			// Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED
+			// is virtually constant (for projectiles fired on the current game tick):
+			// (x - (x+2)) / 50 = -0.04
+			//
+			// We have a strict comparison for the passed time being more than the time between ticks
+			// if(CurtickStart > m_Info.m_CurrentTime) in CDemoPlayer::Update()
+			// so on the practice the typical value of s_LastGameTickTime varies from 0.02386 to 0.03999
+			// which leads to Ct from -0.00001 to -0.01614.
+			// Round up those to 0.0 to fix missing rendering of the projectile.
+			Ct = 0;
+		}
+		else
+		{
+			return; // projectile haven't been shot yet
+		}
+	}
 
 	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
 	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
@@ -85,9 +105,9 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 					str_format(aBuf, sizeof(aBuf), "%f", distance(PrevPos, Pos));
 					str_format(aBuf2, sizeof(aBuf2), "PreWater: %f  %f", PrevPos.x, PrevPos.y);
 					str_format(aBuf3, sizeof(aBuf3), "Pos: %f  %f", Pos.x, Pos.y);
-					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
-					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf2);
-					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf3);*/
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf2);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf3);*/
 				}
 
 			}
@@ -354,7 +374,6 @@ void CItems::OnRender()
 		}
 		else if (Item.m_Type == NETOBJTYPE_CHARACTER)
 		{
-			
 			RenderPlayer((const CNetObj_Character*)pData);
 		}
 		else if (Item.m_Type == NETOBJTYPE_HARPOON)
@@ -440,15 +459,10 @@ void CItems::RenderHarpoon(const CNetObj_Harpoon* pCurrent)
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
-	//float Size = g_pData->m_Weapons.m_aId[;
 	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_pSpriteProj, Vel.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
-	//, 
-	
 	
 	Graphics()->QuadsSetRotation(length(direction(HarpoonAngle)) > 0.00001f ? angle(direction(HarpoonAngle)) : 0);
 
-	//RenderTools()->DrawSprite(Pos.x, Pos.y, 64.0f);
-	//Graphics()->QuadsDraw(&QuadItem, 1);
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 48, 32);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsSetRotation(0);

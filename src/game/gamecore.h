@@ -25,6 +25,7 @@ public:
 
 class CTuningParams
 {
+	static const char *s_apNames[];
 public:
 	CTuningParams()
 	{
@@ -33,8 +34,6 @@ public:
 		#include "tuning.h"
 		#undef MACRO_TUNING_PARAM
 	}
-
-	static const char *m_apNames[];
 
 	#define MACRO_TUNING_PARAM(Name,ScriptName,Value) CTuneParam m_##Name;
 	#include "tuning.h"
@@ -45,6 +44,7 @@ public:
 	bool Set(const char *pName, float Value);
 	bool Get(int Index, float *pValue) const;
 	bool Get(const char *pName, float *pValue) const;
+	const char *GetName(int Index) const { return s_apNames[Index]; }
 };
 
 inline void StrToInts(int *pInts, int Num, const char *pStr)

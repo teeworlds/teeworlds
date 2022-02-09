@@ -13,7 +13,7 @@ public:
 	
 	class CLayers* m_pLayers;
 	class CWaterSurface** m_aWaterSurfaces;
-	class CTile* m_pWaterTiles;
+	struct CTile* m_pWaterTiles;
 	
 	virtual void OnMapLoad() { Init(); }
 	virtual void OnReset();
@@ -24,6 +24,7 @@ public:
 
 	int AmountOfSurfaceTiles(int Coord, int End);
 	bool HitWater(float x, float y, float Force);
+	void CreateWave(float x, float y, float Force);
 	void WaterFreeform(float X, float Y, int A, int B, float Size, CWaterSurface* Surface);
 	void WaterFreeformOutline(float X, float Y, int A, int B, float Size, CWaterSurface* Surface);
 	bool IsUnderWater(vec2 Pos);
@@ -55,11 +56,12 @@ public:
 	int m_AmountOfVertex;
 	int m_Length;
 	float m_Scale;
-
+	
 	bool IsUnderWater(vec2 Pos);
 	void Remove();
 	void Tick(float TimePassed);
 	bool HitWater(float x, float y, float Force);
+	void CreateWave(float x, float y, float Force, int WaveStrDivider, int WavePushDivider); //Created while moving horizontally
 	float PositionOfVertex(float Height, bool ToScale = true);
 };
 

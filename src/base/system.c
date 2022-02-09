@@ -42,6 +42,8 @@
 	#include <errno.h>
 	#include <process.h>
 	#include <wincrypt.h>
+	#include <share.h>
+	#include <shellapi.h>
 #else
 	#error NOT IMPLEMENTED
 #endif
@@ -209,14 +211,15 @@ static void logger_stdout(const char *line)
 	fflush(stdout);
 }
 
-static void logger_debugger(const char *line)
-{
 #if defined(CONF_FAMILY_WINDOWS)
-	OutputDebugString(line);
-	OutputDebugString("\n");
-#endif
+static void logger_win_debugger(const char *line)
+{
+	WCHAR wBuffer[512];
+	MultiByteToWideChar(CP_UTF8, 0, line, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+	OutputDebugStringW(wBuffer);
+	OutputDebugStringW(L"\n");
 }
-
+#endif
 
 static IOHANDLE logfile = 0;
 static void logger_file(const char *line)
@@ -238,7 +241,13 @@ void dbg_logger_stdout()
 	dbg_logger(logger_stdout);
 }
 
-void dbg_logger_debugger() { dbg_logger(logger_debugger); }
+void dbg_logger_debugger()
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	dbg_logger(logger_win_debugger);
+#endif
+}
+
 void dbg_logger_file(const char *filename)
 {
 	IOHANDLE handle = io_open(filename, IOFLAG_WRITE);
@@ -300,34 +309,69 @@ void mem_zero(void *block,unsigned size)
 	memset(block, 0, size);
 }
 
-IOHANDLE io_open(const char *filename, int flags)
+IOHANDLE io_open_impl(const char *filename, int flags)
 {
-	if(flags == IOFLAG_READ)
+	dbg_assert(flags == (IOFLAG_READ | IOFLAG_SKIP_BOM) || flags == IOFLAG_READ || flags == IOFLAG_WRITE || flags == IOFLAG_APPEND, "flags must be read, read+skipbom, write or append");
+#if defined(CONF_FAMILY_WINDOWS)
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+	if((flags & IOFLAG_READ) != 0)
 	{
-	#if defined(CONF_FAMILY_WINDOWS)
 		// check for filename case sensitive
-		WIN32_FIND_DATA finddata;
+		WIN32_FIND_DATAW finddata;
 		HANDLE handle;
-		int length;
+		char buffer[IO_MAX_PATH_LENGTH];
 
-		length = str_length(filename);
+		int length = str_length(filename);
 		if(!filename || !length || filename[length-1] == '\\')
 			return 0x0;
-		handle = FindFirstFile(filename, &finddata);
+		MultiByteToWideChar(CP_UTF8, 0, filename, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+		handle = FindFirstFileW(wBuffer, &finddata);
 		if(handle == INVALID_HANDLE_VALUE)
 			return 0x0;
-		else if(str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName) != 0)
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer, sizeof(buffer), NULL, NULL);
+		if(str_comp(filename+length-str_length(buffer), buffer) != 0)
 		{
 			FindClose(handle);
 			return 0x0;
 		}
 		FindClose(handle);
-	#endif
-		return (IOHANDLE)fopen(filename, "rb");
+		return (IOHANDLE)_wfsopen(wBuffer, L"rb", _SH_DENYNO);
 	}
 	if(flags == IOFLAG_WRITE)
-		return (IOHANDLE)fopen(filename, "wb");
+	{
+		MultiByteToWideChar(CP_UTF8, 0, filename, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+		return (IOHANDLE)_wfsopen(wBuffer, L"wb", _SH_DENYNO);
+	}
+	if(flags == IOFLAG_APPEND)
+	{
+		MultiByteToWideChar(CP_UTF8, 0, filename, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+		return (IOHANDLE)_wfsopen(wBuffer, L"ab", _SH_DENYNO);
+	}
 	return 0x0;
+#else
+	if((flags & IOFLAG_READ) != 0)
+		return (IOHANDLE)fopen(filename, "rb");
+	if(flags == IOFLAG_WRITE)
+		return (IOHANDLE)fopen(filename, "wb");
+	if(flags == IOFLAG_APPEND)
+		return (IOHANDLE)fopen(filename, "ab");
+	return 0x0;
+#endif
+}
+
+IOHANDLE io_open(const char *filename, int flags)
+{
+	IOHANDLE result = io_open_impl(filename, flags);
+	unsigned char buf[3];
+	if((flags & IOFLAG_SKIP_BOM) == 0 || !result)
+	{
+		return result;
+	}
+	if(io_read(result, buf, sizeof(buf)) != 3 || buf[0] != 0xef || buf[1] != 0xbb || buf[2] != 0xbf)
+	{
+		io_seek(result, 0, IOSEEK_START);
+	}
+	return result;
 }
 
 unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
@@ -481,7 +525,12 @@ void *thread_init(void (*threadfunc)(void *), void *u)
 #if defined(CONF_FAMILY_UNIX)
 	{
 		pthread_t id;
-		if(pthread_create(&id, NULL, thread_run, data) != 0)
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+#if defined(CONF_PLATFORM_MACOS)
+		pthread_attr_set_qos_class_np(&attr, QOS_CLASS_USER_INTERACTIVE, 0);
+#endif
+		if(pthread_create(&id, &attr, thread_run, data) != 0)
 		{
 			return 0;
 		}
@@ -507,11 +556,8 @@ void thread_wait(void *thread)
 
 void thread_destroy(void *thread)
 {
-#if defined(CONF_FAMILY_UNIX)
-	void *r = 0;
-	pthread_join((pthread_t)thread, &r);
-#else
-	/*#error not implemented*/
+#if defined(CONF_FAMILY_WINDOWS)
+	CloseHandle((HANDLE)thread);
 #endif
 }
 
@@ -898,7 +944,7 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 			int size;
 			sa6.sin6_family = AF_INET6;
 			size = (int)sizeof(sa6);
-			if(WSAStringToAddress(buf, AF_INET6, NULL, (struct sockaddr *)&sa6, &size) != 0)
+			if(WSAStringToAddressA(buf, AF_INET6, NULL, (struct sockaddr *)&sa6, &size) != 0)
 				return -1;
 		}
 #else
@@ -985,9 +1031,11 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 	{
 #if defined(CONF_FAMILY_WINDOWS)
 		char buf[128];
+		WCHAR wBuffer[128];
 		int error = WSAGetLastError();
-		if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
-			buf[0] = 0;
+		if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, wBuffer, sizeof(wBuffer) / sizeof(WCHAR), 0) == 0)
+			wBuffer[0] = 0;
+		WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buf, sizeof(buf), NULL, NULL);
 		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
 		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
@@ -1024,11 +1072,13 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 		{
 #if defined(CONF_FAMILY_WINDOWS)
 			char buf[128];
+			WCHAR wBuffer[128];
 			int error = WSAGetLastError();
 			if(error == WSAEADDRINUSE && use_random_port)
 				continue;
-			if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
-				buf[0] = 0;
+			if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, wBuffer, sizeof(wBuffer) / sizeof(WCHAR), 0) == 0)
+				wBuffer[0] = 0;
+			WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buf, sizeof(buf), NULL, NULL);
 			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
 			if(errno == EADDRINUSE && use_random_port)
@@ -1480,15 +1530,18 @@ static inline time_t filetime_to_unixtime(LPFILETIME filetime)
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	WIN32_FIND_DATA finddata;
+	WIN32_FIND_DATAW finddata;
 	HANDLE handle;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
+	char buffer2[IO_MAX_PATH_LENGTH];
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	int length;
+
 	str_format(buffer, sizeof(buffer), "%s/*", dir);
+	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 
-	handle = FindFirstFileA(buffer, &finddata);
-
-	if (handle == INVALID_HANDLE_VALUE)
+	handle = FindFirstFileW(wBuffer, &finddata);
+	if(handle == INVALID_HANDLE_VALUE)
 		return;
 
 	str_format(buffer, sizeof(buffer), "%s/", dir);
@@ -1497,17 +1550,17 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	/* add all the entries */
 	do
 	{
-		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
-		if(cb(finddata.cFileName, fs_is_dir(buffer), type, user))
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, sizeof(buffer2), NULL, NULL);
+		str_copy(buffer+length, buffer2, (int)sizeof(buffer)-length);
+		if(cb(buffer2, (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0, type, user))
 			break;
 	}
-	while (FindNextFileA(handle, &finddata));
+	while(FindNextFileW(handle, &finddata));
 
 	FindClose(handle);
-	return;
 #else
 	struct dirent *entry;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
 	int length;
 	DIR *d = opendir(dir);
 
@@ -1520,28 +1573,30 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	while((entry = readdir(d)) != NULL)
 	{
 		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
-		if(cb(entry->d_name, fs_is_dir(buffer), type, user))
+		if(cb(entry->d_name, entry->d_type == DT_UNKNOWN ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
 			break;
 	}
 
 	/* close the directory and return */
 	closedir(d);
-	return;
 #endif
 }
 
-void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void* user)
+void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	WIN32_FIND_DATA finddata;
+	WIN32_FIND_DATAW finddata;
 	HANDLE handle;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
+	char buffer2[IO_MAX_PATH_LENGTH];
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	int length;
+
 	str_format(buffer, sizeof(buffer), "%s/*", dir);
+	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 
-	handle = FindFirstFileA(buffer, &finddata);
-
-	if (handle == INVALID_HANDLE_VALUE)
+	handle = FindFirstFileW(wBuffer, &finddata);
+	if(handle == INVALID_HANDLE_VALUE)
 		return;
 
 	str_format(buffer, sizeof(buffer), "%s/", dir);
@@ -1550,24 +1605,24 @@ void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 	/* add all the entries */
 	do
 	{
-		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, sizeof(buffer2), NULL, NULL);
+		str_copy(buffer+length, buffer2, (int)sizeof(buffer)-length);
 
 		CFsFileInfo info;
-		info.m_pName = finddata.cFileName;
+		info.m_pName = buffer2;
 		info.m_TimeCreated = filetime_to_unixtime(&finddata.ftCreationTime);
 		info.m_TimeModified = filetime_to_unixtime(&finddata.ftLastWriteTime);
 
-		if(cb(&info, fs_is_dir(buffer), type, user))
+		if(cb(&info, (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0, type, user))
 			break;
 	}
-	while (FindNextFileA(handle, &finddata));
+	while(FindNextFileW(handle, &finddata));
 
 	FindClose(handle);
-	return;
 #else
 	struct dirent *entry;
 	time_t created = -1, modified = -1;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
 	int length;
 	DIR *d = opendir(dir);
 
@@ -1588,23 +1643,24 @@ void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 		info.m_TimeCreated = created;
 		info.m_TimeModified = modified;
 
-		if(cb(&info, fs_is_dir(buffer), type, user))
+		if(cb(&info, entry->d_type == DT_UNKNOWN ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
 			break;
 	}
 
 	/* close the directory and return */
 	closedir(d);
-	return;
 #endif
 }
 
 int fs_storage_path(const char *appname, char *path, int max)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	char *home = getenv("APPDATA");
+	WCHAR *home = _wgetenv(L"APPDATA");
+	char buffer[IO_MAX_PATH_LENGTH];
 	if(!home)
 		return -1;
-	str_format(path, max, "%s/%s", home, appname);
+	WideCharToMultiByte(CP_UTF8, 0, home, -1, buffer, sizeof(buffer), NULL, NULL);
+	str_format(path, max, "%s/%s", buffer, appname);
 	return 0;
 #else
 	char *home = getenv("HOME");
@@ -1656,8 +1712,10 @@ int fs_storage_path(const char *appname, char *path, int max)
 int fs_makedir(const char *path)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	if(_mkdir(path) == 0)
-			return 0;
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+	if(_wmkdir(wBuffer) == 0)
+		return 0;
 	if(errno == EEXIST)
 		return 0;
 	return -1;
@@ -1698,46 +1756,35 @@ int fs_makedir_recursive(const char *path)
 int fs_is_dir(const char *path)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	/* TODO: do this smarter */
-	WIN32_FIND_DATA finddata;
-	HANDLE handle;
-	char buffer[1024*2];
-	str_format(buffer, sizeof(buffer), "%s/*", path);
-
-	if ((handle = FindFirstFileA(buffer, &finddata)) == INVALID_HANDLE_VALUE)
-		return 0;
-
-	FindClose(handle);
-	return 1;
+	WCHAR wPath[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, wPath, sizeof(wPath) / sizeof(WCHAR));
+	DWORD attributes = GetFileAttributesW(wPath);
+	return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) ? 1 : 0;
 #else
-	struct stat sb;
-	if (stat(path, &sb) == -1)
-		return 0;
-
-	if (S_ISDIR(sb.st_mode))
-		return 1;
-	else
-		return 0;
-#endif
-}
-
-time_t fs_getmtime(const char *path)
-{
 	struct stat sb;
 	if(stat(path, &sb) == -1)
 		return 0;
-
-	return sb.st_mtime;
+	return S_ISDIR(sb.st_mode) ? 1 : 0;
+#endif
 }
 
 int fs_chdir(const char *path)
 {
 	if(fs_is_dir(path))
 	{
+#if defined(CONF_FAMILY_WINDOWS)
+		WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+		MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+		if(_wchdir(wBuffer))
+			return 1;
+		else
+			return 0;
+#else
 		if(chdir(path))
 			return 1;
 		else
 			return 0;
+#endif
 	}
 	else
 		return 1;
@@ -1745,12 +1792,26 @@ int fs_chdir(const char *path)
 
 char *fs_getcwd(char *buffer, int buffer_size)
 {
-	if(buffer == 0)
-		return 0;
 #if defined(CONF_FAMILY_WINDOWS)
-	return _getcwd(buffer, buffer_size);
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+#endif
+	dbg_assert(buffer != 0, "buffer invalid");
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
+#if defined(CONF_FAMILY_WINDOWS)
+	if(_wgetcwd(wBuffer, buffer_size) == 0)
+	{
+		buffer[0] = '\0';
+		return 0;
+	}
+	WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buffer, buffer_size, NULL, NULL);
+	return buffer;
 #else
-	return getcwd(buffer, buffer_size);
+	if(getcwd(buffer, buffer_size) == 0)
+	{
+		buffer[0] = '\0';
+		return 0;
+	}
+	return buffer;
 #endif
 }
 
@@ -1773,16 +1834,34 @@ int fs_parent_dir(char *path)
 
 int fs_remove(const char *filename)
 {
-	if(remove(filename) != 0)
+#if defined(CONF_FAMILY_WINDOWS)
+	WCHAR wFilename[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, sizeof(wFilename) / sizeof(WCHAR));
+	if(DeleteFileW(wFilename) == 0)
 		return 1;
 	return 0;
+#else
+	if(remove(filename))
+		return 1;
+	return 0;
+#endif
 }
 
 int fs_rename(const char *oldname, const char *newname)
 {
-	if(rename(oldname, newname) != 0)
+#if defined(CONF_FAMILY_WINDOWS)
+	WCHAR wOldname[IO_MAX_PATH_LENGTH];
+	WCHAR wNewname[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, oldname, -1, wOldname, sizeof(wOldname) / sizeof(WCHAR));
+	MultiByteToWideChar(CP_UTF8, 0, newname, -1, wNewname, sizeof(wNewname) / sizeof(WCHAR));
+	if(MoveFileExW(wOldname, wNewname, MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) == 0)
 		return 1;
 	return 0;
+#else
+	if(rename(oldname, newname))
+		return 1;
+	return 0;
+#endif
 }
 
 int fs_read(const char *name, void **result, unsigned *result_len)
@@ -1801,7 +1880,7 @@ int fs_read(const char *name, void **result, unsigned *result_len)
 
 char *fs_read_str(const char *name)
 {
-	IOHANDLE file = io_open(name, IOFLAG_READ);
+	IOHANDLE file = io_open(name, IOFLAG_READ | IOFLAG_SKIP_BOM);
 	char *result;
 	if(!file)
 	{
@@ -1815,13 +1894,18 @@ char *fs_read_str(const char *name)
 int fs_file_time(const char *name, time_t *created, time_t *modified)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	WIN32_FIND_DATA finddata;
-	HANDLE handle = FindFirstFile(name, &finddata);
+	WIN32_FIND_DATAW finddata;
+	HANDLE handle;
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+
+	MultiByteToWideChar(CP_UTF8, 0, name, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+	handle = FindFirstFileW(wBuffer, &finddata);
 	if(handle == INVALID_HANDLE_VALUE)
 		return 1;
 
 	*created = filetime_to_unixtime(&finddata.ftCreationTime);
 	*modified = filetime_to_unixtime(&finddata.ftLastWriteTime);
+	FindClose(handle);
 #elif defined(CONF_FAMILY_UNIX)
 	struct stat sb;
 	if(stat(name, &sb))
@@ -1994,8 +2078,10 @@ int time_iseasterday()
 
 void str_append(char *dst, const char *src, int dst_size)
 {
-	int s = str_length(dst);
+	int s;
 	int i = 0;
+	dbg_assert(dst_size > 0, "dst_size invalid");
+	s = str_length(dst);
 	while(s < dst_size)
 	{
 		dst[s] = src[i];
@@ -2010,6 +2096,8 @@ void str_append(char *dst, const char *src, int dst_size)
 
 void str_copy(char *dst, const char *src, int dst_size)
 {
+	dbg_assert(dst_size > 0, "dst_size invalid");
+
 	strncpy(dst, src, dst_size-1);
 	dst[dst_size-1] = 0; /* assure null termination */
 }
@@ -2031,17 +2119,17 @@ int str_length(const char *str)
 
 void str_format(char *buffer, int buffer_size, const char *format, ...)
 {
+	va_list ap;
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
+	va_start(ap, format);
+
 #if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
-	va_list ap;
-	va_start(ap, format);
 	_vsprintf_p(buffer, buffer_size, format, ap);
-	va_end(ap);
 #else
-	va_list ap;
-	va_start(ap, format);
 	vsnprintf(buffer, buffer_size, format, ap);
-	va_end(ap);
 #endif
+
+	va_end(ap);
 
 	buffer[buffer_size-1] = 0; /* assure null termination */
 }
@@ -2429,6 +2517,7 @@ int str_is_number(const char *str)
 void str_timestamp_ex(time_t time_data, char *buffer, int buffer_size, const char *format)
 {
 	struct tm *time_info;
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
 	time_info = localtime(&time_data);
 	strftime(buffer, buffer_size, format, time_info);
 	buffer[buffer_size-1] = 0;	/* assure null termination */
@@ -2691,6 +2780,7 @@ void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
 {
 	int new_cursor;
 	int cursor = 0;
+	dbg_assert(dst_size > 0, "dst_size invalid");
 
 	while(src[cursor] && num > 0)
 	{
@@ -2705,20 +2795,17 @@ void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
 	str_copy(dst, src, cursor < dst_size ? cursor+1 : dst_size);
 }
 
-void str_utf8_stats(const char *str, int max_size, int *size, int *count)
+void str_utf8_stats(const char *str, int max_size, int max_count, int *size, int *count)
 {
 	*size = 0;
 	*count = 0;
-	while(str[*size] && *size < max_size)
+	while(*size < max_size && *count < max_count)
 	{
 		int new_size = str_utf8_forward(str, *size);
-		if(new_size != *size)
-		{
-			if(new_size >= max_size)
-				break;
-			*size = new_size;
-			++(*count);
-		}
+		if(new_size == *size || new_size >= max_size)
+			break;
+		*size = new_size;
+		++(*count);
 	}
 }
 
@@ -2803,18 +2890,91 @@ int pid()
 #endif
 }
 
+void cmdline_fix(int *argc, const char ***argv)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	int wide_argc = 0;
+	WCHAR **wide_argv = CommandLineToArgvW(GetCommandLineW(), &wide_argc);
+	dbg_assert(wide_argv != NULL, "CommandLineToArgvW failure");
+
+	int total_size = 0;
+
+	for(int i = 0; i < wide_argc; i++)
+	{
+		int size = WideCharToMultiByte(CP_UTF8, 0, wide_argv[i], -1, NULL, 0, NULL, NULL);
+		dbg_assert(size != 0, "WideCharToMultiByte failure");
+		total_size += size;
+	}
+
+	char **new_argv = (char **)malloc((wide_argc + 1) * sizeof(*new_argv));
+	new_argv[0] = (char *)malloc(total_size);
+	mem_zero(new_argv[0], total_size);
+
+	int remaining_size = total_size;
+	for(int i = 0; i < wide_argc; i++)
+	{
+		int size = WideCharToMultiByte(CP_UTF8, 0, wide_argv[i], -1, new_argv[i], remaining_size, NULL, NULL);
+		dbg_assert(size != 0, "WideCharToMultiByte failure");
+
+		remaining_size -= size;
+		new_argv[i + 1] = new_argv[i] + size;
+	}
+
+	new_argv[wide_argc] = 0;
+	*argc = wide_argc;
+	*argv = (const char **)new_argv;
+#endif
+}
+
+void cmdline_free(int argc, const char **argv)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	free((void *)*argv);
+	free((char **)argv);
+#endif
+}
+
+int bytes_be_to_int(const unsigned char *bytes)
+{
+	int Result;
+	unsigned char *pResult = (unsigned char *)&Result;
+	for(unsigned i = 0; i < sizeof(int); i++)
+	{
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		pResult[i] = bytes[i];
+#else
+		pResult[i] = bytes[sizeof(int) - i - 1];
+#endif
+	}
+	return Result;
+}
+
+void int_to_bytes_be(unsigned char *bytes, int value)
+{
+	const unsigned char *pValue = (const unsigned char *)&value;
+	for(unsigned i = 0; i < sizeof(int); i++)
+	{
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		bytes[i] = pValue[i];
+#else
+		bytes[sizeof(int) - i - 1] = pValue[i];
+#endif
+	}
+}
+
 unsigned bytes_be_to_uint(const unsigned char *bytes)
 {
-	return (bytes[0]<<24) | (bytes[1]<<16) | (bytes[2]<<8) | bytes[3];
+	return ((bytes[0] & 0xffu) << 24u) | ((bytes[1] & 0xffu) << 16u) | ((bytes[2] & 0xffu) << 8u) | (bytes[3] & 0xffu);
 }
 
 void uint_to_bytes_be(unsigned char *bytes, unsigned value)
 {
-	bytes[0] = (value>>24)&0xff;
-	bytes[1] = (value>>16)&0xff;
-	bytes[2] = (value>>8)&0xff;
-	bytes[3] = value&0xff;
+	bytes[0] = (value >> 24u) & 0xffu;
+	bytes[1] = (value >> 16u) & 0xffu;
+	bytes[2] = (value >> 8u) & 0xffu;
+	bytes[3] = value & 0xffu;
 }
+
 
 #if defined(__cplusplus)
 }

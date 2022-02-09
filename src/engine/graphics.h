@@ -13,10 +13,10 @@ class CImageInfo
 public:
 	enum
 	{
-		FORMAT_AUTO=-1,
-		FORMAT_RGB=0,
-		FORMAT_RGBA=1,
-		FORMAT_ALPHA=2,
+		FORMAT_AUTO = -1,
+		FORMAT_RGB = 0,
+		FORMAT_RGBA = 1,
+		FORMAT_ALPHA = 2,
 	};
 
 	/* Variable: width
@@ -34,6 +34,22 @@ public:
 	/* Variable: data
 		Pointer to the image data. */
 	void *m_pData;
+
+	static int GetPixelSize(int Format)
+	{
+		switch(Format)
+		{
+		case FORMAT_RGB: return 3;
+		case FORMAT_RGBA: return 4;
+		case FORMAT_ALPHA: return 1;
+		}
+		return 0;
+	}
+
+	int GetPixelSize() const
+	{
+		return GetPixelSize(m_Format);
+	}
 };
 
 /*
@@ -122,7 +138,7 @@ public:
 
 	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) = 0;
 
-	virtual int UnloadTexture(CTextureHandle *Index) = 0;
+	virtual int UnloadTexture(CTextureHandle *pIndex) = 0;
 	virtual CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;
 	virtual int LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData) = 0;
 	virtual CTextureHandle LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) = 0;

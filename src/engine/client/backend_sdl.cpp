@@ -256,7 +256,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Init(const CInitCommand *pCommand)
 	dbg_msg("render", "opengl max texture sizes: %d, %d(3D)", m_MaxTexSize, m_Max3DTexSize);
 	if(m_Max3DTexSize < IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION)
 		dbg_msg("render", "*** warning *** max 3D texture size is too low - using the fallback system");
-	m_TextureArraySize = IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION / min(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
+	m_TextureArraySize = IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION / minimum(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
 	*pCommand->m_pTextureArraySize = m_TextureArraySize;
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -297,7 +297,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 		if((pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D) && m_Max3DTexSize >= CTexture::MIN_GL_MAX_3D_TEXTURE_SIZE)
 		{
 			if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE2D)
-				MaxTexSize = min(MaxTexSize, m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION);
+				MaxTexSize = minimum(MaxTexSize, m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION);
 			else
 				MaxTexSize = m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION;
 		}
@@ -398,7 +398,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	{
 		Width /= IGraphics::NUMTILES_DIMENSION;
 		Height /= IGraphics::NUMTILES_DIMENSION;
-		int Depth = min(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
+		int Depth = minimum(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
 
 		// copy and reorder texture data
 		int MemSize = Width*Height*IGraphics::NUMTILES_DIMENSION*IGraphics::NUMTILES_DIMENSION*pCommand->m_PixelSize;
@@ -580,23 +580,18 @@ bool CCommandProcessorFragment_SDL::RunCommand(const CCommandBuffer::CCommand *p
 
 void CCommandProcessor_SDL_OpenGL::RunBuffer(CCommandBuffer *pBuffer)
 {
-	unsigned CmdIndex = 0;
-	while(1)
+	for(CCommandBuffer::CCommand *pCommand = pBuffer->Head(); pCommand; pCommand = pCommand->m_pNext)
 	{
-		const CCommandBuffer::CCommand *pBaseCommand = pBuffer->GetCommand(&CmdIndex);
-		if(pBaseCommand == 0x0)
-			break;
-
-		if(m_OpenGL.RunCommand(pBaseCommand))
+		if(m_OpenGL.RunCommand(pCommand))
 			continue;
 
-		if(m_SDL.RunCommand(pBaseCommand))
+		if(m_SDL.RunCommand(pCommand))
 			continue;
 
-		if(m_General.RunCommand(pBaseCommand))
+		if(m_General.RunCommand(pCommand))
 			continue;
 
-		dbg_msg("graphics", "unknown command %d", pBaseCommand->m_Cmd);
+		dbg_msg("graphics", "unknown command %d", pCommand->m_Cmd);
 	}
 }
 

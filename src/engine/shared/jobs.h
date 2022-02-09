@@ -57,6 +57,7 @@ public:
 	~CJobPool();
 
 	int Init(int NumThreads);
+	void Shutdown();
 	int Add(CJob *pJob, JOBFUNC pfnFunc, void *pData);
 };
 #endif
