@@ -17,12 +17,9 @@ void CTestInfo::Filename(char *pBuffer, int BufferLength, const char *pSuffix)
 	str_format(pBuffer, BufferLength, "%s%s", m_aFilenamePrefix, pSuffix);
 }
 
-int main(int argc, const char **argv)
+int main(int argc, char **argv)
 {
-	cmdline_fix(&argc, &argv);
-	::testing::InitGoogleTest(&argc, const_cast<char **>(argv));
+	::testing::InitGoogleTest(&argc, argv);
 	net_init();
-	int Result = RUN_ALL_TESTS();
-	cmdline_free(argc, argv);
-	return Result;
+	return RUN_ALL_TESTS();
 }

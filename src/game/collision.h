@@ -14,8 +14,8 @@ enum CollisionAlgorithmFlags
 };
 class CCollision
 {
-	struct CTile *m_pTiles;
-
+	class CTile* m_pTiles;
+	
 	int m_Width;
 	int m_Height;
 	class CLayers *m_pLayers;
@@ -25,7 +25,7 @@ class CCollision
 	//bool IsAirTile(int x, int y, int Flag = COLFLAG_SOLID) const;
 	int GetTile(int x, int y) const;
 public:
-	struct CTile* m_pCollisionTiles;
+	class CTile* m_pCollisionTiles;
 	enum
 	{
 		COLFLAG_AIR = 0,

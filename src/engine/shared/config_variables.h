@@ -76,8 +76,6 @@ MACRO_CONFIG_INT(GfxWatergravity, gfx_watergravity, 750, -10000, 1000000, CFGFLA
 MACRO_CONFIG_INT(GfxWaterfriction, gfx_waterfriction, 100, -10000, 1000000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
 MACRO_CONFIG_INT(GfxLineMultiplier, gfx_linemultiplier, 52, -10000, 1000000, CFGFLAG_CLIENT, "Debug")
 MACRO_CONFIG_INT(GfxWaveDivider, gfx_wavedivider, 75, -10000, 1000000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
-MACRO_CONFIG_INT(GfxWaveDivider2, gfx_wavedivider2, 7500, -10000, 1000000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
-MACRO_CONFIG_INT(GfxWavePushDivider, gfx_wavepushdivider, 200, -10000, 1000000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
 MACRO_CONFIG_INT(GfxNumOfWaveUpdates, gfx_waveupdates, 60, 1, 1000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
 MACRO_CONFIG_INT(GfxDropletElasticity, gfx_droplet_elasticity, 10, 1, 1000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
 
@@ -109,7 +107,6 @@ MACRO_CONFIG_INT(SvRconMaxTries, sv_rcon_max_tries, 3, 0, 100, CFGFLAG_SAVE|CFGF
 MACRO_CONFIG_INT(SvRconBantime, sv_rcon_bantime, 5, 0, 1440, CFGFLAG_SAVE|CFGFLAG_SERVER, "The time a client gets banned if remote console authentication fails. 0 makes it just use kick")
 MACRO_CONFIG_INT(SvAutoDemoRecord, sv_auto_demo_record, 0, 0, 1, CFGFLAG_SAVE|CFGFLAG_SERVER, "Automatically record demos")
 MACRO_CONFIG_INT(SvAutoDemoMax, sv_auto_demo_max, 10, 0, 1000, CFGFLAG_SAVE|CFGFLAG_SERVER, "Maximum number of automatically recorded demos (0 = no limit)")
-MACRO_CONFIG_STR(SvMaplist, sv_maplist, 32, "all", CFGFLAG_SAVE|CFGFLAG_SERVER, "Maplist for authed clients (none, standard, all)")
 
 MACRO_CONFIG_STR(EcBindaddr, ec_bindaddr, 128, "localhost", CFGFLAG_SAVE|CFGFLAG_ECON, "Address to bind the external console to. Anything but 'localhost' is dangerous")
 MACRO_CONFIG_INT(EcPort, ec_port, 0, 0, 0, CFGFLAG_SAVE|CFGFLAG_ECON, "Port to use for the external console")

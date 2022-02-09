@@ -93,7 +93,7 @@ Objects = [
 
 	NetObject("PlayerInput", [
 		NetIntRange("m_Direction", -1, 1),
-		NetIntRange("m_DirectionVertical", -1, 1),
+                NetIntRange("m_DirectionVertical", -1, 1),
 		NetIntAny("m_TargetX"),
 		NetIntAny("m_TargetY"),
 
@@ -118,7 +118,7 @@ Objects = [
 
 		NetIntRange("m_Type", 0, 'NUM_WEAPONS-1'),
 		NetTick("m_StartTick"),
-		NetIntAny("m_Water"),
+                NetIntAny("m_Water"),
 	]),
 
 	NetObject("Laser", [
@@ -130,33 +130,33 @@ Objects = [
 		NetTick("m_StartTick"),
 	]),
 
-	NetObject("Harpoon", [
-		NetIntAny("m_X"),
-		NetIntAny("m_Y"),
-		NetIntAny("m_Dir_X"),
-		NetIntAny("m_Dir_Y"),
-		NetIntAny("m_OwnerID"),
-		NetIntAny("m_Owner_X"),
-		NetIntAny("m_Owner_Y"), #Fallback
+        NetObject("Harpoon", [
+                NetIntAny("m_X"),
+                NetIntAny("m_Y"),
+                NetIntAny("m_Dir_X"),
+                NetIntAny("m_Dir_Y"),
+                NetIntAny("m_OwnerID"),
+                NetIntAny("m_Owner_X"),
+                NetIntAny("m_Owner_Y"), #Fallback
 
-		NetTick("m_SpawnTick"),
-	]),
+                NetTick("m_SpawnTick"),
+        ]),
 
-	NetObject("HarpoonDragPlayer", [
-		NetIntAny("m_OwnerID"),
-		NetIntAny("m_Owner_X"),
-		NetIntAny("m_Owner_Y"), #Fallback
-		NetIntAny("m_VictimID"),
-		NetIntAny("m_X"), #Pickup or Fallback
-		NetIntAny("m_Y"), 
+        NetObject("HarpoonDragPlayer", [
+                NetIntAny("m_OwnerID"),
+                NetIntAny("m_Owner_X"),
+                NetIntAny("m_Owner_Y"), #Fallback
+                NetIntAny("m_VictimID"),
+                NetIntAny("m_X"), #Pickup or Fallback
+                NetIntAny("m_Y"), 
 
-		NetIntAny("m_Type"),
-	]),
+                NetIntAny("m_Type"),
+        ]),
 
 	NetObject("Pickup", [
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
-		NetIntAny("m_DisturbedTick"),
+                NetIntAny("m_DisturbedTick"),
 
 		NetEnum("m_Type", Pickups),
 	]),
@@ -195,7 +195,7 @@ Objects = [
 
 		NetIntAny("m_Angle"),
 		NetIntRange("m_Direction", -1, 1),
-		NetIntRange("m_DirectionVertical", -1, 1),
+                NetIntRange("m_DirectionVertical", -1, 1),
                 
 		NetIntRange("m_Jumped", 0, 3),
 		NetIntRange("m_HookedPlayer", -1, 'MAX_CLIENTS-1'),
@@ -206,7 +206,7 @@ Objects = [
 		NetIntAny("m_HookY"),
 		NetIntAny("m_HookDx"),
 		NetIntAny("m_HookDy"),
-		NetBool("m_DivingGear"),
+                NetBool("m_DivingGear"),
 	]),
 
 	NetObject("Character:CharacterCore", [
@@ -217,9 +217,9 @@ Objects = [
 		NetEnum("m_Emote", Emotes),
 		NetTick("m_AttackTick"),
 		NetFlag("m_TriggeredEvents", CoreEventFlags),
-		NetIntAny("m_BreathBubbles"),
-		NetIntAny("m_HarpoonTimeLeft"),
-		NetIntAny("m_HarpoonAmmoReload"),
+                NetIntAny("m_BreathBubbles"),
+                NetIntAny("m_HarpoonTimeLeft"),
+                NetIntAny("m_HarpoonAmmoReload"),
 	]),
 
 	NetObject("PlayerInfo", [
@@ -275,8 +275,8 @@ Objects = [
 
 
 	NetEvent("Explosion:Common", [
-		NetIntAny("m_Radius"),
-	]),
+            NetIntAny("m_Radius"),
+        ]),
 	NetEvent("Spawn:Common", []),
 	NetEvent("HammerHit:Common", []),
 

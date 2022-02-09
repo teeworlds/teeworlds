@@ -1,9 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <algorithm>
-
+#include <base/tl/base.h>
 #include <base/tl/algorithm.h>
-
 #include "snapshot.h"
 #include "compression.h"
 
@@ -40,7 +38,7 @@ void CSnapshot::InvalidateItem(int Index)
 	((CSnapshotItem *)(DataStart() + Offsets()[Index]))->Invalidate();
 }
 
-int CSnapshot::Serialize(char *pDstData) const
+int CSnapshot::Serialize(char *pDstData)
 {
 	int *pData = (int*)pDstData;
 	pData[0] = m_DataSize;
@@ -141,19 +139,19 @@ static int DiffItem(const int *pPast, const int *pCurrent, int *pOut, int Size)
 	return Needed;
 }
 
-static void UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size, int *pDataRate)
+void CSnapshotDelta::UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size)
 {
 	while(Size)
 	{
 		*pOut = *pPast+*pDiff;
 
 		if(*pDiff == 0)
-			*pDataRate += 1;
+			m_aSnapshotDataRate[m_SnapshotCurrent] += 1;
 		else
 		{
-			unsigned char aBuf[CVariableInt::MAX_BYTES_PACKED];
+			unsigned char aBuf[16];
 			unsigned char *pEnd = CVariableInt::Pack(aBuf, *pDiff);
-			*pDataRate += (int)(pEnd - (unsigned char*)aBuf) * 8;
+			m_aSnapshotDataRate[m_SnapshotCurrent] += (int)(pEnd - (unsigned char*)aBuf) * 8;
 		}
 
 		pOut++;
@@ -168,6 +166,7 @@ CSnapshotDelta::CSnapshotDelta()
 	mem_zero(m_aItemSizes, sizeof(m_aItemSizes));
 	mem_zero(m_aSnapshotDataRate, sizeof(m_aSnapshotDataRate));
 	mem_zero(m_aSnapshotDataUpdates, sizeof(m_aSnapshotDataUpdates));
+	m_SnapshotCurrent = 0;
 	mem_zero(&m_Empty, sizeof(m_Empty));
 }
 
@@ -178,7 +177,7 @@ void CSnapshotDelta::SetStaticsize(int ItemType, int Size)
 	m_aItemSizes[ItemType] = Size;
 }
 
-const CSnapshotDelta::CData *CSnapshotDelta::EmptyDelta() const
+CSnapshotDelta::CData *CSnapshotDelta::EmptyDelta()
 {
 	return &m_Empty;
 }
@@ -320,7 +319,9 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 	// unpack deleted stuff
 	pDeleted = pData;
 	if(pDelta->m_NumDeletedItems < 0)
+	{
 		return -1;
+	}
 	pData += pDelta->m_NumDeletedItems;
 	if(pData > pEnd)
 		return -1;
@@ -357,13 +358,9 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 			return -1;
 
 		Type = *pData++;
-		if(Type < 0 || Type > CSnapshot::MAX_TYPE)
-			return -3;
-
+		if(Type < 0)
+			return -1;
 		ID = *pData++;
-		if(ID < 0 || ID > CSnapshot::MAX_ID)
-			return -3;
-
 		if(Type < MAX_NETOBJSIZES && m_aItemSizes[Type])
 			ItemSize = m_aItemSizes[Type];
 		else
@@ -372,6 +369,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 				return -2;
 			ItemSize = (*pData++) * 4;
 		}
+		m_SnapshotCurrent = Type;
 
 		if(RangeCheck(pEnd, pData, ItemSize) || ItemSize < 0) return -3;
 
@@ -388,14 +386,14 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		if(FromIndex != -1)
 		{
 			// we got an update so we need to apply the diff
-			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize / 4, &m_aSnapshotDataRate[Type]);
-			m_aSnapshotDataUpdates[Type]++;
+			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize/4);
+			m_aSnapshotDataUpdates[m_SnapshotCurrent]++;
 		}
 		else // no previous, just copy the pData
 		{
 			mem_copy(pNewData, pData, ItemSize);
-			m_aSnapshotDataRate[Type] += ItemSize * 8;
-			m_aSnapshotDataUpdates[Type]++;
+			m_aSnapshotDataRate[m_SnapshotCurrent] += ItemSize*8;
+			m_aSnapshotDataUpdates[m_SnapshotCurrent]++;
 		}
 
 		pData += ItemSize/4;
@@ -408,11 +406,6 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 
 // CSnapshotStorage
 
-CSnapshotStorage::~CSnapshotStorage()
-{
-	PurgeAll();
-}
-
 void CSnapshotStorage::Init()
 {
 	m_pFirst = 0;
@@ -422,10 +415,11 @@ void CSnapshotStorage::Init()
 void CSnapshotStorage::PurgeAll()
 {
 	CHolder *pHolder = m_pFirst;
+	CHolder *pNext;
 
 	while(pHolder)
 	{
-		CHolder *pNext = pHolder->m_pNext;
+		pNext = pHolder->m_pNext;
 		mem_free(pHolder);
 		pHolder = pNext;
 	}
@@ -438,10 +432,11 @@ void CSnapshotStorage::PurgeAll()
 void CSnapshotStorage::PurgeUntil(int Tick)
 {
 	CHolder *pHolder = m_pFirst;
+	CHolder *pNext;
 
 	while(pHolder)
 	{
-		CHolder *pNext = pHolder->m_pNext;
+		pNext = pHolder->m_pNext;
 		if(pHolder->m_Tick >= Tick)
 			return; // no more to remove
 		mem_free(pHolder);
@@ -461,7 +456,7 @@ void CSnapshotStorage::PurgeUntil(int Tick)
 	m_pLast = 0;
 }
 
-void CSnapshotStorage::Add(int Tick, int64 Tagtime, int DataSize, const void *pData, bool CreateAlt)
+void CSnapshotStorage::Add(int Tick, int64 Tagtime, int DataSize, void *pData, int CreateAlt)
 {
 	// allocate memory for holder + snapshot_data
 	int TotalSize = sizeof(CHolder)+DataSize;
@@ -497,7 +492,7 @@ void CSnapshotStorage::Add(int Tick, int64 Tagtime, int DataSize, const void *pD
 	m_pLast = pHolder;
 }
 
-int CSnapshotStorage::Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData) const
+int CSnapshotStorage::Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData)
 {
 	CHolder *pHolder = m_pFirst;
 
@@ -581,14 +576,15 @@ bool CSnapshotBuilder::UnserializeSnap(const char *pSrcData, int SrcSize)
 	return true;
 }
 
-CSnapshotItem *CSnapshotBuilder::GetItem(int Index) const
+CSnapshotItem *CSnapshotBuilder::GetItem(int Index)
 {
 	return (CSnapshotItem *)&(m_aData[m_aOffsets[Index]]);
 }
 
-int *CSnapshotBuilder::GetItemData(int Key) const
+int *CSnapshotBuilder::GetItemData(int Key)
 {
-	for(int i = 0; i < m_NumItems; i++)
+	int i;
+	for(i = 0; i < m_NumItems; i++)
 	{
 		if(GetItem(i)->Key() == Key)
 			return GetItem(i)->Data();
@@ -637,9 +633,9 @@ int CSnapshotBuilder::Finish(void *pSnapdata)
 			if(pSnap->SortedKeys()[i-1] > pSnap->SortedKeys()[i])
 			{
 				Sorting = true;
-				std::swap(pSnap->SortedKeys()[i], pSnap->SortedKeys()[i-1]);
-				std::swap(m_aOffsets[i], m_aOffsets[i-1]);
-				std::swap(aItemSizes[i], aItemSizes[i-1]);
+				tl_swap(pSnap->SortedKeys()[i], pSnap->SortedKeys()[i-1]);
+				tl_swap(m_aOffsets[i], m_aOffsets[i-1]);
+				tl_swap(aItemSizes[i], aItemSizes[i-1]);
 			}
 		}
 	}

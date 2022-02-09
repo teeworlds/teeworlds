@@ -16,7 +16,7 @@ CMenus::CListBox::CListBox()
 	m_ScrollOffset = vec2(0,0);
 	m_ListBoxUpdateScroll = false;
 	m_aFilterString[0] = '\0';
-	m_FilterInput.SetBuffer(m_aFilterString, sizeof(m_aFilterString));
+	m_OffsetFilter = 0.0f;
 }
 
 void CMenus::CListBox::DoBegin(const CUIRect *pRect)
@@ -38,7 +38,7 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 	// draw header
 	View.HSplitTop(HeaderHeight, &Header, &View);
 	Header.y += 2.0f;
-	m_pUI->DoLabel(&Header, pTitle, Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	m_pUI->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 
 	View.HSplitTop(Spacing, &Header, &View);
 
@@ -66,13 +66,13 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 	View.HSplitTop(FilterHeight, &Filter, &View);
 	Filter.Margin(Spacing, &Filter);
 
-	float FontSize = Filter.h*CUI::ms_FontmodHeight*0.8f;
+	float FontSize = Filter.h*ms_FontmodHeight*0.8f;
 
 	CUIRect Label, EditBox;
 	Filter.VSplitLeft(Filter.w/5.0f, &Label, &EditBox);
 	Label.y += Spacing;
-	m_pUI->DoLabel(&Label, Localize("Search:"), FontSize, TEXTALIGN_CENTER);
-	bool Changed = m_pUI->DoEditBox(&m_FilterInput, &EditBox, FontSize);
+	m_pUI->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_CENTER);
+	bool Changed = m_pMenus->DoEditBox(m_aFilterString, &EditBox, m_aFilterString, sizeof(m_aFilterString), FontSize, &m_OffsetFilter);
 
 	View.HSplitTop(Spacing, &Filter, &View);
 
@@ -108,7 +108,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 		View.HSplitBottom(m_FooterHeight, &View, &Footer);
 		Footer.VSplitLeft(10.0f, 0, &Footer);
 		Footer.y += 2.0f;
-		m_pUI->DoLabel(&Footer, m_pBottomText, Footer.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		m_pUI->DoLabel(&Footer, m_pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 	}
 
 	// setup the variables
@@ -126,9 +126,9 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 	// handle input
 	if(!pActive || *pActive)
 	{
-		if(m_pUI->ConsumeHotkey(CUI::HOTKEY_DOWN))
+		if(m_pMenus->m_DownArrowPressed)
 			m_ListBoxNewSelOffset += 1;
-		if(m_pUI->ConsumeHotkey(CUI::HOTKEY_UP))
+		if(m_pMenus->m_UpArrowPressed)
 			m_ListBoxNewSelOffset -= 1;
 	}
 
@@ -195,7 +195,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 		{
 			m_ListBoxDoneEvents = 1;
 
-			if(m_pUI->ConsumeHotkey(CUI::HOTKEY_ENTER) || (s_ItemClicked && m_pInput->MouseDoubleClick()))
+			if(m_pMenus->m_EnterPressed || (s_ItemClicked && m_pInput->MouseDoubleClick()))
 			{
 				m_ListBoxItemActivated = true;
 				m_pUI->SetActiveItem(0);

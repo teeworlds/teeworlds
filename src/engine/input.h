@@ -7,6 +7,7 @@
 
 const int g_MaxKeys = 512;
 extern const char g_aaKeyStrings[g_MaxKeys][20];
+const int g_MaxJoystickAxes = 12;
 
 class IInput : public IInterface
 {
@@ -41,7 +42,7 @@ public:
 
 		CURSOR_NONE = 0,
 		CURSOR_MOUSE,
-		CURSOR_JOYSTICK,
+		CURSOR_JOYSTICK
 	};
 
 	// events
@@ -64,23 +65,14 @@ public:
 	const char *KeyName(int Key) const { return (Key >= 0 && Key < g_MaxKeys) ? g_aaKeyStrings[Key] : g_aaKeyStrings[0]; }
 
 	// joystick
-	class IJoystick
-	{
-	public:
-		virtual int GetIndex() const = 0;
-		virtual const char *GetName() const = 0;
-		virtual int GetNumAxes() const = 0;
-		virtual int GetNumButtons() const = 0;
-		virtual int GetNumBalls() const = 0;
-		virtual int GetNumHats() const = 0;
-		virtual float GetAxisValue(int Axis) = 0;
-		virtual int GetHatValue(int Hat) = 0;
-		virtual bool Relative(float *pX, float *pY) = 0;
-		virtual bool Absolute(float *pX, float *pY) = 0;
-	};
 	virtual int NumJoysticks() const = 0;
-	virtual IJoystick *GetActiveJoystick() = 0;
+	virtual int GetJoystickIndex() const = 0;
 	virtual void SelectNextJoystick() = 0;
+	virtual const char *GetJoystickName() = 0;
+	virtual int GetJoystickNumAxes() = 0;
+	virtual float GetJoystickAxisValue(int Axis) = 0;
+	virtual bool JoystickRelative(float *pX, float *pY) = 0;
+	virtual bool JoystickAbsolute(float *pX, float *pY) = 0;
 
 	// mouse
 	virtual void MouseModeRelative() = 0;
@@ -96,8 +88,7 @@ public:
 	{
 		if(MouseRelative(pX, pY))
 			return CURSOR_MOUSE;
-		IJoystick *pJoystick = GetActiveJoystick();
-		if(pJoystick && pJoystick->Relative(pX, pY))
+		if(JoystickRelative(pX, pY))
 			return CURSOR_JOYSTICK;
 		return CURSOR_NONE;
 	}

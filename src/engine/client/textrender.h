@@ -187,6 +187,7 @@ class CTextRender : public IEngineTextRender
 
 public:
 	CTextRender();
+	~CTextRender();
 
 	void Init();
 	void Update();

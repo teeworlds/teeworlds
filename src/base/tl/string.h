@@ -3,6 +3,7 @@
 #ifndef BASE_TL_STRING_H
 #define BASE_TL_STRING_H
 
+#include "base.h"
 #include "allocator.h"
 
 template<class ALLOCATOR >

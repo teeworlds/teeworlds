@@ -64,6 +64,7 @@ public:
 		dbg_msg("engine", "unknown endian");
 	#endif
 
+		
 		m_JobPool.Init(1);
 
 		m_DataLogSent = 0;
@@ -87,11 +88,6 @@ public:
 			return;
 
 		m_pConsole->Register("dbg_lognetwork", "", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_DbgLognetwork, this, "Log the network");
-	}
-
-	void ShutdownJobs()
-	{
-		m_JobPool.Shutdown();
 	}
 
 	void InitLogfile()

@@ -204,15 +204,6 @@ bool CWater::HitWater(float x, float y, float Force)
 	return false;
 }
 
-void CWater::CreateWave(float x, float y, float Force)
-{
-	CWaterSurface* Target;
-	if(FindSurface(&Target, x, y))
-	{
-		Target->CreateWave(x, y, Force, Config()->m_GfxWaveDivider2, Config()->m_GfxWavePushDivider);
-	}
-}
-
 bool CWater::FindSurface(CWaterSurface** Pointer, float x, float y)
 {
 	for (int i = 0; i < m_NumOfSurfaces;i++)
@@ -224,7 +215,7 @@ bool CWater::FindSurface(CWaterSurface** Pointer, float x, float y)
 				if (x > m_aWaterSurfaces[i]->m_Coordinates.m_X * 32.0f && x < (m_aWaterSurfaces[i]->m_Coordinates.m_X + m_aWaterSurfaces[i]->m_Length) * 32.0f)
 				{
 					*Pointer = m_aWaterSurfaces[i];
-					
+
 					return true;
 				}
 				else
@@ -329,49 +320,6 @@ bool CWaterSurface::HitWater(float x, float y, float Force)
 	}
 
 	return true;
-}
-
-void CWaterSurface::CreateWave(float x, float y, float Force, int WaveStrDivider, int WavePushDivider)
-{
-	float PositionForce = absolute(Force);
-
-	//Do some magic to find the correct Vertex
-	int RealX = (int)(x - m_Coordinates.m_X * 32.0f);
-	RealX /= 4;
-
-	//Let the wave cool off a bit
-	//if (m_aVertex[RealX]->m_RecentWave > 0)
-		//return;
-
-	int Side = Force>0 ? 1 : -1;
-
-	Force = absolute(Force) / (WaveStrDivider * 1.0f);
-
-	m_aVertex[RealX]->m_Velo -= Force;
-	for (int i = 1; i <= 4; i++)
-	{
-		if (RealX - i < 0 || RealX + i >= m_AmountOfVertex - 1)
-			break;
-
-		float AddedForce = Force * pow(0.5f, i);
-		m_aVertex[RealX + i]->m_Velo -= AddedForce;
-		m_aVertex[RealX - i]->m_Velo -= AddedForce;
-	}
-
-	RealX += Side * (PositionForce / WavePushDivider); //Predicting the wave
-	RealX = clamp(RealX, 0, m_AmountOfVertex - 1);
-	m_aVertex[RealX]->m_Velo += Force;
-	for (int i = 1; i <= 4; i++)
-	{
-		if (RealX - i < 0 || RealX + i >= m_AmountOfVertex -1)
-			break;
-
-		float AddedForce = Force * pow(0.5f, i);
-		m_aVertex[RealX + i]->m_Velo += AddedForce;
-		m_aVertex[RealX - i]->m_Velo += AddedForce;
-	}
-
-	return;
 }
 
 float CWaterSurface::PositionOfVertex(float Height, bool ToScale)

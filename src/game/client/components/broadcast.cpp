@@ -57,13 +57,13 @@ void CBroadcast::RenderServerBroadcast()
 	const float Width = Height*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0, 0, Width, Height);
 
-	const float Fade = 1.0f - maximum(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
+	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
 	const float TextHeight = m_ServerBroadcastCursor.BoundingBox().h;
 	const float Rounding = 5.0f;
 
 	CUIRect BroadcastView;
 	BroadcastView.w = Width * 0.5f;
-	BroadcastView.h = maximum(TextHeight, 2*Rounding) + 2.0f;
+	BroadcastView.h = max(TextHeight, 2*Rounding) + 2.0f;
 	BroadcastView.x = BroadcastView.w * 0.5f;
 	BroadcastView.y = Height - BroadcastView.h;
 
@@ -107,14 +107,10 @@ CBroadcast::CBroadcast()
 
 void CBroadcast::DoClientBroadcast(const char *pText)
 {
-	const float Height = 300;
-	const float Width = Height*Graphics()->ScreenAspect();
-	Graphics()->MapScreen(0, 0, Width, Height);
-
 	m_ClientBroadcastCursor.Reset();
 	m_ClientBroadcastCursor.m_FontSize = 12.0f;
 	m_ClientBroadcastCursor.m_Align = TEXTALIGN_TC;
-	m_ClientBroadcastCursor.m_MaxWidth = Width;
+	m_ClientBroadcastCursor.m_MaxWidth = 300*Graphics()->ScreenAspect();
 
 	TextRender()->TextDeferred(&m_ClientBroadcastCursor, pText, -1);
 	m_BroadcastTime = Client()->LocalTime() + 10.0f;

@@ -280,11 +280,14 @@ void ReloadBans()
 	m_pConsole->ExecuteFile("master.cfg");
 }
 
-int main(int argc, const char **argv)
+int main(int argc, const char **argv) // ignore_convention
 {
-	dbg_logger_stdout();
-	cmdline_fix(&argc, &argv);
+	int64 LastBuild = 0, LastBanReload = 0;
+	ServerType Type = SERVERTYPE_INVALID;
+	NETADDR BindAddr;
 
+	dbg_logger_stdout();
+	
 	mem_copy(m_CountData.m_Header, SERVERBROWSE_COUNT, sizeof(SERVERBROWSE_COUNT));
 
 	int FlagMask = CFGFLAG_MASTER;
@@ -304,10 +307,9 @@ int main(int argc, const char **argv)
 	pConfigManager->Init(FlagMask);
 	m_pConsole->Init();
 	m_NetBan.Init(m_pConsole, pStorage);
-	if(argc > 1)
-		m_pConsole->ParseArguments(argc-1, &argv[1]);
+	if(argc > 1) // ignore_convention
+		m_pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
 
-	NETADDR BindAddr;
 	if(pConfig->m_Bindaddr[0] && net_host_lookup(pConfig->m_Bindaddr, &BindAddr, NETTYPE_ALL) == 0)
 	{
 		// got bindaddr
@@ -343,8 +345,6 @@ int main(int argc, const char **argv)
 
 	dbg_msg("mastersrv", "started");
 
-	int64 LastBuild = 0, LastBanReload = 0;
-	ServerType Type = SERVERTYPE_INVALID;
 	while(1)
 	{
 		m_NetOp.Update();
@@ -460,6 +460,5 @@ int main(int argc, const char **argv)
 		thread_sleep(1);
 	}
 
-	cmdline_free(argc, argv);
 	return 0;
 }

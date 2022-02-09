@@ -7,14 +7,13 @@
 // buffered stream for reading lines, should perhaps be something smaller
 class CLineReader
 {
-	char m_aBuffer[4 * 1024 + 1]; // 1 additional byte for null termination
+	char m_aBuffer[4*1024];
 	unsigned m_BufferPos;
 	unsigned m_BufferSize;
 	unsigned m_BufferMaxSize;
 	IOHANDLE m_IO;
-
 public:
 	void Init(IOHANDLE IoHandle);
-	const char *Get();
+	char *Get();
 };
 #endif

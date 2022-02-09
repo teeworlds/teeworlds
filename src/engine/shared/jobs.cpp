@@ -15,14 +15,6 @@ CJobPool::CJobPool()
 
 CJobPool::~CJobPool()
 {
-	Shutdown();
-}
-
-void CJobPool::Shutdown()
-{
-	if(m_Shutdown)
-		return;
-
 	m_Shutdown = true;
 	for(int i = 0; i < m_NumThreads; i++)
 	{

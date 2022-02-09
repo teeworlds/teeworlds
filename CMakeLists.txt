@@ -67,7 +67,6 @@ if(TARGET_OS STREQUAL "windows")
 endif()
 
 option(CLIENT "Compile client" ON)
-option(HEADLESS_CLIENT "Build the client without graphics" OFF)
 option(DOWNLOAD_DEPENDENCIES "Download dependencies (only available on Windows)" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DOWNLOAD_GTEST "Download and compile GTest if not found" ${AUTO_DEPENDENCIES_DEFAULT})
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
@@ -398,7 +397,7 @@ elseif(TARGET_OS STREQUAL "mac")
   set(PLATFORM_LIBS ${CARBON})
 else()
   set(PLATFORM_CLIENT)
-  find_package(OpenGL)
+  find_package(OpenGL COMPONENTS OpenGL REQUIRED)
   if(CMAKE_VERSION VERSION_LESS 3.10)
     set(PLATFORM_CLIENT_LIBS ${OPENGL_gl_LIBRARY})
   else()
@@ -530,7 +529,6 @@ set(EXPECTED_DATA
   audio/hook_noattach-02.wv
   audio/hook_noattach-03.wv
   audio/music_menu.wv
-  audio/sfx_big_splash.wv
   audio/sfx_ctf_cap_pl.wv
   audio/sfx_ctf_drop.wv
   audio/sfx_ctf_grab_en.wv
@@ -541,14 +539,6 @@ set(EXPECTED_DATA
   audio/sfx_hit_weak-01.wv
   audio/sfx_hit_weak-02.wv
   audio/sfx_hit_weak-03.wv
-  audio/sfx_movement-01.wv
-  audio/sfx_movement-02.wv
-  audio/sfx_movement-03.wv
-  audio/sfx_movement-04.wv
-  audio/sfx_movement-05.wv
-  audio/sfx_movement-06.wv
-  audio/sfx_movement-07.wv
-  audio/sfx_movement-08.wv
   audio/sfx_msg-client.wv
   audio/sfx_msg-highlight.wv
   audio/sfx_msg-server.wv
@@ -566,16 +556,9 @@ set(EXPECTED_DATA
   audio/sfx_skid-02.wv
   audio/sfx_skid-03.wv
   audio/sfx_skid-04.wv
-  audio/sfx_soft_splash-01.wv
-  audio/sfx_soft_splash-02.wv
-  audio/sfx_soft_splash-03.wv
   audio/sfx_spawn_wpn-01.wv
   audio/sfx_spawn_wpn-02.wv
   audio/sfx_spawn_wpn-03.wv
-  audio/sfx_splash-01.wv
-  audio/sfx_splash-02.wv
-  audio/sfx_splash-03.wv
-  audio/sfx_splash-04.wv
   audio/vo_teefault_cry-01.wv
   audio/vo_teefault_cry-02.wv
   audio/vo_teefault_ninja-01.wv
@@ -1302,6 +1285,7 @@ set_src(BASE GLOB_RECURSE src/base
   tl/algorithm.h
   tl/allocator.h
   tl/array.h
+  tl/base.h
   tl/range.h
   tl/sorted_array.h
   tl/string.h
@@ -1321,7 +1305,6 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   kernel.h
   keys.h
   map.h
-  mapchecker.h
   masterserver.h
   message.h
   server.h
@@ -1362,6 +1345,7 @@ set_src(ENGINE_SHARED GLOB src/engine/shared
   masterserver.cpp
   memheap.cpp
   memheap.h
+  message.h
   netban.cpp
   netban.h
   network.cpp
@@ -1428,7 +1412,6 @@ if(CLIENT)
     contacts.h
     graphics_threaded.cpp
     graphics_threaded.h
-    graphics_threaded_null.h
     input.cpp
     input.h
     keynames.h
@@ -1489,6 +1472,7 @@ if(CLIENT)
     components/menus_demo.cpp
     components/menus_ingame.cpp
     components/menus_listbox.cpp
+    components/menus_popups.cpp
     components/menus_scrollregion.cpp
     components/menus_settings.cpp
     components/menus_start.cpp
@@ -1752,13 +1736,10 @@ add_custom_target(everything DEPENDS ${TARGETS_OWN})
 
 if(GTEST_FOUND OR DOWNLOAD_GTEST)
   set_src(TESTS GLOB src/test
-    bytes_be.cpp
-    compression.cpp
     datafile.cpp
     fs.cpp
     git_revision.cpp
     hash.cpp
-    io.cpp
     jsonwriter.cpp
     sorted_array.cpp
     storage.cpp
@@ -2148,10 +2129,6 @@ foreach(target ${TARGETS_OWN})
     target_compile_options(${target} PRIVATE /wd4267) # Possible loss of data (size_t - int on win64).
     target_compile_options(${target} PRIVATE /wd4800) # Implicit conversion of int to bool.
   endif()
-  if(TARGET_OS STREQUAL "windows")
-    target_compile_definitions(${target} PRIVATE UNICODE) # Windows headers
-    target_compile_definitions(${target} PRIVATE _UNICODE) # C-runtime
-  endif()
   if(OUR_FLAGS_OWN)
     target_compile_options(${target} PRIVATE ${OUR_FLAGS_OWN})
   endif()
@@ -2163,9 +2140,6 @@ foreach(target ${TARGETS_OWN})
   if(CRYPTO_FOUND)
     target_compile_definitions(${target} PRIVATE CONF_OPENSSL)
     target_include_directories(${target} PRIVATE ${CRYPTO_INCLUDE_DIRS})
-  endif()
-  if(HEADLESS_CLIENT)
-    target_compile_definitions(${target} PRIVATE CONF_HEADLESS_CLIENT)
   endif()
 endforeach()
 

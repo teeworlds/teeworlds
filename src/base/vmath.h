@@ -56,7 +56,7 @@ inline vector2_base<T> rotate(const vector2_base<T> &a, float angle)
 template<typename T>
 inline T distance(const vector2_base<T> &a, const vector2_base<T> &b)
 {
-	return length(a - b);
+	return length(a-b);
 }
 
 template<typename T>
@@ -69,17 +69,21 @@ template<typename T>
 inline vector2_base<T> closest_point_on_line(vector2_base<T> line_point0, vector2_base<T> line_point1, vector2_base<T> target_point)
 {
 	vector2_base<T> c = target_point - line_point0;
-	vector2_base<T> v = line_point1 - line_point0;
+	vector2_base<T> v = (line_point1 - line_point0);
 	v = normalize(v);
-	T d = length(line_point0 - line_point1);
+	T d = length(line_point0-line_point1);
 	T t = dot(v, c)/d;
 	return mix(line_point0, line_point1, clamp(t, (T)0, (T)1));
+	/*
+	if (t < 0) t = 0;
+	if (t > 1.0f) return 1.0f;
+	return t;*/
 }
 
 //
 inline float length(const vector2_base<float> &a)
 {
-	return sqrtf(dot(a, a));
+	return sqrtf(a.x*a.x + a.y*a.y);
 }
 
 inline float angle(const vector2_base<float> &a)
@@ -89,7 +93,8 @@ inline float angle(const vector2_base<float> &a)
 
 inline vector2_base<float> normalize(const vector2_base<float> &v)
 {
-	return v / length(v);
+	float l = (float)(1.0f/sqrtf(v.x*v.x + v.y*v.y));
+	return vector2_base<float>(v.x*l, v.y*l);
 }
 
 inline vector2_base<float> direction(float angle)
@@ -143,7 +148,7 @@ public:
 template<typename T>
 inline T distance(const vector3_base<T> &a, const vector3_base<T> &b)
 {
-	return length(a - b);
+	return length(a-b);
 }
 
 template<typename T>
@@ -164,12 +169,13 @@ inline vector3_base<T> cross(const vector3_base<T> &a, const vector3_base<T> &b)
 //
 inline float length(const vector3_base<float> &a)
 {
-	return sqrtf(dot(a, a));
+	return sqrtf(a.x*a.x + a.y*a.y + a.z*a.z);
 }
 
 inline vector3_base<float> normalize(const vector3_base<float> &v)
 {
-	return v / length(v);
+	float l = (float)(1.0f/sqrtf(v.x*v.x + v.y*v.y + v.z*v.z));
+	return vector3_base<float>(v.x*l, v.y*l, v.z*l);
 }
 
 typedef vector3_base<float> vec3;

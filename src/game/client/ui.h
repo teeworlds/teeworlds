@@ -3,110 +3,13 @@
 #ifndef GAME_CLIENT_UI_H
 #define GAME_CLIENT_UI_H
 
-#include <engine/textrender.h>
-#include "lineinput.h"
 #include "ui_rect.h"
-
-class IScrollbarScale
-{
-public:
-	virtual float ToRelative(int AbsoluteValue, int Min, int Max) const = 0;
-	virtual int ToAbsolute(float RelativeValue, int Min, int Max) const = 0;
-};
-static class CLinearScrollbarScale : public IScrollbarScale
-{
-public:
-	float ToRelative(int AbsoluteValue, int Min, int Max) const
-	{
-		return (AbsoluteValue - Min) / (float)(Max - Min);
-	}
-	int ToAbsolute(float RelativeValue, int Min, int Max) const
-	{
-		return round_to_int(RelativeValue*(Max - Min) + Min + 0.1f);
-	}
-} const LinearScrollbarScale;
-static class CLogarithmicScrollbarScale : public IScrollbarScale
-{
-private:
-	int m_MinAdjustment;
-public:
-	CLogarithmicScrollbarScale(int MinAdjustment)
-	{
-		m_MinAdjustment = maximum(MinAdjustment, 1); // must be at least 1 to support Min == 0 with logarithm
-	}
-	float ToRelative(int AbsoluteValue, int Min, int Max) const
-	{
-		if(Min < m_MinAdjustment)
-		{
-			AbsoluteValue += m_MinAdjustment;
-			Min += m_MinAdjustment;
-			Max += m_MinAdjustment;
-		}
-		return (log(AbsoluteValue) - log(Min)) / (float)(log(Max) - log(Min));
-	}
-	int ToAbsolute(float RelativeValue, int Min, int Max) const
-	{
-		int ResultAdjustment = 0;
-		if(Min < m_MinAdjustment)
-		{
-			Min += m_MinAdjustment;
-			Max += m_MinAdjustment;
-			ResultAdjustment = -m_MinAdjustment;
-		}
-		return round_to_int(exp(RelativeValue*(log(Max) - log(Min)) + log(Min))) + ResultAdjustment;
-	}
-} const LogarithmicScrollbarScale(25);
-
-
-class IButtonColorFunction
-{
-public:
-	virtual vec4 GetColor(bool Active, bool Hovered) const = 0;
-};
-static class CDarkButtonColorFunction : public IButtonColorFunction
-{
-public:
-	vec4 GetColor(bool Active, bool Hovered) const
-	{
-		if(Active)
-			return vec4(0.15f, 0.15f, 0.15f, 0.25f);
-		else if(Hovered)
-			return vec4(0.5f, 0.5f, 0.5f, 0.25f);
-		return vec4(0.0f, 0.0f, 0.0f, 0.25f);
-	}
-} const DarkButtonColorFunction;
-static class CLightButtonColorFunction : public IButtonColorFunction
-{
-public:
-	vec4 GetColor(bool Active, bool Hovered) const
-	{
-		if(Active)
-			return vec4(1.0f, 1.0f, 1.0f, 0.4f);
-		else if(Hovered)
-			return vec4(1.0f, 1.0f, 1.0f, 0.6f);
-		return vec4(1.0f, 1.0f, 1.0f, 0.5f);
-	}
-} const LightButtonColorFunction;
-static class CScrollBarColorFunction : public IButtonColorFunction
-{
-public:
-	vec4 GetColor(bool Active, bool Hovered) const
-	{
-		if(Active)
-			return vec4(0.9f, 0.9f, 0.9f, 1.0f);
-		else if(Hovered)
-			return vec4(1.0f, 1.0f, 1.0f, 1.0f);
-		return vec4(0.8f, 0.8f, 0.8f, 1.0f);
-	}
-} const ScrollBarColorFunction;
-
 
 class CUI
 {
 	enum
 	{
-		MAX_CLIP_NESTING_DEPTH = 16,
-		MAX_POPUP_MENUS = 8,
+		MAX_CLIP_NESTING_DEPTH = 16
 	};
 
 	bool m_Enabled;
@@ -122,25 +25,11 @@ class CUI
 	unsigned m_MouseButtons;
 	unsigned m_LastMouseButtons;
 
-	unsigned m_HotkeysPressed;
-	CLineInput *m_pActiveInput;
-
 	CUIRect m_Screen;
 
 	CUIRect m_aClips[MAX_CLIP_NESTING_DEPTH];
 	unsigned m_NumClips;
 	void UpdateClipping();
-
-	class
-	{
-	public:
-		CUIRect m_Rect;
-		int m_Corners;
-		void *m_pContext;
-		bool (*m_pfnFunc)(void *pContext, CUIRect View); // returns true to close popup
-		bool m_New;
-	} m_aPopupMenus[MAX_POPUP_MENUS];
-	unsigned m_NumPopupMenus;
 
 	class CConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
@@ -154,11 +43,8 @@ public:
 	static const vec4 ms_HighlightTextOutlineColor;
 	static const vec4 ms_TransparentTextColor;
 
-	static const float ms_ListheaderHeight;
-	static const float ms_FontmodHeight;
-
 	// TODO: Refactor: Fill this in
-	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender);
+	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender) { m_pConfig = pConfig; m_pGraphics = pGraphics; m_pInput = pInput; m_pTextRender = pTextRender; CUIRect::Init(pGraphics); }
 	class CConfig *Config() const { return m_pConfig; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class IInput *Input() const { return m_pInput; }
@@ -166,14 +52,11 @@ public:
 
 	CUI();
 
-	enum
+	enum EAlignment
 	{
-		HOTKEY_ENTER = 1,
-		HOTKEY_ESCAPE = 2,
-		HOTKEY_UP = 4,
-		HOTKEY_DOWN = 8,
-		HOTKEY_DELETE = 16,
-		HOTKEY_TAB = 32,
+		ALIGN_LEFT,
+		ALIGN_CENTER,
+		ALIGN_RIGHT,
 	};
 
 	void SetEnabled(bool Enabled) { m_Enabled = Enabled; }
@@ -206,16 +89,11 @@ public:
 
 	bool KeyPress(int Key) const;
 	bool KeyIsPressed(int Key) const;
-	bool ConsumeHotkey(unsigned Hotkey);
-	void ClearHotkeys() { m_HotkeysPressed = 0; }
-	bool OnInput(const IInput::CEvent &e);
-	bool IsInputActive() const { return m_pActiveInput != 0; }
 
 	const CUIRect *Screen();
 	float PixelSize();
 	void MapScreen();
 
-	// clipping
 	void ClipEnable(const CUIRect *pRect);
 	void ClipDisable();
 	const CUIRect *ClipArea() const;
@@ -224,32 +102,12 @@ public:
 	bool DoButtonLogic(const void *pID, const CUIRect *pRect, int Button = 0);
 	bool DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float *pY);
 
-	// labels
-	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_LEFT|TEXTALIGN_TOP, float LineWidth = -1.0f, bool MultiLine = true);
+	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, EAlignment Align, float LineWidth = -1.0f, bool MultiLine = true);
 	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor);
 
-	// editboxes
-	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool Hidden = false, int Corners = CUIRect::CORNER_ALL, const IButtonColorFunction *pColorFunction = &DarkButtonColorFunction);
-	void DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const char *pStr, float VSplitVal, bool Hidden = false);
-
-	// scrollbars
-	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
-	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
-	void DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite = false);
-	void DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int NumLabels, const IScrollbarScale *pScale = &LinearScrollbarScale);
-
-	// popup menu
-	void DoPopupMenu(int X, int Y, int Width, int Height, void *pContext, bool (*pfnFunc)(void *pContext, CUIRect View), int Corners = CUIRect::CORNER_ALL);
-	void RenderPopupMenus();
-	bool IsPopupActive() const { return m_NumPopupMenus > 0; }
-
-	// client ID
 	float DrawClientID(float FontSize, vec2 Position, int ID,
 					const vec4& BgColor = vec4(1.0f, 1.0f, 1.0f, 0.5f), const vec4& TextColor = vec4(0.1f, 0.1f, 0.1f, 1.0f));
 	float GetClientIDRectWidth(float FontSize);
-
-	float GetListHeaderHeight() const;
-	float GetListHeaderHeightFactor() const;
 };
 
 

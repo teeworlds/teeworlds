@@ -37,8 +37,6 @@ class CSnapshot
 public:
 	enum
 	{
-		MAX_TYPE = 0x7fff,
-		MAX_ID = 0xffff,
 		MAX_PARTS	= 64,
 		MAX_SIZE	= MAX_PARTS*1024
 	};
@@ -50,7 +48,7 @@ public:
 	int GetItemIndex(int Key) const;
 	void InvalidateItem(int Index);
 
-	int Serialize(char *pDstData) const;
+	int Serialize(char *pDstData);
 
 	int Crc() const;
 	void DebugDump() const;
@@ -77,18 +75,21 @@ private:
 		MAX_NETOBJSIZES=64
 	};
 	short m_aItemSizes[MAX_NETOBJSIZES];
-	int m_aSnapshotDataRate[CSnapshot::MAX_TYPE + 1];
-	int m_aSnapshotDataUpdates[CSnapshot::MAX_TYPE + 1];
+	int m_aSnapshotDataRate[0xffff];
+	int m_aSnapshotDataUpdates[0xffff];
+	int m_SnapshotCurrent;
 	CData m_Empty;
+
+	void UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size);
 
 public:
 	CSnapshotDelta();
 	int GetDataRate(int Index) const { return m_aSnapshotDataRate[Index]; }
 	int GetDataUpdates(int Index) const { return m_aSnapshotDataUpdates[Index]; }
 	void SetStaticsize(int ItemType, int Size);
-	const CData *EmptyDelta() const;
-	int CreateDelta(const class CSnapshot *pFrom, class CSnapshot *pTo, void *pDstData);
-	int UnpackDelta(const class CSnapshot *pFrom, class CSnapshot *pTo, const void *pSrcData, int DataSize);
+	CData *EmptyDelta();
+	int CreateDelta(const class CSnapshot *pFrom, class CSnapshot *pTo, void *pData);
+	int UnpackDelta(const class CSnapshot *pFrom, class CSnapshot *pTo, const void *pData, int DataSize);
 };
 
 
@@ -115,12 +116,11 @@ public:
 	CHolder *m_pFirst;
 	CHolder *m_pLast;
 
-	~CSnapshotStorage();
 	void Init();
 	void PurgeAll();
 	void PurgeUntil(int Tick);
-	void Add(int Tick, int64 Tagtime, int DataSize, const void *pData, bool CreateAlt);
-	int Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData) const;
+	void Add(int Tick, int64 Tagtime, int DataSize, void *pData, int CreateAlt);
+	int Get(int Tick, int64 *pTagtime, CSnapshot **ppData, CSnapshot **ppAltData);
 };
 
 class CSnapshotBuilder
@@ -143,8 +143,8 @@ public:
 
 	void *NewItem(int Type, int ID, int Size);
 
-	CSnapshotItem *GetItem(int Index) const;
-	int *GetItemData(int Key) const;
+	CSnapshotItem *GetItem(int Index);
+	int *GetItemData(int Key);
 
 	int Finish(void *pSnapdata);
 };

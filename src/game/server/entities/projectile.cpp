@@ -135,7 +135,7 @@ void CProjectile::Tick()
 		}
 
 		else if(TargetChr)
-			TargetChr->TakeDamage(m_Direction * maximum(0.001f, m_Force), m_Direction*-1, m_Damage, m_Owner, m_Weapon);
+			TargetChr->TakeDamage(m_Direction * max(0.001f, m_Force), m_Direction*-1, m_Damage, m_Owner, m_Weapon);
 
 		GameWorld()->DestroyEntity(this);
 	}

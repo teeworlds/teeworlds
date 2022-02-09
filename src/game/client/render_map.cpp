@@ -2,6 +2,7 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <math.h>
 #include <base/math.h>
+#include <base/tl/base.h>
 #include <engine/graphics.h>
 
 #include "render.h"
@@ -29,8 +30,8 @@ float SolveBezier(float x, float p0, float p1, float p2, float p3)
 {
 	// check for valid f-curve
 	// we only take care of monotonic bezier curves, so there has to be exactly 1 real solution
-	if(!(p0 <= x && x <= p3) || !(p0 <= p1 && p1 <= p3) || !(p0 <= p2 && p2 <= p3))
-		return 0.0f;
+	tl_assert(p0 <= x && x <= p3);
+	tl_assert((p0 <= p1 && p1 <= p3) && (p0 <= p2 && p2 <= p3));
 
 	double a, b, c, t;
 	double x3 = -p0 + 3*p1 - 3*p2 + p3;
@@ -126,7 +127,7 @@ float SolveBezier(float x, float p0, float p1, float p2, float p3)
 	}
 }
 
-void CRenderTools::RenderEvalEnvelope(const CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult)
+void CRenderTools::RenderEvalEnvelope(CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult)
 {
 	if(NumPoints == 0)
 	{
@@ -217,7 +218,7 @@ void CRenderTools::RenderEvalEnvelope(const CEnvPoint *pPoints, int NumPoints, i
 	return;
 }
 
-static void Rotate(const CPoint *pCenter, CPoint *pPoint, float Rotation)
+static void Rotate(CPoint *pCenter, CPoint *pPoint, float Rotation)
 {
 	int x = pPoint->x - pCenter->x;
 	int y = pPoint->y - pCenter->y;
@@ -225,13 +226,13 @@ static void Rotate(const CPoint *pCenter, CPoint *pPoint, float Rotation)
 	pPoint->y = (int)(x * sinf(Rotation) + y * cosf(Rotation) + pCenter->y);
 }
 
-void CRenderTools::RenderQuads(const CQuad *pQuads, int NumQuads, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser)
+void CRenderTools::RenderQuads(CQuad *pQuads, int NumQuads, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser)
 {
 	Graphics()->QuadsBegin();
 	float Conv = 1/255.0f;
 	for(int i = 0; i < NumQuads; i++)
 	{
-		const CQuad *q = &pQuads[i];
+		CQuad *q = &pQuads[i];
 
 		float r=1, g=1, b=1, a=1;
 
@@ -303,7 +304,7 @@ void CRenderTools::RenderQuads(const CQuad *pQuads, int NumQuads, int RenderFlag
 			IGraphics::CColorVertex(3, q->m_aColors[3].r*Conv*r*q->m_aColors[3].a*Conv*a, q->m_aColors[3].g*Conv*g*q->m_aColors[3].a*Conv*a, q->m_aColors[3].b*Conv*b*q->m_aColors[3].a*Conv*a, q->m_aColors[3].a*Conv*a)};
 		Graphics()->SetColorVertex(Array, 4);
 
-		const CPoint *pPoints = q->m_aPoints;
+		CPoint *pPoints = q->m_aPoints;
 
 		if(Rot != 0)
 		{
@@ -331,7 +332,7 @@ void CRenderTools::RenderQuads(const CQuad *pQuads, int NumQuads, int RenderFlag
 	Graphics()->WrapNormal();
 }
 
-void CRenderTools::RenderTilemap(const CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
+void CRenderTools::RenderTilemap(CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
 									ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
@@ -455,7 +456,7 @@ void CRenderTools::RenderTilemap(const CTile *pTiles, int w, int h, float Scale,
 
 	Graphics()->QuadsEnd();
 }
-void CRenderTools::RenderWaterMap(const CTile* pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
+void CRenderTools::RenderWaterMap(CTile* pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
 	ENVELOPE_EVAL pfnEval, void* pUser, int ColorEnv, int ColorEnvOffset, int Tick)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;

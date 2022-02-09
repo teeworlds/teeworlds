@@ -18,7 +18,6 @@
 #include <math.h> // cosf, sinf
 
 #include "graphics_threaded.h"
-#include "graphics_threaded_null.h"
 
 static CVideoMode g_aFakeModes[] = {
 	{320,200}, {320,240}, {400,300},
@@ -266,22 +265,22 @@ void CGraphics_Threaded::LinesDraw(const CLineItem *pArray, int Num)
 	AddVertices(2*Num);
 }
 
-int CGraphics_Threaded::UnloadTexture(CTextureHandle *pIndex)
+int CGraphics_Threaded::UnloadTexture(CTextureHandle *Index)
 {
-	if(pIndex->Id() == m_InvalidTexture.Id())
+	if(Index->Id() == m_InvalidTexture.Id())
 		return 0;
 
-	if(!pIndex->IsValid())
+	if(!Index->IsValid())
 		return 0;
 
 	CCommandBuffer::CTextureDestroyCommand Cmd;
-	Cmd.m_Slot = pIndex->Id();
+	Cmd.m_Slot = Index->Id();
 	m_pCommandBuffer->AddCommand(Cmd);
 
-	m_aTextureIndices[pIndex->Id()] = m_FirstFreeTexture;
-	m_FirstFreeTexture = pIndex->Id();
+	m_aTextureIndices[Index->Id()] = m_FirstFreeTexture;
+	m_FirstFreeTexture = Index->Id();
 
-	pIndex->Invalidate();
+	Index->Invalidate();
 	return 0;
 }
 
@@ -292,6 +291,17 @@ static int ImageFormatToTexFormat(int Format)
 	if(Format == CImageInfo::FORMAT_ALPHA) return CCommandBuffer::TEXFORMAT_ALPHA;
 	return CCommandBuffer::TEXFORMAT_RGBA;
 }
+
+static int ImageFormatToPixelSize(int Format)
+{
+	switch(Format)
+	{
+	case CImageInfo::FORMAT_RGB: return 3;
+	case CImageInfo::FORMAT_ALPHA: return 1;
+	default: return 4;
+	}
+}
+
 
 int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData)
 {
@@ -307,7 +317,7 @@ int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 
 	// calculate memory usage
-	const int MemSize = Width * Height * CImageInfo::GetPixelSize(Format);
+	int MemSize = Width*Height*ImageFormatToPixelSize(Format);
 
 	// copy texture data
 	void *pTmpData = mem_alloc(MemSize);
@@ -334,7 +344,7 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Heig
 	Cmd.m_Slot = Tex;
 	Cmd.m_Width = Width;
 	Cmd.m_Height = Height;
-	Cmd.m_PixelSize = CImageInfo::GetPixelSize(Format);
+	Cmd.m_PixelSize = ImageFormatToPixelSize(Format);
 	Cmd.m_Format = ImageFormatToTexFormat(Format);
 	Cmd.m_StoreFormat = ImageFormatToTexFormat(StoreFormat);
 
@@ -397,35 +407,41 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTexture(const char *pFilename,
 
 int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
 {
-	// open file for reading
 	char aCompleteFilename[IO_MAX_PATH_LENGTH];
+	unsigned char *pBuffer;
+	png_t Png; // ignore_convention
+
+	// open file for reading
+	png_init(0,0); // ignore_convention
+
 	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType, aCompleteFilename, sizeof(aCompleteFilename));
-	if(!File)
+	if(File)
+		io_close(File);
+	else
 	{
 		dbg_msg("game/png", "failed to open file. filename='%s'", pFilename);
 		return 0;
 	}
 
-	png_init(0, 0); // ignore_convention
-	png_t Png; // ignore_convention
-	int Error = png_open_read(&Png, 0, File); // ignore_convention
+	int Error = png_open_file(&Png, aCompleteFilename); // ignore_convention
 	if(Error != PNG_NO_ERROR)
 	{
-		dbg_msg("game/png", "failed to read file. filename='%s'", aCompleteFilename);
-		io_close(File);
+		dbg_msg("game/png", "failed to open file. filename='%s'", aCompleteFilename);
+		if(Error != PNG_FILE_ERROR)
+			png_close_file(&Png); // ignore_convention
 		return 0;
 	}
 
 	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA) || Png.width > (2<<12) || Png.height > (2<<12)) // ignore_convention
 	{
 		dbg_msg("game/png", "invalid format. filename='%s'", aCompleteFilename);
-		io_close(File);
+		png_close_file(&Png); // ignore_convention
 		return 0;
 	}
 
-	unsigned char *pBuffer = (unsigned char *)mem_alloc(Png.width * Png.height * Png.bpp); // ignore_convention
+	pBuffer = (unsigned char *)mem_alloc(Png.width * Png.height * Png.bpp); // ignore_convention
 	png_get_data(&Png, pBuffer); // ignore_convention
-	io_close(File);
+	png_close_file(&Png); // ignore_convention
 
 	pImg->m_Width = Png.width; // ignore_convention
 	pImg->m_Height = Png.height; // ignore_convention
@@ -466,23 +482,21 @@ void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 	if(Image.m_pData)
 	{
 		// find filename
-		char aWholePath[IO_MAX_PATH_LENGTH];
-		char aBuf[IO_MAX_PATH_LENGTH+32];
+		char aWholePath[1024];
+		png_t Png; // ignore_convention
+
 		IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE, aWholePath, sizeof(aWholePath));
 		if(File)
-		{
-			// save png
-			png_t Png; // ignore_convention
-			png_open_write(&Png, 0, File); // ignore_convention
-			png_set_data(&Png, Image.m_Width, Image.m_Height, 8, PNG_TRUECOLOR, (unsigned char *)Image.m_pData); // ignore_convention
 			io_close(File);
-			str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
-		}
-		else
-		{
-			str_format(aBuf, sizeof(aBuf), "failed to open file '%s'", pFilename);
-		}
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client/screenshot", aBuf);
+
+		// save png
+		char aBuf[256];
+		str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
+		png_open_file_write(&Png, aWholePath); // ignore_convention
+		png_set_data(&Png, Image.m_Width, Image.m_Height, 8, PNG_TRUECOLOR, (unsigned char *)Image.m_pData); // ignore_convention
+		png_close_file(&Png); // ignore_convention
+
 		mem_free(Image.m_pData);
 	}
 }
@@ -992,7 +1006,7 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes, int Scre
 {
 	if(m_pConfig->m_GfxDisplayAllModes)
 	{
-		int Count = minimum((int)(sizeof(g_aFakeModes)/sizeof(CVideoMode)), MaxModes);
+		int Count = min((int)(sizeof(g_aFakeModes)/sizeof(CVideoMode)), MaxModes);
 		mem_copy(pModes, g_aFakeModes, sizeof(CVideoMode) * Count);
 		return Count;
 	}
@@ -1000,11 +1014,4 @@ int CGraphics_Threaded::GetVideoModes(CVideoMode *pModes, int MaxModes, int Scre
 	return m_pBackend->GetVideoModes(pModes, MaxModes, Screen);
 }
 
-extern IEngineGraphics *CreateEngineGraphicsThreaded()
-{
-#ifdef CONF_HEADLESS_CLIENT
-	return new CGraphics_ThreadedNull();
-#else
-	return new CGraphics_Threaded();
-#endif
-}
+extern IEngineGraphics *CreateEngineGraphicsThreaded() { return new CGraphics_Threaded(); }

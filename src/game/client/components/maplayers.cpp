@@ -179,7 +179,7 @@ void CMapLayers::LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoi
 				p.m_Time = pEnvPoint_v1->m_Time;
 				p.m_Curvetype = pEnvPoint_v1->m_Curvetype;
 
-				for(int c = 0; c < minimum(pItem->m_Channels, 4); c++)
+				for(int c = 0; c < pItem->m_Channels; c++)
 				{
 					p.m_aValues[c] = pEnvPoint_v1->m_aValues[c];
 					p.m_aInTangentdx[c] = 0;

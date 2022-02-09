@@ -20,18 +20,18 @@ void CMapChecker::Init()
 {
 	m_Whitelist.Reset();
 	m_pFirst = 0;
-	m_ClearListBeforeAdding = false;
+	m_RemoveDefaultList = false;
 }
 
 void CMapChecker::SetDefaults()
 {
 	AddMaplist(s_aMapVersionList, s_NumMapVersionItems);
-	m_ClearListBeforeAdding = true;
+	m_RemoveDefaultList = true;
 }
 
 void CMapChecker::AddMaplist(CMapVersion *pMaplist, int Num)
 {
-	if(m_ClearListBeforeAdding)
+	if(m_RemoveDefaultList)
 		Init();
 
 	for(int i = 0; i < Num; ++i)
@@ -41,8 +41,8 @@ void CMapChecker::AddMaplist(CMapVersion *pMaplist, int Num)
 		m_pFirst = pEntry;
 
 		str_copy(pEntry->m_aMapName, pMaplist[i].m_aName, sizeof(pEntry->m_aMapName));
-		pEntry->m_MapCrc = bytes_be_to_uint(pMaplist[i].m_aCrc);
-		pEntry->m_MapSize = bytes_be_to_uint(pMaplist[i].m_aSize);
+		pEntry->m_MapCrc = (pMaplist[i].m_aCrc[0]<<24) | (pMaplist[i].m_aCrc[1]<<16) | (pMaplist[i].m_aCrc[2]<<8) | pMaplist[i].m_aCrc[3];
+		pEntry->m_MapSize = (pMaplist[i].m_aSize[0]<<24) | (pMaplist[i].m_aSize[1]<<16) | (pMaplist[i].m_aSize[2]<<8) | pMaplist[i].m_aSize[3];
 		mem_copy(&pEntry->m_MapSha256, &pMaplist[i].m_aSha256, sizeof(pEntry->m_MapSha256));
 	}
 }
@@ -59,13 +59,12 @@ bool CMapChecker::IsMapValid(const char *pMapName, const SHA256_DIGEST *pMapSha2
 				return true;
 		}
 	}
+
 	return !StandardMap;
 }
 
-bool CMapChecker::ReadAndValidateMap(const char *pFilename, int StorageType)
+bool CMapChecker::ReadAndValidateMap(IStorage *pStorage, const char *pFilename, int StorageType)
 {
-	IStorage *pStorage = Kernel()->RequestInterface<IStorage>();
-
 	// extract map name
 	char aMapName[MAX_MAP_LENGTH];
 	char aMapNameExt[MAX_MAP_LENGTH+4];
@@ -103,30 +102,3 @@ bool CMapChecker::ReadAndValidateMap(const char *pFilename, int StorageType)
 
 	return !StandardMap;
 }
-
-int CMapChecker::NumStandardMaps()
-{
-	int Count = 0;
-	for(CWhitelistEntry *pCurrent = m_pFirst; pCurrent; pCurrent = pCurrent->m_pNext)
-		Count++;
-	return Count;
-}
-
-const char *CMapChecker::GetStandardMapName(int Index)
-{
-	int i = 0;
-	for(CWhitelistEntry *pCurrent = m_pFirst; pCurrent; pCurrent = pCurrent->m_pNext, i++)
-		if(i == Index)
-			return pCurrent->m_aMapName;
-	return 0x0;
-}
-
-bool CMapChecker::IsStandardMap(const char *pMapName)
-{
-	for(CWhitelistEntry *pCurrent = m_pFirst; pCurrent; pCurrent = pCurrent->m_pNext)
-		if(str_comp(pCurrent->m_aMapName, pMapName) == 0)
-			return true;
-	return false;
-}
-
-IMapChecker *CreateMapChecker() { return new CMapChecker; }

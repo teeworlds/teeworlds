@@ -206,7 +206,7 @@ void Run(unsigned short Port, NETADDR Dest)
 	}
 }
 
-int main(int argc, const char **argv)
+int main(int argc, char **argv) // ignore_convention
 {
 	NETADDR Addr = {NETTYPE_IPV4, {127,0,0,1},8303};
 	dbg_logger_stdout();

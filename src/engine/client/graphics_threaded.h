@@ -1,7 +1,5 @@
 #pragma once
 
-#include <stdint.h>
-
 #include <engine/graphics.h>
 
 class CCommandBuffer
@@ -32,14 +30,12 @@ class CCommandBuffer
 			m_Used = 0;
 		}
 
-		void *Alloc(unsigned Requested, unsigned Alignment = 8) // TODO: use alignof(std::max_align_t)
+		void *Alloc(unsigned Requested)
 		{
-			size_t Offset = Alignment - (reinterpret_cast<uintptr_t>(m_pData + m_Used) % Alignment);
-			if(Requested + Offset + m_Used > m_Size)
+			if(Requested + m_Used > m_Size)
 				return 0;
-
-			void *pPtr = &m_pData[m_Used + Offset];
-			m_Used += Requested + Offset;
+			void *pPtr = &m_pData[m_Used];
+			m_Used += Requested;
 			return pPtr;
 		}
 
@@ -135,13 +131,10 @@ public:
 	struct CCommand
 	{
 	public:
-		CCommand(unsigned Cmd) :
-			m_Cmd(Cmd), m_pNext(0) {}
+		CCommand(unsigned Cmd) : m_Cmd(Cmd), m_Size(0) {}
 		unsigned m_Cmd;
-		CCommand *m_pNext;
+		unsigned m_Size;
 	};
-	CCommand *m_pCmdBufferHead;
-	CCommand *m_pCmdBufferTail;
 
 	struct CState
 	{
@@ -252,8 +245,8 @@ public:
 	};
 
 	//
-	CCommandBuffer(unsigned CmdBufferSize, unsigned DataBufferSize) :
-		m_CmdBuffer(CmdBufferSize), m_DataBuffer(DataBufferSize), m_pCmdBufferHead(0), m_pCmdBufferTail(0)
+	CCommandBuffer(unsigned CmdBufferSize, unsigned DataBufferSize)
+	: m_CmdBuffer(CmdBufferSize), m_DataBuffer(DataBufferSize)
 	{
 	}
 
@@ -269,29 +262,26 @@ public:
 		(void)static_cast<const CCommand *>(&Command);
 
 		// allocate and copy the command into the buffer
-		T *pCmd = (T *)m_CmdBuffer.Alloc(sizeof(*pCmd), 8); // TODO: use alignof(T)
+		CCommand *pCmd = (CCommand *)m_CmdBuffer.Alloc(sizeof(Command));
 		if(!pCmd)
 			return false;
-		*pCmd = Command;
-		pCmd->m_pNext = 0;
-
-		if(m_pCmdBufferTail)
-			m_pCmdBufferTail->m_pNext = pCmd;
-		if(!m_pCmdBufferHead)
-			m_pCmdBufferHead = pCmd;
-		m_pCmdBufferTail = pCmd;
-
+		mem_copy(pCmd, &Command, sizeof(Command));
+		pCmd->m_Size = sizeof(Command);
 		return true;
 	}
 
-	CCommand *Head()
+	CCommand *GetCommand(unsigned *pIndex)
 	{
-		return m_pCmdBufferHead;
+		if(*pIndex >= m_CmdBuffer.DataUsed())
+			return NULL;
+
+		CCommand *pCommand = (CCommand *)&m_CmdBuffer.DataPtr()[*pIndex];
+		*pIndex += pCommand->m_Size;
+		return pCommand;
 	}
 
 	void Reset()
 	{
-		m_pCmdBufferHead = m_pCmdBufferTail = 0;
 		m_CmdBuffer.Reset();
 		m_DataBuffer.Reset();
 	}
@@ -414,7 +404,7 @@ public:
 	virtual void LinesEnd();
 	virtual void LinesDraw(const CLineItem *pArray, int Num);
 
-	virtual int UnloadTexture(IGraphics::CTextureHandle *pIndex);
+	virtual int UnloadTexture(IGraphics::CTextureHandle *Index);
 	virtual IGraphics::CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
 	virtual int LoadTextureRawSub(IGraphics::CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
 

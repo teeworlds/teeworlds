@@ -21,9 +21,9 @@
 #include "menus.h"
 
 CMenus::CColumn CMenus::ms_aDemoCols[] = { // Localize("Name"); Localize("Length"); Localize("Date"); - these strings are localized within CLocConstString
-	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, "Name", 0, 100.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
-	{COL_DEMO_LENGTH,	CMenus::SORT_LENGTH, "Length", 1, 80.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
-	{COL_DEMO_DATE,		CMenus::SORT_DATE, "Date", 1, 170.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
+	{COL_DEMO_NAME,		CMenus::SORT_DEMONAME, "Name", 0, 100.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_LENGTH,	CMenus::SORT_LENGTH, "Length", 1, 80.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
+	{COL_DEMO_DATE,		CMenus::SORT_DATE, "Date", 1, 170.0f, 0, {0}, {0}, CUI::ALIGN_CENTER},
 };
 
 void CMenus::RenderDemoPlayer(CUIRect MainView)
@@ -121,7 +121,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		str_format(aBuffer, sizeof(aBuffer), "%d:%02d / %d:%02d",
 			CurrentTick/SERVER_TICK_SPEED/60, (CurrentTick/SERVER_TICK_SPEED)%60,
 			TotalTicks/SERVER_TICK_SPEED/60, (TotalTicks/SERVER_TICK_SPEED)%60);
-		UI()->DoLabel(&SeekBar, aBuffer, SeekBar.h*0.70f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&SeekBar, aBuffer, SeekBar.h*0.70f, CUI::ALIGN_CENTER);
 
 		// do the logic
 		if(UI()->CheckActiveItem(&s_PrevAmount))
@@ -314,7 +314,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(Margins*3, 0, &ButtonBar);
 		char aBuffer[64];
 		str_format(aBuffer, sizeof(aBuffer), pInfo->m_Speed >= 1.0f ? "x%.0f" : "x%.2f", pInfo->m_Speed);
-		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, TEXTALIGN_LEFT);
+		UI()->DoLabel(&ButtonBar, aBuffer, Button.h*0.7f, CUI::ALIGN_LEFT);
 
 		// close button
 		ButtonBar.VSplitRight(ButtonbarHeight*3, &ButtonBar, &Button);
@@ -477,12 +477,12 @@ void CMenus::RenderDemoList(CUIRect MainView)
 
 	// demo list header
 	static CListBox s_ListBox;
-	s_ListBox.DoHeader(&ListBox, Localize("Recorded"), UI()->GetListHeaderHeight());
+	s_ListBox.DoHeader(&ListBox, Localize("Recorded"), GetListHeaderHeight());
 
 	// demo list column headers
 	CUIRect Headers;
-	ListBox.HMargin(UI()->GetListHeaderHeight() + 2.0f, &Headers);
-	Headers.h = UI()->GetListHeaderHeight();
+	ListBox.HMargin(GetListHeaderHeight() + 2.0f, &Headers);
+	Headers.h = GetListHeaderHeight();
 
 	Headers.Draw(vec4(0.0f,0,0,0.15f), 0.0f, CUIRect::CORNER_NONE);
 
@@ -541,7 +541,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		}
 	}
 
-	s_ListBox.DoSpacing(UI()->GetListHeaderHeight());
+	s_ListBox.DoSpacing(GetListHeaderHeight());
 
 	s_ListBox.DoStart(20.0f, m_lDemos.size(), 1, 3, m_DemolistSelectedIndex);
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
@@ -587,7 +587,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 				if(ID == COL_DEMO_NAME)
 				{
 					Button.x += FileIcon.w + 10.0f;
-					UI()->DoLabel(&Button, DemoItem.m_aName, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
+					UI()->DoLabel(&Button, DemoItem.m_aName, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_LEFT);
 				}
 				else if(ID == COL_DEMO_LENGTH && !DemoItem.m_IsDir && DemoItem.m_InfosLoaded && DemoItem.m_Valid)
 				{
@@ -597,7 +597,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 					Button.VMargin(4.0f, &Button);
 					if(!Item.m_Selected)
 						TextRender()->TextColor(CUI::ms_TransparentTextColor);
-					UI()->DoLabel(&Button, aLength, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_RIGHT);
+					UI()->DoLabel(&Button, aLength, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_RIGHT);
 				}
 				else if(ID == COL_DEMO_DATE && !DemoItem.m_IsDir)
 				{
@@ -605,7 +605,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 					str_timestamp_ex(DemoItem.m_Date, aDate, sizeof(aDate), FORMAT_SPACE);
 					if(!Item.m_Selected)
 						TextRender()->TextColor(CUI::ms_TransparentTextColor);
-					UI()->DoLabel(&Button, aDate, Item.m_Rect.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+					UI()->DoLabel(&Button, aDate, Item.m_Rect.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
 				}
 				TextRender()->TextColor(CUI::ms_DefaultTextColor);
 				if(Item.m_Selected)
@@ -634,7 +634,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	{
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 		static CButtonContainer s_DeleteButton;
-		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &Button) || UI()->ConsumeHotkey(CUI::HOTKEY_DELETE))
+		if(DoButton_Menu(&s_DeleteButton, Localize("Delete"), 0, &Button) || m_DeletePressed)
 		{
 			if(m_DemolistSelectedIndex >= 0)
 			{
