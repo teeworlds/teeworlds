@@ -255,7 +255,7 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 
 		// find the current command
 		{
-			char aBuf[64] = {0};
+			char aBuf[sizeof(m_aCommandName)];
 			const char *pSrc = GetString();
 			int i = 0;
 			for(; i < (int)sizeof(aBuf)-1 && *pSrc && *pSrc != ' '; i++, pSrc++)
@@ -267,9 +267,9 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 			if(pCommand)
 			{
 				m_IsCommand = true;
-				str_copy(m_aCommandName, pCommand->m_pName, IConsole::TEMPCMD_NAME_LENGTH);
-				str_copy(m_aCommandHelp, pCommand->m_pHelp, IConsole::TEMPCMD_HELP_LENGTH);
-				str_copy(m_aCommandParams, pCommand->m_pParams, IConsole::TEMPCMD_PARAMS_LENGTH);
+				str_copy(m_aCommandName, pCommand->m_pName, sizeof(m_aCommandName));
+				str_copy(m_aCommandHelp, pCommand->m_pHelp, sizeof(m_aCommandHelp));
+				str_copy(m_aCommandParams, pCommand->m_pParams, sizeof(m_aCommandParams));
 			}
 			else
 				m_IsCommand = false;
