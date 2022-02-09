@@ -17,6 +17,7 @@
 #include <generated/client_data.h>
 
 #include <game/version.h>
+#include "lineinput.h"
 #include "localization.h"
 #include "render.h"
 
@@ -612,6 +613,8 @@ void CGameClient::OnRender()
 
 	// clear all events/input for this frame
 	Input()->Clear();
+
+	CLineInput::RenderCandidates();
 }
 
 void CGameClient::OnRelease()
@@ -1687,6 +1690,10 @@ vec2 CGameClient::GetCharPos(int ClientID, bool Predicted) const
 void CGameClient::OnActivateEditor()
 {
 	OnRelease();
+
+	CLineInput *pActiveInput = CLineInput::GetActiveInput();
+	if(pActiveInput)
+		pActiveInput->Deactivate();
 }
 
 void CGameClient::CClientData::UpdateBotRenderInfo(CGameClient *pGameClient, int ClientID)

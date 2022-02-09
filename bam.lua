@@ -276,6 +276,7 @@ function GenerateWindowsSettings(settings, conf, target_arch, compiler)
 	settings.link.extrafiles:Add(manifests.client)
 	settings.link.libs:Add("opengl32")
 	settings.link.libs:Add("winmm")
+	settings.link.libs:Add("imm32")
 	BuildClient(settings)
 
 	-- Content

@@ -66,6 +66,15 @@ private:
 
 	bool m_MouseDoubleClick;
 
+	// ime support
+	char m_aComposition[MAX_COMPOSITION_ARRAY_SIZE];
+	int m_CompositionCursor;
+	int m_CompositionSelectedLength;
+	int m_CompositionLength;
+	char m_aaCandidates[MAX_CANDIDATES][MAX_CANDIDATE_ARRAY_SIZE];
+	int m_CandidateCount;
+	int m_CandidateSelectedIndex;
+
 	void AddEvent(char *pText, int Key, int Flags);
 	void Clear();
 	bool IsEventValid(CEvent *pEvent) const { return pEvent->m_InputCount == m_InputCounter; }
@@ -83,6 +92,9 @@ private:
 
 	void ClearKeyStates();
 	bool KeyState(int Key) const;
+
+	void ProcessSystemMessage(SDL_SysWMmsg *pMsg);
+
 public:
 	CInput();
 	~CInput();
@@ -104,6 +116,17 @@ public:
 
 	const char *GetClipboardText();
 	void SetClipboardText(const char *pText);
-};
 
+	void StartTextInput();
+	void StopTextInput();
+	const char *GetComposition() const { return m_aComposition; }
+	bool HasComposition() const { return m_CompositionLength != COMP_LENGTH_INACTIVE; }
+	int GetCompositionCursor() const { return m_CompositionCursor; }
+	int GetCompositionSelectedLength() const { return m_CompositionSelectedLength; }
+	int GetCompositionLength() const { return m_CompositionLength; }
+	const char *GetCandidate(int Index) const { return m_aaCandidates[Index]; }
+	int GetCandidateCount() const { return m_CandidateCount; }
+	int GetCandidateSelectedIndex() const { return m_CandidateSelectedIndex; }
+	void SetCompositionWindowPosition(float X, float Y, float H);
+};
 #endif
