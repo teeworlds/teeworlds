@@ -4,6 +4,7 @@
 
 #include <engine/shared/config.h>
 #include <engine/shared/memheap.h>
+#include <engine/storage.h>
 #include <engine/map.h>
 
 #include <generated/server_data.h>
@@ -1554,6 +1555,7 @@ void CGameContext::OnInit()
 	m_pServer = Kernel()->RequestInterface<IServer>();
 	m_pConfig = Kernel()->RequestInterface<IConfigManager>()->Values();
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
+	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_World.SetGameServer(this);
 	m_Events.SetGameServer(this);
 	m_CommandManager.Init(m_pConsole, this, NewCommandHook, RemoveCommandHook);
