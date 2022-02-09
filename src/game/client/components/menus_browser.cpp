@@ -1564,6 +1564,9 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		static CButtonContainer s_AddFilter;
 		if(UI()->DoButtonLogic(&s_AddFilter, &Button))
 		{
+			CBrowserFilter *pSelectedFilter = GetSelectedBrowserFilter();
+			if(pSelectedFilter)
+				pSelectedFilter->Switch();
 			m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, ServerBrowser()));
 			m_lFilters[m_lFilters.size()-1].Switch();
 			s_aFilterName[0] = 0;
