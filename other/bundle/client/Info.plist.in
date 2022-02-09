@@ -20,5 +20,9 @@
 		<string>com.TeeworldsClient.app</string>
 		<key>NSHighResolutionCapable</key>
 		<true/>
+		<key>NSPrefersDisplaySafeAreaCompatibilityMode</key>
+		<true/>
+		<key>NSQualityOfService</key>
+		<string>NSQualityOfServiceUserInteractive</string>
 	</dict>
 </plist>
