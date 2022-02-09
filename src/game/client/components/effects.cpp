@@ -177,6 +177,19 @@ void CEffects::Droplet(vec2 Pos, vec2 Vel)
 	YVel = sqrtf(YVel);
 	Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "Droplet Spawn");
 
+	char aBuf[128];
+	str_format(aBuf, sizeof(aBuf), "You made an impact :) Absolute: %f Sqrt: %f", absolute(Vel.y), YVel);
+	Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
+	float Volume = YVel / 25.0f;
+	if (Volume <= 1.0f)
+	{
+		Volume = clamp(Volume, 0.0f, 1.0f);
+		int Sound = Volume <= 0.5f ? SOUND_SOFT_SPLASH : SOUND_SPLASH;
+		
+		m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, Sound, Volume, Pos);
+	}
+	else
+		m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_BIG_SPLASH, 1.0f, Pos);
 	
 	for (int i = 0; i < 4 + (int)(YVel); i++)
 	{

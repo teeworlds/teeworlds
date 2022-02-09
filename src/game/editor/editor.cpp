@@ -406,7 +406,7 @@ int CEditor::DoButton_ButtonDec(const void *pID, const char *pText, int Checked,
 int CEditor::DoButton_AddWaterLayer(const void* pID, const char* pText, int Checked, const CUIRect* pRect, int Flags, const char* pToolTip)
 {
 	pRect->Draw(GetButtonColor(pID, Checked), CUIRect::CORNER_L, 3.0f);
-	UI()->DoLabel(pRect, pText ? pText : "-", 10, CUI::ALIGN_CENTER);
+	UI()->DoLabel(pRect, pText ? pText : "-", 10, TEXTALIGN_CENTER); 
 	return DoButton_Editor_Common(pID, pText, Checked, pRect, Flags, pToolTip);
 }
 

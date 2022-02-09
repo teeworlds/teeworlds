@@ -384,6 +384,22 @@ void CPlayers::RenderPlayer(
 		if (Collision()->IntersectWater(PreWaterPos, Position, &PreWaterPos, vec2(32, 32)))
 			m_pClient->m_pWater->HitWater(PreWaterPos.x, PreWaterPos.y, abs(pPrevChar->m_VelY) / Config()->m_GfxWaveDivider); //trial and erorr
 
+	if (Collision()->TestBox(vec2(Position.x, Position.y), vec2(32, 32 + 1.0f) * (2.0f / 3.0f), CCollision::COLFLAG_WATER) && (!Collision()->TestBox(vec2(Position.x, Position.y - 8.0f), vec2(32, 32) * (2.0f / 3.0f), CCollision::COLFLAG_WATER)))
+	{
+		float Chance = random_float();
+		if(Chance<0.05)
+			m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_WATER_MOVEMENT, 0.1f, Position);
+
+	}
+
+	if (Collision()->TestBox(vec2(Position.x, Position.y), vec2(32, 64), CCollision::COLFLAG_WATER) && (!Collision()->TestBox(vec2(Position.x, Position.y - 8.0f), vec2(32, 32) * (2.0f / 3.0f), CCollision::COLFLAG_WATER)))
+	{
+		m_pClient->m_pWater->CreateWave(Position.x, Position.y, Player.m_VelX);
+	}
+
+
+
+
 	// draw gun
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);

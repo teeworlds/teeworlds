@@ -76,6 +76,8 @@ MACRO_CONFIG_INT(GfxWatergravity, gfx_watergravity, 750, -10000, 1000000, CFGFLA
 MACRO_CONFIG_INT(GfxWaterfriction, gfx_waterfriction, 100, -10000, 1000000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
 MACRO_CONFIG_INT(GfxLineMultiplier, gfx_linemultiplier, 52, -10000, 1000000, CFGFLAG_CLIENT, "Debug")
 MACRO_CONFIG_INT(GfxWaveDivider, gfx_wavedivider, 75, -10000, 1000000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
+MACRO_CONFIG_INT(GfxWaveDivider2, gfx_wavedivider2, 7500, -10000, 1000000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
+MACRO_CONFIG_INT(GfxWavePushDivider, gfx_wavepushdivider, 200, -10000, 1000000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
 MACRO_CONFIG_INT(GfxNumOfWaveUpdates, gfx_waveupdates, 60, 1, 1000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
 MACRO_CONFIG_INT(GfxDropletElasticity, gfx_droplet_elasticity, 10, 1, 1000, CFGFLAG_CLIENT|CFGFLAG_SAVE, "Debug")
 

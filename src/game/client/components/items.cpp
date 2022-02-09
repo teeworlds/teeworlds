@@ -105,9 +105,9 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 					str_format(aBuf, sizeof(aBuf), "%f", distance(PrevPos, Pos));
 					str_format(aBuf2, sizeof(aBuf2), "PreWater: %f  %f", PrevPos.x, PrevPos.y);
 					str_format(aBuf3, sizeof(aBuf3), "Pos: %f  %f", Pos.x, Pos.y);
-					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf);
-					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf2);
-					Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game", aBuf3);*/
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf2);
+					Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", aBuf3);*/
 				}
 
 			}
@@ -374,7 +374,6 @@ void CItems::OnRender()
 		}
 		else if (Item.m_Type == NETOBJTYPE_CHARACTER)
 		{
-			
 			RenderPlayer((const CNetObj_Character*)pData);
 		}
 		else if (Item.m_Type == NETOBJTYPE_HARPOON)
@@ -460,15 +459,10 @@ void CItems::RenderHarpoon(const CNetObj_Harpoon* pCurrent)
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
-	//float Size = g_pData->m_Weapons.m_aId[;
 	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_pSpriteProj, Vel.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
-	//, 
-	
 	
 	Graphics()->QuadsSetRotation(length(direction(HarpoonAngle)) > 0.00001f ? angle(direction(HarpoonAngle)) : 0);
 
-	//RenderTools()->DrawSprite(Pos.x, Pos.y, 64.0f);
-	//Graphics()->QuadsDraw(&QuadItem, 1);
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 48, 32);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsSetRotation(0);

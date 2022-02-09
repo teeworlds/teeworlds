@@ -455,7 +455,7 @@ void CRenderTools::RenderTilemap(const CTile *pTiles, int w, int h, float Scale,
 
 	Graphics()->QuadsEnd();
 }
-void CRenderTools::RenderWaterMap(CTile* pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
+void CRenderTools::RenderWaterMap(const CTile* pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
 	ENVELOPE_EVAL pfnEval, void* pUser, int ColorEnv, int ColorEnvOffset, int Tick)
 {
 	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;

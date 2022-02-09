@@ -123,16 +123,13 @@ class CUI
 	unsigned m_LastMouseButtons;
 
 	unsigned m_HotkeysPressed;
+	CLineInput *m_pActiveInput;
 
 	CUIRect m_Screen;
 
 	CUIRect m_aClips[MAX_CLIP_NESTING_DEPTH];
 	unsigned m_NumClips;
 	void UpdateClipping();
-
-	const void *m_pActiveTooltip;
-	CUIRect m_TooltipAnchor;
-	char m_aTooltipText[256];
 
 	class
 	{
@@ -149,8 +146,6 @@ class CUI
 	class IGraphics *m_pGraphics;
 	class IInput *m_pInput;
 	class ITextRender *m_pTextRender;
-
-	void ApplyCursorAlign(class CTextCursor *pCursor, const CUIRect *pRect, int Align);
 
 public:
 	static const vec4 ms_DefaultTextColor;
@@ -214,7 +209,7 @@ public:
 	bool ConsumeHotkey(unsigned Hotkey);
 	void ClearHotkeys() { m_HotkeysPressed = 0; }
 	bool OnInput(const IInput::CEvent &e);
-	bool IsInputActive() const { return CLineInput::GetActiveInput() != 0; }
+	bool IsInputActive() const { return m_pActiveInput != 0; }
 
 	const CUIRect *Screen();
 	float PixelSize();
@@ -234,18 +229,14 @@ public:
 	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor);
 
 	// editboxes
-	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners = CUIRect::CORNER_ALL, const IButtonColorFunction *pColorFunction = &DarkButtonColorFunction);
-	void DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const char *pStr, float VSplitVal);
+	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool Hidden = false, int Corners = CUIRect::CORNER_ALL, const IButtonColorFunction *pColorFunction = &DarkButtonColorFunction);
+	void DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const char *pStr, float VSplitVal, bool Hidden = false);
 
 	// scrollbars
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
 	void DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite = false);
 	void DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int NumLabels, const IScrollbarScale *pScale = &LinearScrollbarScale);
-
-	// tooltips
-	void DoTooltip(const void *pID, const CUIRect *pRect, const char *pText);
-	void RenderTooltip();
 
 	// popup menu
 	void DoPopupMenu(int X, int Y, int Width, int Height, void *pContext, bool (*pfnFunc)(void *pContext, CUIRect View), int Corners = CUIRect::CORNER_ALL);

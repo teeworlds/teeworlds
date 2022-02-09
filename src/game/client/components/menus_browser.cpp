@@ -37,15 +37,6 @@ CServerFilterInfo CMenus::CBrowserFilter::ms_FilterStandard = {IServerBrowser::F
 CServerFilterInfo CMenus::CBrowserFilter::ms_FilterFavorites = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_FAVORITE, 999, -1, 0, {{0}}, {0}};
 CServerFilterInfo CMenus::CBrowserFilter::ms_FilterAll = {IServerBrowser::FILTER_COMPAT_VERSION, 999, -1, 0, {{0}}, {0}};
 
-static CLocConstString s_aDifficultyLabels[] = {
-	"Casual",
-	"Normal",
-	"Competitive" };
-static int s_aDifficultySpriteIds[] = {
-	SPRITE_LEVEL_A_ON,
-	SPRITE_LEVEL_B_ON,
-	SPRITE_LEVEL_C_ON };
-
 vec3 TextHighlightColor = vec3(0.4f, 0.4f, 1.0f);
 
 // filters
@@ -493,13 +484,12 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			{
 				Icon.Margin(2.0f, &Icon);
 				DoIcon(IMAGE_BROWSEICONS, Selected ? SPRITE_BROWSE_LOCK_B : SPRITE_BROWSE_LOCK_A, &Icon);
-				UI()->DoTooltip(&pEntry->m_Flags, &Icon, Localize("This server is protected by a password."));
 			}
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
 			Icon.Margin(2.0f, &Icon);
-			DoIcon(IMAGE_LEVELICONS, s_aDifficultySpriteIds[pEntry->m_ServerLevel], &Icon);
-			UI()->DoTooltip(&pEntry->m_ServerLevel, &Icon, s_aDifficultyLabels[pEntry->m_ServerLevel]);
+
+			DoIcon(IMAGE_LEVELICONS, pEntry->m_ServerLevel==0 ? SPRITE_LEVEL_A_ON : pEntry->m_ServerLevel==1 ? SPRITE_LEVEL_B_ON : SPRITE_LEVEL_C_ON, &Icon);
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
 			Icon.Margin(2.0f, &Icon);
@@ -511,7 +501,6 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				else
 					ServerBrowser()->RemoveFavorite(pEntry);
 			}
-			UI()->DoTooltip(&pEntry->m_Favorite, &Icon, pEntry->m_Favorite ? Localize("Click to remove server from favorites.") : Localize("Click to add server to favorites."));
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
 			if(pEntry->m_FriendState != CContactInfo::CONTACT_NO)
@@ -525,7 +514,6 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 				Graphics()->QuadsDrawTL(&QuadItem, 1);
 				Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 				Graphics()->QuadsEnd();
-				UI()->DoTooltip(&pEntry->m_FriendState, &Icon, Localize("Friends are online on this server."));
 			}
 		}
 		else if(ID == COL_BROWSER_NAME)
@@ -1158,7 +1146,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	UI()->DoLabel(&Label, Localize("Search:"), FontSize, TEXTALIGN_LEFT);
 	EditBox.VSplitRight(EditBox.h, &EditBox, &Button);
 	static CLineInput s_FilterInput(Config()->m_BrFilterString, sizeof(Config()->m_BrFilterString));
-	if(UI()->DoEditBox(&s_FilterInput, &EditBox, FontSize, CUIRect::CORNER_L))
+	if(UI()->DoEditBox(&s_FilterInput, &EditBox, FontSize, false, CUIRect::CORNER_L))
 	{
 		Client()->ServerBrowserUpdate();
 		ServerBrowserFilterOnUpdate();
@@ -1378,8 +1366,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 
 	// show lists
 	// only ~10 buttons will be displayed at once, a sliding window of 20 buttons ought to be enough
-	static char s_aFriendButtons[20];
-	static char s_aFriendDeleteButtons[20];
+	static CButtonContainer s_FriendButtons[20];
 	int ButtonId = 0;
 	for(int i = 0; i < NUM_FRIEND_TYPES; ++i)
 	{
@@ -1404,9 +1391,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 					continue;
 
 				const bool Inside = UI()->MouseHovered(&Rect);
-				bool ButtonResult = UI()->DoButtonLogic(&(s_aFriendButtons[ButtonId%20]), &Rect);
-				if(m_lFriendList[i][f].m_pServerInfo)
-					UI()->DoTooltip(&(s_aFriendButtons[ButtonId%20]), &Rect, Localize("Double click to join your friend."));
+				bool ButtonResult = UI()->DoButtonLogic(&(s_FriendButtons[ButtonId%20]), &Rect);
 				Rect.Draw(vec4(s_ListColor[i].r, s_ListColor[i].g, s_ListColor[i].b, Inside ? 0.5f : 0.3f));
 				Rect.Margin(2.0f, &Rect);
 				Rect.VSplitRight(50.0f, &Rect, &Icon);
@@ -1437,12 +1422,11 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 				Rect.VSplitRight(12.0f, 0, &Icon);
 				Icon.HMargin((Icon.h - Icon.w) / 2, &Icon);
 				DoIcon(IMAGE_TOOLICONS, UI()->MouseHovered(&Icon) ? SPRITE_TOOL_X_A : SPRITE_TOOL_X_B, &Icon);
-				if(UI()->DoButtonLogic(&(s_aFriendDeleteButtons[ButtonId%20]), &Icon))
+				if(UI()->DoButtonLogic(&m_lFriendList[i][f], &Icon))
 				{
 					m_pDeleteFriend = &m_lFriendList[i][f];
 					ButtonResult = false;
 				}
-				UI()->DoTooltip(&(s_aFriendDeleteButtons[ButtonId%20]), &Icon, Localize("Click to delete this friend."));
 				// handle click and double click on item
 				if(ButtonResult && m_lFriendList[i][f].m_pServerInfo)
 				{
@@ -1553,7 +1537,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	Button.VSplitLeft(60.0f, &Icon, &Button);
 	static char s_aFilterName[32] = { 0 };
 	static CLineInput s_FilterInput(s_aFilterName, sizeof(s_aFilterName));
-	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, CUIRect::CORNER_L);
+	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, false, CUIRect::CORNER_L);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 5.0f, CUIRect::CORNER_R);
 	Button.VSplitLeft(Button.h, &Icon, &Label);
 	Label.HMargin(2.0f, &Label);
@@ -1564,9 +1548,6 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		static CButtonContainer s_AddFilter;
 		if(UI()->DoButtonLogic(&s_AddFilter, &Button))
 		{
-			CBrowserFilter *pSelectedFilter = GetSelectedBrowserFilter();
-			if(pSelectedFilter)
-				pSelectedFilter->Switch();
 			m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, ServerBrowser()));
 			m_lFilters[m_lFilters.size()-1].Switch();
 			s_aFilterName[0] = 0;
@@ -1723,7 +1704,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 
 		static char s_aGametype[16] = { 0 };
 		static CLineInput s_GametypeInput(s_aGametype, sizeof(s_aGametype));
-		UI()->DoEditBox(&s_GametypeInput, &EditBox, FontSize, CUIRect::CORNER_L);
+		UI()->DoEditBox(&s_GametypeInput, &EditBox, FontSize, false, CUIRect::CORNER_L);
 
 		static CButtonContainer s_AddInclusiveGametype;
 		if(DoButton_Menu(&s_AddInclusiveGametype, "+", 0, &AddIncButton, 0, 0) && s_aGametype[0])
@@ -1740,7 +1721,6 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 				}
 			}
 		}
-		UI()->DoTooltip(&s_AddInclusiveGametype, &AddIncButton, Localize("Include servers with this gametype."));
 
 		static CButtonContainer s_AddExclusiveGametype;
 		if(DoButton_Menu(&s_AddExclusiveGametype, "-", 0, &AddExlButton, 0, CUIRect::CORNER_R) && s_aGametype[0])
@@ -1757,7 +1737,6 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 				}
 			}
 		}
-		UI()->DoTooltip(&s_AddExclusiveGametype, &AddExlButton, Localize("Exclude servers with this gametype."));
 
 		static CButtonContainer s_ClearGametypes;
 		if(DoButton_MenuTabTop(&s_ClearGametypes, Localize("Clear", "clear gametype filters"), false, &ClearButton))
@@ -1915,6 +1894,14 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo, const vec4
 		"Game type:",
 		"Version:",
 		"Difficulty:" };
+	static CLocConstString s_aDifficultyLabels[] = {
+		"Casual",
+		"Normal",
+		"Competitive" };
+	static int s_aDifficultySpriteIds[] = {
+		SPRITE_LEVEL_A_ON,
+		SPRITE_LEVEL_B_ON,
+		SPRITE_LEVEL_C_ON };
 
 	CUIRect LeftColumn, RightColumn;
 	View.VMargin(2.0f, &View);
@@ -2038,8 +2025,6 @@ void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int 
 			FriendlistOnUpdate();
 			Client()->ServerBrowserUpdate();
 		}
-		UI()->DoTooltip(&pInfo->m_aClients[i], &Name, pInfo->m_aClients[i].m_FriendState == CContactInfo::CONTACT_PLAYER
-			? Localize("Click to remove the player from your friends.") : Localize("Click to add the player to your friends."));
 		Name.VSplitLeft(Name.h-8.0f, &Icon, &Name);
 		Icon.HMargin(4.0f, &Icon);
 		if(pInfo->m_aClients[i].m_FriendState != CContactInfo::CONTACT_NO)

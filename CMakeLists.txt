@@ -530,6 +530,7 @@ set(EXPECTED_DATA
   audio/hook_noattach-02.wv
   audio/hook_noattach-03.wv
   audio/music_menu.wv
+  audio/sfx_big_splash.wv
   audio/sfx_ctf_cap_pl.wv
   audio/sfx_ctf_drop.wv
   audio/sfx_ctf_grab_en.wv
@@ -540,6 +541,14 @@ set(EXPECTED_DATA
   audio/sfx_hit_weak-01.wv
   audio/sfx_hit_weak-02.wv
   audio/sfx_hit_weak-03.wv
+  audio/sfx_movement-01.wv
+  audio/sfx_movement-02.wv
+  audio/sfx_movement-03.wv
+  audio/sfx_movement-04.wv
+  audio/sfx_movement-05.wv
+  audio/sfx_movement-06.wv
+  audio/sfx_movement-07.wv
+  audio/sfx_movement-08.wv
   audio/sfx_msg-client.wv
   audio/sfx_msg-highlight.wv
   audio/sfx_msg-server.wv
@@ -557,9 +566,16 @@ set(EXPECTED_DATA
   audio/sfx_skid-02.wv
   audio/sfx_skid-03.wv
   audio/sfx_skid-04.wv
+  audio/sfx_soft_splash-01.wv
+  audio/sfx_soft_splash-02.wv
+  audio/sfx_soft_splash-03.wv
   audio/sfx_spawn_wpn-01.wv
   audio/sfx_spawn_wpn-02.wv
   audio/sfx_spawn_wpn-03.wv
+  audio/sfx_splash-01.wv
+  audio/sfx_splash-02.wv
+  audio/sfx_splash-03.wv
+  audio/sfx_splash-04.wv
   audio/vo_teefault_cry-01.wv
   audio/vo_teefault_cry-02.wv
   audio/vo_teefault_ninja-01.wv

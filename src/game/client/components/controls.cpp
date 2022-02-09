@@ -171,7 +171,7 @@ int CControls::SnapInput(int *pData)
 			mem_zero(&m_InputData, sizeof(m_InputData));
 
 			m_InputData.m_Direction = ((int)t/2)%3-1;
-			m_InputData.m_DirectionVertical = ((int)t / 2) % 3 - 1;
+			m_InputData.m_DirectionVertical = ((int)t / 4) % 3 - 1;
 			m_InputData.m_Jump = ((int)t)&1;
 			m_InputData.m_Fire = ((int)(t*10));
 			m_InputData.m_Hook = ((int)(t*2))&1;
