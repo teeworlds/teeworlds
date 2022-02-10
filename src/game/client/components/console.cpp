@@ -594,65 +594,55 @@ void CGameConsole::OnRender()
 
 		TextRender()->DrawTextOutlined(&s_InfoCursor);
 
-		TextRender()->TextColor(1,1,1,1);
+		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
-		//	render log (actual page, wrap lines)
+		// render log (actual page, wrap lines)
 		static CTextCursor s_Cursor;
 		s_Cursor.Reset();
 		s_Cursor.MoveTo(x, y);
 		s_Cursor.m_FontSize = FontSize;
 		s_Cursor.m_MaxLines = -1;
+		s_Cursor.m_MaxWidth = Screen.w - 10.0f;
 
 		CInstance::CBacklogEntry *pEntry = pConsole->m_Backlog.Last();
 		float OffsetY = 0.0f;
-		float LineOffset = 1.0f;
-		s_Cursor.m_MaxWidth = Screen.w-10;
-		for(int Page = 0; Page <= pConsole->m_BacklogActPage; ++Page, OffsetY = 0.0f)
+		const float LineOffset = 1.0f;
+		static int s_LastActivePage = pConsole->m_BacklogActPage;
+		int TotalPages = 1;
+		for(int Page = 0; Page <= s_LastActivePage; ++Page, OffsetY = 0.0f)
 		{
 			while(pEntry)
 			{
 				s_Cursor.Reset();
 				if(pEntry->m_Highlighted)
-					TextRender()->TextColor(1,0.75,0.75,1);
+					TextRender()->TextColor(1.0f, 0.75f, 0.75f, 1.0f);
 				TextRender()->TextDeferred(&s_Cursor, pEntry->m_aText, -1);
-				TextRender()->TextColor(1,1,1,1);
+				TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
 
 				// get y offset (calculate it if we haven't yet)
 				if(pEntry->m_YOffset < 0.0f)
-				{
-					pEntry->m_YOffset = s_Cursor.BaseLineY()+LineOffset;
-				}
+					pEntry->m_YOffset = s_Cursor.BaseLineY() + LineOffset;
 				OffsetY += pEntry->m_YOffset;
 
-				//	next page when lines reach the top
-				if(y-OffsetY <= RowHeight)
+				// next page when lines reach the top
+				if(y - OffsetY <= RowHeight)
 					break;
 
-				//	just render output from actual backlog page (render bottom up)
-				if(Page == pConsole->m_BacklogActPage)
+				// just render output from actual backlog page (render bottom up)
+				if(Page == s_LastActivePage)
 				{
-					s_Cursor.MoveTo(0.0f, y-OffsetY);
+					s_Cursor.MoveTo(0.0f, y - OffsetY);
 					TextRender()->DrawTextOutlined(&s_Cursor);
 				}
+
 				pEntry = pConsole->m_Backlog.Prev(pEntry);
 			}
-
-			//	actual backlog page number is too high, render last available page (current checked one, render top down)
-			if(!pEntry && Page < pConsole->m_BacklogActPage)
-			{
-				pConsole->m_BacklogActPage = Page;
-				pEntry = pConsole->m_Backlog.First();
-				while(OffsetY > 0.0f && pEntry)
-				{
-					s_Cursor.Reset();
-					s_Cursor.MoveTo(0.0f, y-OffsetY);
-					TextRender()->TextOutlined(&s_Cursor, pEntry->m_aText, -1);
-					OffsetY -= pEntry->m_YOffset;
-					pEntry = pConsole->m_Backlog.Next(pEntry);
-				}
+			if(!pEntry)
 				break;
-			}
+			TotalPages++;
 		}
+		pConsole->m_BacklogActPage = clamp(pConsole->m_BacklogActPage, 0, TotalPages - 1);
+		s_LastActivePage = pConsole->m_BacklogActPage;
 
 		s_Cursor.Reset();
 		s_Cursor.m_MaxWidth = -1;
