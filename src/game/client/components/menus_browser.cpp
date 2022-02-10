@@ -174,7 +174,9 @@ void CMenus::LoadFilters()
 
 	if(pJsonData == 0)
 	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "failed to load filters from '%s': %s", pFilename, aError);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
 		return;
 	}
 
