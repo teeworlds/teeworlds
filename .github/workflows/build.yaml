@@ -31,7 +31,7 @@ jobs:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: windows-latest
-          cmake-args: -G "Visual Studio 16 2019" -A x64
+          cmake-args: -A x64
           package-file: teeworlds-*-win64.zip
           env:
             CFLAGS: /WX
