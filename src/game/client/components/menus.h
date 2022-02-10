@@ -534,16 +534,19 @@ private:
 		IServerBrowser *m_pServerBrowser;
 
 		static CServerFilterInfo ms_FilterStandard;
+		static CServerFilterInfo ms_FilterRace;
 		static CServerFilterInfo ms_FilterFavorites;
 		static CServerFilterInfo ms_FilterAll;
 
 	public:
 		enum
 		{
-			FILTER_CUSTOM=0,
+			FILTER_CUSTOM = 0,
 			FILTER_ALL,
 			FILTER_STANDARD,
 			FILTER_FAVORITES,
+			FILTER_RACE,
+			NUM_FILTERS,
 		};
 
 		CButtonContainer m_DeleteButtonContainer;
@@ -577,7 +580,7 @@ private:
 	void LoadFilters();
 	void SaveFilters();
 	void RemoveFilter(int FilterIndex);
-	void Move(bool Up, int Filter);
+	void MoveFilter(bool Up, int Filter);
 	void InitDefaultFilters();
 
 	struct CColumn

@@ -33,9 +33,10 @@ CMenus::CColumn CMenus::ms_aBrowserCols[] = {  // Localize("Server"); Localize("
 	{COL_BROWSER_PING,		IServerBrowser::SORT_PING,			"Ping",		1, 40.0f,  0, {0}, {0}, TEXTALIGN_CENTER},
 };
 
-CServerFilterInfo CMenus::CBrowserFilter::ms_FilterStandard = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP, 999, -1, 0, {{0}}, {0}};
-CServerFilterInfo CMenus::CBrowserFilter::ms_FilterFavorites = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_FAVORITE, 999, -1, 0, {{0}}, {0}};
-CServerFilterInfo CMenus::CBrowserFilter::ms_FilterAll = {IServerBrowser::FILTER_COMPAT_VERSION, 999, -1, 0, {{0}}, {0}};
+CServerFilterInfo CMenus::CBrowserFilter::ms_FilterStandard = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP, 999, -1, 0, {{0}}, {0}, {0}};
+CServerFilterInfo CMenus::CBrowserFilter::ms_FilterRace = {IServerBrowser::FILTER_COMPAT_VERSION, 999, -1, 0, {{"Race"}}, {false}, {0}};
+CServerFilterInfo CMenus::CBrowserFilter::ms_FilterFavorites = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_FAVORITE, 999, -1, 0, {{0}}, {0}, {0}};
+CServerFilterInfo CMenus::CBrowserFilter::ms_FilterAll = {IServerBrowser::FILTER_COMPAT_VERSION, 999, -1, 0, {{0}}, {0}, {0}};
 
 static CLocConstString s_aDifficultyLabels[] = {
 	"Casual",
@@ -61,6 +62,9 @@ CMenus::CBrowserFilter::CBrowserFilter(int Custom, const char* pName, IServerBro
 	case CBrowserFilter::FILTER_STANDARD:
 		m_Filter = m_pServerBrowser->AddFilter(&ms_FilterStandard);
 		break;
+	case CBrowserFilter::FILTER_RACE:
+		m_Filter = m_pServerBrowser->AddFilter(&ms_FilterRace);
+		break;
 	case CBrowserFilter::FILTER_FAVORITES:
 		m_Filter = m_pServerBrowser->AddFilter(&ms_FilterFavorites);
 		break;
@@ -75,6 +79,9 @@ void CMenus::CBrowserFilter::Reset()
 	{
 	case CBrowserFilter::FILTER_STANDARD:
 		SetFilter(&ms_FilterStandard);
+		break;
+	case CBrowserFilter::FILTER_RACE:
+		SetFilter(&ms_FilterRace);
 		break;
 	case CBrowserFilter::FILTER_FAVORITES:
 		SetFilter(&ms_FilterFavorites);
@@ -177,6 +184,8 @@ void CMenus::LoadFilters()
 		m_SidebarActive = rSettingsEntry["sidebar_active"].u.integer;
 	if(rSettingsEntry["sidebar_tab"].type == json_integer)
 		m_SidebarTab = clamp(int(rSettingsEntry["sidebar_tab"].u.integer), int(SIDEBAR_TAB_INFO), int(NUM_SIDEBAR_TABS-1));
+
+	const int AllFilterIndex = CBrowserFilter::NUM_FILTERS - 2; // -2 because custom filters have index 0 but come last in the list
 	if(rSettingsEntry["filters"].type == json_array)
 	{
 		for(unsigned i = 0; i < IServerBrowser::NUM_TYPES; ++i)
@@ -184,13 +193,13 @@ void CMenus::LoadFilters()
 			if(i < rSettingsEntry["filters"].u.array.length && rSettingsEntry["filters"][i].type == json_integer)
 				m_aSelectedFilters[i] = rSettingsEntry["filters"][i].u.integer;
 			else
-				m_aSelectedFilters[i] = 2; // default to "all" if not set for all filters
+				m_aSelectedFilters[i] = AllFilterIndex; // default to "all" if not set for all filters
 		}
 	}
 	else
 	{
 		for(unsigned i = 0; i < IServerBrowser::NUM_TYPES; ++i)
-			m_aSelectedFilters[i] = 2; // default to "all" if not set
+			m_aSelectedFilters[i] = AllFilterIndex; // default to "all" if not set
 	}
 
 	// extract filter data
@@ -202,19 +211,23 @@ void CMenus::LoadFilters()
 		if(rStart.type != json_object)
 			continue;
 
-		int Type = 0;
+		int Type = CBrowserFilter::FILTER_CUSTOM;
 		if(rStart["type"].type == json_integer)
 			Type = rStart["type"].u.integer;
 
 		// filter setting
 		CServerFilterInfo FilterInfo;
 		for(int j = 0; j < CServerFilterInfo::MAX_GAMETYPES; ++j)
+		{
 			FilterInfo.m_aGametype[j][0] = 0;
+			FilterInfo.m_aGametypeExclusive[j] = false;
+		}
 		const json_value &rSubStart = rStart["settings"];
 		if(rSubStart.type == json_object)
 		{
 			if(rSubStart["filter_hash"].type == json_integer)
 				FilterInfo.m_SortHash = rSubStart["filter_hash"].u.integer;
+
 			const json_value &rGametypeEntry = rSubStart["filter_gametype"];
 			if(rGametypeEntry.type == json_array) // legacy: all entries are inclusive
 			{
@@ -239,6 +252,7 @@ void CMenus::LoadFilters()
 					}
 				}
 			}
+
 			if(rSubStart["filter_ping"].type == json_integer)
 				FilterInfo.m_Ping = rSubStart["filter_ping"].u.integer;
 			if(rSubStart["filter_serverlevel"].type == json_integer)
@@ -249,10 +263,16 @@ void CMenus::LoadFilters()
 				FilterInfo.m_Country = rSubStart["filter_country"].u.integer;
 		}
 
-		// add filter
 		m_lFilters.add(CBrowserFilter(Type, pName, ServerBrowser()));
-		if(Type == CBrowserFilter::FILTER_STANDARD)		//	make sure the pure filter is enabled in the Teeworlds-filter
+
+		if(Type == CBrowserFilter::FILTER_STANDARD) // make sure the pure filter is enabled in the Teeworlds-filter
 			FilterInfo.m_SortHash |= IServerBrowser::FILTER_PURE;
+		else if(Type == CBrowserFilter::FILTER_RACE) // make sure Race gametype is included in Race-filter
+		{
+			str_copy(FilterInfo.m_aGametype[0], "Race", sizeof(FilterInfo.m_aGametype[0]));
+			FilterInfo.m_aGametypeExclusive[0] = false;
+		}
+
 		m_lFilters[i].SetFilter(&FilterInfo);
 	}
 
@@ -361,7 +381,7 @@ void CMenus::RemoveFilter(int FilterIndex)
 	}
 }
 
-void CMenus::Move(bool Up, int Filter)
+void CMenus::MoveFilter(bool Up, int Filter)
 {
 	// move up
 	CBrowserFilter Temp = m_lFilters[Filter];
@@ -385,36 +405,40 @@ void CMenus::Move(bool Up, int Filter)
 
 void CMenus::InitDefaultFilters()
 {
-	bool UseDefaultFilters = !m_lFilters.size();
-	bool FilterStandard = false;
-	bool FilterFav = false;
-	bool FilterAll = false;
+	int Filters = 0;
 	for(int i = 0; i < m_lFilters.size(); i++)
+		Filters |= 1 << m_lFilters[i].Custom();
+
+	const bool UseDefaultFilters = Filters == 0;
+
+	if((Filters & (1 << CBrowserFilter::FILTER_STANDARD)) == 0)
 	{
-		switch(m_lFilters[i].Custom())
-		{
-		case CBrowserFilter::FILTER_STANDARD:
-			FilterStandard = true;
-			break;
-		case CBrowserFilter::FILTER_FAVORITES:
-			FilterFav = true;
-			break;
-		case CBrowserFilter::FILTER_ALL:
-			FilterAll = true;
-		}
-	}
-	if(!FilterStandard)
-	{
-		// put it on top
-		int Pos = m_lFilters.size();
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_STANDARD, "Teeworlds", ServerBrowser()));
-		for(; Pos > 0; --Pos)
-			Move(true, Pos);
+		for(int Pos = m_lFilters.size() - 1; Pos > 0; --Pos)
+			MoveFilter(true, Pos);
 	}
-	if(!FilterFav)
+
+	if((Filters & (1 << CBrowserFilter::FILTER_RACE)) == 0)
+	{
+		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_RACE, Localize("Race"), ServerBrowser()));
+		for(int Pos = m_lFilters.size() - 1; Pos > 1; --Pos)
+			MoveFilter(true, Pos);
+	}
+
+	if((Filters & (1 << CBrowserFilter::FILTER_FAVORITES)) == 0)
+	{
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_FAVORITES, Localize("Favorites"), ServerBrowser()));
-	if(!FilterAll)
+		for(int Pos = m_lFilters.size() - 1; Pos > 2; --Pos)
+			MoveFilter(true, Pos);
+	}
+
+	if((Filters & (1 << CBrowserFilter::FILTER_ALL)) == 0)
+	{
 		m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_ALL, Localize("All"), ServerBrowser()));
+		for(int Pos = m_lFilters.size() - 1; Pos > 3; --Pos)
+			MoveFilter(true, Pos);
+	}
+
 	// expand the all filter tab by default
 	if(UseDefaultFilters)
 	{
@@ -713,7 +737,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	{
 		if(DoButton_SpriteID(&pFilter->m_UpButtonContainer, IMAGE_TOOLICONS, SPRITE_TOOL_UP_A, false, &Button))
 		{
-			Move(true, FilterIndex);
+			MoveFilter(true, FilterIndex);
 			Switch = false;
 		}
 	}
@@ -727,7 +751,7 @@ void CMenus::RenderFilterHeader(CUIRect View, int FilterIndex)
 	{
 		if(DoButton_SpriteID(&pFilter->m_DownButtonContainer, IMAGE_TOOLICONS, SPRITE_TOOL_DOWN_A, false, &Button))
 		{
-			Move(false, FilterIndex);
+			MoveFilter(false, FilterIndex);
 			Switch = false;
 		}
 	}
