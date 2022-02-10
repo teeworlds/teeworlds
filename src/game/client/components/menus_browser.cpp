@@ -237,7 +237,7 @@ void CMenus::LoadFilters()
 				{
 					if(rGametypeEntry[j].type == json_string)
 					{
-						str_copy(FilterInfo.m_aGametype[j], rGametypeEntry[j], sizeof(FilterInfo.m_aGametype[j]));
+						str_copy(FilterInfo.m_aGametype[j], rGametypeEntry[j].u.string.ptr, sizeof(FilterInfo.m_aGametype[j]));
 						FilterInfo.m_aGametypeExclusive[j] = false;
 					}
 				}
@@ -260,7 +260,7 @@ void CMenus::LoadFilters()
 			if(rSubStart["filter_serverlevel"].type == json_integer)
 				FilterInfo.m_ServerLevel = rSubStart["filter_serverlevel"].u.integer;
 			if(rSubStart["filter_address"].type == json_string)
-				str_copy(FilterInfo.m_aAddress, rSubStart["filter_address"], sizeof(FilterInfo.m_aAddress));
+				str_copy(FilterInfo.m_aAddress, rSubStart["filter_address"].u.string.ptr, sizeof(FilterInfo.m_aAddress));
 			if(rSubStart["filter_country"].type == json_integer)
 				FilterInfo.m_Country = rSubStart["filter_country"].u.integer;
 		}
