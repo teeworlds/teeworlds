@@ -426,13 +426,10 @@ bool CChat::OnInput(IInput::CEvent Event)
 			}
 		}
 	}
-	else
+	else if(m_Input.ProcessInput(Event))
 	{
-		if(m_Input.ProcessInput(Event))
-		{
-			// reset name completion process
-			m_CompletionChosen = -1;
-		}
+		// reset name completion process
+		m_CompletionChosen = -1;
 	}
 
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_LCTRL)
