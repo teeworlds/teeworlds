@@ -224,7 +224,7 @@ void CChat::OnConsoleInit()
 
 void CChat::ClearChatBuffer()
 {
-	mem_zero(m_ChatBuffer, sizeof(m_ChatBuffer));
+	mem_zero(m_aChatBuffer, sizeof(m_aChatBuffer));
 	m_ChatBufferMode = CHAT_NONE;
 }
 
@@ -486,7 +486,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 	{
 		//Save Chat Buffer
 		m_ChatBufferMode = m_Mode;
-		str_copy(m_ChatBuffer, m_Input.GetString(), sizeof(m_ChatBuffer));
+		str_copy(m_aChatBuffer, m_Input.GetString(), sizeof(m_aChatBuffer));
 	}
 	return true;
 }
@@ -507,7 +507,7 @@ void CChat::EnableMode(int Mode, const char *pText)
 	if(pText) // optional text to initalize with
 		m_Input.Set(pText);
 	else if(m_Mode == m_ChatBufferMode)
-		m_Input.Set(m_ChatBuffer);
+		m_Input.Set(m_aChatBuffer);
 
 	m_Input.Activate(CHAT);
 }
