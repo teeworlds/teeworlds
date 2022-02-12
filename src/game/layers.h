@@ -5,6 +5,7 @@
 
 #include <engine/map.h>
 #include <game/mapitems.h>
+#include <game/gamecore.h> // StrToInts, IntsToStr
 
 class CLayers
 {
@@ -29,6 +30,10 @@ public:
 	CMapItemLayerTilemap *GameLayer() const { return m_pGameLayer; }
 	CMapItemGroup *GetGroup(int Index) const;
 	CMapItemLayer *GetLayer(int Index) const;
+	bool HasMaterialLayer() { return m_pMaterialLayer != nullptr; }
+	CMapItemLayerTilemap *MaterialLayer() const { return m_pMaterialLayer; }
+private:
+	CMapItemLayerTilemap *m_pMaterialLayer;
 };
 
 #endif
