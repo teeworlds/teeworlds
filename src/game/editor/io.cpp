@@ -433,10 +433,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pTiles->m_Image = pTilemapItem->m_Image;
 						pTiles->m_Game = pTilemapItem->m_Flags&TILESLAYERFLAG_GAME;
 
-						// load custom gamelayer flags
-						if(pTilemapItem->m_Version >= 5)
-							pTiles->m_Flags = pTilemapItem->m_Flags&~TILESLAYERFLAG_GAME;
-
 						// load layer name
 						if(pTilemapItem->m_Version >= 3)
 							IntsToStr(pTilemapItem->m_aName, sizeof(pTiles->m_aName)/sizeof(int), pTiles->m_aName);

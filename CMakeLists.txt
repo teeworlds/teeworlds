@@ -1516,9 +1516,9 @@ if(CLIENT)
     editor.h
     io.cpp
     layer_game.cpp
+    layer_material.cpp
     layer_quads.cpp
     layer_tiles.cpp
-    layer_material.cpp
     popups.cpp
   )
   set(GAME_GENERATED_CLIENT
