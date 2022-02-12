@@ -449,10 +449,9 @@ bool CChat::OnInput(IInput::CEvent Event)
 		{
 			if(m_pHistoryEntry)
 			{
-				CHistoryEntry *pTest = m_History.Prev(m_pHistoryEntry);
-
-				if(pTest)
-					m_pHistoryEntry = pTest;
+				CHistoryEntry *pPrev = m_History.Prev(m_pHistoryEntry);
+				if(pPrev)
+					m_pHistoryEntry = pPrev;
 			}
 			else
 				m_pHistoryEntry = m_History.Last();
