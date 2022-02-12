@@ -1486,13 +1486,13 @@ void CChat::Com_All(IConsole::IResult *pResult, void *pContext)
 	CCommandManager::SCommandContext *pCommandContext = (CCommandManager::SCommandContext *)pContext;
 	CChat *pChatData = (CChat *)pCommandContext->m_pContext;
 
-	pChatData->m_ChatCmdBuffer[0] = '\0';
+	pChatData->m_aChatCmdBuffer[0] = '\0';
 	if(pResult->NumArguments())
 	{
 		// save the parameter in a buffer before EnableMode clears it
-		str_copy(pChatData->m_ChatCmdBuffer, pResult->GetString(0), sizeof(pChatData->m_ChatCmdBuffer));
+		str_copy(pChatData->m_aChatCmdBuffer, pResult->GetString(0), sizeof(pChatData->m_aChatCmdBuffer));
 	}
-	pChatData->EnableMode(CHAT_ALL, pChatData->m_ChatCmdBuffer);
+	pChatData->EnableMode(CHAT_ALL, pChatData->m_aChatCmdBuffer);
 }
 
 void CChat::Com_Team(IConsole::IResult *pResult, void *pContext)
@@ -1500,13 +1500,13 @@ void CChat::Com_Team(IConsole::IResult *pResult, void *pContext)
 	CCommandManager::SCommandContext *pCommandContext = (CCommandManager::SCommandContext *)pContext;
 	CChat *pChatData = (CChat *)pCommandContext->m_pContext;
 
-	pChatData->m_ChatCmdBuffer[0] = '\0';
+	pChatData->m_aChatCmdBuffer[0] = '\0';
 	if(pResult->NumArguments())
 	{
 		// save the parameter in a buffer before EnableMode clears it
-		str_copy(pChatData->m_ChatCmdBuffer, pResult->GetString(0), sizeof(pChatData->m_ChatCmdBuffer));
+		str_copy(pChatData->m_aChatCmdBuffer, pResult->GetString(0), sizeof(pChatData->m_aChatCmdBuffer));
 	}
-	pChatData->EnableMode(CHAT_TEAM, pChatData->m_ChatCmdBuffer);
+	pChatData->EnableMode(CHAT_TEAM, pChatData->m_aChatCmdBuffer);
 }
 
 void CChat::Com_Reply(IConsole::IResult *pResult, void *pContext)
@@ -1526,13 +1526,13 @@ void CChat::Com_Reply(IConsole::IResult *pResult, void *pContext)
 	{
 		pChatData->m_WhisperTarget = pChatData->m_LastWhisperFrom;
 
-		pChatData->m_ChatCmdBuffer[0] = '\0';
+		pChatData->m_aChatCmdBuffer[0] = '\0';
 		if(pResult->NumArguments())
 		{
 			// save the parameter in a buffer before EnableMode clears it
-			str_copy(pChatData->m_ChatCmdBuffer, pResult->GetString(0), sizeof(pChatData->m_ChatCmdBuffer));
+			str_copy(pChatData->m_aChatCmdBuffer, pResult->GetString(0), sizeof(pChatData->m_aChatCmdBuffer));
 		}
-		pChatData->EnableMode(CHAT_WHISPER, pChatData->m_ChatCmdBuffer);
+		pChatData->EnableMode(CHAT_WHISPER, pChatData->m_aChatCmdBuffer);
 	}
 }
 

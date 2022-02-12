@@ -62,7 +62,7 @@ class CChat : public CComponent
 
 	int m_ChatBufferMode;
 	char m_ChatBuffer[MAX_LINE_LENGTH];
-	char m_ChatCmdBuffer[1024];
+	char m_aChatCmdBuffer[1024];
 
 	void ClearInput();
 	void ClearChatBuffer();
