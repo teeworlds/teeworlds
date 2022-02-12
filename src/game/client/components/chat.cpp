@@ -1590,17 +1590,18 @@ void CChat::Com_Befriend(IConsole::IResult *pResult, void *pContext)
 	int TargetID = pChatData->m_pClient->GetClientID(pResult->GetString(0));
 	if(TargetID != -1)
 	{
-		bool IsFriend = pChatData->m_pClient->m_aClients[TargetID].m_Friend;
+		CGameClient::CClientData *pTarget = &pChatData->m_pClient->m_aClients[TargetID];
+		bool IsFriend = pTarget->m_Friend;
 		if(IsFriend)
-			pChatData->m_pClient->Friends()->RemoveFriend(pChatData->m_pClient->m_aClients[TargetID].m_aName, pChatData->m_pClient->m_aClients[TargetID].m_aClan);
+			pChatData->m_pClient->Friends()->RemoveFriend(pTarget->m_aName, pTarget->m_aClan);
 		else
-			pChatData->m_pClient->Friends()->AddFriend(pChatData->m_pClient->m_aClients[TargetID].m_aName, pChatData->m_pClient->m_aClients[TargetID].m_aClan);
-		pChatData->m_pClient->m_aClients[TargetID].m_Friend ^= 1;
+			pChatData->m_pClient->Friends()->AddFriend(pTarget->m_aName, pTarget->m_aClan);
+		pTarget->m_Friend ^= 1;
 
 		pChatData->ClearInput();
 
 		char aMsg[128];
-		str_format(aMsg, sizeof(aMsg), !IsFriend ? Localize("'%s' was added as a friend") : Localize("'%s' was removed as a friend"), pChatData->m_pClient->m_aClients[TargetID].m_aName);
+		str_format(aMsg, sizeof(aMsg), !IsFriend ? Localize("'%s' was added as a friend") : Localize("'%s' was removed as a friend"), pTarget->m_aName);
 		pChatData->AddLine(aMsg, CLIENT_MSG, CHAT_ALL);
 	}
 	pChatData->Disable();
