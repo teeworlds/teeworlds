@@ -4185,7 +4185,7 @@ void CEditorMap::MakeGameLayer(CLayer *pLayer)
 	m_pGameLayer = (CLayerGame *)pLayer;
 	m_pGameLayer->m_pEditor = m_pEditor;
 	m_pGameLayer->m_Texture = m_pEditor->m_EntitiesTexture;
-	m_pGameLayer->m_Flags |= LAYERFLAG_OPERATIONAL|LAYERFLAG_NO_IMAGE;
+	m_pGameLayer->m_Flags |= LAYERFLAG_OPERATIONAL;
 }
 
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
@@ -4474,5 +4474,8 @@ void CEditorMap::MakeMaterialLayer(CLayer *pLayer)
 
 void CEditorMap::MakeCustomLayer(CLayer *pLayer)
 {
-	//TODO support custom layers
+	CLayerCustom *CustomLayer = (CLayerCustom *)pLayer;
+	CustomLayer->m_pEditor = m_pEditor;
+	str_format(CustomLayer->m_aName, sizeof(CustomLayer->m_aName)/sizeof(char), "Custom_%d", m_apCustomLayers.size()+1);
+	m_apCustomLayers.add(CustomLayer);
 }

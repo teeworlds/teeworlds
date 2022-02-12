@@ -598,7 +598,7 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		{0},
 	};
 
-	if(IsGameLayer || this->m_Flags&LAYERFLAG_NO_IMAGE) // remove the image and color properties if this is a game layer
+	if(IsGameLayer || (this->m_Flags&(LAYERFLAG_OPERATIONAL) && !(this->m_Flags&LAYERFLAG_CUSTOM_GAMELAYER))) // TODO do this smarter
 	{
 		aProps[3].m_pName = 0;
 		aProps[4].m_pName = 0;

@@ -289,6 +289,8 @@ public:
 	bool operator<(const CEditorImage &Other) const { return str_comp(m_aName, Other.m_aName) < 0; }
 };
 
+class CLayerCustom;
+
 class CEditorMap
 {
 	void MakeGameGroup(CLayerGroup *pGroup);
@@ -388,6 +390,7 @@ public:
 
 	// other game layers
 	class CLayerMaterial *m_pMaterialLayer;
+	class array<CLayerCustom*> m_apCustomLayers;  // should be CLayerCustom but compiler cries
 	void MakeMaterialLayer(CLayer* pLayer);
 	void MakeCustomLayer(CLayer* pLayer);
 };
@@ -508,6 +511,15 @@ class CLayerMaterial : public CLayerTiles
 public:
 	CLayerMaterial(int w, int h);
 	~CLayerMaterial();
+
+	virtual int RenderProperties(CUIRect *pToolbox);
+};
+
+class CLayerCustom : public CLayerTiles
+{
+public:
+	CLayerCustom(int w, int h);
+	~CLayerCustom();
 
 	virtual int RenderProperties(CUIRect *pToolbox);
 };

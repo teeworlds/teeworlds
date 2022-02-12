@@ -72,22 +72,40 @@ bool CEditor::PopupGroup(void *pContext, CUIRect View)
 		}
 	}
 
-	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pMaterialLayer)
+	if(pEditor->GetSelectedGroup()->m_GameGroup)
 	{
-		// new material layer
+		if (!pEditor->m_Map.m_pMaterialLayer)
+		{
+			// new material layer
+			View.HSplitBottom(5.0f, &View, &Button);
+			View.HSplitBottom(12.0f, &View, &Button);
+			static int s_NewMaterialLayerButton = 0;
+			if(pEditor->DoButton_Editor(&s_NewMaterialLayerButton, "Add material layer", 0, &Button, 0, "Creates a new material layer"))
+			{
+				CLayer *l = new CLayerMaterial(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+				l->m_pEditor = pEditor;
+				pEditor->m_Map.MakeMaterialLayer(l);
+				pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+				pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+				pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_Collapse = false;
+				return true;
+			}
+		}
+		// new custom layer
 		View.HSplitBottom(5.0f, &View, &Button);
 		View.HSplitBottom(12.0f, &View, &Button);
-		static int s_NewMaterialLayerButton = 0;
-		if(pEditor->DoButton_Editor(&s_NewMaterialLayerButton, "Add material layer", 0, &Button, 0, "Creates a new material layer"))
+		static int s_NewCustomLayerButton = 0;
+		if(pEditor->DoButton_Editor(&s_NewCustomLayerButton, "Add custom layer", 0, &Button, 0, "Creates a new custom layer"))
 		{
-			CLayer *l = new CLayerMaterial(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+			CLayer *l = new CLayerCustom(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
 			l->m_pEditor = pEditor;
-			pEditor->m_Map.MakeMaterialLayer(l);
+			pEditor->m_Map.MakeCustomLayer(l);
 			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
 			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
 			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_Collapse = false;
 			return true;
 		}
+
 	}
 
 	// new quad layer
@@ -211,7 +229,7 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 	}
 
 	// layer name
-	if(!IsGameLayer && !(pCurrentLayer->m_Flags&LAYERFLAG_OPERATIONAL))
+	if(!IsGameLayer && (!(pCurrentLayer->m_Flags&LAYERFLAG_OPERATIONAL) || pCurrentLayer->m_Flags&LAYERFLAG_CUSTOM_GAMELAYER))  // TODO do this smarter
 	{
 		View.HSplitBottom(5.0f, &View, &Button);
 		View.HSplitBottom(16.0f, &View, &Button);

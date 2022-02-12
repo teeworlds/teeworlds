@@ -1515,6 +1515,7 @@ if(CLIENT)
     editor.cpp
     editor.h
     io.cpp
+    layer_custom.cpp
     layer_game.cpp
     layer_material.cpp
     layer_quads.cpp

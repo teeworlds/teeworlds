@@ -414,6 +414,14 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 								MakeMaterialLayer(pTiles);
 								//MakeGameGroup(pGroup); TODO make a check that this layer is actually in the right group
 							}
+							else
+							{
+								pTiles = new CLayerCustom(pTilemapItem->m_Width, pTilemapItem->m_Height);
+								MakeCustomLayer(pTiles);
+								pTiles->m_Color = pTilemapItem->m_Color;
+								pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
+								pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
+							}
 
 						}
 
