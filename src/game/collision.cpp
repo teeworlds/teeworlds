@@ -48,9 +48,6 @@ void CCollision::Init(class CLayers *pLayers)
 		case TILE_NOHOOK:
 			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
 			break;
-		case TILE_ICE:
-			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_ICE;
-			break;
 		default:
 			m_pTiles[i].m_Index = 0;
 		}
@@ -74,7 +71,7 @@ int CCollision::GetMaterial(float x, float y, int Flag) const
 {
 	int Xi = round_to_int(x);
 	int Yi = round_to_int(y);
-	if(this->IsTile(Xi, Yi, Flag)) {
+	if(m_pMaterial && IsTile(Xi, Yi, Flag)) {
 		int Width = m_pLayers->MaterialLayer()->m_Width;
 		int Height = m_pLayers->MaterialLayer()->m_Height;
 		int Nx = clamp(Xi/32, 0, Width-1);
