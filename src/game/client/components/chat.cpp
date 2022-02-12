@@ -1258,7 +1258,7 @@ void CChat::OnRender()
 			if(pLine->m_Mode == CHAT_WHISPER && pLine->m_ClientID == m_pClient->m_LocalClientID && pLine->m_TargetID >= 0)
 				NameCID = pLine->m_TargetID;
 
-			vec4 IdTextColor = vec4(0.1f*Blend, 0.1f*Blend, 0.1f*Blend, 1.0f*Blend);
+			vec4 IdTextColor = vec4(0.1f, 0.1f, 0.1f, 1.0f) * Blend;
 			vec4 BgIdColor = TextColorName;
 			BgIdColor.a = 0.5f*Blend;
 			float ClientIDWidth = UI()->DrawClientID(FontSize, s_ChatCursor.AdvancePosition(), NameCID, BgIdColor, IdTextColor);
