@@ -224,7 +224,7 @@ void CChat::OnConsoleInit()
 
 void CChat::ClearChatBuffer()
 {
-	mem_zero(m_aChatBuffer, sizeof(m_aChatBuffer));
+	m_aChatBuffer[0] = '\0';
 	m_ChatBufferMode = CHAT_NONE;
 }
 
