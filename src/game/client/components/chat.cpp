@@ -1087,16 +1087,14 @@ void CChat::OnRender()
 	if(m_Show)
 	{
 		int Page;
-		int l = 0;
+		int Line = 0;
 		for(Page = 0; Page < MAX_CHAT_PAGES; Page++)
 		{
 			int PageY = y;
 			bool EndReached = false;
-			for(; l < MAX_LINES; l++)
+			for(; Line < MAX_LINES; Line++)
 			{
-				int r = ((m_CurrentLine-l)+MAX_LINES)%MAX_LINES;
-				const CLine *pLine = &m_aLines[r];
-
+				const CLine *pLine = &m_aLines[((m_CurrentLine - Line) + MAX_LINES) % MAX_LINES];
 				if(pLine->m_aText[0] == 0)
 				{
 					EndReached = true;
@@ -1111,7 +1109,7 @@ void CChat::OnRender()
 			if(EndReached)
 				break;
 			if(Page < m_BacklogPage)
-				StartLine = l - 1;
+				StartLine = Line - 1;
 		}
 		if(Page == MAX_CHAT_PAGES)
 			Page--;
