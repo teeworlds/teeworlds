@@ -35,8 +35,8 @@ void CChat::OnReset()
 		{
 			m_aLines[i].m_Time = 0;
 			m_aLines[i].m_Size.y = -1.0f;
-			m_aLines[i].m_aText[0] = 0;
-			m_aLines[i].m_aName[0] = 0;
+			m_aLines[i].m_aText[0] = '\0';
+			m_aLines[i].m_aName[0] = '\0';
 		}
 
 		Disable();
@@ -45,7 +45,7 @@ void CChat::OnReset()
 		m_BacklogPage = 0;
 		m_CompletionChosen = -1;
 		m_CompletionFav = -1;
-		m_aCompletionBuffer[0] = 0;
+		m_aCompletionBuffer[0] = '\0';
 		m_PlaceholderOffset = 0;
 		m_PlaceholderLength = 0;
 		m_pHistoryEntry = 0x0;
@@ -674,12 +674,12 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 
 		if(ClientID == SERVER_MSG)
 		{
-			pCurLine->m_aName[0] = 0;
+			pCurLine->m_aName[0] = '\0';
 			str_format(pCurLine->m_aText, sizeof(pCurLine->m_aText), "*** %s", pLine);
 		}
 		else if(ClientID == CLIENT_MSG)
 		{
-			pCurLine->m_aName[0] = 0;
+			pCurLine->m_aName[0] = '\0';
 			str_format(pCurLine->m_aText, sizeof(pCurLine->m_aText), "— %s", pLine);
 		}
 		else
@@ -1486,7 +1486,7 @@ void CChat::Com_All(IConsole::IResult *pResult, void *pContext)
 	CCommandManager::SCommandContext *pCommandContext = (CCommandManager::SCommandContext *)pContext;
 	CChat *pChatData = (CChat *)pCommandContext->m_pContext;
 
-	pChatData->m_ChatCmdBuffer[0] = 0;
+	pChatData->m_ChatCmdBuffer[0] = '\0';
 	if(pResult->NumArguments())
 	{
 		// save the parameter in a buffer before EnableMode clears it
@@ -1500,7 +1500,7 @@ void CChat::Com_Team(IConsole::IResult *pResult, void *pContext)
 	CCommandManager::SCommandContext *pCommandContext = (CCommandManager::SCommandContext *)pContext;
 	CChat *pChatData = (CChat *)pCommandContext->m_pContext;
 
-	pChatData->m_ChatCmdBuffer[0] = 0;
+	pChatData->m_ChatCmdBuffer[0] = '\0';
 	if(pResult->NumArguments())
 	{
 		// save the parameter in a buffer before EnableMode clears it
@@ -1526,7 +1526,7 @@ void CChat::Com_Reply(IConsole::IResult *pResult, void *pContext)
 	{
 		pChatData->m_WhisperTarget = pChatData->m_LastWhisperFrom;
 
-		pChatData->m_ChatCmdBuffer[0] = 0;
+		pChatData->m_ChatCmdBuffer[0] = '\0';
 		if(pResult->NumArguments())
 		{
 			// save the parameter in a buffer before EnableMode clears it
