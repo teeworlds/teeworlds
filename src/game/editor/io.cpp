@@ -138,7 +138,13 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 				Item.m_Width = pLayer->m_Width;
 				Item.m_Height = pLayer->m_Height;
-				Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
+
+				// set ITEM flags, this are not layer flags
+				Item.m_Flags = 0;
+				if(pLayer->m_Game)
+					Item.m_Flags |= TILESLAYERFLAG_GAME;
+				else if(pLayer->m_Flags&LAYERFLAG_OPERATIONAL)
+					Item.m_Flags |= TILESLAYERFLAG_OTHER;
 				Item.m_Image = pLayer->m_Image;
 				Item.m_Data = df.AddData(pLayer->m_SaveTilesSize, pLayer->m_pSaveTiles);
 
@@ -398,7 +404,20 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 							MakeGameLayer(pTiles);
 							MakeGameGroup(pGroup);
 						}
-						else
+						else if(pTilemapItem->m_Flags&TILESLAYERFLAG_OTHER && pTilemapItem->m_Version >= 5)
+						{
+							char name_buf[12];
+							IntsToStr(pTilemapItem->m_aName, sizeof(name_buf)/sizeof(int), name_buf);
+							if(str_comp_nocase(name_buf, "Material") == 0)
+							{
+								pTiles = new CLayerMaterial(pTilemapItem->m_Width, pTilemapItem->m_Height);
+								MakeMaterialLayer(pTiles);
+								//MakeGameGroup(pGroup); TODO make a check that this layer is actually in the right group
+							}
+
+						}
+
+						if(!pTiles)
 						{
 							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							pTiles->m_pEditor = m_pEditor;
@@ -413,6 +432,10 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						void *pData = DataFile.GetData(pTilemapItem->m_Data);
 						pTiles->m_Image = pTilemapItem->m_Image;
 						pTiles->m_Game = pTilemapItem->m_Flags&TILESLAYERFLAG_GAME;
+
+						// load custom gamelayer flags
+						if(pTilemapItem->m_Version >= 5)
+							pTiles->m_Flags = pTilemapItem->m_Flags&~TILESLAYERFLAG_GAME;
 
 						// load layer name
 						if(pTilemapItem->m_Version >= 3)

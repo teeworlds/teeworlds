@@ -4,19 +4,18 @@
 #include "editor.h"
 
 
-CLayerGame::CLayerGame(int w, int h)
+CLayerMaterial::CLayerMaterial(int w, int h)
 : CLayerTiles(w, h)
 {
-	str_copy(m_aName, "Game", sizeof(m_aName));
-	m_Game = 1;
-	m_Flags = LAYERFLAG_OPERATIONAL|LAYERFLAG_NO_IMAGE;
+	str_copy(m_aName, "Material", sizeof(m_aName));
+	m_Flags = LAYERFLAG_NO_IMAGE|LAYERFLAG_OPERATIONAL;
 }
 
-CLayerGame::~CLayerGame()
+CLayerMaterial::~CLayerMaterial()
 {
 }
 
-int CLayerGame::RenderProperties(CUIRect *pToolbox)
+int CLayerMaterial::RenderProperties(CUIRect *pToolbox)
 {
 	int r = CLayerTiles::RenderProperties(pToolbox);
 	m_Image = -1;

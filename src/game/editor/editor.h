@@ -385,6 +385,11 @@ public:
 	// io
 	int Save(class IStorage *pStorage, const char *pFilename);
 	int Load(class IStorage *pStorage, const char *pFilename, int StorageType);
+
+	// other game layers
+	class CLayerMaterial *m_pMaterialLayer;
+	void MakeMaterialLayer(CLayer* pLayer);
+	void MakeCustomLayer(CLayer* pLayer);
 };
 
 
@@ -494,6 +499,15 @@ class CLayerGame : public CLayerTiles
 public:
 	CLayerGame(int w, int h);
 	~CLayerGame();
+
+	virtual int RenderProperties(CUIRect *pToolbox);
+};
+
+class CLayerMaterial : public CLayerTiles
+{
+public:
+	CLayerMaterial(int w, int h);
+	~CLayerMaterial();
 
 	virtual int RenderProperties(CUIRect *pToolbox);
 };
@@ -749,6 +763,7 @@ public:
 	IGraphics::CTextureHandle m_BackgroundTexture;
 	IGraphics::CTextureHandle m_CursorTexture;
 	IGraphics::CTextureHandle m_EntitiesTexture;
+	IGraphics::CTextureHandle m_MaterialTexture;
 
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;

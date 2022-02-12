@@ -893,6 +893,7 @@ set(EXPECTED_DATA
   editor/checker.png
   editor/cursor.png
   editor/entities.png
+  editor/materials.png
   emoticons.png
   fonts/DejaVuSans.ttf
   fonts/SourceHanSans.ttc
@@ -1517,6 +1518,7 @@ if(CLIENT)
     layer_game.cpp
     layer_quads.cpp
     layer_tiles.cpp
+    layer_material.cpp
     popups.cpp
   )
   set(GAME_GENERATED_CLIENT

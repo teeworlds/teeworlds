@@ -119,7 +119,7 @@ void CLayerGroup::Render()
 
 	for(int i = 0; i < m_lLayers.size(); i++)
 	{
-		if(m_lLayers[i]->m_Visible && m_lLayers[i] != m_pMap->m_pGameLayer)
+		if(m_lLayers[i]->m_Visible && !(m_lLayers[i]->m_Flags&LAYERFLAG_OPERATIONAL))
 		{
 			if(m_pMap->m_pEditor->m_ShowDetail || !(m_lLayers[i]->m_Flags&LAYERFLAG_DETAIL))
 				m_lLayers[i]->Render();
@@ -1558,11 +1558,18 @@ void CEditor::DoMapEditor(CUIRect View)
 				m_Map.m_lGroups[g]->Render();
 		}
 
-		// render the game above everything else
-		if(m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
+		// render the operational layers above everything else
+		if(m_Map.m_pGameGroup->m_Visible)
 		{
-			m_Map.m_pGameGroup->MapScreen();
-			m_Map.m_pGameLayer->Render();
+
+			for(int l = 0; l < m_Map.m_pGameGroup->m_lLayers.size(); l++)
+			{
+				if(!(m_Map.m_pGameGroup->m_lLayers[l]->m_Flags&LAYERFLAG_OPERATIONAL) || !m_Map.m_pGameGroup->m_lLayers[l]->m_Visible)
+					continue;
+
+				m_Map.m_pGameGroup->MapScreen();
+				m_Map.m_pGameGroup->m_lLayers[l]->Render();
+			}
 		}
 
 		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
@@ -4178,6 +4185,7 @@ void CEditorMap::MakeGameLayer(CLayer *pLayer)
 	m_pGameLayer = (CLayerGame *)pLayer;
 	m_pGameLayer->m_pEditor = m_pEditor;
 	m_pGameLayer->m_Texture = m_pEditor->m_EntitiesTexture;
+	m_pGameLayer->m_Flags |= LAYERFLAG_OPERATIONAL|LAYERFLAG_NO_IMAGE;
 }
 
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
@@ -4198,6 +4206,7 @@ void CEditorMap::Clean()
 	m_MapInfo.Reset();
 
 	m_pGameLayer = 0x0;
+	m_pMaterialLayer = 0x0;
 	m_pGameGroup = 0x0;
 
 	m_Modified = false;
@@ -4250,6 +4259,7 @@ void CEditor::Init()
 	m_BackgroundTexture = Graphics()->LoadTexture("editor/background.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_MaterialTexture = Graphics()->LoadTexture("editor/materials.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();
@@ -4454,3 +4464,15 @@ void CEditor::UpdateAndRender()
 }
 
 IEditor *CreateEditor() { return new CEditor; }
+
+void CEditorMap::MakeMaterialLayer(CLayer *pLayer)
+{
+	m_pMaterialLayer = (CLayerMaterial *)pLayer;
+	m_pMaterialLayer->m_pEditor = m_pEditor;
+	m_pMaterialLayer->m_Texture = m_pEditor->m_MaterialTexture;
+}
+
+void CEditorMap::MakeCustomLayer(CLayer *pLayer)
+{
+	//TODO support custom layers
+}

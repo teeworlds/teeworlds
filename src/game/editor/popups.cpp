@@ -72,6 +72,24 @@ bool CEditor::PopupGroup(void *pContext, CUIRect View)
 		}
 	}
 
+	if(pEditor->GetSelectedGroup()->m_GameGroup && !pEditor->m_Map.m_pMaterialLayer)
+	{
+		// new material layer
+		View.HSplitBottom(5.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static int s_NewMaterialLayerButton = 0;
+		if(pEditor->DoButton_Editor(&s_NewMaterialLayerButton, "Add material layer", 0, &Button, 0, "Creates a new material layer"))
+		{
+			CLayer *l = new CLayerMaterial(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+			l->m_pEditor = pEditor;
+			pEditor->m_Map.MakeMaterialLayer(l);
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_Collapse = false;
+			return true;
+		}
+	}
+
 	// new quad layer
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
@@ -193,7 +211,7 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 	}
 
 	// layer name
-	if(!IsGameLayer)
+	if(!IsGameLayer && !(pCurrentLayer->m_Flags&LAYERFLAG_OPERATIONAL))
 	{
 		View.HSplitBottom(5.0f, &View, &Button);
 		View.HSplitBottom(16.0f, &View, &Button);
@@ -224,7 +242,7 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 		{0},
 	};
 
-	if(IsGameLayer) // dont use Group and Detail from the selection if this is the game layer
+	if(pCurrentLayer->m_Flags&LAYERFLAG_OPERATIONAL) // dont use Group and Detail from the selection if this is the game layer
 	{
 		aProps[0].m_Type = PROPTYPE_NULL;
 		aProps[2].m_Type = PROPTYPE_NULL;
@@ -238,7 +256,7 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 
 	if(Prop == PROP_ORDER)
 		pEditor->m_SelectedLayer = pCurrentGroup->SwapLayers(pEditor->m_SelectedLayer, NewVal);
-	else if(Prop == PROP_GROUP && !IsGameLayer)
+	else if(Prop == PROP_GROUP && !(pCurrentLayer->m_Flags&LAYERFLAG_OPERATIONAL))
 	{
 		if(NewVal >= 0 && NewVal < pEditor->m_Map.m_lGroups.size())
 		{
