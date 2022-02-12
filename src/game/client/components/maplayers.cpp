@@ -340,7 +340,7 @@ void CMapLayers::OnRender()
 					}
 				}
 
-				if(!IsGameLayer)
+				if(!IsGameLayer && !(pLayer->m_Flags&LAYERFLAG_OPERATIONAL))
 				{
 					if(pLayer->m_Type == LAYERTYPE_TILES)
 					{
