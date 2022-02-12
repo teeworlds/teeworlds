@@ -57,7 +57,6 @@ class CChat : public CComponent
 	char m_aCompletionBuffer[256];
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
-	bool m_ReverseCompletion;
 	bool m_FirstMap;
 	float m_CurrentLineWidth;
 

@@ -41,7 +41,6 @@ void CChat::OnReset()
 
 		Disable();
 		m_LastWhisperFrom = -1;
-		m_ReverseCompletion = false;
 		m_Show = false;
 		m_BacklogPage = 0;
 		m_CompletionChosen = -1;
@@ -254,6 +253,8 @@ bool CChat::OnInput(IInput::CEvent Event)
 	if(m_Mode == CHAT_NONE)
 		return false;
 
+	const bool CtrlPressed = Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL);
+
 	if(Event.m_Flags&IInput::FLAG_PRESS && (Event.m_Key == KEY_ESCAPE || Event.m_Key == KEY_MOUSE_1 || Event.m_Key == KEY_MOUSE_2))
 	{
 		if(IsTypingCommand() && m_CommandManager.CommandCount() - m_FilteredCount)
@@ -346,7 +347,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 				m_CompletionChosen = m_CompletionFav;
 			else
 			{
-				if(m_ReverseCompletion)
+				if(CtrlPressed)
 					m_CompletionChosen = (m_CompletionChosen - 1 + 2 * MAX_CLIENTS) % (2 * MAX_CLIENTS);
 				else
 					m_CompletionChosen = (m_CompletionChosen + 1) % (2 * MAX_CLIENTS);
@@ -357,7 +358,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 				int SearchType;
 				int Index;
 
-				if(m_ReverseCompletion)
+				if(CtrlPressed)
 				{
 					SearchType = ((m_CompletionChosen-i +2*MAX_CLIENTS)%(2*MAX_CLIENTS))/MAX_CLIENTS;
 					Index = (m_CompletionChosen-i + MAX_CLIENTS )%MAX_CLIENTS;
@@ -432,11 +433,6 @@ bool CChat::OnInput(IInput::CEvent Event)
 		if(Event.m_Flags&IInput::FLAG_PRESS)
 			m_CompletionChosen = -1;
 	}
-
-	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_LCTRL)
-		m_ReverseCompletion = true;
-	else if(Event.m_Flags&IInput::FLAG_RELEASE && Event.m_Key == KEY_LCTRL)
-		m_ReverseCompletion = false;
 
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_UP)
 	{
