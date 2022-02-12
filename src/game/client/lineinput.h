@@ -5,39 +5,58 @@
 
 #include <engine/input.h>
 
-// line input helter
+// line input helper
 class CLineInput
 {
-	enum
-	{
-		MAX_SIZE=512,
-		MAX_CHARS=MAX_SIZE/4-1,
-	};
-	char m_Str[MAX_SIZE];
+	char *m_pStr;
+	int m_MaxSize;
+	int m_MaxChars;
 	int m_Len;
-	int m_CursorPos;
 	int m_NumChars;
-	IInput *m_pInput;
-public:
+
+	int m_CursorPos;
+
+	float m_ScrollOffset;
+
+	bool m_WasChanged;
+
+	static class IInput *s_pInput;
+	static class ITextRender *s_pTextRender;
+
+	void UpdateStrData();
 	static bool MoveWordStop(char c);
-	static bool Manipulate(IInput::CEvent e, char *pStr, int StrMaxSize, int StrMaxChars, int *pStrLenPtr, int *pCursorPosPtr, int *pNumCharsPtr, IInput *pInput);
 
-	class CCallback
-	{
-	public:
-		virtual ~CCallback() {}
-		virtual bool Event(IInput::CEvent e) = 0;
-	};
+public:
+	static void Init(class IInput *pInput, class ITextRender *pTextRender) { s_pInput = pInput; s_pTextRender = pTextRender; }
 
-	CLineInput();
-	void Init(IInput *pInput);
+	CLineInput() : m_pStr(0) { SetBuffer(0, 0, 0); }
+	CLineInput(char *pStr, int MaxSize) : m_pStr(0)  { SetBuffer(pStr, MaxSize, MaxSize); }
+	CLineInput(char *pStr, int MaxSize, int MaxChars) : m_pStr(0)  { SetBuffer(pStr, MaxSize, MaxChars); }
+
+	void SetBuffer(char *pStr, int MaxSize) { SetBuffer(pStr, MaxSize, MaxSize); }
+	void SetBuffer(char *pStr, int MaxSize, int MaxChars);
+
 	void Clear();
-	bool ProcessInput(IInput::CEvent e);
 	void Set(const char *pString);
-	const char *GetString() const { return m_Str; }
+	void Append(const char *pString);
+
+	const char *GetString() const { return m_pStr; }
+	int GetMaxSize() const { return m_MaxSize; }
+	int GetMaxChars() const { return m_MaxChars; }
 	int GetLength() const { return m_Len; }
+	int GetNumChars() const { return m_NumChars; }
+
 	int GetCursorOffset() const { return m_CursorPos; }
 	void SetCursorOffset(int Offset) { m_CursorPos = Offset > m_Len ? m_Len : Offset < 0 ? 0 : Offset; }
+
+	// used either for vertical or horizontal scrolling
+	float GetScrollOffset() const { return m_ScrollOffset; }
+	void SetScrollOffset(float ScrollOffset) { m_ScrollOffset = ScrollOffset; }
+
+	bool ProcessInput(const IInput::CEvent &Event);
+	bool WasChanged() { bool Changed = m_WasChanged; m_WasChanged = false; return Changed; }
+
+	void Render(class CTextCursor *pCursor, bool Active);
 };
 
 #endif

@@ -16,7 +16,7 @@ CMenus::CListBox::CListBox()
 	m_ScrollOffset = vec2(0,0);
 	m_ListBoxUpdateScroll = false;
 	m_aFilterString[0] = '\0';
-	m_OffsetFilter = 0.0f;
+	m_FilterInput.SetBuffer(m_aFilterString, sizeof(m_aFilterString));
 }
 
 void CMenus::CListBox::DoBegin(const CUIRect *pRect)
@@ -33,12 +33,12 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 
 	// background
 	View.HSplitTop(HeaderHeight+Spacing, &Header, 0);
-	m_pRenderTools->DrawUIRect(&Header, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_T, 5.0f);
+	Header.Draw(vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 5.0f, m_BackgroundCorners&CUIRect::CORNER_T);
 
 	// draw header
 	View.HSplitTop(HeaderHeight, &Header, &View);
 	Header.y += 2.0f;
-	m_pUI->DoLabel(&Header, pTitle, Header.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+	m_pUI->DoLabel(&Header, pTitle, Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 
 	View.HSplitTop(Spacing, &Header, &View);
 
@@ -60,19 +60,19 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 
 	// background
 	View.HSplitTop(FilterHeight+Spacing, &Filter, 0);
-	m_pRenderTools->DrawUIRect(&Filter, vec4(0.0f, 0.0f, 0.0f, 0.25f), 0, 5.0f);
+	Filter.Draw(vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 5.0f, CUIRect::CORNER_NONE);
 
 	// draw filter
 	View.HSplitTop(FilterHeight, &Filter, &View);
 	Filter.Margin(Spacing, &Filter);
 
-	float FontSize = Filter.h*ms_FontmodHeight*0.8f;
+	float FontSize = Filter.h*CUI::ms_FontmodHeight*0.8f;
 
 	CUIRect Label, EditBox;
 	Filter.VSplitLeft(Filter.w/5.0f, &Label, &EditBox);
 	Label.y += Spacing;
-	m_pUI->DoLabel(&Label, Localize("Search:"), FontSize, CUI::ALIGN_CENTER);
-	bool Changed = m_pMenus->DoEditBox(m_aFilterString, &EditBox, m_aFilterString, sizeof(m_aFilterString), FontSize, &m_OffsetFilter);
+	m_pUI->DoLabel(&Label, Localize("Search:"), FontSize, TEXTALIGN_CENTER);
+	bool Changed = m_pUI->DoEditBox(&m_FilterInput, &EditBox, FontSize);
 
 	View.HSplitTop(Spacing, &Filter, &View);
 
@@ -88,7 +88,7 @@ void CMenus::CListBox::DoFooter(const char *pBottomText, float FooterHeight)
 }
 
 void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, 
-							int SelectedIndex, const CUIRect *pRect, bool Background, bool *pActive)
+							int SelectedIndex, const CUIRect *pRect, bool Background, bool *pActive, int BackgroundCorners)
 {
 	CUIRect View;
 	if(pRect)
@@ -97,8 +97,9 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 		View = m_ListBoxView;
 
 	// background
+	m_BackgroundCorners = BackgroundCorners;
 	if(Background)
-		m_pRenderTools->DrawUIRect(&View, vec4(0.0f, 0.0f, 0.0f, 0.25f), CUI::CORNER_B, 5.0f);
+		View.Draw(vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 5.0f, m_BackgroundCorners&CUIRect::CORNER_B);
 
 	// draw footers
 	if(m_pBottomText)
@@ -107,7 +108,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 		View.HSplitBottom(m_FooterHeight, &View, &Footer);
 		Footer.VSplitLeft(10.0f, 0, &Footer);
 		Footer.y += 2.0f;
-		m_pUI->DoLabel(&Footer, m_pBottomText, Footer.h*ms_FontmodHeight*0.8f, CUI::ALIGN_CENTER);
+		m_pUI->DoLabel(&Footer, m_pBottomText, Footer.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
 	}
 
 	// setup the variables
@@ -125,9 +126,9 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 	// handle input
 	if(!pActive || *pActive)
 	{
-		if(m_pMenus->m_DownArrowPressed)
+		if(m_pUI->ConsumeHotkey(CUI::HOTKEY_DOWN))
 			m_ListBoxNewSelOffset += 1;
-		if(m_pMenus->m_UpArrowPressed)
+		if(m_pUI->ConsumeHotkey(CUI::HOTKEY_UP))
 			m_ListBoxNewSelOffset -= 1;
 	}
 
@@ -194,7 +195,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 		{
 			m_ListBoxDoneEvents = 1;
 
-			if(m_pMenus->m_EnterPressed || (s_ItemClicked && m_pInput->MouseDoubleClick()))
+			if(m_pUI->ConsumeHotkey(CUI::HOTKEY_ENTER) || (s_ItemClicked && m_pInput->MouseDoubleClick()))
 			{
 				m_ListBoxItemActivated = true;
 				m_pUI->SetActiveItem(0);
@@ -202,12 +203,12 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 		}
 
 		CUIRect r = Item.m_Rect;
-		m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f), CUI::CORNER_ALL, 5.0f);
+		r.Draw(vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f));
 	}
 	/*else*/ if(m_pUI->HotItem() == pId && !m_ScrollRegion.IsAnimating())
 	{
 		CUIRect r = Item.m_Rect;
-		m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, 0.33f), CUI::CORNER_ALL, 5.0f);
+		r.Draw(vec4(1, 1, 1, 0.33f));
 	}
 
 	return Item;
@@ -217,7 +218,7 @@ CMenus::CListboxItem CMenus::CListBox::DoSubheader()
 {
 	CListboxItem Item = DoNextRow();
 	CUIRect r = Item.m_Rect;
-	m_pRenderTools->DrawUIRect(&r, vec4(1, 1, 1, 0.2f), 0, 0.0f);
+	r.Draw(vec4(1, 1, 1, 0.2f), 0.0f, CUIRect::CORNER_NONE);
 	return Item;
 }
 

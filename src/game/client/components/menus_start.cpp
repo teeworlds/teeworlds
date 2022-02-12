@@ -39,7 +39,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
 	static CButtonContainer s_SettingsButton;
-	if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, Config()->m_ClShowStartMenuImages ? "settings" : 0, CUI::CORNER_ALL, Rounding, 0.5f) || CheckHotKey(KEY_S))
+	if(DoButton_Menu(&s_SettingsButton, Localize("Settings"), 0, &Button, Config()->m_ClShowStartMenuImages ? "settings" : 0, CUIRect::CORNER_ALL, Rounding, 0.5f) || CheckHotKey(KEY_S))
 		NewPage = PAGE_SETTINGS;
 	
 	/*TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
@@ -53,7 +53,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	}
 	else
 	{
-		if(DoButton_Menu(&s_LocalServerButton, Localize("Local server"), 0, &Button, CUI::CORNER_ALL, Rounding, 0.5f))
+		if(DoButton_Menu(&s_LocalServerButton, Localize("Local server"), 0, &Button, CUIRect::CORNER_ALL, Rounding, 0.5f))
 		{
 		}
 	}*/
@@ -61,7 +61,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
 	static CButtonContainer s_DemoButton;
-	if(DoButton_Menu(&s_DemoButton, Localize("Demos"), 0, &Button, Config()->m_ClShowStartMenuImages ? "demos" : 0, CUI::CORNER_ALL, Rounding, 0.5f) || CheckHotKey(KEY_D))
+	if(DoButton_Menu(&s_DemoButton, Localize("Demos"), 0, &Button, Config()->m_ClShowStartMenuImages ? "demos" : 0, CUIRect::CORNER_ALL, Rounding, 0.5f) || CheckHotKey(KEY_D))
 	{
 		NewPage = PAGE_DEMOS;
 		DemolistPopulate();
@@ -73,7 +73,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
 	static CButtonContainer s_MapEditorButton;
-	if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, Config()->m_ClShowStartMenuImages ? "editor" : 0, CUI::CORNER_ALL, Rounding, 0.5f) || (!EditorHotkeyWasPressed && Client()->LocalTime() - EditorHotKeyChecktime < 0.1f && CheckHotKey(KEY_E)))
+	if(DoButton_Menu(&s_MapEditorButton, Localize("Editor"), 0, &Button, Config()->m_ClShowStartMenuImages ? "editor" : 0, CUIRect::CORNER_ALL, Rounding, 0.5f) || (!EditorHotkeyWasPressed && Client()->LocalTime() - EditorHotKeyChecktime < 0.1f && CheckHotKey(KEY_E)))
 	{
 		Config()->m_ClEditor = 1;
 		Input()->MouseModeRelative();
@@ -88,7 +88,7 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 	TopMenu.HSplitBottom(5.0f, &TopMenu, 0); // little space
 	TopMenu.HSplitBottom(40.0f, &TopMenu, &Button);
 	static CButtonContainer s_PlayButton;
-	if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, Config()->m_ClShowStartMenuImages ? "play_game" : 0, CUI::CORNER_ALL, Rounding, 0.5f) || m_EnterPressed || CheckHotKey(KEY_P))
+	if(DoButton_Menu(&s_PlayButton, Localize("Play"), 0, &Button, Config()->m_ClShowStartMenuImages ? "play_game" : 0, CUIRect::CORNER_ALL, Rounding, 0.5f) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER) || CheckHotKey(KEY_P))
 		NewPage = Config()->m_UiBrowserPage;
 	
 	BottomMenu.HSplitTop(90.0f, 0, &BottomMenu);
@@ -96,28 +96,26 @@ void CMenus::RenderStartMenu(CUIRect MainView)
 
 	BottomMenu.HSplitTop(40.0f, &Button, &TopMenu);
 	static CButtonContainer s_QuitButton;
-	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, 0, CUI::CORNER_ALL, Rounding, 0.5f) || m_EscapePressed || CheckHotKey(KEY_Q))
+	if(DoButton_Menu(&s_QuitButton, Localize("Quit"), 0, &Button, 0, CUIRect::CORNER_ALL, Rounding, 0.5f) || UI()->ConsumeHotkey(CUI::HOTKEY_ESCAPE) || CheckHotKey(KEY_Q))
 		m_Popup = POPUP_QUIT;
 
 	// render version
 	CUIRect Version;
 	MainView.HSplitBottom(50.0f, 0, &Version);
 	Version.VMargin(50.0f, &Version);
-	char aBuf[64];
+	UI()->DoLabel(&Version, GAME_RELEASE_VERSION, 14.0f, TEXTALIGN_TR);
+
 	if(str_comp(Client()->LatestVersion(), "0") != 0)
 	{
+		char aBuf[64];
 		str_format(aBuf, sizeof(aBuf), Localize("Teeworlds %s is out! Download it at www.teeworlds.com!"), Client()->LatestVersion());
 		TextRender()->TextColor(1.0f, 0.4f, 0.4f, 1.0f);
-		UI()->DoLabel(&Version, aBuf, 14.0f, CUI::ALIGN_CENTER);
-		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
+		TextRender()->TextSecondaryColor(0.0f, 0.0f, 0.0f, 0.5f);
+		UI()->DoLabel(&TopMenu, aBuf, 14.0f, TEXTALIGN_MC, TopMenu.w * 0.9f, true);
+		TextRender()->TextColor(CUI::ms_DefaultTextColor);
+		TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 	}
-	UI()->DoLabel(&Version, GAME_RELEASE_VERSION, 14.0f, CUI::ALIGN_RIGHT);
 
 	if(NewPage != -1)
 		SetMenuPage(NewPage);
-}
-
-void CMenus::RenderLogo(CUIRect MainView)
-{
-	
 }

@@ -79,7 +79,7 @@ void Run(unsigned short Port, NETADDR Dest)
 			}
 
 			// create new packet
-			CPacket *p = (CPacket *)mem_alloc(sizeof(CPacket)+Bytes, 1);
+			CPacket *p = (CPacket *)mem_alloc(sizeof(CPacket)+Bytes);
 
 			if(net_addr_comp(&From, &Dest, true) == 0)
 				p->m_SendTo = Src; // from the server
@@ -206,7 +206,7 @@ void Run(unsigned short Port, NETADDR Dest)
 	}
 }
 
-int main(int argc, char **argv) // ignore_convention
+int main(int argc, const char **argv)
 {
 	NETADDR Addr = {NETTYPE_IPV4, {127,0,0,1},8303};
 	dbg_logger_stdout();

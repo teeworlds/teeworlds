@@ -65,7 +65,7 @@ inline void AppendDecimals(char *pBuf, int Size, int Time, int Precision)
 			0
 		};
 		char *pDecimals = Time < 0 ? aInvalid : aMSec;
-		pDecimals[min(Precision, 3)+1] = 0;
+		pDecimals[minimum(Precision, 3)+1] = 0;
 		str_append(pBuf, pDecimals, Size);
 	}
 }
@@ -306,7 +306,7 @@ void CGameClient::OnConsoleInit()
 
 	// add the some console commands
 	Console()->Register("team", "i[team]", CFGFLAG_CLIENT, ConTeam, this, "Switch team");
-	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Kill yourself");
+	Console()->Register("kill", "", CFGFLAG_CLIENT, ConKill, this, "Respawn");
 	Console()->Register("ready_change", "", CFGFLAG_CLIENT, ConReadyChange, this, "Change ready state");
 
 	Console()->Chain("add_friend", ConchainFriendUpdate, this);
@@ -351,7 +351,7 @@ void CGameClient::OnInit()
 
 	// propagate pointers
 	m_UI.Init(Config(), Graphics(), Input(), TextRender());
-	m_RenderTools.Init(Config(), Graphics(), UI());
+	m_RenderTools.Init(Config(), Graphics());
 
 	int64 Start = time_get();
 
@@ -585,20 +585,15 @@ void CGameClient::StartRendering()
 	else if(m_pMenus->IsBackgroundNeeded())
 	{
 		// render background color
-		float sw = 300 * Graphics()->ScreenAspect();
-		float sh = 300;
-		Graphics()->MapScreen(0, 0, sw, sh);
+		const float ScreenHeight = 300.0f;
+		const float ScreenWidth = ScreenHeight * Graphics()->ScreenAspect();
+		const vec4 Bottom(0.45f, 0.45f, 0.45f, 1.0f);
+		const vec4 Top(0.45f, 0.45f, 0.45f, 1.0f);
+		Graphics()->MapScreen(0, 0, ScreenWidth, ScreenHeight);
 		Graphics()->TextureClear();
 		Graphics()->QuadsBegin();
-		vec4 Bottom(0.45f, 0.45f, 0.45f, 1.0f);
-		vec4 Top(0.45f, 0.45f, 0.45f, 1.0f);
-		IGraphics::CColorVertex Array[4] = {
-			IGraphics::CColorVertex(0, Top.r, Top.g, Top.b, Top.a),
-			IGraphics::CColorVertex(1, Top.r, Top.g, Top.b, Top.a),
-			IGraphics::CColorVertex(2, Bottom.r, Bottom.g, Bottom.b, Bottom.a),
-			IGraphics::CColorVertex(3, Bottom.r, Bottom.g, Bottom.b, Bottom.a) };
-		Graphics()->SetColorVertex(Array, 4);
-		IGraphics::CQuadItem QuadItem(0, 0, sw, sh);
+		Graphics()->SetColor4(Top, Top, Bottom, Bottom);
+		IGraphics::CQuadItem QuadItem(0, 0, ScreenWidth, ScreenHeight);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
 		Graphics()->QuadsEnd();
 	}
@@ -1067,7 +1062,7 @@ void CGameClient::ProcessEvents()
 		if(Item.m_Type == NETEVENTTYPE_DAMAGE)
 		{
 			CNetEvent_Damage *ev = (CNetEvent_Damage *)pData;
-			m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), ev->m_HealthAmount + ev->m_ArmorAmount);
+			m_pEffects->DamageIndicator(vec2(ev->m_X, ev->m_Y), ev->m_HealthAmount + ev->m_ArmorAmount, ev->m_Angle / 256.0f, ev->m_ClientID);
 		}
 		else if(Item.m_Type == NETEVENTTYPE_EXPLOSION)
 		{
@@ -1297,8 +1292,8 @@ void CGameClient::OnNewSnapshot()
 						pCharInfo->m_Prev = *((const CNetObj_Character *)pOld);
 
 						// limit evolving to 3 seconds
-						int EvolvePrevTick = min(pCharInfo->m_Prev.m_Tick + Client()->GameTickSpeed()*3, Client()->PrevGameTick());
-						int EvolveCurTick = min(pCharInfo->m_Cur.m_Tick + Client()->GameTickSpeed()*3, Client()->GameTick());
+						int EvolvePrevTick = minimum(pCharInfo->m_Prev.m_Tick + Client()->GameTickSpeed()*3, Client()->PrevGameTick());
+						int EvolveCurTick = minimum(pCharInfo->m_Cur.m_Tick + Client()->GameTickSpeed()*3, Client()->GameTick());
 
 						// reuse the evolved char
 						if(m_aClients[Item.m_ID].m_Evolved.m_Tick == EvolvePrevTick)

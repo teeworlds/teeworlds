@@ -1,4 +1,7 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12...3.19.1)
+if(CMAKE_VERSION VERSION_LESS 3.12)
+  cmake_policy(VERSION ${CMAKE_VERSION})
+endif()
 
 file(STRINGS src/game/version.h VERSION_LINE
   LIMIT_COUNT 1
@@ -17,32 +20,15 @@ else()
   message(FATAL_ERROR "Couldn't parse version from src/game/version.h")
 endif()
 
-if(POLICY CMP0017)
-  cmake_policy(SET CMP0017 NEW)
-endif()
-
-if(POLICY CMP0072)
-  cmake_policy(SET CMP0072 OLD)
-endif()
-
-if(POLICY CMP0091)
-  cmake_policy(SET CMP0091 NEW)
-endif()
-
-if(POLICY CMP0092)
-  cmake_policy(SET CMP0092 NEW)
-endif()
-
-if(POLICY CMP0048)
-  cmake_policy(SET CMP0048 NEW)
-  project(teeworlds VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
-else()
-  project(teeworlds)
+# Extra support for CMake pre-3.0
+if(NOT POLICY CMP0048)
   set(PROJECT_VERSION_MAJOR ${VERSION_MAJOR})
   set(PROJECT_VERSION_MINOR ${VERSION_MINOR})
   set(PROJECT_VERSION_PATCH ${VERSION_PATCH})
   set(PROJECT_VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 endif()
+
+project(teeworlds VERSION ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH})
 
 set(ORIGINAL_CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH})
 set(ORIGINAL_CMAKE_REQUIRED_INCLUDES ${CMAKE_REQUIRED_INCLUDES})
@@ -81,12 +67,13 @@ if(TARGET_OS STREQUAL "windows")
 endif()
 
 option(CLIENT "Compile client" ON)
+option(HEADLESS_CLIENT "Build the client without graphics" OFF)
 option(DOWNLOAD_DEPENDENCIES "Download dependencies (only available on Windows)" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DOWNLOAD_GTEST "Download and compile GTest if not found" ${AUTO_DEPENDENCIES_DEFAULT})
 option(PREFER_BUNDLED_LIBS "Prefer bundled libraries over system libraries" ${AUTO_DEPENDENCIES_DEFAULT})
 option(DEV "Don't generate stuff necessary for packaging" OFF)
 
-set(OpenGL_GL_PREFERENCE LEGACY)
+set(OpenGL_GL_PREFERENCE GLVND)
 
 # Set the default build type to Release
 if(NOT(CMAKE_BUILD_TYPE))
@@ -412,9 +399,12 @@ elseif(TARGET_OS STREQUAL "mac")
 else()
   set(PLATFORM_CLIENT)
   find_package(OpenGL)
-  find_package(X11)
-  set(PLATFORM_CLIENT_LIBS ${OPENGL_gl_LIBRARY} ${X11_X11_LIB})
-  set(PLATFORM_CLIENT_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR} ${X11_X11_INCLUDE_PATH})
+  if(CMAKE_VERSION VERSION_LESS 3.10)
+    set(PLATFORM_CLIENT_LIBS ${OPENGL_gl_LIBRARY})
+  else()
+    set(PLATFORM_CLIENT_LIBS ${OPENGL_opengl_LIBRARY})
+  endif()
+  set(PLATFORM_CLIENT_INCLUDE_DIRS ${OPENGL_INCLUDE_DIR})
   if(TARGET_OS STREQUAL "linux")
     set(PLATFORM_LIBS rt) # clock_gettime for glibc < 2.17
   else()
@@ -445,6 +435,15 @@ if(NOT(GTEST_FOUND) AND DOWNLOAD_GTEST)
       message(WARNING "Build step for googletest failed: ${result}")
       set(DOWNLOAD_GTEST OFF)
     else()
+      file(GLOB_RECURSE DDNET_GTEST_CMAKELISTS ${CMAKE_BINARY_DIR}/googletest-src/CMakeLists.txt)
+      foreach(file ${DDNET_GTEST_CMAKELISTS})
+        file(READ ${file} CONTENTS)
+        string(REPLACE "cmake_minimum_required(VERSION 2.6.4)" "cmake_minimum_required(VERSION 2.8.12...3.19.1)" CONTENTS "${CONTENTS}")
+        string(REPLACE "cmake_minimum_required(VERSION 2.6.4)" "cmake_minimum_required(VERSION 2.8.12...3.19.1)" CONTENTS "${CONTENTS}")
+        string(REPLACE "cmake_minimum_required(VERSION 2.8.8)" "cmake_minimum_required(VERSION 2.8.12...3.19.1)" CONTENTS "${CONTENTS}")
+        file(WRITE ${file} "${CONTENTS}")
+      endforeach()
+
       # Prevent overriding the parent project's compiler/linker settings on Windows
       set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
@@ -894,6 +893,7 @@ set(EXPECTED_DATA
   editor/checker.png
   editor/cursor.png
   editor/entities.png
+  editor/materials.png
   emoticons.png
   fonts/DejaVuSans.ttf
   fonts/SourceHanSans.ttc
@@ -1150,6 +1150,7 @@ set(EXPECTED_DATA
   ui/menuimages/settings.png
   ui/no_skinpart.png
   ui/sound_icons.png
+  ui/themes/auto.png
   ui/themes/heavens.png
   ui/themes/heavens_day.map
   ui/themes/heavens_night.map
@@ -1282,7 +1283,6 @@ set_src(BASE GLOB_RECURSE src/base
   tl/algorithm.h
   tl/allocator.h
   tl/array.h
-  tl/base.h
   tl/range.h
   tl/sorted_array.h
   tl/string.h
@@ -1302,6 +1302,7 @@ set_src(ENGINE_INTERFACE GLOB src/engine
   kernel.h
   keys.h
   map.h
+  mapchecker.h
   masterserver.h
   message.h
   server.h
@@ -1342,7 +1343,6 @@ set_src(ENGINE_SHARED GLOB src/engine/shared
   masterserver.cpp
   memheap.cpp
   memheap.h
-  message.h
   netban.cpp
   netban.h
   network.cpp
@@ -1409,6 +1409,7 @@ if(CLIENT)
     contacts.h
     graphics_threaded.cpp
     graphics_threaded.h
+    graphics_threaded_null.h
     input.cpp
     input.h
     keynames.h
@@ -1469,7 +1470,6 @@ if(CLIENT)
     components/menus_demo.cpp
     components/menus_ingame.cpp
     components/menus_listbox.cpp
-    components/menus_popups.cpp
     components/menus_scrollregion.cpp
     components/menus_settings.cpp
     components/menus_start.cpp
@@ -1506,6 +1506,8 @@ if(CLIENT)
     render_map.cpp
     ui.cpp
     ui.h
+    ui_rect.cpp
+    ui_rect.h
   )
   set_src(GAME_EDITOR GLOB src/game/editor
     auto_map.cpp
@@ -1516,6 +1518,7 @@ if(CLIENT)
     layer_game.cpp
     layer_quads.cpp
     layer_tiles.cpp
+    layer_material.cpp
     popups.cpp
   )
   set(GAME_GENERATED_CLIENT
@@ -1726,11 +1729,15 @@ add_custom_target(everything DEPENDS ${TARGETS_OWN})
 
 if(GTEST_FOUND OR DOWNLOAD_GTEST)
   set_src(TESTS GLOB src/test
+    bytes_be.cpp
+    compression.cpp
     datafile.cpp
     fs.cpp
     git_revision.cpp
     hash.cpp
+    io.cpp
     jsonwriter.cpp
+    sorted_array.cpp
     storage.cpp
     str.cpp
     test.cpp
@@ -2118,6 +2125,10 @@ foreach(target ${TARGETS_OWN})
     target_compile_options(${target} PRIVATE /wd4267) # Possible loss of data (size_t - int on win64).
     target_compile_options(${target} PRIVATE /wd4800) # Implicit conversion of int to bool.
   endif()
+  if(TARGET_OS STREQUAL "windows")
+    target_compile_definitions(${target} PRIVATE UNICODE) # Windows headers
+    target_compile_definitions(${target} PRIVATE _UNICODE) # C-runtime
+  endif()
   if(OUR_FLAGS_OWN)
     target_compile_options(${target} PRIVATE ${OUR_FLAGS_OWN})
   endif()
@@ -2129,6 +2140,9 @@ foreach(target ${TARGETS_OWN})
   if(CRYPTO_FOUND)
     target_compile_definitions(${target} PRIVATE CONF_OPENSSL)
     target_include_directories(${target} PRIVATE ${CRYPTO_INCLUDE_DIRS})
+  endif()
+  if(HEADLESS_CLIENT)
+    target_compile_definitions(${target} PRIVATE CONF_HEADLESS_CLIENT)
   endif()
 endforeach()
 

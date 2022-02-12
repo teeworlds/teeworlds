@@ -62,6 +62,7 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	IEngineTextRender *m_pTextRender;
 	IGameClient *m_pGameClient;
 	IEngineMap *m_pMap;
+	IMapChecker *m_pMapChecker;
 	IConfigManager *m_pConfigManager;
 	CConfig *m_pConfig;
 	IConsole *m_pConsole;
@@ -81,7 +82,6 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	class CServerBrowser m_ServerBrowser;
 	class CFriends m_Friends;
 	class CBlacklist m_Blacklist;
-	class CMapChecker m_MapChecker;
 
 	char m_aServerAddressStr[256];
 	char m_aServerPassword[128];
@@ -303,7 +303,6 @@ public:
 	static void Con_RconAuth(IConsole::IResult *pResult, void *pUserData);
 	static void Con_AddFavorite(IConsole::IResult *pResult, void *pUserData);
 	static void Con_RemoveFavorite(IConsole::IResult *pResult, void *pUserData);
-	static void Con_Play(IConsole::IResult *pResult, void *pUserData);
 	static void Con_Record(IConsole::IResult *pResult, void *pUserData);
 	static void Con_StopRecord(IConsole::IResult *pResult, void *pUserData);
 	static void Con_AddDemoMarker(IConsole::IResult *pResult, void *pUserData);
@@ -318,7 +317,7 @@ public:
 	const char *DemoPlayer_Play(const char *pFilename, int StorageType);
 	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp);
 	void DemoRecorder_HandleAutoStart();
-	void DemoRecorder_Stop();
+	void DemoRecorder_Stop(bool ErrorIfNotRecording = false);
 	void DemoRecorder_AddDemoMarker();
 	void RecordGameMessage(bool State) { m_RecordGameMessage = State; }
 

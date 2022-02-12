@@ -9,6 +9,7 @@
 #include <game/layers.h>
 #include <game/gamecore.h>
 #include "render.h"
+#include "ui.h"
 
 class CGameClient : public IGameClient
 {
@@ -90,15 +91,15 @@ public:
 	class IDemoRecorder *DemoRecorder() const { return m_pDemoRecorder; }
 	class IServerBrowser *ServerBrowser() const { return m_pServerBrowser; }
 	class CRenderTools *RenderTools() { return &m_RenderTools; }
-	class CLayers *Layers() { return &m_Layers; };
-	class CCollision *Collision() { return &m_Collision; };
+	class CLayers *Layers() { return &m_Layers; }
+	class CCollision *Collision() { return &m_Collision; }
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
 	class IBlacklist *Blacklist() { return m_pBlacklist; }
 
-	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
-	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
-	const char *NetmsgFailedOn() { return m_NetObjHandler.FailedMsgOn(); };
+	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); }
+	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); }
+	const char *NetmsgFailedOn() { return m_NetObjHandler.FailedMsgOn(); }
 
 	bool m_SuppressEvents;
 

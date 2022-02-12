@@ -47,8 +47,8 @@ inline T bezier(const T p0, const T p1, const T p2, const T p3, TB amount)
 	return mix(c20, c21, amount); // c30
 }
 
-inline int random_int() { return (((rand() & 0xffff) << 16) | (rand() & 0xffff)) & 0x7FFFFFFF; };
-inline float frandom() { return rand()/(float)(RAND_MAX); }
+inline int random_int() { return (((rand() & 0xffff) << 16) | (rand() & 0xffff)) & 0x7FFFFFFF; }
+inline float random_float() { return rand()/(float)(RAND_MAX); }
 
 // float to fixed
 inline int f2fx(float v) { return (int)(v*(float)(1<<10)); }
@@ -82,8 +82,8 @@ public:
 
 const float pi = 3.1415926535897932384626433f;
 
-template <typename T> inline T min(T a, T b) { return a<b?a:b; }
-template <typename T> inline T max(T a, T b) { return a>b?a:b; }
+template <typename T> inline T minimum(T a, T b) { return a<b?a:b; }
+template <typename T> inline T maximum(T a, T b) { return a>b?a:b; }
 template <typename T> inline T absolute(T a) { return a<T(0)?-a:a; }
 
 #endif // BASE_MATH_H

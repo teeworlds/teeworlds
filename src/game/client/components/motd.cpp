@@ -36,27 +36,29 @@ void CMotd::OnRender()
 	if(!IsActive())
 		return;
 
-	float Width = 400*3.0f*Graphics()->ScreenAspect();
-	float Height = 400*3.0f;
+	const float Height = 400.0f * 3.0f;
+	const float Width = Height * Graphics()->ScreenAspect();
 
 	Graphics()->MapScreen(0, 0, Width, Height);
 
-	float h = 800.0f;
+	const int MaxLines = 24;
+	const float TextSize = 32.0f;
+
+	float h = MaxLines * TextSize + 2 * 25.0f;
 	float w = 650.0f;
 	float x = Width/2 - w/2;
 	float y = 150.0f;
 	CUIRect Rect = {x, y, w, h};
 
 	Graphics()->BlendNormal();
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.5f), 30.0f);
+	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.5f), 30.0f);
 
-	Rect.Margin(30.0f, &Rect);
+	Rect.Margin(25.0f, &Rect);
 
-	float TextSize = 32.0f;
-	m_ServerMotdCursor.m_Flags = TEXTFLAG_ALLOW_NEWLINE | TEXTFLAG_WORD_WRAP;
+	m_ServerMotdCursor.m_Flags = TEXTFLAG_ALLOW_NEWLINE | TEXTFLAG_WORD_WRAP | TEXTFLAG_ELLIPSIS;
 	m_ServerMotdCursor.m_FontSize = TextSize;
 	m_ServerMotdCursor.m_MaxWidth = Rect.w;
-	m_ServerMotdCursor.m_MaxLines = (int)(Rect.h/TextSize);
+	m_ServerMotdCursor.m_MaxLines = MaxLines;
 
 	m_ServerMotdCursor.Reset(m_ServerMotdTime);
 	m_ServerMotdCursor.MoveTo(Rect.x, Rect.y);

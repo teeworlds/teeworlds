@@ -11,6 +11,8 @@ CLayers::CLayers()
 	m_pGameGroup = 0;
 	m_pGameLayer = 0;
 	m_pMap = 0;
+
+	m_pMaterialLayer = 0;
 }
 
 void CLayers::Init(class IKernel *pKernel, IMap *pMap)
@@ -54,7 +56,21 @@ void CLayers::InitGameLayer()
 						m_pGameGroup->m_ClipH = 0;
 					}
 
-					break;
+					// return; // there can only be one game layer and game group
+				}
+				else if(pTilemap->m_Flags > TILESLAYERFLAG_GAME)  // this is some other
+				{
+					if(pTilemap->m_Version >= 5) // older versions didn't support this and we want to support everything
+					{
+						char name_buf[12];
+						IntsToStr(pTilemap->m_aName, sizeof(pTilemap->m_aName)/sizeof(int), name_buf);
+						if(str_comp_nocase(name_buf, "Material") == 0)  // save files shouldn't be localized
+						{
+							if(!m_pMaterialLayer)
+								m_pMaterialLayer = pTilemap;
+						}
+						// Here we could find other layers without changing any mapitems
+					}
 				}
 			}
 		}

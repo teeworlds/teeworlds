@@ -79,7 +79,9 @@ CServerBrowserFilter::CServerFilter& CServerBrowserFilter::CServerFilter::operat
 		m_NumSortedServers = Other.m_NumSortedServers;
 		m_SortedServersCapacity = Other.m_SortedServersCapacity;
 
-		m_pSortedServerlist = (int *)mem_alloc(m_SortedServersCapacity * sizeof(int), 1);
+		if(m_pSortedServerlist)
+			mem_free(m_pSortedServerlist);
+		m_pSortedServerlist = (int *)mem_alloc(m_SortedServersCapacity * sizeof(int));
 		for(int i = 0; i < m_SortedServersCapacity; ++i)
 			m_pSortedServerlist[i] = Other.m_pSortedServerlist[i];
 	}
@@ -97,8 +99,8 @@ void CServerBrowserFilter::CServerFilter::Filter()
 	{
 		if(m_pSortedServerlist)
 			mem_free(m_pSortedServerlist);
-		m_SortedServersCapacity = max(1000, NumServers+NumServers/2);
-		m_pSortedServerlist = (int *)mem_alloc(m_SortedServersCapacity*sizeof(int), 1);
+		m_SortedServersCapacity = maximum(1000, NumServers+NumServers/2);
+		m_pSortedServerlist = (int *)mem_alloc(m_SortedServersCapacity*sizeof(int));
 	}
 
 	// filter the servers
@@ -231,7 +233,7 @@ void CServerBrowserFilter::CServerFilter::Filter()
 			{
 				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_FriendState = m_pServerBrowserFilter->m_pFriends->GetFriendState(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aName,
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan);
-				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState = max(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState, m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_FriendState);
+				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState = maximum(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState, m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_FriendState);
 			}
 
 			if(!(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_FRIENDS) || m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState != CContactInfo::CONTACT_NO)

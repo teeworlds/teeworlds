@@ -12,6 +12,7 @@
 class CDemoRecorder : public IDemoRecorder
 {
 	class IConsole *m_pConsole;
+	class IStorage *m_pStorage;
 	CHuffman m_Huffman;
 	IOHANDLE m_File;
 	int m_LastTickMarker;
@@ -26,8 +27,9 @@ class CDemoRecorder : public IDemoRecorder
 	void Write(int Type, const void *pData, int Size);
 public:
 	CDemoRecorder(class CSnapshotDelta *pSnapshotDelta);
+	void Init(class IConsole *pConsole, class IStorage *pStorage);
 
-	int Start(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, const char *pNetversion, const char *pMap, SHA256_DIGEST MapSha256, unsigned MapCrc, const char *pType);
+	int Start(const char *pFilename, const char *pNetversion, const char *pMap, SHA256_DIGEST MapSha256, unsigned MapCrc, const char *pType);
 	int Stop();
 	void AddDemoMarker();
 
@@ -86,6 +88,7 @@ private:
 	};
 
 	class IConsole *m_pConsole;
+	class IStorage *m_pStorage;
 	CHuffman m_Huffman;
 	IOHANDLE m_File;
 	char m_aFilename[256];
@@ -101,24 +104,24 @@ private:
 	int ReadChunkHeader(int *pType, int *pSize, int *pTick);
 	void DoTick();
 	void ScanFile();
-	int NextFrame();
 
 public:
 
-	CDemoPlayer(class CSnapshotDelta *m_pSnapshotDelta);
+	CDemoPlayer(class CSnapshotDelta *pSnapshotDelta);
+	void Init(class IConsole *pConsole, class IStorage *pStorage);
+	void SetListener(IListener *pListener);
 
-	void SetListener(IListener *pListner);
-
-	const char *Load(class IStorage *pStorage, class IConsole *pConsole, const char *pFilename, int StorageType, const char *pNetversion);
+	const char *Load(const char *pFilename, int StorageType, const char *pNetversion);
 	int Play();
 	void Pause();
 	void Unpause();
 	int Stop();
 	void SetSpeed(float Speed);
 	int SetPos(float Percent);
+	int SetPos(int WantedTick);
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
 	void GetDemoName(char *pBuffer, int BufferSize) const;
-	bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const;
+	bool GetDemoInfo(const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const;
 	int GetDemoType() const;
 
 	int Update();

@@ -399,7 +399,7 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 					{
 						char aBuf[256];
 						str_format(aBuf, sizeof(aBuf), "Invalid arguments... Usage: %s %s", pCommand->m_pName, pCommand->m_pParams);
-						Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+						Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 					}
 					else if(m_StoreCommands && pCommand->m_Flags&CFGFLAG_STORE)
 					{
@@ -415,49 +415,55 @@ void CConsole::ExecuteLineStroked(int Stroke, const char *pStr)
 			{
 				char aBuf[256];
 				str_format(aBuf, sizeof(aBuf), "Access for command %s denied.", Result.m_pCommand);
-				Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+				Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 			}
 		}
 		else if(Stroke)
 		{
 			char aBuf[256];
 			str_format(aBuf, sizeof(aBuf), "No such command: %s.", Result.m_pCommand);
-			Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+			Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 		}
 
 		pStr = pNextPart;
 	}
 }
 
-void CConsole::PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser)
+int CConsole::PossibleCommands(const char *pStr, int FlagMask, bool Temp, FPossibleCallback pfnCallback, void *pUser)
 {
+	int Index = 0;
 	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
-		if(pCommand->m_Flags&FlagMask && pCommand->m_Temp == Temp)
+		if(pCommand->m_Flags&FlagMask && pCommand->m_Temp == Temp && str_find_nocase(pCommand->m_pName, pStr))
 		{
-			if(str_find_nocase(pCommand->m_pName, pStr))
-				pfnCallback(pCommand->m_pName, pUser);
+			pfnCallback(Index, pCommand->m_pName, pUser);
+			Index++;
 		}
 	}
+	return Index;
 }
 
-void CConsole::PossibleMaps(const char *pStr, FPossibleCallback pfnCallback, void *pUser)
+int CConsole::PossibleMaps(const char *pStr, FPossibleCallback pfnCallback, void *pUser)
 {
+	int Index = 0;
 	for(CMapListEntryTemp *pMapEntry = m_pFirstMapEntry; pMapEntry; pMapEntry = pMapEntry->m_pNext)
 	{
 		if(str_find_nocase(pMapEntry->m_aName, pStr))
-			pfnCallback(pMapEntry->m_aName, pUser);
+		{
+			pfnCallback(Index, pMapEntry->m_aName, pUser);
+			Index++;
+		}
 	}
+	return Index;
 }
 
 CConsole::CCommand *CConsole::FindCommand(const char *pName, int FlagMask)
 {
 	for(CCommand *pCommand = m_pFirstCommand; pCommand; pCommand = pCommand->m_pNext)
 	{
-		if(pCommand->m_Flags&FlagMask)
+		if(pCommand->m_Flags&FlagMask && str_comp_nocase(pCommand->m_pName, pName) == 0)
 		{
-			if(str_comp_nocase(pCommand->m_pName, pName) == 0)
-				return pCommand;
+			return pCommand;
 		}
 	}
 
@@ -497,19 +503,18 @@ bool CConsole::ExecuteFile(const char *pFilename)
 	m_pFirstExec = &ThisFile;
 
 	// exec the file
-	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ | IOFLAG_SKIP_BOM, IStorage::TYPE_ALL);
 
 	char aBuf[256];
 	if(File)
 	{
-		char *pLine;
-		CLineReader lr;
-
 		str_format(aBuf, sizeof(aBuf), "executing '%s'", pFilename);
 		Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
-		lr.Init(File);
 
-		while((pLine = lr.Get()))
+		CLineReader LineReader;
+		LineReader.Init(File);
+		const char *pLine;
+		while((pLine = LineReader.Get()))
 			ExecuteLine(pLine);
 
 		io_close(File);
@@ -533,7 +538,7 @@ bool CConsole::ExecuteFile(const char *pFilename)
 
 void CConsole::Con_Echo(IResult *pResult, void *pUserData)
 {
-	((CConsole*)pUserData)->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Console", pResult->GetString(0));
+	((CConsole*)pUserData)->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", pResult->GetString(0));
 }
 
 void CConsole::Con_Exec(IResult *pResult, void *pUserData)
@@ -559,7 +564,7 @@ void CConsole::ConModCommandAccess(IResult *pResult, void *pUser)
 	else
 		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
 
-	pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+	pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 }
 
 void CConsole::ConModCommandStatus(IResult *pResult, void *pUser)
@@ -586,7 +591,7 @@ void CConsole::ConModCommandStatus(IResult *pResult, void *pUser)
 			}
 			else
 			{
-				pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+				pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 				mem_zero(aBuf, sizeof(aBuf));
 				str_copy(aBuf, pCommand->m_pName, sizeof(aBuf));
 				Used = Length;
@@ -594,7 +599,7 @@ void CConsole::ConModCommandStatus(IResult *pResult, void *pUser)
 		}
 	}
 	if(Used > 0)
-		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 }
 
 struct CIntVariableData
@@ -636,7 +641,7 @@ static void IntVariableCommand(IConsole::IResult *pResult, void *pUserData)
 	{
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "Value: %d", *(pData->m_pVariable));
-		pData->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+		pData->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
 		pResult->m_Value = *(pData->m_pVariable);
 	}
 }
@@ -672,33 +677,46 @@ static void StrVariableCommand(IConsole::IResult *pResult, void *pUserData)
 	{
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "Value: %s", pData->m_pStr);
-		pData->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+		pData->m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "console", aBuf);
 		str_copy(pResult->m_aValue, pData->m_pStr, sizeof(pResult->m_aValue));
+	}
+}
+
+void CConsole::TraverseChain(FCommandCallback *ppfnCallback, void **ppUserData)
+{
+	while(*ppfnCallback == Con_Chain)
+	{
+		CChain *pChainInfo = static_cast<CChain *>(*ppUserData);
+		*ppfnCallback = pChainInfo->m_pfnCallback;
+		*ppUserData = pChainInfo->m_pCallbackUserData;
 	}
 }
 
 void CConsole::Con_EvalIf(IResult *pResult, void *pUserData)
 {
-	CConsole* pConsole = static_cast<CConsole *>(pUserData);
+	CConsole *pConsole = static_cast<CConsole *>(pUserData);
 	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(0), pConsole->m_FlagMask);
 	char aBuf[128];
 	if(!pCommand)
 	{
 		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
-		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 		return;
 	}
+	FCommandCallback pfnCallback = pCommand->m_pfnCallback;
+	void *pCallbackUserData = pCommand->m_pUserData;
+	pConsole->TraverseChain(&pfnCallback, &pCallbackUserData);
 	CResult Result;
-	pCommand->m_pfnCallback(&Result, pCommand->m_pUserData);
+	pfnCallback(&Result, pCallbackUserData);
 	bool Condition = false;
-	if(pCommand->m_pfnCallback == IntVariableCommand)
+	if(pfnCallback == IntVariableCommand)
 		Condition = Result.m_Value == atoi(pResult->GetString(2));
 	else
 		Condition = !str_comp_nocase(Result.m_aValue, pResult->GetString(2));
 	if(!str_comp(pResult->GetString(1), "!="))
 		Condition = !Condition;
-	else if(str_comp(pResult->GetString(1), "==") && pCommand->m_pfnCallback == StrVariableCommand)
-		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: invalid comperator for type string");
+	else if(str_comp(pResult->GetString(1), "==") && pfnCallback == StrVariableCommand)
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", "Error: invalid comperator for type string");
 	else if(!str_comp(pResult->GetString(1), ">"))
 		Condition = Result.m_Value > atoi(pResult->GetString(2));
 	else if(!str_comp(pResult->GetString(1), "<"))
@@ -708,10 +726,10 @@ void CConsole::Con_EvalIf(IResult *pResult, void *pUserData)
 	else if(!str_comp(pResult->GetString(1), ">="))
 		Condition = Result.m_Value >= atoi(pResult->GetString(2));
 	else if(str_comp(pResult->GetString(1), "=="))
-		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: invalid comperator for type integer");
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", "Error: invalid comperator for type integer");
 
 	if(pResult->NumArguments() > 4 && str_comp(pResult->GetString(4), "else"))
-		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", "Error: expected else");
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", "Error: expected else");
 
 	if(Condition)
 		pConsole->ExecuteLine(pResult->GetString(3));
@@ -721,22 +739,14 @@ void CConsole::Con_EvalIf(IResult *pResult, void *pUserData)
 
 void CConsole::ConToggle(IConsole::IResult *pResult, void *pUser)
 {
-	CConsole* pConsole = static_cast<CConsole *>(pUser);
+	CConsole *pConsole = static_cast<CConsole *>(pUser);
 	char aBuf[128] = {0};
 	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(0), pConsole->m_FlagMask);
 	if(pCommand)
 	{
 		FCommandCallback pfnCallback = pCommand->m_pfnCallback;
 		void *pUserData = pCommand->m_pUserData;
-
-		// check for chain
-		if(pCommand->m_pfnCallback == Con_Chain)
-		{
-			CChain *pChainInfo = static_cast<CChain *>(pCommand->m_pUserData);
-			pfnCallback = pChainInfo->m_pfnCallback;
-			pUserData = pChainInfo->m_pCallbackUserData;
-		}
-
+		pConsole->TraverseChain(&pfnCallback, &pUserData);
 		if(pfnCallback == IntVariableCommand)
 		{
 			CIntVariableData *pData = static_cast<CIntVariableData *>(pUserData);
@@ -751,26 +761,20 @@ void CConsole::ConToggle(IConsole::IResult *pResult, void *pUser)
 	else
 		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(0));
 
-	if(aBuf[0] != 0)
-		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+	if(aBuf[0])
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 }
 
 void CConsole::ConToggleStroke(IConsole::IResult *pResult, void *pUser)
 {
-	CConsole* pConsole = static_cast<CConsole *>(pUser);
+	CConsole *pConsole = static_cast<CConsole *>(pUser);
 	char aBuf[128] = {0};
 	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(1), pConsole->m_FlagMask);
 	if(pCommand)
 	{
 		FCommandCallback pfnCallback = pCommand->m_pfnCallback;
-
-		// check for chain
-		if(pCommand->m_pfnCallback == Con_Chain)
-		{
-			CChain *pChainInfo = static_cast<CChain *>(pCommand->m_pUserData);
-			pfnCallback = pChainInfo->m_pfnCallback;
-		}
-
+		void *pUserData = pCommand->m_pUserData;
+		pConsole->TraverseChain(&pfnCallback, &pUserData);
 		if(pfnCallback == IntVariableCommand)
 		{
 			int Val = pResult->GetInteger(0)==0 ? pResult->GetInteger(3) : pResult->GetInteger(2);
@@ -784,8 +788,8 @@ void CConsole::ConToggleStroke(IConsole::IResult *pResult, void *pUser)
 	else
 		str_format(aBuf, sizeof(aBuf), "No such command: '%s'.", pResult->GetString(1));
 
-	if(aBuf[0] != 0)
-		pConsole->Print(OUTPUT_LEVEL_STANDARD, "Console", aBuf);
+	if(aBuf[0])
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", aBuf);
 }
 
 CConsole::CConsole(int FlagMask)
@@ -828,8 +832,16 @@ CConsole::~CConsole()
 	{
 		CCommand *pNext = pCommand->m_pNext;
 
-		if(pCommand->m_pfnCallback == Con_Chain)
-			mem_free(static_cast<CChain *>(pCommand->m_pUserData));
+		FCommandCallback pfnCallback = pCommand->m_pfnCallback;
+		void *pUserData = pCommand->m_pUserData;
+		while(pfnCallback == Con_Chain)
+		{
+			CChain *pChainInfo = static_cast<CChain *>(pUserData);
+			pfnCallback = pChainInfo->m_pfnCallback;
+			pUserData = pChainInfo->m_pCallbackUserData;
+			mem_free(pChainInfo);
+		}
+
 		mem_free(pCommand);
 
 		pCommand = pNext;
@@ -928,7 +940,7 @@ void CConsole::Register(const char *pName, const char *pParams,
 	bool DoAdd = false;
 	if(pCommand == 0)
 	{
-		pCommand = new(mem_alloc(sizeof(CCommand), sizeof(void*))) CCommand(Flags&CFGFLAG_BASICACCESS);
+		pCommand = new(mem_alloc(sizeof(CCommand))) CCommand(Flags&CFGFLAG_BASICACCESS);;
 		DoAdd = true;
 	}
 	pCommand->m_pfnCallback = pfnFunc;
@@ -1104,7 +1116,7 @@ void CConsole::Chain(const char *pName, FChainCommandCallback pfnChainFunc, void
 		return;
 	}
 
-	CChain *pChainInfo = (CChain *)mem_alloc(sizeof(CChain), sizeof(void*));
+	CChain *pChainInfo = (CChain *)mem_alloc(sizeof(CChain));
 
 	// store info
 	pChainInfo->m_pfnChainCallback = pfnChainFunc;

@@ -22,7 +22,7 @@ static void AnimSeqEval(CAnimSequence *pSeq, float Time, CAnimKeyframe *pFrame)
 	}
 	else
 	{
-		//time = max(0.0f, min(1.0f, time / duration)); // TODO: use clamp
+		//time = maximum(0.0f, minimum(1.0f, time / duration)); // TODO: use clamp
 		CAnimKeyframe *pFrame1 = 0;
 		CAnimKeyframe *pFrame2 = 0;
 		float Blend = 0.0f;

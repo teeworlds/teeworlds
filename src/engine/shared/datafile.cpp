@@ -148,7 +148,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 		return false;
 	}
 
-	CDatafile *pTmpDataFile = (CDatafile*)mem_alloc(AllocSize, 1);
+	CDatafile *pTmpDataFile = (CDatafile*)mem_alloc(AllocSize);
 	pTmpDataFile->m_Header = Header;
 	pTmpDataFile->m_DataStartOffset = sizeof(CDatafileHeader) + Size;
 	pTmpDataFile->m_ppDataPtrs = (char **)(pTmpDataFile+1);
@@ -177,7 +177,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	m_pDataFile = pTmpDataFile;
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	swap_endian(m_pDataFile->m_pData, sizeof(int), min(static_cast<unsigned>(Header.m_Swaplen), static_cast<unsigned>(Size)) / sizeof(int));
+	swap_endian(m_pDataFile->m_pData, sizeof(int), minimum(static_cast<unsigned>(Header.m_Swaplen), static_cast<unsigned>(Size)) / sizeof(int));
 #endif
 
 	//if(DEBUG)
@@ -295,12 +295,12 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 		if(m_pDataFile->m_Header.m_Version == 4)
 		{
 			// v4 has compressed data
-			void *pTemp = (char *)mem_alloc(DataSize, 1);
+			void *pTemp = (char *)mem_alloc(DataSize);
 			unsigned long UncompressedSize = m_pDataFile->m_Info.m_pDataSizes[Index];
 			unsigned long s;
 
 			dbg_msg("datafile", "loading data index=%d size=%d uncompressed=%lu", Index, DataSize, UncompressedSize);
-			m_pDataFile->m_ppDataPtrs[Index] = (char *)mem_alloc(UncompressedSize, 1);
+			m_pDataFile->m_ppDataPtrs[Index] = (char *)mem_alloc(UncompressedSize);
 			m_pDataFile->m_pDataSizes[Index] = UncompressedSize;
 
 			// read the compressed data
@@ -321,7 +321,7 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 		{
 			// load the data
 			dbg_msg("datafile", "loading data index=%d size=%d", Index, DataSize);
-			m_pDataFile->m_ppDataPtrs[Index] = (char *)mem_alloc(DataSize, 1);
+			m_pDataFile->m_ppDataPtrs[Index] = (char *)mem_alloc(DataSize);
 			m_pDataFile->m_pDataSizes[Index] = DataSize;
 			io_seek(m_pDataFile->m_File, m_pDataFile->m_DataStartOffset+m_pDataFile->m_Info.m_pDataOffsets[Index], IOSEEK_START);
 			io_read(m_pDataFile->m_File, m_pDataFile->m_ppDataPtrs[Index], DataSize);
@@ -504,9 +504,9 @@ bool CDataFileReader::CheckSha256(IOHANDLE Handle, const void *pSha256)
 CDataFileWriter::CDataFileWriter()
 {
 	m_File = 0;
-	m_pItemTypes = static_cast<CItemTypeInfo *>(mem_alloc(sizeof(CItemTypeInfo) * MAX_ITEM_TYPES, 1));
-	m_pItems = static_cast<CItemInfo *>(mem_alloc(sizeof(CItemInfo) * MAX_ITEMS, 1));
-	m_pDatas = static_cast<CDataInfo *>(mem_alloc(sizeof(CDataInfo) * MAX_DATAS, 1));
+	m_pItemTypes = static_cast<CItemTypeInfo *>(mem_alloc(sizeof(CItemTypeInfo) * MAX_ITEM_TYPES));
+	m_pItems = static_cast<CItemInfo *>(mem_alloc(sizeof(CItemInfo) * MAX_ITEMS));
+	m_pDatas = static_cast<CDataInfo *>(mem_alloc(sizeof(CDataInfo) * MAX_DATAS));
 }
 
 CDataFileWriter::~CDataFileWriter()
@@ -553,7 +553,7 @@ int CDataFileWriter::AddItem(int Type, int ID, int Size, const void *pData)
 	m_pItems[m_NumItems].m_Size = Size;
 
 	// copy data
-	m_pItems[m_NumItems].m_pData = mem_alloc(Size, 1);
+	m_pItems[m_NumItems].m_pData = mem_alloc(Size);
 	mem_copy(m_pItems[m_NumItems].m_pData, pData, Size);
 
 	if(!m_pItemTypes[Type].m_Num) // count item types
@@ -584,7 +584,7 @@ int CDataFileWriter::AddData(int Size, const void *pData)
 
 	CDataInfo *pInfo = &m_pDatas[m_NumDatas];
 	unsigned long s = compressBound(Size);
-	void *pCompData = mem_alloc(s, 1); // temporary buffer that we use during compression
+	void *pCompData = mem_alloc(s); // temporary buffer that we use during compression
 
 	int Result = compress((Bytef*)pCompData, &s, (Bytef*)pData, Size); // ignore_convention
 	if(Result != Z_OK)
@@ -595,7 +595,7 @@ int CDataFileWriter::AddData(int Size, const void *pData)
 
 	pInfo->m_UncompressedSize = Size;
 	pInfo->m_CompressedSize = (int)s;
-	pInfo->m_pCompressedData = mem_alloc(pInfo->m_CompressedSize, 1);
+	pInfo->m_pCompressedData = mem_alloc(pInfo->m_CompressedSize);
 	mem_copy(pInfo->m_pCompressedData, pCompData, pInfo->m_CompressedSize);
 	mem_free(pCompData);
 
@@ -608,7 +608,7 @@ int CDataFileWriter::AddDataSwapped(int Size, const void *pData)
 	dbg_assert(Size%sizeof(int) == 0, "incorrect boundary");
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
-	void *pSwapped = mem_alloc(Size, 1); // temporary buffer that we use during compression
+	void *pSwapped = mem_alloc(Size); // temporary buffer that we use during compression
 	mem_copy(pSwapped, pData, Size);
 	swap_endian(pSwapped, sizeof(int), Size/sizeof(int));
 	int Index = AddData(Size, pSwapped);

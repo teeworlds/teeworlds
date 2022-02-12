@@ -19,6 +19,7 @@ void CGameControllerLTS::OnCharacterSpawn(class CCharacter *pChr)
 	IGameController::OnCharacterSpawn(pChr);
 
 	// give start equipment
+	pChr->IncreaseArmor(5);
 	pChr->GiveWeapon(WEAPON_SHOTGUN, 10);
 	pChr->GiveWeapon(WEAPON_GRENADE, 10);
 	pChr->GiveWeapon(WEAPON_LASER, 5);

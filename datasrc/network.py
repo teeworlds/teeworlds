@@ -54,6 +54,10 @@ enum
 	SKINPART_FEET,
 	SKINPART_EYES,
 	NUM_SKINPARTS,
+
+	VOTE_CHOICE_NO = -1,
+	VOTE_CHOICE_PASS = 0,
+	VOTE_CHOICE_YES = 1
 };
 '''
 
@@ -92,6 +96,8 @@ Objects = [
 
 		NetFlag("m_PlayerFlags", PlayerFlags),
 
+		# 0 means "no wanted weapon", `1+weapon` means that `weapon` is wanted,
+		# and ninja is not a valid wanted weapon.
 		NetIntRange("m_WantedWeapon", 0, 'NUM_WEAPONS-1'),
 		NetIntAny("m_NextWeapon"),
 		NetIntAny("m_PrevWeapon"),
@@ -423,7 +429,7 @@ Messages = [
 	]),
 
 	NetMessage("Cl_Vote", [
-		NetIntRange("m_Vote", -1, 1),
+		NetIntRange("m_Vote", 'VOTE_CHOICE_NO', 'VOTE_CHOICE_YES'),
 	]),
 
 	NetMessage("Cl_CallVote", [

@@ -65,7 +65,7 @@ void CScoreboard::RenderGoals(float x, float y, float w)
 
 	Graphics()->BlendNormal();
 	CUIRect Rect = {x, y, w, h};
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	// render goals
 	static CTextCursor s_Cursor(12.0f);
@@ -120,7 +120,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 	float TextStartX = x+10.0f;
 	float TextStartY = y+30.0f;
 	float FontSize = 12.0f;
-	float ClientIDWidth = RenderTools()->GetClientIdRectSize(FontSize);
+	float ClientIDWidth = UI()->GetClientIDRectWidth(FontSize);
 
 	// render all the text without drawing
 	static CTextCursor s_SpectatorCursors[MAX_CLIENTS];
@@ -176,10 +176,10 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 	}
 
 	// background
-	float RectHeight = 3*h+((min(Lines, MaxLines)-1) * (FontSize + 3.0f));
+	float RectHeight = 3*h+((minimum(Lines, MaxLines)-1) * (FontSize + 3.0f));
 	Graphics()->BlendNormal();
 	CUIRect Rect = {x, y, w, RectHeight};
-	RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+	Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	// headline
 	s_LabelCursor.MoveTo(TextStartX, TextStartY);
@@ -192,7 +192,7 @@ float CScoreboard::RenderSpectators(float x, float y, float w)
 		{
 			vec2 ClientIDPos = s_SpectatorCursors[i].CursorPosition();
 			ClientIDPos.x -= ClientIDWidth;
-			RenderTools()->DrawClientID(TextRender(), FontSize,  ClientIDPos, i);
+			UI()->DrawClientID(FontSize,  ClientIDPos, i);
 			TextRender()->DrawTextOutlined(&s_SpectatorCursors[i]);
 		}
 	}
@@ -235,7 +235,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	int NumPlayers = m_pClient->m_GameInfo.m_aTeamSize[Team];
 	int PlayerLines = NumPlayers;
 	if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS)
-		PlayerLines = max(m_pClient->m_GameInfo.m_aTeamSize[Team^1], PlayerLines);
+		PlayerLines = maximum(m_pClient->m_GameInfo.m_aTeamSize[Team^1], PlayerLines);
 
 	// clamp to 16
 	if(PlayerLines > 16)
@@ -253,7 +253,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	else
 		Color = vec4(0.0f, 0.0f, 0.0f, 0.5f);
 	CUIRect Rect = {x, y, w, HeadlineHeight};
-	RenderTools()->DrawRoundRect(&Rect, Color, 5.0f);
+	Rect.Draw(Color);
 
 	// render title
 	if(NoTitle)
@@ -365,12 +365,12 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	Graphics()->BlendNormal();
 	{
 		CUIRect Rect = {x, y, w, LineHeight*(PlayerLines+1)};
-		RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+		Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 	}
 	if(PlayerLines)
 	{
 		CUIRect Rect = {x, y+LineHeight, w, LineHeight*(PlayerLines)};
-		RenderTools()->DrawRoundRect(&Rect, vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f);
+		Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 	}
 
 	s_Cursor.m_FontSize = HeadlineFontsize;
@@ -522,6 +522,21 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		}
 	}
 
+	if(Config()->m_ClHideSelfScore)
+	{
+		// Move local player to the bottom of the scoreboard
+		for (int i = 0; i < NumRenderScoreIDs - 1 && RenderScoreIDs[i + 1] >= 0; i++)
+		{
+			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[RenderScoreIDs[i]];
+			if (m_pClient->m_LocalClientID == pInfo->m_ClientID)
+			{
+				const int Temp = RenderScoreIDs[i + 1];
+				RenderScoreIDs[i + 1] = RenderScoreIDs[i];
+				RenderScoreIDs[i] = Temp;
+			}
+		}
+	}
+
 	s_Cursor.m_MaxLines = 1;
 	s_Cursor.m_FontSize = FontSize;
 	for(int i = 0 ; i < NumRenderScoreIDs ; i++)
@@ -536,13 +551,14 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			// color for text
 			vec3 TextColor = vec3(1.0f, 1.0f, 1.0f);
 			vec4 OutlineColor(0.0f, 0.0f, 0.0f, 0.3f);
-			const bool HighlightedLine = m_pClient->m_LocalClientID == pInfo->m_ClientID || (Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == Snap.m_SpecInfo.m_SpectatorID);
+			const bool HighlightedLine = m_pClient->m_LocalClientID == pInfo->m_ClientID ||
+				(Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == Snap.m_SpecInfo.m_SpectatorID);
 
 			// background so it's easy to find the local player or the followed one in spectator mode
 			if(HighlightedLine)
 			{
 				CUIRect Rect = {x, y, w, LineHeight};
-				RenderTools()->DrawRoundRect(&Rect, vec4(1.0f, 1.0f, 1.0f, 0.75f*ColorAlpha), 5.0f);
+				Rect.Draw(vec4(1.0f, 1.0f, 1.0f, 0.75f*ColorAlpha));
 
 				// make color for own entry black
 				TextColor = vec3(0.0f, 0.0f, 0.0f);
@@ -616,7 +632,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 			// id
 			if(Config()->m_ClShowUserId)
-				RenderTools()->DrawClientID(TextRender(), FontSize, vec2(NameOffset+TeeLength-IdSize+Spacing, y+Spacing), pInfo->m_ClientID);
+				UI()->DrawClientID(FontSize, vec2(NameOffset+TeeLength-IdSize+Spacing, y+Spacing), pInfo->m_ClientID);
 
 			// name
 			s_Cursor.Reset();
@@ -645,7 +661,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			s_Cursor.m_MaxWidth = ClanLength;
 			TextRender()->TextOutlined(&s_Cursor, m_pClient->m_aClients[pInfo->m_ClientID].m_aClan, -1);
 
-			if(!Race)
+			if(!Race && !(m_pClient->m_LocalClientID == pInfo->m_ClientID && Config()->m_ClHideSelfScore))
 			{
 				// K
 				TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
@@ -680,7 +696,10 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			s_Cursor.MoveTo(ScoreOffset+(Race ? ScoreLength-3.f : ScoreLength/2), y+Spacing);
 			s_Cursor.m_MaxWidth = ScoreLength;
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
-			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+			if(!Race && !(m_pClient->m_LocalClientID == pInfo->m_ClientID && Config()->m_ClHideSelfScore))
+			{
+				TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+			}
 
 			y += LineHeight;
 		}
@@ -717,12 +736,12 @@ void CScoreboard::RenderRecordingNotification(float x, float w)
 	CUIRect RectBox = {x, 0.0f, w, 50.0f};
 	vec4 Color = vec4(0.0f, 0.0f, 0.0f, 0.4f);
 	Graphics()->BlendNormal();
-	RenderTools()->DrawUIRect(&RectBox, Color, CUI::CORNER_B, 15.0f);
+	RectBox.Draw(Color, 15.0f, CUIRect::CORNER_B);
 
 	//draw the red dot
 	CUIRect RectRedDot = {x+20, 15.0f, 20.0f, 20.0f};
 	Color = vec4(1.0f, 0.0f, 0.0f, 1.0f);
-	RenderTools()->DrawRoundRect(&RectRedDot, Color, 10.0f);
+	RectRedDot.Draw(Color, 10.0f);
 
 	//draw the text
 	char aBuf[64];
@@ -744,7 +763,7 @@ void CScoreboard::RenderNetworkQuality(float x, float w)
 	int Score = Client()->GetInputtimeMarginStabilityScore();
 
 	Graphics()->BlendNormal();
-	RenderTools()->DrawUIRect(&RectBox, Color, CUI::CORNER_B, 15.0f);
+	RectBox.Draw(Color, 15.0f, CUIRect::CORNER_B);
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_NETWORKICONS].m_Id);
 	Graphics()->QuadsBegin();
 	RenderTools()->SelectSprite(SPRITE_NETWORK_GOOD);
@@ -775,7 +794,7 @@ void CScoreboard::RenderNetworkQuality(float x, float w)
 		CUIRect LocalBarRect = BarRect;
 		LocalBarRect.h = BarRect.h*(Bar+2)/(float)NumBars+1.0f;
 		LocalBarRect.y = BarRect.y + BarRect.h - LocalBarRect.h;
-		RenderTools()->DrawUIRect(&LocalBarRect, vec4(0.9f,0.9f,0.9f,1.0f), 0, 0);
+		LocalBarRect.Draw(vec4(0.9f,0.9f,0.9f,1.0f), 0.0f, CUIRect::CORNER_NONE);
 	}
 }
 
@@ -799,10 +818,9 @@ void CScoreboard::OnRender()
 	if(!IsActive())
 		return;
 
-	CUIRect Screen = *UI()->Screen();
-	Graphics()->MapScreen(Screen.x, Screen.y, Screen.w, Screen.h);
+	UI()->MapScreen();
 
-	float Width = Screen.w;
+	float Width = UI()->Screen()->w;
 	float y = 85.f;
 	float w = 364.0f;
 	float FontSize = 86.0f;
@@ -843,8 +861,9 @@ void CScoreboard::OnRender()
 		}
 	}
 
-	Width = 400*3.0f*Graphics()->ScreenAspect();
-	Graphics()->MapScreen(0, 0, Width, 400*3.0f);
+	const float Height = 400.0f * 3.0f;
+	Width = Height * Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0, 0, Width, Height);
 	static CTextCursor s_Cursor(FontSize);
 	s_Cursor.m_Align = TEXTALIGN_TC;
 	s_Cursor.MoveTo(Width/2, 39);

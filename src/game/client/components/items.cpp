@@ -40,28 +40,45 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	static float s_LastGameTickTime = Client()->GameTickTime();
 	if(!m_pClient->IsWorldPaused() && !m_pClient->IsDemoPlaybackPaused())
 		s_LastGameTickTime = Client()->GameTickTime();
-	
+
 	float Ct;
 	if(m_pClient->ShouldUsePredicted() && Config()->m_ClPredictProjectiles)
 		Ct = ((float)(Client()->PredGameTick() - 1 - pCurrent->m_StartTick) + Client()->PredIntraGameTick())/(float)SERVER_TICK_SPEED;
 	else
 		Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 	if(Ct < 0)
-		return; // projectile haven't been shot yet
+	{
+		if(Ct > -s_LastGameTickTime / 2)
+		{
+			// Fixup the timing which might be screwed during demo playback because
+			// s_LastGameTickTime depends on the system timer, while the other part
+			// Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED
+			// is virtually constant (for projectiles fired on the current game tick):
+			// (x - (x+2)) / 50 = -0.04
+			//
+			// We have a strict comparison for the passed time being more than the time between ticks
+			// if(CurtickStart > m_Info.m_CurrentTime) in CDemoPlayer::Update()
+			// so on the practice the typical value of s_LastGameTickTime varies from 0.02386 to 0.03999
+			// which leads to Ct from -0.00001 to -0.01614.
+			// Round up those to 0.0 to fix missing rendering of the projectile.
+			Ct = 0;
+		}
+		else
+		{
+			return; // projectile haven't been shot yet
+		}
+	}
 
 	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
 	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
 	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
 	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
 
-
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
 	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1)].m_pSpriteProj);
-	vec2 Vel = Pos-PrevPos;
-	//vec2 pos = mix(vec2(prev->x, prev->y), vec2(current->x, current->y), Client()->IntraGameTick());
-
+	const vec2 Vel = Pos-PrevPos;
 
 	// add particle for this projectile
 	if(pCurrent->m_Type == WEAPON_GRENADE)
@@ -77,12 +94,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	else
 	{
 		m_pClient->m_pEffects->BulletTrail(Pos);
-
-		if(length(Vel) > 0.00001f)
-			Graphics()->QuadsSetRotation(angle(Vel));
-		else
-			Graphics()->QuadsSetRotation(0);
-
+		Graphics()->QuadsSetRotation(length(Vel) > 0.00001f ? angle(Vel) : 0);
 	}
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 32, 32);
@@ -96,9 +108,8 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
-	float Angle = 0.0f;
 	float Size = 64.0f;
-	const int c[] = {
+	const int aSprites[] = {
 		SPRITE_PICKUP_HEALTH,
 		SPRITE_PICKUP_ARMOR,
 		SPRITE_PICKUP_GRENADE,
@@ -107,8 +118,8 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		SPRITE_PICKUP_NINJA,
 		SPRITE_PICKUP_GUN,
 		SPRITE_PICKUP_HAMMER
-		};
-	RenderTools()->SelectSprite(c[pCurrent->m_Type]);
+	};
+	RenderTools()->SelectSprite(aSprites[pCurrent->m_Type]);
 
 	switch(pCurrent->m_Type)
 	{
@@ -133,9 +144,6 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 		Size = g_pData->m_Weapons.m_aId[WEAPON_HAMMER].m_VisualSize;
 		break;
 	}
-	
-
-	Graphics()->QuadsSetRotation(Angle);
 
 	const float Now = Client()->LocalTime();
 	static float s_Time = 0.0f;
@@ -145,26 +153,15 @@ void CItems::RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCu
 	Pos.x += cosf(s_Time*2.0f+Offset)*2.5f;
 	Pos.y += sinf(s_Time*2.0f+Offset)*2.5f;
 	s_LastLocalTime = Now;
+
+	Graphics()->QuadsSetRotation(0.0f);
 	RenderTools()->DrawSprite(Pos.x, Pos.y, Size);
 	Graphics()->QuadsEnd();
 }
 
 void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent, const CNetObj_GameDataFlag *pPrevGameDataFlag, const CNetObj_GameDataFlag *pCurGameDataFlag)
 {
-	float Angle = 0.0f;
-	float Size = 42.0f;
-
-	Graphics()->BlendNormal();
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-	Graphics()->QuadsBegin();
-
-	if(pCurrent->m_Team == TEAM_RED)
-		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
-	else
-		RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
-
-	Graphics()->QuadsSetRotation(Angle);
-
+	const float Size = 42.0f;
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
 
 	if(pCurGameDataFlag)
@@ -186,6 +183,11 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 			Pos = m_pClient->GetCharPos(FlagCarrier, true);
 	}
 
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(pCurrent->m_Team == TEAM_RED ? SPRITE_FLAG_RED : SPRITE_FLAG_BLUE);
+	Graphics()->QuadsSetRotation(0.0f);
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsEnd();
@@ -194,68 +196,65 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 
 void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 {
-	vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
-	vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
-	vec2 Dir = normalize(Pos-From);
+	const vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
+	const vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
+	const vec2 Dir = normalize(Pos-From);
 
-	float Ticks = (Client()->GameTick() - pCurrent->m_StartTick) + Client()->IntraGameTick();
-	float Ms = (Ticks/50.0f) * 1000.0f;
-	float a = Ms / m_pClient->m_Tuning.m_LaserBounceDelay;
-	a = clamp(a, 0.0f, 1.0f);
-	float Ia = 1-a;
+	static int s_LastGameTick = Client()->GameTick();
+	static float s_LastIntraTick = Client()->IntraGameTick();
+	if(!m_pClient->IsWorldPaused())
+	{
+		s_LastGameTick = Client()->GameTick();
+		s_LastIntraTick = Client()->IntraGameTick();
+	}
 
-	vec2 Out, Border;
+	// This is not using s_LastGameTick because m_StartTick is synchronized by the server
+	const float LifetimeMillis = 1000.0f * (Client()->GameTick() - pCurrent->m_StartTick + s_LastIntraTick) / Client()->GameTickSpeed();
+	const float RemainingRelativeLifetime = 1.0f - clamp(LifetimeMillis / m_pClient->m_Tuning.m_LaserBounceDelay, 0.0f, 1.0f);
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 
-	//vec4 inner_color(0.15f,0.35f,0.75f,1.0f);
-	//vec4 outer_color(0.65f,0.85f,1.0f,1.0f);
-
 	// do outline
-	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
-	Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * (7.0f*Ia);
-
+	const vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
+	const vec2 Outer = vec2(Dir.y, -Dir.x) * (7.0f*RemainingRelativeLifetime);
+	Graphics()->SetColor(OuterColor);
 	IGraphics::CFreeformItem Freeform(
-			From.x-Out.x, From.y-Out.y,
-			From.x+Out.x, From.y+Out.y,
-			Pos.x-Out.x, Pos.y-Out.y,
-			Pos.x+Out.x, Pos.y+Out.y);
+			From.x-Outer.x, From.y-Outer.y,
+			From.x+Outer.x, From.y+Outer.y,
+			Pos.x-Outer.x, Pos.y-Outer.y,
+			Pos.x+Outer.x, Pos.y+Outer.y);
 	Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
 	// do inner
-	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
-	Out = vec2(Dir.y, -Dir.x) * (5.0f*Ia);
-	Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f); // center
-
+	const vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
+	const vec2 Inner = vec2(Dir.y, -Dir.x) * (5.0f*RemainingRelativeLifetime);
+	Graphics()->SetColor(InnerColor);
 	Freeform = IGraphics::CFreeformItem(
-			From.x-Out.x, From.y-Out.y,
-			From.x+Out.x, From.y+Out.y,
-			Pos.x-Out.x, Pos.y-Out.y,
-			Pos.x+Out.x, Pos.y+Out.y);
+			From.x-Inner.x, From.y-Inner.y,
+			From.x+Inner.x, From.y+Inner.y,
+			Pos.x-Inner.x, Pos.y-Inner.y,
+			Pos.x+Inner.x, Pos.y+Inner.y);
 	Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
 	Graphics()->QuadsEnd();
 
 	// render head
-	{
-		Graphics()->BlendNormal();
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
-		Graphics()->QuadsBegin();
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_PARTICLES].m_Id);
+	Graphics()->QuadsBegin();
 
-		int Sprites[] = {SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03};
-		RenderTools()->SelectSprite(Sprites[Client()->GameTick()%3]);
-		Graphics()->QuadsSetRotation(Client()->GameTick());
-		Graphics()->SetColor(OuterColor.r, OuterColor.g, OuterColor.b, 1.0f);
-		IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->SetColor(InnerColor.r, InnerColor.g, InnerColor.b, 1.0f);
-		QuadItem = IGraphics::CQuadItem(Pos.x, Pos.y, 20, 20);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->QuadsEnd();
-	}
+	const int aSprites[] = { SPRITE_PART_SPLAT01, SPRITE_PART_SPLAT02, SPRITE_PART_SPLAT03 };
+	RenderTools()->SelectSprite(aSprites[s_LastGameTick%3]);
+	Graphics()->QuadsSetRotation(s_LastGameTick);
+	Graphics()->SetColor(OuterColor);
+	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 24, 24);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+	Graphics()->SetColor(InnerColor);
+	QuadItem = IGraphics::CQuadItem(Pos.x, Pos.y, 20, 20);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+	Graphics()->QuadsEnd();
 
 	Graphics()->BlendNormal();
 }

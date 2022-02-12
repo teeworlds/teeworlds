@@ -122,8 +122,6 @@ void CPlayers::RenderPlayer(
 	CNetObj_Character Player = *pPlayerChar;
 	CTeeRenderInfo RenderInfo = *pRenderInfo;
 
-	const CGameClient::CClientData *pClientData = &m_pClient->m_aClients[ClientID];
-
 	// set size
 	RenderInfo.m_Size = 64.0f;
 
@@ -208,8 +206,21 @@ void CPlayers::RenderPlayer(
 		State.Add(&g_pData->m_aAnimations[ANIM_WALK], WalkTime, 1.0f);
 
 	static float s_LastGameTickTime = Client()->GameTickTime();
+	static float s_LastIntraTick = IntraTick;
+	static float s_TimeUntilAnimationFrame = 1.0f;
+	bool UpdateSingleAnimationFrage = false;
 	if(!Paused)
+	{
 		s_LastGameTickTime = Client()->GameTickTime();
+		s_LastIntraTick = IntraTick;
+		s_TimeUntilAnimationFrame -= m_pClient->GetAnimationPlaybackSpeed();
+		if(s_TimeUntilAnimationFrame <= 0.0f)
+		{
+			s_TimeUntilAnimationFrame += 1.0f;
+			UpdateSingleAnimationFrage = true;
+		}
+	}
+
 	if (Player.m_Weapon == WEAPON_HAMMER)
 	{
 		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
@@ -257,7 +268,6 @@ void CPlayers::RenderPlayer(
 		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteBody, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
 
 		vec2 Dir = Direction;
-		float Recoil = 0.0f;
 		vec2 p;
 		if (Player.m_Weapon == WEAPON_HAMMER)
 		{
@@ -276,7 +286,7 @@ void CPlayers::RenderPlayer(
 			}
 			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 		}
-		else if (Player.m_Weapon == WEAPON_NINJA)
+		else if(Player.m_Weapon == WEAPON_NINJA)
 		{
 			p = Position;
 			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
@@ -295,26 +305,19 @@ void CPlayers::RenderPlayer(
 			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 
 			// HADOKEN
-			if ((Client()->GameTick()-Player.m_AttackTick) <= (SERVER_TICK_SPEED / 6) && g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)
+			if((Client()->GameTick()-Player.m_AttackTick) <= (SERVER_TICK_SPEED / 6) && g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)
 			{
-				int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
+				const int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
 				static int s_LastIteX = IteX;
-				if(Paused)
-					IteX = s_LastIteX;
-				else
+				if(UpdateSingleAnimationFrage)
 					s_LastIteX = IteX;
-				if(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
+
+				if(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX])
 				{
-					vec2 Dir = vec2(pPlayerChar->m_X,pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y);
-					Dir = normalize(Dir);
-					float HadokenAngle = angle(Dir);
-					Graphics()->QuadsSetRotation(HadokenAngle );
-					//float offsety = -data->weapons[iw].muzzleoffsety;
-					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX], 0);
-					vec2 DirY(-Dir.y,Dir.x);
-					p = Position;
-					float OffsetX = g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx;
-					p -= Dir * OffsetX;
+					const vec2 Dir = normalize(vec2(pPlayerChar->m_X,pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y));
+					p = Position - Dir * g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx;
+					Graphics()->QuadsSetRotation(angle(Dir));
+					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX], 0);
 					RenderTools()->DrawSprite(p.x, p.y, 160.0f);
 				}
 			}
@@ -322,48 +325,30 @@ void CPlayers::RenderPlayer(
 		else
 		{
 			// TODO: should be an animation
-			Recoil = 0;
-			static float s_LastIntraTick = IntraTick;
-			if(!Paused)
-				s_LastIntraTick = IntraTick;
-
-			float a = (Client()->GameTick()-Player.m_AttackTick+s_LastIntraTick)/5.0f;
-			if(a < 1)
-				Recoil = sinf(a*pi);
-			p = Position + Dir * g_pData->m_Weapons.m_aId[iw].m_Offsetx - Dir*Recoil*10.0f;
+			const float RecoilTick = (Client()->GameTick() - Player.m_AttackTick + s_LastIntraTick)/5.0f;
+			const float Recoil = RecoilTick < 1.0f ? sinf(RecoilTick*pi) : 0.0f;
+			p = Position + Dir * (g_pData->m_Weapons.m_aId[iw].m_Offsetx - Recoil*10.0f);
 			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
 			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 		}
 
-		if (Player.m_Weapon == WEAPON_GUN || Player.m_Weapon == WEAPON_SHOTGUN)
+		if(Player.m_Weapon == WEAPON_GUN || Player.m_Weapon == WEAPON_SHOTGUN)
 		{
 			// check if we're firing stuff
-			if(g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)//prev.attackticks)
+			if(g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)
 			{
-				float Alpha = 0.0f;
-				int Phase1Tick = (Client()->GameTick() - Player.m_AttackTick);
-				if (Phase1Tick < (g_pData->m_Weapons.m_aId[iw].m_Muzzleduration + 3))
-				{
-					float t = ((((float)Phase1Tick) + IntraTick)/(float)g_pData->m_Weapons.m_aId[iw].m_Muzzleduration);
-					Alpha = mix(2.0f, 0.0f, min(1.0f,max(0.0f,t)));
-				}
-
-				int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
+				const float MuzzleTick = Client()->GameTick() - Player.m_AttackTick + s_LastIntraTick;
+				const int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
 				static int s_LastIteX = IteX;
-				if(Paused)
-					IteX = s_LastIteX;
-				else
+				if(UpdateSingleAnimationFrage)
 					s_LastIteX = IteX;
-				if (Alpha > 0.0f && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX])
+
+				if(MuzzleTick < g_pData->m_Weapons.m_aId[iw].m_Muzzleduration && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX])
 				{
-					float OffsetY = -g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsety;
-					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[IteX], Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
-					if(Direction.x < 0)
-						OffsetY = -OffsetY;
-
-					vec2 DirY(-Dir.y,Dir.x);
-					vec2 MuzzlePos = p + Dir * g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx + DirY * OffsetY;
-
+					const bool FlipY = Direction.x < 0.0f;
+					const float OffsetY = g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsety * (FlipY ? 1 : -1);
+					const vec2 MuzzlePos = p + Dir * g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx + vec2(-Dir.y, Dir.x) * OffsetY;
+					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX], FlipY ? SPRITE_FLAG_FLIP_Y : 0);
 					RenderTools()->DrawSprite(MuzzlePos.x, MuzzlePos.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 				}
 			}
@@ -401,37 +386,34 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsEnd();
 	}
 
-	if(pClientData->m_EmoticonStart != -1 && pClientData->m_EmoticonStart + 2 * Client()->GameTickSpeed() > Client()->GameTick())
+	CGameClient::CClientData *pClientData = &m_pClient->m_aClients[ClientID];
+	if(pClientData->m_EmoticonStart != -1)
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
-		Graphics()->QuadsBegin();
+		// adjust start tick if world paused; not if demo paused because ticks are synchronized with demo
+		static int s_LastGameTick = Client()->GameTick();
+		if(m_pClient->IsWorldPaused())
+			pClientData->m_EmoticonStart += Client()->GameTick() - s_LastGameTick;
+		s_LastGameTick = Client()->GameTick();
 
-		int SinceStart = Client()->GameTick() - pClientData->m_EmoticonStart;
-		int FromEnd = pClientData->m_EmoticonStart + 2 * Client()->GameTickSpeed() - Client()->GameTick();
+		const float TotalEmoteLifespan = 2 * Client()->GameTickSpeed();
+		const float SinceStart = (Client()->GameTick() - pClientData->m_EmoticonStart) / (float)Client()->GameTickSpeed();
+		const float FromEnd = (pClientData->m_EmoticonStart + TotalEmoteLifespan - Client()->GameTick()) / (float)Client()->GameTickSpeed();
+		if(SinceStart > 0.0f && FromEnd > 0.0f)
+		{
+			const float Size = 64.0f;
+			const float Alpha = FromEnd < 0.2f ? FromEnd / 0.2f : 1.0f;
+			const float HeightFactor = SinceStart < 0.1f ? SinceStart / 0.1f : 1.0f;
+			const float Wiggle = SinceStart < 0.2f ? SinceStart / 0.2f : 0.0f;
 
-		float a = 1;
-
-		if (FromEnd < Client()->GameTickSpeed() / 5)
-			a = FromEnd / (Client()->GameTickSpeed() / 5.0);
-
-		float h = 1;
-		if (SinceStart < Client()->GameTickSpeed() / 10)
-			h = SinceStart / (Client()->GameTickSpeed() / 10.0);
-
-		float Wiggle = 0;
-		if (SinceStart < Client()->GameTickSpeed() / 5)
-			Wiggle = SinceStart / (Client()->GameTickSpeed() / 5.0);
-
-		float WiggleAngle = sinf(5*Wiggle);
-
-		Graphics()->QuadsSetRotation(pi/6*WiggleAngle);
-
-		Graphics()->SetColor(1.0f * a, 1.0f * a, 1.0f * a, a);
-		// client_datas::emoticon is an offset from the first emoticon
-		RenderTools()->SelectSprite(SPRITE_OOP + pClientData->m_Emoticon);
-		IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - 32*h, 64, 64*h);
-		Graphics()->QuadsDraw(&QuadItem, 1);
-		Graphics()->QuadsEnd();
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_EMOTICONS].m_Id);
+			Graphics()->QuadsBegin();
+			Graphics()->QuadsSetRotation(pi/6*sinf(5*Wiggle));
+			Graphics()->SetColor(Alpha, Alpha, Alpha, Alpha);
+			RenderTools()->SelectSprite(SPRITE_OOP + pClientData->m_Emoticon); // pClientData->m_Emoticon is an offset from the first emoticon
+			IGraphics::CQuadItem QuadItem(Position.x, Position.y - 23 - Size * HeightFactor / 2.0f, Size, Size * HeightFactor);
+			Graphics()->QuadsDraw(&QuadItem, 1);
+			Graphics()->QuadsEnd();
+		}
 	}
 }
 

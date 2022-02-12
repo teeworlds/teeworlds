@@ -132,7 +132,7 @@ void CDebugHud::RenderTuning()
 		str_format(aBuf, sizeof(aBuf), "%.2f", Current);
 		TextRender()->TextDeferred(&s_CursorCurrent, aBuf, -1);
 
-		TextRender()->TextDeferred(&s_CursorLabels, m_pClient->m_Tuning.m_apNames[i], -1);
+		TextRender()->TextDeferred(&s_CursorLabels, m_pClient->m_Tuning.GetName(i), -1);
 
 		TextRender()->TextNewline(&s_CursorStandard);
 		TextRender()->TextNewline(&s_CursorCurrent);

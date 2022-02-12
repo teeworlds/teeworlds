@@ -1,12 +1,14 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
-#include "localization.h"
+#include <base/system.h>
 #include <base/tl/algorithm.h>
 
 #include <engine/external/json-parser/json.h>
 #include <engine/console.h>
 #include <engine/storage.h>
+
+#include "localization.h"
 
 const char *Localize(const char *pStr, const char *pContext)
 {
@@ -61,7 +63,7 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	if(!File)
 		return false;
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize, 1);
+	char *pFileData = (char *)mem_alloc(FileSize);
 	io_read(File, pFileData, FileSize);
 	io_close(File);
 

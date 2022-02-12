@@ -17,6 +17,7 @@ extern "C"
 	#include <wavpack.h>
 }
 #include <math.h>
+#include <limits.h>
 
 enum
 {
@@ -63,7 +64,7 @@ static int m_CenterY = 0;
 static float m_MaxDistance = 1500.0f;
 
 static int m_MixingRate = 48000;
-static volatile int m_SoundVolume = 100;
+static int m_SoundVolume = 100;
 
 static int m_NextVoice = 0;
 static int *m_pMixBuffer = 0;	// buffer only used by the thread callback function
@@ -71,21 +72,16 @@ static unsigned m_MaxFrames = 0;
 
 static IOHANDLE s_File;
 
-// TODO: there should be a faster way todo this
 static short Int2Short(int i)
 {
-	if(i > 0x7fff)
-		return 0x7fff;
-	else if(i < -0x7fff)
-		return -0x7fff;
-	return i;
+	return clamp(i, SHRT_MIN, SHRT_MAX);
 }
 
 static void Mix(short *pFinalOut, unsigned Frames)
 {
 	int MasterVol;
 	mem_zero(m_pMixBuffer, m_MaxFrames*2*sizeof(int));
-	Frames = min(Frames, m_MaxFrames);
+	Frames = minimum(Frames, m_MaxFrames);
 
 	// aquire lock while we are mixing
 	lock_wait(m_SoundLock);
@@ -175,18 +171,16 @@ static void Mix(short *pFinalOut, unsigned Frames)
 	// release the lock
 	lock_unlock(m_SoundLock);
 
+	// clamp accumulated values
+	// TODO: this seams slow
+	for(unsigned i = 0; i < Frames; ++i)
 	{
-		// clamp accumulated values
-		// TODO: this seams slow
-		for(unsigned i = 0; i < Frames; i++)
-		{
-			int j = i<<1;
-			int vl = ((m_pMixBuffer[j]*MasterVol)/101)>>8;
-			int vr = ((m_pMixBuffer[j+1]*MasterVol)/101)>>8;
+		int j = i<<1;
+		int vl = ((m_pMixBuffer[j]*MasterVol)/101)>>8;
+		int vr = ((m_pMixBuffer[j+1]*MasterVol)/101)>>8;
 
-			pFinalOut[j] = Int2Short(vl);
-			pFinalOut[j+1] = Int2Short(vr);
-		}
+		pFinalOut[j] = Int2Short(vl);
+		pFinalOut[j+1] = Int2Short(vr);
 	}
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
@@ -244,7 +238,7 @@ int CSound::Init()
 		dbg_msg("client/sound", "sound init successful");
 
 	m_MaxFrames = m_pConfig->m_SndBufferSize*2;
-	m_pMixBuffer = (int *)mem_alloc(m_MaxFrames*2*sizeof(int), 1);
+	m_pMixBuffer = (int *)mem_alloc(m_MaxFrames*2*sizeof(int));
 
 	SDL_PauseAudio(0);
 
@@ -308,7 +302,7 @@ void CSound::RateConvert(int SampleID)
 
 	// allocate new data
 	NumFrames = (int)((pSample->m_NumFrames/(float)pSample->m_Rate)*m_MixingRate);
-	pNewData = (short *)mem_alloc(NumFrames*pSample->m_Channels*sizeof(short), 1);
+	pNewData = (short *)mem_alloc(NumFrames*pSample->m_Channels*sizeof(short));
 
 	for(int i = 0; i < NumFrames; i++)
 	{
@@ -458,11 +452,11 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 			return CSampleHandle();
 		}
 
-		pData = (int *)mem_alloc(4*m_aSamples*m_aChannels, 1);
+		pData = (int *)mem_alloc(4*m_aSamples*m_aChannels);
 		WavpackUnpackSamples(pContext, pData, m_aSamples); // TODO: check return value
 		pSrc = pData;
 
-		pSample->m_pData = (short *)mem_alloc(2*m_aSamples*m_aChannels, 1);
+		pSample->m_pData = (short *)mem_alloc(2*m_aSamples*m_aChannels);
 		pDst = pSample->m_pData;
 
 		for (i = 0; i < m_aSamples*m_aChannels; i++)
@@ -560,6 +554,9 @@ int CSound::Play(int ChannelID, CSampleHandle SampleID, int Flags)
 
 void CSound::Stop(CSampleHandle SampleID)
 {
+	if(!SampleID.IsValid())
+		return;
+
 	// TODO: a nice fade out
 	lock_wait(m_SoundLock);
 	CSample *pSample = &m_aSamples[SampleID.Id()];
@@ -597,6 +594,9 @@ void CSound::StopAll()
 
 bool CSound::IsPlaying(CSampleHandle SampleID)
 {
+	if(!SampleID.IsValid())
+		return false;
+
 	bool Ret = false;
 	lock_wait(m_SoundLock);
 	CSample *pSample = &m_aSamples[SampleID.Id()];

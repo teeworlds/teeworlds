@@ -11,14 +11,15 @@
 
 class CChat : public CComponent
 {
-	CLineInput m_Input;
-
 	enum
 	{
 		MAX_LINES = 250,
 		MAX_CHAT_PAGES = 10,
 		MAX_LINE_LENGTH = 512,
 	};
+
+	char m_aInputBuf[MAX_LINE_LENGTH];
+	CLineInput m_Input;
 
 	struct CLine
 	{
@@ -50,9 +51,6 @@ class CChat : public CComponent
 	int m_LastWhisperFrom;
 	bool m_Show;
 	int m_BacklogPage;
-	bool m_InputUpdate;
-	int m_ChatStringOffset;
-	int m_OldChatStringLength;
 	int m_CompletionChosen;
 	int m_CompletionFav;
 	char m_aCompletionBuffer[256];
@@ -113,6 +111,7 @@ class CChat : public CComponent
 	static void ConWhisper(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
+	static void ConChatCommand(IConsole::IResult *pResult, void *pUserData);
 	static void ServerCommandCallback(IConsole::IResult *pResult, void *pContext);
 
 public:
@@ -131,6 +130,7 @@ public:
 	void ClearChatBuffer();
 	const char* GetCommandName(int Mode) const;
 
+	CChat();
 	virtual void OnInit();
 	virtual void OnReset();
 	virtual void OnMapLoad();

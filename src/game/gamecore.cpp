@@ -1,8 +1,9 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "gamecore.h"
+#include "mapitems.h"
 
-const char *CTuningParams::m_apNames[] =
+const char *CTuningParams::s_apNames[] =
 {
 	#define MACRO_TUNING_PARAM(Name,ScriptName,Value) #ScriptName,
 	#include "tuning.h"
@@ -29,7 +30,7 @@ bool CTuningParams::Get(int Index, float *pValue) const
 bool CTuningParams::Set(const char *pName, float Value)
 {
 	for(int i = 0; i < Num(); i++)
-		if(str_comp_nocase(pName, m_apNames[i]) == 0)
+		if(str_comp_nocase(pName, GetName(i)) == 0)
 			return Set(i, Value);
 	return false;
 }
@@ -37,16 +38,56 @@ bool CTuningParams::Set(const char *pName, float Value)
 bool CTuningParams::Get(const char *pName, float *pValue) const
 {
 	for(int i = 0; i < Num(); i++)
-		if(str_comp_nocase(pName, m_apNames[i]) == 0)
+		if(str_comp_nocase(pName, GetName(i)) == 0)
 			return Get(i, pValue);
-
 	return false;
 }
 
-float HermiteBasis1(float v)
+float CTuningParams::GetControlSpeed(int mat) const
 {
-	return 2*v*v*v - 3*v*v+1;
+	switch(mat)
+	{
+		case MAT_ICE: return m_IceControlSpeed;
+		default: return m_GroundControlSpeed;
+	}
 }
+
+float CTuningParams::GetControlAccel(int mat) const
+{
+	switch(mat)
+	{
+		case MAT_ICE: return m_IceControlAccel;
+		default: return m_GroundControlAccel;
+	}
+}
+float CTuningParams::GetFriction(int mat) const
+{
+	switch(mat)
+	{
+		case MAT_ICE: return m_IceFriction;
+		default: return m_GroundFriction;
+	}
+}
+
+float CTuningParams::CompareGroundControlSpeed(int mat_left, int mat_right)
+{
+	// You could also do this gradually
+	return minimum(GetControlSpeed(mat_left), GetControlSpeed(mat_right));
+}
+
+float CTuningParams::CompareGroundControlAccel(int mat_left, int mat_right)
+{
+	// You could also do this gradually
+	return maximum(GetControlAccel(mat_left), GetControlAccel(mat_right));
+}
+float CTuningParams::CompareGroundFriction(int mat_left, int mat_right)
+{
+	// You could also do this gradually
+	// NOTE: Higher friction values mean LESS friction
+	// Ice has 0.99 friction and default ground has 0.5
+	return minimum(GetFriction(mat_left), GetFriction(mat_right));
+}
+
 
 float VelocityRamp(float Value, float Start, float Range, float Curvature)
 {
@@ -86,22 +127,16 @@ void CCharacterCore::Tick(bool UseInput)
 	bool RightSolid = m_pCollision->CheckPoint(m_Pos.x+PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5);
 	bool LeftSolid = m_pCollision->CheckPoint(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5);
 	bool Grounded = RightSolid || LeftSolid;
-
-    // get ice state
-    /*
-    Player is on ground and both sides are ICE or UNSOLID
-    */
-    bool Iced = Grounded &&
-        (m_pCollision->CheckPoint(m_Pos.x+PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5, CCollision::COLFLAG_ICE) || !RightSolid) &&
-        (m_pCollision->CheckPoint(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5, CCollision::COLFLAG_ICE) || !LeftSolid);
+	int RightMaterialGround = m_pCollision->GetMaterial(m_Pos.x+PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5);
+	int LeftMaterialGround = m_pCollision->GetMaterial(m_Pos.x-PHYS_SIZE/2, m_Pos.y+PHYS_SIZE/2+5);
 
 	vec2 TargetDirection = normalize(vec2(m_Input.m_TargetX, m_Input.m_TargetY));
 
 	m_Vel.y += m_pWorld->m_Tuning.m_Gravity;
 
-	float MaxSpeed = Grounded ? (Iced ? m_pWorld->m_Tuning.m_IceControlSpeed : m_pWorld->m_Tuning.m_GroundControlSpeed) : m_pWorld->m_Tuning.m_AirControlSpeed;
-	float Accel = Grounded ? (Iced ? m_pWorld->m_Tuning.m_IceControlAccel : m_pWorld->m_Tuning.m_GroundControlAccel) : m_pWorld->m_Tuning.m_AirControlAccel;
-	float Friction = Grounded ? (Iced ? m_pWorld->m_Tuning.m_IceFriction : m_pWorld->m_Tuning.m_GroundFriction) : m_pWorld->m_Tuning.m_AirFriction;
+	float MaxSpeed = Grounded ? m_pWorld->m_Tuning.CompareGroundControlSpeed(LeftMaterialGround, RightMaterialGround) : m_pWorld->m_Tuning.m_AirControlSpeed;
+	float Accel = Grounded ? m_pWorld->m_Tuning.CompareGroundControlAccel(LeftMaterialGround, RightMaterialGround) : m_pWorld->m_Tuning.m_AirControlAccel;
+	float Friction = Grounded ? m_pWorld->m_Tuning.CompareGroundFriction(LeftMaterialGround, RightMaterialGround) : m_pWorld->m_Tuning.m_AirFriction;
 
 	// handle input
 	if(UseInput)
@@ -216,7 +251,7 @@ void CCharacterCore::Tick(bool UseInput)
 				vec2 ClosestPoint = closest_point_on_line(m_HookPos, NewPos, pCharCore->m_Pos);
 				if(distance(pCharCore->m_Pos, ClosestPoint) < PHYS_SIZE+2.0f)
 				{
-					if (m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Distance)
+					if(m_HookedPlayer == -1 || distance(m_HookPos, pCharCore->m_Pos) < Distance)
 					{
 						m_TriggeredEvents |= COREEVENTFLAG_HOOK_ATTACH_PLAYER;
 						m_HookState = HOOK_GRABBED;
@@ -321,7 +356,7 @@ void CCharacterCore::Tick(bool UseInput)
 
 				// make sure that we don't add excess force by checking the
 				// direction against the current velocity. if not zero.
-				if (length(m_Vel) > 0.0001)
+				if(length(m_Vel) > 0.0001)
 					Velocity = 1-(dot(normalize(m_Vel), Dir)+1)/2;
 
 				m_Vel += Dir*a*(Velocity*0.75f);

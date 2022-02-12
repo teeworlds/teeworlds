@@ -42,15 +42,15 @@ void CMenus::CScrollRegion::Begin(CUIRect* pClipRect, vec2* pOutOffset, CScrollR
 	if(HasScrollBar)
 	{
 		if(m_Params.m_ScrollbarBgColor.a > 0)
-			m_pRenderTools->DrawUIRect(&ScrollBarBg, m_Params.m_ScrollbarBgColor, CUI::CORNER_R, 4.0f);
+			ScrollBarBg.Draw(m_Params.m_ScrollbarBgColor, 4.0f, CUIRect::CORNER_R);
 		if(m_Params.m_RailBgColor.a > 0)
-			m_pRenderTools->DrawRoundRect(&m_RailRect, m_Params.m_RailBgColor, m_RailRect.w/2.0f);
+			m_RailRect.Draw(m_Params.m_RailBgColor, m_RailRect.w/2.0f);
 	}
 	if(!ContentOverflows)
 		m_ContentScrollOff.y = 0;
 
 	if(m_Params.m_ClipBgColor.a > 0)
-		m_pRenderTools->DrawUIRect(pClipRect, m_Params.m_ClipBgColor, HasScrollBar ? CUI::CORNER_L : CUI::CORNER_ALL, 4.0f);
+		pClipRect->Draw(m_Params.m_ClipBgColor, 4.0f, HasScrollBar ? CUIRect::CORNER_L : CUIRect::CORNER_ALL);
 
 	m_pUI->ClipEnable(pClipRect);
 
@@ -91,7 +91,7 @@ void CMenus::CScrollRegion::End()
 		}
 	}
 
-	const float SliderHeight = max(m_Params.m_SliderMinHeight,
+	const float SliderHeight = maximum(m_Params.m_SliderMinHeight,
 		m_ClipRect.h/m_ContentH * m_RailRect.h);
 
 	CUIRect Slider = m_RailRect;
@@ -114,7 +114,7 @@ void CMenus::CScrollRegion::End()
 
 	if(m_AnimTime > 0)
 	{
-		m_AnimTime -= m_pMenus->Client()->RenderFrameTime();
+		m_AnimTime -= m_pClient->RenderFrameTime();
 		float AnimProgress = (1 - pow(m_AnimTime / AnimationDuration, 3)); // cubic ease out
 		m_ScrollY = m_AnimInitScrollY + (m_AnimTargetScrollY - m_AnimInitScrollY) * AnimProgress;
 	}
@@ -177,7 +177,7 @@ void CMenus::CScrollRegion::End()
 		SliderColor = m_Params.m_SliderColorHover;
 	else
 		SliderColor = m_Params.m_SliderColor;
-	m_pRenderTools->DrawRoundRect(&Slider, SliderColor, Slider.w/2.0f);
+	Slider.Draw(SliderColor, Slider.w/2.0f);
 }
 
 void CMenus::CScrollRegion::AddRect(CUIRect Rect)
@@ -186,12 +186,12 @@ void CMenus::CScrollRegion::AddRect(CUIRect Rect)
 	ContentPos.x += m_ContentScrollOff.x;
 	ContentPos.y += m_ContentScrollOff.y;
 	m_LastAddedRect = Rect;
-	m_ContentH = max(Rect.y + Rect.h - ContentPos.y, m_ContentH);
+	m_ContentH = maximum(Rect.y + Rect.h - ContentPos.y, m_ContentH);
 }
 
 void CMenus::CScrollRegion::ScrollHere(int Option)
 {
-	const float MinHeight = min(m_ClipRect.h, m_LastAddedRect.h);
+	const float MinHeight = minimum(m_ClipRect.h, m_LastAddedRect.h);
 	const float TopScroll = m_LastAddedRect.y - (m_ClipRect.y + m_ContentScrollOff.y);
 
 	switch(Option)

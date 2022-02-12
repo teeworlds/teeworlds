@@ -10,6 +10,7 @@
 #include <engine/demo.h>
 #include <engine/contacts.h>
 #include <engine/serverbrowser.h>
+#include <engine/config.h>
 
 #include <game/voting.h>
 #include <game/client/component.h>
@@ -31,70 +32,20 @@ public:
 	virtual bool OnInput(IInput::CEvent Event);
 };
 
-class IScrollbarScale
-{
-public:
-	virtual float ToRelative(int AbsoluteValue, int Min, int Max) = 0;
-	virtual int ToAbsolute(float RelativeValue, int Min, int Max) = 0;
-};
-static class CLinearScrollbarScale : public IScrollbarScale
-{
-public:
-	float ToRelative(int AbsoluteValue, int Min, int Max)
-	{
-		return (AbsoluteValue - Min) / (float)(Max - Min);
-	}
-	int ToAbsolute(float RelativeValue, int Min, int Max)
-	{
-		return round_to_int(RelativeValue*(Max - Min) + Min + 0.1f);
-	}
-} LinearScrollbarScale;
-static class CLogarithmicScrollbarScale : public IScrollbarScale
-{
-private:
-	int m_MinAdjustment;
-public:
-	CLogarithmicScrollbarScale(int MinAdjustment)
-	{
-		m_MinAdjustment = max(MinAdjustment, 1); // must be at least 1 to support Min == 0 with logarithm
-	}
-	float ToRelative(int AbsoluteValue, int Min, int Max)
-	{
-		if(Min < m_MinAdjustment)
-		{
-			AbsoluteValue += m_MinAdjustment;
-			Min += m_MinAdjustment;
-			Max += m_MinAdjustment;
-		}
-		return (log(AbsoluteValue) - log(Min)) / (float)(log(Max) - log(Min));
-	}
-	int ToAbsolute(float RelativeValue, int Min, int Max)
-	{
-		int ResultAdjustment = 0;
-		if(Min < m_MinAdjustment)
-		{
-			Min += m_MinAdjustment;
-			Max += m_MinAdjustment;
-			ResultAdjustment = -m_MinAdjustment;
-		}
-		return round_to_int(exp(RelativeValue*(log(Max) - log(Min)) + log(Min))) + ResultAdjustment;
-	}
-} LogarithmicScrollbarScale(25);
-
 class CMenus : public CComponent
 {
 public:
 	class CUIElementBase
 	{
 	protected:
-		static CMenus *m_pMenus;	// TODO: Refactor in order to remove this reference to menus
 		static CRenderTools *m_pRenderTools;
 		static CUI *m_pUI;
 		static IInput *m_pInput;
 		static IClient *m_pClient;
+		static CConfig *m_pConfig;
 
 	public:
-		static void Init(CMenus *pMenus) { m_pMenus = pMenus; m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); };
+		static void Init(CMenus *pMenus) { m_pRenderTools = pMenus->RenderTools(); m_pUI = pMenus->UI(); m_pInput = pMenus->Input(); m_pClient = pMenus->Client(); m_pConfig = pMenus->Config(); }
 	};
 
 	class CButtonContainer : public CUIElementBase
@@ -103,7 +54,6 @@ public:
 		float m_FadeStartTime;
 	public:
 		CButtonContainer(bool CleanBackground = false) : m_FadeStartTime(0.0f) { m_CleanBackground = CleanBackground; }
-		const void *GetID() const { return &m_FadeStartTime; }
 		float GetFade(bool Checked = false, float Seconds = 0.6f);
 		bool IsCleanBackground() const { return m_CleanBackground; }
 	};
@@ -111,27 +61,19 @@ public:
 private:
 	typedef float (CMenus::*FDropdownCallback)(CUIRect View);
 
-	bool DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners = CUI::CORNER_ALL, float Rounding = 5.0f, bool Fade = true);
+	bool DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, bool Fade = true);
 	bool DoButton_Toggle(const void *pID, bool Checked, const CUIRect *pRect, bool Active);
-	bool DoButton_Menu(CButtonContainer *pBC, const char *pText, bool Checked, const CUIRect *pRect, const char *pImageName = 0, int Corners = CUI::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, vec4 ColorHot = vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade = true);
-	bool DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, bool Checked, const CUIRect *pRect, float Alpha = 1.0f, float FontAlpha = 1.0f, int Corners = CUI::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f);
+	bool DoButton_Menu(CButtonContainer *pBC, const char *pText, bool Checked, const CUIRect *pRect, const char *pImageName = 0, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, vec4 ColorHot = vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade = true);
+	bool DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, bool Checked, const CUIRect *pRect, float Alpha = 1.0f, float FontAlpha = 1.0f, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f);
 
 	bool DoButton_CheckBox(const void *pID, const char *pText, bool Checked, const CUIRect *pRect, bool Locked = false);
 
 	void DoIcon(int ImageId, int SpriteId, const CUIRect *pRect, const vec4 *pColor = 0);
-	bool DoButton_GridHeader(const void *pID, const char *pText, bool Checked, CUI::EAlignment Align, const CUIRect *pRect, int Corners = CUI::CORNER_ALL);
+	bool DoButton_GridHeader(const void *pID, const char *pText, bool Checked, int Align, const CUIRect *pRect, int Corners = CUIRect::CORNER_ALL);
 
-	bool DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUI::CORNER_ALL);
-	bool DoEditBoxUTF8(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, unsigned MaxLength, float FontSize, float *pOffset, bool Hidden = false, int Corners = CUI::CORNER_ALL);
-	void DoEditBoxOption(void *pID, char *pOption, unsigned OptionSize, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden = false);
-	void DoEditBoxOptionUTF8(void *pID, char *pOption, unsigned OptionSize, unsigned OptionMaxLength, const CUIRect *pRect, const char *pStr, float VSplitVal, float *pOffset, bool Hidden = false);
-	void DoScrollbarOption(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite = false);
-	void DoScrollbarOptionLabeled(void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int Num, IScrollbarScale *pScale = &LinearScrollbarScale);
 	float DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool *pActive);
 	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
 
-	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
-	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
 	void DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);
 	void DoButton_KeySelect(CButtonContainer *pBC, const char *pText, const CUIRect *pRect);
 	int DoKeyReader(CButtonContainer *pPC, const CUIRect *pRect, int Key, int Modifier, int *pNewModifier);
@@ -261,7 +203,8 @@ private:
 		CScrollRegion m_ScrollRegion;
 		vec2 m_ScrollOffset;
 		char m_aFilterString[64];
-		float m_OffsetFilter;
+		CLineInput m_FilterInput;
+		int m_BackgroundCorners;
 
 	protected:
 		CListboxItem DoNextRow();
@@ -275,12 +218,12 @@ private:
 		bool DoFilter(float FilterHeight = 20.0f, float Spacing = 2.0f);
 		void DoFooter(const char *pBottomText, float FooterHeight = 20.0f); // call before DoStart to create a footer
 		void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex,
-					const CUIRect *pRect = 0, bool Background = true, bool *pActive = 0);
+					const CUIRect *pRect = 0, bool Background = true, bool *pActive = 0, int BackgroundCorners = CUIRect::CORNER_ALL);
 		CListboxItem DoNextItem(const void *pID, bool Selected = false, bool *pActive = 0);
 		CListboxItem DoSubheader();
 		int DoEnd();
 		bool FilterMatches(const char *pNeedle) const;
-		bool WasItemActivated() const { return m_ListBoxItemActivated; };
+		bool WasItemActivated() const { return m_ListBoxItemActivated; }
 		float GetScrollBarWidth() const { return m_ScrollRegion.IsScrollbarShown() ? 20 : 0; } // defined in menus_scrollregion.cpp
 	};
 
@@ -292,6 +235,7 @@ private:
 		POPUP_CONFIRM, // generic confirmation popup (two buttons)
 		POPUP_FIRST_LAUNCH,
 		POPUP_CONNECTING,
+		POPUP_LOADING_DEMO,
 		POPUP_LANGUAGE,
 		POPUP_COUNTRY,
 		POPUP_RENAME_DEMO,
@@ -334,11 +278,8 @@ private:
 	bool m_MenuActive;
 	vec2 m_MousePos;
 	vec2 m_PrevMousePos;
-	bool m_CursorActive;
-	bool m_PrevCursorActive;
-	bool m_PopupActive;
 	int m_ActiveListBox;
-	int m_PopupSelection;
+	int m_PopupCountrySelection;
 	bool m_SkinModified;
 	bool m_KeyReaderWasActive;
 	bool m_KeyReaderIsActive;
@@ -409,7 +350,7 @@ private:
 			GAMEICON_SIZE=64,
 			GAMEICON_OLDHEIGHT=192,
 		};
-		CGameIcon() {};
+		CGameIcon() {}
 		CGameIcon(const char *pName) : m_Name(pName) {}
 
 		string m_Name;
@@ -422,11 +363,6 @@ private:
 
 	int64 m_LastInput;
 
-	// some settings
-	static float ms_ButtonHeight;
-	static float ms_ListheaderHeight;
-	static float ms_FontmodHeight;
-
 	// for settings
 	bool m_NeedRestartPlayer;
 	bool m_NeedRestartGraphics;
@@ -437,18 +373,15 @@ private:
 	bool m_RefreshSkinSelector;
 	const CSkins::CSkin *m_pSelectedSkin;
 
-	//
-	bool m_EscapePressed;
-	bool m_EnterPressed;
-	bool m_TabPressed;
-	bool m_DeletePressed;
-	bool m_UpArrowPressed;
-	bool m_DownArrowPressed;
-
 	// for map download popup
 	int64 m_DownloadLastCheckTime;
 	int m_DownloadLastCheckSize;
 	float m_DownloadSpeed;
+
+	// for demo loading popup
+	char m_aDemoLoadingFile[IO_MAX_PATH_LENGTH];
+	int m_DemoLoadingStorageType;
+	bool m_DemoLoadingPopupRendered;
 
 	// for password popup
 	char m_aPasswordPopupServerAddress[256];
@@ -458,9 +391,6 @@ private:
 	int m_CallvoteSelectedPlayer;
 	char m_aFilterString[VOTE_REASON_LENGTH];
 	char m_aCallvoteReason[VOTE_REASON_LENGTH];
-
-	// for callbacks
-	int *m_pActiveDropdown;
 
 	// demo
 	enum
@@ -482,16 +412,18 @@ private:
 		bool m_Valid;
 		CDemoHeader m_Info;
 
+		CDemoItem() : m_InfosLoaded(false), m_Valid(false) {}
+
 		int GetMarkerCount() const
 		{
 			if(!m_Valid || !m_InfosLoaded)
 				return -1;
-			return bytes_be_to_uint(m_Info.m_aNumTimelineMarkers);
+			return bytes_be_to_int(m_Info.m_aNumTimelineMarkers);
 		}
 
 		int Length() const
 		{
-			return bytes_be_to_uint(m_Info.m_aLength);
+			return bytes_be_to_int(m_Info.m_aLength);
 		}
 
 		bool operator<(const CDemoItem &Other) const
@@ -648,26 +580,6 @@ private:
 	void Move(bool Up, int Filter);
 	void InitDefaultFilters();
 
-	class CInfoOverlay
-	{
-	public:
-		enum
-		{
-			OVERLAY_SERVERINFO=0,
-			OVERLAY_HEADERINFO,
-			OVERLAY_PLAYERSINFO,
-		};
-
-		int m_Type;
-		const void *m_pData;
-		float m_X;
-		float m_Y;
-		bool m_Reset;
-	};
-
-	CInfoOverlay m_InfoOverlay;
-	bool m_InfoOverlayActive;
-
 	struct CColumn
 	{
 		int m_ID;
@@ -678,7 +590,7 @@ private:
 		int m_Flags;
 		CUIRect m_Rect;
 		CUIRect m_Spacer;
-		CUI::EAlignment m_Align;
+		int m_Align;
 	};
 
 	enum
@@ -716,17 +628,17 @@ private:
 	static CColumn ms_aBrowserCols[NUM_BROWSER_COLS];
 	static CColumn ms_aDemoCols[NUM_DEMO_COLS];
 
-	CBrowserFilter* GetSelectedBrowserFilter()
+	CBrowserFilter *GetSelectedBrowserFilter()
 	{
 		const int Tab = ServerBrowser()->GetType();
-		if(m_aSelectedFilters[Tab] == -1)
+		if(m_aSelectedFilters[Tab] < 0 || m_aSelectedFilters[Tab] >= m_lFilters.size())
 			return 0;
 		return &m_lFilters[m_aSelectedFilters[Tab]];
 	}
 
-	const CServerInfo* GetSelectedServerInfo()
+	const CServerInfo *GetSelectedServerInfo()
 	{
-		CBrowserFilter* pSelectedFilter = GetSelectedBrowserFilter();
+		CBrowserFilter *pSelectedFilter = GetSelectedBrowserFilter();
 		if(!pSelectedFilter)
 			return 0;
 		const int Tab = ServerBrowser()->GetType();
@@ -761,25 +673,22 @@ private:
 	void UpdateVideoModeSettings();
 
 	// found in menus.cpp
-	void Render();
+	void RenderMenu(CUIRect Screen);
 	void RenderMenubar(CUIRect r);
 	void RenderNews(CUIRect MainView);
 	void RenderBackButton(CUIRect MainView);
-	inline float GetListHeaderHeight() const { return ms_ListheaderHeight + (Config()->m_UiWideview ? 3.0f : 0.0f); }
-	inline float GetListHeaderHeightFactor() const { return 1.0f + (Config()->m_UiWideview ? (3.0f/ms_ListheaderHeight) : 0.0f); }
 	static void ConchainUpdateMusicState(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	void UpdateMusicState();
 
 	// found in menus_demo.cpp
 	bool FetchHeader(CDemoItem *pItem);
-	void RenderDemoPlayer(CUIRect MainView);
+	void RenderDemoPlayer(CUIRect Screen);
 	void RenderDemoList(CUIRect MainView);
 	float RenderDemoDetails(CUIRect View);
 	void PopupConfirmDeleteDemo();
 
 	// found in menus_start.cpp
 	void RenderStartMenu(CUIRect MainView);
-	void RenderLogo(CUIRect MainView);
 
 	// found in menus_ingame.cpp
 	void RenderGame(CUIRect MainView);
@@ -802,7 +711,6 @@ private:
 	void RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, const vec4 &TextColor, const vec4 &TextOutlineColor);
 	void RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pInfo);
 	void RenderServerbrowserBottomBox(CUIRect View);
-	void RenderServerbrowserOverlay();
 	void RenderFilterHeader(CUIRect View, int FilterIndex);
 	void PopupConfirmRemoveFilter();
 	void PopupConfirmCountryFilter();
@@ -813,7 +721,6 @@ private:
 	static void ConchainServerbrowserUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	static void ConchainServerbrowserSortingUpdate(IConsole::IResult *pResult, void *pUserData, IConsole::FCommandCallback pfnCallback, void *pCallbackUserData);
 	void DoFriendListEntry(CUIRect *pView, CFriendItem *pFriend, const void *pID, const CContactInfo *pFriendInfo, const CServerInfo *pServerInfo, bool Checked, bool Clan = false);
-	void SetOverlay(int Type, float x, float y, const void *pData);
 	void UpdateFriendCounter(const CServerInfo *pEntry);
 	void UpdateFriends();
 
@@ -859,9 +766,6 @@ private:
 
 	void SetActive(bool Active);
 
-	void InvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CMenus *pMenu, CUIRect Rect), void *pExtra=0);
-	void DoPopupMenu();
-
 	// loading
 	int m_LoadCurrent;
 	int m_LoadTotal;
@@ -901,5 +805,7 @@ public:
 	virtual void OnRender();
 	virtual bool OnInput(IInput::CEvent Event);
 	virtual bool OnCursorMove(float x, float y, int CursorType);
+
+	static void Con_Play(IConsole::IResult *pResult, void *pUserData);
 };
 #endif

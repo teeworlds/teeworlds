@@ -5,6 +5,7 @@
 
 #include <engine/map.h>
 #include <game/mapitems.h>
+#include <game/gamecore.h> // StrToInts, IntsToStr
 
 class CLayers
 {
@@ -22,13 +23,17 @@ class CLayers
 public:
 	CLayers();
 	void Init(class IKernel *pKernel, class IMap *pMap=0);
-	int NumGroups() const { return m_GroupsNum; };
-	int NumLayers() const { return m_LayersNum; };
-	class IMap *Map() const { return m_pMap; };
-	CMapItemGroup *GameGroup() const { return m_pGameGroup; };
-	CMapItemLayerTilemap *GameLayer() const { return m_pGameLayer; };
+	int NumGroups() const { return m_GroupsNum; }
+	int NumLayers() const { return m_LayersNum; }
+	class IMap *Map() const { return m_pMap; }
+	CMapItemGroup *GameGroup() const { return m_pGameGroup; }
+	CMapItemLayerTilemap *GameLayer() const { return m_pGameLayer; }
 	CMapItemGroup *GetGroup(int Index) const;
 	CMapItemLayer *GetLayer(int Index) const;
+	bool HasMaterialLayer() { return m_pMaterialLayer != nullptr; }
+	CMapItemLayerTilemap *MaterialLayer() const { return m_pMaterialLayer; }
+private:
+	CMapItemLayerTilemap *m_pMaterialLayer;
 };
 
 #endif

@@ -1,4 +1,5 @@
-
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef BASE_COLOR_H
 #define BASE_COLOR_H
 
@@ -30,18 +31,15 @@ inline vec3 HslToRgb(vec3 HSL)
 {
 	if(HSL.s == 0.0f)
 		return vec3(HSL.l, HSL.l, HSL.l);
-	else
-	{
-		float v2 = HSL.l < 0.5f ? HSL.l * (1.0f + HSL.s) : (HSL.l+HSL.s) - (HSL.s*HSL.l);
-		float v1 = 2.0f * HSL.l - v2;
 
-		return vec3(HueToRgb(v1, v2, HSL.h + (1.0f/3.0f)), HueToRgb(v1, v2, HSL.h), HueToRgb(v1, v2, HSL.h - (1.0f/3.0f)));
-	}
+	float v2 = HSL.l < 0.5f ? HSL.l * (1.0f + HSL.s) : (HSL.l+HSL.s) - (HSL.s*HSL.l);
+	float v1 = 2.0f * HSL.l - v2;
+	return vec3(HueToRgb(v1, v2, HSL.h + (1.0f/3.0f)), HueToRgb(v1, v2, HSL.h), HueToRgb(v1, v2, HSL.h - (1.0f/3.0f)));
 }
 
 /*
 	Function: HexToRgba
-		Converts Hex to Rgba
+		Converts Hex to RGBA
 
 	Remarks: Hex should be RGBA8
 */
@@ -52,13 +50,12 @@ inline vec4 HexToRgba(int hex)
 	c.g = ((hex >> 16) & 0xFF) / 255.0f;
 	c.b = ((hex >> 8) & 0xFF) / 255.0f;
 	c.a = (hex & 0xFF) / 255.0f;
-
 	return c;
 }
 
 /*
 	Function: HsvToRgb
-		Converts Hsv to Rgb
+		Converts HSV to RGB
 */
 inline vec3 HsvToRgb(vec3 hsv)
 {
@@ -114,12 +111,12 @@ inline vec3 HsvToRgb(vec3 hsv)
 
 /*
 	Function: RgbToHsv
-		Converts Rgb to Hsv
+		Converts RGB to HSV
 */
 inline vec3 RgbToHsv(vec3 rgb)
 {
-	float h_min = min(min(rgb.r, rgb.g), rgb.b);
-	float h_max = max(max(rgb.r, rgb.g), rgb.b);
+	float h_min = minimum(minimum(rgb.r, rgb.g), rgb.b);
+	float h_max = maximum(maximum(rgb.r, rgb.g), rgb.b);
 
 	// hue
 	float hue = 0.0f;
@@ -149,6 +146,15 @@ inline vec3 RgbToHsv(vec3 rgb)
 	return vec3(hue, s, v);
 }
 
+inline float RgbToLabH(float val)
+{
+	return val > 0.008856f ? powf(val, 0.333333f) : (7.787f*val + 0.137931f);
+}
+
+/*
+	Function: RgbToLab
+		Converts RGB to Lab
+*/
 inline vec3 RgbToLab(vec3 rgb)
 {
 	vec3 adapt(0.950467f, 1, 1.088969f);
@@ -158,23 +164,11 @@ inline vec3 RgbToLab(vec3 rgb)
 		0.0193324f * rgb.r + 0.119193f * rgb.g + 0.950444f * rgb.b
 	);
 
-#define RGB_TO_LAB_H(VAL) ((VAL > 0.008856f) ? powf(VAL, 0.333333f) : (7.787f*VAL + 0.137931f))
-
 	return vec3(
-		116 * RGB_TO_LAB_H( xyz.y / adapt.y) - 16,
-		500 * (RGB_TO_LAB_H(xyz.x / adapt.x) - RGB_TO_LAB_H(xyz.y / adapt.y)),
-		200 * (RGB_TO_LAB_H(xyz.y / adapt.y) - RGB_TO_LAB_H(xyz.z / adapt.z))
+		116 * RgbToLabH(xyz.y / adapt.y) - 16,
+		500 * (RgbToLabH(xyz.x / adapt.x) - RgbToLabH(xyz.y / adapt.y)),
+		200 * (RgbToLabH(xyz.y / adapt.y) - RgbToLabH(xyz.z / adapt.z))
 	);
-
-#undef RGB_TO_LAB_H
-}
-
-inline float LabDistance(vec3 labA, vec3 labB)
-{
-	float ld = labA.x - labB.x;
-	float ad = labA.y - labB.y;
-	float bd = labA.z - labB.z;
-	return sqrtf(ld*ld + ad*ad + bd*bd);
 }
 
 #endif

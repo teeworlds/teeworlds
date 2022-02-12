@@ -115,16 +115,15 @@ int CCommandProcessorFragment_OpenGL::TexFormatToOpenGLFormat(int TexFormat)
 
 unsigned char CCommandProcessorFragment_OpenGL::Sample(int w, int h, const unsigned char *pData, int u, int v, int Offset, int ScaleW, int ScaleH, int Bpp)
 {
-	int Value = 0;
+	int Sum = 0;
 	for(int x = 0; x < ScaleW; x++)
 		for(int y = 0; y < ScaleH; y++)
-			Value += pData[((v+y)*w+(u+x))*Bpp+Offset];
-	return Value/(ScaleW*ScaleH);
+			Sum += pData[((v+y)*w+(u+x))*Bpp+Offset];
+	return Sum/(ScaleW*ScaleH);
 }
 
 void *CCommandProcessorFragment_OpenGL::Rescale(int Width, int Height, int NewWidth, int NewHeight, int Format, const unsigned char *pData)
 {
-	unsigned char *pTmpData;
 	int ScaleW = Width/NewWidth;
 	int ScaleH = Height/NewHeight;
 
@@ -132,18 +131,12 @@ void *CCommandProcessorFragment_OpenGL::Rescale(int Width, int Height, int NewWi
 	if(Format == CCommandBuffer::TEXFORMAT_RGBA)
 		Bpp = 4;
 
-	pTmpData = (unsigned char *)mem_alloc(NewWidth*NewHeight*Bpp, 1);
+	unsigned char *pTmpData = (unsigned char *)mem_alloc(NewWidth*NewHeight*Bpp);
 
-	int c = 0;
 	for(int y = 0; y < NewHeight; y++)
-		for(int x = 0; x < NewWidth; x++, c++)
-		{
-			pTmpData[c*Bpp] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 0, ScaleW, ScaleH, Bpp);
-			pTmpData[c*Bpp+1] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 1, ScaleW, ScaleH, Bpp);
-			pTmpData[c*Bpp+2] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 2, ScaleW, ScaleH, Bpp);
-			if(Bpp == 4)
-				pTmpData[c*Bpp+3] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, 3, ScaleW, ScaleH, Bpp);
-		}
+		for(int x = 0; x < NewWidth; x++)
+			for(int b = 0; b < Bpp; b++)
+				pTmpData[(NewWidth*y+x)*Bpp+b] = Sample(Width, Height, pData, x*ScaleW, y*ScaleH, b, ScaleW, ScaleH, Bpp);
 
 	return pTmpData;
 }
@@ -235,7 +228,6 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::CState &St
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-
 	}
 
 	// screen mapping
@@ -264,7 +256,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Init(const CInitCommand *pCommand)
 	dbg_msg("render", "opengl max texture sizes: %d, %d(3D)", m_MaxTexSize, m_Max3DTexSize);
 	if(m_Max3DTexSize < IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION)
 		dbg_msg("render", "*** warning *** max 3D texture size is too low - using the fallback system");
-	m_TextureArraySize = IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION / min(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
+	m_TextureArraySize = IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION / minimum(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
 	*pCommand->m_pTextureArraySize = m_TextureArraySize;
 
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
@@ -296,7 +288,6 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 {
 	int Width = pCommand->m_Width;
 	int Height = pCommand->m_Height;
-	int Depth = 1;
 	void *pTexData = pCommand->m_pData;
 
 	// resample if needed
@@ -306,7 +297,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 		if((pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE3D) && m_Max3DTexSize >= CTexture::MIN_GL_MAX_3D_TEXTURE_SIZE)
 		{
 			if(pCommand->m_Flags&CCommandBuffer::TEXFLAG_TEXTURE2D)
-				MaxTexSize = min(MaxTexSize, m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION);
+				MaxTexSize = minimum(MaxTexSize, m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION);
 			else
 				MaxTexSize = m_Max3DTexSize * IGraphics::NUMTILES_DIMENSION;
 		}
@@ -407,11 +398,11 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	{
 		Width /= IGraphics::NUMTILES_DIMENSION;
 		Height /= IGraphics::NUMTILES_DIMENSION;
-		Depth = min(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
+		int Depth = minimum(m_Max3DTexSize, IGraphics::NUMTILES_DIMENSION * IGraphics::NUMTILES_DIMENSION);
 
 		// copy and reorder texture data
 		int MemSize = Width*Height*IGraphics::NUMTILES_DIMENSION*IGraphics::NUMTILES_DIMENSION*pCommand->m_PixelSize;
-		char *pTmpData = (char *)mem_alloc(MemSize, sizeof(void*));
+		char *pTmpData = (char *)mem_alloc(MemSize);
 
 		const int TileSize = (Height * Width) * pCommand->m_PixelSize;
 		const int TileRowSize = Width * pCommand->m_PixelSize;
@@ -491,7 +482,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Screenshot(const CCommandBuffer::CScr
 	int y = aViewport[3] - pCommand->m_Y - 1 - (h - 1);
 
 	// we allocate one more row to use when we are flipping the texture
-	unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3, 1);
+	unsigned char *pPixelData = (unsigned char *)mem_alloc(w*(h+1)*3);
 	unsigned char *pTempRow = pPixelData+w*h*3;
 
 	// fetch the pixels
@@ -589,23 +580,18 @@ bool CCommandProcessorFragment_SDL::RunCommand(const CCommandBuffer::CCommand *p
 
 void CCommandProcessor_SDL_OpenGL::RunBuffer(CCommandBuffer *pBuffer)
 {
-	unsigned CmdIndex = 0;
-	while(1)
+	for(CCommandBuffer::CCommand *pCommand = pBuffer->Head(); pCommand; pCommand = pCommand->m_pNext)
 	{
-		const CCommandBuffer::CCommand *pBaseCommand = pBuffer->GetCommand(&CmdIndex);
-		if(pBaseCommand == 0x0)
-			break;
-
-		if(m_OpenGL.RunCommand(pBaseCommand))
+		if(m_OpenGL.RunCommand(pCommand))
 			continue;
 
-		if(m_SDL.RunCommand(pBaseCommand))
+		if(m_SDL.RunCommand(pCommand))
 			continue;
 
-		if(m_General.RunCommand(pBaseCommand))
+		if(m_General.RunCommand(pCommand))
 			continue;
 
-		dbg_msg("graphics", "unknown command %d", pBaseCommand->m_Cmd);
+		dbg_msg("graphics", "unknown command %d", pCommand->m_Cmd);
 	}
 }
 
@@ -756,7 +742,6 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWin
 	RunBuffer(&CmdBuffer);
 	WaitForIdle();
 
-	// return
 	return 0;
 }
 
@@ -838,11 +823,8 @@ int CGraphicsBackend_SDL_OpenGL::GetVideoModes(CVideoMode *pModes, int MaxModes,
 		return 0;
 	}
 
-	if(NumModes > MaxModes)
-		NumModes = MaxModes;
-
 	int ModesCount = 0;
-	for(int i = 0; i < NumModes; i++)
+	for(int i = 0; i < NumModes && ModesCount < MaxModes; i++)
 	{
 		SDL_DisplayMode Mode;
 		if(SDL_GetDisplayMode(Screen, i, &Mode) < 0)
@@ -865,9 +847,6 @@ int CGraphicsBackend_SDL_OpenGL::GetVideoModes(CVideoMode *pModes, int MaxModes,
 
 		pModes[ModesCount].m_Width = Mode.w;
 		pModes[ModesCount].m_Height = Mode.h;
-		pModes[ModesCount].m_Red = 8;
-		pModes[ModesCount].m_Green = 8;
-		pModes[ModesCount].m_Blue = 8;
 		ModesCount++;
 	}
 	return ModesCount;
@@ -892,7 +871,6 @@ int CGraphicsBackend_SDL_OpenGL::WindowActive()
 int CGraphicsBackend_SDL_OpenGL::WindowOpen()
 {
 	return SDL_GetWindowFlags(m_pWindow)&SDL_WINDOW_SHOWN;
-
 }
 
 

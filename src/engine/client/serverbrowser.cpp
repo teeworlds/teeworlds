@@ -10,6 +10,7 @@
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
 #include <engine/shared/jsonwriter.h>
+#include <engine/shared/mapchecker.h>
 
 #include <engine/config.h>
 #include <engine/console.h>
@@ -39,7 +40,11 @@ inline int GetNewToken()
 	return random_int();
 }
 
-//
+CServerBrowser::CServerlist::~CServerlist()
+{
+	mem_free(m_ppServerlist);
+}
+
 void CServerBrowser::CServerlist::Clear()
 {
 	m_ServerlistHeap.Reset();
@@ -68,6 +73,7 @@ CServerBrowser::CServerBrowser()
 
 	m_NeedRefresh = 0;
 	m_RefreshFlags = 0;
+	m_InfoUpdated = false;
 
 	// the token is to keep server refresh separated from each other
 	m_CurrentLanToken = 1;
@@ -84,6 +90,7 @@ void CServerBrowser::Init(class CNetClient *pNetClient, const char *pNetVersion)
 	m_pConsole = Kernel()->RequestInterface<IConsole>();
 	m_pStorage = Kernel()->RequestInterface<IStorage>();
 	m_pMasterServer = Kernel()->RequestInterface<IMasterServer>();
+	m_pMapChecker = Kernel()->RequestInterface<IMapChecker>();
 	m_pNetClient = pNetClient;
 
 	m_ServerBrowserFavorites.Init(pNetClient, m_pConsole, Kernel()->RequestInterface<IEngine>(), pConfigManager);
@@ -146,9 +153,10 @@ void CServerBrowser::Set(const NETADDR &Addr, int SetType, int Token, const CSer
 			{
 				SetInfo(Type, pEntry, *pInfo);
 				if(Type == IServerBrowser::TYPE_LAN)
-					pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-m_BroadcastTime)*1000/time_freq()), 999);
+					pEntry->m_Info.m_Latency = minimum(static_cast<int>((time_get()-m_BroadcastTime)*1000/time_freq()), 999);
 				else
-					pEntry->m_Info.m_Latency = min(static_cast<int>((time_get()-pEntry->m_RequestTime)*1000/time_freq()), 999);
+					pEntry->m_Info.m_Latency = minimum(static_cast<int>((time_get()-pEntry->m_RequestTime)*1000/time_freq()), 999);
+				m_InfoUpdated = true;
 				RemoveRequest(pEntry);
 			}
 		}
@@ -171,6 +179,7 @@ void CServerBrowser::Update(bool ForceResort)
 		CNetChunk Packet;
 
 		m_NeedRefresh = 0;
+		m_InfoUpdated = false;
 
 		mem_zero(&Packet, sizeof(Packet));
 		Packet.m_ClientID = -1;
@@ -328,6 +337,14 @@ void CServerBrowser::Refresh(int RefreshFlags)
 	}
 }
 
+bool CServerBrowser::WasUpdated(bool Purge)
+{
+	bool Result = m_InfoUpdated;
+	if(Purge)
+		m_InfoUpdated = false;
+	return Result;
+}
+
 int CServerBrowser::LoadingProgression() const
 {
 	if(m_aServerlist[m_ActServerlistType].m_NumServers == 0)
@@ -448,13 +465,13 @@ CServerEntry *CServerBrowser::Add(int ServerlistType, const NETADDR &Addr)
 		{
 			// alloc start size
 			m_aServerlist[ServerlistType].m_NumServerCapacity = 1000;
-			m_aServerlist[ServerlistType].m_ppServerlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*), 1);
+			m_aServerlist[ServerlistType].m_ppServerlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*));
 		}
 		else
 		{
 			// increase size
 			m_aServerlist[ServerlistType].m_NumServerCapacity += 100;
-			CServerEntry **ppNewlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*), 1);
+			CServerEntry **ppNewlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*));
 			mem_copy(ppNewlist, m_aServerlist[ServerlistType].m_ppServerlist, m_aServerlist[ServerlistType].m_NumServers*sizeof(CServerEntry*));
 			mem_free(m_aServerlist[ServerlistType].m_ppServerlist);
 			m_aServerlist[ServerlistType].m_ppServerlist = ppNewlist;
@@ -578,13 +595,7 @@ void CServerBrowser::SetInfo(int ServerlistType, CServerEntry *pEntry, const CSe
 		str_comp(pEntry->m_Info.m_aGameType, "LTS") == 0 ||	str_comp(pEntry->m_Info.m_aGameType, "LMS") == 0)
 		pEntry->m_Info.m_Flags |= FLAG_PURE;
 
-	if(str_comp(pEntry->m_Info.m_aMap, "dm1") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm2") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm3") == 0 ||
-		str_comp(pEntry->m_Info.m_aMap, "dm6") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm7") == 0 || str_comp(pEntry->m_Info.m_aMap, "dm8") == 0 ||
-		str_comp(pEntry->m_Info.m_aMap, "dm9") == 0 ||
-		str_comp(pEntry->m_Info.m_aMap, "ctf1") == 0 || str_comp(pEntry->m_Info.m_aMap, "ctf2") == 0 || str_comp(pEntry->m_Info.m_aMap, "ctf3") == 0 ||
-		str_comp(pEntry->m_Info.m_aMap, "ctf4") == 0 || str_comp(pEntry->m_Info.m_aMap, "ctf5") == 0 || str_comp(pEntry->m_Info.m_aMap, "ctf6") == 0 ||
-		str_comp(pEntry->m_Info.m_aMap, "ctf7") == 0 || str_comp(pEntry->m_Info.m_aMap, "ctf8") == 0 ||
-		str_comp(pEntry->m_Info.m_aMap, "lms1") == 0)
+	if(m_pMapChecker->IsStandardMap(pEntry->m_Info.m_aMap))
 		pEntry->m_Info.m_Flags |= FLAG_PUREMAP;
 	pEntry->m_Info.m_Favorite = Fav;
 	pEntry->m_Info.m_NetAddr = pEntry->m_Addr;
@@ -602,7 +613,7 @@ void CServerBrowser::LoadServerlist()
 	if(!File)
 		return;
 	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize, 1);
+	char *pFileData = (char *)mem_alloc(FileSize);
 	io_read(File, pFileData, FileSize);
 	io_close(File);
 

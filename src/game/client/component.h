@@ -33,15 +33,15 @@ protected:
 public:
 	virtual ~CComponent() {}
 
-	virtual void OnStateChange(int NewState, int OldState) {};
-	virtual void OnConsoleInit() {};
-	virtual int GetInitAmount() const { return 0; }; // Amount of progress reported by this component during OnInit
-	virtual void OnInit() {};
-	virtual void OnShutdown() {};
-	virtual void OnReset() {};
-	virtual void OnRender() {};
-	virtual void OnRelease() {};
-	virtual void OnMapLoad() {};
+	virtual void OnStateChange(int NewState, int OldState) {}
+	virtual void OnConsoleInit() {}
+	virtual int GetInitAmount() const { return 0; } // Amount of progress reported by this component during OnInit
+	virtual void OnInit() {}
+	virtual void OnShutdown() {}
+	virtual void OnReset() {}
+	virtual void OnRender() {}
+	virtual void OnRelease() {}
+	virtual void OnMapLoad() {}
 	virtual void OnMessage(int Msg, void *pRawMsg) {}
 	virtual bool OnCursorMove(float x, float y, int CursorType) { return false; }
 	virtual bool OnInput(IInput::CEvent e) { return false; }
