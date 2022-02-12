@@ -429,7 +429,8 @@ bool CChat::OnInput(IInput::CEvent Event)
 	else if(m_Input.ProcessInput(Event))
 	{
 		// reset name completion process
-		m_CompletionChosen = -1;
+		if(Event.m_Flags&IInput::FLAG_PRESS)
+			m_CompletionChosen = -1;
 	}
 
 	if(Event.m_Flags&IInput::FLAG_PRESS && Event.m_Key == KEY_LCTRL)
