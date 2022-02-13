@@ -1,6 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <algorithm>
+#include <limits.h>
 
 #include <base/tl/algorithm.h>
 
@@ -370,6 +371,8 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		{
 			if(pData+1 > pEnd)
 				return -2;
+			if(*pData < 0 || *pData > INT_MAX / 4)
+				return -3;
 			ItemSize = (*pData++) * 4;
 		}
 
