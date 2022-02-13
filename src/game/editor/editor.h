@@ -390,7 +390,7 @@ public:
 
 	// other game layers
 	class CLayerMaterial *m_pMaterialLayer;
-	class array<CLayerCustom*> m_apCustomLayers;  // should be CLayerCustom but compiler cries
+	class array<CLayerCustom*> m_apCustomLayers;
 	void MakeMaterialLayer(CLayer* pLayer);
 	void MakeCustomLayer(CLayer* pLayer);
 };

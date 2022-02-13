@@ -422,7 +422,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 								pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
 								pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
 							}
-
 						}
 
 						if(!pTiles)
