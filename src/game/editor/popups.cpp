@@ -224,6 +224,17 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 	// don't allow deletion of game layer
 	if(!IsGameLayer && pEditor->DoButton_Editor(&s_DeleteButton, "Delete layer", 0, &Button, 0, "Deletes the layer"))
 	{
+		CLayer* Layer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers[pEditor->m_SelectedLayer];
+		if(Layer->m_Flags&LAYERFLAG_OPERATIONAL)
+		{
+			if(Layer->m_Flags&LAYERFLAG_CUSTOM_GAMELAYER)
+			{
+				CLayerCustom *CustomLayer = (CLayerCustom *)Layer;
+				pEditor->m_Map.m_apCustomLayers.remove(CustomLayer);
+			}
+			if(dynamic_cast<CLayerMaterial*>(Layer))
+				pEditor->m_Map.m_pMaterialLayer = 0;
+		}
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return true;
 	}
