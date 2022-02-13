@@ -293,7 +293,7 @@ class CLayerCustom;
 
 class CEditorMap
 {
-	void MakeGameGroup(CLayerGroup *pGroup);
+	bool MakeGameGroup(CLayerGroup *pGroup);
 	void MakeGameLayer(CLayer *pLayer);
 public:
 	CEditor *m_pEditor;

@@ -4198,11 +4198,16 @@ void CEditorMap::MakeGameLayer(CLayer *pLayer)
 	m_pGameLayer->m_Flags |= LAYERFLAG_OPERATIONAL;
 }
 
-void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
+bool CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 {
-	m_pGameGroup = pGroup;
-	m_pGameGroup->m_GameGroup = true;
-	str_copy(m_pGameGroup->m_aName, "Game", sizeof(m_pGameGroup->m_aName));
+	if(!m_pGameGroup)
+	{
+		m_pGameGroup = pGroup;
+		m_pGameGroup->m_GameGroup = true;
+		str_copy(m_pGameGroup->m_aName, "Game", sizeof(m_pGameGroup->m_aName));
+		return true;
+	}
+	return m_pGameGroup == pGroup;
 }
 
 
