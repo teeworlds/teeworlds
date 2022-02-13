@@ -62,7 +62,7 @@ void CLayers::InitGameLayer()
 				{
 					char name_buf[12];
 					IntsToStr(pTilemap->m_aName, sizeof(pTilemap->m_aName)/sizeof(int), name_buf);
-					if(str_comp_nocase(name_buf, "Material") == 0)  // save files shouldn't be localized
+					if(str_comp_nocase(name_buf, LAYERNAME_MATERIAL) == 0)  // save files shouldn't be localized
 					{
 						if(!m_pMaterialLayer)
 							m_pMaterialLayer = pTilemap;

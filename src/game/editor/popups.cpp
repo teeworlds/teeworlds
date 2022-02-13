@@ -248,8 +248,12 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 		Button.VSplitLeft(40.0f, 0, &Button);
 		static CLineInput s_NameInput;
 		s_NameInput.SetBuffer(pCurrentLayer->m_aName, sizeof(pCurrentLayer->m_aName));
-		if(pEditor->DoEditBox(&s_NameInput, &Button, 10.0f))
-			pEditor->m_Map.m_Modified = true;
+		if (pEditor->DoEditBox(&s_NameInput, &Button, 10.0f))
+			if (pCurrentLayer->m_Flags & LAYERFLAG_OPERATIONAL &&
+				(str_comp_nocase(pCurrentLayer->m_aName, LAYERNAME_GAME) == 0
+				 || str_comp_nocase(pCurrentLayer->m_aName, LAYERNAME_MATERIAL) == 0))
+				str_copy(pCurrentLayer->m_aName, "Tiles", sizeof(pCurrentLayer->m_aName));
+		pEditor->m_Map.m_Modified = true;
 	}
 
 	View.HSplitBottom(10.0f, &View, 0);

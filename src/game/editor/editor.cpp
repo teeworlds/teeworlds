@@ -4204,7 +4204,7 @@ bool CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 	{
 		m_pGameGroup = pGroup;
 		m_pGameGroup->m_GameGroup = true;
-		str_copy(m_pGameGroup->m_aName, "Game", sizeof(m_pGameGroup->m_aName));
+		str_copy(m_pGameGroup->m_aName, LAYERNAME_GAME, sizeof(m_pGameGroup->m_aName));
 		return true;
 	}
 	return m_pGameGroup == pGroup;

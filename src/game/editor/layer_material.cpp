@@ -7,7 +7,7 @@
 CLayerMaterial::CLayerMaterial(int w, int h)
 : CLayerTiles(w, h)
 {
-	str_copy(m_aName, "Material", sizeof(m_aName));
+	str_copy(m_aName, LAYERNAME_MATERIAL, sizeof(m_aName));
 	m_Flags = LAYERFLAG_OPERATIONAL;
 }
 

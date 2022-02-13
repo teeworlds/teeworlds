@@ -412,7 +412,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 							{
 								char name_buf[12];
 								IntsToStr(pTilemapItem->m_aName, sizeof(name_buf)/sizeof(int), name_buf);
-								if(str_comp_nocase(name_buf, "Material") == 0)
+								if(str_comp_nocase(name_buf, LAYERNAME_MATERIAL) == 0)
 								{
 									pTiles = new CLayerMaterial(pTilemapItem->m_Width, pTilemapItem->m_Height);
 									MakeMaterialLayer(pTiles);
