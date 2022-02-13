@@ -60,16 +60,17 @@ void CLayers::InitGameLayer()
 				}
 				else if(pTilemap->m_Flags > TILESLAYERFLAG_GAME)  // this is some other
 				{
-					if(pTilemap->m_Version >= 5) // older versions didn't support this and we want to support everything
+					char name_buf[12];
+					IntsToStr(pTilemap->m_aName, sizeof(pTilemap->m_aName)/sizeof(int), name_buf);
+					if(str_comp_nocase(name_buf, "Material") == 0)  // save files shouldn't be localized
 					{
-						char name_buf[12];
-						IntsToStr(pTilemap->m_aName, sizeof(pTilemap->m_aName)/sizeof(int), name_buf);
-						if(str_comp_nocase(name_buf, "Material") == 0)  // save files shouldn't be localized
-						{
-							if(!m_pMaterialLayer)
-								m_pMaterialLayer = pTilemap;
-						}
+						if(!m_pMaterialLayer)
+							m_pMaterialLayer = pTilemap;
+					}
+					else
+					{
 						// Here we could find other layers without changing any mapitems
+						m_apCustomLayers.add(pTilemap);
 					}
 				}
 			}
@@ -117,4 +118,16 @@ CMapItemGroup *CLayers::GetGroup(int Index) const
 CMapItemLayer *CLayers::GetLayer(int Index) const
 {
 	return static_cast<CMapItemLayer *>(m_pMap->GetItem(m_LayersStart+Index, 0, 0));
+}
+
+CMapItemLayerTilemap *CLayers::GetCustomLayer(const char* LayerName)
+{
+	for(int i = 0; i < m_apCustomLayers.size(); ++i)
+	{
+		char layer_name_buf[12];
+		IntsToStr(m_apCustomLayers[i]->m_aName, sizeof(m_apCustomLayers[i]->m_aName)/sizeof(int), layer_name_buf);
+		if(str_comp_nocase(LayerName, layer_name_buf) == 0)
+			return m_apCustomLayers[i];
+	}
+	return 0;
 }

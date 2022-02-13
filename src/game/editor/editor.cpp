@@ -289,11 +289,17 @@ vec4 CEditor::GetButtonColor(const void *pID, int Checked)
 	if(Checked < 0)
 		return vec4(0,0,0,0.5f);
 
-	if(Checked > 0)
+	if(Checked == 1)
 	{
 		if(UI()->HotItem() == pID)
 			return vec4(1,0,0,0.75f);
 		return vec4(1,0,0,0.5f);
+	}
+	else if(Checked > 1)
+	{
+		if(UI()->HotItem() == pID)
+			return vec4(0.5f,0.5f,1,0.75f);
+		return vec4(0.5f,0.5f,1,0.5f);
 	}
 
 	if(UI()->HotItem() == pID)
@@ -1561,13 +1567,12 @@ void CEditor::DoMapEditor(CUIRect View)
 		// render the operational layers above everything else
 		if(m_Map.m_pGameGroup->m_Visible)
 		{
-
+			m_Map.m_pGameGroup->MapScreen();
 			for(int l = 0; l < m_Map.m_pGameGroup->m_lLayers.size(); l++)
 			{
 				if(!(m_Map.m_pGameGroup->m_lLayers[l]->m_Flags&LAYERFLAG_OPERATIONAL) || !m_Map.m_pGameGroup->m_lLayers[l]->m_Visible)
 					continue;
 
-				m_Map.m_pGameGroup->MapScreen();
 				m_Map.m_pGameGroup->m_lLayers[l]->Render();
 			}
 		}
@@ -2445,7 +2450,12 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect View)
 
 				const float FontSize = clamp(10.0f * Button.w / TextRender()->TextWidth(10.0f, aBuf, -1), 6.0f, 10.0f);
 
-				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
+				int Checked = 0;
+				if(m_Map.m_lGroups[g]->m_lLayers[i]->m_Flags&LAYERFLAG_OPERATIONAL)
+					Checked = 2;  // mark all operational layer blue  //TODO refactor this or use flag
+				if(g==m_SelectedGroup&&i==m_SelectedLayer)
+					Checked = 1;
+				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, Checked, &Button,
 					BUTTON_CONTEXT, "Select layer.", 0, FontSize))
 				{
 					m_SelectedLayer = i;
@@ -4185,7 +4195,7 @@ void CEditorMap::MakeGameLayer(CLayer *pLayer)
 	m_pGameLayer = (CLayerGame *)pLayer;
 	m_pGameLayer->m_pEditor = m_pEditor;
 	m_pGameLayer->m_Texture = m_pEditor->m_EntitiesTexture;
-	m_pGameLayer->m_Flags |= LAYERFLAG_OPERATIONAL|LAYERFLAG_NO_IMAGE;
+	m_pGameLayer->m_Flags |= LAYERFLAG_OPERATIONAL;
 }
 
 void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
@@ -4474,5 +4484,8 @@ void CEditorMap::MakeMaterialLayer(CLayer *pLayer)
 
 void CEditorMap::MakeCustomLayer(CLayer *pLayer)
 {
-	//TODO support custom layers
+	CLayerCustom *CustomLayer = (CLayerCustom *)pLayer;
+	CustomLayer->m_pEditor = m_pEditor;
+	str_format(CustomLayer->m_aName, sizeof(CustomLayer->m_aName)/sizeof(char), "Custom_%d", m_apCustomLayers.size()+1);
+	m_apCustomLayers.add(CustomLayer);
 }

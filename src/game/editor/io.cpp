@@ -404,7 +404,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 							MakeGameLayer(pTiles);
 							MakeGameGroup(pGroup);
 						}
-						else if(pTilemapItem->m_Flags&TILESLAYERFLAG_OTHER && pTilemapItem->m_Version >= 5)
+						else if(pTilemapItem->m_Flags != 0)  // detect any flagged gametiles
 						{
 							char name_buf[12];
 							IntsToStr(pTilemapItem->m_aName, sizeof(name_buf)/sizeof(int), name_buf);
@@ -413,6 +413,14 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 								pTiles = new CLayerMaterial(pTilemapItem->m_Width, pTilemapItem->m_Height);
 								MakeMaterialLayer(pTiles);
 								//MakeGameGroup(pGroup); TODO make a check that this layer is actually in the right group
+							}
+							else
+							{
+								pTiles = new CLayerCustom(pTilemapItem->m_Width, pTilemapItem->m_Height);
+								MakeCustomLayer(pTiles);
+								pTiles->m_Color = pTilemapItem->m_Color;
+								pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
+								pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
 							}
 
 						}
@@ -477,7 +485,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					}
 
 					if(pLayer)
-						pLayer->m_Flags = pLayerItem->m_Flags;
+						pLayer->m_Flags |= pLayerItem->m_Flags;
 				}
 			}
 		}

@@ -55,7 +55,7 @@ enum
 
 	LAYERFLAG_DETAIL=1,
 	LAYERFLAG_OPERATIONAL=2,
-	LAYERFLAG_NO_IMAGE=4,
+	LAYERFLAG_CUSTOM_GAMELAYER=4,
 
 	TILESLAYERFLAG_GAME=1,
 	TILESLAYERFLAG_OTHER=64,  // A dummy flag for ALL FUTURE tilelayers. You need to define the layer name in order to derive what it is
@@ -160,7 +160,7 @@ struct CMapItemLayer
 
 struct CMapItemLayerTilemap
 {
-	enum { CURRENT_VERSION=5 };
+	enum { CURRENT_VERSION=4 };
 
 	CMapItemLayer m_Layer;
 	int m_Version;
