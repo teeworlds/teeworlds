@@ -400,29 +400,32 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 						if(pTilemapItem->m_Flags&TILESLAYERFLAG_GAME)
 						{
-							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
-							MakeGameLayer(pTiles);
-							MakeGameGroup(pGroup);
+							if(MakeGameGroup(pGroup))
+							{
+								pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
+								MakeGameLayer(pTiles);
+							}
 						}
 						else if(pTilemapItem->m_Flags != 0)  // detect any flagged gametiles
 						{
-							char name_buf[12];
-							IntsToStr(pTilemapItem->m_aName, sizeof(name_buf)/sizeof(int), name_buf);
-							if(str_comp_nocase(name_buf, "Material") == 0)
+							if(MakeGameGroup(pGroup))  // only add gamelayers in gamegroup
 							{
-								pTiles = new CLayerMaterial(pTilemapItem->m_Width, pTilemapItem->m_Height);
-								MakeMaterialLayer(pTiles);
-								//MakeGameGroup(pGroup); TODO make a check that this layer is actually in the right group
+								char name_buf[12];
+								IntsToStr(pTilemapItem->m_aName, sizeof(name_buf)/sizeof(int), name_buf);
+								if(str_comp_nocase(name_buf, "Material") == 0)
+								{
+									pTiles = new CLayerMaterial(pTilemapItem->m_Width, pTilemapItem->m_Height);
+									MakeMaterialLayer(pTiles);
+								}
+								else
+								{
+									pTiles = new CLayerCustom(pTilemapItem->m_Width, pTilemapItem->m_Height);
+									MakeCustomLayer(pTiles);
+									pTiles->m_Color = pTilemapItem->m_Color;
+									pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
+									pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
+								}
 							}
-							else
-							{
-								pTiles = new CLayerCustom(pTilemapItem->m_Width, pTilemapItem->m_Height);
-								MakeCustomLayer(pTiles);
-								pTiles->m_Color = pTilemapItem->m_Color;
-								pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
-								pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
-							}
-
 						}
 
 						if(!pTiles)
