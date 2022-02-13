@@ -68,6 +68,10 @@ enum
 	ENTITY_OFFSET=255-16*4,
 };
 
+// layer names
+#define LAYERNAME_GAME "Game"
+#define LAYERNAME_MATERIAL "Material"
+
 struct CPoint
 {
 	int x, y; // 22.10 fixed point

@@ -7,7 +7,7 @@
 CLayerGame::CLayerGame(int w, int h)
 : CLayerTiles(w, h)
 {
-	str_copy(m_aName, "Game", sizeof(m_aName));
+	str_copy(m_aName, LAYERNAME_GAME, sizeof(m_aName));
 	m_Game = 1;
 	m_Flags = LAYERFLAG_OPERATIONAL;
 }
