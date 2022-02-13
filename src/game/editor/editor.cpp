@@ -1567,13 +1567,12 @@ void CEditor::DoMapEditor(CUIRect View)
 		// render the operational layers above everything else
 		if(m_Map.m_pGameGroup->m_Visible)
 		{
-
+			m_Map.m_pGameGroup->MapScreen();
 			for(int l = 0; l < m_Map.m_pGameGroup->m_lLayers.size(); l++)
 			{
 				if(!(m_Map.m_pGameGroup->m_lLayers[l]->m_Flags&LAYERFLAG_OPERATIONAL) || !m_Map.m_pGameGroup->m_lLayers[l]->m_Visible)
 					continue;
 
-				m_Map.m_pGameGroup->MapScreen();
 				m_Map.m_pGameGroup->m_lLayers[l]->Render();
 			}
 		}
