@@ -250,6 +250,7 @@ image_levelicons = Image("levelicons", "ui/icons/level.png", 1)
 image_sidebaricons = Image("sidebaricons", "ui/icons/sidebar.png", 1)
 image_chatwhisper = Image("chatwhisper", "ui/icons/chat_whisper.png", 1)
 image_timerclock = Image("timerclock", "ui/icons/timer_clock.png", 1)
+image_race_podium_gimmics = Image("racegimmics", "race_podium_gimmics.png", 1)
 
 container.images.Add(image_null)
 container.images.Add(image_game)
@@ -278,6 +279,7 @@ container.images.Add(image_sidebaricons)
 container.images.Add(image_chatwhisper)
 container.images.Add(Image("raceflag", "race_flag.png"))
 container.images.Add(image_timerclock)
+container.images.Add(image_race_podium_gimmics)
 
 container.pickups.Add(Pickup("health"))
 container.pickups.Add(Pickup("armor"))
@@ -314,6 +316,7 @@ set_networkicons = SpriteSet("networkicons", image_networkicons, 1, 2)
 set_levelicons = SpriteSet("levelicons", image_levelicons, 4, 4)
 set_sidebaricons = SpriteSet("sidebaricons", image_sidebaricons, 4, 2)
 set_timerclock = SpriteSet("timerclock", image_timerclock, 1, 2)
+set_race_podium_gimmics = SpriteSet("racegimmics", image_race_podium_gimmics, 12, 14)
 
 container.spritesets.Add(set_particles)
 container.spritesets.Add(set_game)
@@ -340,6 +343,7 @@ container.spritesets.Add(set_networkicons)
 container.spritesets.Add(set_levelicons)
 container.spritesets.Add(set_sidebaricons)
 container.spritesets.Add(set_timerclock)
+container.spritesets.Add(set_race_podium_gimmics)
 container.spritesets.Add(set_browsericon)
 
 
@@ -567,6 +571,18 @@ container.sprites.Add(Sprite("browser_b", set_browsericon, 0,1,1,1))
 
 container.sprites.Add(Sprite("timerclock_a", set_timerclock, 0,0,1,1))
 container.sprites.Add(Sprite("timerclock_b", set_timerclock, 0,1,1,1))
+
+container.sprites.Add(Sprite("weapon_grenade_cursor_gold", set_race_podium_gimmics, 0,0,2,2))
+container.sprites.Add(Sprite("weapon_grenade_cursor_silver", set_race_podium_gimmics, 0,2,2,2))
+container.sprites.Add(Sprite("weapon_grenade_cursor_bronze", set_race_podium_gimmics, 0,4,2,2))
+
+container.sprites.Add(Sprite("weapon_grenade_body_gold", set_race_podium_gimmics, 2,0,7,2))
+container.sprites.Add(Sprite("weapon_grenade_body_silver", set_race_podium_gimmics, 2,2,7,2))
+container.sprites.Add(Sprite("weapon_grenade_body_bronze", set_race_podium_gimmics, 2,4,7,2))
+
+container.sprites.Add(Sprite("flag_gold", set_race_podium_gimmics, 0,6,4,7))
+container.sprites.Add(Sprite("flag_silver", set_race_podium_gimmics, 4,6,4,7))
+container.sprites.Add(Sprite("flag_bronze", set_race_podium_gimmics, 8,6,4,7))
 
 anim = Animation("base")
 anim.body.frames.Add(AnimKeyframe(0, 0, -4, 0))
