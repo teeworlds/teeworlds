@@ -632,7 +632,21 @@ void CHud::RenderCursor()
 	Graphics()->QuadsBegin();
 
 	// render cursor
-	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[m_pClient->m_Snap.m_pLocalCharacter->m_Weapon%NUM_WEAPONS].m_pSpriteCursor);
+	int Weapon = m_pClient->m_Snap.m_pLocalCharacter->m_Weapon%NUM_WEAPONS;
+	int PlayerFlags = m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_LocalClientID]->m_PlayerFlags;
+	const CDataSprite* CursorSprite = 0;
+	if(Weapon == WEAPON_GRENADE && PlayerFlags&(PLAYERFLAG_RACE_FIRST|PLAYERFLAG_RACE_SECOND|PLAYERFLAG_RACE_THIRD))
+	{
+		if(PlayerFlags&PLAYERFLAG_RACE_FIRST)
+			CursorSprite = &g_pData->m_aSprites[SPRITE_WEAPON_GRENADE_CURSOR_GOLD];
+		else if(PlayerFlags&PLAYERFLAG_RACE_SECOND)
+			CursorSprite = &g_pData->m_aSprites[SPRITE_WEAPON_GRENADE_CURSOR_SILVER];
+		else if(PlayerFlags&PLAYERFLAG_RACE_THIRD)
+			CursorSprite = &g_pData->m_aSprites[SPRITE_WEAPON_GRENADE_CURSOR_BRONZE];
+	}
+	if(!CursorSprite)
+		CursorSprite = g_pData->m_Weapons.m_aId[Weapon].m_pSpriteCursor;
+	RenderTools()->SelectSprite(CursorSprite);
 	float CursorSize = 64;
 	RenderTools()->DrawSprite(m_pClient->m_pControls->m_TargetPos.x, m_pClient->m_pControls->m_TargetPos.y, CursorSize);
 	Graphics()->QuadsEnd();
