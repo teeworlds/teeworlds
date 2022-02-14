@@ -10,22 +10,20 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-20.04]
         include:
         - os: ubuntu-latest
-          cmake-args: -G "Unix Makefiles"
-          build-args: --parallel
+          cmake-args: -G Ninja
           package-file: teeworlds-*-linux_x86_64.tar.xz
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: ubuntu-20.04
           cmake-path: /usr/bin/
-          cmake-args: -G "Unix Makefiles"
+          cmake-args: -G Ninja
           package-file: teeworlds-*-linux_x86_64.tar.xz
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: macOS-latest
-          cmake-args: -G "Unix Makefiles"
-          build-args: --parallel
+          cmake-args: -G Ninja
           package-file: teeworlds-*-macos.dmg
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
@@ -47,13 +45,13 @@ jobs:
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update -y
-        sudo apt-get install pkg-config cmake libfreetype6-dev libsdl2-dev -y
+        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev -y
 
     - name: Prepare MacOS
       if: contains(matrix.os, 'macOS')
       run: |
         brew update || true
-        brew install pkg-config sdl2
+        brew install pkg-config sdl2 python3 ninja
         brew upgrade freetype
         sudo rm -rf /Library/Developer/CommandLineTools
 
