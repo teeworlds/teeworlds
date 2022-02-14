@@ -156,11 +156,14 @@ public:
 		const CNetObj_SpectatorInfo *m_pSpectatorInfo;
 		const CNetObj_SpectatorInfo *m_pPrevSpectatorInfo;
 		const CNetObj_Flag *m_paFlags[2];
+		const CNetObj_RaceFlag *m_paRaceFlags[3];
 		const CNetObj_GameData *m_pGameData;
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
+		const CNetObj_GameDataRaceFlag * m_pGameDataRaceFlag;
 		const CNetObj_GameDataRace *m_pGameDataRace;
 		int m_GameDataFlagSnapID;
+		int m_GameDataRaceFlagSnapID;
 
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];

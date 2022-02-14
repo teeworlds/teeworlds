@@ -6,7 +6,7 @@ Emoticons = Enum("EMOTICON", ["OOP", "EXCLAMATION", "HEARTS", "DROP", "DOTDOT", 
 Votes = Enum("VOTE", ["UNKNOWN", "START_OP", "START_KICK", "START_SPEC", "END_ABORT", "END_PASS", "END_FAIL"]) # todo 0.8: add RUN_OP, RUN_KICK, RUN_SPEC; rem UNKNOWN
 ChatModes = Enum("CHAT", ["NONE", "ALL", "TEAM", "WHISPER"])
 
-PlayerFlags = Flags("PLAYERFLAG", ["ADMIN", "CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING", "BOT", "RACE_FIRST", "RACE_SECOND", "RACE_THIRD"])
+PlayerFlags = Flags("PLAYERFLAG", ["ADMIN", "CHATTING", "SCOREBOARD", "READY", "DEAD", "WATCHING", "BOT"])
 GameFlags = Flags("GAMEFLAG", ["TEAMS", "FLAGS", "SURVIVAL", "RACE"])
 GameStateFlags = Flags("GAMESTATEFLAG", ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "GAMEOVER", "PAUSED", "STARTCOUNTDOWN"])
 CoreEventFlags = Flags("COREEVENTFLAG", ["GROUND_JUMP", "AIR_JUMP", "HOOK_ATTACH_PLAYER", "HOOK_ATTACH_GROUND", "HOOK_HIT_NOHOOK"])
@@ -57,7 +57,13 @@ enum
 
 	VOTE_CHOICE_NO = -1,
 	VOTE_CHOICE_PASS = 0,
-	VOTE_CHOICE_YES = 1
+	VOTE_CHOICE_YES = 1,
+	
+	RACE_FLAG_MISSING=-1,
+	RACE_FLAG_GOLD,
+	RACE_FLAG_SILVER,
+	RACE_FLAG_BRONZE,
+	NUM_RACE_FLAGS
 };
 '''
 
@@ -132,8 +138,13 @@ Objects = [
 	NetObject("Flag", [
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
+		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE'),
+	]),
 
-		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE')
+	NetObject("RaceFlag", [
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntRange("m_Place", 'RACE_FLAG_MISSING', 'RACE_FLAG_BRONZE'),
 	]),
 
 	NetObject("GameData", [
@@ -152,6 +163,12 @@ Objects = [
 		NetIntRange("m_FlagCarrierBlue", 'FLAG_MISSING', 'MAX_CLIENTS-1'),
 		NetTick("m_FlagDropTickRed"),
 		NetTick("m_FlagDropTickBlue"),
+	]),
+
+	NetObject("GameDataRaceFlag", [
+		NetIntRange("m_FlagCarrierRaceGold", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
+		NetIntRange("m_FlagCarrierRaceSilver", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
+		NetIntRange("m_FlagCarrierRaceBronze", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
 	]),
 
 	NetObject("CharacterCore", [

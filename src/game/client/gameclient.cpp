@@ -1368,6 +1368,11 @@ void CGameClient::OnNewSnapshot()
 				m_LastFlagCarrierRed = m_Snap.m_pGameDataFlag->m_FlagCarrierRed;
 				m_LastFlagCarrierBlue = m_Snap.m_pGameDataFlag->m_FlagCarrierBlue;
 			}
+			else if(Item.m_Type == NETOBJTYPE_GAMEDATARACEFLAG)
+			{
+				m_Snap.m_pGameDataRaceFlag = (const CNetObj_GameDataRaceFlag *)pData;
+				m_Snap.m_GameDataRaceFlagSnapID = Item.m_ID;
+			}
 			else if(Item.m_Type == NETOBJTYPE_GAMEDATARACE)
 			{
 				m_Snap.m_pGameDataRace = (const CNetObj_GameDataRace *)pData;
@@ -1375,6 +1380,10 @@ void CGameClient::OnNewSnapshot()
 			else if(Item.m_Type == NETOBJTYPE_FLAG)
 			{
 				m_Snap.m_paFlags[Item.m_ID%2] = (const CNetObj_Flag *)pData;
+			}
+			else if(Item.m_Type == NETOBJTYPE_RACEFLAG)
+			{
+				m_Snap.m_paRaceFlags[Item.m_ID%3] = (const CNetObj_RaceFlag *)pData;
 			}
 		}
 	}
