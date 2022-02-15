@@ -628,27 +628,27 @@ void CHud::RenderCursor()
 
 	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
 	RenderTools()->MapScreenToGroup(Pos.x, Pos.y, Layers()->GameGroup(), m_pClient->m_pCamera->GetZoom());
-	IGraphics::CTextureHandle *Texture = &g_pData->m_aImages[IMAGE_GAME].m_Id;
+	IGraphics::CTextureHandle *pTexture = &g_pData->m_aImages[IMAGE_GAME].m_Id;
 	int Weapon = m_pClient->m_Snap.m_pLocalCharacter->m_Weapon;
 	int LocalClientID = m_pClient->m_LocalClientID;
-	int SpriteID = -1;
+	int PodiumSpriteID = -1;
 	if(Weapon == WEAPON_GRENADE)
 	{
 		if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == LocalClientID)
-			SpriteID = SPRITE_WEAPON_GRENADE_CURSOR_GOLD;
+			PodiumSpriteID = SPRITE_WEAPON_GRENADE_CURSOR_GOLD;
 		else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceSilver == LocalClientID)
-			SpriteID = SPRITE_WEAPON_GRENADE_CURSOR_SILVER;
+			PodiumSpriteID = SPRITE_WEAPON_GRENADE_CURSOR_SILVER;
 		else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceBronze == LocalClientID)
-			SpriteID = SPRITE_WEAPON_GRENADE_CURSOR_BRONZE;
-		if(SpriteID != -1)
-			Texture = &g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id;
+			PodiumSpriteID = SPRITE_WEAPON_GRENADE_CURSOR_BRONZE;
+		if(PodiumSpriteID != -1)
+			pTexture = &g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id;
 	}
-	Graphics()->TextureSet(*Texture);
+	Graphics()->TextureSet(*pTexture);
 	Graphics()->QuadsBegin();
 
 	// render cursor
-	if(SpriteID != -1)
-		RenderTools()->SelectSprite(SpriteID);
+	if(PodiumSpriteID != -1)
+		RenderTools()->SelectSprite(PodiumSpriteID);
 	else
 		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[Weapon%NUM_WEAPONS].m_pSpriteCursor);
 	float CursorSize = 64;

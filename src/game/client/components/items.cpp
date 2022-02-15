@@ -76,7 +76,7 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
 
 
-	IGraphics::CTextureHandle *Texture = &g_pData->m_aImages[IMAGE_GAME].m_Id;
+	IGraphics::CTextureHandle *pTexture = &g_pData->m_aImages[IMAGE_GAME].m_Id;
 	int Weapon = clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1);
 	int LocalClientID = m_pClient->m_LocalClientID;
 	int SpriteID = -1;
@@ -91,10 +91,10 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 		else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceBronze == LocalClientID)
 			SpriteID = SPRITE_WEAPON_GRENADE_PROJ_BRONZE;
 		if(SpriteID != -1)
-			Texture = &g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id;
+			pTexture = &g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id;
 	}
 
-	Graphics()->TextureSet(*Texture);
+	Graphics()->TextureSet(*pTexture);
 	Graphics()->QuadsBegin();
 	if(SpriteID != -1)
 		RenderTools()->SelectSprite(SpriteID);
