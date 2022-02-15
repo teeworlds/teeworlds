@@ -546,7 +546,7 @@ void CServer::DoSnapshot()
 			continue;
 
 		// this client is trying to recover, don't spam snapshots
-		if(m_aClients[i].m_SnapRate == CClient::SNAPRATE_RECOVER && (Tick()%50) != 0)
+		if(m_aClients[i].m_SnapRate == CClient::SNAPRATE_RECOVER && (Tick() % SERVER_TICK_SPEED) != 0)
 			continue;
 
 		// this client is trying to recover, don't spam snapshots
