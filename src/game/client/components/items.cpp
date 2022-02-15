@@ -234,7 +234,7 @@ void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFla
 			FlagCarrier = pCurGameDataRaceFlag->m_FlagCarrierRaceGold;
 		else if(pCurrent->m_Place == RACE_FLAG_SILVER && pCurGameDataRaceFlag->m_FlagCarrierRaceSilver >= 0)
 			FlagCarrier = pCurGameDataRaceFlag->m_FlagCarrierRaceSilver;
-		else if(pCurrent->m_Place == RACE_FLAG_GOLD && pCurGameDataRaceFlag->m_FlagCarrierRaceBronze >= 0)
+		else if(pCurrent->m_Place == RACE_FLAG_BRONZE && pCurGameDataRaceFlag->m_FlagCarrierRaceBronze >= 0)
 			FlagCarrier = pCurGameDataRaceFlag->m_FlagCarrierRaceBronze;
 
 		// make sure to use predicted position
