@@ -129,6 +129,7 @@ public:
 
 		MIN_SKINCHANGE_CLIENTVERSION = 0x0703,
 		MIN_RACE_CLIENTVERSION = 0x0704,
+		MIN_RACE_GIMMIC_CLIENTVERSION = 0x0706,
 	};
 	class CHeap *m_pVoteOptionHeap;
 	CVoteOptionServer *m_pVoteOptionFirst;
