@@ -25,14 +25,14 @@
 	#define SDL_JOYSTICK_AXIS_MAX 32767
 #endif
 
-// for platform specific features that aren't available or are broken in SDL
-#include "SDL_syswm.h"
-
 #if defined(CONF_FAMILY_WINDOWS)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <imm.h>
 #endif
+
+// for platform specific features that aren't available or are broken in SDL
+#include "SDL_syswm.h"
 
 void CInput::AddEvent(char *pText, int Key, int Flags)
 {
