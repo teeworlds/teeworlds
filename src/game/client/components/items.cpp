@@ -214,7 +214,7 @@ void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFla
 	}
 
 	Graphics()->BlendNormal();
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id);
 	Graphics()->QuadsBegin();
 	int SpriteID = SPRITE_FLAG_GOLD;
 	switch(pCurrent->m_Place)
