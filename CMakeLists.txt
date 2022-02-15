@@ -2085,6 +2085,7 @@ foreach(target ${TARGETS})
     target_compile_options(${target} PRIVATE /EHsc) # Only catch C++ exceptions with catch.
     target_compile_options(${target} PRIVATE /GS) # Protect the stack pointer.
     target_compile_options(${target} PRIVATE /wd4996) # Use of non-_s functions.
+    target_compile_options(${target} PRIVATE /utf-8) # Use UTF-8 for source files.
   endif()
   if(OUR_FLAGS)
     target_compile_options(${target} PRIVATE ${OUR_FLAGS})
