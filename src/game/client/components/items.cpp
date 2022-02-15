@@ -12,6 +12,7 @@
 
 #include <game/client/components/flow.h>
 #include <game/client/components/effects.h>
+#include <game/client/components/controls.h>
 
 #include "items.h"
 
@@ -216,11 +217,11 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 
 void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFlag *pCurrent, const CNetObj_GameDataRaceFlag *pPrevGameDataRaceFlag, const CNetObj_GameDataRaceFlag *pCurGameDataRaceFlag)
 {
-	const float Size = 42.0f;
-	const float OffsetX = -2.0f;
-	const float OffsetY = -5.0f;
+	float OffsetX = 14.0f;
+	const float OffsetY = 6;
+	const float Size=42.0f;
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
-	//float Direction = 0;
+	vec2 Direction = vec2(1, 0);
 	if(pCurGameDataRaceFlag)
 	{
 		// make sure that the flag isn't interpolated between records
@@ -242,12 +243,23 @@ void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFla
 		{
 			Pos = m_pClient->GetCharPos(FlagCarrier, true);
 
-			/*
-			//calculate flag direction
-			int PrevX = m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Prev.m_VelX;
-			int PlayerX = m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Cur.m_VelX;
 
-			Direction = mix(PrevX/256.0f, PlayerX/256.0f, Client()->IntraGameTick());*/
+			//calculate flag direction
+			auto PrevAngle = (float)m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Prev.m_Angle;
+			auto PlayerAngle = (float)m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Cur.m_VelX;
+
+			if(PrevAngle < pi*-128 && PlayerAngle > pi*128)
+				PrevAngle += 2*pi*256;
+			else if(PrevAngle > pi*128 && PlayerAngle < pi*-128)
+				PlayerAngle += 2*pi*256;
+			float Angle = mix(PrevAngle, PlayerAngle, Client()->IntraGameTick())/256.0f;
+
+			if(m_pClient->m_LocalClientID == FlagCarrier && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+			{
+				// just use the direct input if it's local player we are rendering
+				Angle = angle(m_pClient->m_pControls->m_MousePos);
+			}
+			Direction = direction(Angle);
 		}
 	}
 
@@ -263,9 +275,11 @@ void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFla
 		case RACE_FLAG_BRONZE: SpriteID = SPRITE_FLAG_BRONZE; break;
 		default: break;
 	}
-	RenderTools()->SelectSprite(SpriteID); //, Direction > 0 ? SPRITE_FLAG_FLIP_X : 0);
+	RenderTools()->SelectSprite(SpriteID, Direction.x > 0 ? SPRITE_FLAG_FLIP_X : 0);
 	Graphics()->QuadsSetRotation(0.0f);
-	IGraphics::CQuadItem QuadItem(Pos.x+OffsetX, Pos.y-Size*0.75f+OffsetY, Size*0.875f, Size*2);
+	if(Direction.x > 0)
+		OffsetX*=-1;
+	IGraphics::CQuadItem QuadItem(Pos.x+OffsetX, Pos.y-32.0f+OffsetY, Size, Size * 7 / 4);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 }
