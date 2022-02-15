@@ -634,9 +634,6 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWin
 		}
 	}
 
-	// enable stencil buffer
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
-
 	// set screen
 	SDL_Rect ScreenPos;
 	m_NumScreens = SDL_GetNumVideoDisplays();
@@ -693,6 +690,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWin
 
 	// set gl attributes
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 	if(FsaaSamples)
 	{
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
