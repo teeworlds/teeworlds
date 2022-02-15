@@ -250,12 +250,11 @@ void CPlayers::RenderPlayer(
 		int RacePodium = RACE_FLAG_MISSING;
 		if(iw == WEAPON_GRENADE)
 		{
-			int LocalClientID = m_pClient->m_LocalClientID;
-			if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == LocalClientID)
+			if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == ClientID)
 				RacePodium = RACE_FLAG_GOLD;
-			else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == LocalClientID)
+			else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceSilver == ClientID)
 				RacePodium = RACE_FLAG_SILVER;
-			else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == LocalClientID)
+			else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceBronze == ClientID)
 				RacePodium = RACE_FLAG_BRONZE;
 		}
 
