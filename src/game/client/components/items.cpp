@@ -193,25 +193,44 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 	Graphics()->QuadsEnd();
 }
 
-void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFlag *pCurrent, const CNetObj_GameDataRaceFlag *pPrevGameDataFlag, const CNetObj_GameDataRaceFlag *pCurGameDataFlag)
+void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFlag *pCurrent, const CNetObj_GameDataRaceFlag *pPrevGameDataRaceFlag, const CNetObj_GameDataRaceFlag *pCurGameDataRaceFlag)
 {
 	const float Size = 42.0f;
+	const float OffsetX = -2.0f;
+	const float OffsetY = -5.0f;
 	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
-
-	if(pCurGameDataFlag)
+	//float Direction = 0;
+	if(pCurGameDataRaceFlag)
 	{
+		// make sure that the flag isn't interpolated between records
+		if(pPrevGameDataRaceFlag &&
+		   ((pCurrent->m_Place == RACE_FLAG_GOLD && pPrevGameDataRaceFlag->m_FlagCarrierRaceGold != pCurGameDataRaceFlag->m_FlagCarrierRaceGold) ||
+			(pCurrent->m_Place == RACE_FLAG_SILVER && pPrevGameDataRaceFlag->m_FlagCarrierRaceSilver != pCurGameDataRaceFlag->m_FlagCarrierRaceSilver) ||
+			(pCurrent->m_Place == RACE_FLAG_BRONZE && pPrevGameDataRaceFlag->m_FlagCarrierRaceBronze != pCurGameDataRaceFlag->m_FlagCarrierRaceBronze)))
+			Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 		int FlagCarrier = -1;
-		if(pCurrent->m_Place == RACE_FLAG_GOLD && pCurGameDataFlag->m_FlagCarrierRaceGold >= 0)
-			FlagCarrier = pCurGameDataFlag->m_FlagCarrierRaceGold;
-		else if(pCurrent->m_Place == RACE_FLAG_SILVER && pCurGameDataFlag->m_FlagCarrierRaceSilver >= 0)
-			FlagCarrier = pCurGameDataFlag->m_FlagCarrierRaceSilver;
-		else if(pCurrent->m_Place == RACE_FLAG_GOLD && pCurGameDataFlag->m_FlagCarrierRaceBronze >= 0)
-			FlagCarrier = pCurGameDataFlag->m_FlagCarrierRaceBronze;
+		if(pCurrent->m_Place == RACE_FLAG_GOLD && pCurGameDataRaceFlag->m_FlagCarrierRaceGold >= 0)
+			FlagCarrier = pCurGameDataRaceFlag->m_FlagCarrierRaceGold;
+		else if(pCurrent->m_Place == RACE_FLAG_SILVER && pCurGameDataRaceFlag->m_FlagCarrierRaceSilver >= 0)
+			FlagCarrier = pCurGameDataRaceFlag->m_FlagCarrierRaceSilver;
+		else if(pCurrent->m_Place == RACE_FLAG_GOLD && pCurGameDataRaceFlag->m_FlagCarrierRaceBronze >= 0)
+			FlagCarrier = pCurGameDataRaceFlag->m_FlagCarrierRaceBronze;
 
 		// make sure to use predicted position
 		if(FlagCarrier >= 0 && FlagCarrier < MAX_CLIENTS && m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(FlagCarrier))
+		{
 			Pos = m_pClient->GetCharPos(FlagCarrier, true);
+
+			/*
+			//calculate flag direction
+			int PrevX = m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Prev.m_VelX;
+			int PlayerX = m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Cur.m_VelX;
+
+			Direction = mix(PrevX/256.0f, PlayerX/256.0f, Client()->IntraGameTick());*/
+		}
 	}
+
+
 
 	Graphics()->BlendNormal();
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id);
@@ -223,9 +242,9 @@ void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFla
 		case RACE_FLAG_BRONZE: SpriteID = SPRITE_FLAG_BRONZE; break;
 		default: break;
 	}
-	RenderTools()->SelectSprite(SpriteID);
+	RenderTools()->SelectSprite(SpriteID); //, Direction > 0 ? SPRITE_FLAG_FLIP_X : 0);
 	Graphics()->QuadsSetRotation(0.0f);
-	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y-Size*0.75f, Size, Size*2);
+	IGraphics::CQuadItem QuadItem(Pos.x+OffsetX, Pos.y-Size*0.75f+OffsetY, Size*0.875f, Size*2);
 	Graphics()->QuadsDraw(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 }
@@ -321,15 +340,8 @@ void CItems::OnRender()
 		{
 			RenderLaser((const CNetObj_Laser *)pData);
 		}
-	}
-
-	// render flag
-	for(int i = 0; i < Num; i++)
-	{
-		IClient::CSnapItem Item;
-		const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
-
-		if(Item.m_Type == NETOBJTYPE_FLAG)
+		// render flags
+		else if(Item.m_Type == NETOBJTYPE_FLAG)
 		{
 			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if(pPrev)
@@ -339,22 +351,14 @@ void CItems::OnRender()
 							static_cast<const CNetObj_GameDataFlag *>(pPrevGameDataFlag), m_pClient->m_Snap.m_pGameDataFlag);
 			}
 		}
-	}
-
-	// render race flag
-	for(int i = 0; i < Num; i++)
-	{
-		IClient::CSnapItem Item;
-		const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
-
-		if(Item.m_Type == NETOBJTYPE_RACEFLAG)
+		else if(Item.m_Type == NETOBJTYPE_RACEFLAG)
 		{
 			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if(pPrev)
 			{
 				const void *pPrevGameDataRaceFlag = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_GAMEDATARACEFLAG, m_pClient->m_Snap.m_GameDataRaceFlagSnapID);
 				RenderRaceFlag(static_cast<const CNetObj_RaceFlag *>(pPrev), static_cast<const CNetObj_RaceFlag *>(pData),
-						   static_cast<const CNetObj_GameDataRaceFlag *>(pPrevGameDataRaceFlag), m_pClient->m_Snap.m_pGameDataRaceFlag);
+							   static_cast<const CNetObj_GameDataRaceFlag *>(pPrevGameDataRaceFlag), m_pClient->m_Snap.m_pGameDataRaceFlag);
 			}
 		}
 	}
