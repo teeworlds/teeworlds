@@ -246,7 +246,7 @@ void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFla
 
 			//calculate flag direction
 			float PrevAngle = (float)m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Prev.m_Angle;
-			float PlayerAngle = (float)m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Cur.m_VelX;
+			float PlayerAngle = (float)m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Cur.m_Angle;
 
 			if(PrevAngle < pi*-128 && PlayerAngle > pi*128)
 				PrevAngle += 2*pi*256;
