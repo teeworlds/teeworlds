@@ -138,13 +138,8 @@ Objects = [
 	NetObject("Flag", [
 		NetIntAny("m_X"),
 		NetIntAny("m_Y"),
-		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE'),
-	]),
 
-	NetObject("RaceFlag", [
-		NetIntAny("m_X"),
-		NetIntAny("m_Y"),
-		NetIntRange("m_Place", 'RACE_FLAG_MISSING', 'RACE_FLAG_BRONZE'),
+		NetIntRange("m_Team", 'TEAM_RED', 'TEAM_BLUE')
 	]),
 
 	NetObject("GameData", [
@@ -163,12 +158,6 @@ Objects = [
 		NetIntRange("m_FlagCarrierBlue", 'FLAG_MISSING', 'MAX_CLIENTS-1'),
 		NetTick("m_FlagDropTickRed"),
 		NetTick("m_FlagDropTickBlue"),
-	]),
-
-	NetObject("GameDataRaceFlag", [
-		NetIntRange("m_FlagCarrierRaceGold", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
-		NetIntRange("m_FlagCarrierRaceSilver", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
-		NetIntRange("m_FlagCarrierRaceBronze", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
 	]),
 
 	NetObject("CharacterCore", [
@@ -284,6 +273,18 @@ Objects = [
 		NetIntRange("m_BestTime", -1, 'max_int'),
 		NetIntRange("m_Precision", 0, 3),
 		NetFlag("m_RaceFlags", RaceFlags),
+	]),
+
+	NetObject("RaceFlag", [
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntRange("m_Place", 'RACE_FLAG_MISSING', 'RACE_FLAG_BRONZE'),
+	]),
+
+	NetObject("GameDataRaceFlag", [
+		NetIntRange("m_FlagCarrierRaceGold", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
+		NetIntRange("m_FlagCarrierRaceSilver", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
+		NetIntRange("m_FlagCarrierRaceBronze", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
 	]),
 ]
 
