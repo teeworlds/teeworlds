@@ -580,6 +580,10 @@ container.sprites.Add(Sprite("weapon_grenade_body_gold", set_race_podium_gimmics
 container.sprites.Add(Sprite("weapon_grenade_body_silver", set_race_podium_gimmics, 2,2,7,2))
 container.sprites.Add(Sprite("weapon_grenade_body_bronze", set_race_podium_gimmics, 2,4,7,2))
 
+container.sprites.Add(Sprite("weapon_grenade_proj_gold", set_race_podium_gimmics, 10,0,2,2))
+container.sprites.Add(Sprite("weapon_grenade_proj_silver", set_race_podium_gimmics, 10,2,2,2))
+container.sprites.Add(Sprite("weapon_grenade_proj_bronze", set_race_podium_gimmics, 10,4,2,2))
+
 container.sprites.Add(Sprite("flag_gold", set_race_podium_gimmics, 0,6,4,7))
 container.sprites.Add(Sprite("flag_silver", set_race_podium_gimmics, 4,6,4,7))
 container.sprites.Add(Sprite("flag_bronze", set_race_podium_gimmics, 8,6,4,7))
