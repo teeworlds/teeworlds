@@ -1664,7 +1664,7 @@ void CEditor2::RenderMapEditorUiLayerGroups(CUIRect NavRect)
 	bool StartedMouseDragging = s_DragMove.m_IsDragging && OldIsMouseDragging == false;
 
 	bool DisplayDragMoveOverlay = s_DragMove.m_IsDragging && (DragMoveGroupListIndex >= 0 || DragMoveLayerListIndex >= 0);
-	CUIRect DragMoveOverlayRect;
+	CUIRect DragMoveOverlayRect = NavRect;
 	int DragMoveOffset = 0;
 	int DragMoveGroupIdOffset = 0; // for group dragging
 	// -----------------------
