@@ -74,10 +74,31 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
 	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
 
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-	Graphics()->QuadsBegin();
 
-	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1)].m_pSpriteProj);
+	IGraphics::CTextureHandle *Texture = &g_pData->m_aImages[IMAGE_GAME].m_Id;
+	int Weapon = clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1);
+	int LocalClientID = m_pClient->m_LocalClientID;
+	int SpriteID = -1;
+
+	//Render racing projectiles
+	if(Weapon == WEAPON_GRENADE)
+	{
+		if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == LocalClientID)
+			SpriteID = SPRITE_WEAPON_GRENADE_PROJ_GOLD;
+		else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceSilver == LocalClientID)
+			SpriteID = SPRITE_WEAPON_GRENADE_PROJ_SILVER;
+		else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceBronze == LocalClientID)
+			SpriteID = SPRITE_WEAPON_GRENADE_PROJ_BRONZE;
+		if(SpriteID != -1)
+			Texture = &g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id;
+	}
+
+	Graphics()->TextureSet(*Texture);
+	Graphics()->QuadsBegin();
+	if(SpriteID != -1)
+		RenderTools()->SelectSprite(SpriteID);
+	else
+		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[Weapon].m_pSpriteProj);
 	const vec2 Vel = Pos-PrevPos;
 
 	// add particle for this projectile
