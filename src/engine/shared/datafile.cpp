@@ -100,7 +100,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 			if(Bytes == 0)
 				break;
 			sha256_update(&Sha256Ctx, aBuffer, Bytes);
-			Crc = crc32(Crc, aBuffer, Bytes); // ignore_convention
+			Crc = crc32(Crc, aBuffer, Bytes);
 		}
 
 		io_seek(File, 0, IOSEEK_START);
@@ -309,7 +309,7 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 
 			// decompress the data, TODO: check for errors
 			s = UncompressedSize;
-			uncompress((Bytef*)m_pDataFile->m_ppDataPtrs[Index], &s, (Bytef*)pTemp, DataSize); // ignore_convention
+			uncompress((Bytef*)m_pDataFile->m_ppDataPtrs[Index], &s, (Bytef*)pTemp, DataSize);
 #if defined(CONF_ARCH_ENDIAN_BIG)
 			SwapSize = s;
 #endif
@@ -586,7 +586,7 @@ int CDataFileWriter::AddData(int Size, const void *pData)
 	unsigned long s = compressBound(Size);
 	void *pCompData = mem_alloc(s); // temporary buffer that we use during compression
 
-	int Result = compress((Bytef*)pCompData, &s, (Bytef*)pData, Size); // ignore_convention
+	int Result = compress((Bytef*)pCompData, &s, (Bytef*)pData, Size);
 	if(Result != Z_OK)
 	{
 		dbg_msg("datafile", "compression error %d", Result);

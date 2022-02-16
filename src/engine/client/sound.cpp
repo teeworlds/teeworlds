@@ -221,12 +221,12 @@ int CSound::Init()
 	m_MixingRate = m_pConfig->m_SndRate;
 
 	// Set 16-bit stereo audio at 22Khz
-	Format.freq = m_pConfig->m_SndRate; // ignore_convention
-	Format.format = AUDIO_S16; // ignore_convention
-	Format.channels = 2; // ignore_convention
-	Format.samples = m_pConfig->m_SndBufferSize; // ignore_convention
-	Format.callback = SdlCallback; // ignore_convention
-	Format.userdata = NULL; // ignore_convention
+	Format.freq = m_pConfig->m_SndRate;
+	Format.format = AUDIO_S16;
+	Format.channels = 2;
+	Format.samples = m_pConfig->m_SndBufferSize;
+	Format.callback = SdlCallback;
+	Format.userdata = NULL;
 
 	// Open the audio device and start playing sound!
 	if(SDL_OpenAudio(&Format, NULL) < 0)
