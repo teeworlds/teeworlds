@@ -1521,6 +1521,8 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 		return 0;
 	aFilename[pSuffix - aFilename] = 0; // remove suffix
 
+	if(str_length(aFilename) >= IConsole::TEMPMAP_NAME_LENGTH)
+		return 0;
 	if(pUserdata->m_StandardOnly && !pThis->m_pMapChecker->IsStandardMap(aFilename))
 		return 0;
 
