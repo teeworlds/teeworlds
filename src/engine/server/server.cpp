@@ -337,20 +337,10 @@ void CServer::Kick(int ClientID, const char *pReason)
 	m_NetServer.Drop(ClientID, pReason);
 }
 
-/*int CServer::Tick()
-{
-	return m_CurrentGameTick;
-}*/
-
 int64 CServer::TickStartTime(int Tick)
 {
 	return m_GameStartTime + (time_freq()*Tick)/SERVER_TICK_SPEED;
 }
-
-/*int CServer::TickSpeed()
-{
-	return SERVER_TICK_SPEED;
-}*/
 
 int CServer::Init()
 {
