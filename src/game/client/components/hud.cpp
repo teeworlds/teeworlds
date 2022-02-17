@@ -632,7 +632,7 @@ void CHud::RenderCursor()
 	int Weapon = m_pClient->m_Snap.m_pLocalCharacter->m_Weapon;
 	int LocalClientID = m_pClient->m_LocalClientID;
 	int PodiumSpriteID = -1;
-	if(Weapon == WEAPON_GRENADE)
+	if(Weapon == WEAPON_GRENADE && Config()->m_ClRaceGimmicks && Config()->m_ClRaceGimmicksLauncher)
 	{
 		if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == LocalClientID)
 			PodiumSpriteID = SPRITE_WEAPON_GRENADE_CURSOR_GOLD;

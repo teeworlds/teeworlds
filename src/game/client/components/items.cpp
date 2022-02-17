@@ -241,6 +241,10 @@ void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFla
 		// make sure to use predicted position
 		if(FlagCarrier >= 0 && FlagCarrier < MAX_CLIENTS && m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(FlagCarrier))
 		{
+			// don't render race flag if it's carried by a player and it's disabled by config
+			if(!Config()->m_ClRaceGimmicks || !Config()->m_ClRaceGimmicksFlags)
+				return;
+
 			Pos = m_pClient->GetCharPos(FlagCarrier, true);
 
 
