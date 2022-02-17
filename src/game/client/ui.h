@@ -101,6 +101,33 @@ public:
 } const ScrollBarColorFunction;
 
 
+class CUIElementBase
+{
+private:
+	static class CUI *s_pUI;
+
+public:
+	static void Init(CUI *pUI) { s_pUI = pUI; }
+
+	class CUI *UI() const { return s_pUI; }
+	class IClient *Client() const;
+	class CConfig *Config() const;
+	class IGraphics *Graphics() const;
+	class IInput *Input() const;
+	class ITextRender *TextRender() const;
+};
+
+class CButtonContainer : public CUIElementBase
+{
+	bool m_CleanBackground;
+	float m_FadeStartTime;
+public:
+	CButtonContainer(bool CleanBackground = false) : m_FadeStartTime(0.0f) { m_CleanBackground = CleanBackground; }
+	float GetFade(bool Checked = false, float Seconds = 0.6f);
+	bool IsCleanBackground() const { return m_CleanBackground; }
+};
+
+
 class CUI
 {
 	enum
@@ -145,6 +172,7 @@ class CUI
 	} m_aPopupMenus[MAX_POPUP_MENUS];
 	unsigned m_NumPopupMenus;
 
+	class IClient *m_pClient;
 	class CConfig *m_pConfig;
 	class IGraphics *m_pGraphics;
 	class IInput *m_pInput;
@@ -162,8 +190,8 @@ public:
 	static const float ms_ListheaderHeight;
 	static const float ms_FontmodHeight;
 
-	// TODO: Refactor: Fill this in
-	void Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput *pInput, class ITextRender *pTextRender);
+	void Init(class IKernel *pKernel);
+	class IClient *Client() const { return m_pClient; }
 	class CConfig *Config() const { return m_pConfig; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
 	class IInput *Input() const { return m_pInput; }

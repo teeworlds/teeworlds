@@ -33,12 +33,6 @@
 #include "menus.h"
 #include "skins.h"
 
-CRenderTools *CMenus::CUIElementBase::m_pRenderTools = 0;
-CUI *CMenus::CUIElementBase::m_pUI = 0;
-IInput *CMenus::CUIElementBase::m_pInput = 0;
-IClient *CMenus::CUIElementBase::m_pClient = 0;
-CConfig *CMenus::CUIElementBase::m_pConfig = 0;
-
 CMenus::CMenus()
 {
 	m_Popup = POPUP_NONE;
@@ -85,17 +79,6 @@ CMenus::CMenus()
 	m_ActiveListBox = ACTLB_NONE;
 
 	m_PopupCountrySelection = -2;
-}
-
-float CMenus::CButtonContainer::GetFade(bool Checked, float Seconds)
-{
-	if(m_pUI->HotItem() == this || Checked)
-	{
-		m_FadeStartTime = m_pClient->LocalTime();
-		return 1.0f;
-	}
-
-	return maximum(0.0f, m_FadeStartTime -  m_pClient->LocalTime() + Seconds)/Seconds;
 }
 
 void CMenus::DoIcon(int ImageId, int SpriteId, const CUIRect *pRect, const vec4 *pColor)
@@ -1678,8 +1661,6 @@ bool CMenus::OnInput(IInput::CEvent e)
 
 void CMenus::OnConsoleInit()
 {
-	CUIElementBase::Init(this);
-
 	Console()->Register("play", "r[file]", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Play, this, "Play the file specified");
 }
 
