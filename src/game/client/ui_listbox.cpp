@@ -1,17 +1,15 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <math.h>
-
 #include <base/system.h>
-#include <base/math.h>
 #include <base/vmath.h>
 
 #include <engine/config.h>
 #include <engine/shared/config.h>
 
-#include "menus.h"
+#include "gameclient.h"
+#include "ui_listbox.h"
 
-CMenus::CListBox::CListBox()
+CListBox::CListBox()
 {
 	m_ScrollOffset = vec2(0,0);
 	m_ListBoxUpdateScroll = false;
@@ -19,13 +17,13 @@ CMenus::CListBox::CListBox()
 	m_FilterInput.SetBuffer(m_aFilterString, sizeof(m_aFilterString));
 }
 
-void CMenus::CListBox::DoBegin(const CUIRect *pRect)
+void CListBox::DoBegin(const CUIRect *pRect)
 {
 	// setup the variables
 	m_ListBoxView = *pRect;
 }
 
-void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
+void CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 							   float HeaderHeight, float Spacing)
 {
 	CUIRect Header;
@@ -45,14 +43,14 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 	m_ListBoxView = View;
 }
 
-void CMenus::CListBox::DoSpacing(float Spacing)
+void CListBox::DoSpacing(float Spacing)
 {
 	CUIRect View = m_ListBoxView;
 	View.HSplitTop(Spacing, 0, &View);
 	m_ListBoxView = View;
 }
 
-bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
+bool CListBox::DoFilter(float FilterHeight, float Spacing)
 {
 	CUIRect Filter;
 	CUIRect View = m_ListBoxView;
@@ -80,13 +78,13 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 	return Changed;
 }
 
-void CMenus::CListBox::DoFooter(const char *pBottomText, float FooterHeight)
+void CListBox::DoFooter(const char *pBottomText, float FooterHeight)
 {
 	m_pBottomText = pBottomText;
 	m_FooterHeight = FooterHeight;
 }
 
-void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, 
+void CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, 
 							int SelectedIndex, const CUIRect *pRect, bool Background, bool *pActive, int BackgroundCorners)
 {
 	CUIRect View;
@@ -118,7 +116,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 	m_ListBoxRowHeight = RowHeight;
 	m_ListBoxNumItems = NumItems;
 	m_ListBoxItemsPerRow = ItemsPerRow;
-	m_ListBoxDoneEvents = 0;
+	m_ListBoxDoneEvents = false;
 	m_ListBoxItemActivated = false;
 
 	// handle input
@@ -138,7 +136,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 	m_ListBoxView.y += m_ScrollOffset.y;
 }
 
-CMenus::CListboxItem CMenus::CListBox::DoNextRow()
+CListboxItem CListBox::DoNextRow()
 {
 	static CUIRect s_RowView;
 	CListboxItem Item = {0};
@@ -161,7 +159,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextRow()
 	return Item;
 }
 
-CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected, bool *pActive)
+CListboxItem CListBox::DoNextItem(const void *pId, bool Selected, bool *pActive)
 {
 	int ThisItemIndex = m_ListBoxItemIndex;
 	if(Selected)
@@ -191,7 +189,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 	{
 		if(ProcessInput && !m_ListBoxDoneEvents)
 		{
-			m_ListBoxDoneEvents = 1;
+			m_ListBoxDoneEvents = true;
 
 			if(UI()->ConsumeHotkey(CUI::HOTKEY_ENTER) || (s_ItemClicked && Input()->MouseDoubleClick()))
 			{
@@ -200,27 +198,24 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 			}
 		}
 
-		CUIRect r = Item.m_Rect;
-		r.Draw(vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f));
+		Item.m_Rect.Draw(vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f));
 	}
 	/*else*/ if(UI()->HotItem() == pId && !m_ScrollRegion.IsAnimating())
 	{
-		CUIRect r = Item.m_Rect;
-		r.Draw(vec4(1, 1, 1, 0.33f));
+		Item.m_Rect.Draw(vec4(1, 1, 1, 0.33f));
 	}
 
 	return Item;
 }
 
-CMenus::CListboxItem CMenus::CListBox::DoSubheader()
+CListboxItem CListBox::DoSubheader()
 {
 	CListboxItem Item = DoNextRow();
-	CUIRect r = Item.m_Rect;
-	r.Draw(vec4(1, 1, 1, 0.2f), 0.0f, CUIRect::CORNER_NONE);
+	Item.m_Rect.Draw(vec4(1, 1, 1, 0.2f), 0.0f, CUIRect::CORNER_NONE);
 	return Item;
 }
 
-int CMenus::CListBox::DoEnd()
+int CListBox::DoEnd()
 {
 	m_ScrollRegion.End();
 	if(m_ListBoxNewSelOffset != 0 && m_ListBoxSelectedIndex != -1 && m_ListBoxSelectedIndex == m_ListBoxNewSelected)
@@ -231,7 +226,7 @@ int CMenus::CListBox::DoEnd()
 	return m_ListBoxNewSelected;
 }
 
-bool CMenus::CListBox::FilterMatches(const char *pNeedle) const
+bool CListBox::FilterMatches(const char *pNeedle) const
 {
 	return !m_aFilterString[0] || str_find_nocase(pNeedle, m_aFilterString);
 }
