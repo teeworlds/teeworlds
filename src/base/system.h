@@ -1783,6 +1783,16 @@ void str_utf8_stats(const char *str, int max_size, int max_count, int *size, int
 int secure_random_init();
 
 /*
+	Function: secure_random_uninit
+		Uninitializes the secure random module.
+
+	Returns:
+		0 - Uninitialization succeeded.
+		1 - Uninitialization failed.
+*/
+int secure_random_uninit();
+
+/*
 	Function: secure_random_fill
 		Fills the buffer with the specified amount of random bytes.
 

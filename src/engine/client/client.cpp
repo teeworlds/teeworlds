@@ -2736,6 +2736,7 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pMapChecker;
 	delete pEngineMasterServer;
 
+	secure_random_uninit();
 	cmdline_free(argc, argv);
 	return 0;
 }
