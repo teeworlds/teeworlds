@@ -242,6 +242,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	// draw gun
+	if(Player.m_Weapon >= 0)
 	{
 		// normal weapons
 		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);

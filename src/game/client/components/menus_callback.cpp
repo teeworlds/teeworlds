@@ -12,7 +12,7 @@ typedef struct
 	const char *m_pCommand;
 	int m_KeyId;
 	int m_Modifier;
-	CMenus::CButtonContainer m_BC;
+	CButtonContainer m_BC;
 } CKeyInfo;
 
 static CKeyInfo gs_aKeys[] =

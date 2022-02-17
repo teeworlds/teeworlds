@@ -29,7 +29,7 @@ void CMapChecker::SetDefaults()
 	m_ClearListBeforeAdding = true;
 }
 
-void CMapChecker::AddMaplist(CMapVersion *pMaplist, int Num)
+void CMapChecker::AddMaplist(const CMapVersion *pMaplist, int Num)
 {
 	if(m_ClearListBeforeAdding)
 		Init();

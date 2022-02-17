@@ -195,7 +195,7 @@ void CInfoMessages::OnRender()
 	for(int i = 1; i <= MAX_INFOMSGS; i++)
 	{
 		CInfoMsg *pInfoMsg = &m_aInfoMsgs[(m_InfoMsgCurrent+i)%MAX_INFOMSGS];
-		if(Client()->GameTick() > pInfoMsg->m_Tick+50*10)
+		if(Client()->GameTick() > pInfoMsg->m_Tick + SERVER_TICK_SPEED * 10)
 			continue;
 
 		if(pInfoMsg->m_Type == INFOMSG_KILL)
