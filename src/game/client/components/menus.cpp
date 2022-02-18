@@ -1455,6 +1455,12 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
 			static CLineInput s_DemoNameInput(m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile));
+			if(UI()->GetActiveItem() == m_aCurrentDemoFile) // initially activate input and select entire name
+			{
+				s_DemoNameInput.SetCursorOffset(s_DemoNameInput.GetLength());
+				s_DemoNameInput.SetSelection(0, s_DemoNameInput.GetLength());
+				UI()->SetActiveItem(&s_DemoNameInput);
+			}
 			UI()->DoEditBoxOption(&s_DemoNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
@@ -1504,6 +1510,12 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
 			static CLineInput s_SkinNameInput(m_aSaveSkinName, sizeof(m_aSaveSkinName));
+			if(UI()->GetActiveItem() == m_aSaveSkinName) // initially activate input and select entire name
+			{
+				s_SkinNameInput.SetCursorOffset(s_SkinNameInput.GetLength());
+				s_SkinNameInput.SetSelection(0, s_SkinNameInput.GetLength());
+				UI()->SetActiveItem(&s_SkinNameInput);
+			}
 			UI()->DoEditBoxOption(&s_SkinNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons

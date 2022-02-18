@@ -1336,7 +1336,10 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
 		static CButtonContainer s_CustomSkinSaveButton;
 		if(DoButton_Menu(&s_CustomSkinSaveButton, Localize("Save"), 0, &Button))
+		{
+			UI()->SetActiveItem(m_aSaveSkinName); // marker to initially activate the input and select the text
 			m_Popup = POPUP_SAVE_SKIN;
+		}
 		BottomView.VSplitLeft(SpacingW, 0, &BottomView);
 
 		BottomView.VSplitLeft(ButtonWidth, &Button, &BottomView);
