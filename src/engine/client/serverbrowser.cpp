@@ -164,7 +164,7 @@ void CServerBrowser::Set(const NETADDR &Addr, int SetType, int Token, const CSer
 	}
 
 	if(pEntry)
-		m_ServerBrowserFilter.Sort(m_aServerlist[m_ActServerlistType].m_ppServerlist, m_aServerlist[m_ActServerlistType].m_NumServers, CServerBrowserFilter::RESORT_FLAG_FORCE);
+		RequestResort();
 }
 
 void CServerBrowser::Update()
