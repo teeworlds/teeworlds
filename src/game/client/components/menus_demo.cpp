@@ -655,7 +655,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			{
 				UI()->SetActiveItem(0);
 				m_Popup = POPUP_RENAME_DEMO;
-				str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aCurrentDemoFile));
+				str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename,
+					minimum<int>(str_length(m_lDemos[m_DemolistSelectedIndex].m_aFilename) - str_length(".demo") + 1, sizeof(m_aCurrentDemoFile)));
 				return;
 			}
 		}
