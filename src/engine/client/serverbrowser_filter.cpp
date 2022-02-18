@@ -165,16 +165,11 @@ void CServerBrowserFilter::CServerFilter::Filter()
 
 			if(!Filtered && Config()->m_BrFilterString[0] != 0)
 			{
-				int MatchFound = 0;
-
 				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit = 0;
 
 				// match against server name
 				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aName, Config()->m_BrFilterString))
-				{
-					MatchFound = 1;
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
-				}
 
 				// match against players
 				for(int p = 0; p < m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients; p++)
@@ -182,7 +177,6 @@ void CServerBrowserFilter::CServerFilter::Filter()
 					if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, Config()->m_BrFilterString) ||
 						str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, Config()->m_BrFilterString))
 					{
-						MatchFound = 1;
 						m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
 						break;
 					}
@@ -190,19 +184,13 @@ void CServerBrowserFilter::CServerFilter::Filter()
 
 				// match against map
 				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aMap, Config()->m_BrFilterString))
-				{
-					MatchFound = 1;
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
-				}
 
 				// match against game type
 				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, Config()->m_BrFilterString))
-				{
-					MatchFound = 1;
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_GAMETYPE;
-				}
 
-				if(!MatchFound)
+				if(!m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit)
 					Filtered = 1;
 			}
 		}
