@@ -71,7 +71,7 @@ CServerBrowser::CServerBrowser()
 	m_pLastReqServer = 0;
 	m_NumRequests = 0;
 
-	m_NeedRefresh = 0;
+	m_NeedRefresh = false;
 	m_RefreshFlags = 0;
 	m_InfoUpdated = false;
 
@@ -178,7 +178,7 @@ void CServerBrowser::Update(bool ForceResort)
 	{
 		CNetChunk Packet;
 
-		m_NeedRefresh = 0;
+		m_NeedRefresh = false;
 		m_InfoUpdated = false;
 
 		mem_zero(&Packet, sizeof(Packet));
@@ -330,7 +330,7 @@ void CServerBrowser::Refresh(int RefreshFlags)
 		m_pLastReqServer = 0;
 		m_NumRequests = 0;
 
-		m_NeedRefresh = 1;
+		m_NeedRefresh = true;
 		for(int i = 0; i < m_ServerBrowserFavorites.m_NumFavoriteServers; i++)
 			if(m_ServerBrowserFavorites.m_aFavoriteServers[i].m_State >= CServerBrowserFavorites::FAVSTATE_ADDR)
 				Set(m_ServerBrowserFavorites.m_aFavoriteServers[i].m_Addr, SET_FAV_ADD, -1, 0);

@@ -96,7 +96,7 @@ private:
 	CServerEntry *m_pLastReqServer;
 	int m_NumRequests;
 
-	int m_NeedRefresh;
+	bool m_NeedRefresh;
 	bool m_InfoUpdated;
 
 	// the token is to keep server refresh separated from each other
