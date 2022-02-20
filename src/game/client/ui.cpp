@@ -408,20 +408,20 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 			s_DoScroll = true;
 			s_ScrollStartX = MouseX();
 			const float MxRel = MouseX() - Textbox.x;
-			float PreviousWidth = 0.0f;
+			float TotalTextWidth = 0.0f;
 			for(int i = 1, Offset = 0; i <= pLineInput->GetNumChars(); i++)
 			{
-				int PrevOffset = Offset;
+				const int PrevOffset = Offset;
 				Offset = str_utf8_forward(pDisplayStr, Offset);
-				const float TextWidth = TextRender()->TextWidth(FontSize, pDisplayStr, Offset);
-				if(PreviousWidth + (TextWidth - PreviousWidth)/2.0f - ScrollOffset > MxRel)
+				const float AddedTextWidth = TextRender()->TextWidth(FontSize, pDisplayStr + PrevOffset, Offset - PrevOffset);
+				if(TotalTextWidth + AddedTextWidth/2.0f - ScrollOffset > MxRel)
 				{
 					CursorOffset = PrevOffset;
 					if(s_SelectionStartOffset < 0)
 						s_SelectionStartOffset = CursorOffset;
 					break;
 				}
-				PreviousWidth = TextWidth;
+				TotalTextWidth += AddedTextWidth;
 
 				if(i == pLineInput->GetNumChars())
 				{
