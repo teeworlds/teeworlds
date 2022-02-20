@@ -19,7 +19,7 @@
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
-// get positions
+	// get positions
 	float Curvature = 0;
 	float Speed = 0;
 	if(pCurrent->m_Type == WEAPON_GRENADE)
@@ -106,7 +106,22 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 
 void CItems::RenderPodiumProjectile(const CNetObj_PodiumRaceProjectile *pCurrent, int ItemID)
 {
-// get positions
+	// get positions
+	if(!Config()->m_ClRaceGimmicksProjectiles)
+	{
+		CNetObj_Projectile Proj;
+		Proj.m_X = pCurrent->m_X;
+		Proj.m_Y = pCurrent->m_Y;
+		Proj.m_VelX = pCurrent->m_VelX;
+		Proj.m_VelY = pCurrent->m_VelY;
+		Proj.m_StartTick = pCurrent->m_StartTick;
+
+		//Set the right weapon
+		Proj.m_Type = WEAPON_GRENADE;
+		RenderProjectile(&Proj, ItemID);
+		return;
+	}
+
 	float Curvature = 0;
 	float Speed = 0;
 	int SpriteID = 0;
