@@ -501,7 +501,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 			float wt = TextRender()->TextWidth(FontSize, pDisplayStr, -1);
 			do
 			{
-				ScrollOffset += minimum(wt-ScrollOffset-Textbox.w, Textbox.w/3);
+				ScrollOffset += clamp(wt-ScrollOffset-Textbox.w, 0.1f, Textbox.w/3);
 			}
 			while(w-ScrollOffset > Textbox.w);
 		}
