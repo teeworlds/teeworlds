@@ -249,7 +249,7 @@ void CPlayers::RenderPlayer(
 
 		// setup race podium texture
 		int RacePodium = RACE_FLAG_MISSING;
-		if(iw == WEAPON_GRENADE && Config()->m_ClRaceGimmicks && Config()->m_ClRaceGimmicksLauncher)
+		if(iw == WEAPON_GRENADE && Config()->m_ClRaceGimmicksLauncher)
 		{
 			if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == ClientID)
 				RacePodium = RACE_FLAG_GOLD;
