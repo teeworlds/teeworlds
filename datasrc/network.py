@@ -286,6 +286,18 @@ Objects = [
 		NetIntRange("m_FlagCarrierRaceSilver", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
 		NetIntRange("m_FlagCarrierRaceBronze", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
 	]),
+
+	# TODO move this into the default projectile netobj in 0.8
+	NetObject("PodiumRaceProjectile", [
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_VelX"),
+		NetIntAny("m_VelY"),
+
+		# NetIntRange("m_Type", 0, 'NUM_WEAPONS-1'),  # it's always type grenade
+		NetIntRange("m_Place", 'RACE_FLAG_GOLD', 'RACE_FLAG_BRONZE'),
+		NetTick("m_StartTick"),
+	]),
 ]
 
 Messages = [

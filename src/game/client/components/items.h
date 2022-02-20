@@ -7,6 +7,7 @@
 class CItems : public CComponent
 {
 	void RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID);
+	void RenderPodiumProjectile(const CNetObj_PodiumRaceProjectile *pCurrent, int ItemID);
 	void RenderPickup(const CNetObj_Pickup *pPrev, const CNetObj_Pickup *pCurrent);
 	void RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent, const CNetObj_GameDataFlag *pPrevGameDataFlag, const CNetObj_GameDataFlag *pCurGameDataFlag);
 	void RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFlag *pCurrent, const CNetObj_GameDataRaceFlag *pPrevGameDataFlag, const CNetObj_GameDataRaceFlag *pCurGameDataFlag);

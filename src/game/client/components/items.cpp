@@ -19,7 +19,7 @@
 
 void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 {
-	// get positions
+// get positions
 	float Curvature = 0;
 	float Speed = 0;
 	if(pCurrent->m_Type == WEAPON_GRENADE)
@@ -75,31 +75,10 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
 	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
 
-
-	IGraphics::CTextureHandle *pTexture = &g_pData->m_aImages[IMAGE_GAME].m_Id;
-	int Weapon = clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1);
-	int LocalClientID = m_pClient->m_LocalClientID;
-	int SpriteID = -1;
-
-	//Render racing projectiles
-	if(Weapon == WEAPON_GRENADE)
-	{
-		if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == LocalClientID)
-			SpriteID = SPRITE_WEAPON_GRENADE_PROJ_GOLD;
-		else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceSilver == LocalClientID)
-			SpriteID = SPRITE_WEAPON_GRENADE_PROJ_SILVER;
-		else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceBronze == LocalClientID)
-			SpriteID = SPRITE_WEAPON_GRENADE_PROJ_BRONZE;
-		if(SpriteID != -1)
-			pTexture = &g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id;
-	}
-
-	Graphics()->TextureSet(*pTexture);
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
-	if(SpriteID != -1)
-		RenderTools()->SelectSprite(SpriteID);
-	else
-		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[Weapon].m_pSpriteProj);
+
+	RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[clamp(pCurrent->m_Type, 0, NUM_WEAPONS-1)].m_pSpriteProj);
 	const vec2 Vel = Pos-PrevPos;
 
 	// add particle for this projectile
@@ -118,6 +97,77 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 		m_pClient->m_pEffects->BulletTrail(Pos);
 		Graphics()->QuadsSetRotation(length(Vel) > 0.00001f ? angle(Vel) : 0);
 	}
+
+	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 32, 32);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsEnd();
+}
+
+void CItems::RenderPodiumProjectile(const CNetObj_PodiumRaceProjectile *pCurrent, int ItemID)
+{
+// get positions
+	float Curvature = 0;
+	float Speed = 0;
+	int SpriteID = 0;
+	if(pCurrent->m_Place == RACE_FLAG_GOLD)
+		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_GOLD;
+	else if(pCurrent->m_Place == RACE_FLAG_GOLD)
+		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_SILVER;
+	else
+		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_BRONZE;
+
+	static float s_LastGameTickTime = Client()->GameTickTime();
+	if(!m_pClient->IsWorldPaused() && !m_pClient->IsDemoPlaybackPaused())
+		s_LastGameTickTime = Client()->GameTickTime();
+
+	float Ct;
+	if(m_pClient->ShouldUsePredicted() && Config()->m_ClPredictProjectiles)
+		Ct = ((float)(Client()->PredGameTick() - 1 - pCurrent->m_StartTick) + Client()->PredIntraGameTick())/(float)SERVER_TICK_SPEED;
+	else
+		Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
+	if(Ct < 0)
+	{
+		if(Ct > -s_LastGameTickTime / 2)
+		{
+			// Fixup the timing which might be screwed during demo playback because
+			// s_LastGameTickTime depends on the system timer, while the other part
+			// Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED
+			// is virtually constant (for projectiles fired on the current game tick):
+			// (x - (x+2)) / 50 = -0.04
+			//
+			// We have a strict comparison for the passed time being more than the time between ticks
+			// if(CurtickStart > m_Info.m_CurrentTime) in CDemoPlayer::Update()
+			// so on the practice the typical value of s_LastGameTickTime varies from 0.02386 to 0.03999
+			// which leads to Ct from -0.00001 to -0.01614.
+			// Round up those to 0.0 to fix missing rendering of the projectile.
+			Ct = 0;
+		}
+		else
+		{
+			return; // projectile haven't been shot yet
+		}
+	}
+
+	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
+	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
+	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
+	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id);
+	Graphics()->QuadsBegin();
+
+	RenderTools()->SelectSprite(SpriteID);
+	const vec2 Vel = Pos-PrevPos;
+
+	// add particle for this projectile
+	m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
+	const float Now = Client()->LocalTime();
+	static float s_Time = 0.0f;
+	static float s_LastLocalTime = Now;
+	s_Time += (Now - s_LastLocalTime) * m_pClient->GetAnimationPlaybackSpeed();
+	Graphics()->QuadsSetRotation(s_Time*pi*2*2 + ItemID);
+	s_LastLocalTime = Now;
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 32, 32);
 	Graphics()->QuadsDraw(&QuadItem, 1);
@@ -368,6 +418,10 @@ void CItems::OnRender()
 		if (Item.m_Type == NETOBJTYPE_PROJECTILE)
 		{
 			RenderProjectile((const CNetObj_Projectile *) pData, Item.m_ID);
+		}
+		else if(Item.m_Type == NETOBJTYPE_PODIUMRACEPROJECTILE)
+		{
+			RenderPodiumProjectile((const CNetObj_PodiumRaceProjectile *) pData, Item.m_ID);
 		}
 		else if (Item.m_Type == NETOBJTYPE_PICKUP)
 		{
