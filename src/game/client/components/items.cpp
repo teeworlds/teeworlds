@@ -360,20 +360,25 @@ void CItems::OnRender()
 		return;
 
 	int Num = Client()->SnapNumItems(IClient::SNAP_CURRENT);
-	for(int i = 0; i < Num; i++) {
+	for(int i = 0; i < Num; i++)
+	{
 		IClient::CSnapItem Item;
 		const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
 
-		if (Item.m_Type == NETOBJTYPE_PROJECTILE) {
+		if (Item.m_Type == NETOBJTYPE_PROJECTILE)
+		{
 			RenderProjectile((const CNetObj_Projectile *) pData, Item.m_ID);
-		} else if (Item.m_Type == NETOBJTYPE_PICKUP) {
+		}
+		else if (Item.m_Type == NETOBJTYPE_PICKUP)
+		{
 			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
 			if (pPrev)
 				RenderPickup((const CNetObj_Pickup *) pPrev, (const CNetObj_Pickup *) pData);
-		} else if (Item.m_Type == NETOBJTYPE_LASER) {
+		}
+		else if (Item.m_Type == NETOBJTYPE_LASER)
+		{
 			RenderLaser((const CNetObj_Laser *) pData);
 		}
-
 	}
 
 	// render flags over all other items
