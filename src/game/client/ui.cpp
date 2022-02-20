@@ -491,32 +491,6 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	if(Inside)
 		SetHotItem(pLineInput);
 
-	// check if the text has to be moved
-	if(Active && !JustGotActive && (UpdateOffset || Changed))
-	{
-		float w = TextRender()->TextWidth(FontSize, pDisplayStr, pLineInput->OffsetFromActualToDisplay(pLineInput->GetCursorOffset()));
-		if(w-ScrollOffset > Textbox.w)
-		{
-			// move to the left
-			float wt = TextRender()->TextWidth(FontSize, pDisplayStr, -1);
-			do
-			{
-				ScrollOffset += clamp(wt-ScrollOffset-Textbox.w, 0.1f, Textbox.w/3);
-			}
-			while(w-ScrollOffset > Textbox.w);
-		}
-		else if(w-ScrollOffset < 0.0f)
-		{
-			// move to the right
-			do
-			{
-				ScrollOffset = maximum(0.0f, ScrollOffset-Textbox.w/3);
-			}
-			while(w-ScrollOffset < 0.0f);
-		}
-	}
-
-	pLineInput->SetScrollOffset(ScrollOffset);
 	if(Enabled() && Active && !JustGotActive)
 		pLineInput->Activate(UI);
 	else
@@ -529,6 +503,32 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	pCursor->MoveTo(Textbox.x, Textbox.y + Textbox.h/2.0f);
 	pLineInput->Render();
 	ClipDisable();
+
+	// check if the text has to be moved
+	if(Active && !JustGotActive && (UpdateOffset || Changed))
+	{
+		const float CaretX = pLineInput->GetCaretPosition().x - Textbox.x;
+		if(CaretX - ScrollOffset > Textbox.w)
+		{
+			// move to the left
+			do
+			{
+				ScrollOffset += clamp(pLineInput->GetCursor()->Width() - ScrollOffset - Textbox.w, 0.1f, Textbox.w / 3.0f);
+			}
+			while(CaretX - ScrollOffset > Textbox.w);
+		}
+		else if(CaretX - ScrollOffset < 0.0f)
+		{
+			// move to the right
+			do
+			{
+				ScrollOffset = maximum(0.0f, ScrollOffset - Textbox.w / 3.0f);
+			}
+			while(CaretX - ScrollOffset < 0.0f);
+		}
+	}
+
+	pLineInput->SetScrollOffset(ScrollOffset);
 
 	return Changed;
 }
