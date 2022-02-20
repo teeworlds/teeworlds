@@ -291,13 +291,9 @@ void dbg_logger_debugger()
 #endif
 }
 
-void dbg_logger_file(const char *filename)
+void dbg_logger_file(IOHANDLE logfile)
 {
-	IOHANDLE logfile = io_open(filename, IOFLAG_WRITE);
-	if(logfile)
-		dbg_logger(logger_file, logger_file_finish, aio_new(logfile));
-	else
-		dbg_msg("dbg/logger", "failed to open '%s' for logging", filename);
+	dbg_logger(logger_file, logger_file_finish, aio_new(logfile));
 }
 
 #if defined(CONF_FAMILY_WINDOWS)
