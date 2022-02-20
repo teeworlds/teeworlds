@@ -1385,7 +1385,7 @@ void CGameClient::OnNewSnapshot()
 			}
 			else if(Item.m_Type == NETOBJTYPE_RACEFLAG)
 			{
-				m_Snap.m_paRaceFlags[Item.m_ID%3] = (const CNetObj_RaceFlag *)pData;
+				m_Snap.m_apRaceFlags[Item.m_ID % 3] = (const CNetObj_RaceFlag *)pData;
 			}
 		}
 	}
