@@ -30,11 +30,6 @@
 #include "register.h"
 #include "server.h"
 
-#if defined(CONF_FAMILY_WINDOWS)
-	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
-#endif
-
 #include <signal.h>
 
 volatile sig_atomic_t InterruptSignaled = 0;
@@ -1850,7 +1845,7 @@ int main(int argc, const char **argv) // ignore_convention
 	{
 		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
 		{
-			ShowWindow(GetConsoleWindow(), SW_HIDE);
+			dbg_console_hide();
 			break;
 		}
 	}

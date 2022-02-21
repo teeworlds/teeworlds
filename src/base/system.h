@@ -1598,6 +1598,7 @@ void dbg_logger_filehandle(IOHANDLE handle);
 #if defined(CONF_FAMILY_WINDOWS)
 void dbg_console_init();
 void dbg_console_cleanup();
+void dbg_console_hide();
 #endif
 
 typedef struct

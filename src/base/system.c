@@ -281,6 +281,11 @@ void dbg_console_cleanup()
 {
 	SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), old_console_mode);
 }
+
+void dbg_console_hide()
+{
+	FreeConsole();
+}
 #endif
 /* */
 
