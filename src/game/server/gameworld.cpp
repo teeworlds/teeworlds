@@ -186,6 +186,7 @@ void CGameWorld::Tick()
 			for(CEntity *pEnt = m_apFirstEntityTypes[i]; pEnt; )
 			{
 				m_pNextTraverseEntity = pEnt->m_pNextTypeEntity;
+				pEnt->ApplyHarpoonDrag();
 				pEnt->Tick();
 				pEnt = m_pNextTraverseEntity;
 			}
@@ -204,7 +205,7 @@ void CGameWorld::Tick()
 
 
 // TODO: should be more general
-CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, CEntity *pNotThis)
+CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, CEntity *pNotThis, CHarpoon* pHarpoon)
 {
 	// Find other players
 	float ClosestLen = distance(Pos0, Pos1) * 100.0f;
@@ -214,6 +215,8 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 	for(; p; p = (CCharacter *)p->TypeNext())
  	{
 		if(p == pNotThis)
+			continue;
+		if (pHarpoon && !p->IsValidForHarpoon(pHarpoon))
 			continue;
 
 		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
@@ -233,6 +236,36 @@ CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, v
 	return pClosest;
 }
 
+CEntity* CGameWorld::IntersectEntity(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, int Type, CEntity* pNotThis, CHarpoon* pHarpoon)
+{
+	// Find other players
+	float ClosestLen = distance(Pos0, Pos1) * 100.0f;
+	CEntity* pClosest = 0;
+
+	CEntity* p = (CEntity*)FindFirst(Type);
+	for (; p; p = (CEntity*)p->TypeNext())
+	{
+		if (p == pNotThis)
+			continue;
+		if (pHarpoon && !p->IsValidForHarpoon(pHarpoon))
+			continue;
+
+		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
+		float Len = distance(p->m_Pos, IntersectPos);
+		if (Len < p->m_ProximityRadius + Radius)
+		{
+			Len = distance(Pos0, IntersectPos);
+			if (Len < ClosestLen)
+			{
+				NewPos = IntersectPos;
+				ClosestLen = Len;
+				pClosest = p;
+			}
+		}
+	}
+
+	return pClosest;
+}
 
 CEntity *CGameWorld::ClosestEntity(vec2 Pos, float Radius, int Type, CEntity *pNotThis)
 {

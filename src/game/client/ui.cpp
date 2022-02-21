@@ -38,7 +38,6 @@ CUI::CUI()
 	m_Enabled = true;
 
 	m_HotkeysPressed = 0;
-	m_pActiveInput = 0;
 
 	m_Screen.x = 0;
 	m_Screen.y = 0;
@@ -58,7 +57,7 @@ void CUI::Init(class CConfig *pConfig, class IGraphics *pGraphics, class IInput 
 	m_pInput = pInput;
 	m_pTextRender = pTextRender;
 	CUIRect::Init(pGraphics);
-	CLineInput::Init(pInput, pTextRender);
+	CLineInput::Init(pInput, pTextRender, pGraphics);
 }
 
 void CUI::Update(float MouseX, float MouseY, float MouseWorldX, float MouseWorldY)
@@ -81,8 +80,13 @@ void CUI::Update(float MouseX, float MouseY, float MouseWorldX, float MouseWorld
 	if(m_pActiveItem)
 		m_pHotItem = m_pActiveItem;
 	m_pBecommingHotItem = 0;
-	if(m_pActiveInput != m_pLastActiveItem)
-		m_pActiveInput = 0;
+
+	if(Enabled())
+	{
+		CLineInput *pActiveInput = CLineInput::GetActiveInput();
+		if(pActiveInput && m_pLastActiveItem && pActiveInput != m_pLastActiveItem)
+			pActiveInput->Deactivate();
+	}
 }
 
 bool CUI::KeyPress(int Key) const
@@ -107,7 +111,8 @@ bool CUI::OnInput(const IInput::CEvent &e)
 	if(!Enabled())
 		return false;
 
-	if(m_pActiveInput && m_pActiveInput->ProcessInput(e))
+	CLineInput *pActiveInput = CLineInput::GetActiveInput();
+	if(pActiveInput && pActiveInput->ProcessInput(e))
 		return true;
 
 	if(e.m_Flags&IInput::FLAG_PRESS)
@@ -331,65 +336,95 @@ void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char
 	TextRender()->DrawTextOutlined(&s_Cursor);
 }
 
-bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, bool Hidden, int Corners, const IButtonColorFunction *pColorFunction)
+bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const IButtonColorFunction *pColorFunction)
 {
+	CTextCursor *pCursor = pLineInput->GetCursor();
+	pCursor->m_FontSize = FontSize;
+	pCursor->m_Align = TEXTALIGN_ML;
+
 	const bool Inside = MouseHovered(pRect);
-	const int Len = pLineInput->GetLength();
+	const bool Active = LastActiveItem() == pLineInput;
 	const bool Changed = pLineInput->WasChanged();
+	const char *pDisplayStr = pLineInput->GetDisplayedString();
 
 	bool UpdateOffset = false;
 	float ScrollOffset = pLineInput->GetScrollOffset();
 
 	static bool s_DoScroll = false;
+	static int s_SelectionStartOffset = -1;
 
-	if(LastActiveItem() == pLineInput)
+	const float VSpacing = 2.0f;
+	CUIRect Textbox;
+	pRect->VMargin(VSpacing, &Textbox);
+
+	if(Active)
 	{
-		static float s_ScrollStart = 0.0f;
+		static float s_ScrollStartX = 0.0f;
 
-		if(Inside && MouseButton(0))
+		int CursorOffset = pLineInput->GetCursorOffset();
+
+		if(Inside && MouseButton(0) && !Changed)
 		{
 			s_DoScroll = true;
-			s_ScrollStart = MouseX();
-			int MxRel = (int)(MouseX() - pRect->x);
-
-			for(int i = 1; i <= Len; i++)
+			s_ScrollStartX = MouseX();
+			const float MxRel = MouseX() - Textbox.x;
+			float PreviousWidth = 0.0f;
+			for(int i = 1, Offset = 0; i <= pLineInput->GetNumChars(); i++)
 			{
-				if(TextRender()->TextWidth(FontSize, pLineInput->GetString(), i) - ScrollOffset > MxRel)
+				int PrevOffset = Offset;
+				Offset = str_utf8_forward(pDisplayStr, Offset);
+				const float TextWidth = TextRender()->TextWidth(FontSize, pDisplayStr, Offset);
+				if(PreviousWidth + (TextWidth - PreviousWidth)/2.0f - ScrollOffset > MxRel)
 				{
-					pLineInput->SetCursorOffset(i - 1);
+					CursorOffset = PrevOffset;
+					if(s_SelectionStartOffset < 0)
+						s_SelectionStartOffset = CursorOffset;
 					break;
 				}
+				PreviousWidth = TextWidth;
 
-				if(i == Len)
-					pLineInput->SetCursorOffset(Len);
+				if(i == pLineInput->GetNumChars())
+				{
+					CursorOffset = pLineInput->GetLength();
+					if(s_SelectionStartOffset < 0)
+						s_SelectionStartOffset = CursorOffset;
+				}
 			}
 		}
-		else if(!MouseButton(0))
+		else if(!MouseButton(0) || Changed)
+		{
 			s_DoScroll = false;
+			s_SelectionStartOffset = -1;
+		}
 		else if(s_DoScroll)
 		{
 			// do scrolling
-			if(MouseX() < pRect->x && s_ScrollStart-MouseX() > 10.0f)
+			if(MouseX() < Textbox.x && s_ScrollStartX-MouseX() > 10.0f)
 			{
-				pLineInput->SetCursorOffset(pLineInput->GetCursorOffset()-1);
-				s_ScrollStart = MouseX();
+				CursorOffset = str_utf8_rewind(pDisplayStr, CursorOffset);
+				s_ScrollStartX = MouseX();
 				UpdateOffset = true;
 			}
-			else if(MouseX() > pRect->x+pRect->w && MouseX()-s_ScrollStart > 10.0f)
+			else if(MouseX() > Textbox.x+Textbox.w && MouseX()-s_ScrollStartX > 10.0f)
 			{
-				pLineInput->SetCursorOffset(pLineInput->GetCursorOffset()+1);
-				s_ScrollStart = MouseX();
+				CursorOffset = str_utf8_forward(pDisplayStr, CursorOffset);
+				s_ScrollStartX = MouseX();
 				UpdateOffset = true;
 			}
 		}
 		else if(!Inside && MouseButton(0))
 		{
 			s_DoScroll = false;
+			s_SelectionStartOffset = -1;
 			SetActiveItem(0);
 			ClearLastActiveItem();
 		}
 
-		m_pActiveInput = pLineInput;
+		if(s_SelectionStartOffset >= 0)
+		{
+			pLineInput->SetCursorOffset(pLineInput->OffsetFromDisplayToActual(CursorOffset));
+			pLineInput->SetSelection(pLineInput->OffsetFromDisplayToActual(s_SelectionStartOffset), pLineInput->OffsetFromDisplayToActual(CursorOffset));
+		}
 	}
 
 	bool JustGotActive = false;
@@ -399,6 +434,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 		if(!MouseButton(0))
 		{
 			s_DoScroll = false;
+			s_SelectionStartOffset = -1;
 			SetActiveItem(0);
 		}
 	}
@@ -406,7 +442,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	{
 		if(MouseButton(0))
 		{
-			if(LastActiveItem() != pLineInput)
+			if(!Active)
 				JustGotActive = true;
 			SetActiveItem(pLineInput);
 		}
@@ -415,29 +451,10 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	if(Inside)
 		SetHotItem(pLineInput);
 
-	const float Spacing = 2.0f;
-	CUIRect Textbox = *pRect;
-	Textbox.Draw(pColorFunction->GetColor(LastActiveItem() == pLineInput, Inside), 5.0f, Corners);
-	Textbox.VMargin(Spacing, &Textbox);
-
-	const char *pDisplayStr = pLineInput->GetString();
-	char aStars[128];
-
-	if(Hidden)
-	{
-		unsigned s = Len;
-		if(s >= sizeof(aStars))
-			s = sizeof(aStars)-1;
-		for(unsigned int i = 0; i < s; ++i)
-			aStars[i] = '*';
-		aStars[s] = 0;
-		pDisplayStr = aStars;
-	}
-
 	// check if the text has to be moved
-	if(LastActiveItem() == pLineInput && !JustGotActive && (UpdateOffset || Changed))
+	if(Active && !JustGotActive && (UpdateOffset || Changed))
 	{
-		float w = TextRender()->TextWidth(FontSize, pDisplayStr, pLineInput->GetCursorOffset());
+		float w = TextRender()->TextWidth(FontSize, pDisplayStr, pLineInput->OffsetFromActualToDisplay(pLineInput->GetCursorOffset()));
 		if(w-ScrollOffset > Textbox.w)
 		{
 			// move to the left
@@ -459,23 +476,24 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 		}
 	}
 
+	pLineInput->SetScrollOffset(ScrollOffset);
+	if(Enabled() && Active && !JustGotActive)
+		pLineInput->Activate(UI);
+	else
+		pLineInput->Deactivate();
+
+	// render
+	pRect->Draw(pColorFunction->GetColor(Active, Inside), 5.0f, Corners);
 	ClipEnable(pRect);
 	Textbox.x -= ScrollOffset;
-	static CTextCursor s_TextCursor;
-	s_TextCursor.Reset();
-	s_TextCursor.m_FontSize = FontSize;
-	s_TextCursor.m_Align = TEXTALIGN_ML;
-	s_TextCursor.MoveTo(Textbox.x, Textbox.y + Textbox.h/2.0f);
-	TextRender()->TextDeferred(&s_TextCursor, pDisplayStr, -1);
-	pLineInput->Render(&s_TextCursor, LastActiveItem() == pLineInput && !JustGotActive);
+	pCursor->MoveTo(Textbox.x, Textbox.y + Textbox.h/2.0f);
+	pLineInput->Render();
 	ClipDisable();
-
-	pLineInput->SetScrollOffset(ScrollOffset);
 
 	return Changed;
 }
 
-void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const char *pStr, float VSplitVal, bool Hidden)
+void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const char *pStr, float VSplitVal)
 {
 	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
@@ -488,7 +506,7 @@ void CUI::DoEditBoxOption(CLineInput *pLineInput, const CUIRect *pRect, const ch
 	Label.y += 2.0f;
 	DoLabel(&Label, aBuf, FontSize, TEXTALIGN_CENTER);
 
-	DoEditBox(pLineInput, &EditBox, FontSize, Hidden);
+	DoEditBox(pLineInput, &EditBox, FontSize);
 }
 
 float CUI::DoScrollbarV(const void *pID, const CUIRect *pRect, float Current)

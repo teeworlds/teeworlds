@@ -390,8 +390,10 @@ public:
 
 	// other game layers
 	class CLayerMaterial *m_pMaterialLayer;
+	class CLayerWater *m_pWaterLayer;
 	class array<CLayerCustom*> m_apCustomLayers;
 	void MakeMaterialLayer(CLayer* pLayer);
+	void MakeWaterLayer(CLayer* pLayer);
 	void MakeCustomLayer(CLayer* pLayer);
 };
 
@@ -511,6 +513,15 @@ class CLayerMaterial : public CLayerTiles
 public:
 	CLayerMaterial(int w, int h);
 	~CLayerMaterial();
+
+	virtual int RenderProperties(CUIRect *pToolbox);
+};
+
+class CLayerWater : public CLayerTiles
+{
+public:
+	CLayerWater(int w, int h);
+	~CLayerWater();
 
 	virtual int RenderProperties(CUIRect *pToolbox);
 };
@@ -776,6 +787,7 @@ public:
 	IGraphics::CTextureHandle m_CursorTexture;
 	IGraphics::CTextureHandle m_EntitiesTexture;
 	IGraphics::CTextureHandle m_MaterialTexture;
+	IGraphics::CTextureHandle m_WaterTexture;
 
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;

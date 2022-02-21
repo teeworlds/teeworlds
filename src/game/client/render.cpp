@@ -80,7 +80,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 	vec2 Direction = Dir;
 	vec2 Position = Pos;
 	bool IsBot = pInfo->m_BotTexture.IsValid();
-
+	bool HasDivingGear = pInfo->m_DivingGearTexture.IsValid();
 	// first pass we draw the outline
 	// second pass we draw the filling
 	for(int p = 0; p < 2; p++)
@@ -95,6 +95,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 			{
 				vec2 BodyPos = Position + vec2(pAnim->GetBody()->m_X, pAnim->GetBody()->m_Y)*AnimScale;
 				IGraphics::CQuadItem BodyItem(BodyPos.x, BodyPos.y, BaseSize, BaseSize);
+				IGraphics::CQuadItem DivingGearItem(BodyPos.x, BodyPos.y-10.0f, BaseSize + 15.0f, BaseSize + 15.0f);
 				IGraphics::CQuadItem BotItem(BodyPos.x+(2.f/3.f)*AnimScale, BodyPos.y+(-16+2.f/3.f)*AnimScale, BaseSize, BaseSize); // x+0.66, y+0.66 to correct some rendering bug
 				IGraphics::CQuadItem Item;
 
@@ -253,6 +254,23 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 					Graphics()->QuadsDraw(&Item, 1);
 					Graphics()->QuadsEnd();
 				}
+				if (!OutLine && HasDivingGear)
+				{
+					Graphics()->TextureSet(pInfo->m_DivingGearTexture);
+					Graphics()->QuadsBegin();
+					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle * pi * 2);
+					Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
+					int Flag = Direction.x < 0.0f ? SPRITE_FLAG_FLIP_X : 0;
+					SelectSprite(SPRITE_TEE_DIVING_GEAR, Flag, 0, 0);
+					//Item = DivingGearItem;
+					float EyeScale = BaseSize * 1.0f;
+					//float h = Emote == EMOTE_BLINK ? BaseSize * 0.15f / 2.0f : EyeScale / 2.0f;
+					vec2 Offset = vec2(Direction.x * 0.125f, -0.05f + Direction.y * 0.10f) * BaseSize;
+					IGraphics::CQuadItem QuadItem(BodyPos.x + Offset.x, BodyPos.y + Offset.y, EyeScale, EyeScale);
+					Graphics()->QuadsDraw(&QuadItem, 1);
+					//Graphics()->QuadsDraw(&Item, 1);
+					Graphics()->QuadsEnd();
+				}
 			}
 
 			// draw feet
@@ -262,7 +280,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 
 			float w = BaseSize/2.1f;
 			float h = w;
-
+			
 			Graphics()->QuadsSetRotation(pFoot->m_Angle*pi*2);
 
 			if(OutLine)
@@ -326,6 +344,43 @@ void CRenderTools::RenderTeeHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, ve
 	Graphics()->QuadsSetRotation(0);
 	Graphics()->QuadsEnd();
 }
+
+void CRenderTools::RenderRope(vec2 WeaponPos, vec2 SpearPos, int Thickness)
+{
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_ROPE].m_Id);
+	Graphics()->QuadsBegin();
+	float d = distance(SpearPos, WeaponPos);
+	vec2 Dir = normalize(WeaponPos - SpearPos);
+
+	Graphics()->QuadsSetRotation(angle(Dir) + pi);
+
+	// render head
+	SelectSprite(SPRITE_ROPE_END);
+	IGraphics::CQuadItem QuadItem(SpearPos.x, SpearPos.y, Thickness, Thickness);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+
+	// render chain
+	Graphics()->QuadsSetRotation(angle(Dir) + pi);
+	SelectSprite(SPRITE_ROPE_MID);
+	IGraphics::CQuadItem Array[2048];
+	int i = 0;
+	float f = Thickness;
+	for (;f <= d && i < 2048; f += Thickness, i++)
+	{
+		vec2 p = SpearPos + Dir * f;
+		Array[i] = IGraphics::CQuadItem(p.x, p.y, Thickness, Thickness);
+	}
+	vec2 p = SpearPos + Dir * f;
+	Graphics()->QuadsDraw(Array, i);
+	SelectSprite(SPRITE_ROPE_END);
+	Graphics()->QuadsSetRotation(angle(Dir) + 2 * pi);
+	IGraphics::CQuadItem QuadItem2(p.x, p.y, Thickness, Thickness);
+	Graphics()->QuadsDraw(&QuadItem2, 1);
+
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsEnd();
+}
+
 
 static void CalcScreenParams(float Amount, float WMax, float HMax, float Aspect, float *w, float *h)
 {

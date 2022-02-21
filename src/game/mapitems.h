@@ -41,6 +41,8 @@ enum
 	ENTITY_WEAPON_GRENADE,
 	ENTITY_POWERUP_NINJA,
 	ENTITY_WEAPON_LASER,
+	ENTITY_WEAPON_HARPOON,
+	ENTITY_PICKUP_DIVING,
 	NUM_ENTITIES,
 
 	TILE_AIR=0,
@@ -64,6 +66,7 @@ enum
 	MAT_DEFAULT=0, // default doesn't mean air!
 	MAT_ICE,
 	MAT_SAND,
+	//TODO wadd water
 
 	ENTITY_OFFSET=255-16*4,
 };
@@ -71,6 +74,7 @@ enum
 // layer names
 #define LAYERNAME_GAME "Game"
 #define LAYERNAME_MATERIAL "Material"
+#define LAYERNAME_WATER "Water"
 
 struct CPoint
 {

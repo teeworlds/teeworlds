@@ -4487,6 +4487,13 @@ void CEditorMap::MakeMaterialLayer(CLayer *pLayer)
 	m_pMaterialLayer->m_Texture = m_pEditor->m_MaterialTexture;
 }
 
+void CEditorMap::MakeWaterLayer(CLayer *pLayer)
+{
+	m_pWaterLayer = (CLayerWater *)pLayer;
+	m_pWaterLayer->m_pEditor = m_pEditor;
+	m_pWaterLayer->m_Texture = m_pEditor->m_WaterTexture;
+}
+
 void CEditorMap::MakeCustomLayer(CLayer *pLayer)
 {
 	CLayerCustom *CustomLayer = (CLayerCustom *)pLayer;

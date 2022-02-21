@@ -790,7 +790,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Label.y += 2.0f;
 				UI()->DoLabel(&Label, pReasonLabel, FontSize, TEXTALIGN_LEFT);
 				static CLineInput s_ReasonInput(m_aCallvoteReason, sizeof(m_aCallvoteReason));
-				UI()->DoEditBox(&s_ReasonInput, &Reason, FontSize, false, CUIRect::CORNER_L);
+				UI()->DoEditBox(&s_ReasonInput, &Reason, FontSize, CUIRect::CORNER_L);
 
 				// clear button
 				static CButtonContainer s_ClearButton;

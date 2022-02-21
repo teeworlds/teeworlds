@@ -5,6 +5,7 @@
 
 #include "character.h"
 #include "flag.h"
+#include "game/server/player.h"
 
 CFlag::CFlag(CGameWorld *pGameWorld, int Team, vec2 StandPos)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_FLAG, StandPos, ms_PhysSize)
@@ -24,6 +25,11 @@ void CFlag::Reset()
 	m_Pos = m_StandPos;
 	m_Vel = vec2(0, 0);
 	m_GrabTick = 0;
+	if (m_pHarpoon)
+		m_pHarpoon->RemoveHarpoon();
+	m_pHarpoon = 0x0;
+	m_MarkForHarpoonDeallocation = false;
+	m_HarpoonVel = vec2(0, 0);
 }
 
 void CFlag::Grab(CCharacter *pChar)
@@ -39,6 +45,7 @@ void CFlag::Drop()
 	m_pCarrier = 0;
 	m_Vel = vec2(0, 0);
 	m_DropTick = Server()->Tick();
+	m_MarkForHarpoonDeallocation = false;
 }
 
 void CFlag::TickDefered()
@@ -47,11 +54,14 @@ void CFlag::TickDefered()
 	{
 		// update flag position
 		m_Pos = m_pCarrier->GetPos();
+		m_MarkForHarpoonDeallocation = true;
+		if (m_pHarpoon)
+			m_pHarpoon->RemoveHarpoon();
 	}
 	else
 	{
 		// flag hits death-tile or left the game layer, reset it
-		if((GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y) & CCollision::COLFLAG_DEATH)
+		if((((GameServer()->Collision()->GetCollisionAt(m_Pos.x, m_Pos.y) & CCollision::COLFLAG_DEATH )&&!m_pHarpoon))
 			|| GameLayerClipped(m_Pos))
 		{
 			Reset();
@@ -67,8 +77,13 @@ void CFlag::TickDefered()
 			}
 			else
 			{
-				m_Vel.y += GameWorld()->m_Core.m_Tuning.m_Gravity;
-				GameServer()->Collision()->MoveBox(&m_Pos, &m_Vel, vec2(ms_PhysSize, ms_PhysSize), 0.5f);
+				if (m_pHarpoon)
+				{
+					m_DropTick++;
+					return;
+				}
+				m_Vel.y += GameServer()->Collision()->TestBox(m_Pos, vec2(ms_PhysSize, ms_PhysSize),8) ? -GameWorld()->m_Core.m_Tuning.m_Gravity : GameWorld()->m_Core.m_Tuning.m_Gravity;
+				GameServer()->Collision()->MoveWaterBox(&m_Pos, &m_Vel, vec2(ms_PhysSize, ms_PhysSize), 0.5f, 0 , GameWorld()->m_Core.m_Tuning.m_LiquidFlagResistance);
 			}
 		}
 	}
@@ -93,4 +108,63 @@ void CFlag::Snap(int SnappingClient)
 	pFlag->m_X = round_to_int(m_Pos.x);
 	pFlag->m_Y = round_to_int(m_Pos.y);
 	pFlag->m_Team = m_Team;
+}
+
+void CFlag::ApplyHarpoonVel(vec2 Vel)
+{
+	Vel *= GameServer()->Tuning()->m_HarpoonEntityMultiplier;
+	float MaximumSpeed = GameServer()->Tuning()->m_HarpoonFlagDragSpeed;
+	float MinimumSpeed = GameServer()->Tuning()->m_HarpoonFlagMinSpeed;
+	float Length = length(Vel);
+	if (Length < MinimumSpeed)
+	{
+		Vel = normalize(Vel);
+		Vel *= MinimumSpeed;
+	}
+	else if (Length > MaximumSpeed)
+	{
+		Vel = normalize(Vel);
+		Vel *= MaximumSpeed;
+	}
+
+	m_HarpoonVel += Vel;
+}
+
+void CFlag::ApplyHarpoonDrag()
+{
+	vec2 NewPos = m_Pos;
+	GameServer()->Collision()->MoveBox(&NewPos, &m_HarpoonVel, vec2(ms_PhysSize, ms_PhysSize), 0, 0);
+
+	m_Pos = NewPos;
+
+	m_HarpoonVel = vec2(0, 0);
+}
+
+void CFlag::AllocateHarpoon(CHarpoon* pHarpoon)
+{
+	/*if (m_pHarpoon->GetOwner()->GetPlayer()->GetTeam() == GetTeam())
+	{
+		m_pHarpoon->DeallocateVictim();
+		return;
+	}*/
+	m_DropTick = Server()->Tick();
+	m_AtStand = false;
+	m_pHarpoon = pHarpoon;
+	
+	GameServer()->SendGameMsg(GAMEMSG_CTF_GRAB, m_Team, -1);
+}
+
+void CFlag::DeallocateHarpoon()
+{
+	m_pHarpoon = 0x0;
+	m_MarkForHarpoonDeallocation = false;
+}
+
+bool CFlag::IsValidForHarpoon(CHarpoon* pHarpoon)
+{
+	if (pHarpoon->GetOwner()->GetPlayer()&&pHarpoon->GetOwner()->GetPlayer()->GetTeam() == m_Team)
+		return false;
+	if (m_pCarrier)
+		return false;
+	return true;
 }

@@ -7,6 +7,7 @@
 
 #include <game/gamecore.h>
 #include <game/server/entity.h>
+#include <game/server/entities/harpoon.h>
 
 
 class CCharacter : public CEntity
@@ -21,7 +22,14 @@ public:
 	{
 		MIN_KILLMESSAGE_CLIENTVERSION=0x0704,   // todo 0.8: remove me
 	};
+	enum
+	{
+		DMGTYPE_PURE,
+		DMGTYPE_HEART,
+		DMGTYPE_ARMOR,
+	};
 
+	int m_HarpoonReloadTimer;
 	CCharacter(CGameWorld *pWorld);
 
 	virtual void Reset();
@@ -31,8 +39,11 @@ public:
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 	virtual void PostSnap();
+	virtual bool IsValidForHarpoon(CHarpoon* pHarpoon);
 
 	bool IsGrounded();
+	bool HasDivingGear();
+	void GiveDiving();
 
 	void SetWeapon(int W);
 	void HandleWeaponSwitch();
@@ -46,8 +57,19 @@ public:
 	void ResetInput();
 	void FireWeapon();
 
+	void DeallocateHarpoon();
+	void DeallocateVictimHarpoon();
+	void HarpoonDrag(vec2 Vel);
+	void HandleHarpoon();
+	void AllocateHarpoon(CHarpoon* pHarpoon);
+
+	int NumOfBreathBubbles();
+	int DivingBreathAmount();
+
+	int GetActiveWeapon() { return m_ActiveWeapon; }
+
 	void Die(int Killer, int Weapon);
-	bool TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weapon);
+	bool TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weapon, int Flag = DMGTYPE_PURE);
 
 	bool Spawn(class CPlayer *pPlayer, vec2 Pos);
 	bool Remove();
@@ -56,6 +78,7 @@ public:
 	bool IncreaseArmor(int Amount);
 
 	bool GiveWeapon(int Weapon, int Ammo);
+	bool GiveHarpoon(int Ammo);
 	void GiveNinja();
 
 	void SetEmote(int Emote, int Tick);
@@ -69,9 +92,12 @@ private:
 
 	bool m_Alive;
 
+	int TicksInWater;
 	// weapon info
 	CEntity *m_apHitObjects[MAX_PLAYERS];
 	int m_NumObjectsHit;
+	class CHarpoon* m_pHarpoon;
+	class CHarpoon* m_pBeingHookedByHarpoon;
 
 	struct WeaponStat
 	{
@@ -106,6 +132,7 @@ private:
 
 	int m_Health;
 	int m_Armor;
+	int m_BreathTick;
 
 	int m_TriggeredEvents;
 

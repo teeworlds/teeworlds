@@ -39,6 +39,7 @@ class CGameContext : public IGameServer
 	IServer *m_pServer;
 	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
+	class IStorage *m_pStorage;
 	CLayers m_Layers;
 	CCollision m_Collision;
 	CNetObjHandler m_NetObjHandler;
@@ -77,6 +78,7 @@ public:
 	IServer *Server() const { return m_pServer; }
 	class CConfig *Config() { return m_pConfig; }
 	class IConsole *Console() { return m_pConsole; }
+	class IStorage *Storage() { return m_pStorage; }
 	CCollision *Collision() { return &m_Collision; }
 	CTuningParams *Tuning() { return &m_Tuning; }
 
@@ -134,7 +136,7 @@ public:
 
 	// helper functions
 	void CreateDamage(vec2 Pos, int Id, vec2 Source, int HealthAmount, int ArmorAmount, bool Self);
-	void CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamage);
+	void CreateExplosion(vec2 Pos, int Owner, int Weapon, int MaxDamage, float RadiusMultiplier=1.0f);
 	void CreateHammerHit(vec2 Pos);
 	void CreatePlayerSpawn(vec2 Pos);
 	void CreateDeath(vec2 Pos, int Who);

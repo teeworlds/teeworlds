@@ -234,6 +234,7 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 			}
 			if(dynamic_cast<CLayerMaterial*>(Layer))
 				pEditor->m_Map.m_pMaterialLayer = 0;
+			//TODO add water
 		}
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return true;
@@ -251,7 +252,8 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 		if (pEditor->DoEditBox(&s_NameInput, &Button, 10.0f))
 			if (pCurrentLayer->m_Flags & LAYERFLAG_OPERATIONAL &&
 				(str_comp_nocase(pCurrentLayer->m_aName, LAYERNAME_GAME) == 0
-				 || str_comp_nocase(pCurrentLayer->m_aName, LAYERNAME_MATERIAL) == 0))
+				 || str_comp_nocase(pCurrentLayer->m_aName, LAYERNAME_MATERIAL) == 0
+				 || str_comp_nocase(pCurrentLayer->m_aName, LAYERNAME_WATER) == 0))
 				str_copy(pCurrentLayer->m_aName, "Tiles", sizeof(pCurrentLayer->m_aName));
 		pEditor->m_Map.m_Modified = true;
 	}

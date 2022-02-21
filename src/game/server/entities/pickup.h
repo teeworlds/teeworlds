@@ -14,12 +14,21 @@ public:
 
 	virtual void Reset();
 	virtual void Tick();
+	virtual void DeallocateHarpoon();
+	virtual void AllocateHarpoon(CHarpoon* pHarpoon);
+	virtual bool IsValidForHarpoon(CHarpoon* pHarpoon);
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 
 private:
+	vec2 m_OriginalPos;
 	int m_Type;
 	int m_SpawnTick;
+	vec2 m_Vel;
+
+	int m_AmountOfHarpoons;
+	//CHarpoon* m_apHarpoons[16];
+	int m_DisturbedTick; //When this reaches 0, the disturbed pickup will return to m_OriginalPos
 };
 
 #endif

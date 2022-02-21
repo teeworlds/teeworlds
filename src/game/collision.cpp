@@ -8,6 +8,7 @@
 #include <engine/map.h>
 #include <engine/kernel.h>
 
+#include <game/server/entities/harpoon.h>
 #include <game/mapitems.h>
 #include <game/layers.h>
 #include <game/collision.h>
@@ -29,6 +30,8 @@ void CCollision::Init(class CLayers *pLayers)
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
 	if(m_pLayers->HasMaterialLayer())
 		m_pMaterial = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->MaterialLayer()->m_Data));
+	if(m_pLayers->HasWaterLayer())
+		m_pWater = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->WaterLayer()->m_Data));
 
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
@@ -82,6 +85,21 @@ int CCollision::GetMaterial(float x, float y, int Flag) const
 	return MAT_DEFAULT;
 }
 
+int CCollision::GetWater(float x, float y) const
+{
+	int Xi = round_to_int(x);
+	int Yi = round_to_int(y);
+	if(!IsTile(Xi, Yi, COLFLAG_SOLID)) {
+		int Width = m_pLayers->MaterialLayer()->m_Width;
+		int Height = m_pLayers->MaterialLayer()->m_Height;
+		int Nx = clamp(Xi/32, 0, Width-1);
+		int Ny = clamp(Yi/32, 0, Height-1);
+
+		return m_pWater[Ny*Width+Nx].m_Index;
+	}
+	return TILE_AIR;
+}
+
 // TODO: rewrite this smarter!
 int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *pOutBeforeCollision) const
 {
@@ -105,6 +123,41 @@ int CCollision::IntersectLine(vec2 Pos0, vec2 Pos1, vec2 *pOutCollision, vec2 *p
 	if(pOutCollision)
 		*pOutCollision = Pos1;
 	if(pOutBeforeCollision)
+		*pOutBeforeCollision = Pos1;
+	return 0;
+}
+int CCollision::IntersectLineWithWater(vec2 Pos0, vec2 Pos1, vec2* pOutCollision, vec2* pOutBeforeCollision, int Flag) const
+{
+	const int End = distance(Pos0, Pos1) + 1;
+	const float InverseEnd = 1.0f / End;
+	vec2 Last = Pos0;
+
+	for (int i = 0; i <= End; i++)
+	{
+		vec2 Pos = mix(Pos0, Pos1, i * InverseEnd);
+		if (CheckPoint(Pos.x, Pos.y))
+		{
+			if (pOutCollision)
+				*pOutCollision = Pos;
+			if (pOutBeforeCollision)
+				*pOutBeforeCollision = Last;
+			return 1;
+				//GetCollisionAt(Pos.x, Pos.y);
+		}
+		else if (CheckPoint(Pos.x, Pos.y, Flag))
+		{
+			if (pOutCollision)
+				*pOutCollision = Pos;
+			if (pOutBeforeCollision)
+				*pOutBeforeCollision = Last;
+			return 2;
+			//GetWaterCollisionAt(Pos.x, Pos.y, Flag);
+		}
+		Last = Pos;
+	}
+	if (pOutCollision)
+		*pOutCollision = Pos1;
+	if (pOutBeforeCollision)
 		*pOutBeforeCollision = Pos1;
 	return 0;
 }
@@ -147,6 +200,47 @@ void CCollision::MovePoint(vec2 *pInoutPos, vec2 *pInoutVel, float Elasticity, i
 		*pInoutPos = Pos + Vel;
 	}
 }
+void CCollision::Diffract(vec2* pInoutPos, vec2* pInoutVel, float Elasticity, int* pBounces, int Flag) const
+{
+	if (pBounces)
+		*pBounces = 0;
+
+	vec2 Pos = *pInoutPos;
+	vec2 Vel = *pInoutVel;
+	if (CheckPoint(Pos + Vel, Flag))
+	{
+		int Affected = 0;
+		if (CheckPoint(Pos.x + Vel.x, Pos.y, Flag))
+		{
+			pInoutVel->x *= -Elasticity;
+			pInoutPos->x += clamp(-Elasticity * Vel.x, -1.0f, 1.0f);
+			if (pBounces)
+				(*pBounces)++;
+			Affected++;
+		}
+
+		if (CheckPoint(Pos.x, Pos.y + Vel.y, Flag))
+		{
+			pInoutVel->y *= -Elasticity;
+			pInoutPos->y += clamp(-Elasticity * Vel.y, -1.0f, 1.0f);
+			if (pBounces)
+				(*pBounces)++;
+			Affected++;
+		}
+
+		if (Affected == 0)
+		{
+			pInoutVel->x *= -Elasticity;
+			pInoutVel->y *= -Elasticity;
+			pInoutPos->y += clamp(-Elasticity * Vel.y, -1.0f, 1.0f);
+			pInoutPos->x += clamp(-Elasticity * Vel.x, -1.0f, 1.0f);
+		}
+	}
+	else
+	{
+		*pInoutPos = Pos + Vel;
+	}
+}
 
 bool CCollision::TestBox(vec2 Pos, vec2 Size, int Flag) const
 {
@@ -158,6 +252,20 @@ bool CCollision::TestBox(vec2 Pos, vec2 Size, int Flag) const
 	if(CheckPoint(Pos.x-Size.x, Pos.y+Size.y, Flag))
 		return true;
 	if(CheckPoint(Pos.x+Size.x, Pos.y+Size.y, Flag))
+		return true;
+	return false;
+}
+
+bool CCollision::TestBoxWater(vec2 Pos, vec2 Size) const
+{
+	Size *= 0.5f;
+	if(GetWater(Pos.x-Size.x, Pos.y-Size.y))
+		return true;
+	if(GetWater(Pos.x+Size.x, Pos.y-Size.y))
+		return true;
+	if(GetWater(Pos.x-Size.x, Pos.y+Size.y))
+		return true;
+	if(GetWater(Pos.x+Size.x, Pos.y+Size.y))
 		return true;
 	return false;
 }
@@ -223,4 +331,106 @@ void CCollision::MoveBox(vec2 *pInoutPos, vec2 *pInoutVel, vec2 Size, float Elas
 
 	*pInoutPos = Pos;
 	*pInoutVel = Vel;
+}
+
+void CCollision::MoveWaterBox(vec2* pInoutPos, vec2* pInoutVel, vec2 Size, float Elasticity, bool* pDeath, float Severity) const
+{
+	// do the move
+	vec2 Pos = *pInoutPos;
+	vec2 Vel = *pInoutVel;
+
+	float Distance = length(Vel);
+	int Max = (int)Distance;
+
+	if (pDeath)
+		*pDeath = false;
+
+	if (Distance > 0.00001f)
+	{
+		//vec2 old_pos = pos;
+		float Fraction = 1.0f / (float)(Max + 1);
+		for (int i = 0; i <= Max; i++)
+		{
+			//float amount = i/(float)max;
+			//if(max == 0)
+			//amount = 0;
+
+			vec2 NewPos = Pos + Vel * Fraction; // TODO: this row is not nice
+
+			//You hit a deathtile, congrats to that :)
+			//Deathtiles are a bit smaller
+			if (pDeath && TestBox(vec2(NewPos.x, NewPos.y), Size * (2.0f / 3.0f), COLFLAG_DEATH))
+			{
+				*pDeath = true;
+			}
+			//You are in water
+			if (TestBoxWater(vec2(NewPos.x, NewPos.y), Size * (2.0f / 3.0f)))
+			{
+				Vel.x *= Severity;
+				Vel.y *= Severity;
+			}
+			if (TestBox(vec2(NewPos.x, NewPos.y), Size))
+			{
+				int Hits = 0;
+
+				if (TestBox(vec2(Pos.x, NewPos.y), Size))
+				{
+					NewPos.y = Pos.y;
+					Vel.y *= -Elasticity;
+					Hits++;
+				}
+
+				if (TestBox(vec2(NewPos.x, Pos.y), Size))
+				{
+					NewPos.x = Pos.x;
+					Vel.x *= -Elasticity;
+					Hits++;
+				}
+
+				// neither of the tests got a collision.
+				// this is a real _corner case_!
+				if (Hits == 0)
+				{
+					NewPos.y = Pos.y;
+					Vel.y *= -Elasticity;
+					NewPos.x = Pos.x;
+					Vel.x *= -Elasticity;
+				}
+			}
+
+			Pos = NewPos;
+		}
+	}
+
+	*pInoutPos = Pos;
+	*pInoutVel = Vel;
+}
+
+/*
+	function: Intersect Water
+		Returns Position of where an entity hit water
+*/
+
+bool CCollision::IntersectWater(vec2 Pos0, vec2 Pos1, vec2* Position, vec2 Size)
+{
+	//const int End = distance(Pos0, Pos1) + 1;
+	//const float InverseEnd = 1.0f / End;
+	//vec2 Last = Pos0;
+
+	const int End = distance(Pos0, Pos1) + 1;
+	//float Distance = distance(Pos0, Pos1) + 1;
+	//int Max = (int)Distance;
+	//float Inverse = 1.0f / Max+1;
+	const float InverseEnd = 1.0f / End;
+	for (int i = 0; i <= End +1; i++)
+	{
+		vec2 NewPos = mix(Pos0, Pos1, i * InverseEnd);
+
+		if (TestBoxWater(vec2(NewPos.x, NewPos.y), Size * (2.0f / 3.0f)))
+		{
+			*Position = NewPos;
+			return true;
+		}
+	}
+	return false;
 }

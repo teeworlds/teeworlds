@@ -7,6 +7,7 @@
 
 #include "alloc.h"
 #include "gameworld.h"
+class CHarpoon;
 
 /*
 	Class: Entity
@@ -35,11 +36,10 @@ private:
 	*/
 	float m_ProximityRadius;
 
-	/* State */
-	bool m_MarkedForDestroy;
-
 protected:
 	/* State */
+
+	bool m_MarkedForDestroy;
 
 	/*
 		Variable: m_Pos
@@ -47,13 +47,15 @@ protected:
 	*/
 	vec2 m_Pos;
 
+	vec2 m_HarpoonVel;
+
 	/* Getters */
 	int GetID() const					{ return m_ID; }
 
 public:
 	/* Constructor */
 	CEntity(CGameWorld *pGameWorld, int Objtype, vec2 Pos, int ProximityRadius=0);
-
+	
 	/* Destructor */
 	virtual ~CEntity();
 
@@ -96,9 +98,32 @@ public:
 	virtual void Tick() {}
 
 	/*
+		Function: ApplyHarpoonDrag
+			Called before Tick() function, and it updates the entities' position based on Harpoon dragging it.
+	*/
+
+	virtual void ApplyHarpoonDrag();
+
+	/*
+		Function: ApplyHarpoonVel
+			Called through Harpoon, it applies velocity to the Entity which then is applied to the position through ApplyHarpoonDrag()
+	*/
+
+	virtual void ApplyHarpoonVel(vec2 Vel);
+
+	virtual void DeallocateHarpoon() {}
+
+	virtual void AllocateHarpoon(CHarpoon* pHarpoon) {}
+
+	virtual bool IsValidForHarpoon(CHarpoon* pHarpoon);
+
+	bool m_MarkForHarpoonDeallocation;
+
+	/*
 		Function: TickDefered
 			Called after all entities Tick() function has been called.
 	*/
+
 	virtual void TickDefered() {}
 
 	/*

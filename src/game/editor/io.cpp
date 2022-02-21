@@ -417,6 +417,11 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 									pTiles = new CLayerMaterial(pTilemapItem->m_Width, pTilemapItem->m_Height);
 									MakeMaterialLayer(pTiles);
 								}
+								else if(str_comp_nocase(name_buf, LAYERNAME_MATERIAL) == 0)
+								{
+									pTiles = new CLayerWater(pTilemapItem->m_Width, pTilemapItem->m_Height);
+									MakeWaterLayer(pTiles);
+								}
 								else
 								{
 									pTiles = new CLayerCustom(pTilemapItem->m_Width, pTilemapItem->m_Height);

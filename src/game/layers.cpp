@@ -11,8 +11,8 @@ CLayers::CLayers()
 	m_pGameGroup = 0;
 	m_pGameLayer = 0;
 	m_pMap = 0;
-
 	m_pMaterialLayer = 0;
+	m_pWaterLayer = 0;
 }
 
 void CLayers::Init(class IKernel *pKernel, IMap *pMap)
@@ -66,6 +66,11 @@ void CLayers::InitGameLayer()
 					{
 						if(!m_pMaterialLayer)
 							m_pMaterialLayer = pTilemap;
+					}
+					else if(str_comp_nocase(name_buf, LAYERNAME_WATER) == 0)
+					{
+						if(!m_pWaterLayer)
+							m_pWaterLayer = pTilemap;
 					}
 					else
 					{

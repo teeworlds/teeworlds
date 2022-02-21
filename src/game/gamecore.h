@@ -92,7 +92,6 @@ inline vec2 CalcPos(vec2 Pos, vec2 Velocity, float Curvature, float Speed, float
 	return n;
 }
 
-
 template<typename T>
 inline T SaturatedAdd(T Min, T Max, T Current, T Modifier)
 {
@@ -159,13 +158,16 @@ public:
 	int m_HookState;
 	int m_HookedPlayer;
 
+	vec2 m_HarpoonDragVel;
+
 	int m_Jumped;
 
 	int m_Direction;
+	int m_DirectionVertical;
 	int m_Angle;
 
 	bool m_Death;
-
+	bool m_DivingGear;
 	CNetObj_PlayerInput m_Input;
 
 	int m_TriggeredEvents;
@@ -175,12 +177,18 @@ public:
 	void Tick(bool UseInput);
 	void Move();
 
+	void AddHarpoonDragVelocity();
 	void AddDragVelocity();
 	void ResetDragVelocity();
+	void HandleWater(bool UseInput);
+	void HandleSwimming(vec2 TargetDirection);
 
 	void Read(const CNetObj_CharacterCore *pObjCore);
 	void Write(CNetObj_CharacterCore *pObjCore) const;
 	void Quantize();
+
+	bool IsInWater();
+	bool IsFloating();
 };
 
 #endif

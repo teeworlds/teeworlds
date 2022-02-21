@@ -6,9 +6,9 @@
 
 const int CBinds::s_aaDefaultBindKeys[][2] = {
 	{KEY_F1, 0}, {KEY_F2, 0}, {KEY_TAB, 0}, {'e', 0}, {'u', 0}, {KEY_F10, 0}, {'s', CBinds::MODIFIER_CTRL},
-	{'a', 0}, {'d', 0},
+	{'a', 0}, {'d', 0}, {'w', 0}, {'s', 0},
 	{KEY_SPACE, 0}, {KEY_MOUSE_1, 0}, {KEY_MOUSE_2, 0}, {KEY_LSHIFT, 0}, {KEY_RSHIFT, 0}, {KEY_RIGHT, 0}, {KEY_LEFT, 0},
-	{'1', 0}, {'2', 0}, {'3', 0}, {'4', 0}, {'5', 0},
+	{'1', 0}, {'2', 0}, {'3', 0}, {'4', 0}, {'5', 0}, {'6', 0},
 	{KEY_MOUSE_WHEEL_UP, 0}, {KEY_MOUSE_WHEEL_DOWN, 0},
 	{'t', 0}, {'y', 0}, {'x', 0},
 	{KEY_F3, 0}, {KEY_F4, 0},
@@ -16,9 +16,9 @@ const int CBinds::s_aaDefaultBindKeys[][2] = {
 };
 const char CBinds::s_aaDefaultBindValues[][32] = {
 	"toggle_local_console", "toggle_remote_console", "+scoreboard", "+stats", "+show_chat", "screenshot", "snd_toggle",
-	"+left", "+right",
+	"+left", "+right", "+up", "+down",
 	"+jump", "+fire", "+hook", "+emote", "+spectate", "spectate_next", "spectate_previous",
-	"+weapon1", "+weapon2", "+weapon3", "+weapon4", "+weapon5",
+	"+weapon1", "+weapon2", "+weapon3", "+weapon4", "+weapon5", "+weapon6",
 	"+prevweapon", "+nextweapon",
 	"chat all", "chat team", "chat whisper",
 	"vote yes", "vote no",

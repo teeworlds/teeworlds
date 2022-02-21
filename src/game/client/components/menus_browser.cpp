@@ -1158,7 +1158,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	UI()->DoLabel(&Label, Localize("Search:"), FontSize, TEXTALIGN_LEFT);
 	EditBox.VSplitRight(EditBox.h, &EditBox, &Button);
 	static CLineInput s_FilterInput(Config()->m_BrFilterString, sizeof(Config()->m_BrFilterString));
-	if(UI()->DoEditBox(&s_FilterInput, &EditBox, FontSize, false, CUIRect::CORNER_L))
+	if(UI()->DoEditBox(&s_FilterInput, &EditBox, FontSize, CUIRect::CORNER_L))
 	{
 		Client()->ServerBrowserUpdate();
 		ServerBrowserFilterOnUpdate();
@@ -1553,7 +1553,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	Button.VSplitLeft(60.0f, &Icon, &Button);
 	static char s_aFilterName[32] = { 0 };
 	static CLineInput s_FilterInput(s_aFilterName, sizeof(s_aFilterName));
-	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, false, CUIRect::CORNER_L);
+	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, CUIRect::CORNER_L);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 5.0f, CUIRect::CORNER_R);
 	Button.VSplitLeft(Button.h, &Icon, &Label);
 	Label.HMargin(2.0f, &Label);
@@ -1564,6 +1564,9 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		static CButtonContainer s_AddFilter;
 		if(UI()->DoButtonLogic(&s_AddFilter, &Button))
 		{
+			CBrowserFilter *pSelectedFilter = GetSelectedBrowserFilter();
+			if(pSelectedFilter)
+				pSelectedFilter->Switch();
 			m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, ServerBrowser()));
 			m_lFilters[m_lFilters.size()-1].Switch();
 			s_aFilterName[0] = 0;
@@ -1720,7 +1723,7 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 
 		static char s_aGametype[16] = { 0 };
 		static CLineInput s_GametypeInput(s_aGametype, sizeof(s_aGametype));
-		UI()->DoEditBox(&s_GametypeInput, &EditBox, FontSize, false, CUIRect::CORNER_L);
+		UI()->DoEditBox(&s_GametypeInput, &EditBox, FontSize, CUIRect::CORNER_L);
 
 		static CButtonContainer s_AddInclusiveGametype;
 		if(DoButton_Menu(&s_AddInclusiveGametype, "+", 0, &AddIncButton, 0, 0) && s_aGametype[0])

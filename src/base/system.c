@@ -525,7 +525,12 @@ void *thread_init(void (*threadfunc)(void *), void *u)
 #if defined(CONF_FAMILY_UNIX)
 	{
 		pthread_t id;
-		if(pthread_create(&id, NULL, thread_run, data) != 0)
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+#if defined(CONF_PLATFORM_MACOS)
+		pthread_attr_set_qos_class_np(&attr, QOS_CLASS_USER_INTERACTIVE, 0);
+#endif
+		if(pthread_create(&id, &attr, thread_run, data) != 0)
 		{
 			return 0;
 		}
