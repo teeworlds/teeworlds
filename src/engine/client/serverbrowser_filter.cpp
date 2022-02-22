@@ -88,7 +88,7 @@ void CServerBrowserFilter::CServerFilter::Filter()
 	// filter the servers
 	for(int i = 0; i < NumServers; i++)
 	{
-		int Filtered = 0;
+		bool Filtered = false;
 
 		int RelevantClientCount = (m_FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS) ? m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumPlayers : m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients;
 		if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS)
@@ -99,26 +99,26 @@ void CServerBrowserFilter::CServerFilter::Filter()
 		}
 
 		if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_EMPTY && RelevantClientCount == 0)
-			Filtered = 1;
+			Filtered = true;
 		else if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_FULL && ((m_FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS && m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumPlayers == m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_MaxPlayers) ||
 				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients == m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_MaxClients))
-			Filtered = 1;
+			Filtered = true;
 		else if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_PW && m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_Flags&IServerBrowser::FLAG_PASSWORD)
-			Filtered = 1;
+			Filtered = true;
 		else if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_FAVORITE && !m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_Favorite)
-			Filtered = 1;
+			Filtered = true;
 		else if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE && !(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_Flags&IServerBrowser::FLAG_PURE))
-			Filtered = 1;
+			Filtered = true;
 		else if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE_MAP &&  !(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_Flags&IServerBrowser::FLAG_PUREMAP))
-			Filtered = 1;
+			Filtered = true;
 		else if(m_FilterInfo.m_Ping < m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_Latency)
-			Filtered = 1;
+			Filtered = true;
 		else if(m_FilterInfo.m_SortHash&IServerBrowser::FILTER_COMPAT_VERSION && str_comp_num(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aVersion, m_pServerBrowserFilter->m_aNetVersion, 3) != 0)
-			Filtered = 1;
+			Filtered = true;
 		else if(m_FilterInfo.m_aAddress[0] && !str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aAddress, m_FilterInfo.m_aAddress))
-			Filtered = 1;
+			Filtered = true;
 		else if(m_FilterInfo.IsLevelFiltered(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_ServerLevel))
-			Filtered = 1;
+			Filtered = true;
 		else
 		{
 			if(m_FilterInfo.m_aGametype[0][0])
@@ -151,13 +151,13 @@ void CServerBrowserFilter::CServerFilter::Filter()
 
 			if(!Filtered && m_FilterInfo.m_SortHash&IServerBrowser::FILTER_COUNTRY)
 			{
-				Filtered = 1;
+				Filtered = true;
 				// match against player country
 				for(int p = 0; p < m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients; p++)
 				{
 					if(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_Country == m_FilterInfo.m_Country)
 					{
-						Filtered = 0;
+						Filtered = false;
 						break;
 					}
 				}
@@ -165,16 +165,11 @@ void CServerBrowserFilter::CServerFilter::Filter()
 
 			if(!Filtered && Config()->m_BrFilterString[0] != 0)
 			{
-				int MatchFound = 0;
-
 				m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit = 0;
 
 				// match against server name
 				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aName, Config()->m_BrFilterString))
-				{
-					MatchFound = 1;
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_SERVERNAME;
-				}
 
 				// match against players
 				for(int p = 0; p < m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_NumClients; p++)
@@ -182,7 +177,6 @@ void CServerBrowserFilter::CServerFilter::Filter()
 					if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aName, Config()->m_BrFilterString) ||
 						str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aClients[p].m_aClan, Config()->m_BrFilterString))
 					{
-						MatchFound = 1;
 						m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_PLAYER;
 						break;
 					}
@@ -190,24 +184,18 @@ void CServerBrowserFilter::CServerFilter::Filter()
 
 				// match against map
 				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aMap, Config()->m_BrFilterString))
-				{
-					MatchFound = 1;
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_MAPNAME;
-				}
 
 				// match against game type
 				if(str_find_nocase(m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_aGameType, Config()->m_BrFilterString))
-				{
-					MatchFound = 1;
 					m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit |= IServerBrowser::QUICK_GAMETYPE;
-				}
 
-				if(!MatchFound)
-					Filtered = 1;
+				if(!m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_QuickSearchHit)
+					Filtered = true;
 			}
 		}
 
-		if(Filtered == 0)
+		if(!Filtered)
 		{
 			// check for friend
 			m_pServerBrowserFilter->m_ppServerlist[i]->m_Info.m_FriendState = CContactInfo::CONTACT_NO;
