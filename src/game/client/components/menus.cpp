@@ -1455,6 +1455,12 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
 			static CLineInput s_DemoNameInput(m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile));
+			if(UI()->GetActiveItem() == m_aCurrentDemoFile) // initially activate input and select entire name
+			{
+				s_DemoNameInput.SetCursorOffset(s_DemoNameInput.GetLength());
+				s_DemoNameInput.SetSelection(0, s_DemoNameInput.GetLength());
+				UI()->SetActiveItem(&s_DemoNameInput);
+			}
 			UI()->DoEditBoxOption(&s_DemoNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
@@ -1504,18 +1510,24 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
 			static CLineInput s_SkinNameInput(m_aSaveSkinName, sizeof(m_aSaveSkinName));
+			if(UI()->GetActiveItem() == m_aSaveSkinName) // initially activate input and select entire name
+			{
+				s_SkinNameInput.SetCursorOffset(s_SkinNameInput.GetLength());
+				s_SkinNameInput.SetSelection(0, s_SkinNameInput.GetLength());
+				UI()->SetActiveItem(&s_SkinNameInput);
+			}
 			UI()->DoEditBoxOption(&s_SkinNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
 			CUIRect Yes, No;
 			BottomBar.VSplitMid(&No, &Yes, SpacingW);
 
-			static CButtonContainer s_ButtonAbort;
-			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || UI()->ConsumeHotkey(CUI::HOTKEY_ESCAPE))
+			static CButtonContainer s_ButtonNo;
+			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || UI()->ConsumeHotkey(CUI::HOTKEY_ESCAPE))
 				m_Popup = POPUP_NONE;
 
-			static CButtonContainer s_ButtonTryAgain;
-			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
+			static CButtonContainer s_ButtonYes;
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 			{
 				if(m_aSaveSkinName[0] && m_aSaveSkinName[0] != 'x' && m_aSaveSkinName[1] != '_')
 				{
