@@ -3,7 +3,11 @@
 #ifndef GAME_CLIENT_LINEINPUT_H
 #define GAME_CLIENT_LINEINPUT_H
 
+#include <base/vmath.h>
+
+#include <engine/graphics.h>
 #include <engine/input.h>
+#include <engine/textrender.h>
 
 enum EInputPriority
 {
@@ -16,9 +20,9 @@ enum EInputPriority
 // line input helper
 class CLineInput
 {
-	static class IInput *s_pInput;
-	static class ITextRender *s_pTextRender;
-	static class IGraphics *s_pGraphics;
+	static IInput *s_pInput;
+	static ITextRender *s_pTextRender;
+	static IGraphics *s_pGraphics;
 
 	static CLineInput *s_pActiveInput;
 	static EInputPriority s_ActiveInputPriority;
@@ -28,7 +32,7 @@ class CLineInput
 
 	static char s_aStars[128];
 
-	class CTextCursor m_TextCursor;
+	CTextCursor m_TextCursor;
 	char *m_pStr;
 	int m_MaxSize;
 	int m_MaxChars;
@@ -59,7 +63,7 @@ class CLineInput
 	void OnDeactivate();
 
 public:
-	static void Init(class IInput *pInput, class ITextRender *pTextRender, class IGraphics *pGraphics) { s_pInput = pInput; s_pTextRender = pTextRender; s_pGraphics = pGraphics; }
+	static void Init(IInput *pInput, ITextRender *pTextRender, IGraphics *pGraphics) { s_pInput = pInput; s_pTextRender = pTextRender; s_pGraphics = pGraphics; }
 	static void RenderCandidates();
 
 	static CLineInput *GetActiveInput() { return s_pActiveInput; }
@@ -77,7 +81,7 @@ public:
 	void Insert(const char *pString, int Begin);
 	void Append(const char *pString);
 
-	class CTextCursor *GetCursor() { return &m_TextCursor; }
+	CTextCursor *GetCursor() { return &m_TextCursor; }
 	const char *GetString() const { return m_pStr; }
 	const char *GetDisplayedString();
 	int GetMaxSize() const { return m_MaxSize; }
