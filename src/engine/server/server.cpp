@@ -337,20 +337,10 @@ void CServer::Kick(int ClientID, const char *pReason)
 	m_NetServer.Drop(ClientID, pReason);
 }
 
-/*int CServer::Tick()
-{
-	return m_CurrentGameTick;
-}*/
-
 int64 CServer::TickStartTime(int Tick)
 {
 	return m_GameStartTime + (time_freq()*Tick)/SERVER_TICK_SPEED;
 }
-
-/*int CServer::TickSpeed()
-{
-	return SERVER_TICK_SPEED;
-}*/
 
 int CServer::Init()
 {
@@ -546,7 +536,7 @@ void CServer::DoSnapshot()
 			continue;
 
 		// this client is trying to recover, don't spam snapshots
-		if(m_aClients[i].m_SnapRate == CClient::SNAPRATE_RECOVER && (Tick()%50) != 0)
+		if(m_aClients[i].m_SnapRate == CClient::SNAPRATE_RECOVER && (Tick() % SERVER_TICK_SPEED) != 0)
 			continue;
 
 		// this client is trying to recover, don't spam snapshots
@@ -1963,6 +1953,7 @@ int main(int argc, const char **argv) // ignore_convention
 	delete pStorage;
 	delete pConfigManager;
 
+	secure_random_uninit();
 	cmdline_free(argc, argv);
 	return Ret;
 }

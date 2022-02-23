@@ -3,13 +3,15 @@
 #ifndef ENGINE_MAPCHECKER_H
 #define ENGINE_MAPCHECKER_H
 
+#include <base/hash.h>
+
 #include "kernel.h"
 
 class IMapChecker : public IInterface
 {
 	MACRO_INTERFACE("mapchecker", 0)
 public:
-	virtual void AddMaplist(struct CMapVersion *pMaplist, int Num) = 0;
+	virtual void AddMaplist(const struct CMapVersion *pMaplist, int Num) = 0;
 	virtual bool IsMapValid(const char *pMapName, const SHA256_DIGEST *pMapSha256, unsigned MapCrc, unsigned MapSize) = 0;
 	virtual bool ReadAndValidateMap(const char *pFilename, int StorageType) = 0;
 

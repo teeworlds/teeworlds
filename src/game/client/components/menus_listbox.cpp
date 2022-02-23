@@ -33,12 +33,11 @@ void CMenus::CListBox::DoHeader(const CUIRect *pRect, const char *pTitle,
 
 	// background
 	View.HSplitTop(HeaderHeight+Spacing, &Header, 0);
-	Header.Draw(vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 5.0f, m_BackgroundCorners&CUIRect::CORNER_T);
+	Header.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 5.0f, m_BackgroundCorners&CUIRect::CORNER_T);
 
 	// draw header
 	View.HSplitTop(HeaderHeight, &Header, &View);
-	Header.y += 2.0f;
-	m_pUI->DoLabel(&Header, pTitle, Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Header, pTitle, Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_MC);
 
 	View.HSplitTop(Spacing, &Header, &View);
 
@@ -60,7 +59,7 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 
 	// background
 	View.HSplitTop(FilterHeight+Spacing, &Filter, 0);
-	Filter.Draw(vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 5.0f, CUIRect::CORNER_NONE);
+	Filter.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 5.0f, CUIRect::CORNER_NONE);
 
 	// draw filter
 	View.HSplitTop(FilterHeight, &Filter, &View);
@@ -71,8 +70,8 @@ bool CMenus::CListBox::DoFilter(float FilterHeight, float Spacing)
 	CUIRect Label, EditBox;
 	Filter.VSplitLeft(Filter.w/5.0f, &Label, &EditBox);
 	Label.y += Spacing;
-	m_pUI->DoLabel(&Label, Localize("Search:"), FontSize, TEXTALIGN_CENTER);
-	bool Changed = m_pUI->DoEditBox(&m_FilterInput, &EditBox, FontSize);
+	UI()->DoLabel(&Label, Localize("Search:"), FontSize, TEXTALIGN_CENTER);
+	bool Changed = UI()->DoEditBox(&m_FilterInput, &EditBox, FontSize);
 
 	View.HSplitTop(Spacing, &Filter, &View);
 
@@ -99,7 +98,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 	// background
 	m_BackgroundCorners = BackgroundCorners;
 	if(Background)
-		View.Draw(vec4(0.0f, 0.0f, 0.0f, m_pConfig->m_ClMenuAlpha/100.0f), 5.0f, m_BackgroundCorners&CUIRect::CORNER_B);
+		View.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 5.0f, m_BackgroundCorners&CUIRect::CORNER_B);
 
 	// draw footers
 	if(m_pBottomText)
@@ -107,8 +106,7 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 		CUIRect Footer;
 		View.HSplitBottom(m_FooterHeight, &View, &Footer);
 		Footer.VSplitLeft(10.0f, 0, &Footer);
-		Footer.y += 2.0f;
-		m_pUI->DoLabel(&Footer, m_pBottomText, Footer.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+		UI()->DoLabel(&Footer, m_pBottomText, Footer.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_MC);
 	}
 
 	// setup the variables
@@ -126,9 +124,9 @@ void CMenus::CListBox::DoStart(float RowHeight, int NumItems, int ItemsPerRow, i
 	// handle input
 	if(!pActive || *pActive)
 	{
-		if(m_pUI->ConsumeHotkey(CUI::HOTKEY_DOWN))
+		if(UI()->ConsumeHotkey(CUI::HOTKEY_DOWN))
 			m_ListBoxNewSelOffset += 1;
-		if(m_pUI->ConsumeHotkey(CUI::HOTKEY_UP))
+		if(UI()->ConsumeHotkey(CUI::HOTKEY_UP))
 			m_ListBoxNewSelOffset -= 1;
 	}
 
@@ -176,7 +174,7 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 	CListboxItem Item = DoNextRow();
 	static bool s_ItemClicked = false;
 
-	if(Item.m_Visible && m_pUI->DoButtonLogic(pId, &Item.m_Rect))
+	if(Item.m_Visible && UI()->DoButtonLogic(pId, &Item.m_Rect))
 	{
 		s_ItemClicked = true;
 		m_ListBoxNewSelected = ThisItemIndex;
@@ -195,17 +193,17 @@ CMenus::CListboxItem CMenus::CListBox::DoNextItem(const void *pId, bool Selected
 		{
 			m_ListBoxDoneEvents = 1;
 
-			if(m_pUI->ConsumeHotkey(CUI::HOTKEY_ENTER) || (s_ItemClicked && m_pInput->MouseDoubleClick()))
+			if(UI()->ConsumeHotkey(CUI::HOTKEY_ENTER) || (s_ItemClicked && Input()->MouseDoubleClick()))
 			{
 				m_ListBoxItemActivated = true;
-				m_pUI->SetActiveItem(0);
+				UI()->SetActiveItem(0);
 			}
 		}
 
 		CUIRect r = Item.m_Rect;
 		r.Draw(vec4(1, 1, 1, ProcessInput ? 0.5f : 0.33f));
 	}
-	/*else*/ if(m_pUI->HotItem() == pId && !m_ScrollRegion.IsAnimating())
+	/*else*/ if(UI()->HotItem() == pId && !m_ScrollRegion.IsAnimating())
 	{
 		CUIRect r = Item.m_Rect;
 		r.Draw(vec4(1, 1, 1, 0.33f));

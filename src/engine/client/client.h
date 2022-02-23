@@ -103,7 +103,6 @@ class CClient : public IClient, public CDemoPlayer::IListener
 	bool m_AutoStatScreenshotRecycle;
 	bool m_EditorActive;
 	bool m_SoundInitFailed;
-	bool m_ResortServerBrowser;
 	bool m_RecordGameMessage;
 
 	int m_AckGameTick;

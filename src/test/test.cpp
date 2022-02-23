@@ -23,6 +23,7 @@ int main(int argc, const char **argv)
 	::testing::InitGoogleTest(&argc, const_cast<char **>(argv));
 	net_init();
 	int Result = RUN_ALL_TESTS();
+	secure_random_uninit();
 	cmdline_free(argc, argv);
 	return Result;
 }

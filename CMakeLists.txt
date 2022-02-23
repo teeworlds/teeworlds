@@ -1490,7 +1490,6 @@ if(CLIENT)
     components/menus_demo.cpp
     components/menus_ingame.cpp
     components/menus_listbox.cpp
-    components/menus_scrollregion.cpp
     components/menus_settings.cpp
     components/menus_start.cpp
     components/motd.cpp
@@ -1531,6 +1530,8 @@ if(CLIENT)
     ui.h
     ui_rect.cpp
     ui_rect.h
+    ui_scrollregion.cpp
+    ui_scrollregion.h
   )
   set_src(GAME_EDITOR GLOB src/game/editor
     auto_map.cpp
@@ -2114,6 +2115,7 @@ foreach(target ${TARGETS})
     target_compile_options(${target} PRIVATE /EHsc) # Only catch C++ exceptions with catch.
     target_compile_options(${target} PRIVATE /GS) # Protect the stack pointer.
     target_compile_options(${target} PRIVATE /wd4996) # Use of non-_s functions.
+    target_compile_options(${target} PRIVATE /utf-8) # Use UTF-8 for source files.
   endif()
   if(OUR_FLAGS)
     target_compile_options(${target} PRIVATE ${OUR_FLAGS})

@@ -334,12 +334,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		DemoPlayer()->GetDemoName(aDemoName, sizeof(aDemoName));
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), Localize("Demofile: %s"), aDemoName);
-		static CTextCursor s_Cursor;
-		s_Cursor.m_FontSize = Button.h*0.5f;
-		s_Cursor.MoveTo(NameBar.x, NameBar.y);
-		s_Cursor.Reset();
-		s_Cursor.m_MaxWidth = MainView.w;
-		TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
+		UI()->DoLabel(&NameBar, aBuf, Button.h*0.5f, TEXTALIGN_TL, NameBar.w);
 	}
 
 	if(IncreaseDemoSpeed)
@@ -658,9 +653,10 @@ void CMenus::RenderDemoList(CUIRect MainView)
 		{
 			if(m_DemolistSelectedIndex >= 0)
 			{
-				UI()->SetActiveItem(0);
 				m_Popup = POPUP_RENAME_DEMO;
-				str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aCurrentDemoFile));
+				str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename,
+					minimum<int>(str_length(m_lDemos[m_DemolistSelectedIndex].m_aFilename) - str_length(".demo") + 1, sizeof(m_aCurrentDemoFile)));
+				UI()->SetActiveItem(m_aCurrentDemoFile); // marker to initially activate the input and select the text
 				return;
 			}
 		}

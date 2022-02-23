@@ -356,7 +356,7 @@ void CGameClient::OnInit()
 	m_pGraphics = Kernel()->RequestInterface<IGraphics>();
 
 	// propagate pointers
-	m_UI.Init(Config(), Graphics(), Input(), TextRender());
+	m_UI.Init(Kernel());
 	m_RenderTools.Init(Config(), Graphics());
 
 	int64 Start = time_get();
@@ -606,6 +606,8 @@ void CGameClient::StartRendering()
 
 void CGameClient::OnRender()
 {
+	CUIElementBase::Init(UI()); // update static pointer because game and editor use separate UI
+
 	// update the local character and spectate position
 	UpdatePositions();
 

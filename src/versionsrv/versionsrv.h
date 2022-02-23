@@ -2,7 +2,9 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef VERSIONSRV_VERSIONSRV_H
 #define VERSIONSRV_VERSIONSRV_H
+
 #include <base/hash.h>
+
 static const int VERSIONSRV_PORT = 8285;
 
 struct CMapVersion
@@ -18,4 +20,5 @@ static const unsigned char VERSIONSRV_VERSION[] = {255, 255, 255, 255, 'v', 'e',
 
 static const unsigned char VERSIONSRV_GETMAPLIST[] = {255, 255, 255, 255, 'v', 'm', 'l', 'g'};
 static const unsigned char VERSIONSRV_MAPLIST[] = {255, 255, 255, 255, 'v', 'm', 'l', 's'};
+
 #endif

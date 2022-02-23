@@ -33,12 +33,6 @@
 #include "menus.h"
 #include "skins.h"
 
-CRenderTools *CMenus::CUIElementBase::m_pRenderTools = 0;
-CUI *CMenus::CUIElementBase::m_pUI = 0;
-IInput *CMenus::CUIElementBase::m_pInput = 0;
-IClient *CMenus::CUIElementBase::m_pClient = 0;
-CConfig *CMenus::CUIElementBase::m_pConfig = 0;
-
 CMenus::CMenus()
 {
 	m_Popup = POPUP_NONE;
@@ -85,17 +79,6 @@ CMenus::CMenus()
 	m_ActiveListBox = ACTLB_NONE;
 
 	m_PopupCountrySelection = -2;
-}
-
-float CMenus::CButtonContainer::GetFade(bool Checked, float Seconds)
-{
-	if(m_pUI->HotItem() == this || Checked)
-	{
-		m_FadeStartTime = m_pClient->LocalTime();
-		return 1.0f;
-	}
-
-	return maximum(0.0f, m_FadeStartTime -  m_pClient->LocalTime() + Seconds)/Seconds;
 }
 
 void CMenus::DoIcon(int ImageId, int SpriteId, const CUIRect *pRect, const vec4 *pColor)
@@ -179,7 +162,7 @@ bool CMenus::DoButton_Menu(CButtonContainer *pBC, const char *pText, bool Checke
 		TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
 		TextRender()->TextSecondaryColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
 	}
-	UI()->DoLabel(&Text, pText, Text.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Text, pText, Text.h*CUI::ms_FontmodHeight, TEXTALIGN_MC);
 	if(TextFade)
 	{
 		TextRender()->TextColor(CUI::ms_DefaultTextColor);
@@ -198,7 +181,7 @@ void CMenus::DoButton_KeySelect(CButtonContainer *pBC, const char *pText, const 
 	pRect->HMargin(1.0f, &Label);
 	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, 1.0f);
 	TextRender()->TextSecondaryColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f);
-	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight, TEXTALIGN_MC);
 	TextRender()->TextColor(CUI::ms_DefaultTextColor);
 	TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 }
@@ -215,7 +198,7 @@ bool CMenus::DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, bool 
 	Label.HMargin((Label.h*FontFactor)/2.0f, &Label);
 	TextRender()->TextColor(1.0f-FadeVal, 1.0f-FadeVal, 1.0f-FadeVal, FontAlpha);
 	TextRender()->TextSecondaryColor(0.0f+FadeVal, 0.0f+FadeVal, 0.0f+FadeVal, 0.25f*FontAlpha);
-	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight, TEXTALIGN_MC);
 	TextRender()->TextColor(CUI::ms_DefaultTextColor);
 	TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
 	return UI()->DoButtonLogic(pBC, pRect);
@@ -236,8 +219,7 @@ bool CMenus::DoButton_GridHeader(const void *pID, const char *pText, bool Checke
 
 	CUIRect Label;
 	pRect->VMargin(2.0f, &Label);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight*0.8f, Align);
+	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight*0.8f, Align|TEXTALIGN_MIDDLE);
 
 	if(Checked)
 	{
@@ -279,8 +261,7 @@ bool CMenus::DoButton_CheckBox(const void *pID, const char *pText, bool Checked,
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	Label.y += 1.0f; // lame fix
-	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_LEFT);
+	UI()->DoLabel(&Label, pText, Label.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_ML);
 
 	if(Locked)
 	{
@@ -324,7 +305,7 @@ bool CMenus::DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID,
 float CMenus::DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const char *pStr, float HeaderHeight, FDropdownCallback pfnCallback, bool *pActive)
 {
 	CUIRect View = *pRect;
-	CUIRect Header, Label;
+	CUIRect Header;
 
 	View.HSplitTop(HeaderHeight, &Header, &View);
 
@@ -348,9 +329,7 @@ float CMenus::DoIndependentDropdownMenu(void *pID, const CUIRect *pRect, const c
 	Graphics()->QuadsEnd();
 
 	// label
-	Label = Header;
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, pStr, Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Header, pStr, Header.h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_MC);
 
 	if(UI()->DoButtonLogic(pID, &Header))
 		*pActive ^= 1;
@@ -371,13 +350,11 @@ void CMenus::DoInfoBox(const CUIRect *pRect, const char *pLabel, const char *pVa
 
 	Value.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
+	const float FontSize = pRect->h*CUI::ms_FontmodHeight*0.8f;
 	char aBuf[32];
 	str_format(aBuf, sizeof(aBuf), "%s:", pLabel);
-	Label.y += 2.0f;
-	UI()->DoLabel(&Label, aBuf, pRect->h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
-
-	Value.y += 2.0f;
-	UI()->DoLabel(&Value, pValue, pRect->h*CUI::ms_FontmodHeight*0.8f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&Label, aBuf, FontSize, TEXTALIGN_MC);
+	UI()->DoLabel(&Value, pValue, FontSize, TEXTALIGN_MC);
 }
 
 void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active)
@@ -693,12 +670,7 @@ void CMenus::RenderMenubar(CUIRect Rect)
 
 			// make the header look like an active tab
 			Box.Draw(vec4(1.0f, 1.0f, 1.0f, 0.75f));
-			Box.HMargin(2.0f, &Box);
-			TextRender()->TextColor(CUI::ms_HighlightTextColor);
-			TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-			UI()->DoLabel(&Box, Localize("Demos"), Box.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
-			TextRender()->TextColor(CUI::ms_DefaultTextColor);
-			TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
+			UI()->DoLabelSelected(&Box, Localize("Demos"), true, Box.h*CUI::ms_FontmodHeight, TEXTALIGN_MC);
 		}
 	}
 
@@ -780,7 +752,7 @@ void CMenus::RenderLoading(int WorkedAmount)
 	}
 	char aBuf[8];
 	str_format(aBuf, sizeof(aBuf), "%d%%", (int)(100*Percent));
-	UI()->DoLabel(&FullBar, aBuf, 20.0f, TEXTALIGN_CENTER);
+	UI()->DoLabel(&FullBar, aBuf, 20.0f, TEXTALIGN_MC);
 
 	if(Percent > 0.5f)
 	{
@@ -1447,17 +1419,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 					Graphics()->QuadsEnd();
 
-					if(i == OldSelected)
-					{
-						TextRender()->TextColor(CUI::ms_HighlightTextColor);
-						TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
-					}
-					UI()->DoLabel(&Label, pEntry->m_aCountryCodeString, 10.0f, TEXTALIGN_CENTER);
-					if(i == OldSelected)
-					{
-						TextRender()->TextColor(CUI::ms_DefaultTextColor);
-						TextRender()->TextSecondaryColor(CUI::ms_DefaultTextOutlineColor);
-					}
+					UI()->DoLabelSelected(&Label, pEntry->m_aCountryCodeString, Item.m_Selected, 10.0f, TEXTALIGN_CENTER);
 				}
 			}
 
@@ -1493,6 +1455,12 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
 			static CLineInput s_DemoNameInput(m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile));
+			if(UI()->GetActiveItem() == m_aCurrentDemoFile) // initially activate input and select entire name
+			{
+				s_DemoNameInput.SetCursorOffset(s_DemoNameInput.GetLength());
+				s_DemoNameInput.SetSelection(0, s_DemoNameInput.GetLength());
+				UI()->SetActiveItem(&s_DemoNameInput);
+			}
 			UI()->DoEditBoxOption(&s_DemoNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
@@ -1542,18 +1510,24 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
 			static CLineInput s_SkinNameInput(m_aSaveSkinName, sizeof(m_aSaveSkinName));
+			if(UI()->GetActiveItem() == m_aSaveSkinName) // initially activate input and select entire name
+			{
+				s_SkinNameInput.SetCursorOffset(s_SkinNameInput.GetLength());
+				s_SkinNameInput.SetSelection(0, s_SkinNameInput.GetLength());
+				UI()->SetActiveItem(&s_SkinNameInput);
+			}
 			UI()->DoEditBoxOption(&s_SkinNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
 			CUIRect Yes, No;
 			BottomBar.VSplitMid(&No, &Yes, SpacingW);
 
-			static CButtonContainer s_ButtonAbort;
-			if(DoButton_Menu(&s_ButtonAbort, Localize("No"), 0, &No) || UI()->ConsumeHotkey(CUI::HOTKEY_ESCAPE))
+			static CButtonContainer s_ButtonNo;
+			if(DoButton_Menu(&s_ButtonNo, Localize("No"), 0, &No) || UI()->ConsumeHotkey(CUI::HOTKEY_ESCAPE))
 				m_Popup = POPUP_NONE;
 
-			static CButtonContainer s_ButtonTryAgain;
-			if(DoButton_Menu(&s_ButtonTryAgain, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
+			static CButtonContainer s_ButtonYes;
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 			{
 				if(m_aSaveSkinName[0] && m_aSaveSkinName[0] != 'x' && m_aSaveSkinName[1] != '_')
 				{
@@ -1699,8 +1673,6 @@ bool CMenus::OnInput(IInput::CEvent e)
 
 void CMenus::OnConsoleInit()
 {
-	CUIElementBase::Init(this);
-
 	Console()->Register("play", "r[file]", CFGFLAG_CLIENT|CFGFLAG_STORE, Con_Play, this, "Play the file specified");
 }
 

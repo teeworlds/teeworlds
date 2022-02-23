@@ -3,8 +3,6 @@
 #ifndef ENGINE_SHARED_MAPCHECKER_H
 #define ENGINE_SHARED_MAPCHECKER_H
 
-#include <base/hash.h>
-
 #include <engine/mapchecker.h>
 
 #include "memheap.h"
@@ -35,7 +33,7 @@ class CMapChecker : public IMapChecker
 
 public:
 	CMapChecker();
-	void AddMaplist(struct CMapVersion *pMaplist, int Num);
+	void AddMaplist(const struct CMapVersion *pMaplist, int Num);
 	bool IsMapValid(const char *pMapName, const SHA256_DIGEST *pMapSha256, unsigned MapCrc, unsigned MapSize);
 	bool ReadAndValidateMap(const char *pFilename, int StorageType);
 
