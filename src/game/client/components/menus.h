@@ -644,6 +644,7 @@ private:
 	float RenderSettingsControlsScoreboard(CUIRect View);
 	float RenderSettingsControlsStats(CUIRect View);
 	float RenderSettingsControlsMisc(CUIRect View);
+	float RenderSettingsControlsWater(CUIRect View);
 	void DoSettingsControlsButtons(int Start, int Stop, CUIRect View, float ButtonHeight, float Spacing);
 
 	void DoJoystickAxisPicker(CUIRect View);

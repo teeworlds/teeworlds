@@ -293,7 +293,9 @@ class CEditorMap
 {
 	void MakeGameGroup(CLayerGroup *pGroup);
 	void MakeGameLayer(CLayer *pLayer);
+	
 public:
+	void MakeWaterLayer(CLayer* pLayer);
 	CEditor *m_pEditor;
 	bool m_Modified;
 
@@ -326,6 +328,7 @@ public:
 	CMapInfo m_MapInfoTmp;
 
 	class CLayerGame *m_pGameLayer;
+	class CLayerWater* m_pWaterLayer;
 	CLayerGroup *m_pGameGroup;
 
 	CEnvelope *NewEnvelope(int Channels)
@@ -448,6 +451,7 @@ public:
 
 	IGraphics::CTextureHandle m_Texture;
 	int m_Game;
+	int m_Water;
 	int m_Image;
 	int m_Width;
 	int m_Height;
@@ -496,6 +500,15 @@ public:
 	~CLayerGame();
 
 	virtual int RenderProperties(CUIRect *pToolbox);
+};
+
+class CLayerWater: public CLayerTiles
+{
+public:
+	CLayerWater(int w, int h);
+	~CLayerWater();
+
+	virtual int RenderProperties(CUIRect* pToolbox);
 };
 
 class CEditor : public IEditor
@@ -749,6 +762,7 @@ public:
 	IGraphics::CTextureHandle m_BackgroundTexture;
 	IGraphics::CTextureHandle m_CursorTexture;
 	IGraphics::CTextureHandle m_EntitiesTexture;
+	IGraphics::CTextureHandle m_WaterLayerTexture;
 
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;
@@ -776,6 +790,8 @@ public:
 
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_MenuItem(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags=0, const char *pToolTip=0);
+
+	int DoButton_AddWaterLayer(const void* pID, const char* pText, int Checked, const CUIRect* pRect, int Flags, const char* pToolTip);
 
 	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize) { return UI()->DoEditBox(pLineInput, pRect, FontSize, CUIRect::CORNER_ALL, &LightButtonColorFunction); }
 

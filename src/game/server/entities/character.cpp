@@ -9,6 +9,7 @@
 
 #include "character.h"
 #include "laser.h"
+#include "harpoon.h"
 #include "projectile.h"
 
 //input count
@@ -47,6 +48,7 @@ CCharacter::CCharacter(CGameWorld *pWorld)
 	m_Health = 0;
 	m_Armor = 0;
 	m_TriggeredEvents = 0;
+	m_HarpoonReloadTimer = 0;
 }
 
 void CCharacter::Reset()
@@ -113,6 +115,15 @@ bool CCharacter::IsGrounded()
 	return false;
 }
 
+bool CCharacter::HasDivingGear()
+{
+	return m_Core.m_DivingGear;
+}
+
+void CCharacter::GiveDiving()
+{
+	m_Core.m_DivingGear = true;
+}
 
 void CCharacter::HandleNinja()
 {
@@ -149,7 +160,7 @@ void CCharacter::HandleNinja()
 		// Set velocity
 		m_Core.m_Vel = m_Ninja.m_ActivationDir * g_pData->m_Weapons.m_Ninja.m_Velocity;
 		vec2 OldPos = m_Pos;
-		GameServer()->Collision()->MoveBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(GetProximityRadius(), GetProximityRadius()), 0.f);
+		GameServer()->Collision()->MoveWaterBox(&m_Core.m_Pos, &m_Core.m_Vel, vec2(GetProximityRadius(), GetProximityRadius()), 0.f);
 
 		// reset velocity so the client doesn't predict stuff
 		m_Core.m_Vel = vec2(0.f, 0.f);
@@ -247,6 +258,11 @@ void CCharacter::HandleWeaponSwitch()
 
 void CCharacter::FireWeapon()
 {
+	if (m_ActiveWeapon == WEAPON_HARPOON)
+	{
+		HandleHarpoon();
+		return;
+	}
 	if(m_ReloadTimer != 0)
 		return;
 
@@ -327,8 +343,15 @@ void CCharacter::FireWeapon()
 			}
 
 			// if we Hit anything, we have to wait for the reload
-			if(Hits)
-				m_ReloadTimer = Server()->TickSpeed()/3;
+			if (Hits)
+			{
+				if (m_Core.IsInWater())
+				{
+					m_ReloadTimer = Server()->TickSpeed();
+				}
+				else
+					m_ReloadTimer = Server()->TickSpeed() / 3;
+			}
 
 		} break;
 
@@ -394,7 +417,17 @@ void CCharacter::FireWeapon()
 
 			GameServer()->CreateSound(m_Pos, SOUND_NINJA_FIRE);
 		} break;
+		case WEAPON_HARPOON:
+		{
+			new CProjectile(GameWorld(), WEAPON_HARPOON,
+				m_pPlayer->GetCID(),
+				ProjStartPos,
+				Direction,
+				(int)(Server()->TickSpeed() * GameServer()->Tuning()->m_GrenadeLifetime),
+				g_pData->m_Weapons.m_Harpoon.m_pBase->m_Damage, true, 0, SOUND_GRENADE_EXPLODE, WEAPON_GRENADE);
 
+			GameServer()->CreateSound(m_Pos, SOUND_GRENADE_FIRE);
+		} break;
 	}
 
 	m_AttackTick = Server()->Tick();
@@ -402,10 +435,69 @@ void CCharacter::FireWeapon()
 	if(m_aWeapons[m_ActiveWeapon].m_Ammo > 0) // -1 == unlimited
 		m_aWeapons[m_ActiveWeapon].m_Ammo--;
 
-	if(!m_ReloadTimer)
+	if (!m_ReloadTimer)
+	{
 		m_ReloadTimer = g_pData->m_Weapons.m_aId[m_ActiveWeapon].m_Firedelay * Server()->TickSpeed() / 1000;
+	}
+		
 }
 
+void CCharacter::HandleHarpoon()
+{
+	/*
+		No such thing as reload timer, one harpoon to be fired per collection
+	*/
+	bool WillFire = false;
+
+	DoWeaponSwitch();
+
+	vec2 Direction = normalize(vec2(m_LatestInput.m_TargetX, m_LatestInput.m_TargetY));
+	if (m_pHarpoon) //has fired a harpoon
+	{
+		if (!WillFire)
+			return;
+	}
+	else
+	{
+		if (!CountInput(m_LatestPrevInput.m_Fire, m_LatestInput.m_Fire).m_Presses)
+			return;
+		if (m_aWeapons[m_ActiveWeapon].m_Ammo)
+		{
+			vec2 ProjStartPos = m_Pos + Direction * GetProximityRadius() * 0.75f;
+			m_pHarpoon = new CHarpoon(GameWorld(), ProjStartPos, Direction, m_pPlayer->GetCID(), this);
+			m_aWeapons[m_ActiveWeapon].m_Ammo--;
+			m_AttackTick = Server()->Tick();
+		}
+
+	}
+}
+
+void CCharacter::DeallocateHarpoon()
+{
+	m_pHarpoon = 0x0;
+}
+
+void CCharacter::AllocateHarpoon(CHarpoon* pHarpoon)
+{
+	m_pBeingHookedByHarpoon = pHarpoon;
+}
+void CCharacter::DeallocateVictimHarpoon()
+{
+	m_pBeingHookedByHarpoon = 0x0;
+}
+
+void CCharacter::HarpoonDrag(vec2 Vel)
+{
+	// Apply harpoon interaction velocity
+	m_Core.m_HarpoonDragVel += Vel;
+}
+
+bool CCharacter::IsValidForHarpoon(CHarpoon* pHarpoon)
+{
+	if (pHarpoon->GetOwner()->GetPlayer() && pHarpoon->GetOwner()->GetPlayer()->GetTeam() == GetPlayer()->GetTeam() && GameServer()->m_pController->IsTeamplay())
+		return false;
+	return true;
+}
 void CCharacter::HandleWeapons()
 {
 	//ninja
@@ -454,6 +546,17 @@ bool CCharacter::GiveWeapon(int Weapon, int Ammo)
 	{
 		m_aWeapons[Weapon].m_Got = true;
 		m_aWeapons[Weapon].m_Ammo = minimum(g_pData->m_Weapons.m_aId[Weapon].m_Maxammo, Ammo);
+		return true;
+	}
+	return false;
+}
+
+bool CCharacter::GiveHarpoon(int Ammo)
+{
+	if (m_aWeapons[WEAPON_HARPOON].m_Ammo < g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_Maxammo || !m_aWeapons[WEAPON_HARPOON].m_Got)
+	{
+		m_aWeapons[WEAPON_HARPOON].m_Got = true;
+		m_aWeapons[WEAPON_HARPOON].m_Ammo = clamp(m_aWeapons[WEAPON_HARPOON].m_Ammo + Ammo, 0, g_pData->m_Weapons.m_aId[WEAPON_HARPOON].m_Maxammo);
 		return true;
 	}
 	return false;
@@ -513,6 +616,7 @@ void CCharacter::OnDirectInput(CNetObj_PlayerInput *pNewInput)
 void CCharacter::ResetInput()
 {
 	m_Input.m_Direction = 0;
+	m_Input.m_DirectionVertical = 0;
 	m_Input.m_Hook = 0;
 	// simulate releasing the fire button
 	if((m_Input.m_Fire&1) != 0)
@@ -522,10 +626,96 @@ void CCharacter::ResetInput()
 	m_LatestPrevInput = m_LatestInput = m_Input;
 }
 
+int CCharacter::NumOfBreathBubbles()
+{
+	if (m_BreathTick <= 5) //magic floating tee number that won't make it flick
+	{
+		return -1;
+	}
+	int NumOfBreathBubbles;
+	if (HasDivingGear() && GameServer()->Tuning()->m_LiquidDivingGearBreath)
+		NumOfBreathBubbles = (int)ceil(((GameServer()->Tuning()->m_LiquidDivingGearBreath.Get() / 100.0f) - m_BreathTick) / (GameServer()->Tuning()->m_LiquidDivingGearBreath.Get() / 1000.0f));
+	else
+		NumOfBreathBubbles = (int)ceil(((GameServer()->Tuning()->m_LiquidAirTicks.Get() / 100.0f) - m_BreathTick) /(GameServer()->Tuning()->m_LiquidAirTicks.Get() / 1000.0f));
+	if (NumOfBreathBubbles < 0 || (NumOfBreathBubbles==10 && m_Core.IsFloating()))
+	{
+		return -1;
+	}
+	return NumOfBreathBubbles;
+}
+int CCharacter::DivingBreathAmount()
+{
+	if (m_BreathTick == -1)
+	{
+		return -1;
+	}
+	if (!GameServer()->Tuning()->m_LiquidDivingGearBreath||!HasDivingGear())
+	{
+		return -1;
+	}
+	int Progress = (((GameServer()->Tuning()->m_LiquidDivingGearBreath.Get() / 100.0f) - m_BreathTick) / (GameServer()->Tuning()->m_LiquidDivingGearBreath.Get() / 100.0f)) * 100;
+	if (Progress < 0||(Progress>95&&m_Core.IsFloating()))
+	{
+		return -1;
+	}
+	return Progress;
+}
+
 void CCharacter::Tick()
 {
 	m_Core.m_Input = m_Input;
+	if (m_HarpoonReloadTimer&&!(m_pHarpoon&&m_pHarpoon->m_DeathTick>0))
+	{
+		m_HarpoonReloadTimer--;
+		if (!m_HarpoonReloadTimer)
+		{
+			m_aWeapons[WEAPON_HARPOON].m_Ammo++;
+			m_HarpoonReloadTimer = 0;
+		}
+		if (m_aWeapons[WEAPON_HARPOON].m_Ammo==5)
+			m_HarpoonReloadTimer = 0;
+	}
 	m_Core.Tick(true);
+
+	if (m_pBeingHookedByHarpoon&&Server()->Tick()%50==0)
+	{
+		SetEmote(EMOTE_PAIN, Server()->Tick() + 1200 * Server()->TickSpeed() / 1000);
+
+		GameServer()->CreateSound(m_Pos, SOUND_PLAYER_PAIN_SHORT);
+	}
+	if (m_Core.IsInWater() && (GameServer()->Tuning()->m_LiquidDivingGearBreath||(!GameServer()->Tuning()->m_LiquidDivingGearBreath&&!HasDivingGear())))
+	{
+		if (m_BreathTick == -1)
+		{
+			m_BreathTick =  0;
+		}
+		else
+		{
+			m_BreathTick++;
+			int TickLimit;
+			if (HasDivingGear())
+			{
+				TickLimit = GameServer()->Tuning()->m_LiquidDivingGearBreath.Get()/100;
+			}
+			else
+			{
+				TickLimit = GameServer()->Tuning()->m_LiquidAirTicks.Get()/100;
+			}
+			if (m_BreathTick > TickLimit)
+			{
+				if (!GameServer()->Tuning()->m_LiquidTicksPerSuffocationDmg.Get())
+				{
+					TakeDamage(vec2(0.f, 0.f), vec2(0.f, 0.f), 2, GetPlayer()->GetCID(), WEAPON_WORLD, GameServer()->Tuning()->m_LiquidOnlyHeartDmg && DMGTYPE_HEART); //works as if the tick delay was 1, but 1 tick delay deals 1 dmg this one deals 2
+				}
+				else if(!(m_BreathTick % (GameServer()->Tuning()->m_LiquidTicksPerSuffocationDmg.Get() / 100)))
+				{
+					TakeDamage(vec2(0.f, 0.f), vec2(0.f, 0.f), 1, GetPlayer()->GetCID(), WEAPON_WORLD, GameServer()->Tuning()->m_LiquidOnlyHeartDmg && DMGTYPE_HEART);
+				}
+			}
+		}
+	}
+	else
+		m_BreathTick = -1;
 
 	// handle leaving gamelayer
 	if(GameLayerClipped(m_Pos))
@@ -553,6 +743,9 @@ void CCharacter::TickDefered()
 	// and set it back to 0 for the next tick
 	if(m_ActiveWeapon != WEAPON_NINJA || m_Ninja.m_CurrentMoveTime < 0)
 		m_Core.AddDragVelocity();
+	
+	if(m_pBeingHookedByHarpoon)
+		m_Core.AddHarpoonDragVelocity();
 	m_Core.ResetDragVelocity();
 
 	//lastsentcore
@@ -657,6 +850,14 @@ bool CCharacter::IncreaseArmor(int Amount)
 void CCharacter::Die(int Killer, int Weapon)
 {
 	// we got to wait 0.5 secs before respawning
+	if (m_pHarpoon)
+	{
+		m_pHarpoon->RemoveHarpoon();
+	}
+	if (m_pBeingHookedByHarpoon)
+	{
+		m_pBeingHookedByHarpoon->RemoveHarpoon();
+	}
 	m_Alive = false;
 	m_pPlayer->m_RespawnTick = Server()->Tick()+Server()->TickSpeed()/2;
 	int ModeSpecial = GameServer()->m_pController->OnCharacterDeath(this, (Killer < 0) ? 0 : GameServer()->m_apPlayers[Killer], Weapon);
@@ -711,7 +912,7 @@ void CCharacter::Die(int Killer, int Weapon)
 	GameServer()->CreateDeath(m_Pos, m_pPlayer->GetCID());
 }
 
-bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weapon)
+bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weapon, int Flag)
 {
 	m_Core.m_Vel += Force;
 
@@ -736,9 +937,9 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 	int OldHealth = m_Health, OldArmor = m_Armor;
 	if(Dmg)
 	{
-		if(m_Armor)
+		if(m_Armor&&Flag!=DMGTYPE_HEART)
 		{
-			if(Dmg > 1)
+			if(Dmg > 1&&Flag!=DMGTYPE_ARMOR)
 			{
 				m_Health--;
 				Dmg--;
@@ -838,12 +1039,25 @@ void CCharacter::Snap(int SnappingClient)
 	pCharacter->m_Health = 0;
 	pCharacter->m_Armor = 0;
 	pCharacter->m_TriggeredEvents = m_TriggeredEvents;
+	pCharacter->m_BreathBubbles = NumOfBreathBubbles();
+	//pCharacter->m_DivingBreath = DivingBreathAmount();
+	pCharacter->m_HarpoonTimeLeft = 0;
+	pCharacter->m_HarpoonAmmoReload = m_HarpoonReloadTimer;
 
+	if (m_pHarpoon&& m_pHarpoon->m_Status)
+	{
+		pCharacter->m_HarpoonTimeLeft = m_pHarpoon->m_DeathTick;
+	}
 	pCharacter->m_Weapon = m_ActiveWeapon;
+	if (m_ActiveWeapon == WEAPON_HARPOON)
+	{
+		pCharacter->m_AmmoCount = m_aWeapons[WEAPON_HARPOON].m_Ammo;
+	}
 	pCharacter->m_AttackTick = m_AttackTick;
 
 	pCharacter->m_Direction = m_Input.m_Direction;
-
+	pCharacter->m_DirectionVertical = m_Input.m_DirectionVertical;
+	
 	if(m_pPlayer->GetCID() == SnappingClient || SnappingClient == -1 ||
 		(!Config()->m_SvStrictSpectateMode && m_pPlayer->GetCID() == GameServer()->m_apPlayers[SnappingClient]->GetSpectatorID()))
 	{

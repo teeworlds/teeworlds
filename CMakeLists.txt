@@ -530,6 +530,7 @@ set(EXPECTED_DATA
   audio/hook_noattach-02.wv
   audio/hook_noattach-03.wv
   audio/music_menu.wv
+  audio/sfx_big_splash.wv
   audio/sfx_ctf_cap_pl.wv
   audio/sfx_ctf_drop.wv
   audio/sfx_ctf_grab_en.wv
@@ -540,6 +541,14 @@ set(EXPECTED_DATA
   audio/sfx_hit_weak-01.wv
   audio/sfx_hit_weak-02.wv
   audio/sfx_hit_weak-03.wv
+  audio/sfx_movement-01.wv
+  audio/sfx_movement-02.wv
+  audio/sfx_movement-03.wv
+  audio/sfx_movement-04.wv
+  audio/sfx_movement-05.wv
+  audio/sfx_movement-06.wv
+  audio/sfx_movement-07.wv
+  audio/sfx_movement-08.wv
   audio/sfx_msg-client.wv
   audio/sfx_msg-highlight.wv
   audio/sfx_msg-server.wv
@@ -557,9 +566,16 @@ set(EXPECTED_DATA
   audio/sfx_skid-02.wv
   audio/sfx_skid-03.wv
   audio/sfx_skid-04.wv
+  audio/sfx_soft_splash-01.wv
+  audio/sfx_soft_splash-02.wv
+  audio/sfx_soft_splash-03.wv
   audio/sfx_spawn_wpn-01.wv
   audio/sfx_spawn_wpn-02.wv
   audio/sfx_spawn_wpn-03.wv
+  audio/sfx_splash-01.wv
+  audio/sfx_splash-02.wv
+  audio/sfx_splash-03.wv
+  audio/sfx_splash-04.wv
   audio/vo_teefault_cry-01.wv
   audio/vo_teefault_cry-02.wv
   audio/vo_teefault_ninja-01.wv
@@ -893,6 +909,7 @@ set(EXPECTED_DATA
   editor/checker.png
   editor/cursor.png
   editor/entities.png
+  editor/water.png
   emoticons.png
   fonts/DejaVuSans.ttf
   fonts/SourceHanSans.ttc
@@ -967,6 +984,7 @@ set(EXPECTED_DATA
   mapres/snow.png
   mapres/stars.png
   mapres/sun.png
+  mapres/water.png
   mapres/winter_doodads.png
   mapres/winter_main.png
   mapres/winter_mountains.png
@@ -992,6 +1010,7 @@ set(EXPECTED_DATA
   maps/readme.txt
   particles.png
   race_flag.png
+  rope.png
   skins/beaver.json
   skins/bluekitty.json
   skins/bluestripe.json
@@ -1025,6 +1044,7 @@ set(EXPECTED_DATA
   skins/decoration/unimelo.png
   skins/decoration/unipento.png
   skins/default.json
+  skins/diving_gear.png
   skins/eyes/colorable.png
   skins/eyes/negative.png
   skins/eyes/standard.png
@@ -1479,6 +1499,7 @@ if(CLIENT)
     components/notifications.h
     components/particles.cpp
     components/particles.h
+    components/particles_functions.cpp
     components/players.cpp
     components/players.h
     components/scoreboard.cpp
@@ -1493,6 +1514,8 @@ if(CLIENT)
     components/stats.h
     components/voting.cpp
     components/voting.h
+    components/water.cpp
+    components/water.h
     gameclient.cpp
     gameclient.h
     lineinput.cpp
@@ -1606,6 +1629,8 @@ set_src(GAME_SERVER GLOB_RECURSE src/game/server
   entities/character.h
   entities/flag.cpp
   entities/flag.h
+  entities/harpoon.cpp
+  entities/harpoon.h
   entities/laser.cpp
   entities/laser.h
   entities/pickup.cpp

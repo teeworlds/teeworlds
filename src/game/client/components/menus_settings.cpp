@@ -22,6 +22,7 @@
 #include <game/client/render.h>
 #include <game/client/gameclient.h>
 #include <game/client/animstate.h>
+#include <game/client/components/water.h>
 
 #include "binds.h"
 #include "countryflags.h"
@@ -1467,6 +1468,12 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 	static bool s_MiscActive = true;
 	Split = DoIndependentDropdownMenu(&s_MiscActive, &MainView, Localize("Misc"), HeaderHeight, &CMenus::RenderSettingsControlsMisc, &s_MiscActive);
 
+	MainView.HSplitTop(Split + 10.0f, &LastExpandRect, &MainView);
+	s_ScrollRegion.AddRect(LastExpandRect);
+	static int s_WaterDropdown = 0;
+	static bool s_WaterActive = true;
+	Split = DoIndependentDropdownMenu(&s_WaterDropdown, &MainView, Localize("Water"), HeaderHeight, &CMenus::RenderSettingsControlsWater, &s_WaterActive);
+
 	MainView.HSplitTop(Split+10.0f, &LastExpandRect, &MainView);
 	s_ScrollRegion.AddRect(LastExpandRect);
 
@@ -1744,8 +1751,17 @@ void CMenus::RenderSettingsGraphics(CUIRect MainView)
 	if(DoButton_CheckBox(&Config()->m_GfxHighDetail, Localize("High Detail"), Config()->m_GfxHighDetail, &Button))
 		Config()->m_GfxHighDetail ^= 1;
 
+	Texture.HSplitTop(Spacing, 0, &Texture);
+	Texture.HSplitTop(ButtonHeight, &Button, &Texture);
+	static int s_ButtonGfxAnimateWater = 0;
+	if (DoButton_CheckBox(&s_ButtonGfxAnimateWater, Localize("Animate Water"), Config()->m_GfxAnimateWater, &Button))
+	{
+		Config()->m_GfxAnimateWater ^= 1;
+		m_pClient->m_pWater->Init();
+	}
+
 	// render screen modes
-	MainView.HSplitTop(10.0f, 0, &MainView);
+	MainView.HSplitTop(24.0f, 0, &MainView);
 
 	// display mode list
 	{

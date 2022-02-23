@@ -138,7 +138,9 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 				Item.m_Width = pLayer->m_Width;
 				Item.m_Height = pLayer->m_Height;
-				Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
+				Item.m_Flags = 0;
+				Item.m_Flags |= pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
+				Item.m_Flags |= pLayer->m_Water ? TILESLAYERFLAG_WATER : 0;
 				Item.m_Image = pLayer->m_Image;
 				Item.m_Data = df.AddData(pLayer->m_SaveTilesSize, pLayer->m_pSaveTiles);
 
@@ -382,6 +384,9 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 				for(int l = 0; l < pGItem->m_NumLayers; l++)
 				{
+					char aBuf[64];
+					str_format(aBuf, sizeof(aBuf), "layer number: %d", LayersStart + pGItem->m_StartLayer);
+					m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", aBuf);
 					CLayer *pLayer = 0;
 					CMapItemLayer *pLayerItem = (CMapItemLayer *)DataFile.GetItem(LayersStart+pGItem->m_StartLayer+l, 0, 0);
 					if(!pLayerItem)
@@ -389,14 +394,23 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 					if(pLayerItem->m_Type == LAYERTYPE_TILES)
 					{
+						
 						CMapItemLayerTilemap *pTilemapItem = (CMapItemLayerTilemap *)pLayerItem;
 						CLayerTiles *pTiles = 0;
-
 						if(pTilemapItem->m_Flags&TILESLAYERFLAG_GAME)
 						{
 							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							MakeGameLayer(pTiles);
 							MakeGameGroup(pGroup);
+						}
+						else if (pTilemapItem->m_Flags & TILESLAYERFLAG_WATER)
+						{
+							pTiles = new CLayerWater(pTilemapItem->m_Width, pTilemapItem->m_Height);
+							MakeWaterLayer(pTiles);
+							//MakeGameGroup(pGroup);
+							pTiles->m_Color = pTilemapItem->m_Color;
+							pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
+							pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
 						}
 						else
 						{
@@ -408,22 +422,19 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						}
 
 						pLayer = pTiles;
-
 						pGroup->AddLayer(pTiles);
 						void *pData = DataFile.GetData(pTilemapItem->m_Data);
 						pTiles->m_Image = pTilemapItem->m_Image;
 						pTiles->m_Game = pTilemapItem->m_Flags&TILESLAYERFLAG_GAME;
-
+						pTiles->m_Water = pTilemapItem->m_Flags &TILESLAYERFLAG_WATER;
 						// load layer name
 						if(pTilemapItem->m_Version >= 3)
 							IntsToStr(pTilemapItem->m_aName, sizeof(pTiles->m_aName)/sizeof(int), pTiles->m_aName);
-
 						// get tile data
 						if(pTilemapItem->m_Version > 3)
 							pTiles->ExtractTiles((CTile *)pData);
 						else
 							mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
-
 
 						if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
 						{
@@ -433,7 +444,6 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 									pTiles->m_pTiles[i].m_Index += ENTITY_OFFSET;
 							}
 						}
-
 						DataFile.UnloadData(pTilemapItem->m_Data);
 					}
 					else if(pLayerItem->m_Type == LAYERTYPE_QUADS)

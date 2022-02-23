@@ -290,6 +290,17 @@ void CHud::RenderScoreHud()
 						Graphics()->QuadsDrawTL(&QuadItem, 1);
 						Graphics()->QuadsEnd();
 					}
+					else if (FlagCarrier[t] == FLAG_HOOKED)
+					{
+						//draw harpoon
+						Graphics()->BlendNormal();
+						Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+						Graphics()->QuadsBegin();
+						RenderTools()->SelectSprite(SPRITE_WEAPON_HARPOON_BODY);
+						IGraphics::CQuadItem QuadItem(Whole - ScoreWidthMax - ImageSize -5.0f, StartY + 6.0f + t * TeamOffset, ImageSize, ImageSize*3/8);
+						Graphics()->QuadsDrawTL(&QuadItem, 1);
+						Graphics()->QuadsEnd();
+					}
 					else if(FlagCarrier[t] >= 0)
 					{
 						// draw name
@@ -628,6 +639,7 @@ void CHud::RenderCursor()
 
 	vec2 Pos = *m_pClient->m_pCamera->GetCenter();
 	RenderTools()->MapScreenToGroup(Pos.x, Pos.y, Layers()->GameGroup(), m_pClient->m_pCamera->GetZoom());
+
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 	Graphics()->QuadsBegin();
 
@@ -707,6 +719,75 @@ void CHud::RenderNinjaBar(float x, float y, float Progress)
 	Graphics()->QuadsDrawTL(&QuadEndEmpty, 1);
 }
 
+void CHud::RenderDivingGearBar(float x, float y, float Progress)
+{
+	Progress = clamp(Progress, 0.0f, 1.0f);
+	const float EndWidth = 6.0f;
+	const float BarHeight = 12.0f;
+	const float WholeBarWidth = 120.f;
+	const float MiddleBarWidth = WholeBarWidth - (EndWidth * 2.0f);
+
+	IGraphics::CQuadItem QuadStartFull(x, y, EndWidth, BarHeight);
+	RenderTools()->SelectSprite(&g_pData->m_aSprites[SPRITE_DIVING_BAR_FULL_LEFT]);
+	Graphics()->QuadsDrawTL(&QuadStartFull, 1);
+	x += EndWidth;
+
+	const float FullBarWidth = MiddleBarWidth * Progress;
+	const float EmptyBarWidth = MiddleBarWidth - FullBarWidth;
+
+	// full bar
+	IGraphics::CQuadItem QuadFull(x, y, FullBarWidth, BarHeight);
+
+	CDataSprite SpriteBarFull = g_pData->m_aSprites[SPRITE_DIVING_BAR_FULL];
+	// prevent pixel puree, select only a small slice
+	if (Progress < 0.1f)
+	{
+		int spx = SpriteBarFull.m_X;
+		int spy = SpriteBarFull.m_Y;
+		float w = SpriteBarFull.m_W * 0.1f; // magic here
+		int h = SpriteBarFull.m_H;
+		int cx = SpriteBarFull.m_pSet->m_Gridx;
+		int cy = SpriteBarFull.m_pSet->m_Gridy;
+		float x1 = spx / (float)cx;
+		float x2 = (spx + w - 1 / 32.0f) / (float)cx;
+		float y1 = spy / (float)cy;
+		float y2 = (spy + h - 1 / 32.0f) / (float)cy;
+
+		Graphics()->QuadsSetSubset(x1, y1, x2, y2);
+	}
+	else
+		RenderTools()->SelectSprite(&SpriteBarFull);
+
+	Graphics()->QuadsDrawTL(&QuadFull, 1);
+
+	// empty bar
+	// select the middle portion of the sprite so we don't get edge bleeding
+	const CDataSprite SpriteBarEmpty = g_pData->m_aSprites[SPRITE_DIVING_BAR_EMPTY];
+	{
+		float spx = SpriteBarEmpty.m_X + 0.1f;
+		float spy = SpriteBarEmpty.m_Y;
+		float w = SpriteBarEmpty.m_W * 0.5f;
+		int h = SpriteBarEmpty.m_H;
+		int cx = SpriteBarEmpty.m_pSet->m_Gridx;
+		int cy = SpriteBarEmpty.m_pSet->m_Gridy;
+		float x1 = spx / (float)cx;
+		float x2 = (spx + w - 1 / 32.0f) / (float)cx;
+		float y1 = spy / (float)cy;
+		float y2 = (spy + h - 1 / 32.0f) / (float)cy;
+
+		Graphics()->QuadsSetSubset(x1, y1, x2, y2);
+	}
+
+	IGraphics::CQuadItem QuadEmpty(x + FullBarWidth, y, EmptyBarWidth, BarHeight);
+	Graphics()->QuadsDrawTL(&QuadEmpty, 1);
+
+	x += MiddleBarWidth;
+
+	IGraphics::CQuadItem QuadEndEmpty(x, y, EndWidth, BarHeight);
+	RenderTools()->SelectSprite(&g_pData->m_aSprites[SPRITE_DIVING_BAR_EMPTY_RIGHT]);
+	Graphics()->QuadsDrawTL(&QuadEndEmpty, 1);
+}
+
 void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 {
 	if(!pCharacter)
@@ -715,6 +796,8 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	float x = 5;
 	float y = 5;
 	int i;
+
+	int OffSet = 0; //This is the GUI offset for the topleft hud, for each new 'instance' (Harpoon reload, ninja bar, breath), 12 is added.
 	IGraphics::CQuadItem Array[10];
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
@@ -723,12 +806,45 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 	Graphics()->QuadsBegin();
 	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
 
+	//Render Health and Ammo, guaranteed each time
+	{
+		int h = 0;
+
+		// render health
+		RenderTools()->SelectSprite(SPRITE_HEALTH_FULL);
+		for (; h < minimum(pCharacter->m_Health, 10); h++)
+			Array[h] = IGraphics::CQuadItem(x + h * 12, y, 12, 12);
+		Graphics()->QuadsDrawTL(Array, h);
+
+		i = 0;
+		RenderTools()->SelectSprite(SPRITE_HEALTH_EMPTY);
+		for (; h < 10; h++)
+			Array[i++] = IGraphics::CQuadItem(x + h * 12, y, 12, 12);
+		Graphics()->QuadsDrawTL(Array, i);
+
+		OffSet += 12;
+		// render armor meter
+		h = 0;
+		RenderTools()->SelectSprite(SPRITE_ARMOR_FULL);
+		for (; h < minimum(pCharacter->m_Armor, 10); h++)
+			Array[h] = IGraphics::CQuadItem(x + h * 12, y + OffSet, 12, 12);
+		Graphics()->QuadsDrawTL(Array, h);
+
+		i = 0;
+		RenderTools()->SelectSprite(SPRITE_ARMOR_EMPTY);
+		for (; h < 10; h++)
+			Array[i++] = IGraphics::CQuadItem(x + h * 12, y + OffSet, 12, 12);
+		Graphics()->QuadsDrawTL(Array, i);
+
+		OffSet += 12;
+	}
+
 	// render ammo
 	if(pCharacter->m_Weapon == WEAPON_NINJA)
 	{
 		const int Max = g_pData->m_Weapons.m_Ninja.m_Duration * Client()->GameTickSpeed() / 1000;
 		float NinjaProgress = clamp(pCharacter->m_AmmoCount-Client()->GameTick(), 0, Max) / (float)Max;
-		RenderNinjaBar(x, y+24.f, NinjaProgress);
+		RenderNinjaBar(x, y+ OffSet, NinjaProgress);
 	}
 	else
 	{
@@ -736,44 +852,78 @@ void CHud::RenderHealthAndAmmo(const CNetObj_Character *pCharacter)
 		if(pCharacter->m_Weapon == WEAPON_GRENADE)
 		{
 			for(i = 0; i < minimum(pCharacter->m_AmmoCount, 10); i++)
-				Array[i] = IGraphics::CQuadItem(x+1+i*12, y+24, 10, 10);
+				Array[i] = IGraphics::CQuadItem(x+1+i*12, y+ OffSet, 10, 10);
+			Graphics()->QuadsDrawTL(Array, i);
+		}
+		else if (pCharacter->m_Weapon == WEAPON_HARPOON)
+		{
+			for (i = 0; i < minimum(pCharacter->m_AmmoCount, 5); i++)
+				Array[i] = IGraphics::CQuadItem(x + 3 + i * 24, y + OffSet, 20, 15);
+			Graphics()->QuadsDrawTL(Array, i);
+			//float OffSet2 = i * 24;
+			int Temp = i;
+			Graphics()->SetColor(vec4(0.25f, 0.25f, 0.25f, 1.0f));
+			for (i = 0; i < 5-Temp; i++)
+				Array[i] = IGraphics::CQuadItem(x + 3 + (i+ Temp) * 24, y + OffSet, 20, 15);
+			Graphics()->QuadsDrawTL(Array, i);
+			Graphics()->SetColor(vec4(1, 1, 1, 1.0f));
 		}
 		else
 		{
 			for(i = 0; i < minimum(pCharacter->m_AmmoCount, 10); i++)
-				Array[i] = IGraphics::CQuadItem(x+i*12, y+24, 12, 12);
+				Array[i] = IGraphics::CQuadItem(x+i*12, y+ OffSet, 12, 12);
+			Graphics()->QuadsDrawTL(Array, i);
 		}
-		Graphics()->QuadsDrawTL(Array, i);
+		
+	}
+	OffSet += 12;
+
+	if (pCharacter->m_Weapon == WEAPON_HARPOON && pCharacter->m_HarpoonTimeLeft)
+	{
+		const int Max = Client()->GameTickSpeed() * 5;
+		float TimeLeft = clamp(pCharacter->m_HarpoonTimeLeft, 0, Max) / float(Max);
+		RenderNinjaBar(x, y + OffSet, TimeLeft);
+		OffSet += 12;
+	}
+	else if (pCharacter->m_Weapon == WEAPON_HARPOON && pCharacter->m_HarpoonAmmoReload)
+	{
+		const int Max = m_pClient->m_Tuning.m_HarpoonReloadTime * Client()->GameTickSpeed();
+		float TimeLeft = clamp(pCharacter->m_HarpoonAmmoReload, 0, Max) / float(Max);
+		RenderDivingGearBar(x, y + OffSet, TimeLeft);
+		OffSet += 12;
 	}
 
-	int h = 0;
-
-	// render health
-	RenderTools()->SelectSprite(SPRITE_HEALTH_FULL);
-	for(; h < minimum(pCharacter->m_Health, 10); h++)
-		Array[h] = IGraphics::CQuadItem(x+h*12,y,12,12);
-	Graphics()->QuadsDrawTL(Array, h);
-
-	i = 0;
-	RenderTools()->SelectSprite(SPRITE_HEALTH_EMPTY);
-	for(; h < 10; h++)
-		Array[i++] = IGraphics::CQuadItem(x+h*12,y,12,12);
-	Graphics()->QuadsDrawTL(Array, i);
-
-	// render armor meter
-	h = 0;
-	RenderTools()->SelectSprite(SPRITE_ARMOR_FULL);
-	for(; h < minimum(pCharacter->m_Armor, 10); h++)
-		Array[h] = IGraphics::CQuadItem(x+h*12,y+12,12,12);
-	Graphics()->QuadsDrawTL(Array, h);
-
-	i = 0;
-	RenderTools()->SelectSprite(SPRITE_ARMOR_EMPTY);
-	for(; h < 10; h++)
-		Array[i++] = IGraphics::CQuadItem(x+h*12,y+12,12,12);
-	Graphics()->QuadsDrawTL(Array, i);
+	// render breath bubbles
+	if (pCharacter->m_BreathBubbles > -1)
+	{
+		int h = 0;
+		RenderTools()->SelectSprite(SPRITE_BUBBLE);
+		for (; h < minimum(pCharacter->m_BreathBubbles, 10); h++)
+			Array[h] = IGraphics::CQuadItem(x + h * 12, y + OffSet, 12, 12);
+		Graphics()->QuadsDrawTL(Array, h);
+		OffSet += 12;
+	}
+	if (pCharacter->m_DivingGear && !Config()->m_ClShowDivingGear)
+	{
+		OffSet += 12;
+		RenderDivingGear(x+12, y + OffSet);
+		OffSet += 12;
+	}
 	Graphics()->QuadsEnd();
 	Graphics()->WrapNormal();
+}
+
+void CHud::RenderDivingGear(float x, float y)
+{
+	IGraphics::CQuadItem Item(x, y, 18, 18);
+	Graphics()->QuadsEnd();
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_DIVING_GEAR].m_Id);
+	Graphics()->QuadsBegin();
+	RenderTools()->SelectSprite(SPRITE_DIVING_GEAR);
+	Graphics()->QuadsDraw(&Item, 1);
+	Graphics()->QuadsEnd();
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+	Graphics()->QuadsBegin();
 }
 
 void CHud::RenderSpectatorHud()

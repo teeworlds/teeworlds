@@ -16,7 +16,7 @@ CGameControllerCTF::CGameControllerCTF(CGameContext *pGameServer)
 	// game
 	m_apFlags[0] = 0;
 	m_apFlags[1] = 0;
-	m_pGameType = "CTF";
+	m_pGameType = "CTFw";
 	m_GameFlags = GAMEFLAG_TEAMS|GAMEFLAG_FLAGS;
 }
 
@@ -126,7 +126,9 @@ void CGameControllerCTF::Snap(int SnappingClient)
 	pGameDataFlag->m_FlagDropTickRed = 0;
 	if(m_apFlags[TEAM_RED])
 	{
-		if(m_apFlags[TEAM_RED]->IsAtStand())
+		if(m_apFlags[TEAM_RED]->m_pHarpoon)
+			pGameDataFlag->m_FlagCarrierRed = FLAG_HOOKED;
+		else if(m_apFlags[TEAM_RED]->IsAtStand())
 			pGameDataFlag->m_FlagCarrierRed = FLAG_ATSTAND;
 		else if(m_apFlags[TEAM_RED]->GetCarrier() && m_apFlags[TEAM_RED]->GetCarrier()->GetPlayer())
 			pGameDataFlag->m_FlagCarrierRed = m_apFlags[TEAM_RED]->GetCarrier()->GetPlayer()->GetCID();
@@ -141,7 +143,9 @@ void CGameControllerCTF::Snap(int SnappingClient)
 	pGameDataFlag->m_FlagDropTickBlue = 0;
 	if(m_apFlags[TEAM_BLUE])
 	{
-		if(m_apFlags[TEAM_BLUE]->IsAtStand())
+		if (m_apFlags[TEAM_BLUE]->m_pHarpoon)
+			pGameDataFlag->m_FlagCarrierBlue = FLAG_HOOKED;
+		else if(m_apFlags[TEAM_BLUE]->IsAtStand())
 			pGameDataFlag->m_FlagCarrierBlue = FLAG_ATSTAND;
 		else if(m_apFlags[TEAM_BLUE]->GetCarrier() && m_apFlags[TEAM_BLUE]->GetCarrier()->GetPlayer())
 			pGameDataFlag->m_FlagCarrierBlue = m_apFlags[TEAM_BLUE]->GetCarrier()->GetPlayer()->GetCID();

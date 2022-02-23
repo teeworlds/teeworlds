@@ -40,6 +40,7 @@ private:
 	float m_Force;
 	int m_StartTick;
 	bool m_Explosive;
+	int m_Water;
 };
 
 #endif
