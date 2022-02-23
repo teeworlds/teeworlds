@@ -4222,6 +4222,7 @@ void CEditorMap::Clean()
 
 	m_pGameLayer = 0x0;
 	m_pMaterialLayer = 0x0;
+	m_pWaterLayer = 0x0;
 	m_pGameGroup = 0x0;
 
 	m_Modified = false;
@@ -4275,6 +4276,7 @@ void CEditor::Init()
 	m_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 	m_MaterialTexture = Graphics()->LoadTexture("editor/materials.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_WaterTexture = Graphics()->LoadTexture("editor/water.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();

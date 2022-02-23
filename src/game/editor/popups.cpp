@@ -91,6 +91,23 @@ bool CEditor::PopupGroup(void *pContext, CUIRect View)
 				return true;
 			}
 		}
+		if (!pEditor->m_Map.m_pWaterLayer)
+		{
+			// new water layer
+			View.HSplitBottom(5.0f, &View, &Button);
+			View.HSplitBottom(12.0f, &View, &Button);
+			static int s_NewWaterLayerButton = 0;
+			if(pEditor->DoButton_Editor(&s_NewWaterLayerButton, "Add water layer", 0, &Button, 0, "Creates a new water layer"))
+			{
+				CLayer *l = new CLayerWater(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+				l->m_pEditor = pEditor;
+				pEditor->m_Map.MakeWaterLayer(l);
+				pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+				pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+				pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_Collapse = false;
+				return true;
+			}
+		}
 		// new custom layer
 		View.HSplitBottom(5.0f, &View, &Button);
 		View.HSplitBottom(12.0f, &View, &Button);
@@ -234,7 +251,8 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 			}
 			if(dynamic_cast<CLayerMaterial*>(Layer))
 				pEditor->m_Map.m_pMaterialLayer = 0;
-			//TODO add water
+			if(dynamic_cast<CLayerMaterial*>(Layer))
+				pEditor->m_Map.m_pWaterLayer = 0;
 		}
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return true;

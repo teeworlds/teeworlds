@@ -9,6 +9,10 @@ CLayerWater::CLayerWater(int w, int h)
 {
 	str_copy(m_aName, LAYERNAME_WATER, sizeof(m_aName));
 	m_Flags = LAYERFLAG_OPERATIONAL|LAYERFLAG_CUSTOM_GAMELAYER;
+	m_Color.r = 0;
+	m_Color.g = 162;
+	m_Color.b = 255;
+	m_Color.a = 64;
 }
 
 CLayerWater::~CLayerWater()
