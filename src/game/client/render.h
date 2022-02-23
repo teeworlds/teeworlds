@@ -34,6 +34,7 @@ public:
 	IGraphics::CTextureHandle m_aTextures[NUM_SKINPARTS];
 	IGraphics::CTextureHandle m_HatTexture;
 	IGraphics::CTextureHandle m_BotTexture;
+	IGraphics::CTextureHandle m_DivingGearTexture;
 	int m_HatSpriteIndex;
 	vec4 m_BotColor;
 	vec4 m_aColors[NUM_SKINPARTS];
@@ -64,10 +65,13 @@ public:
 	void RenderTee(class CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
 	void RenderTeeHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset);
 
-	// map render methods (render_map.cpp)
+	void RenderRope(vec2 WeaponPos, vec2 SpearPos, int Thickness);
+
+	// map render methods (gc_render_map.cpp)
 	static void RenderEvalEnvelope(const CEnvPoint *pPoints, int NumPoints, int Channels, float Time, float *pResult);
 	void RenderQuads(const CQuad *pQuads, int NumQuads, int Flags, ENVELOPE_EVAL pfnEval, void *pUser);
 	void RenderTilemap(const CTile *pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void *pUser, int ColorEnv, int ColorEnvOffset);
+	void RenderWaterMap(const CTile* pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags, ENVELOPE_EVAL pfnEval, void* pUser, int ColorEnv, int ColorEnvOffset, int Tick);
 
 	// helpers
 	void MapScreenToWorld(float CenterX, float CenterY, float ParallaxX, float ParallaxY,

@@ -21,6 +21,7 @@ CControls::CControls()
 void CControls::OnReset()
 {
 	m_LastData.m_Direction = 0;
+	m_LastData.m_DirectionVertical = 0;
 	m_LastData.m_Hook = 0;
 	// simulate releasing the fire button
 	if((m_LastData.m_Fire&1) != 0)
@@ -83,6 +84,8 @@ void CControls::OnConsoleInit()
 	// game commands
 	Console()->Register("+left", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputDirectionLeft, "Move left");
 	Console()->Register("+right", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputDirectionRight, "Move right");
+	Console()->Register("+up", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputDirectionUp, "Move up");
+	Console()->Register("+down", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputDirectionDown, "Move down");
 	Console()->Register("+jump", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputData.m_Jump, "Jump");
 	Console()->Register("+hook", "", CFGFLAG_CLIENT, ConKeyInputState, &m_InputData.m_Hook, "Hook");
 	Console()->Register("+fire", "", CFGFLAG_CLIENT, ConKeyInputCounter, &m_InputData.m_Fire, "Fire");
@@ -92,6 +95,7 @@ void CControls::OnConsoleInit()
 	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 3}; Console()->Register("+weapon3", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to shotgun"); }
 	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 4}; Console()->Register("+weapon4", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to grenade"); }
 	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 5}; Console()->Register("+weapon5", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to laser"); }
+	{ static CInputSet s_Set = {this, &m_InputData.m_WantedWeapon, 6}; Console()->Register("+weapon6", "", CFGFLAG_CLIENT, ConKeyInputSet, (void *)&s_Set, "Switch to harpoon"); }
 
 	{ static CInputSet s_Set = {this, &m_InputData.m_NextWeapon, 0}; Console()->Register("+nextweapon", "", CFGFLAG_CLIENT, ConKeyInputNextPrevWeapon, (void *)&s_Set, "Switch to next weapon"); }
 	{ static CInputSet s_Set = {this, &m_InputData.m_PrevWeapon, 0}; Console()->Register("+prevweapon", "", CFGFLAG_CLIENT, ConKeyInputNextPrevWeapon, (void *)&s_Set, "Switch to previous weapon"); }
@@ -154,6 +158,12 @@ int CControls::SnapInput(int *pData)
 		if(!m_InputDirectionLeft && m_InputDirectionRight)
 			m_InputData.m_Direction = 1;
 
+		m_InputData.m_DirectionVertical = 0;
+		if (!m_InputDirectionUp && m_InputDirectionDown)
+			m_InputData.m_DirectionVertical = 1;
+		if (m_InputDirectionUp && !m_InputDirectionDown)
+			m_InputData.m_DirectionVertical = -1;
+
 		// stress testing
 		if(Config()->m_DbgStress)
 		{
@@ -161,6 +171,7 @@ int CControls::SnapInput(int *pData)
 			mem_zero(&m_InputData, sizeof(m_InputData));
 
 			m_InputData.m_Direction = ((int)t/2)%3-1;
+			m_InputData.m_DirectionVertical = ((int)t / 4) % 3 - 1;
 			m_InputData.m_Jump = ((int)t)&1;
 			m_InputData.m_Fire = ((int)(t*10));
 			m_InputData.m_Hook = ((int)(t*2))&1;
@@ -171,6 +182,7 @@ int CControls::SnapInput(int *pData)
 
 		// check if we need to send input
 		if(m_InputData.m_Direction != m_LastData.m_Direction) Send = true;
+		else if(m_InputData.m_DirectionVertical != m_LastData.m_DirectionVertical) Send = true;
 		else if(m_InputData.m_Jump != m_LastData.m_Jump) Send = true;
 		else if(m_InputData.m_Fire != m_LastData.m_Fire) Send = true;
 		else if(m_InputData.m_Hook != m_LastData.m_Hook) Send = true;

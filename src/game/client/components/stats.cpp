@@ -263,22 +263,24 @@ void CStats::OnRender()
 
 	// sprite headers now
 	if(Config()->m_ClStatboardInfos & TC_STATS_WEAPS)
-	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
-		Graphics()->QuadsBegin();
+	{	
 		for(i=0; i<NUM_WEAPONS; i++)
 		{
 			if(!aDisplayWeapon[i])
 				continue;
 
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+
+			Graphics()->QuadsBegin();
 			RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[i].m_pSpriteBody);
 			if(i == 0)
 				RenderTools()->DrawSprite(x+px-40, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize*0.8);
 			else
 				RenderTools()->DrawSprite(x+px-40, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize);
 			px += 80;
+			Graphics()->QuadsEnd();
 		}
-		Graphics()->QuadsEnd();
+		
 		if(!NoDisplayedWeapon)
 			px += 10;
 	}
@@ -468,7 +470,7 @@ void CStats::OnRender()
 			CUIRect Rect = {x + StartX, y+0.3f*LineHeight, 0.0f, BarHeight};
 			for(i=0; i<NUM_WEAPONS; i++)
 			{
-				extern int _dummy[(int)(NUM_WEAPONS == 6)]; (void)_dummy; // static assert that there are 6 weapons
+				extern int _dummy[(int)(NUM_WEAPONS == 7)]; (void)_dummy; // static assert that there are 6 weapons
 				static const vec4 Colors[NUM_WEAPONS] =
 				{
 					// crosshair colors

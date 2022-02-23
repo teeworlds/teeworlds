@@ -5,6 +5,8 @@
 #include <engine/graphics.h>
 
 #include "render.h"
+#include <generated/client_data.h>
+#include <engine/shared/config.h>
 
 void ValidateFCurve(const vec2& p0, vec2& p1, vec2& p2, const vec2& p3)
 {
@@ -345,7 +347,6 @@ void CRenderTools::RenderTilemap(const CTile *pTiles, int w, int h, float Scale,
 		b = aChannels[2];
 		a = aChannels[3];
 	}
-
 	Graphics()->QuadsBegin();
 	const float Alpha = Color.a*a;
 	Graphics()->SetColor(Color.r*r*Alpha, Color.g*g*Alpha, Color.b*b*Alpha, Alpha);
@@ -414,6 +415,152 @@ void CRenderTools::RenderTilemap(const CTile *pTiles, int w, int h, float Scale,
 					float x3 = 0;
 					float y3 = 1;
 
+					if (Flags & TILEFLAG_VFLIP)
+					{
+						x0 = x2;
+						x1 = x3;
+						x2 = x3;
+						x3 = x0;
+					}
+
+					if (Flags & TILEFLAG_HFLIP)
+					{
+						y0 = y3;
+						y2 = y1;
+						y3 = y1;
+						y1 = y0;
+					}
+
+					if (Flags & TILEFLAG_ROTATE)
+					{
+						float Tmp = x0;
+						x0 = x3;
+						x3 = x2;
+						x2 = x1;
+						x1 = Tmp;
+						Tmp = y0;
+						y0 = y3;
+						y3 = y2;
+						y2 = y1;
+						y1 = Tmp;
+					}
+
+					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3, Index);
+					IGraphics::CQuadItem QuadItem(x*Scale, y*Scale, Scale, Scale);
+					Graphics()->QuadsDrawTL(&QuadItem, 1);
+				}
+			}
+			x += pTiles[c].m_Skip;
+		}
+
+	Graphics()->QuadsEnd();
+}
+void CRenderTools::RenderWaterMap(const CTile* pTiles, int w, int h, float Scale, vec4 Color, int RenderFlags,
+	ENVELOPE_EVAL pfnEval, void* pUser, int ColorEnv, int ColorEnvOffset, int Tick)
+{
+	float ScreenX0, ScreenY0, ScreenX1, ScreenY1;
+	Graphics()->TextureClear();
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_WATER].m_Id);
+	Graphics()->GetScreen(&ScreenX0, &ScreenY0, &ScreenX1, &ScreenY1);
+
+	float r = 1, g = 1, b = 1, a = 1;
+	if (ColorEnv >= 0)
+	{
+		float aChannels[4];
+		pfnEval(ColorEnvOffset / 1000.0f, ColorEnv, aChannels, pUser);
+		r = aChannels[0];
+		g = aChannels[1];
+		b = aChannels[2];
+		a = aChannels[3];
+	}
+
+	Graphics()->QuadsBegin();
+	const float Alpha = Color.a * a;
+	Graphics()->SetColor(Color.r * r * Alpha, Color.g * g * Alpha, Color.b * b * Alpha, Alpha);
+
+	int StartY = (int)(ScreenY0 / Scale) - 1;
+	int StartX = (int)(ScreenX0 / Scale) - 1;
+	int EndY = (int)(ScreenY1 / Scale) + 1;
+	int EndX = (int)(ScreenX1 / Scale) + 1;
+
+	for (int y = StartY; y < EndY; y++)
+		for (int x = StartX; x < EndX; x++)
+		{
+			int mx = x;
+			int my = y;
+
+			if (RenderFlags & TILERENDERFLAG_EXTEND)
+			{
+				if (mx < 0)
+					mx = 0;
+				if (mx >= w)
+					mx = w - 1;
+				if (my < 0)
+					my = 0;
+				if (my >= h)
+					my = h - 1;
+			}
+			else
+			{
+				if (mx < 0)
+					continue; // mx = 0;
+				if (mx >= w)
+					continue; // mx = w-1;
+				if (my < 0)
+					continue; // my = 0;
+				if (my >= h)
+					continue; // my = h-1;
+			}
+
+			int c = mx + my * w;
+			int TileUnder = mx + (my - 1) * w;
+			unsigned char Index = pTiles[c].m_Index;
+			bool Full = false;
+			if (TileUnder>=0&&pTiles[TileUnder].m_Index)
+			{
+				Full = true;
+			}
+			if (Index)
+			{
+				bool Render = true;
+				/*if (Flags & TILEFLAG_OPAQUE && Color.a * a > 254.0f / 255.0f)
+				{
+					if (RenderFlags & LAYERRENDERFLAG_OPAQUE)
+						Render = true;
+				}
+				else
+				{
+					if (RenderFlags & LAYERRENDERFLAG_TRANSPARENT)
+						Render = true;
+				}*/
+
+				if (Render)
+				{
+					if(Full)
+					{
+						SelectSprite(SPRITE_WATER30);
+					}
+					else
+					{
+						SelectSprite(SPRITE_WATER20);
+						if (!m_pConfig->m_GfxAnimateWater)
+						{
+							int Tick2 = Tick/4;
+							int Sprite = x % 2 ? SPRITE_WATER10 : SPRITE_WATER00;
+							Sprite += Tick2;
+							SelectSprite(Sprite);
+						}
+					}
+					
+					/*float x0 = 0;
+					float y0 = 0;
+					float x1 = 1;
+					float y1 = 0;
+					float x2 = 1;
+					float y2 = 1;
+					float x3 = 0;
+					float y3 = 1;
+
 					if(Flags&TILEFLAG_VFLIP)
 					{
 						x0 = x2;
@@ -442,10 +589,11 @@ void CRenderTools::RenderTilemap(const CTile *pTiles, int w, int h, float Scale,
 						y3 = y2;
 						y2 = y1;
 						y1 = Tmp;
-					}
+					}*/
 
-					Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3, Index);
-					IGraphics::CQuadItem QuadItem(x*Scale, y*Scale, Scale, Scale);
+					//Graphics()->QuadsSetSubsetFree(x0, y0, x1, y1, x2, y2, x3, y3, Index);
+					
+					IGraphics::CQuadItem QuadItem(x * Scale, y * Scale, Scale, Scale);
 					Graphics()->QuadsDrawTL(&QuadItem, 1);
 				}
 			}
@@ -453,4 +601,5 @@ void CRenderTools::RenderTilemap(const CTile *pTiles, int w, int h, float Scale,
 		}
 
 	Graphics()->QuadsEnd();
+	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }

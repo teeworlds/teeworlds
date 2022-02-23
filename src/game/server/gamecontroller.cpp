@@ -295,10 +295,17 @@ bool IGameController::OnEntity(int Index, vec2 Pos)
 	case ENTITY_WEAPON_LASER:
 		Type = PICKUP_LASER;
 		break;
+	case ENTITY_WEAPON_HARPOON:
+		Type = PICKUP_HARPOON;
+		break;
+	case ENTITY_PICKUP_DIVING:
+		Type = PICKUP_DIVING;
+		break;
 	case ENTITY_POWERUP_NINJA:
-		if(Config()->m_SvPowerups)
+		if (Config()->m_SvPowerups)
 			Type = PICKUP_NINJA;
 	}
+
 
 	if(Type != -1)
 	{

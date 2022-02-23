@@ -138,7 +138,13 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 				Item.m_Width = pLayer->m_Width;
 				Item.m_Height = pLayer->m_Height;
-				Item.m_Flags = pLayer->m_Game ? TILESLAYERFLAG_GAME : 0;
+
+				// set ITEM flags, this are not layer flags
+				Item.m_Flags = 0;
+				if(pLayer->m_Game)
+					Item.m_Flags |= TILESLAYERFLAG_GAME;
+				else if(pLayer->m_Flags&LAYERFLAG_OPERATIONAL)
+					Item.m_Flags |= TILESLAYERFLAG_OTHER;
 				Item.m_Image = pLayer->m_Image;
 				Item.m_Data = df.AddData(pLayer->m_SaveTilesSize, pLayer->m_pSaveTiles);
 
@@ -394,11 +400,40 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 
 						if(pTilemapItem->m_Flags&TILESLAYERFLAG_GAME)
 						{
-							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
-							MakeGameLayer(pTiles);
-							MakeGameGroup(pGroup);
+							if(MakeGameGroup(pGroup))
+							{
+								pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
+								MakeGameLayer(pTiles);
+							}
 						}
-						else
+						else if(pTilemapItem->m_Flags != 0)  // detect any flagged gametiles
+						{
+							if(MakeGameGroup(pGroup))  // only add gamelayers in gamegroup
+							{
+								char name_buf[12];
+								IntsToStr(pTilemapItem->m_aName, sizeof(name_buf)/sizeof(int), name_buf);
+								if(str_comp_nocase(name_buf, LAYERNAME_MATERIAL) == 0)
+								{
+									pTiles = new CLayerMaterial(pTilemapItem->m_Width, pTilemapItem->m_Height);
+									MakeMaterialLayer(pTiles);
+								}
+								else if(str_comp_nocase(name_buf, LAYERNAME_WATER) == 0)
+								{
+									pTiles = new CLayerWater(pTilemapItem->m_Width, pTilemapItem->m_Height);
+									MakeWaterLayer(pTiles);
+								}
+								else
+								{
+									pTiles = new CLayerCustom(pTilemapItem->m_Width, pTilemapItem->m_Height);
+									MakeCustomLayer(pTiles);
+									pTiles->m_Color = pTilemapItem->m_Color;
+									pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
+									pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
+								}
+							}
+						}
+
+						if(!pTiles)
 						{
 							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
 							pTiles->m_pEditor = m_pEditor;
@@ -458,7 +493,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					}
 
 					if(pLayer)
-						pLayer->m_Flags = pLayerItem->m_Flags;
+						pLayer->m_Flags |= pLayerItem->m_Flags;
 				}
 			}
 		}

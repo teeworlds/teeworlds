@@ -338,6 +338,26 @@ void CSkins::OnInit()
 		}
 	}
 	m_pClient->m_pMenus->RenderLoading(1);
+
+	{
+		// add diving gear
+		const char* pFileName = "skins/diving_gear.png";
+		CImageInfo Info;
+		if (!Graphics()->LoadPNG(&Info, pFileName, IStorage::TYPE_ALL) || Info.m_Width != 120 || Info.m_Height != 120)
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "failed to load diving gear '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		}
+		else
+		{
+			char aBuf[128];
+			str_format(aBuf, sizeof(aBuf), "loaded diving gear '%s'", pFileName);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+			m_DivingGearTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
+		}
+	}
+	m_pClient->m_pMenus->RenderLoading(1);
 }
 
 void CSkins::AddSkin(const char *pSkinName)

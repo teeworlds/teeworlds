@@ -54,6 +54,7 @@ public:
 	static int *ms_apColorVariables[NUM_SKINPARTS];
 	IGraphics::CTextureHandle m_XmasHatTexture;
 	IGraphics::CTextureHandle m_BotTexture;
+	IGraphics::CTextureHandle m_DivingGearTexture;
 
 	int GetInitAmount() const;
 	void OnInit();

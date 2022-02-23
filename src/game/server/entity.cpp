@@ -4,6 +4,7 @@
 #include "entity.h"
 #include "gamecontext.h"
 #include "player.h"
+#include "game/collision.h"
 
 CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, vec2 Pos, int ProximityRadius)
 {
@@ -18,7 +19,10 @@ CEntity::CEntity(CGameWorld *pGameWorld, int ObjType, vec2 Pos, int ProximityRad
 	m_ProximityRadius = ProximityRadius;
 
 	m_MarkedForDestroy = false;
+	m_MarkForHarpoonDeallocation = false;
 	m_Pos = Pos;
+
+	m_HarpoonVel = vec2(0,0);
 }
 
 CEntity::~CEntity()
@@ -54,4 +58,33 @@ bool CEntity::GameLayerClipped(vec2 CheckPos)
 	int ry = round_to_int(CheckPos.y) / 32;
 	return (rx < -200 || rx >= GameServer()->Collision()->GetWidth()+200)
 			|| (ry < -200 || ry >= GameServer()->Collision()->GetHeight()+200);
+}
+
+void CEntity::ApplyHarpoonDrag()
+{
+	vec2 NewPos = m_Pos;
+	GameServer()->Collision()->MoveBox(&NewPos, &m_HarpoonVel, vec2(6.0f, 6.0f), 0, 0);
+
+	m_Pos = NewPos;
+
+	m_HarpoonVel = vec2(0, 0);
+}
+
+void CEntity::ApplyHarpoonVel(vec2 Vel)
+{
+	Vel *= GameServer()->Tuning()->m_HarpoonEntityMultiplier;
+	float DragSpeed = GameServer()->Tuning()->m_HarpoonEntityDragSpeed;
+	float MinimumSpeed = GameServer()->Tuning()->m_HarpoonEntityMinSpeed;
+	if (length(Vel) < MinimumSpeed)
+	{
+		Vel = normalize(Vel);
+		Vel *= MinimumSpeed;
+	}
+	m_HarpoonVel.x += clamp(Vel.x, -DragSpeed, DragSpeed);
+	m_HarpoonVel.y += clamp(Vel.y, -DragSpeed, DragSpeed);
+}
+
+bool CEntity::IsValidForHarpoon(CHarpoon* pHarpoon)
+{
+	return true;
 }

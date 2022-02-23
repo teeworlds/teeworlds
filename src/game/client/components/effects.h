@@ -17,12 +17,14 @@ public:
 	void AirJump(vec2 Pos);
 	void DamageIndicator(vec2 Pos, int Amount, float Angle, int ClientID);
 	void PowerupShine(vec2 Pos, vec2 Size);
+	void WaterBubble(vec2 Pos);
 	void SmokeTrail(vec2 Pos, vec2 Vel);
 	void SkidTrail(vec2 Pos, vec2 Vel);
+	void Droplet(vec2 Pos, vec2 Vel);
 	void BulletTrail(vec2 Pos);
 	void PlayerSpawn(vec2 Pos);
 	void PlayerDeath(vec2 Pos, int ClientID);
-	void Explosion(vec2 Pos);
+	void Explosion(vec2 Pos, float Radius=1);
 	void HammerHit(vec2 Pos);
 
 	virtual void OnRender();

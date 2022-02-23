@@ -28,6 +28,7 @@ static CKeyInfo gs_aKeys[] =
 	{ "Shotgun", "+weapon3", 0, 0},
 	{ "Grenade", "+weapon4", 0, 0},
 	{ "Laser", "+weapon5", 0, 0},
+	{ "Harpoon", "+weapon6", 0, 0},
 	{ "Next weapon", "+nextweapon", 0, 0},
 	{ "Prev. weapon", "+prevweapon", 0, 0},
 	
@@ -53,6 +54,9 @@ static CKeyInfo gs_aKeys[] =
 	{ "Add demo marker", "add_demomarker", 0, 0},
 	{ "Toggle sounds", "snd_toggle", 0, 0},
 	{ "Toggle dynamic camera", "toggle cl_dynamic_camera 1 0", 0, 0},
+
+	{ "Dive", "+down", 0, 0},
+	{ "Surface", "+up", 0, 0},
 };
 
 /*	This is for scripts/update_localization.py to work, don't remove!
@@ -367,7 +371,7 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View)
 {
 	UpdateBindKeys(m_pClient->m_pBinds);
 
-	int NumOptions = 12;
+	int NumOptions = 13;
 	int StartOption = 20;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
@@ -377,6 +381,24 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View)
 	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_B);
 
 	DoSettingsControlsButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spacing);
+
+	return BackgroundHeight;
+}
+
+float CMenus::RenderSettingsControlsWater(CUIRect View)
+{
+	UpdateBindKeys(m_pClient->m_pBinds);
+
+	int NumOptions = 2;
+	int StartOption = 33;
+	float ButtonHeight = 20.0f;
+	float Spacing = 2.0f;
+	float BackgroundHeight = (float)NumOptions * ButtonHeight + (float)NumOptions * Spacing;
+
+	View.HSplitTop(BackgroundHeight, &View, 0);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), CUIRect::CORNER_B, 5.0f);
+
+	DoSettingsControlsButtons(StartOption, StartOption + NumOptions, View, ButtonHeight, Spacing);
 
 	return BackgroundHeight;
 }

@@ -47,6 +47,7 @@ class CGameClient : public IGameClient
 	class IEditor *m_pEditor;
 	class IFriends *m_pFriends;
 	class IBlacklist *m_pBlacklist;
+	class CPlayers *m_pPlayerRender;
 
 	CLayers m_Layers;
 	class CCollision m_Collision;
@@ -76,6 +77,7 @@ class CGameClient : public IGameClient
 	void LoadFonts();
 
 public:
+	static void WaterSplash(float x, float y, float Force);
 	IKernel *Kernel() { return IInterface::Kernel(); }
 	IEngine *Engine() const { return m_pEngine; }
 	class IGraphics *Graphics() const { return m_pGraphics; }
@@ -139,6 +141,7 @@ public:
 
 	vec2 GetCharPos(int ClientID, bool Predicted = false) const;
 
+	vec2 GetHarpoonAlignment(vec2 WeaponPos, float Angle) const;
 	// ---
 
 	struct CPlayerInfoItem
@@ -167,6 +170,8 @@ public:
 
 		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
 		const CNetObj_PlayerInfoRace *m_paPlayerInfosRace[MAX_CLIENTS];
+		const CNetObj_HarpoonDragPlayer* m_paHarpoonDragData[64];
+		int HarpoonDragCount;
 		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
 
 		// spectate data
@@ -321,6 +326,7 @@ public:
 	class CGameConsole *m_pGameConsole;
 	class CBinds *m_pBinds;
 	class CBroadcast *m_pBroadcast;
+	class CWater* m_pWater;
 	class CParticles *m_pParticles;
 	class CMenus *m_pMenus;
 	class CSkins *m_pSkins;

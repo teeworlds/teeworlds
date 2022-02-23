@@ -41,6 +41,8 @@ enum
 	ENTITY_WEAPON_GRENADE,
 	ENTITY_POWERUP_NINJA,
 	ENTITY_WEAPON_LASER,
+	ENTITY_WEAPON_HARPOON,
+	ENTITY_PICKUP_DIVING,
 	NUM_ENTITIES,
 
 	TILE_AIR=0,
@@ -54,10 +56,25 @@ enum
 	TILEFLAG_ROTATE=8,
 
 	LAYERFLAG_DETAIL=1,
+	LAYERFLAG_OPERATIONAL=2,
+	LAYERFLAG_CUSTOM_GAMELAYER=4,
+
 	TILESLAYERFLAG_GAME=1,
+	TILESLAYERFLAG_OTHER=64,  // A dummy flag for ALL FUTURE tilelayers. You need to define the layer name in order to derive what it is
+
+	//material layer tiles
+	MAT_DEFAULT=0, // default doesn't mean air!
+	MAT_ICE,
+	MAT_SAND,
+	//TODO wadd water
 
 	ENTITY_OFFSET=255-16*4,
 };
+
+// layer names
+#define LAYERNAME_GAME "Game"
+#define LAYERNAME_MATERIAL "Material"
+#define LAYERNAME_WATER "Water"
 
 struct CPoint
 {

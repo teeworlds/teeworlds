@@ -22,6 +22,7 @@ private:
 public:
 	/* Constants */
 	static int const ms_PhysSize = 14;
+	CHarpoon* m_pHarpoon;
 
 	/* Constructor */
 	CFlag(CGameWorld *pGameWorld, int Team, vec2 StandPos);
@@ -30,6 +31,9 @@ public:
 	int GetTeam() const				{ return m_Team; }
 	bool IsAtStand() const			{ return m_AtStand; }
 	CCharacter *GetCarrier() const	{ return m_pCarrier; }
+	void DeallocateHarpoon();
+	void AllocateHarpoon(CHarpoon* pHarpoon);
+	virtual bool IsValidForHarpoon(CHarpoon* pHarpoon);
 	int GetGrabTick() const			{ return m_GrabTick; }
 	int GetDropTick() const			{ return m_DropTick; }
 
@@ -38,6 +42,8 @@ public:
 	virtual void TickPaused();
 	virtual void Snap(int SnappingClient);
 	virtual void TickDefered();
+	virtual void ApplyHarpoonVel(vec2 Vel);
+	virtual void ApplyHarpoonDrag();
 
 	/* Functions */
 	void Grab(class CCharacter *pChar);
