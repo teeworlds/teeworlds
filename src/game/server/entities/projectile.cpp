@@ -86,7 +86,7 @@ vec2 CProjectile::GetPos(float Time)
 		
 	else
 		ReturnPos = CalcPos(m_Pos, m_Direction, Curvature, Speed, Time);
-	if ((m_Water<=0)&&GameServer()->Collision()->TestBox(vec2(ReturnPos.x, ReturnPos.y), vec2(6.0f, 6.0f), 8))
+	if ((m_Water<=0)&&GameServer()->Collision()->TestBoxWater(vec2(ReturnPos.x, ReturnPos.y), vec2(6.0f, 6.0f)))
 	{
 		m_Pos.x = ReturnPos.x;
 		m_Pos.y = ReturnPos.y;
@@ -94,7 +94,7 @@ vec2 CProjectile::GetPos(float Time)
 		m_StartTick = Server()->Tick();
 		m_Water = 1;
 	}
-	else if (m_Water>0 && GameServer()->Tuning()->m_LiquidSlowProjectilesAfterWater&& !GameServer()->Collision()->TestBox(vec2(ReturnPos.x, ReturnPos.y), vec2(6.0f, 6.0f), 8))
+	else if (m_Water>0 && GameServer()->Tuning()->m_LiquidSlowProjectilesAfterWater&& !GameServer()->Collision()->TestBoxWater(vec2(ReturnPos.x, ReturnPos.y), vec2(6.0f, 6.0f)))
 	{
 		m_Pos.x = ReturnPos.x;
 		m_Pos.y = ReturnPos.y;
@@ -114,7 +114,7 @@ void CProjectile::Tick()
 	float Ct = (Server()->Tick()-m_StartTick)/(float)Server()->TickSpeed();
 	vec2 PrevPos = GetPos(Pt);
 	vec2 CurPos = GetPos(Ct);
-	IsInWater = GameServer()->Collision()->TestBox(vec2(PrevPos.x, PrevPos.y), vec2(6.0f, 6.0f), 8);
+	IsInWater = GameServer()->Collision()->TestBoxWater(vec2(PrevPos.x, PrevPos.y), vec2(6.0f, 6.0f));
 	int Collide = GameServer()->Collision()->IntersectLine(PrevPos, CurPos, &CurPos, 0);
 	CCharacter *OwnerChar = GameServer()->GetPlayerChar(m_Owner);
 	CCharacter *TargetChr = GameWorld()->IntersectCharacter(PrevPos, CurPos, 6.0f, CurPos, OwnerChar);

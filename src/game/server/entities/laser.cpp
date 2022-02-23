@@ -46,7 +46,7 @@ void CLaser::DoBounce()
 	int CheckFor;
 	float Elasticity;
 	float EnergyMultiplier = 1;
-	if (GameServer()->Collision()->TestBox(m_Pos, vec2(0.0f, 0.0f), 8))
+	if (GameServer()->Collision()->TestBoxWater(m_Pos, vec2(0.0f, 0.0f)))
 	{
 		CheckFor = 0;
 		EnergyMultiplier = GameServer()->Tuning()->m_LaserWaterReachMultiplier;

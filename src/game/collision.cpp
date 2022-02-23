@@ -74,7 +74,7 @@ int CCollision::GetMaterial(float x, float y, int Flag) const
 {
 	int Xi = round_to_int(x);
 	int Yi = round_to_int(y);
-	if(this->IsTile(Xi, Yi, Flag)) {
+	if(this->IsTile(Xi, Yi, Flag) && m_pLayers->HasMaterialLayer()) {
 		int Width = m_pLayers->MaterialLayer()->m_Width;
 		int Height = m_pLayers->MaterialLayer()->m_Height;
 		int Nx = clamp(Xi/32, 0, Width-1);
@@ -89,9 +89,9 @@ int CCollision::GetWater(float x, float y) const
 {
 	int Xi = round_to_int(x);
 	int Yi = round_to_int(y);
-	if(!IsTile(Xi, Yi, COLFLAG_SOLID)) {
-		int Width = m_pLayers->MaterialLayer()->m_Width;
-		int Height = m_pLayers->MaterialLayer()->m_Height;
+	if(!IsTile(Xi, Yi, COLFLAG_SOLID) && m_pLayers->HasWaterLayer()) {
+		int Width = m_pLayers->WaterLayer()->m_Width;
+		int Height = m_pLayers->WaterLayer()->m_Height;
 		int Nx = clamp(Xi/32, 0, Width-1);
 		int Ny = clamp(Yi/32, 0, Height-1);
 

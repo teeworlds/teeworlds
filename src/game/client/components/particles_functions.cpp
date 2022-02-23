@@ -61,7 +61,7 @@ bool CBubbleParticle::OnDeath(CPointers* pPointers)
 
 void CBubbleParticle::OnUpdate(CPointers* pPointers)
 {
-	if (!pPointers->pCollision->TestBox(m_Pos, vec2(1.0f, 1.0f) * (2.0f / 3.0f), 8) && m_Water)
+	if (!pPointers->pCollision->TestBoxWater(m_Pos, vec2(1.0f, 1.0f) * (2.0f / 3.0f)) && m_Water)
 	{
 		m_Water = false;
 		m_LifeSpan = m_Life + 0.025f;

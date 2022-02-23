@@ -50,7 +50,7 @@ void CPickup::Tick()
 			}
 			else
 			{
-				m_Vel.y += GameServer()->Collision()->TestBox(m_Pos, vec2(16.0f, 16.0f), 8) ? -GameWorld()->m_Core.m_Tuning.m_Gravity : GameWorld()->m_Core.m_Tuning.m_Gravity;
+				m_Vel.y += GameServer()->Collision()->TestBoxWater(m_Pos, vec2(16.0f, 16.0f)) ? -GameWorld()->m_Core.m_Tuning.m_Gravity : GameWorld()->m_Core.m_Tuning.m_Gravity;
 				GameServer()->Collision()->MoveWaterBox(&m_Pos, &m_Vel, vec2(16.0f, 16.0f), 0.75f, 0, 0.9f);
 			}
 			

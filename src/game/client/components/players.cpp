@@ -380,11 +380,11 @@ void CPlayers::RenderPlayer(
 	}
 
 	vec2 PreWaterPos = vec2(pPrevChar->m_X, pPrevChar->m_Y);
-	if (Collision()->TestBox(PreWaterPos, vec2(32, 32), CCollision::COLFLAG_WATER) ^ Collision()->TestBox(Position, vec2(32, 32), CCollision::COLFLAG_WATER))
+	if (Collision()->TestBoxWater(PreWaterPos, vec2(32, 32)) ^ Collision()->TestBoxWater(Position, vec2(32, 32)))
 		if (Collision()->IntersectWater(PreWaterPos, Position, &PreWaterPos, vec2(32, 32)))
 			m_pClient->m_pWater->HitWater(PreWaterPos.x, PreWaterPos.y, abs(pPrevChar->m_VelY) / Config()->m_GfxWaveDivider); //trial and erorr
 
-	if (Collision()->TestBox(vec2(Position.x, Position.y), vec2(32, 32 + 1.0f) * (2.0f / 3.0f), CCollision::COLFLAG_WATER) && (!Collision()->TestBox(vec2(Position.x, Position.y - 8.0f), vec2(32, 32) * (2.0f / 3.0f), CCollision::COLFLAG_WATER)))
+	if (Collision()->TestBoxWater(vec2(Position.x, Position.y), vec2(32, 32 + 1.0f) * (2.0f / 3.0f)) && (!Collision()->TestBoxWater(vec2(Position.x, Position.y - 8.0f), vec2(32, 32) * (2.0f / 3.0f))))
 	{
 		float Chance = random_float();
 		if(Chance<0.05)
@@ -392,7 +392,7 @@ void CPlayers::RenderPlayer(
 
 	}
 
-	if (Collision()->TestBox(vec2(Position.x, Position.y), vec2(32, 64), CCollision::COLFLAG_WATER) && (!Collision()->TestBox(vec2(Position.x, Position.y - 8.0f), vec2(32, 32) * (2.0f / 3.0f), CCollision::COLFLAG_WATER)))
+	if (Collision()->TestBoxWater(vec2(Position.x, Position.y), vec2(32, 64)) && (!Collision()->TestBoxWater(vec2(Position.x, Position.y - 8.0f), vec2(32, 32) * (2.0f / 3.0f))))
 	{
 		m_pClient->m_pWater->CreateWave(Position.x, Position.y, Player.m_VelX);
 	}

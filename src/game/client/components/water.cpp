@@ -248,7 +248,7 @@ bool CWater::IsUnderWater(vec2 Pos)
 	}
 	else
 	{
-		return m_pClient->Collision()->TestBox(Pos, vec2(1.0f, 1.0f), 8);
+		return m_pClient->Collision()->TestBoxWater(Pos, vec2(1.0f, 1.0f));
 	}
 }
 
