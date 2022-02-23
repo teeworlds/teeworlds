@@ -909,8 +909,8 @@ set(EXPECTED_DATA
   editor/checker.png
   editor/cursor.png
   editor/entities.png
-  editor/water.png
   editor/materials.png
+  editor/water.png
   emoticons.png
   fonts/DejaVuSans.ttf
   fonts/SourceHanSans.ttc
