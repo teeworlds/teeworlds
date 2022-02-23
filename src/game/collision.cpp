@@ -18,6 +18,7 @@ CCollision::CCollision()
 	m_Width = 0;
 	m_Height = 0;
 	m_pLayers = 0;
+	m_pMaterial = 0;
 }
 
 void CCollision::Init(class CLayers *pLayers)
@@ -26,6 +27,8 @@ void CCollision::Init(class CLayers *pLayers)
 	m_Width = m_pLayers->GameLayer()->m_Width;
 	m_Height = m_pLayers->GameLayer()->m_Height;
 	m_pTiles = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->GameLayer()->m_Data));
+	if(m_pLayers->HasMaterialLayer())
+		m_pMaterial = static_cast<CTile *>(m_pLayers->Map()->GetData(m_pLayers->MaterialLayer()->m_Data));
 
 	for(int i = 0; i < m_Width*m_Height; i++)
 	{
@@ -62,6 +65,21 @@ int CCollision::GetTile(int x, int y) const
 bool CCollision::IsTile(int x, int y, int Flag) const
 {
 	return GetTile(x, y)&Flag;
+}
+
+int CCollision::GetMaterial(float x, float y, int Flag) const
+{
+	int Xi = round_to_int(x);
+	int Yi = round_to_int(y);
+	if(this->IsTile(Xi, Yi, Flag)) {
+		int Width = m_pLayers->MaterialLayer()->m_Width;
+		int Height = m_pLayers->MaterialLayer()->m_Height;
+		int Nx = clamp(Xi/32, 0, Width-1);
+		int Ny = clamp(Yi/32, 0, Height-1);
+
+		return m_pMaterial[Ny*Width+Nx].m_Index > 128 ? 0 : m_pMaterial[Ny*Width+Nx].m_Index;
+	}
+	return MAT_DEFAULT;
 }
 
 // TODO: rewrite this smarter!

@@ -289,9 +289,11 @@ public:
 	bool operator<(const CEditorImage &Other) const { return str_comp(m_aName, Other.m_aName) < 0; }
 };
 
+class CLayerCustom;
+
 class CEditorMap
 {
-	void MakeGameGroup(CLayerGroup *pGroup);
+	bool MakeGameGroup(CLayerGroup *pGroup);
 	void MakeGameLayer(CLayer *pLayer);
 public:
 	CEditor *m_pEditor;
@@ -385,6 +387,12 @@ public:
 	// io
 	int Save(class IStorage *pStorage, const char *pFilename);
 	int Load(class IStorage *pStorage, const char *pFilename, int StorageType);
+
+	// other game layers
+	class CLayerMaterial *m_pMaterialLayer;
+	class array<CLayerCustom*> m_apCustomLayers;
+	void MakeMaterialLayer(CLayer* pLayer);
+	void MakeCustomLayer(CLayer* pLayer);
 };
 
 
@@ -494,6 +502,24 @@ class CLayerGame : public CLayerTiles
 public:
 	CLayerGame(int w, int h);
 	~CLayerGame();
+
+	virtual int RenderProperties(CUIRect *pToolbox);
+};
+
+class CLayerMaterial : public CLayerTiles
+{
+public:
+	CLayerMaterial(int w, int h);
+	~CLayerMaterial();
+
+	virtual int RenderProperties(CUIRect *pToolbox);
+};
+
+class CLayerCustom : public CLayerTiles
+{
+public:
+	CLayerCustom(int w, int h);
+	~CLayerCustom();
 
 	virtual int RenderProperties(CUIRect *pToolbox);
 };
@@ -749,6 +775,7 @@ public:
 	IGraphics::CTextureHandle m_BackgroundTexture;
 	IGraphics::CTextureHandle m_CursorTexture;
 	IGraphics::CTextureHandle m_EntitiesTexture;
+	IGraphics::CTextureHandle m_MaterialTexture;
 
 	CLayerGroup m_Brush;
 	CLayerTiles m_TilesetPicker;
