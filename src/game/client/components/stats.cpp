@@ -130,7 +130,7 @@ void CStats::OnRender()
 		}
 	}
 
-	// don't render scoreboard if menu is open
+	// don't render if menu is open
 	if(m_pClient->m_pMenus->IsActive())
 		return;
 
