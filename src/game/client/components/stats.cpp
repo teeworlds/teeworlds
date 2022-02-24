@@ -283,10 +283,8 @@ void CStats::OnRender()
 				continue;
 
 			RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[i].m_pSpriteBody);
-			if(i == 0)
-				RenderTools()->DrawSprite(x+px-40, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize*0.8);
-			else
-				RenderTools()->DrawSprite(x+px-40, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize);
+			const float SizeFactor = i == WEAPON_HAMMER ? 0.8f : 1.0f;
+			RenderTools()->DrawSprite(x+px-40, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize * SizeFactor);
 			px += 80;
 		}
 		Graphics()->QuadsEnd();
