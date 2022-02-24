@@ -9,8 +9,19 @@
 #include <generated/client_data.h>
 #include "stats.h"
 
+static const vec4 s_aWeaponColors[] =
+{
+	vec4(201/255.0f, 197/255.0f, 205/255.0f, 1.0f),
+	vec4(156/255.0f, 158/255.0f, 100/255.0f, 1.0f),
+	vec4(98/255.0f, 80/255.0f, 46/255.0f, 1.0f),
+	vec4(163/255.0f, 51/255.0f, 56/255.0f, 1.0f),
+	vec4(65/255.0f, 97/255.0f, 161/255.0f, 1.0f),
+	vec4(182/255.0f, 137/255.0f, 40/255.0f, 1.0f),
+};
+
 CStats::CStats()
 {
+	dbg_assert(NUM_WEAPONS == sizeof(s_aWeaponColors) / sizeof(vec4), "Incorrect number of weapon colors");
 	OnReset();
 }
 
@@ -468,22 +479,11 @@ void CStats::OnRender()
 			CUIRect Rect = {x + StartX, y+0.3f*LineHeight, 0.0f, BarHeight};
 			for(i=0; i<NUM_WEAPONS; i++)
 			{
-				extern int _dummy[(int)(NUM_WEAPONS == 6)]; (void)_dummy; // static assert that there are 6 weapons
-				static const vec4 Colors[NUM_WEAPONS] =
-				{
-					// crosshair colors
-					vec4(201/255.0f, 197/255.0f, 205/255.0f, 1.0f),
-					vec4(156/255.0f, 158/255.0f, 100/255.0f, 1.0f),
-					vec4(98/255.0f, 80/255.0f, 46/255.0f, 1.0f),
-					vec4(163/255.0f, 51/255.0f, 56/255.0f, 1.0f),
-					vec4(65/255.0f, 97/255.0f, 161/255.0f, 1.0f),
-					vec4(182/255.0f, 137/255.0f, 40/255.0f, 1.0f),
-				};
 				if(pStats->m_aFragsWith[i])
 				{
 					Rect.w = ExploitableLength * pStats->m_aFragsWith[i] / (float)TotalFrags;
 					Rect.w += RoundSize;
-					Rect.Draw(Colors[i], RoundSize);
+					Rect.Draw(s_aWeaponColors[i], RoundSize);
 					Rect.w -= RoundSize;
 					Rect.x += Rect.w;
 				}
