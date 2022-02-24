@@ -1510,10 +1510,12 @@ float CMenus::RenderSettingsControlsStats(CUIRect View)
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 3, Localize("Ratio"), Config()->m_ClStatboardInfos & TC_STATS_RATIO, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_RATIO;
+	UI()->DoTooltip(s_aCheckboxIds + 3, &Button, Localize("The ratio of frags to deaths."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 4, Localize("Net score"), Config()->m_ClStatboardInfos & TC_STATS_NET, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_NET;
+	UI()->DoTooltip(s_aCheckboxIds + 4, &Button, Localize("The number of frags minus the number of deaths."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 5, Localize("Frags per minute"), Config()->m_ClStatboardInfos & TC_STATS_FPM, &Button))
@@ -1530,14 +1532,17 @@ float CMenus::RenderSettingsControlsStats(CUIRect View)
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 8, Localize("Weapons stats"), Config()->m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_WEAPS;
+	UI()->DoTooltip(s_aCheckboxIds + 8, &Button, Localize("The proportion of frags gotten with each weapon."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 9, Localize("Flag grabs"), Config()->m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FLAGGRABS;
+	UI()->DoTooltip(s_aCheckboxIds + 9, &Button, Localize("The number of times that the flag was touched in CTF (1 point)."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 10, Localize("Flag captures"), Config()->m_ClStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FLAGCAPTURES;
+	UI()->DoTooltip(s_aCheckboxIds + 10, &Button, Localize("The number of times that the flag was captured in CTF (100 points)."));
 
 	return NUM_TC_STATS * RowHeight;
 }
