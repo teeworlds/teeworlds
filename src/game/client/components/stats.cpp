@@ -149,7 +149,7 @@ void CStats::OnRender()
 	float w = 250.0f;
 	float h = 750.0f;
 
-	int apPlayers[MAX_CLIENTS] = {0};
+	int aPlayers[MAX_CLIENTS] = {0};
 	int NumPlayers = 0;
 	int i;
 	for(i=0; i<MAX_CLIENTS; i++)
@@ -159,7 +159,7 @@ void CStats::OnRender()
 		if(m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
 			continue;
 
-		apPlayers[NumPlayers] = i;
+		aPlayers[NumPlayers] = i;
 		NumPlayers++;
 	}
 
@@ -193,7 +193,7 @@ void CStats::OnRender()
 	{
 		for(i=0; i<NumPlayers; i++)
 		{
-			const CPlayerStats *pStats = &m_aStats[apPlayers[i]];
+			const CPlayerStats *pStats = &m_aStats[aPlayers[i]];
 			for(int j=0; j<NUM_WEAPONS; j++)
 				aDisplayWeapon[j] = aDisplayWeapon[j] || pStats->m_aFragsWith[j] || pStats->m_aDeathsFrom[j];
 		}
@@ -330,9 +330,9 @@ void CStats::OnRender()
 			break;
 		}
 
-		const CPlayerStats *pStats = &m_aStats[apPlayers[j]];		
-		const bool HighlightedLine = apPlayers[j] == m_pClient->m_LocalClientID
-			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && apPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
+		const CPlayerStats *pStats = &m_aStats[aPlayers[j]];
+		const bool HighlightedLine = aPlayers[j] == m_pClient->m_LocalClientID
+			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && aPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
 
 		// background so it's easy to find the local player or the followed one in spectator mode
 		if(HighlightedLine)
@@ -341,7 +341,7 @@ void CStats::OnRender()
 			Rect.Draw(vec4(1,1,1,0.25f), 17.0f);
 		}
 
-		CTeeRenderInfo Teeinfo = m_pClient->m_aClients[apPlayers[j]].m_RenderInfo;
+		CTeeRenderInfo Teeinfo = m_pClient->m_aClients[aPlayers[j]].m_RenderInfo;
 		Teeinfo.m_Size *= TeeSizemod;
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &Teeinfo, EMOTE_NORMAL, vec2(1,0), vec2(x+28, y+28+TeeOffset));
 
@@ -350,7 +350,7 @@ void CStats::OnRender()
 		s_Cursor.Reset();
 		s_Cursor.m_MaxWidth = 220;
 		s_Cursor.MoveTo(x+64, y);
-		TextRender()->TextOutlined(&s_Cursor, m_pClient->m_aClients[apPlayers[j]].m_aName, -1);
+		TextRender()->TextOutlined(&s_Cursor, m_pClient->m_aClients[aPlayers[j]].m_aName, -1);
 
 		s_Cursor.m_MaxWidth = -1;
 		s_Cursor.m_Align = TEXTALIGN_RIGHT;
@@ -517,7 +517,7 @@ void CStats::OnRender()
 				for(int n = 0; n < DisplayedFlagsCount; n++)
 				{
 					Graphics()->QuadsSetRotation(0.18f);
-					if(m_pClient->m_aClients[apPlayers[j]].m_Team == TEAM_RED)
+					if(m_pClient->m_aClients[aPlayers[j]].m_Team == TEAM_RED)
 						RenderTools()->SelectSprite(SPRITE_FLAG_BLUE);
 					else
 						RenderTools()->SelectSprite(SPRITE_FLAG_RED);
