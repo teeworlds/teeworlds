@@ -7,7 +7,7 @@
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
-#include <engine/external/json-parser/json.h>
+#include <engine/shared/jsonparser.h>
 #include <engine/shared/config.h>
 
 #include "menus.h"
@@ -16,29 +16,11 @@
 
 void CCountryFlags::LoadCountryflagsIndexfile()
 {
-	// read file data into buffer
-	const char *pFilename = "countryflags/index.json";
-	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
-	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", "couldn't open index file");
-		return;
-	}
-	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize);
-	io_read(File, pFileData, FileSize);
-	io_close(File);
-
-	// parse json data
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
-	mem_free(pFileData);
-
+	CJsonParser JsonParser;
+	const json_value *pJsonData = JsonParser.ParseFile("countryflags/index.json", Storage());
 	if(pJsonData == 0)
 	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", JsonParser.Error());
 		return;
 	}
 
@@ -108,7 +90,6 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 	}
 
 	// clean up
-	json_value_free(pJsonData);
 	m_aCountryFlags.sort_range();
 
 	// find index of default item
