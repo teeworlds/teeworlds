@@ -329,7 +329,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	CGameClient::CClientData *pClientData = &m_pClient->m_aClients[ClientID];
-	if(pClientData->m_EmoticonStart != -1)
+	if(pClientData->m_EmoticonStart != -1 && pClientData->m_Emoticon >= 0 && pClientData->m_Emoticon < NUM_EMOTICONS)
 	{
 		// adjust start tick if world paused; not if demo paused because ticks are synchronized with demo
 		static int s_LastGameTick = Client()->GameTick();
