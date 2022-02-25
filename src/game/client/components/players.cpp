@@ -63,7 +63,7 @@ void CPlayers::RenderHook(
 			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
 		}
 
-		float d = distance(Position, HookPos);
+		const float HookDistance = distance(Position, HookPos);
 		vec2 Dir = normalize(Position - HookPos);
 
 		Graphics()->QuadsSetRotation(angle(Dir)+pi);
@@ -77,7 +77,7 @@ void CPlayers::RenderHook(
 		RenderTools()->SelectSprite(SPRITE_HOOK_CHAIN);
 		IGraphics::CQuadItem aArray[1024];
 		int i = 0;
-		for(float f = 16; f < d && i < 1024; f += 16, i++)
+		for(float f = 16; f < HookDistance && i < 1024; f += 16, i++)
 		{
 			vec2 p = HookPos + Dir*f;
 			aArray[i] = IGraphics::CQuadItem(p.x, p.y,16,16);
