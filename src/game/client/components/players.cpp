@@ -252,7 +252,6 @@ void CPlayers::RenderPlayer(
 		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
 		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteBody, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
 
-		vec2 Dir = Direction;
 		vec2 p;
 		if(Player.m_Weapon == WEAPON_HAMMER)
 		{
@@ -312,7 +311,7 @@ void CPlayers::RenderPlayer(
 			// TODO: should be an animation
 			const float RecoilTick = (Client()->GameTick() - Player.m_AttackTick + s_LastIntraTick)/5.0f;
 			const float Recoil = RecoilTick < 1.0f ? sinf(RecoilTick*pi) : 0.0f;
-			p = Position + Dir * (g_pData->m_Weapons.m_aId[iw].m_Offsetx - Recoil*10.0f);
+			p = Position + Direction * (g_pData->m_Weapons.m_aId[iw].m_Offsetx - Recoil * 10.0f);
 			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
 			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 		}
@@ -332,7 +331,7 @@ void CPlayers::RenderPlayer(
 				{
 					const bool FlipY = Direction.x < 0.0f;
 					const float OffsetY = g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsety * (FlipY ? 1 : -1);
-					const vec2 MuzzlePos = p + Dir * g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx + vec2(-Dir.y, Dir.x) * OffsetY;
+					const vec2 MuzzlePos = p + Direction * g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx + vec2(-Direction.y, Direction.x) * OffsetY;
 					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX], FlipY ? SPRITE_FLAG_FLIP_Y : 0);
 					RenderTools()->DrawSprite(MuzzlePos.x, MuzzlePos.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
 				}
