@@ -75,15 +75,15 @@ void CPlayers::RenderHook(
 
 		// render chain
 		RenderTools()->SelectSprite(SPRITE_HOOK_CHAIN);
-		IGraphics::CQuadItem Array[1024];
+		IGraphics::CQuadItem aArray[1024];
 		int i = 0;
 		for(float f = 16; f < d && i < 1024; f += 16, i++)
 		{
 			vec2 p = HookPos + Dir*f;
-			Array[i] = IGraphics::CQuadItem(p.x, p.y,16,16);
+			aArray[i] = IGraphics::CQuadItem(p.x, p.y,16,16);
 		}
 
-		Graphics()->QuadsDraw(Array, i);
+		Graphics()->QuadsDraw(aArray, i);
 		Graphics()->QuadsSetRotation(0);
 		Graphics()->QuadsEnd();
 
