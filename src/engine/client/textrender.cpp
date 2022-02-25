@@ -2,9 +2,11 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
 #include <base/math.h>
-#include <engine/external/json-parser/json.h>
+
 #include <engine/graphics.h>
 #include <engine/textrender.h>
+
+#include <engine/shared/jsonparser.h>
 
 #include "textrender.h"
 
@@ -744,30 +746,11 @@ void CTextRender::Shutdown()
 
 void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 {
-	// read file data into buffer
-	const char *pFilename = "fonts/index.json";
-
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
-	{
-		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "textrender", "couldn't open fonts index file");
-		return;
-	}
-	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize);
-	io_read(File, pFileData, FileSize);
-	io_close(File);
-
-	// parse json data
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
-	mem_free(pFileData);
-
+	CJsonParser JsonParser;
+	const json_value *pJsonData = JsonParser.ParseFile("fonts/index.json", pStorage);
 	if(pJsonData == 0)
 	{
-		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "textrender", JsonParser.Error());
 		return;
 	}
 
@@ -829,8 +812,6 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 				m_paVariants[i].m_aFamilyName[0] = 0;
 		}
 	}
-
-	json_value_free(pJsonData);
 }
 
 void CTextRender::SetFontLanguageVariant(const char *pLanguageFile)
