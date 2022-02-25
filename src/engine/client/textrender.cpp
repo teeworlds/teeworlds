@@ -669,11 +669,11 @@ void CTextRender::TextRefreshGlyphs(CTextCursor *pCursor)
 	}
 }
 
-int CTextRender::LoadFontCollection(const void *pFilename, const void *pBuf, long FileSize)
+int CTextRender::LoadFontCollection(const char *pFilename, const void *pBuf, unsigned FileSize)
 {
 	FT_Face FtFace;
 
-	if(FT_New_Memory_Face(m_FTLibrary, (FT_Byte *)pBuf, FileSize, -1, &FtFace))
+	if(FT_New_Memory_Face(m_FTLibrary, (FT_Byte *)pBuf, (FT_Long)FileSize, -1, &FtFace))
 		return -1;
 
 	int NumFaces = FtFace->num_faces;
@@ -682,7 +682,7 @@ int CTextRender::LoadFontCollection(const void *pFilename, const void *pBuf, lon
 	int i;
 	for(i = 0; i < NumFaces; ++i)
 	{
-		if(FT_New_Memory_Face(m_FTLibrary, (FT_Byte *)pBuf, FileSize, i, &FtFace))
+		if(FT_New_Memory_Face(m_FTLibrary, (FT_Byte *)pBuf, (FT_Long)FileSize, i, &FtFace))
 		{
 			FT_Done_Face(FtFace);
 			break;
@@ -779,15 +779,10 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 		{
 			char aFontName[IO_MAX_PATH_LENGTH];
 			str_format(aFontName, sizeof(aFontName), "fonts/%s", (const char *)rFiles[i]);
-			char aFilename[IO_MAX_PATH_LENGTH];
-			IOHANDLE File = pStorage->OpenFile(aFontName, IOFLAG_READ, IStorage::TYPE_ALL, aFilename, sizeof(aFilename));
-			if(File)
+			unsigned FileSize;
+			if(pStorage->ReadFile(aFontName, IStorage::TYPE_ALL, &m_apFontData[i], &FileSize))
 			{
-				long FileSize = io_length(File);
-				m_apFontData[i] = mem_alloc(FileSize);
-				io_read(File, m_apFontData[i], FileSize);
-				io_close(File);
-				if(LoadFontCollection(aFilename, m_apFontData[i], FileSize))
+				if(LoadFontCollection(aFontName, m_apFontData[i], FileSize))
 				{
 					char aBuf[256];
 					str_format(aBuf, sizeof(aBuf), "failed to load font. filename='%s'", aFontName);
