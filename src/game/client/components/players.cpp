@@ -201,7 +201,7 @@ void CPlayers::RenderPlayer(
 	static float s_LastGameTickTime = Client()->GameTickTime();
 	static float s_LastIntraTick = IntraTick;
 	static float s_TimeUntilAnimationFrame = 1.0f;
-	bool UpdateSingleAnimationFrage = false;
+	bool UpdateSingleAnimationFrame = false;
 	if(!Paused)
 	{
 		s_LastGameTickTime = Client()->GameTickTime();
@@ -210,7 +210,7 @@ void CPlayers::RenderPlayer(
 		if(s_TimeUntilAnimationFrame <= 0.0f)
 		{
 			s_TimeUntilAnimationFrame += 1.0f;
-			UpdateSingleAnimationFrage = true;
+			UpdateSingleAnimationFrame = true;
 		}
 	}
 
@@ -294,7 +294,7 @@ void CPlayers::RenderPlayer(
 			{
 				const int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
 				static int s_LastIteX = IteX;
-				if(UpdateSingleAnimationFrage)
+				if(UpdateSingleAnimationFrame)
 					s_LastIteX = IteX;
 
 				if(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX])
@@ -325,7 +325,7 @@ void CPlayers::RenderPlayer(
 				const float MuzzleTick = Client()->GameTick() - Player.m_AttackTick + s_LastIntraTick;
 				const int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
 				static int s_LastIteX = IteX;
-				if(UpdateSingleAnimationFrage)
+				if(UpdateSingleAnimationFrame)
 					s_LastIteX = IteX;
 
 				if(MuzzleTick < g_pData->m_Weapons.m_aId[iw].m_Muzzleduration && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX])
