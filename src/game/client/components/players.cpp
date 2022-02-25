@@ -20,23 +20,6 @@
 
 #include "players.h"
 
-inline float NormalizeAngular(float f)
-{
-	return fmod(f+pi*2, pi*2);
-}
-
-inline float AngularMixDirection (float Src, float Dst) { return sinf(Dst-Src) >0?1:-1; }
-inline float AngularDistance(float Src, float Dst) { return asinf(sinf(Dst-Src)); }
-
-inline float AngularApproach(float Src, float Dst, float Amount)
-{
-	float d = AngularMixDirection (Src, Dst);
-	float n = Src + Amount*d;
-	if(AngularMixDirection (n, Dst) != d)
-		return Dst;
-	return n;
-}
-
 void CPlayers::RenderHook(
 	const CNetObj_Character *pPrevChar,
 	const CNetObj_Character *pPlayerChar,
@@ -65,7 +48,6 @@ void CPlayers::RenderHook(
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
-		//Graphics()->QuadsBegin();
 
 		vec2 Pos = Position;
 		vec2 HookPos;
@@ -133,34 +115,10 @@ void CPlayers::RenderPlayer(
 		Player.m_Angle += 2*pi*256;
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
 
-	//float angle = 0;
-
 	if(m_pClient->m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// just use the direct input if it's local player we are rendering
 		Angle = angle(m_pClient->m_pControls->m_MousePos);
-	}
-	else
-	{
-		/*
-		float mixspeed = Client()->FrameTime()*2.5f;
-		if(player.attacktick != prev.attacktick) // shooting boosts the mixing speed
-			mixspeed *= 15.0f;
-
-		// move the delta on a constant speed on a x^2 curve
-		float current = g_GameClient.m_aClients[info.cid].angle;
-		float target = player.angle/256.0f;
-		float delta = angular_distance(current, target);
-		float sign = delta < 0 ? -1 : 1;
-		float new_delta = delta - 2*mixspeed*sqrt(delta*sign)*sign + mixspeed*mixspeed;
-
-		// make sure that it doesn't vibrate when it's still
-		if(fabs(delta) < 2/256.0f)
-			angle = target;
-		else
-			angle = angular_approach(current, target, fabs(delta-new_delta));
-
-		g_GameClient.m_aClients[info.cid].angle = angle;*/
 	}
 
 	if(m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(ClientID))
