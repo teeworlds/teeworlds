@@ -49,7 +49,6 @@ void CPlayers::RenderHook(
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
 
-		vec2 Pos = Position;
 		vec2 HookPos;
 
 		if(Player.m_HookedPlayer != -1 && m_pClient->m_Snap.m_aCharacters[Player.m_HookedPlayer].m_Active)
@@ -64,8 +63,8 @@ void CPlayers::RenderHook(
 			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
 		}
 
-		float d = distance(Pos, HookPos);
-		vec2 Dir = normalize(Pos-HookPos);
+		float d = distance(Position, HookPos);
+		vec2 Dir = normalize(Position - HookPos);
 
 		Graphics()->QuadsSetRotation(angle(Dir)+pi);
 
@@ -88,7 +87,7 @@ void CPlayers::RenderHook(
 		Graphics()->QuadsSetRotation(0);
 		Graphics()->QuadsEnd();
 
-		RenderTools()->RenderTeeHand(&RenderInfo, Position, normalize(HookPos-Pos), -pi/2, vec2(20, 0));
+		RenderTools()->RenderTeeHand(&RenderInfo, Position, normalize(HookPos - Position), -pi/2, vec2(20, 0));
 	}
 }
 
