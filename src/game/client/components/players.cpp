@@ -214,12 +214,12 @@ void CPlayers::RenderPlayer(
 		}
 	}
 
-	if (Player.m_Weapon == WEAPON_HAMMER)
+	if(Player.m_Weapon == WEAPON_HAMMER)
 	{
 		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 		State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], clamp(ct*5.0f,0.0f,1.0f), 1.0f);
 	}
-	if (Player.m_Weapon == WEAPON_NINJA)
+	if(Player.m_Weapon == WEAPON_NINJA)
 	{
 		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 		State.Add(&g_pData->m_aAnimations[ANIM_NINJA_SWING], clamp(ct*2.0f,0.0f,1.0f), 1.0f);
@@ -254,7 +254,7 @@ void CPlayers::RenderPlayer(
 
 		vec2 Dir = Direction;
 		vec2 p;
-		if (Player.m_Weapon == WEAPON_HAMMER)
+		if(Player.m_Weapon == WEAPON_HAMMER)
 		{
 			// Static position for hammer
 			p = Position + vec2(State.GetAttach()->m_X, State.GetAttach()->m_Y);
@@ -340,7 +340,7 @@ void CPlayers::RenderPlayer(
 		}
 		Graphics()->QuadsEnd();
 
-		switch (Player.m_Weapon)
+		switch(Player.m_Weapon)
 		{
 			case WEAPON_GUN: RenderTools()->RenderTeeHand(&RenderInfo, p, Direction, -3*pi/4, vec2(-15, 4)); break;
 			case WEAPON_SHOTGUN: RenderTools()->RenderTeeHand(&RenderInfo, p, Direction, -pi/2, vec2(-5, 4)); break;
