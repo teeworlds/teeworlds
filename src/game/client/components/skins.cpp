@@ -43,6 +43,12 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 		return 0;
 	}
+	if(Info.m_Format != CImageInfo::FORMAT_RGBA)
+	{
+		str_format(aBuf, sizeof(aBuf), "failed to load skin part '%s': must be RGBA format", pName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
+		return 0;
+	}
 
 	Part.m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	Part.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
