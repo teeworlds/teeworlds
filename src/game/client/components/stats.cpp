@@ -162,8 +162,7 @@ void CStats::OnRender()
 
 	int aPlayers[MAX_CLIENTS] = {0};
 	int NumPlayers = 0;
-	int i;
-	for(i=0; i<MAX_CLIENTS; i++)
+	for(int i = 0; i < MAX_CLIENTS; i++)
 	{
 		if(!m_pClient->m_aClients[i].m_Active)
 			continue;
@@ -202,13 +201,13 @@ void CStats::OnRender()
 	bool NoDisplayedWeapon = true;
 	if(Config()->m_ClStatboardInfos & TC_STATS_WEAPS)
 	{
-		for(i=0; i<NumPlayers; i++)
+		for(int i = 0; i < NumPlayers; i++)
 		{
 			const CPlayerStats *pStats = &m_aStats[aPlayers[i]];
 			for(int j=0; j<NUM_WEAPONS; j++)
 				aDisplayWeapon[j] = aDisplayWeapon[j] || pStats->m_aFragsWith[j] || pStats->m_aDeathsFrom[j];
 		}
-		for(i=0; i<NUM_WEAPONS; i++)
+		for(int i = 0; i < NUM_WEAPONS; i++)
 			if(aDisplayWeapon[i])
 			{
 				w += 80;
@@ -241,7 +240,8 @@ void CStats::OnRender()
 	TextRender()->TextOutlined(&s_Cursor, Localize("Name"), -1);
 	const char *apHeaders[] = { "K", "D", Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
 	s_Cursor.m_Align = TEXTALIGN_RIGHT;
-	for(i=0; i<9; i++)
+	for(int i = 0; i < 9; i++)
+	{
 		if(Config()->m_ClStatboardInfos & (1<<i))
 		{
 			const char* pText = apHeaders[i];
@@ -271,13 +271,14 @@ void CStats::OnRender()
 			TextRender()->TextOutlined(&s_Cursor, pText, -1);
 			px += 100;
 		}
+	}
 
 	// sprite headers now
 	if(Config()->m_ClStatboardInfos & TC_STATS_WEAPS)
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
-		for(i=0; i<NUM_WEAPONS; i++)
+		for(int i = 0; i < NUM_WEAPONS; i++)
 		{
 			if(!aDisplayWeapon[i])
 				continue;
@@ -464,7 +465,7 @@ void CStats::OnRender()
 			float EndX = StartX; // each bar will have its width incremented by the roundsize so this avoids that last one would overflow
 			int TotalFrags = 0;
 			int TotalDeaths = 0;
-			for(i=0; i<NUM_WEAPONS; i++)
+			for(int i = 0; i < NUM_WEAPONS; i++)
 			{
 				if(aDisplayWeapon[i])
 				{
@@ -475,7 +476,7 @@ void CStats::OnRender()
 			}
 			float ExploitableLength = (EndX-StartX) - RoundSize;
 			CUIRect Rect = {x + StartX, y+0.3f*LineHeight, 0.0f, BarHeight};
-			for(i=0; i<NUM_WEAPONS; i++)
+			for(int i = 0; i < NUM_WEAPONS; i++)
 			{
 				if(pStats->m_aFragsWith[i])
 				{
