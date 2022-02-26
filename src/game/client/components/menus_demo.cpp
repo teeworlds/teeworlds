@@ -654,9 +654,13 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			if(m_DemolistSelectedIndex >= 0)
 			{
 				m_Popup = POPUP_RENAME_DEMO;
-				str_copy(m_aCurrentDemoFile, m_lDemos[m_DemolistSelectedIndex].m_aFilename,
-					minimum<int>(str_length(m_lDemos[m_DemolistSelectedIndex].m_aFilename) - str_length(".demo") + 1, sizeof(m_aCurrentDemoFile)));
-				UI()->SetActiveItem(m_aCurrentDemoFile); // marker to initially activate the input and select the text
+				char aFilename[IO_MAX_PATH_LENGTH];
+				str_copy(aFilename, m_lDemos[m_DemolistSelectedIndex].m_aFilename,
+					minimum<int>(str_length(m_lDemos[m_DemolistSelectedIndex].m_aFilename) - str_length(".demo") + 1, sizeof(aFilename)));
+				m_DemoNameInput.Set(aFilename);
+				m_DemoNameInput.SetCursorOffset(m_DemoNameInput.GetLength());
+				m_DemoNameInput.SetSelection(0, m_DemoNameInput.GetLength());
+				UI()->SetActiveItem(&m_DemoNameInput);
 				return;
 			}
 		}

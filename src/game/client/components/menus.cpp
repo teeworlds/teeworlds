@@ -73,6 +73,8 @@ CMenus::CMenus()
 	m_LastInput = time_get();
 
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
+	m_aCurrentDemoFile[0] = '\0';
+	m_DemoNameInput.SetBuffer(m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile));
 	m_aCallvoteReason[0] = 0;
 	m_aFilterString[0] = 0;
 
@@ -1454,14 +1456,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
-			static CLineInput s_DemoNameInput(m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile));
-			if(UI()->GetActiveItem() == m_aCurrentDemoFile) // initially activate input and select entire name
-			{
-				s_DemoNameInput.SetCursorOffset(s_DemoNameInput.GetLength());
-				s_DemoNameInput.SetSelection(0, s_DemoNameInput.GetLength());
-				UI()->SetActiveItem(&s_DemoNameInput);
-			}
-			UI()->DoEditBoxOption(&s_DemoNameInput, &EditBox, Localize("Name"), ButtonWidth);
+			UI()->DoEditBoxOption(&m_DemoNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
 			CUIRect Yes, No;
