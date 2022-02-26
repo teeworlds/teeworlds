@@ -1529,11 +1529,20 @@ void CMenus::RenderMenu(CUIRect Screen)
 			static CButtonContainer s_ButtonYes;
 			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 			{
-				if(m_aSaveSkinName[0] && m_aSaveSkinName[0] != 'x' && m_aSaveSkinName[1] != '_')
+				if(m_aSaveSkinName[0])
 				{
-					m_Popup = POPUP_NONE;
-					m_pClient->m_pSkins->SaveSkinfile(m_aSaveSkinName);
-					m_RefreshSkinSelector = true;
+					if(m_aSaveSkinName[0] != 'x' && m_aSaveSkinName[1] != '_')
+					{
+						if(m_pClient->m_pSkins->SaveSkinfile(m_aSaveSkinName))
+						{
+							m_Popup = POPUP_NONE;
+							m_RefreshSkinSelector = true;
+						}
+						else
+							PopupMessage(Localize("Error"), Localize("Unable to save the skin"), Localize("Ok"), POPUP_SAVE_SKIN);
+					}
+					else
+						PopupMessage(Localize("Error"), Localize("Unable to save the skin with a reserved name"), Localize("Ok"), POPUP_SAVE_SKIN);
 				}
 			}
 		}
