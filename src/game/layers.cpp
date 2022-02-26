@@ -11,6 +11,8 @@ CLayers::CLayers()
 	m_pGameGroup = 0;
 	m_pGameLayer = 0;
 	m_pMap = 0;
+
+	m_pMaterialLayer = 0;
 }
 
 void CLayers::Init(class IKernel *pKernel, IMap *pMap)
@@ -54,7 +56,22 @@ void CLayers::InitGameLayer()
 						m_pGameGroup->m_ClipH = 0;
 					}
 
-					return; // there can only be one game layer and game group
+					// return; // there can only be one game layer and game group
+				}
+				else if(pTilemap->m_Flags > TILESLAYERFLAG_GAME)  // this is some other
+				{
+					char name_buf[12];
+					IntsToStr(pTilemap->m_aName, sizeof(pTilemap->m_aName)/sizeof(int), name_buf);
+					if(str_comp_nocase(name_buf, LAYERNAME_MATERIAL) == 0)  // save files shouldn't be localized
+					{
+						if(!m_pMaterialLayer)
+							m_pMaterialLayer = pTilemap;
+					}
+					else
+					{
+						// Here we could find other layers without changing any mapitems
+						m_apCustomLayers.add(pTilemap);
+					}
 				}
 			}
 		}
@@ -101,4 +118,16 @@ CMapItemGroup *CLayers::GetGroup(int Index) const
 CMapItemLayer *CLayers::GetLayer(int Index) const
 {
 	return static_cast<CMapItemLayer *>(m_pMap->GetItem(m_LayersStart+Index, 0, 0));
+}
+
+CMapItemLayerTilemap *CLayers::GetCustomLayer(const char* LayerName)
+{
+	for(int i = 0; i < m_apCustomLayers.size(); ++i)
+	{
+		char layer_name_buf[12];
+		IntsToStr(m_apCustomLayers[i]->m_aName, sizeof(m_apCustomLayers[i]->m_aName)/sizeof(int), layer_name_buf);
+		if(str_comp_nocase(LayerName, layer_name_buf) == 0)
+			return m_apCustomLayers[i];
+	}
+	return 0;
 }

@@ -54,10 +54,23 @@ enum
 	TILEFLAG_ROTATE=8,
 
 	LAYERFLAG_DETAIL=1,
+	LAYERFLAG_OPERATIONAL=2,
+	LAYERFLAG_CUSTOM_GAMELAYER=4,
+
 	TILESLAYERFLAG_GAME=1,
+	TILESLAYERFLAG_OTHER=64,  // A dummy flag for ALL FUTURE tilelayers. You need to define the layer name in order to derive what it is
+
+	//material layer tiles
+	MAT_DEFAULT=0, // default doesn't mean air!
+	MAT_ICE,
+	MAT_SAND,
 
 	ENTITY_OFFSET=255-16*4,
 };
+
+// layer names
+#define LAYERNAME_GAME "Game"
+#define LAYERNAME_MATERIAL "Material"
 
 struct CPoint
 {

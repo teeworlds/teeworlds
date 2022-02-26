@@ -119,7 +119,7 @@ void CLayerGroup::Render()
 
 	for(int i = 0; i < m_lLayers.size(); i++)
 	{
-		if(m_lLayers[i]->m_Visible && m_lLayers[i] != m_pMap->m_pGameLayer)
+		if(m_lLayers[i]->m_Visible && !(m_lLayers[i]->m_Flags&LAYERFLAG_OPERATIONAL))
 		{
 			if(m_pMap->m_pEditor->m_ShowDetail || !(m_lLayers[i]->m_Flags&LAYERFLAG_DETAIL))
 				m_lLayers[i]->Render();
@@ -289,11 +289,17 @@ vec4 CEditor::GetButtonColor(const void *pID, int Checked)
 	if(Checked < 0)
 		return vec4(0,0,0,0.5f);
 
-	if(Checked > 0)
+	if(Checked == 1)
 	{
 		if(UI()->HotItem() == pID)
 			return vec4(1,0,0,0.75f);
 		return vec4(1,0,0,0.5f);
+	}
+	else if(Checked > 1)
+	{
+		if(UI()->HotItem() == pID)
+			return vec4(0.5f,0.5f,1,0.75f);
+		return vec4(0.5f,0.5f,1,0.5f);
 	}
 
 	if(UI()->HotItem() == pID)
@@ -1558,11 +1564,17 @@ void CEditor::DoMapEditor(CUIRect View)
 				m_Map.m_lGroups[g]->Render();
 		}
 
-		// render the game above everything else
-		if(m_Map.m_pGameGroup->m_Visible && m_Map.m_pGameLayer->m_Visible)
+		// render the operational layers above everything else
+		if(m_Map.m_pGameGroup->m_Visible)
 		{
 			m_Map.m_pGameGroup->MapScreen();
-			m_Map.m_pGameLayer->Render();
+			for(int l = 0; l < m_Map.m_pGameGroup->m_lLayers.size(); l++)
+			{
+				if(!(m_Map.m_pGameGroup->m_lLayers[l]->m_Flags&LAYERFLAG_OPERATIONAL) || !m_Map.m_pGameGroup->m_lLayers[l]->m_Visible)
+					continue;
+
+				m_Map.m_pGameGroup->m_lLayers[l]->Render();
+			}
 		}
 
 		CLayerTiles *pT = static_cast<CLayerTiles *>(GetSelectedLayerType(0, LAYERTYPE_TILES));
@@ -2438,7 +2450,12 @@ void CEditor::RenderLayers(CUIRect ToolBox, CUIRect View)
 
 				const float FontSize = clamp(10.0f * Button.w / TextRender()->TextWidth(10.0f, aBuf, -1), 6.0f, 10.0f);
 
-				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, g==m_SelectedGroup&&i==m_SelectedLayer, &Button,
+				int Checked = 0;
+				if(m_Map.m_lGroups[g]->m_lLayers[i]->m_Flags&LAYERFLAG_OPERATIONAL)
+					Checked = 2;  // mark all operational layer blue  //TODO refactor this or use flag
+				if(g==m_SelectedGroup&&i==m_SelectedLayer)
+					Checked = 1;
+				if(int Result = DoButton_Ex(m_Map.m_lGroups[g]->m_lLayers[i], aBuf, Checked, &Button,
 					BUTTON_CONTEXT, "Select layer.", 0, FontSize))
 				{
 					m_SelectedLayer = i;
@@ -4178,13 +4195,19 @@ void CEditorMap::MakeGameLayer(CLayer *pLayer)
 	m_pGameLayer = (CLayerGame *)pLayer;
 	m_pGameLayer->m_pEditor = m_pEditor;
 	m_pGameLayer->m_Texture = m_pEditor->m_EntitiesTexture;
+	m_pGameLayer->m_Flags |= LAYERFLAG_OPERATIONAL;
 }
 
-void CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
+bool CEditorMap::MakeGameGroup(CLayerGroup *pGroup)
 {
-	m_pGameGroup = pGroup;
-	m_pGameGroup->m_GameGroup = true;
-	str_copy(m_pGameGroup->m_aName, "Game", sizeof(m_pGameGroup->m_aName));
+	if(!m_pGameGroup)
+	{
+		m_pGameGroup = pGroup;
+		m_pGameGroup->m_GameGroup = true;
+		str_copy(m_pGameGroup->m_aName, LAYERNAME_GAME, sizeof(m_pGameGroup->m_aName));
+		return true;
+	}
+	return m_pGameGroup == pGroup;
 }
 
 
@@ -4198,6 +4221,7 @@ void CEditorMap::Clean()
 	m_MapInfo.Reset();
 
 	m_pGameLayer = 0x0;
+	m_pMaterialLayer = 0x0;
 	m_pGameGroup = 0x0;
 
 	m_Modified = false;
@@ -4250,6 +4274,7 @@ void CEditor::Init()
 	m_BackgroundTexture = Graphics()->LoadTexture("editor/background.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_CursorTexture = Graphics()->LoadTexture("editor/cursor.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, 0);
 	m_EntitiesTexture = Graphics()->LoadTexture("editor/entities.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	m_MaterialTexture = Graphics()->LoadTexture("editor/materials.png", IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 
 	m_TilesetPicker.m_pEditor = this;
 	m_TilesetPicker.MakePalette();
@@ -4458,3 +4483,18 @@ void CEditor::UpdateAndRender()
 }
 
 IEditor *CreateEditor() { return new CEditor; }
+
+void CEditorMap::MakeMaterialLayer(CLayer *pLayer)
+{
+	m_pMaterialLayer = (CLayerMaterial *)pLayer;
+	m_pMaterialLayer->m_pEditor = m_pEditor;
+	m_pMaterialLayer->m_Texture = m_pEditor->m_MaterialTexture;
+}
+
+void CEditorMap::MakeCustomLayer(CLayer *pLayer)
+{
+	CLayerCustom *CustomLayer = (CLayerCustom *)pLayer;
+	CustomLayer->m_pEditor = m_pEditor;
+	str_format(CustomLayer->m_aName, sizeof(CustomLayer->m_aName)/sizeof(char), "Custom_%d", m_apCustomLayers.size()+1);
+	m_apCustomLayers.add(CustomLayer);
+}

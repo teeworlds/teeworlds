@@ -45,6 +45,13 @@ public:
 	bool Get(int Index, float *pValue) const;
 	bool Get(const char *pName, float *pValue) const;
 	const char *GetName(int Index) const { return s_apNames[Index]; }
+
+	float GetControlSpeed(int mat) const;
+	float GetControlAccel(int mat) const;
+	float GetFriction(int mat) const;
+	float CompareGroundControlSpeed(int mat_left, int mat_right);
+	float CompareGroundControlAccel(int mat_left, int mat_right);
+	float CompareGroundFriction(int mat_left, int mat_right);
 };
 
 inline void StrToInts(int *pInts, int Num, const char *pStr)

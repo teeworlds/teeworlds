@@ -893,6 +893,7 @@ set(EXPECTED_DATA
   editor/checker.png
   editor/cursor.png
   editor/entities.png
+  editor/materials.png
   emoticons.png
   fonts/DejaVuSans.ttf
   fonts/SourceHanSans.ttc
@@ -1515,7 +1516,9 @@ if(CLIENT)
     editor.cpp
     editor.h
     io.cpp
+    layer_custom.cpp
     layer_game.cpp
+    layer_material.cpp
     layer_quads.cpp
     layer_tiles.cpp
     popups.cpp

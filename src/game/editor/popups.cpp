@@ -72,6 +72,42 @@ bool CEditor::PopupGroup(void *pContext, CUIRect View)
 		}
 	}
 
+	if(pEditor->GetSelectedGroup()->m_GameGroup)
+	{
+		if (!pEditor->m_Map.m_pMaterialLayer)
+		{
+			// new material layer
+			View.HSplitBottom(5.0f, &View, &Button);
+			View.HSplitBottom(12.0f, &View, &Button);
+			static int s_NewMaterialLayerButton = 0;
+			if(pEditor->DoButton_Editor(&s_NewMaterialLayerButton, "Add material layer", 0, &Button, 0, "Creates a new material layer"))
+			{
+				CLayer *l = new CLayerMaterial(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+				l->m_pEditor = pEditor;
+				pEditor->m_Map.MakeMaterialLayer(l);
+				pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+				pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+				pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_Collapse = false;
+				return true;
+			}
+		}
+		// new custom layer
+		View.HSplitBottom(5.0f, &View, &Button);
+		View.HSplitBottom(12.0f, &View, &Button);
+		static int s_NewCustomLayerButton = 0;
+		if(pEditor->DoButton_Editor(&s_NewCustomLayerButton, "Add custom layer", 0, &Button, 0, "Creates a new custom layer"))
+		{
+			CLayer *l = new CLayerCustom(pEditor->m_Map.m_pGameLayer->m_Width, pEditor->m_Map.m_pGameLayer->m_Height);
+			l->m_pEditor = pEditor;
+			pEditor->m_Map.MakeCustomLayer(l);
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->AddLayer(l);
+			pEditor->m_SelectedLayer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers.size()-1;
+			pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_Collapse = false;
+			return true;
+		}
+
+	}
+
 	// new quad layer
 	View.HSplitBottom(10.0f, &View, &Button);
 	View.HSplitBottom(12.0f, &View, &Button);
@@ -188,12 +224,23 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 	// don't allow deletion of game layer
 	if(!IsGameLayer && pEditor->DoButton_Editor(&s_DeleteButton, "Delete layer", 0, &Button, 0, "Deletes the layer"))
 	{
+		CLayer* Layer = pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->m_lLayers[pEditor->m_SelectedLayer];
+		if(Layer->m_Flags&LAYERFLAG_OPERATIONAL)
+		{
+			if(Layer->m_Flags&LAYERFLAG_CUSTOM_GAMELAYER)
+			{
+				CLayerCustom *CustomLayer = (CLayerCustom *)Layer;
+				pEditor->m_Map.m_apCustomLayers.remove(CustomLayer);
+			}
+			if(dynamic_cast<CLayerMaterial*>(Layer))
+				pEditor->m_Map.m_pMaterialLayer = 0;
+		}
 		pEditor->m_Map.m_lGroups[pEditor->m_SelectedGroup]->DeleteLayer(pEditor->m_SelectedLayer);
 		return true;
 	}
 
 	// layer name
-	if(!IsGameLayer)
+	if(!IsGameLayer && (!(pCurrentLayer->m_Flags&LAYERFLAG_OPERATIONAL) || pCurrentLayer->m_Flags&LAYERFLAG_CUSTOM_GAMELAYER))  // TODO do this smarter
 	{
 		View.HSplitBottom(5.0f, &View, &Button);
 		View.HSplitBottom(16.0f, &View, &Button);
@@ -201,8 +248,12 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 		Button.VSplitLeft(40.0f, 0, &Button);
 		static CLineInput s_NameInput;
 		s_NameInput.SetBuffer(pCurrentLayer->m_aName, sizeof(pCurrentLayer->m_aName));
-		if(pEditor->DoEditBox(&s_NameInput, &Button, 10.0f))
-			pEditor->m_Map.m_Modified = true;
+		if (pEditor->DoEditBox(&s_NameInput, &Button, 10.0f))
+			if (pCurrentLayer->m_Flags & LAYERFLAG_OPERATIONAL &&
+				(str_comp_nocase(pCurrentLayer->m_aName, LAYERNAME_GAME) == 0
+				 || str_comp_nocase(pCurrentLayer->m_aName, LAYERNAME_MATERIAL) == 0))
+				str_copy(pCurrentLayer->m_aName, "Tiles", sizeof(pCurrentLayer->m_aName));
+		pEditor->m_Map.m_Modified = true;
 	}
 
 	View.HSplitBottom(10.0f, &View, 0);
@@ -224,7 +275,7 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 		{0},
 	};
 
-	if(IsGameLayer) // dont use Group and Detail from the selection if this is the game layer
+	if(pCurrentLayer->m_Flags&LAYERFLAG_OPERATIONAL) // dont use Group and Detail from the selection if this is the game layer
 	{
 		aProps[0].m_Type = PROPTYPE_NULL;
 		aProps[2].m_Type = PROPTYPE_NULL;
@@ -238,7 +289,7 @@ bool CEditor::PopupLayer(void *pContext, CUIRect View)
 
 	if(Prop == PROP_ORDER)
 		pEditor->m_SelectedLayer = pCurrentGroup->SwapLayers(pEditor->m_SelectedLayer, NewVal);
-	else if(Prop == PROP_GROUP && !IsGameLayer)
+	else if(Prop == PROP_GROUP && !(pCurrentLayer->m_Flags&LAYERFLAG_OPERATIONAL))
 	{
 		if(NewVal >= 0 && NewVal < pEditor->m_Map.m_lGroups.size())
 		{
