@@ -29,8 +29,18 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	if(IsDir || !str_endswith(pName, ".png"))
 		return 0;
 
+	int PartNameSize, PartNameCount;
+	str_utf8_stats(pName, str_length(pName) - str_length(".png") + 1, IO_MAX_PATH_LENGTH, &PartNameSize, &PartNameCount);
+	if(PartNameSize >= MAX_SKIN_ARRAY_SIZE || PartNameCount > MAX_SKIN_LENGTH)
+	{
+		char aBuf[IO_MAX_PATH_LENGTH + 64];
+		str_format(aBuf, sizeof(aBuf), "failed to load skin part '%s': name too long", pName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
+		return 0;
+	}
+
 	CSkinPart Part;
-	str_utf8_copy_num(Part.m_aName, pName, minimum(str_length(pName) - 3, int(sizeof(Part.m_aName))), MAX_SKIN_LENGTH);
+	str_copy(Part.m_aName, pName, minimum<int>(PartNameSize + 1, sizeof(Part.m_aName)));
 	if(pSelf->FindSkinPart(pSelf->m_ScanningPart, Part.m_aName, true) != -1)
 		return 0;
 
