@@ -244,7 +244,7 @@ void CStats::OnRender()
 	{
 		if(Config()->m_ClStatboardInfos & (1<<i))
 		{
-			const char* pText = apHeaders[i];
+			const char *pText = apHeaders[i];
 			// handle K:D merge (in the frags column)
 			if(1<<i == TC_STATS_FRAGS && Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
 			{
