@@ -55,7 +55,7 @@ CMenus::CMenus()
 	m_NeedRestartPlayer = false;
 	m_TeePartSelected = SKINPART_BODY;
 	m_aSaveSkinName[0] = '\0';
-	m_SkinNameInput.SetBuffer(m_aSaveSkinName, sizeof(m_aSaveSkinName));
+	m_SkinNameInput.SetBuffer(m_aSaveSkinName, sizeof(m_aSaveSkinName), MAX_SKIN_LENGTH);
 	m_RefreshSkinSelector = true;
 	m_pSelectedSkin = 0;
 	m_MenuActive = true;
