@@ -49,6 +49,7 @@ public:
 	void DoFooter(const char *pBottomText, float FooterHeight = 20.0f); // call before DoStart to create a footer
 	void DoStart(float RowHeight, int NumItems, int ItemsPerRow, int RowsPerScroll, int SelectedIndex,
 				const CUIRect *pRect = 0, bool Background = true, bool *pActive = 0, int BackgroundCorners = CUIRect::CORNER_ALL);
+	void ScrollToSelected() { m_ListBoxUpdateScroll = true; }
 	CListboxItem DoNextItem(const void *pID, bool Selected = false, bool *pActive = 0);
 	CListboxItem DoSubheader();
 	int DoEnd();
