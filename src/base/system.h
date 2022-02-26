@@ -1542,6 +1542,20 @@ char *fs_read_str(const char *name);
 int fs_file_time(const char *name, time_t *created, time_t *modified);
 
 /*
+	Function: fs_file_name
+		Gets the stored name in filesystem of a file.
+
+	Parameters:
+		name - The filename
+		buffer - The buffer to store the real filename
+		length - size of the buffer
+
+	Returns:
+		0 on success non-zero on failure
+*/
+int fs_file_name(const char *name, char *buffer, int length);
+
+/*
 	Group: Undocumented
 */
 
