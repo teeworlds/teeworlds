@@ -309,6 +309,7 @@ private:
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;
+	char m_aDemolistPreviousSelection[IO_MAX_PATH_LENGTH];
 	int64 m_SeekBarActivatedTime;
 	bool m_SeekBarActive;
 

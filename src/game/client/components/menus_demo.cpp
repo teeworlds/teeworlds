@@ -534,11 +534,28 @@ void CMenus::RenderDemoList(CUIRect MainView)
 			}
 
 			// Don't rescan in order to keep fetched headers, just resort
+			if(m_DemolistSelectedIndex >= 0)
+				str_copy(m_aDemolistPreviousSelection, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aDemolistPreviousSelection));
 			m_lDemos.sort_range_by(CDemoComparator(
 				Config()->m_BrDemoSort, Config()->m_BrDemoSortOrder
 			));
 			DemolistOnUpdate(false);
 		}
+	}
+
+	// Restore previous selection based on name
+	if(m_aDemolistPreviousSelection[0])
+	{
+		for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
+		{
+			if(str_comp(r.front().m_aFilename, m_aDemolistPreviousSelection) == 0)
+			{
+				m_DemolistSelectedIndex = &r.front() - m_lDemos.base_ptr();
+				break;
+			}
+		}
+		m_aDemolistPreviousSelection[0] = '\0';
+		s_ListBox.ScrollToSelected();
 	}
 
 	s_ListBox.DoSpacing(UI()->GetListHeaderHeight());
@@ -547,6 +564,7 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 	{
 		CListboxItem Item = s_ListBox.DoNextItem(&r.front(), (&r.front() - m_lDemos.base_ptr()) == m_DemolistSelectedIndex);
+
 		// marker count
 		const CDemoItem& DemoItem = r.front();
 		const int DemoMarkerCount = DemoItem.GetMarkerCount();
@@ -671,6 +689,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	static CButtonContainer s_RefreshButton;
 	if(DoButton_Menu(&s_RefreshButton, Localize("Refresh"), 0, &Button) || (UI()->KeyPress(KEY_R) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
 	{
+		if(m_DemolistSelectedIndex >= 0)
+			str_copy(m_aDemolistPreviousSelection, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aDemolistPreviousSelection));
 		DemolistPopulate();
 		DemolistOnUpdate(false);
 	}
@@ -680,6 +700,8 @@ void CMenus::RenderDemoList(CUIRect MainView)
 	static CButtonContainer s_FetchButton;
 	if(DoButton_Menu(&s_FetchButton, Localize("Fetch Info"), 0, &Button))
 	{
+		if(m_DemolistSelectedIndex >= 0)
+			str_copy(m_aDemolistPreviousSelection, m_lDemos[m_DemolistSelectedIndex].m_aFilename, sizeof(m_aDemolistPreviousSelection));
 		for(sorted_array<CDemoItem>::range r = m_lDemos.all(); !r.empty(); r.pop_front())
 		{
 			if(str_comp(r.front().m_aFilename, ".."))
