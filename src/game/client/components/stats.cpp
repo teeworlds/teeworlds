@@ -331,7 +331,7 @@ void CStats::OnRender()
 		{
 			char aBuf[64], aBuf2[64];
 			str_format(aBuf, sizeof(aBuf), Localize("%d other players"), NumPlayers-j);
-			str_format(aBuf2, sizeof(aBuf2), "\xe2\x8b\x85\xe2\x8b\x85\xe2\x8b\x85 %s", aBuf);
+			str_format(aBuf2, sizeof(aBuf2), "⋅⋅⋅ %s", aBuf);
 
 			s_Cursor.Reset();
 			s_Cursor.MoveTo(x+64, y);
