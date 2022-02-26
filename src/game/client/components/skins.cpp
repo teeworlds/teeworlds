@@ -111,6 +111,16 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	CSkins *pSelf = (CSkins *)pUser;
 
+	int SkinNameSize, SkinNameCount;
+	str_utf8_stats(pName, str_length(pName) - str_length(".json") + 1, IO_MAX_PATH_LENGTH, &SkinNameSize, &SkinNameCount);
+	if(SkinNameSize >= MAX_SKIN_ARRAY_SIZE || SkinNameCount > MAX_SKIN_LENGTH)
+	{
+		char aBuf[IO_MAX_PATH_LENGTH + 64];
+		str_format(aBuf, sizeof(aBuf), "failed to load skin '%s': name too long", pName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
+		return 0;
+	}
+
 	// read file data into buffer
 	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s", pName);
@@ -124,7 +134,7 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	// init
 	CSkin Skin = pSelf->m_DummySkin;
-	str_utf8_copy_num(Skin.m_aName, pName, minimum(str_length(pName) - 4, int(sizeof(Skin.m_aName))), MAX_SKIN_LENGTH);
+	str_copy(Skin.m_aName, pName, minimum<int>(SkinNameSize + 1, sizeof(Skin.m_aName)));
 	if(pSelf->Find(Skin.m_aName, true) != -1)
 		return 0;
 	bool SpecialSkin = pName[0] == 'x' && pName[1] == '_';
