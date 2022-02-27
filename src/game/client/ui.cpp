@@ -462,8 +462,9 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 
 		if(s_SelectionStartOffset >= 0)
 		{
-			pLineInput->SetCursorOffset(pLineInput->OffsetFromDisplayToActual(CursorOffset));
-			pLineInput->SetSelection(pLineInput->OffsetFromDisplayToActual(s_SelectionStartOffset), pLineInput->OffsetFromDisplayToActual(CursorOffset));
+			const int ActualCursorOffset = pLineInput->OffsetFromDisplayToActual(CursorOffset);
+			pLineInput->SetCursorOffset(ActualCursorOffset);
+			pLineInput->SetSelection(pLineInput->OffsetFromDisplayToActual(s_SelectionStartOffset), ActualCursorOffset);
 		}
 	}
 
