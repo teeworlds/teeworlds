@@ -349,11 +349,12 @@ void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char
 	const char *pMatch = pHighlighted && pHighlighted[0] ? str_find_nocase(pText, pHighlighted) : 0;
 	if(pMatch)
 	{
+		const int HighlightLength = str_length(pHighlighted);
 		TextRender()->TextDeferred(&s_Cursor, pText, (int)(pMatch - pText));
 		TextRender()->TextColor(HighlightColor);
-		TextRender()->TextDeferred(&s_Cursor, pMatch, str_length(pHighlighted));
+		TextRender()->TextDeferred(&s_Cursor, pMatch, HighlightLength);
 		TextRender()->TextColor(TextColor);
-		TextRender()->TextDeferred(&s_Cursor, pMatch + str_length(pHighlighted), -1);
+		TextRender()->TextDeferred(&s_Cursor, pMatch + HighlightLength, -1);
 	}
 	else
 		TextRender()->TextDeferred(&s_Cursor, pText, -1);
