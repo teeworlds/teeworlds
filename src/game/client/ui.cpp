@@ -379,10 +379,6 @@ void CUI::DoLabelSelected(const CUIRect *pRect, const char *pText, bool Selected
 
 bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const IButtonColorFunction *pColorFunction)
 {
-	CTextCursor *pCursor = pLineInput->GetCursor();
-	pCursor->m_FontSize = FontSize;
-	pCursor->m_Align = TEXTALIGN_ML;
-
 	const bool Inside = MouseHovered(pRect);
 	const bool Active = LastActiveItem() == pLineInput;
 	const bool Changed = pLineInput->WasChanged();
@@ -499,10 +495,12 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 		pLineInput->Deactivate();
 
 	// render
+	CTextCursor *pCursor = pLineInput->GetCursor();
+	pCursor->m_FontSize = FontSize;
 	pRect->Draw(pColorFunction->GetColor(Active, Inside), 5.0f, Corners);
 	ClipEnable(pRect);
 	Textbox.x -= ScrollOffset;
-	pCursor->MoveTo(Textbox.x, Textbox.y + Textbox.h/2.0f);
+	ApplyCursorAlign(pCursor, &Textbox, TEXTALIGN_ML);
 	pLineInput->Render();
 	ClipDisable();
 
