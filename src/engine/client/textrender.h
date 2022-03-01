@@ -175,7 +175,7 @@ class CTextRender : public IEngineTextRender
 
 	int LoadFontCollection(const void *pFilename, const void *pBuf, long FileSize);
 
-	bool isWestern(int Chr) const
+	static bool IsWestern(int Chr)
 	{
 		return Chr >= 0x0020 && Chr <= 0x218F;
 	}

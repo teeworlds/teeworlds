@@ -640,7 +640,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		Hint.m_EffectiveAdvanceX = pCursor->m_Advance.x;
 
 		// break every char on non latin/greek characters
-		if(!isWestern(Chr))
+		if(!IsWestern(Chr))
 			break;
 	}
 
