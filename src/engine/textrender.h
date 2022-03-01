@@ -100,14 +100,14 @@ class CTextCursor
 			Box.x = -m_Width / 2.0f;
 		else
 			Box.x = 0.0f;
-		
+
 		if((m_Align & TEXTALIGN_MASK_VERT) == TEXTALIGN_BOTTOM)
 			Box.y = -m_Height;
 		else if((m_Align & TEXTALIGN_MASK_VERT) == TEXTALIGN_MIDDLE)
 			Box.y = -m_Height / 2.0f;
 		else
 			Box.y = 0.0f;
-	
+
 		Box.w = m_Width;
 		Box.h = m_Height;
 		return Box;
@@ -194,7 +194,7 @@ public:
 
 	virtual void TextColor(float r, float g, float b, float a) = 0;
 	virtual void TextSecondaryColor(float r, float g, float b, float a) = 0;
-	
+
 	virtual float TextWidth(float FontSize, const char *pText, int Length) = 0;
 	virtual void TextDeferred(CTextCursor *pCursor, const char *pText, int Length) = 0;
 	virtual void TextNewline(CTextCursor *pCursor) = 0;
