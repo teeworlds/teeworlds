@@ -192,8 +192,8 @@ public:
 	virtual void LoadFonts(IStorage *pStorage, IConsole *pConsole) = 0;
 	virtual void SetFontLanguageVariant(const char *pLanguageFile) = 0;
 
-	virtual void TextColor(float r, float g, float b, float a) = 0;
-	virtual void TextSecondaryColor(float r, float g, float b, float a) = 0;
+	inline void TextColor(float r, float g, float b, float a) { TextColor(vec4(r, g, b, a)); }
+	inline void TextSecondaryColor(float r, float g, float b, float a) { TextSecondaryColor(vec4(r, g, b, a)); }
 
 	virtual float TextWidth(float FontSize, const char *pText, int Length) = 0;
 	virtual void TextDeferred(CTextCursor *pCursor, const char *pText, int Length) = 0;
@@ -203,8 +203,8 @@ public:
 	virtual void TextOutlined(CTextCursor *pCursor, const char *pText, int Length) = 0;
 	virtual void TextShadowed(CTextCursor *pCursor, const char *pText, int Length, vec2 ShadowOffset) = 0;
 
-	inline void TextColor(const vec4 &Color) { TextColor(Color.r, Color.g, Color.b, Color.a); }
-	inline void TextSecondaryColor(const vec4 &Color) { TextSecondaryColor(Color.r, Color.g, Color.b, Color.a); }
+	virtual void TextColor(const vec4 &Color) = 0;
+	virtual void TextSecondaryColor(const vec4 &Color) = 0;
 
 	virtual vec4 GetColor() const = 0;
 	virtual vec4 GetSecondaryColor() const = 0;

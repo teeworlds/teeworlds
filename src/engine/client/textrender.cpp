@@ -615,8 +615,8 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 			Scaled.m_Advance = pCursor->m_Advance;
 			Scaled.m_Size = Size;
 			Scaled.m_Line = pCursor->m_LineCount - 1;
-			Scaled.m_TextColor = vec4(m_TextR, m_TextG, m_TextB, m_TextA);
-			Scaled.m_SecondaryColor = vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA);
+			Scaled.m_TextColor = m_TextColor;
+			Scaled.m_SecondaryColor = m_TextSecondaryColor;
 			Scaled.m_NumChars = NumChars;
 			pCursor->m_Glyphs.add(Scaled);
 		}
@@ -704,14 +704,8 @@ CTextRender::CTextRender()
 {
 	m_pGraphics = 0;
 
-	m_TextR = 1.0f;
-	m_TextG = 1.0f;
-	m_TextB = 1.0f;
-	m_TextA = 1.0f;
-	m_TextSecondaryR = 0.0f;
-	m_TextSecondaryG = 0.0f;
-	m_TextSecondaryB = 0.0f;
-	m_TextSecondaryA = 0.3f;
+	m_TextColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+	m_TextSecondaryColor = vec4(0.0f, 0.0f, 0.0f, 0.3f);
 
 	m_pGlyphMap = 0;
 	m_NumVariants = 0;
@@ -865,22 +859,6 @@ void CTextRender::SetFontLanguageVariant(const char *pLanguageFile)
 	}
 
 	m_pGlyphMap->SetVariantFaceByName(pFamilyName);
-}
-
-void CTextRender::TextColor(float r, float g, float b, float a)
-{
-	m_TextR = r;
-	m_TextG = g;
-	m_TextB = b;
-	m_TextA = a;
-}
-
-void CTextRender::TextSecondaryColor(float r, float g, float b, float a)
-{
-	m_TextSecondaryR = r;
-	m_TextSecondaryG = g;
-	m_TextSecondaryB = b;
-	m_TextSecondaryA = a;
 }
 
 float CTextRender::TextWidth(float FontSize, const char *pText, int Length)

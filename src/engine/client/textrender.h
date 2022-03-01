@@ -153,15 +153,8 @@ class CTextRender : public IEngineTextRender
 	IGraphics *m_pGraphics;
 	IGraphics *Graphics() { return m_pGraphics; }
 
-	float m_TextR;
-	float m_TextG;
-	float m_TextB;
-	float m_TextA;
-
-	float m_TextSecondaryR;
-	float m_TextSecondaryG;
-	float m_TextSecondaryB;
-	float m_TextSecondaryA;
+	vec4 m_TextColor;
+	vec4 m_TextSecondaryColor;
 
 	CGlyphMap *m_pGlyphMap;
 	void *m_apFontData[MAX_FACES];
@@ -195,11 +188,11 @@ public:
 	void LoadFonts(IStorage *pStorage, IConsole *pConsole);
 	void SetFontLanguageVariant(const char *pLanguageFile);
 
-	void TextColor(float r, float g, float b, float a);
-	void TextSecondaryColor(float r, float g, float b, float a);
+	void TextColor(const vec4 &Color) { m_TextColor = Color; }
+	void TextSecondaryColor(const vec4 &Color) { m_TextSecondaryColor = Color; }
 
-	vec4 GetColor() const { return vec4(m_TextR, m_TextG, m_TextB, m_TextA); }
-	vec4 GetSecondaryColor() const { return vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA); }
+	vec4 GetColor() const { return m_TextColor; }
+	vec4 GetSecondaryColor() const { return m_TextSecondaryColor; }
 
 	float TextWidth(float FontSize, const char *pText, int Length);
 	void TextDeferred(CTextCursor *pCursor, const char *pText, int Length);
