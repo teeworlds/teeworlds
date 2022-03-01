@@ -56,7 +56,8 @@ struct CGlyphIndex
 	};
 	friend bool operator < (const CGlyphIndex& l, const CGlyphIndex& r)
 	{
-		if (l.m_FontSizeIndex == r.m_FontSizeIndex) return l.m_ID < r.m_ID;
+		if(l.m_FontSizeIndex == r.m_FontSizeIndex)
+			return l.m_ID < r.m_ID;
 		return l.m_FontSizeIndex < r.m_FontSizeIndex;
 	};
 	friend bool operator > (const CGlyphIndex& l, const CGlyphIndex& r) { return r < l; }

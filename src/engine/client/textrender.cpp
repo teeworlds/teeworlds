@@ -566,7 +566,7 @@ CWordWidthHint CTextRender::MakeWord(CTextCursor *pCursor, const char *pText, co
 		return Hint;
 	}
 
-	while(1)
+	while(true)
 	{
 		int Chr = NextChr;
 		CGlyph *pGlyph = pNextGlyph;
@@ -1242,7 +1242,7 @@ int CTextRender::CharToGlyph(CTextCursor *pCursor, int NumChars, float *pLineWid
 	int NumGlyphs = pCursor->m_Glyphs.size();
 	if(NumGlyphs == 0 || NumChars == 0)
 	{
-		if (pLineWidth)
+		if(pLineWidth)
 			*pLineWidth = 0.0f;
 		return 0;
 	}

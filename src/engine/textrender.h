@@ -135,7 +135,7 @@ public:
 
 	void Reset(int64 StringVersion = -1)
 	{
-		if (StringVersion < 0 || m_StringVersion != StringVersion)
+		if(StringVersion < 0 || m_StringVersion != StringVersion)
 		{
 			m_Width = 0;
 			m_Height = 0;
