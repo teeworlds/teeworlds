@@ -1146,7 +1146,7 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 	Graphics()->QuadsBegin();
 
 	int Line = -1;
-	vec2 LineOffset = vec2(0, 0);
+	float LineOffset = 0.0f;
 	vec2 Anchor = pCursor->m_CursorPos + AlignOffset;
 
 	for(int i = NumQuads - 1; i >= 0; --i)
@@ -1158,11 +1158,11 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 		{
 			Line = rScaled.m_Line;
 			if(HorizontalAlign == TEXTALIGN_RIGHT)
-				LineOffset.x = pCursor->m_Width - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size);
+				LineOffset = pCursor->m_Width - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size);
 			else if(HorizontalAlign == TEXTALIGN_CENTER)
-				LineOffset.x = (pCursor->m_Width - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size)) / 2.0f;
+				LineOffset = (pCursor->m_Width - (rScaled.m_Advance.x + pGlyph->m_AdvanceX * rScaled.m_Size)) / 2.0f;
 			else
-				LineOffset.x = 0;
+				LineOffset = 0.0f;
 		}
 
 		if(pGlyph->m_AtlasIndex < 0 || i < StartGlyph || i >= EndGlyphs)
@@ -1190,8 +1190,8 @@ void CTextRender::DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool 
 
 		Graphics()->QuadsSetSubset(pGlyph->m_aUvCoords[0], pGlyph->m_aUvCoords[1], pGlyph->m_aUvCoords[2], pGlyph->m_aUvCoords[3]);
 		
-		float AnchorX = (int)((Anchor.x + LineOffset.x) * ScreenScale.x) / ScreenScale.x; 
-		float AnchorY = (int)((Anchor.y + LineOffset.y) * ScreenScale.y) / ScreenScale.y; 
+		float AnchorX = (int)((Anchor.x + LineOffset) * ScreenScale.x) / ScreenScale.x; 
+		float AnchorY = (int)(Anchor.y * ScreenScale.y) / ScreenScale.y; 
 		vec2 QuadPosition = vec2(AnchorX, AnchorY) + rScaled.m_Advance + vec2(pGlyph->m_BearingX, pGlyph->m_BearingY) * rScaled.m_Size + Offset / ScreenScale;
 		IGraphics::CQuadItem QuadItem = IGraphics::CQuadItem(QuadPosition.x, QuadPosition.y, pGlyph->m_Width * rScaled.m_Size, pGlyph->m_Height * rScaled.m_Size);
 		Graphics()->QuadsDrawTL(&QuadItem, 1);
