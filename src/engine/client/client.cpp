@@ -541,9 +541,8 @@ void CClient::Connect(const char *pAddress)
 
 	if(net_addr_from_str(&m_ServerAddress, m_aServerAddressStr) != 0 && net_host_lookup(m_aServerAddressStr, &m_ServerAddress, m_NetClient.NetType()) != 0)
 	{
-		char aBufMsg[256];
-		str_format(aBufMsg, sizeof(aBufMsg), "could not find the address of %s, connecting to localhost", aBuf);
-		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBufMsg);
+		str_format(aBuf, sizeof(aBuf), "could not find the address of %s, connecting to localhost", m_aServerAddressStr);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "client", aBuf);
 		net_host_lookup("localhost", &m_ServerAddress, m_NetClient.NetType());
 	}
 
