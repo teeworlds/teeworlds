@@ -811,6 +811,22 @@ void CCharacter::Snap(int SnappingClient)
 	CNetObj_Character *pCharacter = static_cast<CNetObj_Character *>(Server()->SnapNewItem(NETOBJTYPE_CHARACTER, m_pPlayer->GetCID(), sizeof(CNetObj_Character)));
 	if(!pCharacter)
 		return;
+	/* Race podium support example
+	//Render race podium flags
+	if(Server()->GetClientVersion(SnappingClient) >= GameServer()->MIN_RACE_GIMMIC_CLIENTVERSION)
+	{
+		int Place = m_pPlayer->GetCID(); //Put race rank here
+		if (Place >= 0 && Place < 3) {
+			CNetObj_RaceFlag *pRaceFlag = (CNetObj_RaceFlag *) Server()->SnapNewItem(NETOBJTYPE_RACEFLAG, Place,
+																					 sizeof(CNetObj_RaceFlag));
+			if (!pRaceFlag)
+				return;
+
+			pRaceFlag->m_X = round_to_int(m_Pos.x);
+			pRaceFlag->m_Y = round_to_int(m_Pos.y);
+			pRaceFlag->m_Place = Place;
+		}
+	}*/
 
 	// write down the m_Core
 	if(!m_ReckoningTick || GameWorld()->m_Paused)

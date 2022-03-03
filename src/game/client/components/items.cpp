@@ -12,6 +12,7 @@
 
 #include <game/client/components/flow.h>
 #include <game/client/components/effects.h>
+#include <game/client/components/controls.h>
 
 #include "items.h"
 
@@ -96,6 +97,92 @@ void CItems::RenderProjectile(const CNetObj_Projectile *pCurrent, int ItemID)
 		m_pClient->m_pEffects->BulletTrail(Pos);
 		Graphics()->QuadsSetRotation(length(Vel) > 0.00001f ? angle(Vel) : 0);
 	}
+
+	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 32, 32);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+	Graphics()->QuadsSetRotation(0);
+	Graphics()->QuadsEnd();
+}
+
+void CItems::RenderPodiumProjectile(const CNetObj_PodiumRaceProjectile *pCurrent, int ItemID)
+{
+	// get positions
+	if(!Config()->m_ClRaceGimmicksProjectiles)
+	{
+		CNetObj_Projectile Proj;
+		Proj.m_X = pCurrent->m_X;
+		Proj.m_Y = pCurrent->m_Y;
+		Proj.m_VelX = pCurrent->m_VelX;
+		Proj.m_VelY = pCurrent->m_VelY;
+		Proj.m_StartTick = pCurrent->m_StartTick;
+
+		//Set the right weapon
+		Proj.m_Type = WEAPON_GRENADE;
+		RenderProjectile(&Proj, ItemID);
+		return;
+	}
+
+	float Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
+	float Speed = m_pClient->m_Tuning.m_GrenadeSpeed;
+	int SpriteID = 0;
+	if(pCurrent->m_Place == RACE_FLAG_GOLD)
+		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_GOLD;
+	else if(pCurrent->m_Place == RACE_FLAG_SILVER)
+		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_SILVER;
+	else
+		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_BRONZE;
+
+	static float s_LastGameTickTime = Client()->GameTickTime();
+	if(!m_pClient->IsWorldPaused() && !m_pClient->IsDemoPlaybackPaused())
+		s_LastGameTickTime = Client()->GameTickTime();
+
+	float Ct;
+	if(m_pClient->ShouldUsePredicted() && Config()->m_ClPredictProjectiles)
+		Ct = ((float)(Client()->PredGameTick() - 1 - pCurrent->m_StartTick) + Client()->PredIntraGameTick())/(float)SERVER_TICK_SPEED;
+	else
+		Ct = (Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
+	if(Ct < 0)
+	{
+		if(Ct > -s_LastGameTickTime / 2)
+		{
+			// Fixup the timing which might be screwed during demo playback because
+			// s_LastGameTickTime depends on the system timer, while the other part
+			// Client()->PrevGameTick()-pCurrent->m_StartTick)/(float)SERVER_TICK_SPEED
+			// is virtually constant (for projectiles fired on the current game tick):
+			// (x - (x+2)) / 50 = -0.04
+			//
+			// We have a strict comparison for the passed time being more than the time between ticks
+			// if(CurtickStart > m_Info.m_CurrentTime) in CDemoPlayer::Update()
+			// so on the practice the typical value of s_LastGameTickTime varies from 0.02386 to 0.03999
+			// which leads to Ct from -0.00001 to -0.01614.
+			// Round up those to 0.0 to fix missing rendering of the projectile.
+			Ct = 0;
+		}
+		else
+		{
+			return; // projectile haven't been shot yet
+		}
+	}
+
+	vec2 StartPos(pCurrent->m_X, pCurrent->m_Y);
+	vec2 StartVel(pCurrent->m_VelX/100.0f, pCurrent->m_VelY/100.0f);
+	vec2 Pos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct);
+	vec2 PrevPos = CalcPos(StartPos, StartVel, Curvature, Speed, Ct-0.001f);
+
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id);
+	Graphics()->QuadsBegin();
+
+	RenderTools()->SelectSprite(SpriteID);
+	const vec2 Vel = Pos-PrevPos;
+
+	// add particle for this projectile
+	m_pClient->m_pEffects->SmokeTrail(Pos, Vel*-1);
+	const float Now = Client()->LocalTime();
+	static float s_Time = 0.0f;
+	static float s_LastLocalTime = Now;
+	s_Time += (Now - s_LastLocalTime) * m_pClient->GetAnimationPlaybackSpeed();
+	Graphics()->QuadsSetRotation(s_Time*pi*2*2 + ItemID);
+	s_LastLocalTime = Now;
 
 	IGraphics::CQuadItem QuadItem(Pos.x, Pos.y, 32, 32);
 	Graphics()->QuadsDraw(&QuadItem, 1);
@@ -193,6 +280,79 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 	Graphics()->QuadsEnd();
 }
 
+void CItems::RenderRaceFlag(const CNetObj_RaceFlag *pPrev, const CNetObj_RaceFlag *pCurrent, const CNetObj_GameDataRaceFlag *pPrevGameDataRaceFlag, const CNetObj_GameDataRaceFlag *pCurGameDataRaceFlag)
+{
+	float OffsetX = 14.0f;
+	const float OffsetY = 6;
+	const float Size=42.0f;
+	vec2 Pos = mix(vec2(pPrev->m_X, pPrev->m_Y), vec2(pCurrent->m_X, pCurrent->m_Y), Client()->IntraGameTick());
+	vec2 Direction = vec2(1, 0);
+	if(pCurGameDataRaceFlag)
+	{
+		// make sure that the flag isn't interpolated between records
+		if(pPrevGameDataRaceFlag &&
+		   ((pCurrent->m_Place == RACE_FLAG_GOLD && pPrevGameDataRaceFlag->m_FlagCarrierRaceGold != pCurGameDataRaceFlag->m_FlagCarrierRaceGold) ||
+			(pCurrent->m_Place == RACE_FLAG_SILVER && pPrevGameDataRaceFlag->m_FlagCarrierRaceSilver != pCurGameDataRaceFlag->m_FlagCarrierRaceSilver) ||
+			(pCurrent->m_Place == RACE_FLAG_BRONZE && pPrevGameDataRaceFlag->m_FlagCarrierRaceBronze != pCurGameDataRaceFlag->m_FlagCarrierRaceBronze)))
+			Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
+		int FlagCarrier = -1;
+		if(pCurrent->m_Place == RACE_FLAG_GOLD && pCurGameDataRaceFlag->m_FlagCarrierRaceGold >= 0)
+			FlagCarrier = pCurGameDataRaceFlag->m_FlagCarrierRaceGold;
+		else if(pCurrent->m_Place == RACE_FLAG_SILVER && pCurGameDataRaceFlag->m_FlagCarrierRaceSilver >= 0)
+			FlagCarrier = pCurGameDataRaceFlag->m_FlagCarrierRaceSilver;
+		else if(pCurrent->m_Place == RACE_FLAG_BRONZE && pCurGameDataRaceFlag->m_FlagCarrierRaceBronze >= 0)
+			FlagCarrier = pCurGameDataRaceFlag->m_FlagCarrierRaceBronze;
+
+		// make sure to use predicted position
+		if(FlagCarrier >= 0 && FlagCarrier < MAX_CLIENTS && m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(FlagCarrier))
+		{
+			// don't render race flag if it's carried by a player and it's disabled by config
+			if(!Config()->m_ClRaceGimmicksFlags)
+				return;
+
+			Pos = m_pClient->GetCharPos(FlagCarrier, true);
+
+
+			//calculate flag direction
+			float PrevAngle = (float)m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Prev.m_Angle;
+			float PlayerAngle = (float)m_pClient->m_Snap.m_aCharacters[FlagCarrier].m_Cur.m_Angle;
+
+			if(PrevAngle < pi*-128 && PlayerAngle > pi*128)
+				PrevAngle += 2*pi*256;
+			else if(PrevAngle > pi*128 && PlayerAngle < pi*-128)
+				PlayerAngle += 2*pi*256;
+			float Angle = mix(PrevAngle, PlayerAngle, Client()->IntraGameTick())/256.0f;
+
+			if(m_pClient->m_LocalClientID == FlagCarrier && Client()->State() != IClient::STATE_DEMOPLAYBACK)
+			{
+				// just use the direct input if it's local player we are rendering
+				Angle = angle(m_pClient->m_pControls->m_MousePos);
+			}
+			Direction = direction(Angle);
+		}
+	}
+
+
+
+	Graphics()->BlendNormal();
+	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id);
+	Graphics()->QuadsBegin();
+	int SpriteID = SPRITE_FLAG_GOLD;
+	switch(pCurrent->m_Place)
+	{
+		case RACE_FLAG_SILVER: SpriteID = SPRITE_FLAG_SILVER; break;
+		case RACE_FLAG_BRONZE: SpriteID = SPRITE_FLAG_BRONZE; break;
+		default: break;
+	}
+	RenderTools()->SelectSprite(SpriteID, Direction.x > 0 ? SPRITE_FLAG_FLIP_X : 0);
+	Graphics()->QuadsSetRotation(0.0f);
+	if(Direction.x > 0)
+		OffsetX*=-1;
+	IGraphics::CQuadItem QuadItem(Pos.x+OffsetX, Pos.y-32.0f+OffsetY, Size, Size * 7 / 4);
+	Graphics()->QuadsDraw(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+}
+
 
 void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 {
@@ -270,28 +430,31 @@ void CItems::OnRender()
 		IClient::CSnapItem Item;
 		const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
 
-		if(Item.m_Type == NETOBJTYPE_PROJECTILE)
+		if (Item.m_Type == NETOBJTYPE_PROJECTILE)
 		{
-			RenderProjectile((const CNetObj_Projectile *)pData, Item.m_ID);
+			RenderProjectile((const CNetObj_Projectile *) pData, Item.m_ID);
 		}
-		else if(Item.m_Type == NETOBJTYPE_PICKUP)
+		else if(Item.m_Type == NETOBJTYPE_PODIUMRACEPROJECTILE)
+		{
+			RenderPodiumProjectile((const CNetObj_PodiumRaceProjectile *) pData, Item.m_ID);
+		}
+		else if (Item.m_Type == NETOBJTYPE_PICKUP)
 		{
 			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
-			if(pPrev)
-				RenderPickup((const CNetObj_Pickup *)pPrev, (const CNetObj_Pickup *)pData);
+			if (pPrev)
+				RenderPickup((const CNetObj_Pickup *) pPrev, (const CNetObj_Pickup *) pData);
 		}
-		else if(Item.m_Type == NETOBJTYPE_LASER)
+		else if (Item.m_Type == NETOBJTYPE_LASER)
 		{
-			RenderLaser((const CNetObj_Laser *)pData);
+			RenderLaser((const CNetObj_Laser *) pData);
 		}
 	}
 
-	// render flag
+	// render flags over all other items
 	for(int i = 0; i < Num; i++)
 	{
 		IClient::CSnapItem Item;
 		const void *pData = Client()->SnapGetItem(IClient::SNAP_CURRENT, i, &Item);
-
 		if(Item.m_Type == NETOBJTYPE_FLAG)
 		{
 			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
@@ -300,6 +463,16 @@ void CItems::OnRender()
 				const void *pPrevGameDataFlag = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_GAMEDATAFLAG, m_pClient->m_Snap.m_GameDataFlagSnapID);
 				RenderFlag(static_cast<const CNetObj_Flag *>(pPrev), static_cast<const CNetObj_Flag *>(pData),
 							static_cast<const CNetObj_GameDataFlag *>(pPrevGameDataFlag), m_pClient->m_Snap.m_pGameDataFlag);
+			}
+		}
+		else if(Item.m_Type == NETOBJTYPE_RACEFLAG)
+		{
+			const void *pPrev = Client()->SnapFindItem(IClient::SNAP_PREV, Item.m_Type, Item.m_ID);
+			if(pPrev)
+			{
+				const void *pPrevGameDataRaceFlag = Client()->SnapFindItem(IClient::SNAP_PREV, NETOBJTYPE_GAMEDATARACEFLAG, m_pClient->m_Snap.m_GameDataRaceFlagSnapID);
+				RenderRaceFlag(static_cast<const CNetObj_RaceFlag *>(pPrev), static_cast<const CNetObj_RaceFlag *>(pData),
+							   static_cast<const CNetObj_GameDataRaceFlag *>(pPrevGameDataRaceFlag), m_pClient->m_Snap.m_pGameDataRaceFlag);
 			}
 		}
 	}

@@ -115,6 +115,18 @@ void CProjectile::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient, GetPos(Ct)))
 		return;
 
+	/*
+	if(m_Type == WEAPON_GRENADE && m_Owner < 3 && m_Owner >= 0 && Server()->GetClientVersion(SnappingClient) >= GameServer()->MIN_RACE_GIMMIC_CLIENTVERSION)
+	{
+		CNetObj_PodiumRaceProjectile *pProjPod = static_cast<CNetObj_PodiumRaceProjectile *>(Server()->SnapNewItem(NETOBJTYPE_PODIUMRACEPROJECTILE, GetID(), sizeof(CNetObj_PodiumRaceProjectile)));
+		pProjPod->m_X = round_to_int(m_Pos.x);
+		pProjPod->m_Y = round_to_int(m_Pos.y);
+		pProjPod->m_VelX = round_to_int(m_Direction.x*100.0f);
+		pProjPod->m_VelY = round_to_int(m_Direction.y*100.0f);
+		pProjPod->m_StartTick = m_StartTick;
+		pProjPod->m_Place = m_Owner;
+		return;
+	}*/
 	CNetObj_Projectile *pProj = static_cast<CNetObj_Projectile *>(Server()->SnapNewItem(NETOBJTYPE_PROJECTILE, GetID(), sizeof(CNetObj_Projectile)));
 	if(pProj)
 		FillInfo(pProj);

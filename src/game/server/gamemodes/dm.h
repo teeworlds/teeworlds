@@ -8,6 +8,7 @@ class CGameControllerDM : public IGameController
 {
 public:
 	CGameControllerDM(class CGameContext *pGameServer);
+	//virtual void Snap(int SnappingClient);
 };
 
 #endif

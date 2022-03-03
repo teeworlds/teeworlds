@@ -57,7 +57,13 @@ enum
 
 	VOTE_CHOICE_NO = -1,
 	VOTE_CHOICE_PASS = 0,
-	VOTE_CHOICE_YES = 1
+	VOTE_CHOICE_YES = 1,
+	
+	RACE_FLAG_MISSING=-1,
+	RACE_FLAG_GOLD,
+	RACE_FLAG_SILVER,
+	RACE_FLAG_BRONZE,
+	NUM_RACE_FLAGS
 };
 '''
 
@@ -267,6 +273,30 @@ Objects = [
 		NetIntRange("m_BestTime", -1, 'max_int'),
 		NetIntRange("m_Precision", 0, 3),
 		NetFlag("m_RaceFlags", RaceFlags),
+	]),
+
+	NetObject("RaceFlag", [
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntRange("m_Place", 'RACE_FLAG_MISSING', 'RACE_FLAG_BRONZE'),
+	]),
+
+	NetObject("GameDataRaceFlag", [
+		NetIntRange("m_FlagCarrierRaceGold", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
+		NetIntRange("m_FlagCarrierRaceSilver", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
+		NetIntRange("m_FlagCarrierRaceBronze", 'RACE_FLAG_MISSING', 'MAX_CLIENTS-1'),
+	]),
+
+	# TODO move this into the default projectile netobj in 0.8
+	NetObject("PodiumRaceProjectile", [
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_VelX"),
+		NetIntAny("m_VelY"),
+
+		# NetIntRange("m_Type", 0, 'NUM_WEAPONS-1'),  # it's always type grenade
+		NetIntRange("m_Place", 'RACE_FLAG_GOLD', 'RACE_FLAG_BRONZE'),
+		NetTick("m_StartTick"),
 	]),
 ]
 

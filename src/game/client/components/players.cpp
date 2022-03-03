@@ -244,13 +244,42 @@ void CPlayers::RenderPlayer(
 	// draw gun
 	if(Player.m_Weapon >= 0)
 	{
-		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
+		// normal weapons
+		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
+
+		// setup race podium texture
+		int RacePodium = RACE_FLAG_MISSING;
+		if(iw == WEAPON_GRENADE && Config()->m_ClRaceGimmicksLauncher && m_pClient->m_Snap.m_pGameDataRaceFlag)
+		{
+			if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceGold == ClientID)
+				RacePodium = RACE_FLAG_GOLD;
+			else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceSilver == ClientID)
+				RacePodium = RACE_FLAG_SILVER;
+			else if(m_pClient->m_Snap.m_pGameDataRaceFlag->m_FlagCarrierRaceBronze == ClientID)
+				RacePodium = RACE_FLAG_BRONZE;
+		}
+
+		if(RacePodium != RACE_FLAG_MISSING)
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_RACEGIMMICS].m_Id);
+		else
+			Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
 
-		// normal weapons
-		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
-		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteBody, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+
+		int SpriteDir = Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0;
+		if(RacePodium != RACE_FLAG_MISSING)
+		{
+			int SpriteID = SPRITE_WEAPON_GRENADE_BODY_GOLD;
+			switch(RacePodium){
+				case RACE_FLAG_SILVER: SpriteID = SPRITE_WEAPON_GRENADE_BODY_SILVER; break;
+				case RACE_FLAG_BRONZE: SpriteID = SPRITE_WEAPON_GRENADE_BODY_BRONZE; break;
+				default: break;
+			}
+			RenderTools()->SelectSprite(SpriteID, SpriteDir);
+		}
+		else
+			RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteBody, SpriteDir);
 
 		vec2 Dir = Direction;
 		vec2 p;

@@ -31,6 +31,9 @@ MACRO_CONFIG_INT(ClShowServerBroadcast, cl_show_server_broadcast, 1, 0, 1, CFGFL
 MACRO_CONFIG_INT(ClColoredBroadcast, cl_colored_broadcast, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Enable colored server broadcasts")
 
 MACRO_CONFIG_INT(ClSaveServerPasswords, cl_save_server_passwords, 1, 0, 2, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Save server passwords (0 = never, 1 = only favorites, 2 = all servers)")
+MACRO_CONFIG_INT(ClRaceGimmicksFlags, cl_race_gimmicks_flag, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show race gold/silver/bronze flag")
+MACRO_CONFIG_INT(ClRaceGimmicksLauncher, cl_race_gimmicks_launcher, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show race gold/silver/bronze grenade launchers and crosshairs")
+MACRO_CONFIG_INT(ClRaceGimmicksProjectiles, cl_race_gimmicks_proj, 1, 0, 1, CFGFLAG_SAVE|CFGFLAG_CLIENT, "Show race gold/silver/bronze grenade projectiles")
 
 MACRO_CONFIG_STR(BrFilterString, br_filter_string, 25, "", CFGFLAG_SAVE|CFGFLAG_CLIENT, "Server browser filtering string")
 
