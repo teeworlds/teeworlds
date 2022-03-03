@@ -127,7 +127,7 @@ void CItems::RenderPodiumProjectile(const CNetObj_PodiumRaceProjectile *pCurrent
 	int SpriteID = 0;
 	if(pCurrent->m_Place == RACE_FLAG_GOLD)
 		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_GOLD;
-	else if(pCurrent->m_Place == RACE_FLAG_GOLD)
+	else if(pCurrent->m_Place == RACE_FLAG_SILVER)
 		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_SILVER;
 	else
 		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_BRONZE;
