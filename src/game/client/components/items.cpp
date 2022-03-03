@@ -122,8 +122,8 @@ void CItems::RenderPodiumProjectile(const CNetObj_PodiumRaceProjectile *pCurrent
 		return;
 	}
 
-	float Curvature = 0;
-	float Speed = 0;
+	float Curvature = m_pClient->m_Tuning.m_GrenadeCurvature;
+	float Speed = m_pClient->m_Tuning.m_GrenadeSpeed;
 	int SpriteID = 0;
 	if(pCurrent->m_Place == RACE_FLAG_GOLD)
 		SpriteID = SPRITE_WEAPON_GRENADE_PROJ_GOLD;
