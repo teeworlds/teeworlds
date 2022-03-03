@@ -2,7 +2,7 @@
 #include <gtest/gtest.h>
 
 #include <base/system.h>
-#include <engine/shared/packer.h>
+#include <engine/message.h>
 
 // pExpected is NULL if an error is expected
 static void ExpectAddString5(const char *pString, int Limit, const char *pExpected)
@@ -61,4 +61,113 @@ TEST(Packer, AddStringBroken)
 	ExpectAddString5("\x80\x80", 3, "�");
 	ExpectAddString5("\x80\x80", 5, "�");
 	ExpectAddString5("\x80\x80", 6, 0);
+}
+
+TEST(Packer, EmptyPacker)
+{
+	CPacker Packer;
+	Packer.Reset();
+	EXPECT_EQ(false, Packer.Error());
+	EXPECT_EQ(0, Packer.Size());
+	EXPECT_EQ(int(CPacker::PACKER_BUFFER_SIZE), Packer.RemainingSize());
+}
+
+TEST(Packer, PackerRawNoSize)
+{
+	CPacker Packer;
+	Packer.Reset();
+	EXPECT_EQ(false, Packer.Error());
+	Packer.AddRaw("a", 0);
+	EXPECT_EQ(true, Packer.Error());
+}
+
+TEST(Packer, MinimalUnpacker)
+{
+	unsigned char aBuf[1] = {0};
+	CUnpacker Unpacker;
+	Unpacker.Reset(aBuf, sizeof(aBuf));
+	EXPECT_EQ(1, Unpacker.RemainingSize());
+	EXPECT_EQ(1, Unpacker.CompleteSize());
+	EXPECT_EQ(0, Unpacker.Size());
+	EXPECT_EQ(0, Unpacker.GetInt());
+	EXPECT_EQ(false, Unpacker.Error());
+	EXPECT_EQ(0, Unpacker.RemainingSize());
+	EXPECT_EQ(1, Unpacker.CompleteSize());
+	EXPECT_EQ(1, Unpacker.Size());
+	EXPECT_EQ(123, Unpacker.GetIntOrDefault(123));
+	EXPECT_EQ(false, Unpacker.Error());
+	EXPECT_EQ(0, Unpacker.GetInt());
+	EXPECT_EQ(true, Unpacker.Error());
+}
+
+TEST(Packer, UnpackerRawNoSize)
+{
+	unsigned char aBuf[1] = {0};
+	CUnpacker Unpacker;
+	Unpacker.Reset(aBuf, sizeof(aBuf));
+	EXPECT_EQ(false, Unpacker.Error());
+	EXPECT_EQ((const unsigned char *)0x0, Unpacker.GetRaw(0));
+	EXPECT_EQ(true, Unpacker.Error());
+}
+
+TEST(Packer, RoundtripPackerUnpacker)
+{
+	CPacker Packer;
+	Packer.Reset();
+	Packer.AddInt(12345);
+	Packer.AddString("abcd");
+	Packer.AddInt(-123);
+	Packer.AddRaw("efgh", 4);
+	EXPECT_EQ(false, Packer.Error());
+	EXPECT_EQ(14, Packer.Size());
+
+	CUnpacker Unpacker;
+	Unpacker.Reset(Packer.Data(), Packer.Size());
+	EXPECT_EQ(12345, Unpacker.GetInt());
+	EXPECT_STREQ("abcd", Unpacker.GetString());
+	EXPECT_EQ(-123, Unpacker.GetInt());
+	EXPECT_EQ(0, mem_comp("efgh", Unpacker.GetRaw(4), 4));
+	EXPECT_EQ(false, Unpacker.Error());
+	EXPECT_EQ(0, Unpacker.RemainingSize());
+}
+
+static void TestMsgPackerUnpacker(int Type, bool System, bool ExpectError)
+{
+	CMsgPacker Packer(Type, System);
+	EXPECT_EQ(ExpectError, Packer.Error());
+	if(Packer.Error())
+		return;
+
+	CMsgUnpacker Unpacker(Packer.Data(), Packer.Size());
+	EXPECT_EQ(Type, Unpacker.Type());
+	EXPECT_EQ(System, Unpacker.System());
+	EXPECT_EQ(false, Unpacker.Error());
+	EXPECT_EQ(0, Unpacker.RemainingSize());
+}
+
+TEST(Packer, RoundtripMsgPackerUnpacker)
+{
+	TestMsgPackerUnpacker(0, false, false);
+	TestMsgPackerUnpacker(12345, true, false);
+	TestMsgPackerUnpacker(0x3FFFFFFF, true, false);
+}
+
+TEST(Packer, MsgPackerError)
+{
+	TestMsgPackerUnpacker(-1, false, true);
+	TestMsgPackerUnpacker(-12345, true, true);
+	TestMsgPackerUnpacker(0x7FFFFFFF, true, true);
+}
+
+TEST(Packer, MsgUnpackerError)
+{
+	CPacker Packer;
+	Packer.Reset();
+	Packer.AddInt(-12345);
+	EXPECT_EQ(false, Packer.Error());
+
+	CMsgUnpacker Unpacker(Packer.Data(), Packer.Size());
+	EXPECT_EQ(0, Unpacker.Type());
+	EXPECT_EQ(false, Unpacker.System());
+	EXPECT_EQ(true, Unpacker.Error());
 }
