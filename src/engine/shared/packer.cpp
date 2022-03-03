@@ -18,14 +18,13 @@ void CPacker::AddInt(int i)
 	if(m_Error)
 		return;
 
-	// make sure that we have space enough
-	if(m_pEnd - m_pCurrent <= CVariableInt::MAX_BYTES_PACKED)
+	unsigned char *pNext = CVariableInt::Pack(m_pCurrent, i, m_pEnd - m_pCurrent);
+	if(!pNext)
 	{
-		dbg_break();
 		m_Error = 1;
+		return;
 	}
-	else
-		m_pCurrent = CVariableInt::Pack(m_pCurrent, i);
+	m_pCurrent = pNext;
 }
 
 void CPacker::AddString(const char *pStr, int Limit)
@@ -103,12 +102,13 @@ int CUnpacker::GetInt()
 	}
 
 	int i;
-	m_pCurrent = CVariableInt::Unpack(m_pCurrent, &i);
-	if(m_pCurrent > m_pEnd)
+	const unsigned char *pNext = CVariableInt::Unpack(m_pCurrent, &i, m_pEnd - m_pCurrent);
+	if(!pNext)
 	{
 		m_Error = 1;
 		return 0;
 	}
+	m_pCurrent = pNext;
 	return i;
 }
 
