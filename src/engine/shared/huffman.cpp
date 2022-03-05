@@ -232,7 +232,7 @@ int CHuffman::Decompress(const void *pInput, int InputSize, void *pOutput, int O
 	CNode *pEof = &m_aNodes[HUFFMAN_EOF_SYMBOL];
 	CNode *pNode = 0;
 
-	while(1)
+	while(true)
 	{
 		// {A} try to load a node now, this will reduce dependency at location {D}
 		pNode = 0;
@@ -267,7 +267,7 @@ int CHuffman::Decompress(const void *pInput, int InputSize, void *pOutput, int O
 			Bitcount -= HUFFMAN_LUTBITS;
 
 			// walk the tree bit by bit
-			while(1)
+			while(true)
 			{
 				// traverse tree
 				pNode = &m_aNodes[pNode->m_aLeafs[Bits&1]];
