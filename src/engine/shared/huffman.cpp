@@ -22,7 +22,7 @@ static const unsigned gs_aFreqTable[256 + 1] = {
 struct CHuffmanConstructNode
 {
 	unsigned short m_NodeId;
- 	int m_Frequency;
+	int m_Frequency;
 };
 
 void CHuffman::Setbits_r(CNode *pNode, int Bits, unsigned Depth)
