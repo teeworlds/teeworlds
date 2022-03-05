@@ -1,6 +1,9 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <algorithm>
+
 #include <base/system.h>
+
 #include "huffman.h"
 
 
@@ -25,6 +28,11 @@ struct CHuffmanConstructNode
 	int m_Frequency;
 };
 
+bool CompareNodesByFrequencyDesc(const CHuffmanConstructNode *pNode1, const CHuffmanConstructNode *pNode2)
+{
+	return pNode2->m_Frequency < pNode1->m_Frequency;
+}
+
 void CHuffman::Setbits_r(CNode *pNode, int Bits, unsigned Depth)
 {
 	if(pNode->m_aLeafs[1] != 0xffff)
@@ -36,29 +44,6 @@ void CHuffman::Setbits_r(CNode *pNode, int Bits, unsigned Depth)
 	{
 		pNode->m_Bits = Bits;
 		pNode->m_NumBits = Depth;
-	}
-}
-
-// TODO: this should be something faster, but it's enough for now
-static void BubbleSort(CHuffmanConstructNode **ppList, int Size)
-{
-	int Changed = 1;
-	CHuffmanConstructNode *pTemp;
-
-	while(Changed)
-	{
-		Changed = 0;
-		for(int i = 0; i < Size-1; i++)
-		{
-			if(ppList[i]->m_Frequency < ppList[i+1]->m_Frequency)
-			{
-				pTemp = ppList[i];
-				ppList[i] = ppList[i+1];
-				ppList[i+1] = pTemp;
-				Changed = 1;
-			}
-		}
-		Size--;
 	}
 }
 
@@ -90,8 +75,7 @@ void CHuffman::ConstructTree(const unsigned *pFrequencies)
 	// construct the table
 	while(NumNodesLeft > 1)
 	{
-		// we can't rely on stdlib's qsort for this, it can generate different results on different implementations
-		BubbleSort(apNodesLeft, NumNodesLeft);
+		std::stable_sort(apNodesLeft, apNodesLeft + NumNodesLeft, CompareNodesByFrequencyDesc);
 
 		m_aNodes[m_NumNodes].m_NumBits = 0;
 		m_aNodes[m_NumNodes].m_aLeafs[0] = apNodesLeft[NumNodesLeft-1]->m_NodeId;
