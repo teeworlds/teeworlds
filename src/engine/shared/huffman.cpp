@@ -4,7 +4,7 @@
 #include "huffman.h"
 
 
-static const unsigned gs_aFreqTable[256 + 1] = {
+const unsigned CHuffman::ms_aFreqTable[HUFFMAN_MAX_SYMBOLS] = {
 	1 << 30,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,
 	283,131,146,166,543,164,167,136,179,859,363,113,157,154,204,108,137,180,202,176,
 	872,404,168,134,151,111,113,109,120,126,129,100,41,20,16,22,18,18,17,19,
@@ -119,8 +119,6 @@ void CHuffman::Init(const unsigned *pFrequencies)
 	m_NumNodes = 0;
 
 	// construct the tree
-	if(!pFrequencies)
-		pFrequencies = gs_aFreqTable;
 	ConstructTree(pFrequencies);
 
 	// build decode LUT

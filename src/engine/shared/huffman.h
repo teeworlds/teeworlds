@@ -30,6 +30,8 @@ class CHuffman
 		unsigned char m_Symbol;
 	};
 
+	static const unsigned ms_aFreqTable[HUFFMAN_MAX_SYMBOLS];
+
 	CNode m_aNodes[HUFFMAN_MAX_NODES];
 	CNode *m_apDecodeLut[HUFFMAN_LUTSIZE];
 	CNode *m_pStartNode;
@@ -50,7 +52,7 @@ public:
 			- Does no allocation whatsoever.
 			- You don't have to call any cleanup functions when you are done with it.
 	*/
-	void Init(const unsigned *pFrequencies = 0);
+	void Init(const unsigned *pFrequencies = ms_aFreqTable);
 
 	/*
 		Function: Compress
