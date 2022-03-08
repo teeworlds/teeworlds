@@ -1167,7 +1167,7 @@ void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)
 	float NewValue = pResult->GetFloat(1);
 
 	char aBuf[256];
-	if(pSelf->Tuning()->Set(pParamName, NewValue))
+	if(pSelf->Tuning()->Set(pParamName, NewValue) && pSelf->Tuning()->Get(pParamName, &NewValue))
 	{
 		str_format(aBuf, sizeof(aBuf), "%s changed to %.2f", pParamName, NewValue);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
