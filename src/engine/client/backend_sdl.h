@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ENGINE_CLIENT_BACKEND_SDL_H
+#define ENGINE_CLIENT_BACKEND_SDL_H
 
 #include "graphics_threaded.h"
 
@@ -216,3 +217,5 @@ public:
 	virtual int WindowActive();
 	virtual int WindowOpen();
 };
+
+#endif // ENGINE_CLIENT_BACKEND_SDL_H
