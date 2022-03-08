@@ -29,11 +29,10 @@ class CGameConsole : public CComponent
 
 		CGameConsole *m_pGameConsole;
 
-		char m_aCompletionMapBuffer[128];
-		int m_CompletionMapChosen;
-
 		char m_aCompletionBuffer[128];
 		int m_CompletionChosen;
+		char m_aCompletionBufferArgument[128];
+		int m_CompletionChosenArgument;
 		int m_CompletionFlagmask;
 		float m_CompletionRenderOffset;
 		float m_CompletionRenderOffsetChange;
@@ -57,7 +56,7 @@ class CGameConsole : public CComponent
 
 		const char *GetString() const { return m_Input.GetString(); }
 		static void PossibleCommandsCompleteCallback(int Index, const char *pStr, void *pUser);
-		static void PossibleMapsCompleteCallback(int Index, const char *pStr, void *pUser);
+		static void PossibleArgumentsCompleteCallback(int Index, const char *pStr, void *pUser);
 	};
 
 	class IConsole *m_pConsole;
