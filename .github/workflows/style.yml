@@ -22,7 +22,7 @@ jobs:
         sudo apt-get install jq -y
     - name: Check header guards
       run: scripts/check_header_guards.py
-    - name: lint JSON
+    - name: Lint JSON
       run: |
         while read -r json;
         do
