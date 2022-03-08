@@ -42,6 +42,20 @@ bool CTuningParams::Get(const char *pName, float *pValue) const
 	return false;
 }
 
+int CTuningParams::PossibleTunings(const char *pStr, IConsole::FPossibleCallback pfnCallback, void *pUser)
+{
+	int Index = 0;
+	for(int i = 0; i < Num(); i++)
+	{
+		if(str_find_nocase(GetName(i), pStr))
+		{
+			pfnCallback(Index, GetName(i), pUser);
+			Index++;
+		}
+	}
+	return Index;
+}
+
 
 float VelocityRamp(float Value, float Start, float Range, float Curvature)
 {
