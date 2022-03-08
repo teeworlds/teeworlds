@@ -1166,15 +1166,18 @@ void CGameContext::ConTuneParam(IConsole::IResult *pResult, void *pUserData)
 	const char *pParamName = pResult->GetString(0);
 	float NewValue = pResult->GetFloat(1);
 
+	char aBuf[256];
 	if(pSelf->Tuning()->Set(pParamName, NewValue))
 	{
-		char aBuf[256];
 		str_format(aBuf, sizeof(aBuf), "%s changed to %.2f", pParamName, NewValue);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
 		pSelf->SendTuningParams(-1);
 	}
 	else
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", "No such tuning parameter");
+	{
+		str_format(aBuf, sizeof(aBuf), "No such tuning parameter: %s", pParamName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "tuning", aBuf);
+	}
 }
 
 void CGameContext::ConTuneReset(IConsole::IResult *pResult, void *pUserData)
