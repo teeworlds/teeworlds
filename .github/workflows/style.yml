@@ -20,6 +20,8 @@ jobs:
       run: |
         sudo apt-get update -y
         sudo apt-get install jq -y
+    - name: Check header guards
+      run: scripts/check_header_guards.py
     - name: lint JSON
       run: |
         while read -r json;
