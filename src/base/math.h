@@ -5,7 +5,7 @@
 
 #include <stdlib.h>
 
-template <typename T>
+template<typename T>
 inline T clamp(T val, T min, T max)
 {
 	if(val < min)
@@ -17,20 +17,20 @@ inline T clamp(T val, T min, T max)
 
 inline float sign(float f)
 {
-	return f<0.0f?-1.0f:1.0f;
+	return f < 0.0f ? -1.0f : 1.0f;
 }
 
 inline int round_to_int(float f)
 {
-	if(f > 0)
-		return (int)(f+0.5f);
-	return (int)(f-0.5f);
+	if(f > 0.0f)
+		return (int)(f + 0.5f);
+	return (int)(f - 0.5f);
 }
 
 template<typename T, typename TB>
 inline T mix(const T a, const T b, TB amount)
 {
-	return a + (b-a)*amount;
+	return a + (b - a) * amount;
 }
 
 template<typename T, typename TB>
@@ -124,8 +124,22 @@ public:
 
 const float pi = 3.1415926535897932384626433f;
 
-template <typename T> inline T minimum(T a, T b) { return a<b?a:b; }
-template <typename T> inline T maximum(T a, T b) { return a>b?a:b; }
-template <typename T> inline T absolute(T a) { return a<T(0)?-a:a; }
+template<typename T>
+inline T minimum(T a, T b)
+{
+	return a < b ? a : b;
+}
+
+template<typename T>
+inline T maximum(T a, T b)
+{
+	return a > b ? a : b;
+}
+
+template<typename T>
+inline T absolute(T a)
+{
+	return a < T(0) ? -a : a;
+}
 
 #endif // BASE_MATH_H
