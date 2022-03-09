@@ -50,13 +50,27 @@ inline T bezier(const T p0, const T p1, const T p2, const T p3, TB amount)
 inline int random_int() { return (((rand() & 0xffff) << 16) | (rand() & 0xffff)) & 0x7FFFFFFF; }
 inline float random_float() { return rand()/(float)(RAND_MAX); }
 
+const int fxpscale = 1 << 10;
+
 // float to fixed
-inline int f2fx(float v) { return (int)(v*(float)(1<<10)); }
-inline float fx2f(int v) { return v*(1.0f/(1<<10)); }
+inline int f2fx(float v)
+{
+	return (int)(v * fxpscale);
+}
+inline float fx2f(int v)
+{
+	return v / (float)fxpscale;
+}
 
 // int to fixed
-inline int i2fx(int v) { return v<<10; }
-inline int fx2i(int v) { return v>>10; }
+inline int i2fx(int v)
+{
+	return v * fxpscale;
+}
+inline int fx2i(int v)
+{
+	return v / fxpscale;
+}
 
 inline int gcd(int a, int b)
 {
@@ -73,11 +87,32 @@ class fxp
 {
 	int value;
 public:
-	void set(int v) { value = v; }
-	int get() const { return value; }
-	fxp &operator = (int v) { value = v<<10; return *this; }
-	fxp &operator = (float v) { value = (int)(v*(float)(1<<10)); return *this; }
-	operator float() const { return value/(float)(1<<10); }
+	void set(int v)
+	{
+		value = v;
+	}
+	int get() const
+	{
+		return value;
+	}
+	fxp &operator=(int v)
+	{
+		value = i2fx(v);
+		return *this;
+	}
+	fxp &operator=(float v)
+	{
+		value = f2fx(v);
+		return *this;
+	}
+	operator int() const
+	{
+		return fx2i(value);
+	}
+	operator float() const
+	{
+		return fx2f(value);
+	}
 };
 
 const float pi = 3.1415926535897932384626433f;
