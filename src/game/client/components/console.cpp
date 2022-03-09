@@ -331,7 +331,7 @@ CGameConsole::CGameConsole()
 
 float CGameConsole::TimeNow()
 {
-	static long long s_TimeStart = time_get();
+	static int64 s_TimeStart = time_get();
 	return float(time_get()-s_TimeStart)/float(time_freq());
 }
 
