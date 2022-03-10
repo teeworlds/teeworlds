@@ -56,7 +56,8 @@ struct CGlyphIndex
 	};
 	friend bool operator < (const CGlyphIndex& l, const CGlyphIndex& r)
 	{
-		if (l.m_FontSizeIndex == r.m_FontSizeIndex) return l.m_ID < r.m_ID;
+		if(l.m_FontSizeIndex == r.m_FontSizeIndex)
+			return l.m_ID < r.m_ID;
 		return l.m_FontSizeIndex < r.m_FontSizeIndex;
 	};
 	friend bool operator > (const CGlyphIndex& l, const CGlyphIndex& r) { return r < l; }
@@ -121,7 +122,7 @@ public:
 	void SetDefaultFaceByName(const char *pFamilyName);
 	void AddFallbackFaceByName(const char *pFamilyName);
 	void SetVariantFaceByName(const char *pFamilyName);
-	
+
 	bool RenderGlyph(CGlyph *pGlyph, bool Render);
 	CGlyph *GetGlyph(int Chr, int FontSizeIndex, bool Render);
 	int GetFontSizeIndex(int PixelSize) const;
@@ -152,15 +153,8 @@ class CTextRender : public IEngineTextRender
 	IGraphics *m_pGraphics;
 	IGraphics *Graphics() { return m_pGraphics; }
 
-	float m_TextR;
-	float m_TextG;
-	float m_TextB;
-	float m_TextA;
-
-	float m_TextSecondaryR;
-	float m_TextSecondaryG;
-	float m_TextSecondaryB;
-	float m_TextSecondaryA;
+	vec4 m_TextColor;
+	vec4 m_TextSecondaryColor;
 
 	CGlyphMap *m_pGlyphMap;
 	void *m_apFontData[MAX_FACES];
@@ -174,13 +168,12 @@ class CTextRender : public IEngineTextRender
 
 	int LoadFontCollection(const void *pFilename, const void *pBuf, long FileSize);
 
-	bool isWestern(int Chr) const
+	static bool IsWestern(int Chr)
 	{
 		return Chr >= 0x0020 && Chr <= 0x218F;
 	}
 
-	CWordWidthHint MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, 
-						int FontSizeIndex, float Size, int PixelSize, vec2 ScreenScale);
+	CWordWidthHint MakeWord(CTextCursor *pCursor, const char *pText, const char *pEnd, int FontSizeIndex, float Size, int PixelSize, vec2 ScreenScale);
 	void TextRefreshGlyphs(CTextCursor *pCursor);
 
 	void DrawText(CTextCursor *pCursor, vec2 Offset, int Texture, bool IsSecondary, float Alpha, int StartGlyph, int NumGlyphs);
@@ -195,11 +188,11 @@ public:
 	void LoadFonts(IStorage *pStorage, IConsole *pConsole);
 	void SetFontLanguageVariant(const char *pLanguageFile);
 
-	void TextColor(float r, float g, float b, float a);
-	void TextSecondaryColor(float r, float g, float b, float a);
+	void TextColor(const vec4 &Color) { m_TextColor = Color; }
+	void TextSecondaryColor(const vec4 &Color) { m_TextSecondaryColor = Color; }
 
-	vec4 GetColor() const { return vec4(m_TextR, m_TextG, m_TextB, m_TextA); }
-	vec4 GetSecondaryColor() const { return vec4(m_TextSecondaryR, m_TextSecondaryG, m_TextSecondaryB, m_TextSecondaryA); }
+	vec4 GetColor() const { return m_TextColor; }
+	vec4 GetSecondaryColor() const { return m_TextSecondaryColor; }
 
 	float TextWidth(float FontSize, const char *pText, int Length);
 	void TextDeferred(CTextCursor *pCursor, const char *pText, int Length);
