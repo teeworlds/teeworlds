@@ -2004,6 +2004,11 @@ int time_season()
 	time(&time_data);
 	time_info = localtime(&time_data);
 
+	if((time_info->tm_mon == 11 && time_info->tm_mday == 31) || (time_info->tm_mon == 0 && time_info->tm_mday == 1))
+	{
+		return SEASON_NEWYEAR;
+	}
+
 	switch(time_info->tm_mon)
 	{
 		case 11:
