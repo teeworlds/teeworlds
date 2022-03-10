@@ -108,20 +108,20 @@ void CCamera::OnRender()
 	else
 	{
 		m_Zoom = 0.7f;
-		static vec2 Dir = vec2(1.0f, 0.0f);
+		static vec2 s_Dir = vec2(1.0f, 0.0f);
 
 		if(distance(m_Center, m_RotationCenter) <= (float)Config()->m_ClRotationRadius+0.5f)
 		{
 			// do little rotation
 			float RotPerTick = 360.0f/(float)Config()->m_ClRotationSpeed * Client()->RenderFrameTime();
-			Dir = rotate(Dir, RotPerTick);
-			m_Center = m_RotationCenter+Dir*(float)Config()->m_ClRotationRadius;
+			s_Dir = rotate(s_Dir, RotPerTick);
+			m_Center = m_RotationCenter + s_Dir * (float)Config()->m_ClRotationRadius;
 		}
 		else
 		{
 			// positions for the animation
-			Dir = normalize(m_AnimationStartPos - m_RotationCenter);
-			vec2 TargetPos = m_RotationCenter + Dir * (float)Config()->m_ClRotationRadius;
+			s_Dir = normalize(m_AnimationStartPos - m_RotationCenter);
+			vec2 TargetPos = m_RotationCenter + s_Dir * (float)Config()->m_ClRotationRadius;
 			float Distance = distance(m_AnimationStartPos, TargetPos);
 
 			// move time
@@ -129,7 +129,7 @@ void CCamera::OnRender()
 			float XVal = 1 - m_MoveTime;
 			XVal = pow(XVal, 7.0f);
 
-			m_Center = TargetPos + Dir * (XVal*Distance);
+			m_Center = TargetPos + s_Dir * (XVal * Distance);
 		}
 	}
 
@@ -148,11 +148,6 @@ void CCamera::ChangePosition(int PositionNumber)
 	m_RotationCenter = m_Positions[PositionNumber];
 	m_CurrentPosition = PositionNumber;
 	m_MoveTime = 0.0f;
-}
-
-int CCamera::GetCurrentPosition()
-{
-	return m_CurrentPosition;
 }
 
 void CCamera::ConSetPosition(IConsole::IResult *pResult, void *pUserData)
