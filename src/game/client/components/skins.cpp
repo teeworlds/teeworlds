@@ -53,16 +53,23 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 		return 0;
 	}
+	if(Info.m_Format != CImageInfo::FORMAT_RGBA)
+	{
+		str_format(aBuf, sizeof(aBuf), "failed to load skin part '%s': must be RGBA format", pName);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
+		return 0;
+	}
 
 	Part.m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 	Part.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
 
+	const int Step = Info.GetPixelSize();
 	unsigned char *pData = (unsigned char *)Info.m_pData;
-	int Pitch = Info.m_Width*4;
 
 	// dig out blood color
 	if(pSelf->m_ScanningPart == SKINPART_BODY)
 	{
+		int Pitch = Info.m_Width * Step;
 		int PartX = Info.m_Width/2;
 		int PartY = 0;
 		int PartWidth = Info.m_Width/2;
@@ -71,22 +78,14 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		int aColors[3] = {0};
 		for(int y = PartY; y < PartY+PartHeight; y++)
 			for(int x = PartX; x < PartX+PartWidth; x++)
-			{
-				if(pData[y*Pitch+x*4+3] > 128)
-				{
-					aColors[0] += pData[y*Pitch+x*4+0];
-					aColors[1] += pData[y*Pitch+x*4+1];
-					aColors[2] += pData[y*Pitch+x*4+2];
-				}
-			}
+				if(pData[y*Pitch+x*Step+3] > 128)
+					for(int c = 0; c < 3; c++)
+						aColors[c] += pData[y*Pitch+x*Step+c];
 
 		Part.m_BloodColor = normalize(vec3(aColors[0], aColors[1], aColors[2]));
 	}
 
 	// create colorless version
-	const int Step = Info.GetPixelSize();
-
-	// make the texture gray scale
 	for(int i = 0; i < Info.m_Width*Info.m_Height; i++)
 	{
 		const int Average = (pData[i*Step]+pData[i*Step+1]+pData[i*Step+2])/3;
