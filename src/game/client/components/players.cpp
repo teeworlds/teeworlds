@@ -20,23 +20,6 @@
 
 #include "players.h"
 
-inline float NormalizeAngular(float f)
-{
-	return fmod(f+pi*2, pi*2);
-}
-
-inline float AngularMixDirection (float Src, float Dst) { return sinf(Dst-Src) >0?1:-1; }
-inline float AngularDistance(float Src, float Dst) { return asinf(sinf(Dst-Src)); }
-
-inline float AngularApproach(float Src, float Dst, float Amount)
-{
-	float d = AngularMixDirection (Src, Dst);
-	float n = Src + Amount*d;
-	if(AngularMixDirection (n, Dst) != d)
-		return Dst;
-	return n;
-}
-
 void CPlayers::RenderHook(
 	const CNetObj_Character *pPrevChar,
 	const CNetObj_Character *pPlayerChar,
@@ -65,9 +48,7 @@ void CPlayers::RenderHook(
 	{
 		Graphics()->TextureSet(g_pData->m_aImages[IMAGE_GAME].m_Id);
 		Graphics()->QuadsBegin();
-		//Graphics()->QuadsBegin();
 
-		vec2 Pos = Position;
 		vec2 HookPos;
 
 		if(Player.m_HookedPlayer != -1 && m_pClient->m_Snap.m_aCharacters[Player.m_HookedPlayer].m_Active)
@@ -82,8 +63,8 @@ void CPlayers::RenderHook(
 			HookPos = mix(vec2(Prev.m_HookX, Prev.m_HookY), vec2(Player.m_HookX, Player.m_HookY), IntraTick);
 		}
 
-		float d = distance(Pos, HookPos);
-		vec2 Dir = normalize(Pos-HookPos);
+		const float HookDistance = distance(Position, HookPos);
+		vec2 Dir = normalize(Position - HookPos);
 
 		Graphics()->QuadsSetRotation(angle(Dir)+pi);
 
@@ -94,19 +75,19 @@ void CPlayers::RenderHook(
 
 		// render chain
 		RenderTools()->SelectSprite(SPRITE_HOOK_CHAIN);
-		IGraphics::CQuadItem Array[1024];
+		IGraphics::CQuadItem aArray[1024];
 		int i = 0;
-		for(float f = 16; f < d && i < 1024; f += 16, i++)
+		for(float f = 16; f < HookDistance && i < 1024; f += 16, i++)
 		{
 			vec2 p = HookPos + Dir*f;
-			Array[i] = IGraphics::CQuadItem(p.x, p.y,16,16);
+			aArray[i] = IGraphics::CQuadItem(p.x, p.y,16,16);
 		}
 
-		Graphics()->QuadsDraw(Array, i);
+		Graphics()->QuadsDraw(aArray, i);
 		Graphics()->QuadsSetRotation(0);
 		Graphics()->QuadsEnd();
 
-		RenderTools()->RenderTeeHand(&RenderInfo, Position, normalize(HookPos-Pos), -pi/2, vec2(20, 0));
+		RenderTools()->RenderTeeHand(&RenderInfo, Position, normalize(HookPos - Position), -pi/2, vec2(20, 0));
 	}
 }
 
@@ -133,34 +114,10 @@ void CPlayers::RenderPlayer(
 		Player.m_Angle += 2*pi*256;
 	float Angle = mix((float)Prev.m_Angle, (float)Player.m_Angle, IntraTick)/256.0f;
 
-	//float angle = 0;
-
 	if(m_pClient->m_LocalClientID == ClientID && Client()->State() != IClient::STATE_DEMOPLAYBACK)
 	{
 		// just use the direct input if it's local player we are rendering
 		Angle = angle(m_pClient->m_pControls->m_MousePos);
-	}
-	else
-	{
-		/*
-		float mixspeed = Client()->FrameTime()*2.5f;
-		if(player.attacktick != prev.attacktick) // shooting boosts the mixing speed
-			mixspeed *= 15.0f;
-
-		// move the delta on a constant speed on a x^2 curve
-		float current = g_GameClient.m_aClients[info.cid].angle;
-		float target = player.angle/256.0f;
-		float delta = angular_distance(current, target);
-		float sign = delta < 0 ? -1 : 1;
-		float new_delta = delta - 2*mixspeed*sqrt(delta*sign)*sign + mixspeed*mixspeed;
-
-		// make sure that it doesn't vibrate when it's still
-		if(fabs(delta) < 2/256.0f)
-			angle = target;
-		else
-			angle = angular_approach(current, target, fabs(delta-new_delta));
-
-		g_GameClient.m_aClients[info.cid].angle = angle;*/
 	}
 
 	if(m_pClient->ShouldUsePredicted() && m_pClient->ShouldUsePredictedChar(ClientID))
@@ -201,7 +158,7 @@ void CPlayers::RenderPlayer(
 	static float s_LastGameTickTime = Client()->GameTickTime();
 	static float s_LastIntraTick = IntraTick;
 	static float s_TimeUntilAnimationFrame = 1.0f;
-	bool UpdateSingleAnimationFrage = false;
+	bool UpdateSingleAnimationFrame = false;
 	if(!Paused)
 	{
 		s_LastGameTickTime = Client()->GameTickTime();
@@ -210,16 +167,16 @@ void CPlayers::RenderPlayer(
 		if(s_TimeUntilAnimationFrame <= 0.0f)
 		{
 			s_TimeUntilAnimationFrame += 1.0f;
-			UpdateSingleAnimationFrage = true;
+			UpdateSingleAnimationFrame = true;
 		}
 	}
 
-	if (Player.m_Weapon == WEAPON_HAMMER)
+	if(Player.m_Weapon == WEAPON_HAMMER)
 	{
 		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 		State.Add(&g_pData->m_aAnimations[ANIM_HAMMER_SWING], clamp(ct*5.0f,0.0f,1.0f), 1.0f);
 	}
-	if (Player.m_Weapon == WEAPON_NINJA)
+	if(Player.m_Weapon == WEAPON_NINJA)
 	{
 		float ct = (Client()->PrevGameTick()-Player.m_AttackTick)/(float)SERVER_TICK_SPEED + s_LastGameTickTime;
 		State.Add(&g_pData->m_aAnimations[ANIM_NINJA_SWING], clamp(ct*2.0f,0.0f,1.0f), 1.0f);
@@ -228,11 +185,11 @@ void CPlayers::RenderPlayer(
 	// do skidding
 	if(!InAir && WantOtherDir && length(Vel*50) > 500.0f)
 	{
-		static int64 SkidSoundTime = 0;
-		if(time_get()-SkidSoundTime > time_freq()/10)
+		static int64 s_SkidSoundTime = 0;
+		if(time_get() - s_SkidSoundTime > time_freq()/10)
 		{
 			m_pClient->m_pSounds->PlayAt(CSounds::CHN_WORLD, SOUND_PLAYER_SKID, 0.25f, Position);
-			SkidSoundTime = time_get();
+			s_SkidSoundTime = time_get();
 		}
 
 		m_pClient->m_pEffects->SkidTrail(
@@ -249,37 +206,36 @@ void CPlayers::RenderPlayer(
 		Graphics()->QuadsSetRotation(State.GetAttach()->m_Angle*pi*2+Angle);
 
 		// normal weapons
-		int iw = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
-		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_pSpriteBody, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
+		const int Weapon = clamp(Player.m_Weapon, 0, NUM_WEAPONS-1);
+		RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[Weapon].m_pSpriteBody, Direction.x < 0 ? SPRITE_FLAG_FLIP_Y : 0);
 
-		vec2 Dir = Direction;
 		vec2 p;
-		if (Player.m_Weapon == WEAPON_HAMMER)
+		if(Player.m_Weapon == WEAPON_HAMMER)
 		{
 			// Static position for hammer
 			p = Position + vec2(State.GetAttach()->m_X, State.GetAttach()->m_Y);
-			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
+			p.y += g_pData->m_Weapons.m_aId[Weapon].m_Offsety;
 			// if attack is under way, bash stuffs
 			if(Direction.x < 0)
 			{
 				Graphics()->QuadsSetRotation(-pi/2-State.GetAttach()->m_Angle*pi*2);
-				p.x -= g_pData->m_Weapons.m_aId[iw].m_Offsetx;
+				p.x -= g_pData->m_Weapons.m_aId[Weapon].m_Offsetx;
 			}
 			else
 			{
 				Graphics()->QuadsSetRotation(-pi/2+State.GetAttach()->m_Angle*pi*2);
 			}
-			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
+			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[Weapon].m_VisualSize);
 		}
 		else if(Player.m_Weapon == WEAPON_NINJA)
 		{
 			p = Position;
-			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
+			p.y += g_pData->m_Weapons.m_aId[Weapon].m_Offsety;
 
 			if(Direction.x < 0)
 			{
 				Graphics()->QuadsSetRotation(-pi/2-State.GetAttach()->m_Angle*pi*2);
-				p.x -= g_pData->m_Weapons.m_aId[iw].m_Offsetx;
+				p.x -= g_pData->m_Weapons.m_aId[Weapon].m_Offsetx;
 				m_pClient->m_pEffects->PowerupShine(p+vec2(32,0), vec2(32,12));
 			}
 			else
@@ -287,22 +243,22 @@ void CPlayers::RenderPlayer(
 				Graphics()->QuadsSetRotation(-pi/2+State.GetAttach()->m_Angle*pi*2);
 				m_pClient->m_pEffects->PowerupShine(p-vec2(32,0), vec2(32,12));
 			}
-			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
+			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[Weapon].m_VisualSize);
 
 			// HADOKEN
-			if((Client()->GameTick()-Player.m_AttackTick) <= (SERVER_TICK_SPEED / 6) && g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)
+			if((Client()->GameTick()-Player.m_AttackTick) <= (SERVER_TICK_SPEED / 6) && g_pData->m_Weapons.m_aId[Weapon].m_NumSpriteMuzzles)
 			{
-				const int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
+				const int IteX = random_int() % g_pData->m_Weapons.m_aId[Weapon].m_NumSpriteMuzzles;
 				static int s_LastIteX = IteX;
-				if(UpdateSingleAnimationFrage)
+				if(UpdateSingleAnimationFrame)
 					s_LastIteX = IteX;
 
-				if(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX])
+				if(g_pData->m_Weapons.m_aId[Weapon].m_aSpriteMuzzles[s_LastIteX])
 				{
 					const vec2 Dir = normalize(vec2(pPlayerChar->m_X,pPlayerChar->m_Y) - vec2(pPrevChar->m_X, pPrevChar->m_Y));
-					p = Position - Dir * g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx;
+					p = Position - Dir * g_pData->m_Weapons.m_aId[Weapon].m_Muzzleoffsetx;
 					Graphics()->QuadsSetRotation(angle(Dir));
-					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX], 0);
+					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[Weapon].m_aSpriteMuzzles[s_LastIteX], 0);
 					RenderTools()->DrawSprite(p.x, p.y, 160.0f);
 				}
 			}
@@ -312,35 +268,35 @@ void CPlayers::RenderPlayer(
 			// TODO: should be an animation
 			const float RecoilTick = (Client()->GameTick() - Player.m_AttackTick + s_LastIntraTick)/5.0f;
 			const float Recoil = RecoilTick < 1.0f ? sinf(RecoilTick*pi) : 0.0f;
-			p = Position + Dir * (g_pData->m_Weapons.m_aId[iw].m_Offsetx - Recoil*10.0f);
-			p.y += g_pData->m_Weapons.m_aId[iw].m_Offsety;
-			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
+			p = Position + Direction * (g_pData->m_Weapons.m_aId[Weapon].m_Offsetx - Recoil * 10.0f);
+			p.y += g_pData->m_Weapons.m_aId[Weapon].m_Offsety;
+			RenderTools()->DrawSprite(p.x, p.y, g_pData->m_Weapons.m_aId[Weapon].m_VisualSize);
 		}
 
 		if(Player.m_Weapon == WEAPON_GUN || Player.m_Weapon == WEAPON_SHOTGUN)
 		{
 			// check if we're firing stuff
-			if(g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles)
+			if(g_pData->m_Weapons.m_aId[Weapon].m_NumSpriteMuzzles)
 			{
 				const float MuzzleTick = Client()->GameTick() - Player.m_AttackTick + s_LastIntraTick;
-				const int IteX = random_int() % g_pData->m_Weapons.m_aId[iw].m_NumSpriteMuzzles;
+				const int IteX = random_int() % g_pData->m_Weapons.m_aId[Weapon].m_NumSpriteMuzzles;
 				static int s_LastIteX = IteX;
-				if(UpdateSingleAnimationFrage)
+				if(UpdateSingleAnimationFrame)
 					s_LastIteX = IteX;
 
-				if(MuzzleTick < g_pData->m_Weapons.m_aId[iw].m_Muzzleduration && g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX])
+				if(MuzzleTick < g_pData->m_Weapons.m_aId[Weapon].m_Muzzleduration && g_pData->m_Weapons.m_aId[Weapon].m_aSpriteMuzzles[s_LastIteX])
 				{
 					const bool FlipY = Direction.x < 0.0f;
-					const float OffsetY = g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsety * (FlipY ? 1 : -1);
-					const vec2 MuzzlePos = p + Dir * g_pData->m_Weapons.m_aId[iw].m_Muzzleoffsetx + vec2(-Dir.y, Dir.x) * OffsetY;
-					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[iw].m_aSpriteMuzzles[s_LastIteX], FlipY ? SPRITE_FLAG_FLIP_Y : 0);
-					RenderTools()->DrawSprite(MuzzlePos.x, MuzzlePos.y, g_pData->m_Weapons.m_aId[iw].m_VisualSize);
+					const float OffsetY = g_pData->m_Weapons.m_aId[Weapon].m_Muzzleoffsety * (FlipY ? 1 : -1);
+					const vec2 MuzzlePos = p + Direction * g_pData->m_Weapons.m_aId[Weapon].m_Muzzleoffsetx + vec2(-Direction.y, Direction.x) * OffsetY;
+					RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[Weapon].m_aSpriteMuzzles[s_LastIteX], FlipY ? SPRITE_FLAG_FLIP_Y : 0);
+					RenderTools()->DrawSprite(MuzzlePos.x, MuzzlePos.y, g_pData->m_Weapons.m_aId[Weapon].m_VisualSize);
 				}
 			}
 		}
 		Graphics()->QuadsEnd();
 
-		switch (Player.m_Weapon)
+		switch(Player.m_Weapon)
 		{
 			case WEAPON_GUN: RenderTools()->RenderTeeHand(&RenderInfo, p, Direction, -3*pi/4, vec2(-15, 4)); break;
 			case WEAPON_SHOTGUN: RenderTools()->RenderTeeHand(&RenderInfo, p, Direction, -pi/2, vec2(-5, 4)); break;
@@ -372,7 +328,7 @@ void CPlayers::RenderPlayer(
 	}
 
 	CGameClient::CClientData *pClientData = &m_pClient->m_aClients[ClientID];
-	if(pClientData->m_EmoticonStart != -1)
+	if(pClientData->m_EmoticonStart != -1 && pClientData->m_Emoticon >= 0 && pClientData->m_Emoticon < NUM_EMOTICONS)
 	{
 		// adjust start tick if world paused; not if demo paused because ticks are synchronized with demo
 		static int s_LastGameTick = Client()->GameTick();
