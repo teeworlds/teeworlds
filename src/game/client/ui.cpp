@@ -469,7 +469,16 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 
 	if(CheckActiveItem(pLineInput))
 	{
-		if(!MouseButton(0))
+		if(MouseButton(0))
+		{
+			if(pLineInput->IsActive() && (Input()->HasComposition() || Input()->GetCandidateCount()))
+			{
+				// Clear IME composition/candidates on mouse press
+				Input()->StopTextInput();
+				Input()->StartTextInput();
+			}
+		}
+		else
 		{
 			s_DoScroll = false;
 			s_SelectionStartOffset = -1;
