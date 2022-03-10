@@ -1491,54 +1491,60 @@ void CMenus::RenderSettingsControls(CUIRect MainView)
 
 float CMenus::RenderSettingsControlsStats(CUIRect View)
 {
+	static char s_aCheckboxIds[NUM_TC_STATS];
 	const float RowHeight = 20.0f;
 	CUIRect Button;
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos, Localize("Frags"), Config()->m_ClStatboardInfos & TC_STATS_FRAGS, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 0, Localize("Frags"), Config()->m_ClStatboardInfos & TC_STATS_FRAGS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FRAGS;
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+1, Localize("Deaths"), Config()->m_ClStatboardInfos & TC_STATS_DEATHS, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 1, Localize("Deaths"), Config()->m_ClStatboardInfos & TC_STATS_DEATHS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_DEATHS;
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+2, Localize("Suicides"), Config()->m_ClStatboardInfos & TC_STATS_SUICIDES, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 2, Localize("Suicides"), Config()->m_ClStatboardInfos & TC_STATS_SUICIDES, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_SUICIDES;
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+3, Localize("Ratio"), Config()->m_ClStatboardInfos & TC_STATS_RATIO, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 3, Localize("Ratio"), Config()->m_ClStatboardInfos & TC_STATS_RATIO, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_RATIO;
+	UI()->DoTooltip(s_aCheckboxIds + 3, &Button, Localize("The ratio of frags to deaths."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+4, Localize("Net score"), Config()->m_ClStatboardInfos & TC_STATS_NET, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 4, Localize("Net score"), Config()->m_ClStatboardInfos & TC_STATS_NET, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_NET;
+	UI()->DoTooltip(s_aCheckboxIds + 4, &Button, Localize("The number of frags minus the number of deaths."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+5, Localize("Frags per minute"), Config()->m_ClStatboardInfos & TC_STATS_FPM, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 5, Localize("Frags per minute"), Config()->m_ClStatboardInfos & TC_STATS_FPM, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FPM;
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+6, Localize("Current spree"), Config()->m_ClStatboardInfos & TC_STATS_SPREE, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 6, Localize("Current spree"), Config()->m_ClStatboardInfos & TC_STATS_SPREE, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_SPREE;
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+7, Localize("Best spree"), Config()->m_ClStatboardInfos & TC_STATS_BESTSPREE, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 7, Localize("Best spree"), Config()->m_ClStatboardInfos & TC_STATS_BESTSPREE, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_BESTSPREE;
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+9, Localize("Weapons stats"), Config()->m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 8, Localize("Weapons stats"), Config()->m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_WEAPS;
+	UI()->DoTooltip(s_aCheckboxIds + 8, &Button, Localize("The proportion of frags gotten with each weapon."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+8, Localize("Flag grabs"), Config()->m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 9, Localize("Flag grabs"), Config()->m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FLAGGRABS;
+	UI()->DoTooltip(s_aCheckboxIds + 9, &Button, Localize("The number of times that the flag was touched in CTF (1 point)."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(&Config()->m_ClStatboardInfos+10, Localize("Flag captures"), Config()->m_ClStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
+	if(DoButton_CheckBox(s_aCheckboxIds + 10, Localize("Flag captures"), Config()->m_ClStatboardInfos & TC_STATS_FLAGCAPTURES, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_FLAGCAPTURES;
+	UI()->DoTooltip(s_aCheckboxIds + 10, &Button, Localize("The number of times that the flag was captured in CTF (100 points)."));
 
-	return 11 * RowHeight;
+	return NUM_TC_STATS * RowHeight;
 }
 
 bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
