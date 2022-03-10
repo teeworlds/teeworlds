@@ -1468,7 +1468,6 @@ if(CLIENT)
     components/menus_callback.cpp
     components/menus_demo.cpp
     components/menus_ingame.cpp
-    components/menus_listbox.cpp
     components/menus_settings.cpp
     components/menus_start.cpp
     components/motd.cpp
@@ -1504,6 +1503,8 @@ if(CLIENT)
     render_map.cpp
     ui.cpp
     ui.h
+    ui_listbox.cpp
+    ui_listbox.h
     ui_rect.cpp
     ui_rect.h
     ui_scrollregion.cpp
