@@ -76,7 +76,7 @@ public:
 	// returns true if everything was valid and nothing changed
 	bool ValidateSkinParts(char *apPartNames[NUM_SKINPARTS], int *pUseCustomColors, int *pPartColors, int GameFlags) const;
 
-	void SaveSkinfile(const char *pSaveSkinName);
+	bool SaveSkinfile(const char *pSaveSkinName);
 
 private:
 	int m_ScanningPart;

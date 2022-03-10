@@ -548,13 +548,13 @@ bool CSkins::ValidateSkinParts(char *apPartNames[NUM_SKINPARTS], int *pUseCustom
 	return true;
 }
 
-void CSkins::SaveSkinfile(const char *pSaveSkinName)
+bool CSkins::SaveSkinfile(const char *pSaveSkinName)
 {
 	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s.json", pSaveSkinName);
 	IOHANDLE File = Storage()->OpenFile(aBuf, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!File)
-		return;
+		return false;
 
 	CJsonWriter Writer(File);
 
@@ -600,4 +600,5 @@ void CSkins::SaveSkinfile(const char *pSaveSkinName)
 
 	// add new skin to the skin list
 	AddSkin(pSaveSkinName);
+	return true;
 }
