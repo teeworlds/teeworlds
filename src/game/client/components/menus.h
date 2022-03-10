@@ -5,6 +5,7 @@
 
 #include <base/vmath.h>
 #include <base/tl/sorted_array.h>
+#include <base/tl/string.h>
 
 #include <engine/graphics.h>
 #include <engine/demo.h>
