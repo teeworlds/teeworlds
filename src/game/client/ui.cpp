@@ -349,11 +349,12 @@ void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char
 	const char *pMatch = pHighlighted && pHighlighted[0] ? str_find_nocase(pText, pHighlighted) : 0;
 	if(pMatch)
 	{
+		const int HighlightLength = str_length(pHighlighted);
 		TextRender()->TextDeferred(&s_Cursor, pText, (int)(pMatch - pText));
 		TextRender()->TextColor(HighlightColor);
-		TextRender()->TextDeferred(&s_Cursor, pMatch, str_length(pHighlighted));
+		TextRender()->TextDeferred(&s_Cursor, pMatch, HighlightLength);
 		TextRender()->TextColor(TextColor);
-		TextRender()->TextDeferred(&s_Cursor, pMatch + str_length(pHighlighted), -1);
+		TextRender()->TextDeferred(&s_Cursor, pMatch + HighlightLength, -1);
 	}
 	else
 		TextRender()->TextDeferred(&s_Cursor, pText, -1);
@@ -378,10 +379,6 @@ void CUI::DoLabelSelected(const CUIRect *pRect, const char *pText, bool Selected
 
 bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize, int Corners, const IButtonColorFunction *pColorFunction)
 {
-	CTextCursor *pCursor = pLineInput->GetCursor();
-	pCursor->m_FontSize = FontSize;
-	pCursor->m_Align = TEXTALIGN_ML;
-
 	const bool Inside = MouseHovered(pRect);
 	const bool Active = LastActiveItem() == pLineInput;
 	const bool Changed = pLineInput->WasChanged();
@@ -462,8 +459,9 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 
 		if(s_SelectionStartOffset >= 0)
 		{
-			pLineInput->SetCursorOffset(pLineInput->OffsetFromDisplayToActual(CursorOffset));
-			pLineInput->SetSelection(pLineInput->OffsetFromDisplayToActual(s_SelectionStartOffset), pLineInput->OffsetFromDisplayToActual(CursorOffset));
+			const int ActualCursorOffset = pLineInput->OffsetFromDisplayToActual(CursorOffset);
+			pLineInput->SetCursorOffset(ActualCursorOffset);
+			pLineInput->SetSelection(pLineInput->OffsetFromDisplayToActual(s_SelectionStartOffset), ActualCursorOffset);
 		}
 	}
 
@@ -497,10 +495,12 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 		pLineInput->Deactivate();
 
 	// render
+	CTextCursor *pCursor = pLineInput->GetCursor();
+	pCursor->m_FontSize = FontSize;
 	pRect->Draw(pColorFunction->GetColor(Active, Inside), 5.0f, Corners);
 	ClipEnable(pRect);
 	Textbox.x -= ScrollOffset;
-	pCursor->MoveTo(Textbox.x, Textbox.y + Textbox.h/2.0f);
+	ApplyCursorAlign(pCursor, &Textbox, TEXTALIGN_ML);
 	pLineInput->Render();
 	ClipDisable();
 
