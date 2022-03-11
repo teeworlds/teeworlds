@@ -1,4 +1,5 @@
-#pragma once
+#ifndef ENGINE_CLIENT_GRAPHICS_THREADED_NULL_H
+#define ENGINE_CLIENT_GRAPHICS_THREADED_NULL_H
 
 #include <engine/graphics.h>
 
@@ -87,3 +88,5 @@ public:
 	virtual bool IsIdle() const { return false; };
 	virtual void WaitForIdle() {};
 };
+
+#endif // ENGINE_CLIENT_GRAPHICS_THREADED_NULL_H

@@ -1,7 +1,7 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#ifndef ENGINE_CLIENT_FRIENDS_H
-#define ENGINE_CLIENT_FRIENDS_H
+#ifndef ENGINE_CLIENT_CONTACTS_H
+#define ENGINE_CLIENT_CONTACTS_H
 
 #include <engine/shared/console.h>
 #include <engine/config.h>

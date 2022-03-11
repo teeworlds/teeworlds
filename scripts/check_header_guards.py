@@ -1,35 +1,45 @@
+#!/usr/bin/env python3
 import os
+import sys
 
+os.chdir(os.path.dirname(__file__) + "/..")
 
-PATH = "../src/"
-
+PATH = "src/"
+EXCEPTIONS = [
+]
 
 def check_file(filename):
-	file = open(filename)
-	while 1:
-		line = file.readline()
-		if len(line) == 0:
+	if filename in EXCEPTIONS:
+		return False
+	error = False
+	with open(filename) as file:
+		for line in file:
+			if line == "// This file can be included several times.\n":
+				break
+			if line[0] == "/" or line[0] == "*" or line[0] == "\r" or line[0] == "\n" or line[0] == "\t":
+				continue
+			if line.startswith("#ifndef"):
+				header_guard = "#ifndef " + ("_".join(filename.split(PATH)[1].split("/"))[:-2]).upper() + "_H"
+				if line[:-1] != header_guard:
+					error = True
+					print("Wrong header guard in {}".format(filename))
+			else:
+				error = True
+				print("Missing header guard in {}".format(filename))
 			break
-		if line[0] == "/" or line[0] == "*" or line[0] == "\r" or line[0] == "\n" or line[0] == "\t":
-			continue
-		if line[:7] == "#ifndef":
-			hg = "#ifndef " + ("_".join(filename.split(PATH)[1].split("/"))[:-2]).upper() + "_H"
-			if line[:-1] != hg:
-				print "Wrong header guard in " + filename
-		else:
-			print "Missing header guard in " + filename
-		break
-	file.close()
+	return error
 
+def check_dir(directory):
+	errors = 0
+	file_list = os.listdir(directory)
+	for file in file_list:
+		path = directory + file
+		if os.path.isdir(path):
+			if file not in ("external", "generated"):
+				errors += check_dir(path + "/")
+		elif file.endswith(".h") and file != "keynames.h":
+			errors += check_file(path)
+	return errors
 
-
-def check_dir(dir):
-	list = os.listdir(dir)
-	for file in list:
-		if os.path.isdir(dir+file):
-			if file != "external" and file != "generated":
-				check_dir(dir+file+"/")
-		elif file[-2:] == ".h" and file != "keynames.h":
-			check_file(dir+file)
-
-check_dir(PATH)
+if __name__ == '__main__':
+	sys.exit(int(check_dir(PATH) != 0))
