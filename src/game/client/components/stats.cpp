@@ -157,7 +157,7 @@ void CStats::OnRender()
 
 	const float Height = 400.0f * 3.0f;
 	const float Width = Height * Graphics()->ScreenAspect();
-	float w = 250.0f;
+	float w = 270.0f;
 	float h = 770.0f;
 
 	int aPlayers[MAX_CLIENTS] = {0};
@@ -218,7 +218,7 @@ void CStats::OnRender()
 	}
 
 	float x = Width/2-w/2;
-	float y = 200.0f;
+	float y = 190.0f;
 
 	static CTextCursor s_Cursor;
 
@@ -226,9 +226,13 @@ void CStats::OnRender()
 
 	Graphics()->BlendNormal();
 	{
-		CUIRect Rect = {x-10.f, y-10.f, w, h};
+		CUIRect Rect = {x, y, w, h};
 		Rect.Draw(vec4(0,0,0,0.5f), 17.0f);
 	}
+
+	const float Margin = 10.0f;
+	x += Margin;
+	w -= 2 * Margin;
 
 	int px = 325;
 	const float HeaderHeight = 50.0f;
@@ -348,7 +352,7 @@ void CStats::OnRender()
 		// background so it's easy to find the local player or the followed one in spectator mode
 		if(HighlightedLine)
 		{
-			CUIRect Rect = {x, y, w-20, LineHeight};
+			CUIRect Rect = {x, y, w, LineHeight};
 			Rect.Draw(vec4(1,1,1,0.25f), 17.0f);
 		}
 
