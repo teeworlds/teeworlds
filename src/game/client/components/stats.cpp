@@ -231,15 +231,16 @@ void CStats::OnRender()
 	}
 
 	int px = 325;
+	const float HeaderHeight = 30.0f;
 
 	s_Cursor.m_FontSize = 20.0f;
 	s_Cursor.m_MaxWidth = -1;
-	s_Cursor.m_Align = TEXTALIGN_LEFT;
+	s_Cursor.m_Align = TEXTALIGN_ML;
 	s_Cursor.Reset();
-	s_Cursor.MoveTo(x+10, y-5);
+	s_Cursor.MoveTo(x + 10, y + HeaderHeight / 2.0f);
 	TextRender()->TextOutlined(&s_Cursor, Localize("Name"), -1);
 	const char *apHeaders[] = { "K", "D", Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
-	s_Cursor.m_Align = TEXTALIGN_RIGHT;
+	s_Cursor.m_Align = TEXTALIGN_MR;
 	for(int i = 0; i < 9; i++)
 	{
 		if(Config()->m_ClStatboardInfos & (1<<i))
@@ -266,7 +267,7 @@ void CStats::OnRender()
 				continue;
 			
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y-5);
+			s_Cursor.MoveTo(x + px, y + HeaderHeight / 2.0f);
 
 			TextRender()->TextOutlined(&s_Cursor, pText, -1);
 			px += 100;
@@ -285,7 +286,7 @@ void CStats::OnRender()
 
 			RenderTools()->SelectSprite(g_pData->m_Weapons.m_aId[i].m_pSpriteBody);
 			const float SizeFactor = i == WEAPON_HAMMER ? 0.7f : i == WEAPON_GUN ? 1.0f : 0.9f;
-			RenderTools()->DrawSprite(x+px-40, y+10, g_pData->m_Weapons.m_aId[i].m_VisualSize * SizeFactor);
+			RenderTools()->DrawSprite(x+px-40, y + HeaderHeight / 2.0f, g_pData->m_Weapons.m_aId[i].m_VisualSize * SizeFactor);
 			px += 80;
 		}
 		Graphics()->QuadsEnd();
@@ -300,19 +301,19 @@ void CStats::OnRender()
 		Graphics()->QuadsBegin();
 		Graphics()->QuadsSetRotation(-0.39f);
 		RenderTools()->SelectSprite(SPRITE_FLAG_BLUE, SPRITE_FLAG_FLIP_X);
-		RenderTools()->DrawSprite(x+px-10, y+12.5f, 48);
+		RenderTools()->DrawSprite(x+px-10, y + HeaderHeight / 2.0f, 48);
 		Graphics()->QuadsSetRotation(0.39f);
 		RenderTools()->SelectSprite(SPRITE_FLAG_RED);
-		RenderTools()->DrawSprite(x+px+10, y+12.5f, 48);
+		RenderTools()->DrawSprite(x+px+10, y + HeaderHeight / 2.0f, 48);
 		Graphics()->QuadsEnd();
 	}
 
-	y += 29.0f;
+	y += HeaderHeight;
 
 	float FontSize = 30.0f;
 	float LineHeight = 50.0f;
 	float TeeSizemod = 1.0f;
-	float TeeOffset = 0.0f;
+	float TeeOffset = 1.0f;
 
 	if(NumPlayers > 14)
 	{
@@ -325,17 +326,17 @@ void CStats::OnRender()
 	s_Cursor.m_FontSize = FontSize;
 	for(int j=0; j<NumPlayers; j++)
 	{
-		s_Cursor.m_Align = TEXTALIGN_LEFT;
+		s_Cursor.m_Align = TEXTALIGN_ML;
 		// workaround
 		if(j == 16)
 		{
-			char aBuf[64], aBuf2[64];
+			char aBuf[64];
 			str_format(aBuf, sizeof(aBuf), Localize("%d other players"), NumPlayers-j);
-			str_format(aBuf2, sizeof(aBuf2), "⋅⋅⋅ %s", aBuf);
 
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+64, y);
-			TextRender()->TextOutlined(&s_Cursor, aBuf2, -1);
+			s_Cursor.MoveTo(x + 64, y + LineHeight / 2.0f);
+			TextRender()->TextOutlined(&s_Cursor, "⋅⋅⋅ ", -1);
+			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 			break;
 		}
@@ -347,7 +348,7 @@ void CStats::OnRender()
 		// background so it's easy to find the local player or the followed one in spectator mode
 		if(HighlightedLine)
 		{
-			CUIRect Rect = {x, y, w-20, LineHeight*0.95f};
+			CUIRect Rect = {x, y, w-20, LineHeight};
 			Rect.Draw(vec4(1,1,1,0.25f), 17.0f);
 		}
 
@@ -359,11 +360,11 @@ void CStats::OnRender()
 		
 		s_Cursor.Reset();
 		s_Cursor.m_MaxWidth = 220;
-		s_Cursor.MoveTo(x+64, y);
+		s_Cursor.MoveTo(x + 64, y + LineHeight / 2.0f);
 		TextRender()->TextOutlined(&s_Cursor, m_pClient->m_aClients[aPlayers[j]].m_aName, -1);
 
 		s_Cursor.m_MaxWidth = -1;
-		s_Cursor.m_Align = TEXTALIGN_RIGHT;
+		s_Cursor.m_Align = TEXTALIGN_MR;
 		px = 325;
 		if(Config()->m_ClStatboardInfos & TC_STATS_FRAGS)
 		{
@@ -376,7 +377,7 @@ void CStats::OnRender()
 				str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Frags);
 			
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y);
+			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
@@ -384,7 +385,7 @@ void CStats::OnRender()
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Deaths);
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y);
+			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
@@ -392,7 +393,7 @@ void CStats::OnRender()
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Suicides);
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y);
+			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
@@ -403,7 +404,7 @@ void CStats::OnRender()
 			else
 				str_format(aBuf, sizeof(aBuf), "%.2f", (float)(pStats->m_Frags)/pStats->m_Deaths);
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y);
+			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
@@ -411,7 +412,7 @@ void CStats::OnRender()
 		{
 			str_format(aBuf, sizeof(aBuf), "%+d", pStats->m_Frags-pStats->m_Deaths);
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y);
+			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
@@ -420,7 +421,7 @@ void CStats::OnRender()
 			float Fpm = pStats->m_IngameTicks > 0 ? (float)(pStats->m_Frags * Client()->GameTickSpeed() * 60) / pStats->m_IngameTicks : 0.f;
 			str_format(aBuf, sizeof(aBuf), "%.1f", Fpm);
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y);
+			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
@@ -434,7 +435,7 @@ void CStats::OnRender()
 			else
 				str_format(aBuf, sizeof(aBuf), "%d", pStats->m_CurrentSpree);
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y);
+			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
@@ -443,7 +444,7 @@ void CStats::OnRender()
 			px += 40;
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_BestSpree);
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y);
+			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
@@ -451,7 +452,7 @@ void CStats::OnRender()
 		{
 			str_format(aBuf, sizeof(aBuf), "%d", pStats->m_FlagGrabs);
 			s_Cursor.Reset();
-			s_Cursor.MoveTo(x+px, y);
+			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
@@ -475,7 +476,7 @@ void CStats::OnRender()
 				}					
 			}
 			float ExploitableLength = (EndX-StartX) - RoundSize;
-			CUIRect Rect = {x + StartX, y+0.3f*LineHeight, 0.0f, BarHeight};
+			CUIRect Rect = {x + StartX, y + LineHeight / 2.0f - BarHeight / 2.0f, 0.0f, BarHeight};
 			for(int i = 0; i < NUM_WEAPONS; i++)
 			{
 				if(pStats->m_aFragsWith[i])
@@ -497,8 +498,8 @@ void CStats::OnRender()
 			if(pStats->m_FlagCaptures <= 0)
 			{
 				s_Cursor.Reset();
-				s_Cursor.MoveTo(x+px, y);
-				s_Cursor.m_Align = TEXTALIGN_CENTER;
+				s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
+				s_Cursor.m_Align = TEXTALIGN_MC;
 				TextRender()->TextOutlined(&s_Cursor, "—", -1);
 			}
 			else
@@ -529,8 +530,8 @@ void CStats::OnRender()
 				{
 					str_format(aBuf, sizeof(aBuf), "x%d", pStats->m_FlagCaptures);
 					s_Cursor.Reset();
-					s_Cursor.MoveTo(x+TempX, y);
-					s_Cursor.m_Align = TEXTALIGN_LEFT;
+					s_Cursor.MoveTo(x + TempX, y + LineHeight / 2.0f);
+					s_Cursor.m_Align = TEXTALIGN_ML;
 					TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 				}
 			}
