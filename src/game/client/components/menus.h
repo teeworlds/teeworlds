@@ -198,6 +198,7 @@ private:
 	bool m_NeedRestartSound;
 	int m_TeePartSelected;
 	char m_aSaveSkinName[MAX_SKIN_ARRAY_SIZE];
+	CLineInput m_SkinNameInput;
 
 	bool m_RefreshSkinSelector;
 	const CSkins::CSkin *m_pSelectedSkin;
@@ -304,6 +305,7 @@ private:
 	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[IO_MAX_PATH_LENGTH];
 	char m_aCurrentDemoFile[IO_MAX_PATH_LENGTH];
+	CLineInput m_DemoNameInput;
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;

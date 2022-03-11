@@ -54,7 +54,8 @@ CMenus::CMenus()
 	m_NeedRestartSound = false;
 	m_NeedRestartPlayer = false;
 	m_TeePartSelected = SKINPART_BODY;
-	m_aSaveSkinName[0] = 0;
+	m_aSaveSkinName[0] = '\0';
+	m_SkinNameInput.SetBuffer(m_aSaveSkinName, sizeof(m_aSaveSkinName), MAX_SKIN_LENGTH);
 	m_RefreshSkinSelector = true;
 	m_pSelectedSkin = 0;
 	m_MenuActive = true;
@@ -73,6 +74,8 @@ CMenus::CMenus()
 	m_LastInput = time_get();
 
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
+	m_aCurrentDemoFile[0] = '\0';
+	m_DemoNameInput.SetBuffer(m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile));
 	m_aCallvoteReason[0] = 0;
 	m_aFilterString[0] = 0;
 
@@ -1454,14 +1457,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
-			static CLineInput s_DemoNameInput(m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile));
-			if(UI()->GetActiveItem() == m_aCurrentDemoFile) // initially activate input and select entire name
-			{
-				s_DemoNameInput.SetCursorOffset(s_DemoNameInput.GetLength());
-				s_DemoNameInput.SetSelection(0, s_DemoNameInput.GetLength());
-				UI()->SetActiveItem(&s_DemoNameInput);
-			}
-			UI()->DoEditBoxOption(&s_DemoNameInput, &EditBox, Localize("Name"), ButtonWidth);
+			UI()->DoEditBoxOption(&m_DemoNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
 			CUIRect Yes, No;
@@ -1509,14 +1505,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 			Box.HSplitBottom(Box.h/2.0f, 0, &Box);
 			Box.HSplitTop(20.0f, &EditBox, &Box);
 
-			static CLineInput s_SkinNameInput(m_aSaveSkinName, sizeof(m_aSaveSkinName));
-			if(UI()->GetActiveItem() == m_aSaveSkinName) // initially activate input and select entire name
-			{
-				s_SkinNameInput.SetCursorOffset(s_SkinNameInput.GetLength());
-				s_SkinNameInput.SetSelection(0, s_SkinNameInput.GetLength());
-				UI()->SetActiveItem(&s_SkinNameInput);
-			}
-			UI()->DoEditBoxOption(&s_SkinNameInput, &EditBox, Localize("Name"), ButtonWidth);
+			UI()->DoEditBoxOption(&m_SkinNameInput, &EditBox, Localize("Name"), ButtonWidth);
 
 			// buttons
 			CUIRect Yes, No;

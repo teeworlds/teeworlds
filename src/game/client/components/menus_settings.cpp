@@ -1337,7 +1337,9 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		static CButtonContainer s_CustomSkinSaveButton;
 		if(DoButton_Menu(&s_CustomSkinSaveButton, Localize("Save"), 0, &Button))
 		{
-			UI()->SetActiveItem(m_aSaveSkinName); // marker to initially activate the input and select the text
+			m_SkinNameInput.SetCursorOffset(m_SkinNameInput.GetLength());
+			m_SkinNameInput.SetSelection(0, m_SkinNameInput.GetLength());
+			UI()->SetActiveItem(&m_SkinNameInput);
 			m_Popup = POPUP_SAVE_SKIN;
 		}
 		BottomView.VSplitLeft(SpacingW, 0, &BottomView);
@@ -1373,9 +1375,12 @@ void CMenus::RenderSettingsPlayer(CUIRect MainView)
 		if(s_CustomSkinMenu && m_pSelectedSkin)
 		{
 			if(m_pSelectedSkin->m_Flags&CSkins::SKINFLAG_STANDARD)
-				str_format(m_aSaveSkinName, sizeof(m_aSaveSkinName), "copy_%s", m_pSelectedSkin->m_aName);
+			{
+				m_SkinNameInput.Set("copy_");
+				m_SkinNameInput.Append(m_pSelectedSkin->m_aName);
+			}
 			else
-				str_copy(m_aSaveSkinName, m_pSelectedSkin->m_aName, sizeof(m_aSaveSkinName));
+				m_SkinNameInput.Set(m_pSelectedSkin->m_aName);
 		}
 	}
 
