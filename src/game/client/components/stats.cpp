@@ -158,7 +158,7 @@ void CStats::OnRender()
 	const float Height = 400.0f * 3.0f;
 	const float Width = Height * Graphics()->ScreenAspect();
 	float w = 250.0f;
-	float h = 750.0f;
+	float h = 770.0f;
 
 	int aPlayers[MAX_CLIENTS] = {0};
 	int NumPlayers = 0;
@@ -231,7 +231,7 @@ void CStats::OnRender()
 	}
 
 	int px = 325;
-	const float HeaderHeight = 30.0f;
+	const float HeaderHeight = 50.0f;
 
 	s_Cursor.m_FontSize = 20.0f;
 	s_Cursor.m_MaxWidth = -1;
