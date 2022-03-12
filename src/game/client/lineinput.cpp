@@ -212,7 +212,7 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 		const bool CtrlPressed = s_pInput->KeyIsPressed(KEY_LCTRL) || s_pInput->KeyIsPressed(KEY_RCTRL);
 		const bool AltPressed = s_pInput->KeyIsPressed(KEY_LALT) || s_pInput->KeyIsPressed(KEY_RALT);
 
-#ifdef CONF_PLATFORM_MACOSX
+#ifdef CONF_PLATFORM_MACOS
 		const bool MoveWord = AltPressed && !CtrlPressed;
 #else
 		const bool MoveWord = CtrlPressed && !AltPressed;

@@ -108,7 +108,7 @@ function GenerateCommonSettings(settings, conf, arch, compiler)
 	libs = {zlib=zlib, wavpack=wavpack, png=png, md5=md5, json=json}
 end
 
-function GenerateMacOSXSettings(settings, conf, arch, compiler)
+function GenerateMacOSSettings(settings, conf, arch, compiler)
 	if arch == "x86" then
 		settings.cc.flags:Add("-arch i386")
 		settings.link.flags:Add("-arch i386")
@@ -145,7 +145,7 @@ function GenerateMacOSXSettings(settings, conf, arch, compiler)
 	GenerateCommonSettings(settings, conf, arch, compiler)
 
 	-- Build server launcher before adding game stuff
-	local serverlaunch = Link(settings, "serverlaunch", Compile(settings, "src/osxlaunch/server.m"))
+	local serverlaunch = Link(settings, "serverlaunch", Compile(settings, "src/macoslaunch/server.m"))
 
 	-- Master server, version server and tools
 	BuildEngineCommon(settings)
@@ -166,7 +166,7 @@ function GenerateMacOSXSettings(settings, conf, arch, compiler)
 	settings.link.frameworks:Add("AGL")
 	-- FIXME: the SDL config is applied in BuildClient too but is needed here before so the launcher will compile
 	config.sdl:Apply(settings)
-	settings.link.extrafiles:Merge(Compile(settings, "src/osxlaunch/client.m"))
+	settings.link.extrafiles:Merge(Compile(settings, "src/macoslaunch/client.m"))
 	BuildClient(settings)
 
 	-- Content
@@ -465,7 +465,7 @@ function GenerateSettings(conf, arch, builddir, compiler, headless)
 		GenerateWindowsSettings(settings, conf, arch, compiler)
 	elseif family == "unix" then
 		if platform == "macosx" then
-			GenerateMacOSXSettings(settings, conf, arch, compiler)
+			GenerateMacOSSettings(settings, conf, arch, compiler)
 		elseif platform == "solaris" then
 			GenerateSolarisSettings(settings, conf, arch, compiler)
 		else -- Linux, BSD

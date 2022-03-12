@@ -474,7 +474,7 @@ void lock_unlock(LOCK lock);
 
 /* Group: Semaphores */
 
-#if !defined(CONF_PLATFORM_MACOSX)
+#if !defined(CONF_PLATFORM_MACOS)
 	#if defined(CONF_FAMILY_UNIX)
 		#include <semaphore.h>
 		typedef sem_t SEMAPHORE;
@@ -1402,7 +1402,7 @@ int fs_makedir_recursive(const char *path);
 
 	Remarks:
 		- Returns ~/.appname on UNIX based systems
-		- Returns ~/Library/Applications Support/appname on Mac OS X
+		- Returns ~/Library/Applications Support/appname on macOS
 		- Returns %APPDATA%/Appname on Windows based systems
 */
 int fs_storage_path(const char *appname, char *path, int max);

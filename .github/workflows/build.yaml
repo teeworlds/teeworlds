@@ -26,7 +26,7 @@ jobs:
         - os: macOS-latest
           cmake-args: -G "Unix Makefiles"
           build-args: --parallel
-          package-file: teeworlds-*-osx.dmg
+          package-file: teeworlds-*-macos.dmg
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
@@ -156,4 +156,4 @@ jobs:
     - name: Create MacOS app using make_release.py
       if: contains(matrix.os, 'macOS')
       run: |
-        sudo python3 scripts/make_release.py master osx
+        sudo python3 scripts/make_release.py master macos

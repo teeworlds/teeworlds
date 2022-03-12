@@ -2454,7 +2454,7 @@ void CClient::ConchainWindowScreen(IConsole::IResult *pResult, void *pUserData, 
 
 bool CClient::ToggleFullscreen()
 {
-#ifndef CONF_PLATFORM_MACOSX
+#ifndef CONF_PLATFORM_MACOS
 	if(Graphics()->Fullscreen(Config()->m_GfxFullscreen^1))
 		Config()->m_GfxFullscreen ^= 1;
 	return true;
@@ -2566,7 +2566,7 @@ void CClient::DoVersionSpecificActions()
 	Prediction Latency
 		Upstream latency
 */
-#if defined(CONF_PLATFORM_MACOSX)
+#if defined(CONF_PLATFORM_MACOS)
 extern "C" int TWMain(int argc, const char **argv) // ignore_convention
 #else
 int main(int argc, const char **argv) // ignore_convention

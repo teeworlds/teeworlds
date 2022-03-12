@@ -28,7 +28,7 @@
 
 	#include <dirent.h>
 
-	#if defined(CONF_PLATFORM_MACOSX)
+	#if defined(CONF_PLATFORM_MACOS)
 		#include <Carbon/Carbon.h>
 	#endif
 
@@ -674,7 +674,7 @@ void lock_unlock(LOCK lock)
 #endif
 }
 
-#if !defined(CONF_PLATFORM_MACOSX)
+#if !defined(CONF_PLATFORM_MACOS)
 	#if defined(CONF_FAMILY_UNIX)
 	void semaphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
 	void semaphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
@@ -1673,7 +1673,7 @@ int fs_storage_path(const char *appname, char *path, int max)
 	if(!home)
 		return -1;
 
-#if defined(CONF_PLATFORM_MACOSX)
+#if defined(CONF_PLATFORM_MACOS)
 	str_format(path, max, "%s/Library/Application Support/%s", home, appname);
 	return 0;
 #endif
