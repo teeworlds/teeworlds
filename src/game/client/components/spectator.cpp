@@ -320,17 +320,17 @@ void CSpectator::OnRender()
 			Selected = true;
 		}
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, Selected?1.0f:0.5f);
-		char aBuf[64];
-		str_format(aBuf, sizeof(aBuf), "%s", Config()->m_ClShowsocial ? m_pClient->m_aClients[i].m_aName : "");
 
-		static CTextCursor s_PlayerNameCursor;
-		s_PlayerNameCursor.m_FontSize = FontSize;
-		s_PlayerNameCursor.Reset();
-		
 		vec2 CursorPosition = vec2(Width/2.0f+x+50.0f, Height/2.0f+y+5.0f);
-		CursorPosition.x += UI()->DrawClientID(s_PlayerNameCursor.m_FontSize, CursorPosition, i);
-		s_PlayerNameCursor.MoveTo(CursorPosition.x, CursorPosition.y);
-		TextRender()->TextOutlined(&s_PlayerNameCursor, aBuf, -1);
+		CursorPosition.x += UI()->DrawClientID(FontSize, CursorPosition, i);
+		if(Config()->m_ClShowsocial)
+		{
+			static CTextCursor s_PlayerNameCursor;
+			s_PlayerNameCursor.m_FontSize = FontSize;
+			s_PlayerNameCursor.Reset();
+			s_PlayerNameCursor.MoveTo(CursorPosition.x, CursorPosition.y);
+			TextRender()->TextOutlined(&s_PlayerNameCursor, m_pClient->m_aClients[i].m_aName, -1);
+		}
 
 		// flag
 		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_FLAGS &&
