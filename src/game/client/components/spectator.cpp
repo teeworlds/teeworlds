@@ -238,7 +238,7 @@ void CSpectator::OnRender()
 		static CTextCursor s_FreeViewLabelCursor;
 		s_FreeViewLabelCursor.m_FontSize = FontSize;
 		s_FreeViewLabelCursor.MoveTo(Width/2.0f-240.0f, Height/2.0f-265.0f);
-		s_FreeViewLabelCursor.Reset(g_Localization.Version());
+		s_FreeViewLabelCursor.Reset((g_Localization.Version() << 1) | (Selected ? 1 : 0));
 		TextRender()->TextOutlined(&s_FreeViewLabelCursor, Localize("Free-View"), -1);
 	}
 
