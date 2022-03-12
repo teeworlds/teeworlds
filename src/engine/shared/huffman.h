@@ -67,7 +67,7 @@ public:
 		Returns:
 			Returns the size of the compressed data. Negative value on failure.
 	*/
-	int Compress(const void *pInput, int InputSize, void *pOutput, int OutputSize);
+	int Compress(const void *pInput, int InputSize, void *pOutput, int OutputSize) const;
 
 	/*
 		Function: Decompress
@@ -82,7 +82,7 @@ public:
 		Returns:
 			Returns the size of the uncompressed data. Negative value on failure.
 	*/
-	int Decompress(const void *pInput, int InputSize, void *pOutput, int OutputSize);
+	int Decompress(const void *pInput, int InputSize, void *pOutput, int OutputSize) const;
 
 };
 #endif // ENGINE_SHARED_HUFFMAN_H
