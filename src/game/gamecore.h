@@ -8,9 +8,9 @@
 
 #include <math.h>
 #include "collision.h"
+#include <engine/console.h>
 #include <engine/shared/protocol.h>
 #include <generated/protocol.h>
-
 
 class CTuneParam
 {
@@ -45,6 +45,7 @@ public:
 	bool Get(int Index, float *pValue) const;
 	bool Get(const char *pName, float *pValue) const;
 	const char *GetName(int Index) const { return s_apNames[Index]; }
+	int PossibleTunings(const char *pStr, IConsole::FPossibleCallback pfnCallback = IConsole::EmptyPossibleCommandCallback, void *pUser = 0);
 };
 
 inline void StrToInts(int *pInts, int Num, const char *pStr)

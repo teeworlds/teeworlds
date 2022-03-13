@@ -26,11 +26,19 @@
 #include "console.h"
 
 static const char *s_apMapCommands[] = {"sv_map ", "change_map "};
-
 static bool IsMapCommandPrefix(const char *pStr)
 {
 	for(unsigned i = 0; i < sizeof(s_apMapCommands) / sizeof(char *); i++)
 		if(str_startswith_nocase(pStr, s_apMapCommands[i]))
+			return true;
+	return false;
+}
+
+static const char *s_apTuningCommands[] = {"tune ", "tune_reset "};
+static bool IsTuningCommandPrefix(const char *pStr)
+{
+	for(unsigned i = 0; i < sizeof(s_apTuningCommands) / sizeof(char *); i++)
+		if(str_startswith_nocase(pStr, s_apTuningCommands[i]))
 			return true;
 	return false;
 }
@@ -60,11 +68,10 @@ CGameConsole::CInstance::CInstance(int Type)
 		m_CompletionFlagmask = CFGFLAG_SERVER;
 	}
 
-	m_aCompletionMapBuffer[0] = 0;
-	m_CompletionMapChosen = -1;
-
 	m_aCompletionBuffer[0] = 0;
 	m_CompletionChosen = -1;
+	m_aCompletionBufferArgument[0] = 0;
+	m_CompletionChosenArgument = -1;
 	Reset();
 
 	m_IsCommand = false;
@@ -109,10 +116,10 @@ void CGameConsole::CInstance::PossibleCommandsCompleteCallback(int Index, const 
 		pInstance->m_Input.Set(pStr);
 }
 
-void CGameConsole::CInstance::PossibleMapsCompleteCallback(int Index, const char *pStr, void *pUser)
+void CGameConsole::CInstance::PossibleArgumentsCompleteCallback(int Index, const char *pStr, void *pUser)
 {
 	CGameConsole::CInstance *pInstance = (CGameConsole::CInstance *)pUser;
-	if(pInstance->m_CompletionMapChosen == Index)
+	if(pInstance->m_CompletionChosenArgument == Index)
 	{
 		// get command
 		char aBuf[512] = { 0 };
@@ -123,7 +130,7 @@ void CGameConsole::CInstance::PossibleMapsCompleteCallback(int Index, const char
 		aBuf[i++] = ' ';
 		aBuf[i] = 0;
 
-		// add mapname to current command
+		// append argument
 		str_append(aBuf, pStr, sizeof(aBuf));
 		pInstance->m_Input.Set(aBuf);
 	}
@@ -201,21 +208,34 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				}
 			}
 
-			// maplist completion
-			if(m_Type == CGameConsole::CONSOLETYPE_REMOTE && m_pGameConsole->Client()->RconAuthed() && IsMapCommandPrefix(GetString()))
+			// argument completion (map, tuning, ...)
+			if(m_Type == CGameConsole::CONSOLETYPE_REMOTE && m_pGameConsole->Client()->RconAuthed())
 			{
-				const int CompletionMapEnumerationCount = m_pGameConsole->m_pConsole->PossibleMaps(m_aCompletionMapBuffer);
-				if(CompletionMapEnumerationCount)
+				const bool MapCompletion = IsMapCommandPrefix(GetString());
+				const bool TuningCompletion = IsTuningCommandPrefix(GetString());
+				if(MapCompletion || TuningCompletion)
 				{
-					if(m_CompletionMapChosen == -1 && Direction < 0)
-						m_CompletionMapChosen = 0;
-					m_CompletionMapChosen = (m_CompletionMapChosen + Direction + CompletionMapEnumerationCount) % CompletionMapEnumerationCount;
-					m_pGameConsole->m_pConsole->PossibleMaps(m_aCompletionMapBuffer, PossibleMapsCompleteCallback, this);
-				}
-				else if(m_CompletionMapChosen != -1)
-				{
-					m_CompletionMapChosen = -1;
-					Reset();
+					int CompletionEnumerationCount = 0;
+					if(MapCompletion)
+						CompletionEnumerationCount = m_pGameConsole->m_pConsole->PossibleMaps(m_aCompletionBufferArgument);
+					else if(TuningCompletion)
+						CompletionEnumerationCount = m_pGameConsole->m_pClient->m_Tuning.PossibleTunings(m_aCompletionBufferArgument);
+
+					if(CompletionEnumerationCount)
+					{
+						if(m_CompletionChosenArgument == -1 && Direction < 0)
+							m_CompletionChosenArgument = 0;
+						m_CompletionChosenArgument = (m_CompletionChosenArgument + Direction + CompletionEnumerationCount) % CompletionEnumerationCount;
+						if(MapCompletion)
+							m_pGameConsole->m_pConsole->PossibleMaps(m_aCompletionBufferArgument, PossibleArgumentsCompleteCallback, this);
+						else if(TuningCompletion)
+							m_pGameConsole->m_pClient->m_Tuning.PossibleTunings(m_aCompletionBufferArgument, PossibleArgumentsCompleteCallback, this);
+					}
+					else if(m_CompletionChosenArgument != -1)
+					{
+						m_CompletionChosenArgument = -1;
+						Reset();
+					}
 				}
 			}
 		}
@@ -243,13 +263,22 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 
 			for(unsigned i = 0; i < sizeof(s_apMapCommands) / sizeof(char *); i++)
 			{
-				if(str_startswith_nocase(GetString(), s_apMapCommands[i]))
+				if(str_startswith_nocase(m_Input.GetString(), s_apMapCommands[i]))
 				{
-					m_CompletionMapChosen = -1;
-					str_copy(m_aCompletionMapBuffer, &m_Input.GetString()[str_length(s_apMapCommands[i])], sizeof(m_aCompletionBuffer));
+					m_CompletionChosenArgument = -1;
+					str_copy(m_aCompletionBufferArgument, &m_Input.GetString()[str_length(s_apMapCommands[i])], sizeof(m_aCompletionBufferArgument));
 				}
 			}
-			
+
+			for(unsigned i = 0; i < sizeof(s_apTuningCommands) / sizeof(char *); i++)
+			{
+				if(str_startswith_nocase(m_Input.GetString(), s_apTuningCommands[i]))
+				{
+					m_CompletionChosenArgument = -1;
+					str_copy(m_aCompletionBufferArgument, &m_Input.GetString()[str_length(s_apTuningCommands[i])], sizeof(m_aCompletionBufferArgument));
+				}
+			}
+
 			Reset();
 		}
 
@@ -302,7 +331,7 @@ CGameConsole::CGameConsole()
 
 float CGameConsole::TimeNow()
 {
-	static long long s_TimeStart = time_get();
+	static int64 s_TimeStart = time_get();
 	return float(time_get()-s_TimeStart)/float(time_freq());
 }
 
@@ -544,13 +573,18 @@ void CGameConsole::OnRender()
 
 			if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
 			{
-				if(IsMapCommandPrefix(Info.m_pCurrentCmd))
+				const bool MapCompletion = IsMapCommandPrefix(Info.m_pCurrentCmd);
+				const bool TuningCompletion = IsTuningCommandPrefix(Info.m_pCurrentCmd);
+				if(MapCompletion || TuningCompletion)
 				{
-					Info.m_WantedCompletion = pConsole->m_CompletionMapChosen;
+					Info.m_WantedCompletion = pConsole->m_CompletionChosenArgument;
 					Info.m_EnumCount = 0;
 					Info.m_TotalWidth = 0.0f;
-					Info.m_pCurrentCmd = pConsole->m_aCompletionMapBuffer;
-					m_pConsole->PossibleMaps(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
+					Info.m_pCurrentCmd = pConsole->m_aCompletionBufferArgument;
+					if(MapCompletion)
+						m_pConsole->PossibleMaps(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
+					else if(TuningCompletion)
+						m_pClient->m_Tuning.PossibleTunings(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
 				}
 
 				if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
