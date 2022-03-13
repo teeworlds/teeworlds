@@ -19,6 +19,8 @@ public:
 
 	float x, y, w, h;
 
+	vec2 Center() const;
+
 	void HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing = 0.0f) const;
 	void HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
 	void HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
