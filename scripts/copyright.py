@@ -1,8 +1,8 @@
 import os, sys
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 
-notice = [b"/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */\n", b"/* If you are missing that file, acquire a complete release at teeworlds.com.                */\n"]
-exclude = ["src%sengine%sexternal" % (os.sep, os.sep), "src%sosxlaunch" % os.sep]
+notice = [("/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */" + os.linesep).encode('utf-8'), ("/* If you are missing that file, acquire a complete release at teeworlds.com.                */" + os.linesep).encode('utf-8')]
+exclude = ["src%sengine%sexternal" % (os.sep, os.sep), "src%sosxlaunch" % os.sep, "src%sbase%shash_libtomcrypt.c" % (os.sep, os.sep)]
 updated_files = 0
 
 def fix_copyright_notice(filename):
@@ -50,7 +50,8 @@ for root, dirs, files in os.walk("src"):
 		continue
 	for name in files:
 		filename = os.path.join(root, name)
-
+		if filename in exclude:
+			continue
 		if filename[-2:] != ".c" and filename[-4:] != ".cpp" and filename[-2:] != ".h":
 			continue
 
