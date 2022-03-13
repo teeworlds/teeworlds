@@ -33,19 +33,18 @@ void CSpectator::ConSpectate(IConsole::IResult *pResult, void *pUserData)
 
 bool CSpectator::SpecModePossible(int SpecMode, int SpectatorID)
 {
-	int i = SpectatorID;
 	switch(SpecMode)
 	{
 	case SPEC_PLAYER:
-		if(!m_pClient->m_aClients[i].m_Active || m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
+		if(!m_pClient->m_aClients[SpectatorID].m_Active || m_pClient->m_aClients[SpectatorID].m_Team == TEAM_SPECTATORS)
 		{
 			return false;
 		}
 		if(m_pClient->m_LocalClientID != -1
 			&& m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS
-			&& (i == m_pClient->m_LocalClientID
-				|| m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != m_pClient->m_aClients[i].m_Team
-				|| (m_pClient->m_Snap.m_paPlayerInfos[i] && (m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+			&& (SpectatorID == m_pClient->m_LocalClientID
+				|| m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != m_pClient->m_aClients[SpectatorID].m_Team
+				|| (m_pClient->m_Snap.m_paPlayerInfos[SpectatorID] && (m_pClient->m_Snap.m_paPlayerInfos[SpectatorID]->m_PlayerFlags&PLAYERFLAG_DEAD))))
 		{
 			return false;
 		}
