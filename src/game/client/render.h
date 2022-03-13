@@ -59,6 +59,7 @@ public:
 
 	void DrawSprite(float x, float y, float Size);
 	void RenderCursor(float CenterX, float CenterY, float Size);
+	void RenderCursor(vec2 Center, float Size) { RenderCursor(Center.x, Center.y, Size); }
 
 	// object render methods
 	void RenderTee(class CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
