@@ -14,20 +14,23 @@
 
 #include "spectator.h"
 
+bool CSpectator::CanSpectate()
+{
+	return m_pClient->m_Snap.m_SpecInfo.m_Active
+		&& (Client()->State() != IClient::STATE_DEMOPLAYBACK || DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER);
+}
 
 void CSpectator::ConKeySpectator(IConsole::IResult *pResult, void *pUserData)
 {
 	CSpectator *pSelf = (CSpectator *)pUserData;
-	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active &&
-		(pSelf->Client()->State() != IClient::STATE_DEMOPLAYBACK || pSelf->DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER))
+	if(pSelf->CanSpectate())
 		pSelf->m_Active = pResult->GetInteger(0) != 0;
 }
 
 void CSpectator::ConSpectate(IConsole::IResult *pResult, void *pUserData)
 {
 	CSpectator *pSelf = (CSpectator *)pUserData;
-	if(pSelf->m_pClient->m_Snap.m_SpecInfo.m_Active &&
-		(pSelf->Client()->State() != IClient::STATE_DEMOPLAYBACK || pSelf->DemoPlayer()->GetDemoType() == IDemoPlayer::DEMOTYPE_SERVER))
+	if(pSelf->CanSpectate())
 		pSelf->Spectate(pResult->GetInteger(0), pResult->GetInteger(1));
 }
 
