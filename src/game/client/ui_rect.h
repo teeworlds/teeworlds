@@ -31,6 +31,7 @@ public:
 	void HMargin(float Cut, CUIRect *pOtherRect) const;
 
 	bool Inside(float x, float y) const;
+	bool Inside(vec2 Pos) const { return Inside(Pos.x, Pos.y); }
 
 	enum
 	{
