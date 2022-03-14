@@ -218,7 +218,7 @@ private:
 	// for call vote
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
-	char m_aFilterString[VOTE_REASON_LENGTH];
+	CLineInputBuffered<static_cast<int>(VOTE_REASON_LENGTH)> m_CallvoteFilterInput;
 	char m_aCallvoteReason[VOTE_REASON_LENGTH];
 
 	// demo

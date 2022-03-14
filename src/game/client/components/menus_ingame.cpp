@@ -518,7 +518,7 @@ bool CMenus::RenderServerControlServer(CUIRect MainView)
 
 	for(const CVoteOptionClient *pOption = m_pClient->m_pVoting->FirstVoteOption(); pOption; pOption = pOption->m_pNext)
 	{
-		if(m_aFilterString[0] && !pOption->m_IsSubheader && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
+		if(m_CallvoteFilterInput.GetLength() && !pOption->m_IsSubheader && !str_find_nocase(pOption->m_aDescription, m_CallvoteFilterInput.GetString()))
 			continue; // no match found
 
 		if(!pOption->m_aDescription[0])
@@ -619,7 +619,7 @@ void CMenus::HandleCallvote(int Page, bool Force)
 		int RealIndex = 0, FilteredIndex = 0;
 		for(const CVoteOptionClient *pOption = m_pClient->m_pVoting->FirstVoteOption(); pOption; pOption = pOption->m_pNext, RealIndex++)
 		{
-			if(m_aFilterString[0] && !pOption->m_IsSubheader && !str_find_nocase(pOption->m_aDescription, m_aFilterString))
+			if(m_CallvoteFilterInput.GetLength() && !pOption->m_IsSubheader && !str_find_nocase(pOption->m_aDescription, m_CallvoteFilterInput.GetString()))
 				continue; // no match found
 
 			if(!pOption->m_aDescription[0])
@@ -765,8 +765,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Search.VSplitLeft(TextRender()->TextWidth(FontSize, pSearchLabel, -1) + 10.0f, &Label, &Search);
 				Label.y += 2.0f;
 				UI()->DoLabel(&Label, pSearchLabel, FontSize, TEXTALIGN_LEFT);
-				static CLineInput s_FilterInput(m_aFilterString, sizeof(m_aFilterString));
-				if(UI()->DoEditBox(&s_FilterInput, &Search, FontSize))
+				if(UI()->DoEditBox(&m_CallvoteFilterInput, &Search, FontSize))
 					m_CallvoteSelectedOption = 0;
 			}
 
