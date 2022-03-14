@@ -630,14 +630,14 @@ void CMenus::HandleCallvote(int Page, bool Force)
 
 			FilteredIndex++;
 		}
-		m_pClient->m_pVoting->CallvoteOption(RealIndex, m_aCallvoteReason, Force);
+		m_pClient->m_pVoting->CallvoteOption(RealIndex, m_CallvoteReasonInput.GetString(), Force);
 	}
 	else if(Page == 1)
 	{
 		if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
 			m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
 		{
-			m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_aCallvoteReason, Force);
+			m_pClient->m_pVoting->CallvoteKick(m_CallvoteSelectedPlayer, m_CallvoteReasonInput.GetString(), Force);
 			SetActive(false);
 		}
 	}
@@ -646,7 +646,7 @@ void CMenus::HandleCallvote(int Page, bool Force)
 		if(m_CallvoteSelectedPlayer >= 0 && m_CallvoteSelectedPlayer < MAX_CLIENTS &&
 			m_pClient->m_aClients[m_CallvoteSelectedPlayer].m_Active)
 		{
-			m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_aCallvoteReason, Force);
+			m_pClient->m_pVoting->CallvoteSpectate(m_CallvoteSelectedPlayer, m_CallvoteReasonInput.GetString(), Force);
 			SetActive(false);
 		}
 	}
@@ -788,20 +788,19 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Reason.VSplitLeft(TextRender()->TextWidth(FontSize, pReasonLabel, -1) + 10.0f, &Label, &Reason);
 				Label.y += 2.0f;
 				UI()->DoLabel(&Label, pReasonLabel, FontSize, TEXTALIGN_LEFT);
-				static CLineInput s_ReasonInput(m_aCallvoteReason, sizeof(m_aCallvoteReason));
-				UI()->DoEditBox(&s_ReasonInput, &Reason, FontSize, CUIRect::CORNER_L);
+				UI()->DoEditBox(&m_CallvoteReasonInput, &Reason, FontSize, CUIRect::CORNER_L);
 
 				// clear button
 				static CButtonContainer s_ClearButton;
 				if(DoButton_SpriteID(&s_ClearButton, IMAGE_TOOLICONS, SPRITE_TOOL_X_A, false, &ClearButton, CUIRect::CORNER_R, 5.0f, true))
-					m_aCallvoteReason[0] = 0;
+					m_CallvoteReasonInput.Clear();
 
 				// call vote button
 				static CButtonContainer s_CallVoteButton;
 				if(DoButton_Menu(&s_CallVoteButton, Localize("Call vote"), 0, &CallVoteButton) || DoCallVote)
 				{
 					HandleCallvote(s_ControlPage, false);
-					m_aCallvoteReason[0] = 0;
+					m_CallvoteReasonInput.Clear();
 				}
 			}
 		}
@@ -820,7 +819,7 @@ void CMenus::RenderServerControl(CUIRect MainView)
 			if(DoButton_Menu(&s_ForceVoteButton, Localize("Force vote"), 0, &Button))
 			{
 				HandleCallvote(s_ControlPage, true);
-				m_aCallvoteReason[0] = 0;
+				m_CallvoteReasonInput.Clear();
 			}
 
 			if(s_ControlPage == 0)

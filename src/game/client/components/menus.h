@@ -219,7 +219,7 @@ private:
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
 	CLineInputBuffered<static_cast<int>(VOTE_REASON_LENGTH)> m_CallvoteFilterInput;
-	char m_aCallvoteReason[VOTE_REASON_LENGTH];
+	CLineInputBuffered<static_cast<int>(VOTE_REASON_LENGTH)> m_CallvoteReasonInput;
 
 	// demo
 	enum

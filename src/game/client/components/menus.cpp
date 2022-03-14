@@ -73,7 +73,6 @@ CMenus::CMenus()
 	m_LastInput = time_get();
 
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
-	m_aCallvoteReason[0] = 0;
 
 	m_ActiveListBox = ACTLB_NONE;
 
