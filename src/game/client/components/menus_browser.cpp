@@ -1569,13 +1569,12 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	// new filter
 	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
 	Button.VSplitLeft(60.0f, &Icon, &Button);
-	static char s_aFilterName[32] = { 0 };
-	static CLineInput s_FilterInput(s_aFilterName, sizeof(s_aFilterName));
+	static CLineInputBuffered<32> s_FilterInput;
 	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, CUIRect::CORNER_L);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 5.0f, CUIRect::CORNER_R);
 	Button.VSplitLeft(Button.h, &Icon, &Label);
 	UI()->DoLabel(&Label, Localize("New filter"), FontSize, TEXTALIGN_ML);
-	if(s_aFilterName[0])
+	if(s_FilterInput.GetLength())
 	{
 		DoIcon(IMAGE_FRIENDICONS, UI()->MouseHovered(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Icon);
 		static CButtonContainer s_AddFilter;
@@ -1584,9 +1583,9 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 			CBrowserFilter *pSelectedFilter = GetSelectedBrowserFilter();
 			if(pSelectedFilter)
 				pSelectedFilter->Switch();
-			m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, ServerBrowser()));
+			m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_FilterInput.GetString(), ServerBrowser()));
 			m_lFilters[m_lFilters.size()-1].Switch();
-			s_aFilterName[0] = 0;
+			s_FilterInput.Clear();
 			Client()->ServerBrowserUpdate();
 		}
 	}
