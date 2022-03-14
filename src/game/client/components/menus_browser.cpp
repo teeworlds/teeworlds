@@ -1816,11 +1816,10 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	UI()->DoLabel(&Button, Localize("Server address:"), FontSize, TEXTALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
-	static char s_aAddressFilter[sizeof(FilterInfo.m_aAddress)];
-	static CLineInput s_AddressInput(s_aAddressFilter, sizeof(s_aAddressFilter));
+	static CLineInputBuffered<static_cast<int>(sizeof(FilterInfo.m_aAddress))> s_AddressInput;
 	if(UI()->DoEditBox(&s_AddressInput, &Button, FontSize))
 	{
-		str_copy(FilterInfo.m_aAddress, s_aAddressFilter, sizeof(FilterInfo.m_aAddress));
+		str_copy(FilterInfo.m_aAddress, s_AddressInput.GetString(), sizeof(FilterInfo.m_aAddress));
 		UpdateFilter = true;
 	}
 
