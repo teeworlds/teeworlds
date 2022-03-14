@@ -1507,37 +1507,35 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Name"), FontSize, TEXTALIGN_ML);
-	static char s_aName[MAX_NAME_ARRAY_SIZE] = { 0 };
-	static CLineInput s_NameInput(s_aName, sizeof(s_aName), MAX_NAME_LENGTH);
+	static CLineInputBuffered<static_cast<int>(MAX_NAME_ARRAY_SIZE), static_cast<int>(MAX_NAME_LENGTH)> s_NameInput;
 	UI()->DoEditBox(&s_NameInput, &Button, Button.h*CUI::ms_FontmodHeight*0.8f);
 
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Clan"), FontSize, TEXTALIGN_ML);
-	static char s_aClan[MAX_CLAN_ARRAY_SIZE] = { 0 };
-	static CLineInput s_ClanInput(s_aClan, sizeof(s_aClan), MAX_CLAN_LENGTH);
+	static CLineInputBuffered<static_cast<int>(MAX_CLAN_ARRAY_SIZE), static_cast<int>(MAX_CLAN_LENGTH)> s_ClanInput;
 	UI()->DoEditBox(&s_ClanInput, &Button, Button.h*CUI::ms_FontmodHeight*0.8f);
 
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f));
-	if(s_aName[0] || s_aClan[0])
+	if(s_NameInput.GetLength() || s_ClanInput.GetLength())
 		Button.VSplitLeft(Button.h, &Icon, &Label);
 	else
 		Label = Button;
 
-	const char *pButtonText = (!s_aName[0] && !s_aClan[0]) ? Localize("Add friend/clan") : s_aName[0] ? Localize("Add friend") : Localize("Add clan");
+	const char *pButtonText = (!s_NameInput.GetLength() && !s_ClanInput.GetLength()) ? Localize("Add friend/clan") : s_NameInput.GetLength() ? Localize("Add friend") : Localize("Add clan");
 	UI()->DoLabel(&Label, pButtonText, FontSize, TEXTALIGN_MC);
-	if(s_aName[0] || s_aClan[0])
+	if(s_NameInput.GetLength() || s_ClanInput.GetLength())
 		DoIcon(IMAGE_FRIENDICONS, UI()->MouseHovered(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Icon);
 	static CButtonContainer s_AddFriend;
-	if((s_aName[0] || s_aClan[0]) && UI()->DoButtonLogic(&s_AddFriend, &Button))
+	if((s_NameInput.GetLength() || s_ClanInput.GetLength()) && UI()->DoButtonLogic(&s_AddFriend, &Button))
 	{
-		m_pClient->Friends()->AddFriend(s_aName, s_aClan);
+		m_pClient->Friends()->AddFriend(s_NameInput.GetString(), s_ClanInput.GetString());
 		FriendlistOnUpdate();
 		Client()->ServerBrowserUpdate();
-		s_aName[0] = 0;
-		s_aClan[0] = 0;
+		s_NameInput.Clear();
+		s_ClanInput.Clear();
 	}
 
 	// delete friend
