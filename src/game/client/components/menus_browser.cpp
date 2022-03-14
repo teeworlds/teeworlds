@@ -1734,21 +1734,20 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		ButtonLine.VSplitRight(ButtonLine.h, &ButtonLine, &AddExlButton);
 		ButtonLine.VSplitRight(ButtonLine.h, &EditBox, &AddIncButton);
 
-		static char s_aGametype[16] = { 0 };
-		static CLineInput s_GametypeInput(s_aGametype, sizeof(s_aGametype));
+		static CLineInputBuffered<16> s_GametypeInput;
 		UI()->DoEditBox(&s_GametypeInput, &EditBox, FontSize, CUIRect::CORNER_L);
 
 		static CButtonContainer s_AddInclusiveGametype;
-		if(DoButton_Menu(&s_AddInclusiveGametype, "+", 0, &AddIncButton, 0, 0) && s_aGametype[0])
+		if(DoButton_Menu(&s_AddInclusiveGametype, "+", 0, &AddIncButton, 0, 0) && s_GametypeInput.GetLength())
 		{
 			for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 			{
 				if(!FilterInfo.m_aGametype[i][0])
 				{
-					str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
+					str_copy(FilterInfo.m_aGametype[i], s_GametypeInput.GetString(), sizeof(FilterInfo.m_aGametype[i]));
 					FilterInfo.m_aGametypeExclusive[i] = false;
 					UpdateFilter = true;
-					s_aGametype[0] = 0;
+					s_GametypeInput.Clear();
 					break;
 				}
 			}
@@ -1756,16 +1755,16 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		UI()->DoTooltip(&s_AddInclusiveGametype, &AddIncButton, Localize("Include servers with this gametype."));
 
 		static CButtonContainer s_AddExclusiveGametype;
-		if(DoButton_Menu(&s_AddExclusiveGametype, "-", 0, &AddExlButton, 0, CUIRect::CORNER_R) && s_aGametype[0])
+		if(DoButton_Menu(&s_AddExclusiveGametype, "-", 0, &AddExlButton, 0, CUIRect::CORNER_R) && s_GametypeInput.GetLength())
 		{
 			for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 			{
 				if(!FilterInfo.m_aGametype[i][0])
 				{
-					str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
+					str_copy(FilterInfo.m_aGametype[i], s_GametypeInput.GetString(), sizeof(FilterInfo.m_aGametype[i]));
 					FilterInfo.m_aGametypeExclusive[i] = true;
 					UpdateFilter = true;
-					s_aGametype[0] = 0;
+					s_GametypeInput.Clear();
 					break;
 				}
 			}
