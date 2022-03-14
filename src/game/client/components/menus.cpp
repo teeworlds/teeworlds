@@ -54,8 +54,6 @@ CMenus::CMenus()
 	m_NeedRestartSound = false;
 	m_NeedRestartPlayer = false;
 	m_TeePartSelected = SKINPART_BODY;
-	m_aSaveSkinName[0] = '\0';
-	m_SkinNameInput.SetBuffer(m_aSaveSkinName, sizeof(m_aSaveSkinName), MAX_SKIN_LENGTH);
 	m_RefreshSkinSelector = true;
 	m_pSelectedSkin = 0;
 	m_MenuActive = true;
@@ -1519,13 +1517,13 @@ void CMenus::RenderMenu(CUIRect Screen)
 				m_Popup = POPUP_NONE;
 
 			static CButtonContainer s_ButtonYes;
-			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_SkinNameInput.GetLength(), &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 			{
-				if(m_aSaveSkinName[0])
+				if(m_SkinNameInput.GetLength())
 				{
-					if(m_aSaveSkinName[0] != 'x' && m_aSaveSkinName[1] != '_')
+					if(m_SkinNameInput.GetString()[0] != 'x' && m_SkinNameInput.GetString()[1] != '_')
 					{
-						if(m_pClient->m_pSkins->SaveSkinfile(m_aSaveSkinName))
+						if(m_pClient->m_pSkins->SaveSkinfile(m_SkinNameInput.GetString()))
 						{
 							m_Popup = POPUP_NONE;
 							m_RefreshSkinSelector = true;

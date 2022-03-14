@@ -197,8 +197,7 @@ private:
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
 	int m_TeePartSelected;
-	char m_aSaveSkinName[MAX_SKIN_ARRAY_SIZE];
-	CLineInput m_SkinNameInput;
+	CLineInputBuffered<static_cast<int>(MAX_SKIN_ARRAY_SIZE), static_cast<int>(MAX_SKIN_LENGTH)> m_SkinNameInput;
 
 	bool m_RefreshSkinSelector;
 	const CSkins::CSkin *m_pSelectedSkin;
