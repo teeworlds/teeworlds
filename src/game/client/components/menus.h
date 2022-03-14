@@ -303,8 +303,7 @@ private:
 
 	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[IO_MAX_PATH_LENGTH];
-	char m_aCurrentDemoFile[IO_MAX_PATH_LENGTH];
-	CLineInput m_DemoNameInput;
+	CLineInputBuffered<static_cast<int>(IO_MAX_PATH_LENGTH)> m_DemoNameInput;
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;
