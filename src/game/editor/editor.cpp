@@ -2740,18 +2740,15 @@ void CEditor::RenderFileDialog()
 		if(DoEditBox(&m_FileDialogFileNameInput, &FileBox, 10.0f))
 		{
 			// remove '/' and '\'
-			char aTempFileName[sizeof(m_aFileDialogFileName)];
-			str_copy(aTempFileName, m_aFileDialogFileName, sizeof(aTempFileName));
-			for(int i = 0; aTempFileName[i]; ++i)
-				if(aTempFileName[i] == '/' || aTempFileName[i] == '\\')
-					str_copy(&aTempFileName[i], &aTempFileName[i+1], (int)(sizeof(aTempFileName))-i);
-			m_FileDialogFileNameInput.Set(aTempFileName);
+			for(int i = 0; m_FileDialogFileNameInput.GetString()[i]; ++i)
+				if(m_FileDialogFileNameInput.GetString()[i] == '/' || m_FileDialogFileNameInput.GetString()[i] == '\\')
+					m_FileDialogFileNameInput.SetRange(m_FileDialogFileNameInput.GetString() + i + 1, i, m_FileDialogFileNameInput.GetLength());
 			m_FilesSelectedIndex = -1;
 			m_aFilesSelectedName[0] = '\0';
 			// find first valid entry, if it exists
 			for(int i = 0; i < m_FilteredFileList.size(); i++)
 			{
-				if(str_comp_nocase(m_FilteredFileList[i]->m_aName, m_aFileDialogFileName) == 0)
+				if(str_comp_nocase(m_FilteredFileList[i]->m_aName, m_FileDialogFileNameInput.GetString()) == 0)
 				{
 					m_FilesSelectedIndex = i;
 					str_copy(m_aFilesSelectedName, m_FilteredFileList[i]->m_aName, sizeof(m_aFilesSelectedName));
@@ -2913,7 +2910,7 @@ void CEditor::RenderFileDialog()
 		}
 		else // file
 		{
-			str_format(m_aFileSaveName, sizeof(m_aFileSaveName), "%s/%s", m_pFileDialogPath, m_aFileDialogFileName);
+			str_format(m_aFileSaveName, sizeof(m_aFileSaveName), "%s/%s", m_pFileDialogPath, m_FileDialogFileNameInput.GetString());
 			if(!str_comp(m_pFileDialogButtonText, "Save"))
 			{
 				IOHANDLE File = Storage()->OpenFile(m_aFileSaveName, IOFLAG_READ, IStorage::TYPE_SAVE);

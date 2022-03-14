@@ -545,8 +545,6 @@ public:
 		m_PopupEventWasActivated = false;
 
 		m_FileDialogStorageType = 0;
-		m_aFileDialogFileName[0] = '\0';
-		m_FileDialogFileNameInput.SetBuffer(m_aFileDialogFileName, sizeof(m_aFileDialogFileName));
 		m_pFileDialogTitle = 0;
 		m_pFileDialogButtonText = 0;
 		m_pFileDialogUser = 0;
@@ -661,8 +659,7 @@ public:
 	const char *m_pFileDialogButtonText;
 	void (*m_pfnFileDialogFunc)(const char *pFileName, int StorageType, void *pUser);
 	void *m_pFileDialogUser;
-	CLineInput m_FileDialogFileNameInput;
-	char m_aFileDialogFileName[IO_MAX_PATH_LENGTH];
+	CLineInputBuffered<static_cast<int>(IO_MAX_PATH_LENGTH)> m_FileDialogFileNameInput;
 	char m_aFileDialogCurrentFolder[IO_MAX_PATH_LENGTH];
 	char m_aFileDialogCurrentLink[IO_MAX_PATH_LENGTH];
 	char *m_pFileDialogPath;
