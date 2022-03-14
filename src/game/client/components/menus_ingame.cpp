@@ -840,21 +840,20 @@ void CMenus::RenderServerControl(CUIRect MainView)
 				Bottom.VSplitLeft(2*Spacing, 0, &Button);
 				UI()->DoLabel(&Button, Localize("Vote command:"), FontSize, TEXTALIGN_LEFT);
 
-				static char s_aVoteDescription[VOTE_DESC_LENGTH] = {0};
-				static char s_aVoteCommand[VOTE_CMD_LENGTH] = {0};
+				static CLineInputBuffered<static_cast<int>(VOTE_DESC_LENGTH)> s_DescriptionInput;
+				static CLineInputBuffered<static_cast<int>(VOTE_CMD_LENGTH)> s_CommandInput;
+
 				Extended.HSplitTop(LineHeight, &Bottom, &Extended);
 				Bottom.VSplitRight(ColumnWidth, &Bottom, &Button);
 				static CButtonContainer s_AddVoteButton;
 				if(DoButton_Menu(&s_AddVoteButton, Localize("Add"), 0, &Button))
-					if(s_aVoteDescription[0] != 0 && s_aVoteCommand[0] != 0)
-						m_pClient->m_pVoting->RconAddVoteOption(s_aVoteDescription, s_aVoteCommand);
+					if(s_DescriptionInput.GetLength() && s_CommandInput.GetLength())
+						m_pClient->m_pVoting->RconAddVoteOption(s_DescriptionInput.GetString(), s_CommandInput.GetString());
 
 				Bottom.VSplitLeft(2*ColumnWidth+Spacing, &Button, &Bottom);
-				static CLineInput s_DescriptionInput(s_aVoteDescription, sizeof(s_aVoteDescription));
 				UI()->DoEditBox(&s_DescriptionInput, &Button, FontSize);
 
 				Bottom.VMargin(2*Spacing, &Button);
-				static CLineInput s_CommandInput(s_aVoteCommand, sizeof(s_aVoteCommand));
 				UI()->DoEditBox(&s_CommandInput, &Button, FontSize);
 			}
 		}
