@@ -547,8 +547,6 @@ public:
 		m_FileDialogStorageType = 0;
 		m_aFileDialogFileName[0] = '\0';
 		m_FileDialogFileNameInput.SetBuffer(m_aFileDialogFileName, sizeof(m_aFileDialogFileName));
-		m_aFileDialogFilterString[0] = '\0';
-		m_FileDialogFilterInput.SetBuffer(m_aFileDialogFilterString, sizeof(m_aFileDialogFilterString));
 		m_pFileDialogTitle = 0;
 		m_pFileDialogButtonText = 0;
 		m_pFileDialogUser = 0;
@@ -671,8 +669,7 @@ public:
 	int m_FileDialogFileType;
 	int m_FilesSelectedIndex;
 	char m_aFilesSelectedName[IO_MAX_PATH_LENGTH];
-	char m_aFileDialogFilterString[64];
-	CLineInput m_FileDialogFilterInput;
+	CLineInputBuffered<64> m_FileDialogFilterInput;
 	CLineInputBuffered<64> m_FileDialogNewFolderNameInput;
 	char m_aFileDialogErrString[64];
 	IGraphics::CTextureHandle m_FilePreviewImage;

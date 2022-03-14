@@ -2773,13 +2773,13 @@ void CEditor::RenderFileDialog()
 			{
 				m_FilesSelectedIndex = -1;
 			}
-			else if(m_FilesSelectedIndex == -1 || (m_aFileDialogFilterString[0] && !str_find_nocase(m_FilteredFileList[m_FilesSelectedIndex]->m_aName, m_aFileDialogFilterString)))
+			else if(m_FilesSelectedIndex == -1 || (m_FileDialogFilterInput.GetLength() && !str_find_nocase(m_FilteredFileList[m_FilesSelectedIndex]->m_aName, m_FileDialogFilterInput.GetString())))
 			{
 				// we need to refresh selection
 				m_FilesSelectedIndex = -1;
 				for(int i = 0; i < m_FilteredFileList.size(); i++)
 				{
-					if(str_find_nocase(m_FilteredFileList[i]->m_aName, m_aFileDialogFilterString))
+					if(str_find_nocase(m_FilteredFileList[i]->m_aName, m_FileDialogFilterInput.GetString()))
 					{
 						m_FilesSelectedIndex = i;
 						break;
@@ -2971,7 +2971,7 @@ void CEditor::RefreshFilteredFileList()
 	m_FilteredFileList.clear();
 	for(int i = 0; i < m_CompleteFileList.size(); i++)
 	{
-		if(!m_aFileDialogFilterString[0] || str_find_nocase(m_CompleteFileList[i].m_aName, m_aFileDialogFilterString))
+		if(!m_FileDialogFilterInput.GetLength() || str_find_nocase(m_CompleteFileList[i].m_aName, m_FileDialogFilterInput.GetString()))
 		{
 			m_FilteredFileList.add(&m_CompleteFileList[i]);
 		}
