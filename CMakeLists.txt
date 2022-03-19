@@ -2126,6 +2126,7 @@ foreach(target ${TARGETS_OWN})
     target_compile_options(${target} PRIVATE /wd4800) # Implicit conversion of int to bool.
   endif()
   if(TARGET_OS STREQUAL "windows")
+    target_compile_definitions(${target} PRIVATE _WIN32_WINNT=0x0501)
     target_compile_definitions(${target} PRIVATE UNICODE) # Windows headers
     target_compile_definitions(${target} PRIVATE _UNICODE) # C-runtime
   endif()
