@@ -138,8 +138,7 @@ endfunction()
 
 if(NOT MSVC)
   # Protect the stack pointer.
-  # -fstack-protector-all doesn't work on MinGW.
-  add_c_compiler_flag_if_supported(OUR_FLAGS -fstack-protector-strong)
+  add_c_compiler_flag_if_supported(OUR_FLAGS -fstack-protector-all)
 
   # Protect the stack from clashing.
   add_c_compiler_flag_if_supported(OUR_FLAGS -fstack-clash-protection)
