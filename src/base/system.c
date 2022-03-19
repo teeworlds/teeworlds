@@ -1523,7 +1523,7 @@ static inline time_t filetime_to_unixtime(LPFILETIME filetime)
 	li.QuadPart -= 11644473600LL; // Windows epoch is in the past
 
 	t = li.QuadPart;
-	return t == li.QuadPart ? t : (time_t)-1;
+	return t == (time_t)li.QuadPart ? t : (time_t)-1;
 }
 #endif
 
@@ -2102,9 +2102,8 @@ void str_append(char *dst, const char *src, int dst_size)
 void str_copy(char *dst, const char *src, int dst_size)
 {
 	dbg_assert(dst_size > 0, "dst_size invalid");
-
-	strncpy(dst, src, dst_size-1);
-	dst[dst_size-1] = 0; /* assure null termination */
+	dst[0] = '\0';
+	strncat(dst, src, dst_size - 1);
 }
 
 void str_truncate(char *dst, int dst_size, const char *src, int truncation_len)
