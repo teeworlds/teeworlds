@@ -33,7 +33,7 @@ void CDemoRecorder::Init(class IConsole *pConsole, class IStorage *pStorage)
 }
 
 // Record
-int CDemoRecorder::Start(const char *pFilename, const char *pNetVersion, const char *pMap, SHA256_DIGEST Sha256, unsigned Crc, const char *pType)
+int CDemoRecorder::Start(const char *pFilename, bool WithTimestamp, const char *pNetVersion, const char *pMap, SHA256_DIGEST Sha256, unsigned Crc, const char *pType)
 {
 	CDemoHeader Header;
 	if(m_File)
@@ -77,13 +77,23 @@ int CDemoRecorder::Start(const char *pFilename, const char *pNetVersion, const c
 		return -1;
 	}
 
-	IOHANDLE DemoFile = m_pStorage->OpenFile(pFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+	char aDemoFilename[IO_MAX_PATH_LENGTH];
+	if(WithTimestamp)
+	{
+		char aDate[20];
+		str_timestamp(aDate, sizeof(aDate));
+		str_format(aDemoFilename, sizeof(aDemoFilename), "demos/%s_%s.demo", pFilename, aDate);
+	}
+	else
+		str_format(aDemoFilename, sizeof(aDemoFilename), "demos/%s.demo", pFilename);
+
+	IOHANDLE DemoFile = m_pStorage->OpenFile(aDemoFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 	if(!DemoFile)
 	{
 		io_close(MapFile);
 		MapFile = 0;
 		char aBuf[256];
-		str_format(aBuf, sizeof(aBuf), "Unable to open '%s' for recording", pFilename);
+		str_format(aBuf, sizeof(aBuf), "Unable to open '%s' for recording", aDemoFilename);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_recorder", aBuf);
 		return -1;
 	}
@@ -121,7 +131,7 @@ int CDemoRecorder::Start(const char *pFilename, const char *pNetVersion, const c
 	m_NumTimelineMarkers = 0;
 
 	char aBuf[256];
-	str_format(aBuf, sizeof(aBuf), "Recording to '%s'", pFilename);
+	str_format(aBuf, sizeof(aBuf), "Recording to '%s'", aDemoFilename);
 	m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_recorder", aBuf);
 	m_File = DemoFile;
 
