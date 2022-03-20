@@ -200,6 +200,7 @@ public:
 
 	void Kick(int ClientID, const char *pReason);
 
+	void DemoRecorder_Start(const char *pFilename, bool WithTimestamp);
 	void DemoRecorder_HandleAutoStart();
 	bool DemoRecorder_IsRecording();
 
