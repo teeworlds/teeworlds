@@ -481,12 +481,11 @@ unsigned CDataFileReader::Crc() const
 
 bool CDataFileReader::CheckSha256(IOHANDLE Handle, const void *pSha256)
 {
-	// read the hash of the file
 	SHA256_CTX Sha256Ctx;
 	sha256_init(&Sha256Ctx);
 	unsigned char aBuffer[64*1024];
-	
-	while(1)
+
+	while(true)
 	{
 		unsigned Bytes = io_read(Handle, aBuffer, sizeof(aBuffer));
 		if(Bytes == 0)
@@ -497,7 +496,25 @@ bool CDataFileReader::CheckSha256(IOHANDLE Handle, const void *pSha256)
 	io_seek(Handle, 0, IOSEEK_START);
 	SHA256_DIGEST Sha256 = sha256_finish(&Sha256Ctx);
 
-	return !sha256_comp(*(const SHA256_DIGEST *)pSha256, Sha256);
+	return *(const SHA256_DIGEST *)pSha256 == Sha256;
+}
+
+bool CDataFileReader::CheckCrc(IOHANDLE Handle, const void *pCrc)
+{
+	unsigned Crc = crc32(0L, 0x0, 0);
+	unsigned char aBuffer[64*1024];
+
+	while(true)
+	{
+		unsigned Bytes = io_read(Handle, aBuffer, sizeof(aBuffer));
+		if(Bytes == 0)
+			break;
+		Crc = crc32(Crc, aBuffer, Bytes);
+	}
+
+	io_seek(Handle, 0, IOSEEK_START);
+
+	return *(const unsigned *)pCrc == Crc;
 }
 
 
