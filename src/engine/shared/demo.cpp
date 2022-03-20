@@ -43,7 +43,7 @@ int CDemoRecorder::Start(const char *pFilename, const char *pNetVersion, const c
 	}
 
 	// open mapfile
-	char aMapFilename[128];
+	char aMapFilename[IO_MAX_PATH_LENGTH];
 	// try the normal maps folder
 	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", pMap);
 	IOHANDLE MapFile = m_pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
@@ -66,8 +66,8 @@ int CDemoRecorder::Start(const char *pFilename, const char *pNetVersion, const c
 		// search for the map within subfolders
 		char aBuf[IO_MAX_PATH_LENGTH];
 		str_format(aMapFilename, sizeof(aMapFilename), "%s.map", pMap);
-		if(m_pStorage->FindFile(aMapFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
-			MapFile = m_pStorage->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckSha256, &Sha256);
+		if(m_pStorage->FindFile(aMapFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf), &Sha256, Crc))
+			MapFile = m_pStorage->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
 	}
 	if(!MapFile)
 	{

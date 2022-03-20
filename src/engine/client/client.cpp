@@ -912,9 +912,9 @@ const char *CClient::LoadMapSearch(const char *pMapName, const SHA256_DIGEST *pW
 	}
 
 	// search for the map within subfolders
-	char aFilename[128];
+	char aFilename[IO_MAX_PATH_LENGTH];
 	str_format(aFilename, sizeof(aFilename), "%s.map", pMapName);
-	if(Storage()->FindFile(aFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf)))
+	if(Storage()->FindFile(aFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf), pWantedSha256, WantedCrc))
 		pError = LoadMap(pMapName, aBuf, pWantedSha256, WantedCrc);
 
 	return pError;
