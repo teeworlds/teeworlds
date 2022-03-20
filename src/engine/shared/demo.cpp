@@ -685,14 +685,30 @@ const char *CDemoPlayer::Load(const char *pFilename, int StorageType, const char
 		m_DemoType = DEMOTYPE_INVALID;
 
 	// read map
-	unsigned MapSize = bytes_be_to_uint(m_Info.m_Header.m_aMapSize);
+	const unsigned MapSize = bytes_be_to_uint(m_Info.m_Header.m_aMapSize);
+	const unsigned Crc = bytes_be_to_uint(m_Info.m_Header.m_aMapCrc);
 
 	// check if we already have the map
-	// TODO: improve map checking (maps folder, check crc)
-	unsigned Crc = bytes_be_to_uint(m_Info.m_Header.m_aMapCrc);
-	char aMapFilename[128];
-	str_format(aMapFilename, sizeof(aMapFilename), "downloadedmaps/%s_%08x.map", m_Info.m_Header.m_aMapName, Crc);
-	IOHANDLE MapFile = m_pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL);
+	// TODO: add map sha256 to demo file and check for correct sha256 if available instead of crc
+	char aMapFilename[IO_MAX_PATH_LENGTH];
+	char aMapFilenameOutput[IO_MAX_PATH_LENGTH];
+	// try the normal maps folder
+	str_format(aMapFilename, sizeof(aMapFilename), "maps/%s.map", m_Info.m_Header.m_aMapName);
+	IOHANDLE MapFile = m_pStorage->OpenFile(aMapFilename, IOFLAG_READ, IStorage::TYPE_ALL, 0, 0, CDataFileReader::CheckCrc, &Crc);
+	if(!MapFile)
+	{
+		// try the downloaded maps (crc)
+		str_format(aMapFilenameOutput, sizeof(aMapFilenameOutput), "downloadedmaps/%s_%08x.map", m_Info.m_Header.m_aMapName, Crc);
+		MapFile = m_pStorage->OpenFile(aMapFilenameOutput, IOFLAG_READ, IStorage::TYPE_ALL);
+	}
+	if(!MapFile)
+	{
+		// search for the map within subfolders
+		char aBuf[IO_MAX_PATH_LENGTH];
+		str_format(aMapFilename, sizeof(aMapFilename), "%s.map", m_Info.m_Header.m_aMapName);
+		if(m_pStorage->FindFile(aMapFilename, "maps", IStorage::TYPE_ALL, aBuf, sizeof(aBuf), 0, Crc))
+			MapFile = m_pStorage->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
+	}
 
 	if(MapFile)
 	{
@@ -706,7 +722,7 @@ const char *CDemoPlayer::Load(const char *pFilename, int StorageType, const char
 		io_read(m_File, pMapData, MapSize);
 
 		// save map
-		MapFile = m_pStorage->OpenFile(aMapFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
+		MapFile = m_pStorage->OpenFile(aMapFilenameOutput, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 		io_write(MapFile, pMapData, MapSize);
 		io_close(MapFile);
 
