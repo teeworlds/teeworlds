@@ -1243,8 +1243,7 @@ int CServer::LoadMap(const char *pMapName)
 		return 0;
 
 	// stop recording when we change map
-	if(m_DemoRecorder.IsRecording())
-		m_DemoRecorder.Stop();
+	DemoRecorder_Stop();
 
 	// reinit snapshot ids
 	m_IDPool.TimeoutIDs();
@@ -1623,8 +1622,7 @@ void CServer::DemoRecorder_HandleAutoStart()
 {
 	if(Config()->m_SvAutoDemoRecord)
 	{
-		if(m_DemoRecorder.IsRecording())
-			m_DemoRecorder.Stop();
+		DemoRecorder_Stop();
 		DemoRecorder_Start("auto/autorecord", true);
 		if(Config()->m_SvAutoDemoMax)
 		{
@@ -1633,6 +1631,12 @@ void CServer::DemoRecorder_HandleAutoStart()
 			AutoDemos.Init(Storage(), "demos/server", "autorecord", ".demo", Config()->m_SvAutoDemoMax);
 		}
 	}
+}
+
+void CServer::DemoRecorder_Stop(bool ErrorIfNotRecording)
+{
+	if(ErrorIfNotRecording || m_DemoRecorder.IsRecording())
+		m_DemoRecorder.Stop();
 }
 
 bool CServer::DemoRecorder_IsRecording()
@@ -1652,7 +1656,7 @@ void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)
 
 void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser)
 {
-	((CServer *)pUser)->m_DemoRecorder.Stop();
+	((CServer *)pUser)->DemoRecorder_Stop(true);
 }
 
 void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
