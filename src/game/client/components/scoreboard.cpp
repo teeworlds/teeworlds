@@ -665,7 +665,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			{
 				// K
 				TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
-				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Frags, 0, 999));
+				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Kills, 0, 999));
 				s_Cursor.Reset();
 				s_Cursor.MoveTo(KillOffset+KillLength/2, y+Spacing);
 				s_Cursor.m_MaxWidth = KillLength;

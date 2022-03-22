@@ -1501,8 +1501,8 @@ float CMenus::RenderSettingsControlsStats(CUIRect View)
 	CUIRect Button;
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(s_aCheckboxIds + 0, Localize("Frags"), Config()->m_ClStatboardInfos & TC_STATS_FRAGS, &Button))
-		Config()->m_ClStatboardInfos ^= TC_STATS_FRAGS;
+	if(DoButton_CheckBox(s_aCheckboxIds + 0, Localize("Kills"), Config()->m_ClStatboardInfos & TC_STATS_KILLS, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_KILLS;
 
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 1, Localize("Deaths"), Config()->m_ClStatboardInfos & TC_STATS_DEATHS, &Button))
@@ -1515,16 +1515,16 @@ float CMenus::RenderSettingsControlsStats(CUIRect View)
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 3, Localize("Ratio"), Config()->m_ClStatboardInfos & TC_STATS_RATIO, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_RATIO;
-	UI()->DoTooltip(s_aCheckboxIds + 3, &Button, Localize("The ratio of frags to deaths."));
+	UI()->DoTooltip(s_aCheckboxIds + 3, &Button, Localize("The ratio of kills to deaths."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 4, Localize("Net score"), Config()->m_ClStatboardInfos & TC_STATS_NET, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_NET;
-	UI()->DoTooltip(s_aCheckboxIds + 4, &Button, Localize("The number of frags minus the number of deaths."));
+	UI()->DoTooltip(s_aCheckboxIds + 4, &Button, Localize("The number of kills minus the number of deaths."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
-	if(DoButton_CheckBox(s_aCheckboxIds + 5, Localize("Frags per minute"), Config()->m_ClStatboardInfos & TC_STATS_FPM, &Button))
-		Config()->m_ClStatboardInfos ^= TC_STATS_FPM;
+	if(DoButton_CheckBox(s_aCheckboxIds + 5, Localize("Kills per minute"), Config()->m_ClStatboardInfos & TC_STATS_KPM, &Button))
+		Config()->m_ClStatboardInfos ^= TC_STATS_KPM;
 
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 6, Localize("Current spree"), Config()->m_ClStatboardInfos & TC_STATS_SPREE, &Button))
@@ -1537,7 +1537,7 @@ float CMenus::RenderSettingsControlsStats(CUIRect View)
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 8, Localize("Weapons stats"), Config()->m_ClStatboardInfos & TC_STATS_WEAPS, &Button))
 		Config()->m_ClStatboardInfos ^= TC_STATS_WEAPS;
-	UI()->DoTooltip(s_aCheckboxIds + 8, &Button, Localize("The proportion of frags gotten with each weapon."));
+	UI()->DoTooltip(s_aCheckboxIds + 8, &Button, Localize("The proportion of kills gotten with each weapon."));
 
 	View.HSplitTop(RowHeight, &Button, &View);
 	if(DoButton_CheckBox(s_aCheckboxIds + 9, Localize("Flag grabs"), Config()->m_ClStatboardInfos & TC_STATS_FLAGGRABS, &Button))
