@@ -132,7 +132,8 @@ void CStats::OnRender()
 	if(Config()->m_ClAutoStatScreenshot)
 	{
 		// on game over, wait three seconds
-		if(m_ScreenshotTime < 0 && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+		const bool IsGameOver = m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
+		if(m_ScreenshotTime < 0 && IsGameOver)
 			m_ScreenshotTime = time_get()+time_freq()*3;
 
 		// when rendered, take screenshot once
@@ -141,6 +142,9 @@ void CStats::OnRender()
 			AutoStatScreenshot();
 			m_ScreenshotTaken = true;
 		}
+
+		if(!IsGameOver)
+			m_ScreenshotTime = -1;
 	}
 
 	// don't render if menu is open
