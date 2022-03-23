@@ -2741,8 +2741,13 @@ void CEditor::RenderFileDialog()
 		{
 			// remove '/' and '\'
 			for(int i = 0; m_FileDialogFileNameInput.GetString()[i]; ++i)
+			{
 				if(m_FileDialogFileNameInput.GetString()[i] == '/' || m_FileDialogFileNameInput.GetString()[i] == '\\')
+				{
 					m_FileDialogFileNameInput.SetRange(m_FileDialogFileNameInput.GetString() + i + 1, i, m_FileDialogFileNameInput.GetLength());
+					--i;
+				}
+			}
 			m_FilesSelectedIndex = -1;
 			m_aFilesSelectedName[0] = '\0';
 			// find first valid entry, if it exists
