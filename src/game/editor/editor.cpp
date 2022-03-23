@@ -2948,7 +2948,7 @@ void CEditor::RenderFileDialog()
 			m_FileDialogNewFolderNameInput.Clear();
 			m_aFileDialogErrString[0] = 0;
 			UI()->DoPopupMenu(Width/2.0f-200.0f, Height/2.0f-100.0f, 400.0f, 200.0f, this, PopupNewFolder);
-			UI()->SetActiveItem(0);
+			UI()->SetActiveItem(&m_FileDialogNewFolderNameInput);
 		}
 
 		ButtonBar.VSplitLeft(40.0f, 0, &ButtonBar);
