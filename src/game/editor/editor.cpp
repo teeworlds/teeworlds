@@ -2945,7 +2945,7 @@ void CEditor::RenderFileDialog()
 		static int s_NewFolderButton = 0;
 		if(DoButton_Editor(&s_NewFolderButton, "New folder", 0, &Button, 0, 0))
 		{
-			m_aFileDialogNewFolderName[0] = 0;
+			m_FileDialogNewFolderNameInput.Clear();
 			m_aFileDialogErrString[0] = 0;
 			UI()->DoPopupMenu(Width/2.0f-200.0f, Height/2.0f-100.0f, 400.0f, 200.0f, this, PopupNewFolder);
 			UI()->SetActiveItem(0);

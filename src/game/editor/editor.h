@@ -673,7 +673,7 @@ public:
 	char m_aFilesSelectedName[IO_MAX_PATH_LENGTH];
 	char m_aFileDialogFilterString[64];
 	CLineInput m_FileDialogFilterInput;
-	char m_aFileDialogNewFolderName[64];
+	CLineInputBuffered<64> m_FileDialogNewFolderNameInput;
 	char m_aFileDialogErrString[64];
 	IGraphics::CTextureHandle m_FilePreviewImage;
 	bool m_PreviewImageIsLoaded;
