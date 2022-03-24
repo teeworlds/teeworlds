@@ -162,17 +162,39 @@ void CStats::OnRender()
 	float w = 270.0f;
 	float h = 770.0f;
 
+	// local client or spectated player is always the first in the list
+	int LocalOrSpectatedClient = -1;
+	if(m_pClient->m_LocalClientID != -1 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
+		LocalOrSpectatedClient = m_pClient->m_LocalClientID;
+	else if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
+		LocalOrSpectatedClient = m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
+
 	int aPlayers[MAX_CLIENTS] = {0};
 	int NumPlayers = 0;
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	if(LocalOrSpectatedClient != -1)
 	{
-		if(!m_pClient->m_aClients[i].m_Active)
-			continue;
-		if(m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
-			continue;
-
-		aPlayers[NumPlayers] = i;
+		aPlayers[NumPlayers] = LocalOrSpectatedClient;
 		NumPlayers++;
+	}
+
+	// order other clients by team, starting with the team of our player
+	int aTeams[] = {TEAM_RED, TEAM_BLUE};
+	if(LocalOrSpectatedClient != -1 && m_pClient->m_aClients[LocalOrSpectatedClient].m_Team != aTeams[0])
+		std::swap(aTeams[0], aTeams[1]);
+	for(unsigned t = 0; t < sizeof(aTeams) / sizeof(aTeams[0]); ++t)
+	{
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(i == LocalOrSpectatedClient)
+				continue;
+			if(!m_pClient->m_aClients[i].m_Active)
+				continue;
+			if(m_pClient->m_aClients[i].m_Team != aTeams[t])
+				continue;
+
+			aPlayers[NumPlayers] = i;
+			NumPlayers++;
+		}
 	}
 
 	for(int i=0; i<9; i++)
