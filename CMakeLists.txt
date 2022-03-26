@@ -1268,6 +1268,8 @@ generate_source("src/generated/server_data.h" "server_content_header")
 
 # Sources
 set_src(BASE GLOB_RECURSE src/base
+  base64.c
+  base64.h
   color.h
   detect.h
   hash.c
@@ -1729,6 +1731,7 @@ add_custom_target(everything DEPENDS ${TARGETS_OWN})
 
 if(GTEST_FOUND OR DOWNLOAD_GTEST)
   set_src(TESTS GLOB src/test
+    base64.cpp
     bytes_be.cpp
     compression.cpp
     datafile.cpp
