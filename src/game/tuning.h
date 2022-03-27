@@ -44,4 +44,8 @@ MACRO_TUNING_PARAM(LaserBounceCost, laser_bounce_cost, 0)
 
 MACRO_TUNING_PARAM(PlayerCollision, player_collision, 1)
 MACRO_TUNING_PARAM(PlayerHooking, player_hooking, 1)
+
+MACRO_TUNING_PARAM(PlayerElasticityX, player_elasticity_x, 0.0f)
+MACRO_TUNING_PARAM(PlayerElasticityY, player_elasticity_y, 0.0f)
+MACRO_TUNING_PARAM(FlagElasticity, flag_elasticity, 0.5f)
 #endif

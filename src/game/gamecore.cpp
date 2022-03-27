@@ -375,7 +375,10 @@ void CCharacterCore::Move()
 	m_Vel.x = m_Vel.x*RampValue;
 
 	vec2 NewPos = m_Pos;
-	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(PHYS_SIZE, PHYS_SIZE), 0, &m_Death);
+	bool Grounded = false;
+	m_pCollision->MoveBox(&NewPos, &m_Vel, vec2(PHYS_SIZE, PHYS_SIZE), vec2(m_pWorld->m_Tuning.m_PlayerElasticityX, m_pWorld->m_Tuning.m_PlayerElasticityY), &m_Death, &Grounded);
+	if(Grounded)
+		m_Jumped &= ~2;
 
 	m_Vel.x = m_Vel.x*(1.0f/RampValue);
 
