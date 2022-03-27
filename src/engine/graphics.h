@@ -136,7 +136,8 @@ public:
 	virtual void WrapMode(int WrapU, int WrapV) = 0;
 	virtual int MemoryUsage() const = 0;
 
-	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) = 0;
+	virtual bool LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) = 0;
+	virtual bool LoadPNG(CImageInfo *pImg, const unsigned char *pData, unsigned Size, const char *pContext = 0x0) = 0;
 
 	virtual int UnloadTexture(CTextureHandle *pIndex) = 0;
 	virtual CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags) = 0;

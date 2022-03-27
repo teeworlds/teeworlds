@@ -40,7 +40,8 @@ public:
 
 	// simple uncompressed RGBA loaders
 	virtual IGraphics::CTextureHandle LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags) { return CreateTextureHandle(0); };
-	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) { return 0; };
+	virtual bool LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType) { return false; };
+	virtual bool LoadPNG(CImageInfo *pImg, const unsigned char *pData, unsigned Size, const char *pContext) { return false; };
 
 	virtual void TextureSet(CTextureHandle TextureID) {};
 
