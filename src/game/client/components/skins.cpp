@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/base64.h>
 #include <base/color.h>
 #include <base/math.h>
 #include <base/system.h>
@@ -591,6 +592,26 @@ bool CSkins::SaveSkinfile(const char *pSaveSkinName)
 		{
 			Writer.WriteAttribute("filename");
 			Writer.WriteStrValue(ms_apSkinVariables[PartIndex]);
+
+			const int SkinPart = FindSkinPart(PartIndex, ms_apSkinVariables[PartIndex], false);
+			if(SkinPart > -1)
+			{
+				const CSkins::CSkinPart *pSkinPart = GetSkinPart(PartIndex, SkinPart);
+				if((pSkinPart->m_Flags & SKINFLAG_STANDARD) == 0)
+				{
+					char aPartFilename[IO_MAX_PATH_LENGTH];
+					str_format(aPartFilename, sizeof(aPartFilename), "skins/%s/%s.png", ms_apSkinPartNames[PartIndex], ms_apSkinVariables[PartIndex]);
+					void *pData;
+					unsigned DataSize;
+					if(!Storage()->ReadFile(aPartFilename, IStorage::TYPE_SAVE, &pData, &DataSize)) // TODO: with #3141 merged this returns true on success
+					{
+						char *pEncoded = base64_encode(static_cast<unsigned char *>(pData), DataSize);
+						Writer.WriteAttribute("data");
+						Writer.WriteStrValue(pEncoded);
+						mem_free(pEncoded);
+					}
+				}
+			}
 
 			const bool CustomColors = *ms_apUCCVariables[PartIndex];
 			Writer.WriteAttribute("custom_colors");
