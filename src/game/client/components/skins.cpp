@@ -397,7 +397,7 @@ int CSkins::NumSkinPart(int Part)
 
 const CSkins::CSkin *CSkins::Get(int Index)
 {
-	return &m_aSkins[maximum(0, Index%m_aSkins.size())];
+	return &m_aSkins[clamp(Index, 0, m_aSkins.size() - 1)];
 }
 
 int CSkins::Find(const char *pName, bool AllowSpecialSkin)
@@ -412,8 +412,7 @@ int CSkins::Find(const char *pName, bool AllowSpecialSkin)
 
 const CSkins::CSkinPart *CSkins::GetSkinPart(int Part, int Index)
 {
-	int Size = m_aaSkinParts[Part].size();
-	return &m_aaSkinParts[Part][maximum(0, Index%Size)];
+	return &m_aaSkinParts[Part][clamp(Index, 0, m_aaSkinParts[Part].size() - 1)];
 }
 
 int CSkins::FindSkinPart(int Part, const char *pName, bool AllowSpecialPart)
