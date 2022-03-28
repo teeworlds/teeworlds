@@ -4,6 +4,7 @@
 #define GAME_CLIENT_COMPONENTS_SKINS_H
 #include <base/vmath.h>
 #include <base/tl/sorted_array.h>
+#include <engine/shared/memheap.h>
 #include <game/client/component.h>
 
 // todo: fix duplicate skins (different paths)
@@ -12,8 +13,9 @@ class CSkins : public CComponent
 public:
 	enum
 	{
-		SKINFLAG_SPECIAL=1<<0,
-		SKINFLAG_STANDARD=1<<1,
+		SKINFLAG_SPECIAL = 1 << 0,
+		SKINFLAG_STANDARD = 1 << 1,
+		SKINFLAG_EMBEDDED = 1 << 2,
 
 		DARKEST_COLOR_LGT=61,
 
@@ -67,6 +69,7 @@ public:
 	int Find(const char *pName, bool AllowSpecialSkin);
 	const CSkinPart *GetSkinPart(int Part, int Index);
 	int FindSkinPart(int Part, const char *pName, bool AllowSpecialPart);
+	CSkinPart *AddSkinPart(int PartIndex, const CSkinPart *pPart);
 	void RandomizeSkin();
 
 	vec3 GetColorV3(int v) const;
@@ -80,11 +83,14 @@ public:
 
 private:
 	int m_ScanningPart;
-	sorted_array<CSkinPart> m_aaSkinParts[NUM_SKINPARTS];
+	CHeap m_SkinPartsHeap;
+	sorted_array<CSkinPart *> m_aapSkinParts[NUM_SKINPARTS];
 	sorted_array<CSkin> m_aSkins;
 	CSkin m_DummySkin;
 
+	void LoadSkinPartImpl(int PartIndex, CSkinPart *pPart, CImageInfo *pInfo);
 	static int SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser);
+	const CSkinPart *LoadEmbeddedSkinPart(int PartIndex, const char *pName, const unsigned char *pData, unsigned Size);
 	static int SkinScan(const char *pName, int IsDir, int DirType, void *pUser);
 };
 
