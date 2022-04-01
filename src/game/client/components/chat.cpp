@@ -695,8 +695,8 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 					pCurLine->m_NameColor = TEAM_BLUE;
 			}
 
-			str_format(pCurLine->m_aName, sizeof(pCurLine->m_aName), "%s", m_pClient->m_aClients[NameCID].m_aName);
-			str_format(pCurLine->m_aText, sizeof(pCurLine->m_aText), "%s", pLine);
+			str_copy(pCurLine->m_aName, m_pClient->m_aClients[NameCID].m_aName, sizeof(pCurLine->m_aName));
+			str_copy(pCurLine->m_aText, pLine, sizeof(pCurLine->m_aText));
 		}
 
 		char aBuf[1024];
