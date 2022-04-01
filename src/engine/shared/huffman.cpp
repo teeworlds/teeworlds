@@ -1,11 +1,8 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
-#include <algorithm>
-
-#include <base/system.h>
-
 #include "huffman.h"
-
+#include <algorithm>
+#include <base/system.h>
 
 const unsigned CHuffman::ms_aFreqTable[HUFFMAN_MAX_SYMBOLS] = {
 	1 << 30,4545,2657,431,1950,919,444,482,2244,617,838,542,715,1814,304,240,754,212,647,186,

@@ -83,6 +83,5 @@ public:
 			Returns the size of the uncompressed data. Negative value on failure.
 	*/
 	int Decompress(const void *pInput, int InputSize, void *pOutput, int OutputSize) const;
-
 };
 #endif // ENGINE_SHARED_HUFFMAN_H
