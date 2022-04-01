@@ -700,7 +700,17 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 		}
 
 		char aBuf[1024];
-		str_format(aBuf, sizeof(aBuf), "%2d: %s: %s", NameCID, pCurLine->m_aName, pCurLine->m_aText);
+		if(NameCID >= 0)
+			str_format(aBuf, sizeof(aBuf), "%d: ", NameCID);
+		else
+			aBuf[0] = '\0';
+		if(pCurLine->m_aName[0])
+		{
+			str_append(aBuf, pCurLine->m_aName, sizeof(aBuf));
+			str_append(aBuf, ": ", sizeof(aBuf));
+		}
+		str_append(aBuf, pCurLine->m_aText, sizeof(aBuf));
+
 		char aMode[16];
 		str_copy(aMode, "chat/", sizeof(aMode));
 		str_append(aMode, GetModeName(Mode, ClientID), sizeof(aMode));
