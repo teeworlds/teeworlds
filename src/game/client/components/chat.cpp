@@ -701,7 +701,10 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 
 		char aBuf[1024];
 		str_format(aBuf, sizeof(aBuf), "%2d: %s: %s", NameCID, pCurLine->m_aName, pCurLine->m_aText);
-		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, GetModeName(Mode), aBuf, Highlighted || Mode == CHAT_WHISPER);
+		char aMode[16];
+		str_copy(aMode, "chat/", sizeof(aMode));
+		str_append(aMode, GetModeName(Mode, ClientID), sizeof(aMode));
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, aMode, aBuf, Highlighted || Mode == CHAT_WHISPER);
 	}
 
 	if(Mode == CHAT_WHISPER && m_pClient->m_LocalClientID != ClientID)
@@ -738,10 +741,16 @@ int CChat::GetChatSound(int ChatType)
 	}
 }
 
-const char *CChat::GetModeName(int Mode) const
+const char *CChat::GetModeName(int Mode, int ClientID) const
 {
+	switch(ClientID)
+	{
+		case CLIENT_MSG: return "client";
+		case SERVER_MSG: return "server";
+	}
 	switch(Mode)
 	{
+		case CHAT_NONE:
 		case CHAT_ALL: return "all";
 		case CHAT_WHISPER: return "whisper";
 		case CHAT_TEAM: return "team";
