@@ -828,11 +828,8 @@ int png_get_data(png_t* png, unsigned char* data)
 
 	if(result != PNG_DONE)
 	{
-		if(!png->png_data)
-		{
-			png_free(png->png_data);
-			png->png_data = 0;
-		}
+		png_free(png->png_data);
+		png->png_data = 0;
 		return result;
 	}
 
