@@ -1,6 +1,9 @@
-name: Build
+name: Build-nightly
 
-on: [push, pull_request]
+on:
+  push:
+      branches:
+        - 'nightly-unstable-build'
 
 jobs:
   build-cmake:
@@ -96,6 +99,14 @@ jobs:
         ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target package_default
         mkdir artifacts
         mv ${{ matrix.package-file }} artifacts
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "nightly-builds"
+          prerelease: true
+          title: "Nightly Teeworlds build"
+          files: "./release/artifacts/*"
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v1
