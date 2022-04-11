@@ -338,6 +338,7 @@ void CDemoRecorder::AddDemoMarker()
 }
 
 
+const float CDemoPlayer::ms_aSpeeds[] = {0.05f, 0.1f, 0.25f, 0.5f, 0.75f, 1.0f, 2.0f, 4.0f, 8.0f};
 
 CDemoPlayer::CDemoPlayer(class CSnapshotDelta *pSnapshotDelta)
 {
@@ -633,7 +634,8 @@ const char *CDemoPlayer::Load(const char *pFilename, int StorageType, const char
 	m_Info.m_NextTick = -1;
 	m_Info.m_Info.m_CurrentTick = -1;
 	m_Info.m_PreviousTick = -1;
-	m_Info.m_Info.m_Speed = 1;
+	m_Info.m_Info.m_Speed = 1.0f;
+	m_Info.m_Info.m_SpeedIndex = 5;
 
 	m_LastSnapshotDataSize = -1;
 
@@ -770,6 +772,12 @@ int CDemoPlayer::SetPos(int WantedTick)
 void CDemoPlayer::SetSpeed(float Speed)
 {
 	m_Info.m_Info.m_Speed = Speed;
+}
+
+void CDemoPlayer::SetSpeedIndex(int Offset)
+{
+	m_Info.m_Info.m_SpeedIndex = clamp<int>(m_Info.m_Info.m_SpeedIndex + Offset, 0, sizeof(ms_aSpeeds) / sizeof(ms_aSpeeds[0]) - 1);
+	SetSpeed(ms_aSpeeds[m_Info.m_Info.m_SpeedIndex]);
 }
 
 int CDemoPlayer::Update()

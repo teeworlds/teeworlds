@@ -170,8 +170,10 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		PositionToSeek = 0.0f;
 	}
 
-	bool IncreaseDemoSpeed = UI()->KeyPress(KEY_MOUSE_WHEEL_UP) || UI()->KeyPress(KEY_PLUS) || UI()->KeyPress(KEY_KP_PLUS);
-	bool DecreaseDemoSpeed = UI()->KeyPress(KEY_MOUSE_WHEEL_DOWN) || UI()->KeyPress(KEY_MINUS) || UI()->KeyPress(KEY_KP_MINUS);
+	if(UI()->KeyPress(KEY_MOUSE_WHEEL_UP) || UI()->KeyPress(KEY_PLUS) || UI()->KeyPress(KEY_KP_PLUS))
+		DemoPlayer()->SetSpeedIndex(+1);
+	else if(UI()->KeyPress(KEY_MOUSE_WHEEL_DOWN) || UI()->KeyPress(KEY_MINUS) || UI()->KeyPress(KEY_KP_MINUS))
+		DemoPlayer()->SetSpeedIndex(-1);
 
 	// add spacebar for toggling Play/Pause
 	if(UI()->KeyPress(KEY_SPACE))
@@ -317,14 +319,14 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static CButtonContainer s_SlowDownButton;
 		if(DoButton_SpriteID(&s_SlowDownButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_SLOWER, false, &Button, CUIRect::CORNER_ALL))
-			DecreaseDemoSpeed = true;
+			DemoPlayer()->SetSpeedIndex(-1);
 
 		// fastforward
 		ButtonBar.VSplitLeft(Margins, 0, &ButtonBar);
 		ButtonBar.VSplitLeft(ButtonbarHeight, &Button, &ButtonBar);
 		static CButtonContainer s_FastForwardButton;
 		if(DoButton_SpriteID(&s_FastForwardButton, IMAGE_DEMOBUTTONS, SPRITE_DEMOBUTTON_FASTER, false, &Button, CUIRect::CORNER_ALL))
-			IncreaseDemoSpeed = true;
+			DemoPlayer()->SetSpeedIndex(+1);
 
 		// speed meter
 		ButtonBar.VSplitLeft(Margins*3, 0, &ButtonBar);
@@ -344,29 +346,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		char aBuf[128];
 		str_format(aBuf, sizeof(aBuf), Localize("Demofile: %s"), aDemoName);
 		UI()->DoLabel(&NameBar, aBuf, Button.h*0.5f, TEXTALIGN_TL, NameBar.w);
-	}
-
-	if(IncreaseDemoSpeed)
-	{
-		if(pInfo->m_Speed < 0.1f) DemoPlayer()->SetSpeed(0.1f);
-		else if(pInfo->m_Speed < 0.25f) DemoPlayer()->SetSpeed(0.25f);
-		else if(pInfo->m_Speed < 0.5f) DemoPlayer()->SetSpeed(0.5f);
-		else if(pInfo->m_Speed < 0.75f) DemoPlayer()->SetSpeed(0.75f);
-		else if(pInfo->m_Speed < 1.0f) DemoPlayer()->SetSpeed(1.0f);
-		else if(pInfo->m_Speed < 2.0f) DemoPlayer()->SetSpeed(2.0f);
-		else if(pInfo->m_Speed < 4.0f) DemoPlayer()->SetSpeed(4.0f);
-		else DemoPlayer()->SetSpeed(8.0f);
-	}
-	else if(DecreaseDemoSpeed)
-	{
-		if(pInfo->m_Speed > 4.0f) DemoPlayer()->SetSpeed(4.0f);
-		else if(pInfo->m_Speed > 2.0f) DemoPlayer()->SetSpeed(2.0f);
-		else if(pInfo->m_Speed > 1.0f) DemoPlayer()->SetSpeed(1.0f);
-		else if(pInfo->m_Speed > 0.75f) DemoPlayer()->SetSpeed(0.75f);
-		else if(pInfo->m_Speed > 0.5f) DemoPlayer()->SetSpeed(0.5f);
-		else if(pInfo->m_Speed > 0.25f) DemoPlayer()->SetSpeed(0.25f);
-		else if(pInfo->m_Speed > 0.1f) DemoPlayer()->SetSpeed(0.1f);
-		else DemoPlayer()->SetSpeed(0.05f);
 	}
 
 	if(PositionToSeek >= 0.0f && PositionToSeek <= 1.0f)
