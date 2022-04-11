@@ -45,7 +45,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	MainView.VSplitLeft(50.0f, 0, &MainView);
 	MainView.VSplitRight(450.0f, &MainView, 0);
 
-	if (m_SeekBarActive || m_MenuActive) // only draw the background if SeekBar or Menu is active
+	if(m_SeekBarActive || m_MenuActive) // only draw the background if SeekBar or Menu is active
 		MainView.Draw(vec4(0.0f, 0.0f, 0.0f, Config()->m_ClMenuAlpha/100.0f), 10.0f, CUIRect::CORNER_T);
 
 	MainView.Margin(5.0f, &MainView);
@@ -62,7 +62,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	// we can toggle the seekbar using CTRL
 	if(!m_MenuActive && !s_LastCtrlDown && CtrlDown)
 	{
-		if (m_SeekBarActive)
+		if(m_SeekBarActive)
 			m_SeekBarActive = false;
 		else
 		{
