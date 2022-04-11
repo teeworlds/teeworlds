@@ -35,11 +35,9 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	const float NameBarHeight = 20.0f;
 	const float Margins = 5.0f;
 
-	float TotalHeight;
+	float TotalHeight = SeekBarHeight + Margins * 2;
 	if(m_MenuActive)
-		TotalHeight = SeekBarHeight+ButtonbarHeight+NameBarHeight+Margins*3;
-	else
-		TotalHeight = SeekBarHeight+Margins*2;
+		TotalHeight += ButtonbarHeight + NameBarHeight + Margins;
 
 	MainView.HSplitBottom(TotalHeight, 0, &MainView);
 	MainView.VSplitLeft(50.0f, 0, &MainView);
