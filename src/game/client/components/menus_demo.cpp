@@ -199,8 +199,8 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			// Go to previous/next marker if ctrl is held.
 			// Go to start/end if there is no marker.
 
-			// Threshold to consider all ticks close to a marker to be that markers position.
-			// Necessary, as setting the demo players position does not set it to exactly the desired tick.
+			// Threshold to consider all ticks close to a marker to be that marker's position.
+			// Necessary, as setting the demo player's position does not set it to exactly the desired tick.
 			const int Threshold = 10;
 
 			if(SkipForwards)
