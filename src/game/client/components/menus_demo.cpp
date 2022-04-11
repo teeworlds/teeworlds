@@ -75,14 +75,14 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	if(m_SeekBarActivatedTime < Now - 5*time_freq())
 		m_SeekBarActive = false;
 
+	bool SeekBarActivate = false;
 	if(m_MenuActive)
 	{
 		MainView.HSplitTop(SeekBarHeight, &SeekBar, &ButtonBar);
 		ButtonBar.HSplitTop(Margins, 0, &ButtonBar);
 		ButtonBar.HSplitBottom(NameBarHeight, &ButtonBar, &NameBar);
 		NameBar.HSplitTop(4.0f, 0, &NameBar);
-		m_SeekBarActive = true;
-		m_SeekBarActivatedTime = Now;
+		SeekBarActivate = true;
 	}
 	else
 		SeekBar = MainView;
@@ -182,9 +182,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 			DemoPlayer()->Pause();
 		else
 			DemoPlayer()->Unpause();
-
-		m_SeekBarActive = true;
-		m_SeekBarActivatedTime = Now;
+		SeekBarActivate = true;
 	}
 
 	// skip forward/backward using left/right arrow keys
@@ -253,10 +251,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		}
 
 		PositionToSeek = clamp(DesiredTick, 0, TotalTicks-1)/(float)TotalTicks;
-
-		// Show the seek bar for a few seconds after skipping
-		m_SeekBarActive = true;
-		m_SeekBarActivatedTime = Now;
+		SeekBarActivate = true;
 	}
 
 	// Advance single frame forward/backward with period/comma key
@@ -268,8 +263,11 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		DemoPlayer()->SetPos(pInfo->m_CurrentTick + (TickForwards ? 3 : 0));
 		m_pClient->m_SuppressEvents = false;
 		DemoPlayer()->Pause();
+		SeekBarActivate = true;
+	}
 
-		// Show the seek bar for a few seconds after skipping
+	if(SeekBarActivate)
+	{
 		m_SeekBarActive = true;
 		m_SeekBarActivatedTime = Now;
 	}
