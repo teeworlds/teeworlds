@@ -106,7 +106,7 @@ jobs:
           automatic_release_tag: "nightly-builds"
           prerelease: true
           title: "Nightly Teeworlds build"
-          files: "./release/artifacts/*"
+          files: "./artifacts/*"
 
     - name: Upload Artifacts
       uses: actions/upload-artifact@v1
