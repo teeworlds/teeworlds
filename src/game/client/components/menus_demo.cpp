@@ -251,6 +251,19 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 		PositionToSeek = clamp(DesiredTick, 0, TotalTicks-1)/(float)TotalTicks;
 		SeekBarActivate = true;
 	}
+	else
+	{
+		// Skip to 0%, 10%, ..., 90% with number keys
+		for(int Digit = 0; Digit < 10; ++Digit)
+		{
+			if(UI()->KeyPress(DigitToNumberKey(Digit)) || UI()->KeyPress(DigitToKeypadKey(Digit)))
+			{
+				PositionToSeek = Digit / 10.0f;
+				SeekBarActivate = true;
+				break;
+			}
+		}
+	}
 
 	// Advance single frame forward/backward with period/comma key
 	const bool TickForwards = UI()->KeyPress(KEY_PERIOD);
