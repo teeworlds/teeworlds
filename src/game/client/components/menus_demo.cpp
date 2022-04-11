@@ -48,7 +48,6 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 
 	MainView.Margin(5.0f, &MainView);
 
-	CUIRect SeekBar, ButtonBar, NameBar;
 
 	const bool CtrlDown = UI()->KeyIsPressed(KEY_LCTRL) || UI()->KeyIsPressed(KEY_RCTRL);
 	static bool s_LastCtrlDown = CtrlDown;
@@ -73,6 +72,7 @@ void CMenus::RenderDemoPlayer(CUIRect MainView)
 	if(m_SeekBarActivatedTime < Now - 5*time_freq())
 		m_SeekBarActive = false;
 
+	CUIRect SeekBar, ButtonBar, NameBar;
 	bool SeekBarActivate = false;
 	if(m_MenuActive)
 	{
