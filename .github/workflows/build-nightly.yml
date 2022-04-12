@@ -16,27 +16,27 @@ jobs:
           cmake-args: -G "Unix Makefiles"
           build-args: --parallel
           package-file: teeworlds-*-linux_x86_64.tar.xz
-          env:
+          env: |
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: ubuntu-20.04
           cmake-path: /usr/bin/
           cmake-args: -G "Unix Makefiles"
           package-file: teeworlds-*-linux_x86_64.tar.xz
-          env:
+          env: |
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: macOS-latest
           cmake-args: -G "Unix Makefiles"
           build-args: --parallel
           package-file: teeworlds-*-osx.dmg
-          env:
+          env: |
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: windows-latest
           cmake-args: -A x64
           package-file: teeworlds-*-win64.zip
-          env:
+          env: |
             CFLAGS: /WX
             CXXFLAGS: /WX
             LDFLAGS: /WX
@@ -99,7 +99,7 @@ jobs:
         ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target package_default
         mkdir artifacts
         mv ${{ matrix.package-file }} artifacts
-# because each os is seperate proccess, each will replace the other so need a different tag.
+# because each os is seperate build, each will replace the other so it needs a different tag.
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
