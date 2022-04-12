@@ -3,7 +3,7 @@ name: Build-nightly
 on:
   push:
       branches:
-        - 'nightly-unstable-build'
+        - 'master'
 
 jobs:
   build-cmake:
