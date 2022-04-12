@@ -103,9 +103,9 @@ jobs:
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
-          automatic_release_tag: "nightly-builds"
+          automatic_release_tag: "nightly-${{ matrix.os }}-builds"
           prerelease: true
-          title: "Nightly Teeworlds build"
+          title: "Nightly ${{ matrix.os }} Teeworlds build"
           files: "./release/artifacts"
 
     - name: Upload Artifacts
