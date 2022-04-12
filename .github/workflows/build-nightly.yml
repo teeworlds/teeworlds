@@ -99,7 +99,7 @@ jobs:
         ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target package_default
         mkdir artifacts
         mv ${{ matrix.package-file }} artifacts
-
+# because each os is seperate proccess, each will replace the other so need a different tag.
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
