@@ -32,7 +32,7 @@ void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 	m_WasChanged = m_pStr && pLastStr && m_WasChanged;
 	if(!pLastStr)
 	{
-		m_ScrollOffset = 0;
+		m_ScrollOffset = m_ScrollOffsetChange = 0.0f;
 		m_CaretPosition = vec2(0, 0);
 		m_Hidden = false;
 	}

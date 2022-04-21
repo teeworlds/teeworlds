@@ -44,6 +44,7 @@ class CLineInput
 	int m_SelectionEnd;
 
 	float m_ScrollOffset;
+	float m_ScrollOffsetChange;
 	vec2 m_CaretPosition;
 
 	bool m_Hidden;
@@ -102,6 +103,8 @@ public:
 	// used either for vertical or horizontal scrolling
 	float GetScrollOffset() const { return m_ScrollOffset; }
 	void SetScrollOffset(float ScrollOffset) { m_ScrollOffset = ScrollOffset; }
+	float GetScrollOffsetChange() const { return m_ScrollOffsetChange; }
+	void SetScrollOffsetChange(float ScrollOffsetChange) { m_ScrollOffsetChange = ScrollOffsetChange; }
 
 	vec2 GetCaretPosition() const { return m_CaretPosition; } // only updated while the input is active
 

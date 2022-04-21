@@ -305,6 +305,35 @@ bool CUI::DoPickerLogic(const void *pID, const CUIRect *pRect, float *pX, float 
 	return true;
 }
 
+void CUI::DoSmoothScrollLogic(float *pScrollOffset, float *pScrollOffsetChange, float ViewPortSize, float TotalSize, float ScrollSpeed)
+{
+	// instant scrolling if distance too long
+	if(absolute(*pScrollOffsetChange) > ViewPortSize)
+	{
+		*pScrollOffset += *pScrollOffsetChange;
+		*pScrollOffsetChange = 0.0f;
+	}
+	// smooth scrolling
+	if(*pScrollOffsetChange)
+	{
+		const float Delta = *pScrollOffsetChange * clamp(Client()->RenderFrameTime() * ScrollSpeed, 0.0f, 1.0f);
+		*pScrollOffset += Delta;
+		*pScrollOffsetChange -= Delta;
+	}
+	// clamp to first item
+	if(*pScrollOffset < 0.0f)
+	{
+		*pScrollOffset = 0.0f;
+		*pScrollOffsetChange = 0.0f;
+	}
+	// clamp to last item
+	if(TotalSize > ViewPortSize && *pScrollOffset > TotalSize - ViewPortSize)
+	{
+		*pScrollOffset = TotalSize - ViewPortSize;
+		*pScrollOffsetChange = 0.0f;
+	}
+}
+
 void CUI::ApplyCursorAlign(class CTextCursor *pCursor, const CUIRect *pRect, int Align)
 {
 	pCursor->m_Align = Align;
@@ -389,6 +418,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 
 	bool UpdateOffset = false;
 	float ScrollOffset = pLineInput->GetScrollOffset();
+	float ScrollOffsetChange = pLineInput->GetScrollOffsetChange();
 
 	static bool s_DoScroll = false;
 	static int s_SelectionStartOffset = -1;
@@ -397,16 +427,14 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	CUIRect Textbox;
 	pRect->VMargin(VSpacing, &Textbox);
 
+	float ScrollSpeed = 10.0f;
 	if(Active)
 	{
-		static float s_ScrollStartX = 0.0f;
-
 		int CursorOffset = pLineInput->GetCursorOffset();
 
 		if(Inside && MouseButton(0) && !Changed)
 		{
 			s_DoScroll = true;
-			s_ScrollStartX = MouseX();
 			const float MxRel = MouseX() - Textbox.x;
 			float TotalTextWidth = 0.0f;
 			for(int i = 1, Offset = 0; i <= pLineInput->GetNumChars(); i++)
@@ -414,7 +442,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 				const int PrevOffset = Offset;
 				Offset = str_utf8_forward(pDisplayStr, Offset);
 				const float AddedTextWidth = TextRender()->TextWidth(FontSize, pDisplayStr + PrevOffset, Offset - PrevOffset);
-				if(TotalTextWidth + AddedTextWidth/2.0f - ScrollOffset > MxRel)
+				if(TotalTextWidth + AddedTextWidth/2.0f - ScrollOffset - ScrollOffsetChange > MxRel)
 				{
 					CursorOffset = PrevOffset;
 					if(s_SelectionStartOffset < 0)
@@ -438,18 +466,20 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 		}
 		else if(s_DoScroll)
 		{
-			// do scrolling
-			if(MouseX() < Textbox.x && s_ScrollStartX-MouseX() > 10.0f)
+			if(absolute(ScrollOffsetChange) < 10.0f)
 			{
-				CursorOffset = str_utf8_rewind(pDisplayStr, CursorOffset);
-				s_ScrollStartX = MouseX();
-				UpdateOffset = true;
-			}
-			else if(MouseX() > Textbox.x+Textbox.w && MouseX()-s_ScrollStartX > 10.0f)
-			{
-				CursorOffset = str_utf8_forward(pDisplayStr, CursorOffset);
-				s_ScrollStartX = MouseX();
-				UpdateOffset = true;
+				if(MouseX() < Textbox.x)
+				{
+					CursorOffset = str_utf8_rewind(pDisplayStr, CursorOffset);
+					ScrollSpeed *= clamp(Textbox.x - MouseX(), 1.0f, Textbox.w / 8.0f);
+					UpdateOffset = true;
+				}
+				else if(MouseX() > Textbox.x + Textbox.w)
+				{
+					CursorOffset = str_utf8_forward(pDisplayStr, CursorOffset);
+					ScrollSpeed *= clamp(MouseX() - Textbox.x - Textbox.w, 1.0f, Textbox.w / 8.0f);
+					UpdateOffset = true;
+				}
 			}
 		}
 		else if(!Inside && MouseButton(0))
@@ -519,28 +549,17 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	// check if the text has to be moved
 	if(Active && !JustGotActive && (UpdateOffset || Changed))
 	{
-		const float CaretX = pLineInput->GetCaretPosition().x - Textbox.x;
-		if(CaretX - ScrollOffset > Textbox.w)
-		{
-			// move to the left
-			do
-			{
-				ScrollOffset += clamp(pLineInput->GetCursor()->Width() - ScrollOffset - Textbox.w, 0.1f, Textbox.w / 3.0f);
-			}
-			while(CaretX - ScrollOffset > Textbox.w);
-		}
-		else if(CaretX - ScrollOffset < 0.0f)
-		{
-			// move to the right
-			do
-			{
-				ScrollOffset = maximum(0.0f, ScrollOffset - Textbox.w / 3.0f);
-			}
-			while(CaretX - ScrollOffset < 0.0f);
-		}
+		const float CaretX = pLineInput->GetCaretPosition().x - Textbox.x - ScrollOffset - ScrollOffsetChange;
+		if(CaretX > Textbox.w)
+			ScrollOffsetChange += CaretX - Textbox.w;
+		else if(CaretX < 0.0f)
+			ScrollOffsetChange += CaretX;
 	}
 
+	DoSmoothScrollLogic(&ScrollOffset, &ScrollOffsetChange, Textbox.w, pCursor->Width(), ScrollSpeed);
+
 	pLineInput->SetScrollOffset(ScrollOffset);
+	pLineInput->SetScrollOffsetChange(ScrollOffsetChange);
 
 	return Changed;
 }
