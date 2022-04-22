@@ -378,7 +378,7 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
 		pInfo->m_pSelf->TextRender()->TextColor(0.05f, 0.05f, 0.05f,1);
-		const float BeginX = pInfo->m_pCursor->AdvancePosition().x - pInfo->m_Offset;
+		const float BeginX = pInfo->m_pCursor->AdvancePosition().x + pInfo->m_Offset;
 		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
 		CTextBoundingBox Box = pInfo->m_pCursor->BoundingBox();
 		CUIRect Rect = {Box.x - 5 + BeginX, Box.y, Box.w + 8 - BeginX, Box.h};
@@ -386,10 +386,10 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 		Rect.Draw(vec4(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f), pInfo->m_pCursor->m_FontSize/3);
 
 		// scroll when out of sight
-		if(Rect.x + *pInfo->m_pOffsetChange < 0.0f)
-			*pInfo->m_pOffsetChange += -Rect.x + pInfo->m_Width/4.0f;
-		else if(Rect.x + Rect.w + *pInfo->m_pOffsetChange > pInfo->m_Width)
-			*pInfo->m_pOffsetChange -= Rect.x + Rect.w - pInfo->m_Width + pInfo->m_Width/4.0f;
+		if(Rect.x - *pInfo->m_pOffsetChange < 0.0f)
+			*pInfo->m_pOffsetChange -= -Rect.x + pInfo->m_Width/4.0f;
+		else if(Rect.x + Rect.w - *pInfo->m_pOffsetChange > pInfo->m_Width)
+			*pInfo->m_pOffsetChange += Rect.x + Rect.w - pInfo->m_Width + pInfo->m_Width/4.0f;
 	}
 	else
 	{
@@ -412,7 +412,7 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 
 	pInfo->m_EnumCount++;
 	pInfo->m_pSelf->TextRender()->TextAdvance(pInfo->m_pCursor, 7.0f);
-	pInfo->m_TotalWidth = pInfo->m_pCursor->AdvancePosition().x - pInfo->m_Offset;
+	pInfo->m_TotalWidth = pInfo->m_pCursor->AdvancePosition().x + pInfo->m_Offset;
 }
 
 void CGameConsole::OnRender()
@@ -519,7 +519,7 @@ void CGameConsole::OnRender()
 
 		static CTextCursor s_CompletionOptionsCursor;
 		s_CompletionOptionsCursor.Reset();
-		s_CompletionOptionsCursor.MoveTo(x+pConsole->m_CompletionRenderOffset, y+RowHeight+2.0f);
+		s_CompletionOptionsCursor.MoveTo(x - pConsole->m_CompletionRenderOffset, y + RowHeight + 2.0f);
 		s_CompletionOptionsCursor.m_FontSize = FontSize;
 		s_CompletionOptionsCursor.m_MaxWidth = -1.0f;
 
@@ -565,7 +565,6 @@ void CGameConsole::OnRender()
 		y -= (pInputCursor->LineCount() - 1) * FontSize;
 
 		// render possible commands
-		static float s_LastRender = Now;
 		if((m_ConsoleType == CONSOLETYPE_LOCAL || Client()->RconAuthed()) && pConsole->m_Input.GetString()[0])
 		{
 			CCompletionOptionRenderInfo Info;
@@ -610,33 +609,8 @@ void CGameConsole::OnRender()
 				TextRender()->TextDeferred(&s_InfoCursor, aBuf, -1);
 			}
 
-			// instant scrolling if distance too long
-			if(absolute(pConsole->m_CompletionRenderOffsetChange) > Info.m_Width)
-			{
-				pConsole->m_CompletionRenderOffset += pConsole->m_CompletionRenderOffsetChange;
-				pConsole->m_CompletionRenderOffsetChange = 0.0f;
-			}
-			// smooth scrolling
-			if(pConsole->m_CompletionRenderOffsetChange)
-			{
-				const float Delta = pConsole->m_CompletionRenderOffsetChange * clamp((Now - s_LastRender) * 10.0f, 0.0f, 1.0f);
-				pConsole->m_CompletionRenderOffset += Delta;
-				pConsole->m_CompletionRenderOffsetChange -= Delta;
-			}
-			// clamp to first item
-			if(pConsole->m_CompletionRenderOffset > 0.0f)
-			{
-				pConsole->m_CompletionRenderOffset = 0.0f;
-				pConsole->m_CompletionRenderOffsetChange = 0.0f;
-			}
-			// clamp to last item
-			if(Info.m_TotalWidth > Info.m_Width && pConsole->m_CompletionRenderOffset < Info.m_Width - Info.m_TotalWidth)
-			{
-				pConsole->m_CompletionRenderOffset = Info.m_Width - Info.m_TotalWidth;
-				pConsole->m_CompletionRenderOffsetChange = 0.0f;
-			}
+			UI()->DoSmoothScrollLogic(&pConsole->m_CompletionRenderOffset, &pConsole->m_CompletionRenderOffsetChange, Info.m_Width, Info.m_TotalWidth);
 		}
-		s_LastRender = Now;
 
 		TextRender()->DrawTextOutlined(&s_CompletionOptionsCursor);
 		TextRender()->DrawTextOutlined(&s_InfoCursor);
