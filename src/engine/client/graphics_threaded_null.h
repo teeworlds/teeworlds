@@ -12,6 +12,8 @@ public:
 	{
 		m_ScreenWidth = 800;
 		m_ScreenHeight = 600;
+		m_DesktopScreenWidth = 800;
+		m_DesktopScreenHeight = 600;
 	};
 
 	virtual void ClipEnable(int x, int y, int w, int h) {};
@@ -28,7 +30,13 @@ public:
 	virtual int MemoryUsage() const { return 0; };
 
 	virtual void MapScreen(float TopLeftX, float TopLeftY, float BottomRightX, float BottomRightY) {};
-	virtual void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY) {};
+	virtual void GetScreen(float *pTopLeftX, float *pTopLeftY, float *pBottomRightX, float *pBottomRightY)
+	{
+		*pTopLeftX = 0;
+		*pTopLeftY = 0;
+		*pBottomRightX = 600;
+		*pBottomRightY = 600;
+	};
 
 	virtual void LinesBegin() {};
 	virtual void LinesEnd() {};
