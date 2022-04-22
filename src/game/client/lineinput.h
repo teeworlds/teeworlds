@@ -5,6 +5,7 @@
 
 #include <base/vmath.h>
 
+#include <engine/client.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/textrender.h>
@@ -23,6 +24,7 @@ class CLineInput
 	static IInput *s_pInput;
 	static ITextRender *s_pTextRender;
 	static IGraphics *s_pGraphics;
+	static IClient *s_pClient;
 
 	static CLineInput *s_pActiveInput;
 	static EInputPriority s_ActiveInputPriority;
@@ -64,7 +66,13 @@ class CLineInput
 	void OnDeactivate();
 
 public:
-	static void Init(IInput *pInput, ITextRender *pTextRender, IGraphics *pGraphics) { s_pInput = pInput; s_pTextRender = pTextRender; s_pGraphics = pGraphics; }
+	static void Init(IInput *pInput, ITextRender *pTextRender, IGraphics *pGraphics, IClient *pClient)
+	{
+		s_pInput = pInput;
+		s_pTextRender = pTextRender;
+		s_pGraphics = pGraphics;
+		s_pClient = pClient;
+	}
 	static void RenderCandidates();
 
 	static CLineInput *GetActiveInput() { return s_pActiveInput; }
@@ -114,7 +122,7 @@ public:
 	bool ProcessInput(const IInput::CEvent &Event);
 	bool WasChanged() { bool Changed = m_WasChanged; m_WasChanged = false; return Changed; }
 
-	void Render();
+	void Render(bool Changed);
 
 	bool IsActive() const { return GetActiveInput() == this; }
 	void Activate(EInputPriority Priority);

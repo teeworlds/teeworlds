@@ -84,7 +84,7 @@ void CUI::Init(class IKernel *pKernel)
 	m_pInput = pKernel->RequestInterface<IInput>();
 	m_pTextRender = pKernel->RequestInterface<ITextRender>();
 	CUIRect::Init(m_pGraphics);
-	CLineInput::Init(m_pInput, m_pTextRender, m_pGraphics);
+	CLineInput::Init(m_pInput, m_pTextRender, m_pGraphics, m_pClient);
 	CUIElementBase::Init(this);
 }
 
@@ -447,6 +447,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 					CursorOffset = PrevOffset;
 					if(s_SelectionStartOffset < 0)
 						s_SelectionStartOffset = CursorOffset;
+					UpdateOffset = true;
 					break;
 				}
 				TotalTextWidth += AddedTextWidth;
@@ -456,6 +457,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 					CursorOffset = pLineInput->GetLength();
 					if(s_SelectionStartOffset < 0)
 						s_SelectionStartOffset = CursorOffset;
+					UpdateOffset = true;
 				}
 			}
 		}
@@ -543,7 +545,7 @@ bool CUI::DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize
 	ClipEnable(pRect);
 	Textbox.x -= ScrollOffset;
 	ApplyCursorAlign(pCursor, &Textbox, TEXTALIGN_ML);
-	pLineInput->Render();
+	pLineInput->Render(UpdateOffset || Changed);
 	ClipDisable();
 
 	// check if the text has to be moved

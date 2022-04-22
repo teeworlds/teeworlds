@@ -560,7 +560,7 @@ void CGameConsole::OnRender()
 		pInputCursor->MoveTo(x, y + FontSize * 1.35f);
 
 		pConsole->m_Input.Activate(CONSOLE); // ensure the input is active
-		pConsole->m_Input.Render();
+		pConsole->m_Input.Render(pConsole->m_Input.WasChanged());
 
 		y -= (pInputCursor->LineCount() - 1) * FontSize;
 

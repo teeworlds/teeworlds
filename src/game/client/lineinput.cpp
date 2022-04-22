@@ -12,6 +12,7 @@
 IInput *CLineInput::s_pInput = 0;
 ITextRender *CLineInput::s_pTextRender = 0;
 IGraphics *CLineInput::s_pGraphics = 0;
+IClient *CLineInput::s_pClient = 0;
 
 CLineInput *CLineInput::s_pActiveInput = 0;
 EInputPriority CLineInput::s_ActiveInputPriority = NONE;
@@ -352,7 +353,7 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 	return m_WasChanged;
 }
 
-void CLineInput::Render()
+void CLineInput::Render(bool Changed)
 {
 	m_TextCursor.Reset();
 
@@ -399,9 +400,15 @@ void CLineInput::Render()
 		s_pTextRender->TextDeferred(&s_MarkerCursor, "｜", -1);
 		s_MarkerCursor.MoveTo(s_pTextRender->CaretPosition(&m_TextCursor, HasComposition ? DisplayCompositionStart : DisplayCursorOffset));
 
-		// render blinking caret
-		if((2*time_get()/time_freq())%2)
-			s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
+		// render blinking caret, don't blink shortly after caret has been moved
+		{
+			const float LocalTime = s_pClient->LocalTime();
+			static float s_LastChanged = 0.0f;
+			if(Changed)
+				s_LastChanged = LocalTime;
+			if(fmod(LocalTime - s_LastChanged, 1.0f) < 0.5f)
+				s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
+		}
 
 		m_CaretPosition = s_pTextRender->CaretPosition(&m_TextCursor, DisplayCursorOffset);
 		s_MarkerCursor.MoveTo(m_CaretPosition);

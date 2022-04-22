@@ -974,7 +974,7 @@ void CChat::OnRender()
 			const float XScale = Graphics()->ScreenWidth()/Width;
 			const float YScale = Graphics()->ScreenHeight()/Height;
 			Graphics()->ClipEnable((int)(ClippingRect.x*XScale), (int)(ClippingRect.y*YScale), (int)(ClippingRect.w*XScale), (int)(ClippingRect.h*YScale));
-			m_Input.Render();
+			m_Input.Render(m_Input.WasChanged());
 			Graphics()->ClipDisable();
 
 			// scroll to keep the caret inside the clipping rect
