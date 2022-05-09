@@ -1,0 +1,3 @@
+# Need at least one check, otherwise clang-tidy fails, use one that can't
+# happen in our code since we don't use OpenMP API.
+Checks: '-*,openmp-exception-escape'
