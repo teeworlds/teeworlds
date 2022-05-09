@@ -1,0 +1,18 @@
+# Why we disabled individual checks:
+#
+# clang-analyzer-optin.cplusplus.UninitializedObject
+#   TODO: Occurs commonly in graphics_threaded.h
+# clang-analyzer-optin.cplusplus.VirtualCall
+#   Occurs very commonly all over
+# clang-analyzer-optin.performance.Padding
+#   Too annoying to always align for perfect padding
+# clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+#   TODO: Requires C11 to fix
+
+Checks: >
+  -*,
+  clang-analyzer-*,
+  -clang-analyzer-optin.cplusplus.UninitializedObject,
+  -clang-analyzer-optin.cplusplus.VirtualCall,
+  -clang-analyzer-optin.performance.Padding,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
