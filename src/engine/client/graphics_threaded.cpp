@@ -418,7 +418,18 @@ int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int Sto
 		return 0;
 	}
 
-	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA) || Png.width > (2<<12) || Png.height > (2<<12))
+	if(Png.depth != 8 || Png.width > (2<<12) || Png.height > (2<<12))
+	{
+		dbg_msg("game/png", "invalid format. filename='%s'", aCompleteFilename);
+		io_close(File);
+		return 0;
+	}
+
+	if(Png.color_type == PNG_TRUECOLOR)
+		pImg->m_Format = CImageInfo::FORMAT_RGB;
+	else if(Png.color_type == PNG_TRUECOLOR_ALPHA)
+		pImg->m_Format = CImageInfo::FORMAT_RGBA;
+	else
 	{
 		dbg_msg("game/png", "invalid format. filename='%s'", aCompleteFilename);
 		io_close(File);
@@ -431,10 +442,6 @@ int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int Sto
 
 	pImg->m_Width = Png.width;
 	pImg->m_Height = Png.height;
-	if(Png.color_type == PNG_TRUECOLOR)
-		pImg->m_Format = CImageInfo::FORMAT_RGB;
-	else if(Png.color_type == PNG_TRUECOLOR_ALPHA)
-		pImg->m_Format = CImageInfo::FORMAT_RGBA;
 	pImg->m_pData = pBuffer;
 	return 1;
 }
