@@ -382,7 +382,7 @@ void CMenus::DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance,
 int CMenus::DoKeyReader(CButtonContainer *pButtonContainer, const CUIRect *pRect, int Key, int Modifier, int* pNewModifier)
 {
 	// process
-	static const void *s_pGrabbedID = 0;
+	static const void *s_pGrabbedID = 0x0;
 	static bool s_MouseReleased = true;
 	static int s_ButtonUsed = 0;
 
@@ -390,7 +390,7 @@ int CMenus::DoKeyReader(CButtonContainer *pButtonContainer, const CUIRect *pRect
 	int NewKey = Key;
 	*pNewModifier = Modifier;
 
-	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && s_pGrabbedID == pButtonContainer)
+	if(!UI()->MouseButton(0) && !UI()->MouseButton(1) && s_pGrabbedID != 0x0 && s_pGrabbedID == pButtonContainer)
 		s_MouseReleased = true;
 
 	if(UI()->CheckActiveItem(pButtonContainer))
