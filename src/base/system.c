@@ -218,7 +218,7 @@ static void logger_win_console(const char *line, void *user)
 				break;
 
 			dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for error");
-			wline[len++] = character;
+			wline[len++] = (unsigned char)character;
 			read++;
 		}
 	}
@@ -3139,7 +3139,7 @@ int str_utf8_decode(const char **ptr)
 	{
 		if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
 		{
-			ch = *buf;
+			ch = (unsigned char)*buf;
 			buf++;
 		}
 		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
