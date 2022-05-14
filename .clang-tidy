@@ -29,3 +29,5 @@ Checks: >
   -clang-analyzer-optin.cplusplus.VirtualCall,
   -clang-analyzer-optin.performance.Padding,
   -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  performance-*,
+  -performance-no-int-to-ptr,
