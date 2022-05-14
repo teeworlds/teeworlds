@@ -1273,9 +1273,9 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 {
 	int Num = lQuads.size();
 	CEnvelope **apEnvelope = new CEnvelope*[Num];
-	mem_zero(apEnvelope, sizeof(CEnvelope*)*Num);
 	for(int i = 0; i < Num; i++)
 	{
+		apEnvelope[i] = 0;
 		if((m_ShowEnvelopePreview == SHOWENV_SELECTED && lQuads[i].m_PosEnv == m_SelectedEnvelope) || m_ShowEnvelopePreview == SHOWENV_ALL)
 			if(lQuads[i].m_PosEnv >= 0 && lQuads[i].m_PosEnv < m_Map.m_lEnvelopes.size())
 				apEnvelope[i] = m_Map.m_lEnvelopes[lQuads[i].m_PosEnv];

@@ -466,14 +466,14 @@ CServerEntry *CServerBrowser::Add(int ServerlistType, const NETADDR &Addr)
 		{
 			// alloc start size
 			m_aServerlist[ServerlistType].m_NumServerCapacity = 1000;
-			m_aServerlist[ServerlistType].m_ppServerlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*));
+			m_aServerlist[ServerlistType].m_ppServerlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*)); // NOLINT(bugprone-sizeof-expression)
 		}
 		else
 		{
 			// increase size
 			m_aServerlist[ServerlistType].m_NumServerCapacity += 100;
-			CServerEntry **ppNewlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*));
-			mem_copy(ppNewlist, m_aServerlist[ServerlistType].m_ppServerlist, m_aServerlist[ServerlistType].m_NumServers*sizeof(CServerEntry*));
+			CServerEntry **ppNewlist = (CServerEntry **)mem_alloc(m_aServerlist[ServerlistType].m_NumServerCapacity*sizeof(CServerEntry*)); // NOLINT(bugprone-sizeof-expression)
+			mem_copy(ppNewlist, m_aServerlist[ServerlistType].m_ppServerlist, m_aServerlist[ServerlistType].m_NumServers*sizeof(CServerEntry*)); // NOLINT(bugprone-sizeof-expression)
 			mem_free(m_aServerlist[ServerlistType].m_ppServerlist);
 			m_aServerlist[ServerlistType].m_ppServerlist = ppNewlist;
 		}
