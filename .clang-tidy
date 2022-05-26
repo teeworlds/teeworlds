@@ -35,3 +35,4 @@ Checks: >
   cppcoreguidelines-virtual-class-destructor,
   performance-*,
   -performance-no-int-to-ptr,
+  portability-*,
