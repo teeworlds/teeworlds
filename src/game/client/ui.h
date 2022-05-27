@@ -230,7 +230,7 @@ public:
 	const void *LastActiveItem() const { return m_pLastActiveItem; }
 
 	void StartCheck() { m_ActiveItemValid = false; }
-	void FinishCheck() { if(!m_ActiveItemValid) SetActiveItem(0); }
+	void FinishCheck() { if(!m_ActiveItemValid && m_pActiveItem != 0) { SetActiveItem(0); m_pHotItem = 0; m_pBecommingHotItem = 0; } }
 
 	bool MouseInside(const CUIRect *pRect) const { return pRect->Inside(m_MouseX, m_MouseY); }
 	bool MouseInsideClip() const { return !IsClipped() || MouseInside(ClipArea()); }
