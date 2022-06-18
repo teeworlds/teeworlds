@@ -2178,6 +2178,7 @@ void CClient::Run()
 	GameClient()->OnShutdown();
 	Disconnect();
 
+	m_pInput->Shutdown();
 	m_pGraphics->Shutdown();
 	m_pSound->Shutdown();
 	m_pTextRender->Shutdown();

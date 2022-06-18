@@ -39,7 +39,6 @@ public:
 		int GetHatValue(int Hat);
 		bool Relative(float *pX, float *pY);
 		bool Absolute(float *pX, float *pY);
-		void Close();
 
 		static int GetJoystickHatKey(int Hat, int HatValue);
 	};
@@ -97,9 +96,9 @@ private:
 
 public:
 	CInput();
-	~CInput();
 
 	void Init();
+	void Shutdown();
 	int Update();
 
 	bool KeyIsPressed(int Key) const { return KeyState(Key); }
