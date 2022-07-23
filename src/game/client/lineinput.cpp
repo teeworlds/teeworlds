@@ -210,11 +210,12 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
 		const bool CtrlPressed = s_pInput->KeyIsPressed(KEY_LCTRL) || s_pInput->KeyIsPressed(KEY_RCTRL);
+		const bool AltPressed = s_pInput->KeyIsPressed(KEY_LALT) || s_pInput->KeyIsPressed(KEY_RALT);
 
 #ifdef CONF_PLATFORM_MACOSX
-		const bool MoveWord = s_pInput->KeyIsPressed(KEY_LALT) || s_pInput->KeyIsPressed(KEY_RALT);
+		const bool MoveWord = AltPressed && !CtrlPressed;
 #else
-		const bool MoveWord = CtrlPressed;
+		const bool MoveWord = CtrlPressed && !AltPressed;
 #endif
 
 		if(Event.m_Key == KEY_BACKSPACE)
@@ -323,13 +324,13 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 			m_CursorPos = m_Len;
 			m_SelectionEnd = m_Len;
 		}
-		else if(CtrlPressed && Event.m_Key == KEY_V)
+		else if(CtrlPressed && !AltPressed && Event.m_Key == KEY_V)
 		{
 			const char *pClipboardText = s_pInput->GetClipboardText();
 			if(pClipboardText)
 				SetRange(pClipboardText, m_SelectionStart, m_SelectionEnd);
 		}
-		else if(CtrlPressed && (Event.m_Key == KEY_C || Event.m_Key == KEY_X) && SelectionLength)
+		else if(CtrlPressed && !AltPressed  && (Event.m_Key == KEY_C || Event.m_Key == KEY_X) && SelectionLength)
 		{
 			char *pSelection = m_pStr + m_SelectionStart;
 			char TempChar = pSelection[SelectionLength];
@@ -339,7 +340,7 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 			if(Event.m_Key == KEY_X)
 				SetRange("", m_SelectionStart, m_SelectionEnd);
 		}
-		else if(CtrlPressed && Event.m_Key == KEY_A)
+		else if(CtrlPressed && !AltPressed  && Event.m_Key == KEY_A)
 		{
 			m_SelectionStart = 0;
 			m_SelectionEnd = m_CursorPos = m_Len;
