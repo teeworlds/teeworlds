@@ -696,7 +696,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			s_Cursor.MoveTo(ScoreOffset+(Race ? ScoreLength-3.f : ScoreLength/2), y+Spacing);
 			s_Cursor.m_MaxWidth = ScoreLength;
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
-			if(!Race && !(m_pClient->m_LocalClientID == pInfo->m_ClientID && Config()->m_ClHideSelfScore))
+			if(Race || m_pClient->m_LocalClientID != pInfo->m_ClientID || !Config()->m_ClHideSelfScore)
 			{
 				TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			}
