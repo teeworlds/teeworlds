@@ -850,8 +850,6 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	// render client menu background
 	NumOptions = 4;
-	if(Config()->m_ClAutoDemoRecord) NumOptions += 1;
-	if(Config()->m_ClAutoScreenshot) NumOptions += 1;
 	BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
@@ -989,31 +987,24 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	Client.HSplitTop(ButtonHeight, &Button, &Client);
 	UI()->DoScrollbarOption(&Config()->m_ClMenuAlpha, &Config()->m_ClMenuAlpha, &Button, Localize("Menu background opacity"), 0, 75);
 
+	CUIRect ClientLeft, ClientRight;
 	Client.HSplitTop(Spacing, 0, &Client);
-	Client.HSplitTop(ButtonHeight, &Button, &Client);
-	if(DoButton_CheckBox(&Config()->m_ClAutoDemoRecord, Localize("Automatically record demos"), Config()->m_ClAutoDemoRecord, &Button))
+	Client.HSplitTop(ButtonHeight, &ClientLeft, &Client);
+	ClientLeft.VSplitMid(&ClientLeft, &ClientRight, Spacing);
+	if(DoButton_CheckBox(&Config()->m_ClAutoDemoRecord, Localize("Automatically record demos"), Config()->m_ClAutoDemoRecord, &ClientLeft))
 		Config()->m_ClAutoDemoRecord ^= 1;
 
 	if(Config()->m_ClAutoDemoRecord)
-	{
-		Client.HSplitTop(Spacing, 0, &Client);
-		Client.HSplitTop(ButtonHeight, &Button, &Client);
-		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		UI()->DoScrollbarOption(&Config()->m_ClAutoDemoMax, &Config()->m_ClAutoDemoMax, &Button, Localize("Max"), 0, 1000, &CUI::ms_LogarithmicScrollbarScale, true);
-	}
+		UI()->DoScrollbarOption(&Config()->m_ClAutoDemoMax, &Config()->m_ClAutoDemoMax, &ClientRight, Localize("Max"), 0, 1000, &CUI::ms_LogarithmicScrollbarScale, true);
 
 	Client.HSplitTop(Spacing, 0, &Client);
-	Client.HSplitTop(ButtonHeight, &Button, &Client);
-	if(DoButton_CheckBox(&Config()->m_ClAutoScreenshot, Localize("Automatically take game over screenshot"), Config()->m_ClAutoScreenshot, &Button))
+	Client.HSplitTop(ButtonHeight, &ClientLeft, &Client);
+	ClientLeft.VSplitMid(&ClientLeft, &ClientRight, Spacing);
+	if(DoButton_CheckBox(&Config()->m_ClAutoScreenshot, Localize("Automatically take game over screenshot"), Config()->m_ClAutoScreenshot, &ClientLeft))
 		Config()->m_ClAutoScreenshot ^= 1;
 
 	if(Config()->m_ClAutoScreenshot)
-	{
-		Client.HSplitTop(Spacing, 0, &Client);
-		Client.HSplitTop(ButtonHeight, &Button, &Client);
-		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		UI()->DoScrollbarOption(&Config()->m_ClAutoScreenshotMax, &Config()->m_ClAutoScreenshotMax, &Button, Localize("Max"), 0, 1000, &CUI::ms_LogarithmicScrollbarScale, true);
-	}
+		UI()->DoScrollbarOption(&Config()->m_ClAutoScreenshotMax, &Config()->m_ClAutoScreenshotMax, &ClientRight, Localize("Max"), 0, 1000, &CUI::ms_LogarithmicScrollbarScale, true);
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 
