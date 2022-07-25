@@ -1081,7 +1081,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 				Button.Draw(Color, 5.0f, CUIRect::CORNER_BL);
 
 				// draw non-blending X
-				UI()->DoLabel(&Button, "\xE2\x9C\x95", Button.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
+				UI()->DoLabel(&Button, "✕", Button.h*CUI::ms_FontmodHeight, TEXTALIGN_CENTER);
 				if(UI()->DoButtonLogic(&s_QuitButton, &Button))
 					m_Popup = POPUP_QUIT;
 
@@ -1091,7 +1091,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 					Row.VSplitRight(5.0f, &Row, 0);
 					Row.VSplitRight(TopOffset, &Row, &Button);
 					static CButtonContainer s_SettingsButton;
-					if(DoButton_MenuTabTop(&s_SettingsButton, "\xE2\x9A\x99", false, &Button, 1.0f, 1.0f, CUIRect::CORNER_B))
+					if(DoButton_MenuTabTop(&s_SettingsButton, "⚙", false, &Button, 1.0f, 1.0f, CUIRect::CORNER_B))
 					{
 						m_MenuPageOld = m_MenuPage;
 						m_MenuPage = PAGE_SETTINGS;
