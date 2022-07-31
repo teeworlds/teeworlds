@@ -3824,7 +3824,7 @@ void CEditor::Render()
 		m_EditorOffsetY = 0;
 		m_ZoomLevel = 100;
 	}
-	if(m_Dialog == DIALOG_NONE && UI()->MouseInside(&View))
+	if(m_Dialog == DIALOG_NONE && !UI()->IsPopupActive() && UI()->MouseInside(&View))
 	{
 		// Determines in which direction to zoom.
 		int Zoom = 0;
