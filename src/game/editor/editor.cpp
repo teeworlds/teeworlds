@@ -2795,6 +2795,10 @@ void CEditor::RenderFileDialog()
 				str_copy(m_aFilesSelectedName, m_FilteredFileList[m_FilesSelectedIndex]->m_aName, sizeof(m_aFilesSelectedName));
 			else
 				m_aFilesSelectedName[0] = '\0';
+			if(m_FilesSelectedIndex >= 0 && !m_FilteredFileList[m_FilesSelectedIndex]->m_IsDir)
+				m_FileDialogFileNameInput.Set(m_FilteredFileList[m_FilesSelectedIndex]->m_aFilename);
+			else
+				m_FileDialogFileNameInput.Clear();
 			s_ListBox.ScrollToSelected();
 		}
 	}
