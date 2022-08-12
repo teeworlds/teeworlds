@@ -386,9 +386,11 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 		Rect.Draw(vec4(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f), pInfo->m_pCursor->m_FontSize/3);
 
 		// scroll when out of sight
-		if(Rect.x - *pInfo->m_pOffsetChange < 0.0f)
+		const bool MoveLeft = Rect.x - *pInfo->m_pOffsetChange < 0.0f;
+		const bool MoveRight = Rect.x + Rect.w - *pInfo->m_pOffsetChange > pInfo->m_Width;
+		if(MoveLeft && !MoveRight)
 			*pInfo->m_pOffsetChange -= -Rect.x + pInfo->m_Width/4.0f;
-		else if(Rect.x + Rect.w - *pInfo->m_pOffsetChange > pInfo->m_Width)
+		else if(!MoveLeft && MoveRight)
 			*pInfo->m_pOffsetChange += Rect.x + Rect.w - pInfo->m_Width + pInfo->m_Width/4.0f;
 	}
 	else
