@@ -84,16 +84,17 @@ void CSnapshot::DebugDump() const
 
 // CSnapshotDelta
 
-struct CItemList
-{
-	int m_Num;
-	int m_aKeys[64];
-	int m_aIndex[64];
-};
-
 enum
 {
 	HASHLIST_SIZE = 256,
+	HASHLIST_BUCKET_SIZE = 64,
+};
+
+struct CItemList
+{
+	int m_Num;
+	int m_aKeys[HASHLIST_BUCKET_SIZE];
+	int m_aIndex[HASHLIST_BUCKET_SIZE];
 };
 
 inline unsigned CalcHashID(int Key)
@@ -110,7 +111,7 @@ static void GenerateHash(CItemList *pHashlist, const CSnapshot *pSnapshot)
 	{
 		int Key = pSnapshot->GetItem(i)->Key();
 		unsigned HashID = CalcHashID(Key);
-		if(pHashlist[HashID].m_Num != 64)
+		if(pHashlist[HashID].m_Num < HASHLIST_BUCKET_SIZE)
 		{
 			pHashlist[HashID].m_aIndex[pHashlist[HashID].m_Num] = i;
 			pHashlist[HashID].m_aKeys[pHashlist[HashID].m_Num] = Key;
