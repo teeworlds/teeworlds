@@ -2501,15 +2501,16 @@ const char *str_find(const char *haystack, const char *needle)
 void str_hex(char *dst, int dst_size, const void *data, int data_size)
 {
 	static const char hex[] = "0123456789ABCDEF";
-	int b;
-
-	for(b = 0; b < data_size && b < dst_size/4-4; b++)
+	int data_index;
+	int dst_index;
+	for(data_index = 0, dst_index = 0; data_index < data_size && dst_index < dst_size - 3; data_index++)
 	{
-		dst[b*3] = hex[((const unsigned char *)data)[b]>>4];
-		dst[b*3+1] = hex[((const unsigned char *)data)[b]&0xf];
-		dst[b*3+2] = ' ';
-		dst[b*3+3] = 0;
+		dst[data_index * 3] = hex[((const unsigned char *)data)[data_index] >> 4];
+		dst[data_index * 3 + 1] = hex[((const unsigned char *)data)[data_index] & 0xf];
+		dst[data_index * 3 + 2] = ' ';
+		dst_index += 3;
 	}
+	dst[dst_index] = '\0';
 }
 
 int str_is_number(const char *str)
