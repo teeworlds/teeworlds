@@ -1233,7 +1233,7 @@ void CMenus::RenderMenu(CUIRect Screen)
 				Box.HSplitTop(12.0f, 0, &Part);
 				Part.HSplitTop(20.0f, &Label, &Part);
 				Part.VMargin(5.0f, &Part);
-				UI()->DoLabel(&Part, Localize("There's an unsaved map in the editor, you might want to save it before you quit the game."), FontSize, TEXTALIGN_ML, Part.w);
+				UI()->DoLabel(&Part, Localize("There's an unsaved map in the editor; you may want to save it before you quit the game."), FontSize, TEXTALIGN_ML, Part.w);
 			}
 			else
 			{

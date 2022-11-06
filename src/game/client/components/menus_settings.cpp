@@ -941,7 +941,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	CUIRect CheckBoxShowHud, CheckBoxHideScore;
 	Button.VSplitMid(&CheckBoxShowHud, &CheckBoxHideScore);
 
-	if(DoButton_CheckBox(&Config()->m_ClShowhud, Localize("Show ingame HUD"), Config()->m_ClShowhud, &CheckBoxShowHud))
+	if(DoButton_CheckBox(&Config()->m_ClShowhud, Localize("Show in-game HUD"), Config()->m_ClShowhud, &CheckBoxShowHud))
 		Config()->m_ClShowhud ^= 1;
 
 	if(DoButton_CheckBox(&Config()->m_ClHideSelfScore, Localize("Hide player's score"), Config()->m_ClHideSelfScore, &CheckBoxHideScore))
@@ -1895,7 +1895,7 @@ void CMenus::RenderSettingsSound(CUIRect MainView)
 		Sound.HSplitTop(Spacing, 0, &Sound);
 		Sound.HSplitTop(ButtonHeight, &Button, &Sound);
 		Button.VSplitLeft(ButtonHeight, 0, &Button);
-		if(DoButton_CheckBox(&Config()->m_SndNonactiveMute, Localize("Mute when not active"), Config()->m_SndNonactiveMute, &Button))
+		if(DoButton_CheckBox(&Config()->m_SndNonactiveMute, Localize("Mute when window is inactive"), Config()->m_SndNonactiveMute, &Button))
 			Config()->m_SndNonactiveMute ^= 1;
 
 		// render detail menu

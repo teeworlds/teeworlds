@@ -658,7 +658,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// proof button
 	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
 	static int s_ProofButton = 0;
-	if(DoButton_Editor(&s_ProofButton, "Proof", m_ProofBorders, &Button, 0, "[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.") ||
+	if(DoButton_Editor(&s_ProofButton, "Proof", m_ProofBorders, &Button, 0, "[ctrl+p] Toggle proof borders. These borders represent the maximum range players are able to see in-game.") ||
 		(Input()->KeyPress(KEY_P) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
 	{
 		m_ProofBorders = !m_ProofBorders;
@@ -757,12 +757,12 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 				s_RotationAmount = maximum(90, (s_RotationAmount/90)*90);
 				break;
 			}
-		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 359, TileLayer?90:1, TileLayer?10.0f:2.0f, "Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.");
+		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 359, TileLayer?90:1, TileLayer?10.0f:2.0f, "Rotation of the brush in degrees. Hold down the left mouse button to change the value. Hold Shift for more precision.");
 
 		TB_Top.VSplitLeft(5.0f, &Button, &TB_Top);
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_CcwButton = 0;
-		if(DoButton_Ex(&s_CcwButton, "CCW", Enabled, &Button, 0, "[R] Rotates the brush counter clockwise", CUIRect::CORNER_L) || Input()->KeyPress(KEY_R))
+		if(DoButton_Ex(&s_CcwButton, "CCW", Enabled, &Button, 0, "[R] Rotates the brush counter-clockwise", CUIRect::CORNER_L) || Input()->KeyPress(KEY_R))
 		{
 			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 				m_Brush.m_lLayers[i]->BrushRotate(-s_RotationAmount/360.0f*pi*2);
@@ -835,7 +835,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// grid button
 	TB_Bottom.VSplitLeft(50.0f, &Button, &TB_Bottom);
 	static int s_GridButton = 0;
-	if(DoButton_Editor(&s_GridButton, "Grid", m_GridActive, &Button, 0, "Toggle Grid"))
+	if(DoButton_Editor(&s_GridButton, "Grid", m_GridActive, &Button, 0, "Toggle grid"))
 	{
 		m_GridActive = !m_GridActive;
 	}
@@ -1056,7 +1056,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		ms_pUiGotContext = pID;
 
 		PivotColor = HexToRgba(Config()->m_EdColorQuadPivotHover);
-		m_pTooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate. Hold alt to ignore grid.";
+		m_pTooltip = "Left mouse button to move. Hold Shift to move pivot. Hold Ctrl to rotate. Hold Alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
 		{
@@ -1236,7 +1236,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 		ms_pUiGotContext = pID;
 
 		pointColor = HexToRgba(Config()->m_EdColorQuadPointHover);
-		m_pTooltip = "Left mouse button to move. Hold shift to move the texture. Hold alt to ignore grid.";
+		m_pTooltip = "Left mouse button to move. Hold Shift to move the texture. Hold Alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
 		{
@@ -1499,7 +1499,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int PIndex)
 		ms_pUiGotContext = pID;
 
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		m_pTooltip = "Left mouse button to move. Hold ctrl to rotate. Hold alt to ignore grid.";
+		m_pTooltip = "Left mouse button to move. Hold Ctrl to rotate. Hold Alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
 		{
@@ -2181,7 +2181,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 		}
 		else if(pProps[i].m_Type == PROPTYPE_INT_SCROLL)
 		{
-			int NewValue = UiDoValueSelector(&pIDs[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, "Use left mouse button to drag and change the value. Hold shift to be more precise.");
+			int NewValue = UiDoValueSelector(&pIDs[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, "Use left mouse button to drag and change the value. Hold Shift for more precision.");
 			if(NewValue != pProps[i].m_Value)
 			{
 				*pNewVal = NewValue;
@@ -2205,7 +2205,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 			for(int c = 0; c < 4; c++)
 			{
 				int v = (pProps[i].m_Value >> s_aShift[c])&0xff;
-				NewColor |= UiDoValueSelector(((char *)&pIDs[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1, 1.0f, "Use left mouse button to drag and change the color value. Hold shift to be more precise.")<<s_aShift[c];
+				NewColor |= UiDoValueSelector(((char *)&pIDs[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1, 1.0f, "Use left mouse button to drag and change the color value. Hold Shift for more precision.")<<s_aShift[c];
 
 				if(c != 3)
 				{
@@ -3061,7 +3061,7 @@ void CEditor::RenderModebar(CUIRect View)
 		Button.HSplitTop(30.0f, 0, &Button);
 		static int s_Button = 0;
 		const char *pButName = m_Mode == MODE_LAYERS ? "Layers" : "Images";
-		if(DoButton_Tab(&s_Button, pButName, 0, &Button, 0, "Switch between images and layers managment."))
+		if(DoButton_Tab(&s_Button, pButName, 0, &Button, 0, "Switch between image and layer management."))
 		{
 			if(m_Mode == MODE_LAYERS)
 				m_Mode = MODE_IMAGES;
@@ -3533,7 +3533,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							m_ShowEnvelopePreview = SHOWENV_SELECTED;
 							ColorMod = 100.0f;
 							Graphics()->SetColor(1,0.75f,0.75f,1);
-							m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.";
+							m_pTooltip = "Left mouse to drag. Hold Ctrl for more precision. Hold Shift to alter time point aswell. Right click to delete.";
 						}
 
 						if(UI()->CheckActiveItem(pID) || UI()->HotItem() == pID)
@@ -3621,7 +3621,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 								m_ShowEnvelopePreview = SHOWENV_SELECTED;
 								ColorMod = 100.0f;
-								m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise.";
+								m_pTooltip = "Left mouse to drag. Hold Ctrl for more precision.";
 							}
 
 							if(UI()->CheckActiveItem(pID) || UI()->HotItem() == pID)
@@ -3704,7 +3704,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 								m_ShowEnvelopePreview = SHOWENV_SELECTED;
 								ColorMod = 100.0f;
-								m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise.";
+								m_pTooltip = "Left mouse to drag. Hold Ctrl for more precision.";
 							}
 
 							if(UI()->CheckActiveItem(pID) || UI()->HotItem() == pID)

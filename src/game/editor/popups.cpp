@@ -715,15 +715,15 @@ bool CEditor::PopupEvent(void *pContext, CUIRect View)
 	View.VMargin(40.0f, &View);
 	View.HSplitTop(20.0f, &Label, &View);
 	if(pEditor->m_PopupEventType == POPEVENT_EXIT)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you exit the editor.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map currently contains unsaved data; you may want to save it before you exit the editor.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map currently contains unsaved data; you may want to save it before you load a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load the current map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map currently contains unsaved data; you may want to save it before you load the current map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you create a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map currently contains unsaved data; you may want to save it before you create a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
-		pEditor->UI()->DoLabel(&Label, "The file already exists.\nDo you want to overwrite the map?", 10.0f, TEXTALIGN_LEFT);
+		pEditor->UI()->DoLabel(&Label, "This file already exists.\nDo you want to overwrite it?", 10.0f, TEXTALIGN_LEFT);
 
 	// button bar
 	ButtonBar.VSplitLeft(30.0f, 0, &ButtonBar);
