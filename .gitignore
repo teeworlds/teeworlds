@@ -45,6 +45,7 @@ versionsrv*
 .vscode
 *.vcxproj
 *.vcxproj.filters
+.ccls-cache
 compile_commands.json
 cscope.files
 cscope.out
