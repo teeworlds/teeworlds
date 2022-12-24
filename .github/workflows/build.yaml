@@ -51,8 +51,9 @@ jobs:
       if: contains(matrix.os, 'macOS')
       run: |
         brew update || true
+        brew install pkg-config sdl2 python3 ninja || true
         # --overwrite for:  Target /usr/local/bin/2to3 already exists.
-        brew install --overwrite pkg-config sdl2 python3 ninja
+        brew link --overwrite python@3.10
         brew upgrade freetype
         sudo rm -rf /Library/Developer/CommandLineTools
 
