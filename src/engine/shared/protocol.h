@@ -66,8 +66,9 @@ enum
 	NETMSG_AUTH_START,		//
 	NETMSG_AUTH_RESPONSE,	//
 
-	// sent by both
 	NETMSG_PING,
+
+	// sent by both
 	NETMSG_PING_REPLY,
 	NETMSG_ERROR,
 
