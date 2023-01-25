@@ -1286,7 +1286,7 @@ void CClient::ProcessServerPacket(CNetChunk *pPacket)
 		else if(Msg == NETMSG_PING)
 		{
 			CMsgPacker Msg(NETMSG_PING_REPLY, true);
-			SendMsg(&Msg, 0);
+			SendMsg(&Msg, MSGFLAG_FLUSH);
 		}
 		else if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && Msg == NETMSG_RCON_CMD_ADD)
 		{
@@ -2104,7 +2104,7 @@ void CClient::Run()
 			}
 			else if(m_EditorActive)
 				m_EditorActive = false;
-			
+
 			m_pTextRender->Update();
 
 			Update();
@@ -2222,7 +2222,7 @@ void CClient::Con_Ping(IConsole::IResult *pResult, void *pUserData)
 	CClient *pSelf = (CClient *)pUserData;
 
 	CMsgPacker Msg(NETMSG_PING, true);
-	pSelf->SendMsg(&Msg, 0);
+	pSelf->SendMsg(&Msg, MSGFLAG_FLUSH);
 	pSelf->m_PingStartTime = time_get();
 }
 
