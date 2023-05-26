@@ -51,6 +51,7 @@ class CLineInput
 
 	bool m_Hidden;
 	bool m_WasChanged;
+	bool m_WasRendered;
 
 	void UpdateStrData();
 	enum EMoveDirection

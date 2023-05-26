@@ -36,6 +36,7 @@ void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 		m_ScrollOffset = m_ScrollOffsetChange = 0.0f;
 		m_CaretPosition = vec2(0, 0);
 		m_Hidden = false;
+		m_WasRendered = false;
 	}
 	if(m_pStr && m_pStr != pLastStr)
 		UpdateStrData();
@@ -355,6 +356,7 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 
 void CLineInput::Render(bool Changed)
 {
+	m_WasRendered = true;
 	m_TextCursor.Reset();
 
 	if(!m_pStr)
@@ -423,6 +425,23 @@ void CLineInput::Render(bool Changed)
 
 void CLineInput::RenderCandidates()
 {
+	// Check if the active line input was not rendered and deactivate it in that case.
+	// This can happen e.g. when an input in the ingame menu is active and the menu is
+	// closed or when switching between menu and editor with an active input.
+	CLineInput *pActiveInput = GetActiveInput();
+	if(pActiveInput != nullptr)
+	{
+		if(pActiveInput->m_WasRendered)
+		{
+			pActiveInput->m_WasRendered = false;
+		}
+		else
+		{
+			pActiveInput->Deactivate();
+			return;
+		}
+	}
+
 	if(!s_pInput->HasComposition() || !s_pInput->GetCandidateCount())
 		return;
 
