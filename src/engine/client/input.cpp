@@ -75,13 +75,6 @@ CInput::CInput()
 	m_CandidateSelectedIndex = -1;
 }
 
-CInput::~CInput()
-{
-	if(m_pClipboardText)
-		SDL_free(m_pClipboardText);
-	CloseJoysticks();
-}
-
 void CInput::Init()
 {
 	StopTextInput();
@@ -93,6 +86,12 @@ void CInput::Init()
 	MouseModeRelative();
 
 	InitJoysticks();
+}
+
+void CInput::Shutdown()
+{
+	SDL_free(m_pClipboardText);
+	CloseJoysticks();
 }
 
 void CInput::InitJoysticks()
@@ -183,16 +182,11 @@ CInput::CJoystick::CJoystick(CInput *pInput, int Index, SDL_Joystick *pDelegate)
 
 void CInput::CloseJoysticks()
 {
-	for(array<CJoystick>::range r = m_aJoysticks.all(); !r.empty(); r.pop_front())
-		r.front().Close();
+	if(SDL_WasInit(SDL_INIT_JOYSTICK))
+		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+
 	m_aJoysticks.clear();
 	m_pActiveJoystick = 0x0;
-}
-
-void CInput::CJoystick::Close()
-{
-	if(SDL_JoystickGetAttached(m_pDelegate))
-		SDL_JoystickClose(m_pDelegate);
 }
 
 void CInput::SelectNextJoystick()
