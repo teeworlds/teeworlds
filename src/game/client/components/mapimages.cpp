@@ -38,27 +38,40 @@ void CMapImages::LoadMapImages(IMap *pMap, class CLayers *pLayers, int MapType)
 		bool FoundTileLayer = false;
 		for(int k = 0; k < pLayers->NumLayers(); k++)
 		{
-			const CMapItemLayer * const pLayer = pLayers->GetLayer(k);
-			if(!FoundQuadLayer && pLayer->m_Type == LAYERTYPE_QUADS && ((const CMapItemLayerQuads *)pLayer)->m_Image == i)
+			const CMapItemLayer *pLayer = pLayers->GetLayer(k);
+			if(!pLayer)
+				continue;
+			if(!FoundQuadLayer && pLayer->m_Type == LAYERTYPE_QUADS && reinterpret_cast<const CMapItemLayerQuads *>(pLayer)->m_Image == i)
 				FoundQuadLayer = true;
-			if(!FoundTileLayer && pLayer->m_Type == LAYERTYPE_TILES && ((const CMapItemLayerTilemap *)pLayer)->m_Image == i)
+			if(!FoundTileLayer && pLayer->m_Type == LAYERTYPE_TILES && reinterpret_cast<const CMapItemLayerTilemap *>(pLayer)->m_Image == i)
 				FoundTileLayer = true;
 		}
 		if(FoundTileLayer)
 			TextureFlags = FoundQuadLayer ? IGraphics::TEXLOAD_MULTI_DIMENSION : IGraphics::TEXLOAD_ARRAY_256;
 
-		CMapItemImage *pImg = (CMapItemImage *)pMap->GetItem(Start+i, 0, 0);
-		if(pImg->m_External || (pImg->m_Version > 1 && pImg->m_Format != CImageInfo::FORMAT_RGB && pImg->m_Format != CImageInfo::FORMAT_RGBA))
+		int ItemSize;
+		const CMapItemImage *pImg = static_cast<CMapItemImage *>(pMap->GetItem(Start + i, 0x0, 0x0, &ItemSize));
+		if(!CMapItemChecker::IsValid(pImg, ItemSize))
+			continue;
+
+		const int Format = pImg->m_Version < CMapItemImage_v2::CURRENT_VERSION ? CImageInfo::FORMAT_RGBA : pImg->m_Format;
+		if(pImg->m_External || (Format != CImageInfo::FORMAT_RGB && Format != CImageInfo::FORMAT_RGBA))
 		{
-			char Buf[IO_MAX_PATH_LENGTH];
-			char *pName = (char *)pMap->GetData(pImg->m_ImageName);
-			str_format(Buf, sizeof(Buf), "mapres/%s.png", pName);
-			m_Info[MapType].m_aTextures[i] = Graphics()->LoadTexture(Buf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, TextureFlags);
+			char aName[IO_MAX_PATH_LENGTH];
+			if(!pMap->GetDataString(pImg->m_ImageName, aName, sizeof(aName)))
+				continue;
+			char aBuf[IO_MAX_PATH_LENGTH];
+			str_format(aBuf, sizeof(aBuf), "mapres/%s.png", aName);
+			m_Info[MapType].m_aTextures[i] = Graphics()->LoadTexture(aBuf, IStorage::TYPE_ALL, CImageInfo::FORMAT_AUTO, TextureFlags);
 		}
 		else
 		{
-			void *pData = pMap->GetData(pImg->m_ImageData);
-			m_Info[MapType].m_aTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pImg->m_Format, pData, CImageInfo::FORMAT_RGBA, TextureFlags);
+			if(pImg->m_Width * pImg->m_Height * CImageInfo::GetPixelSize(Format) != pMap->GetDataSize(pImg->m_ImageData))
+				continue;
+			const void *pData = pMap->GetData(pImg->m_ImageData);
+			if(!pData)
+				continue;
+			m_Info[MapType].m_aTextures[i] = Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, Format, pData, CImageInfo::FORMAT_RGBA, TextureFlags);
 			pMap->UnloadData(pImg->m_ImageData);
 		}
 	}
@@ -66,6 +79,13 @@ void CMapImages::LoadMapImages(IMap *pMap, class CLayers *pLayers, int MapType)
 	// easter time, preload easter tileset
 	if(m_pClient->IsEaster())
 		GetEasterTexture();
+}
+
+int CMapImages::GetActiveMapType() const
+{
+	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
+		return MAP_TYPE_GAME;
+	return MAP_TYPE_MENU;
 }
 
 void CMapImages::OnMapLoad()
@@ -94,14 +114,11 @@ IGraphics::CTextureHandle CMapImages::GetEasterTexture()
 
 IGraphics::CTextureHandle CMapImages::Get(int Index) const
 {
-	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
-		return m_Info[MAP_TYPE_GAME].m_aTextures[clamp(Index, 0, m_Info[MAP_TYPE_GAME].m_Count)];
-	return m_Info[MAP_TYPE_MENU].m_aTextures[clamp(Index, 0, m_Info[MAP_TYPE_MENU].m_Count)];
+	const int MapType = GetActiveMapType();
+	return m_Info[MapType].m_aTextures[clamp(Index, 0, m_Info[MapType].m_Count)];
 }
 
 int CMapImages::Num() const
 {
-	if(Client()->State() == IClient::STATE_ONLINE || Client()->State() == IClient::STATE_DEMOPLAYBACK)
-		return m_Info[MAP_TYPE_GAME].m_Count;
-	return m_Info[MAP_TYPE_MENU].m_Count;
+	return m_Info[GetActiveMapType()].m_Count;
 }

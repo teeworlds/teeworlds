@@ -25,11 +25,8 @@ int MaplistCallback(const char *pName, int IsDir, int DirType, void *pUser)
 
 	unsigned MapCrc = s_pEngineMap->Crc();
 	SHA256_DIGEST MapSha256 = s_pEngineMap->Sha256();
+	unsigned MapSize = s_pEngineMap->FileSize();
 	s_pEngineMap->Unload();
-
-	IOHANDLE MapFile = s_pStorage->OpenFile(aBuf, IOFLAG_READ, DirType);
-	unsigned MapSize = io_length(MapFile);
-	io_close(MapFile);
 
 	char aMapName[8];
 	str_copy(aMapName, pName, minimum((int)sizeof(aMapName),l-3));

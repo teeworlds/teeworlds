@@ -807,7 +807,7 @@ const char *CClient::LoadMap(const char *pName, const char *pFilename, const SHA
 
 	if(!m_pMap->Load(pFilename))
 	{
-		str_format(aErrorMsg, sizeof(aErrorMsg), "map '%s' not found", pFilename);
+		str_format(aErrorMsg, sizeof(aErrorMsg), "map '%s' could not be loaded. %s", pFilename, m_pMap->GetError());
 		return aErrorMsg;
 	}
 

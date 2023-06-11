@@ -1,109 +1,215 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <base/system.h>
+#include <base/math.h>
+
 #include <engine/map.h>
 #include <engine/storage.h>
+
 #include <game/mapitems.h>
+
 #include "datafile.h"
 
 class CMap : public IEngineMap
 {
-	CDataFileReader m_DataFile;
-public:
-	CMap() {}
+	CDataFileReader *m_pDataFile;
+	char m_aError[128];
 
-	virtual void *GetData(int Index) { return m_DataFile.GetData(Index); }
-	virtual void *GetDataSwapped(int Index) { return m_DataFile.GetDataSwapped(Index); }
-	virtual void UnloadData(int Index) { m_DataFile.UnloadData(Index); }
-	virtual void *GetItem(int Index, int *pType, int *pID) { return m_DataFile.GetItem(Index, pType, pID); }
-	virtual void GetType(int Type, int *pStart, int *pNum) { m_DataFile.GetType(Type, pStart, pNum); }
-	virtual void *FindItem(int Type, int ID) { return m_DataFile.FindItem(Type, ID); }
-	virtual int NumItems() { return m_DataFile.NumItems(); }
+public:
+	CMap()
+	{
+		m_pDataFile = new CDataFileReader;
+		m_aError[0] = '\0';
+	}
+
+	~CMap()
+	{
+		Unload();
+		delete m_pDataFile;
+	}
+
+	virtual void *GetData(int Index)
+	{
+		return m_pDataFile->GetData(Index);
+	}
+
+	virtual void *GetDataSwapped(int Index)
+	{
+		return m_pDataFile->GetDataSwapped(Index);
+	}
+
+	virtual bool GetDataString(int Index, char *pBuffer, int BufferSize)
+	{
+		return m_pDataFile->GetDataString(Index, pBuffer, BufferSize);
+	}
+
+	virtual int GetDataSize(int Index) const
+	{
+		return m_pDataFile->GetDataSize(Index);
+	}
+
+	virtual void UnloadData(int Index)
+	{
+		m_pDataFile->UnloadData(Index);
+	}
+
+	virtual void *GetItem(int Index, int *pType, int *pID, int *pSize) const
+	{
+		return m_pDataFile->GetItem(Index, pType, pID, pSize);
+	}
+
+	virtual int GetItemSize(int Index) const
+	{
+		return m_pDataFile->GetItemSize(Index);
+	}
+
+	virtual void GetType(int Type, int *pStart, int *pNum) const
+	{
+		m_pDataFile->GetType(Type, pStart, pNum);
+	}
+
+	virtual void *FindItem(int Type, int ID, int *pIndex, int *pSize) const
+	{
+		return m_pDataFile->FindItem(Type, ID, pIndex, pSize);
+	}
+
+	virtual int NumItems() const
+	{
+		return m_pDataFile->NumItems();
+	}
+
+	virtual int NumData() const
+	{
+		return m_pDataFile->NumData();
+	}
 
 	virtual void Unload()
 	{
-		m_DataFile.Close();
+		m_pDataFile->Close();
 	}
 
-	virtual bool Load(const char *pMapName, IStorage *pStorage)
+	bool LoadImpl(const char *pMapName, IStorage *pStorage, int StorageType)
 	{
 		if(!pStorage)
 			pStorage = Kernel()->RequestInterface<IStorage>();
 		if(!pStorage)
+		{
+			str_copy(m_aError, "IStorage not available", sizeof(m_aError));
 			return false;
-		if(!m_DataFile.Open(pStorage, pMapName, IStorage::TYPE_ALL))
+		}
+		if(!m_pDataFile->Open(pStorage, pMapName, StorageType))
+		{
+			str_copy(m_aError, m_pDataFile->GetError(), sizeof(m_aError));
 			return false;
-		// check version
-		CMapItemVersion *pItem = (CMapItemVersion *)m_DataFile.FindItem(MAPITEMTYPE_VERSION, 0);
-		if(!pItem || pItem->m_Version != CMapItemVersion::CURRENT_VERSION)
-			return false;
+		}
 
+		// check version
+		int VersionItemSize;
+		const CMapItemVersion *pItem = static_cast<CMapItemVersion *>(m_pDataFile->FindItem(MAPITEMTYPE_VERSION, 0, 0, &VersionItemSize));
+		if(!CMapItemChecker::IsValid(pItem, VersionItemSize))
+		{
+			str_format(m_aError, sizeof(m_aError), "incompatible map version");
+			return false;
+		}
+
+		// Validate tile layers dimensions and
 		// replace compressed tile layers with uncompressed ones
 		int GroupsStart, GroupsNum, LayersStart, LayersNum;
-		m_DataFile.GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
-		m_DataFile.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
+		m_pDataFile->GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
+		m_pDataFile->GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
 		for(int g = 0; g < GroupsNum; g++)
 		{
-			CMapItemGroup *pGroup = static_cast<CMapItemGroup *>(m_DataFile.GetItem(GroupsStart + g, 0, 0));
-			for(int l = 0; l < pGroup->m_NumLayers; l++)
+			int GroupItemSize;
+			const CMapItemGroup *pGroup = static_cast<CMapItemGroup *>(m_pDataFile->GetItem(GroupsStart + g, 0x0, 0x0, &GroupItemSize));
+			if(!CMapItemChecker::IsValid(pGroup, GroupItemSize) || pGroup->m_StartLayer >= LayersNum)
+				continue;
+
+			for(int l = 0; l < minimum(pGroup->m_NumLayers, LayersNum); l++)
 			{
-				CMapItemLayer *pLayer = static_cast<CMapItemLayer *>(m_DataFile.GetItem(LayersStart + pGroup->m_StartLayer + l, 0, 0));
+				int LayerItemSize;
+				const CMapItemLayer *pLayer = static_cast<CMapItemLayer *>(m_pDataFile->GetItem(LayersStart + pGroup->m_StartLayer + l, 0x0, 0x0, &LayerItemSize));
+				if(!CMapItemChecker::IsValid(pLayer, LayerItemSize))
+					continue;
 
 				if(pLayer->m_Type == LAYERTYPE_TILES)
 				{
-					CMapItemLayerTilemap *pTilemap = reinterpret_cast<CMapItemLayerTilemap *>(pLayer);
-					
-					if(pTilemap->m_Version > 3)
+					const CMapItemLayerTilemap *pTilemap = reinterpret_cast<const CMapItemLayerTilemap *>(pLayer);
+					if(!CMapItemChecker::IsValid(pTilemap, LayerItemSize) || pTilemap->m_Version < CMapItemLayerTilemap_v4::CURRENT_VERSION)
+						continue;
+
+					const int TilemapCount = pTilemap->m_Width * pTilemap->m_Height;
+					const int TilemapSize = TilemapCount * sizeof(CTile);
+
+					// extract original tile data
+					const int NumSavedTiles = m_pDataFile->GetDataSize(pTilemap->m_Data) / sizeof(CTile);
+					CTile *pSavedTiles = static_cast<CTile *>(m_pDataFile->GetData(pTilemap->m_Data));
+					if(NumSavedTiles <= 0 || !pSavedTiles)
+						continue;
+
+					CTile *pTiles = static_cast<CTile *>(mem_alloc(TilemapSize));
+					if(!pTiles)
+						continue;
+
+					for(int i = 0, j = 0; i < TilemapCount && j < NumSavedTiles; )
 					{
-						const int TilemapCount = pTilemap->m_Width * pTilemap->m_Height;
-						const int TilemapSize = TilemapCount * sizeof(CTile);
-
-						if((TilemapCount / pTilemap->m_Width != pTilemap->m_Height) || (TilemapSize / (int)sizeof(CTile) != TilemapCount))
+						for(unsigned Counter = 0; Counter <= pSavedTiles[j].m_Skip && i < TilemapCount && j < NumSavedTiles; Counter++)
 						{
-							dbg_msg("engine", "map layer too big (%d * %d * %u causes an integer overflow)", pTilemap->m_Width, pTilemap->m_Height, unsigned(sizeof(CTile)));
-							return false;
+							pTiles[i] = pSavedTiles[j];
+							pTiles[i].m_Skip = 0;
+							i++;
 						}
-						CTile *pTiles = static_cast<CTile *>(mem_alloc(TilemapSize));
-						if(!pTiles)
-							return false;
-
-						// extract original tile data
-						int i = 0;
-						CTile *pSavedTiles = static_cast<CTile *>(m_DataFile.GetData(pTilemap->m_Data));
-						while(i < TilemapCount)
-						{
-							for(unsigned Counter = 0; Counter <= pSavedTiles->m_Skip && i < TilemapCount; Counter++)
-							{
-								pTiles[i] = *pSavedTiles;
-								pTiles[i++].m_Skip = 0;
-							}
-
-							pSavedTiles++;
-						}
-
-						m_DataFile.ReplaceData(pTilemap->m_Data, reinterpret_cast<char *>(pTiles), TilemapSize);
+						j++;
 					}
+
+					m_pDataFile->ReplaceData(pTilemap->m_Data, reinterpret_cast<char *>(pTiles), TilemapSize);
 				}
 			}
-			
 		}
-		
+
+		m_aError[0] = '\0';
 		return true;
 	}
 
-	virtual bool IsLoaded()
+	virtual bool Load(const char *pMapName, IStorage *pStorage, int StorageType)
 	{
-		return m_DataFile.IsOpen();
+		CDataFileReader *pLastDataFile = m_pDataFile;
+		m_pDataFile = new CDataFileReader;
+		if(LoadImpl(pMapName, pStorage, StorageType))
+		{
+			delete pLastDataFile;
+			return true;
+		}
+		else
+		{
+			delete m_pDataFile;
+			m_pDataFile = pLastDataFile;
+			return false;
+		}
 	}
 
-	virtual SHA256_DIGEST Sha256()
+	virtual bool IsLoaded() const
 	{
-		return m_DataFile.Sha256();
+		return m_pDataFile->IsOpen();
 	}
 
-	virtual unsigned Crc()
+	virtual const char *GetError() const
 	{
-		return m_DataFile.Crc();
+		return m_aError;
+	}
+
+	virtual SHA256_DIGEST Sha256() const
+	{
+		return m_pDataFile->Sha256();
+	}
+
+	virtual unsigned Crc() const
+	{
+		return m_pDataFile->Crc();
+	}
+
+	virtual unsigned FileSize() const
+	{
+		return m_pDataFile->FileSize();
 	}
 };
 

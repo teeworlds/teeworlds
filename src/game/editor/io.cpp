@@ -2,14 +2,13 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/client.h>
 #include <engine/console.h>
+#include <engine/map.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
-#include <game/gamecore.h> // StrToInts, IntsToStr
-#include "editor.h"
 
-template<typename T>
-static int MakeVersion(int i, const T &v)
-{ return (i<<16)+sizeof(T); }
+#include <game/gamecore.h> // StrToInts, IntsToStr
+
+#include "editor.h"
 
 int CEditor::Save(const char *pFilename)
 {
@@ -80,10 +79,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		if(pImg->m_External)
 			Item.m_ImageData = -1;
 		else
-		{
-			int PixelSize = pImg->m_Format == CImageInfo::FORMAT_RGB ? 3 : 4;
-			Item.m_ImageData = df.AddData(Item.m_Width*Item.m_Height*PixelSize, pImg->m_pData);
-		}
+			Item.m_ImageData = df.AddData(Item.m_Width * Item.m_Height * pImg->GetPixelSize(), pImg->m_pData);
 		Item.m_Format = pImg->m_Format;
 		df.AddItem(MAPITEMTYPE_IMAGE, i, sizeof(Item), &Item);
 	}
@@ -203,7 +199,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	{
 		CMapItemEnvelope Item;
 		Item.m_Version = Version;
-		Item.m_Channels = m_lEnvelopes[e]->m_Channels;
+		Item.m_Channels = m_lEnvelopes[e]->GetChannels();
 		Item.m_StartPoint = PointCount;
 		Item.m_NumPoints = m_lEnvelopes[e]->m_lPoints.size();
 		Item.m_Synchronized = m_lEnvelopes[e]->m_Synchronized;
@@ -214,20 +210,23 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	}
 
 	// save points
-	int TotalSize = Size * PointCount;
-	unsigned char *pPoints = (unsigned char *)mem_alloc(TotalSize);
-	int Offset = 0;
-	for(int e = 0; e < m_lEnvelopes.size(); e++)
+	const int TotalSize = Size * PointCount;
+	if(TotalSize)
 	{
-		for(int p = 0; p < m_lEnvelopes[e]->m_lPoints.size(); p++)
+		unsigned char *pPoints = (unsigned char *)mem_alloc(TotalSize);
+		int Offset = 0;
+		for(int e = 0; e < m_lEnvelopes.size(); e++)
 		{
-			mem_copy(pPoints + Offset, &(m_lEnvelopes[e]->m_lPoints[p]), Size);
-			Offset += Size;
+			for(int p = 0; p < m_lEnvelopes[e]->m_lPoints.size(); p++)
+			{
+				mem_copy(pPoints + Offset, &(m_lEnvelopes[e]->m_lPoints[p]), Size);
+				Offset += Size;
+			}
 		}
-	}
 
-	df.AddItem(MAPITEMTYPE_ENVPOINTS, 0, TotalSize, pPoints);
-	mem_free(pPoints);
+		df.AddItem(MAPITEMTYPE_ENVPOINTS, 0, TotalSize, pPoints);
+		mem_free(pPoints);
+	}
 
 	// finish the data file
 	df.Finish();
@@ -260,260 +259,290 @@ void CEditor::LoadCurrentMap()
 
 int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int StorageType)
 {
-	CDataFileReader DataFile;
-	if(!DataFile.Open(pStorage, pFileName, StorageType))
+	IEngineMap *pMap = CreateEngineMap();
+	if(!pMap->Load(pFileName, pStorage, StorageType))
+	{
+		delete pMap;
 		return 0;
+	}
 
 	Clean();
 
-	// check version
-	CMapItemVersion *pItem = (CMapItemVersion *)DataFile.FindItem(MAPITEMTYPE_VERSION, 0);
-	if(!pItem)
+	// load map info
 	{
-		return 0;
+		int ItemSize;
+		const CMapItemInfo *pItem = static_cast<CMapItemInfo *>(pMap->FindItem(MAPITEMTYPE_INFO, 0, 0x0, &ItemSize));
+		if(CMapItemChecker::IsValid(pItem, ItemSize))
+		{
+			if(pItem->m_Author > -1)
+				pMap->GetDataString(pItem->m_Author, m_MapInfo.m_aAuthor, sizeof(m_MapInfo.m_aAuthor));
+			if(pItem->m_MapVersion > -1)
+				pMap->GetDataString(pItem->m_MapVersion, m_MapInfo.m_aVersion, sizeof(m_MapInfo.m_aVersion));
+			if(pItem->m_Credits > -1)
+				pMap->GetDataString(pItem->m_Credits, m_MapInfo.m_aCredits, sizeof(m_MapInfo.m_aCredits));
+			if(pItem->m_License > -1)
+				pMap->GetDataString(pItem->m_License, m_MapInfo.m_aLicense, sizeof(m_MapInfo.m_aLicense));
+		}
 	}
-	else if(pItem->m_Version == CMapItemVersion::CURRENT_VERSION)
+
+	// load images
 	{
-		// load map info
+		int Start, Num;
+		pMap->GetType(MAPITEMTYPE_IMAGE, &Start, &Num);
+		for(int i = 0; i < Num; i++)
 		{
-			CMapItemInfo *pItem = (CMapItemInfo *)DataFile.FindItem(MAPITEMTYPE_INFO, 0);
-			if(pItem && pItem->m_Version == 1)
+			int ItemSize;
+			const CMapItemImage *pItem = static_cast<CMapItemImage *>(pMap->GetItem(Start + i, 0x0, 0x0, &ItemSize));
+			if(!CMapItemChecker::IsValid(pItem, ItemSize))
+				continue;
+
+			// copy base info
+			CEditorImage *pImg = new CEditorImage(m_pEditor);
+			pImg->m_External = pItem->m_External != 0;
+			pMap->GetDataString(pItem->m_ImageName, pImg->m_aName, sizeof(pImg->m_aName));
+
+			const int Format = pItem->m_Version < CMapItemImage_v2::CURRENT_VERSION ? CImageInfo::FORMAT_RGBA : pItem->m_Format;
+			if(pImg->m_External || (Format != CImageInfo::FORMAT_RGB && Format != CImageInfo::FORMAT_RGBA))
 			{
-				if(pItem->m_Author > -1)
-					str_copy(m_MapInfo.m_aAuthor, (char *)DataFile.GetData(pItem->m_Author), sizeof(m_MapInfo.m_aAuthor));
-				if(pItem->m_MapVersion > -1)
-					str_copy(m_MapInfo.m_aVersion, (char *)DataFile.GetData(pItem->m_MapVersion), sizeof(m_MapInfo.m_aVersion));
-				if(pItem->m_Credits > -1)
-					str_copy(m_MapInfo.m_aCredits, (char *)DataFile.GetData(pItem->m_Credits), sizeof(m_MapInfo.m_aCredits));
-				if(pItem->m_License > -1)
-					str_copy(m_MapInfo.m_aLicense, (char *)DataFile.GetData(pItem->m_License), sizeof(m_MapInfo.m_aLicense));
-			}
-		}
-
-		// load images
-		{
-			int Start, Num;
-			DataFile.GetType( MAPITEMTYPE_IMAGE, &Start, &Num);
-			for(int i = 0; i < Num; i++)
-			{
-				CMapItemImage *pItem = (CMapItemImage *)DataFile.GetItem(Start+i, 0, 0);
-				char *pName = (char *)DataFile.GetData(pItem->m_ImageName);
-
-				// copy base info
-				CEditorImage *pImg = new CEditorImage(m_pEditor);
-				pImg->m_External = pItem->m_External;
-
-				if(pItem->m_External || (pItem->m_Version > 1 && pItem->m_Format != CImageInfo::FORMAT_RGB && pItem->m_Format != CImageInfo::FORMAT_RGBA))
+				// load external
+				char aBuf[IO_MAX_PATH_LENGTH];
+				str_format(aBuf, sizeof(aBuf), "mapres/%s.png", pImg->m_aName);
+				if(m_pEditor->Graphics()->LoadPNG(pImg, aBuf, IStorage::TYPE_ALL))
 				{
-					char aBuf[IO_MAX_PATH_LENGTH];
-					str_format(aBuf, sizeof(aBuf),"mapres/%s.png", pName);
-
-					// load external
-					CEditorImage ImgInfo(m_pEditor);
-					if(m_pEditor->Graphics()->LoadPNG(&ImgInfo, aBuf, IStorage::TYPE_ALL))
-					{
-						*pImg = ImgInfo;
-						pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
-						ImgInfo.m_pData = 0;
-						pImg->m_External = 1;
-					}
+					pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(
+						pImg->m_Width, pImg->m_Height, pImg->m_Format, pImg->m_pData,
+						CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+					pImg->m_External = 1;
 				}
-				else
-				{
-					pImg->m_Width = pItem->m_Width;
-					pImg->m_Height = pItem->m_Height;
-					pImg->m_Format = pItem->m_Version == 1 ? CImageInfo::FORMAT_RGBA : pItem->m_Format;
-
-					// copy image data
-					const int DataSize = pImg->m_Width * pImg->m_Height * pImg->GetPixelSize();
-					void *pData = DataFile.GetData(pItem->m_ImageData);
-					pImg->m_pData = mem_alloc(DataSize);
-					mem_copy(pImg->m_pData, pData, DataSize);
-					pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Format, pImg->m_pData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
-				}
-
-				// copy image name
-				if(pName)
-					str_copy(pImg->m_aName, pName, 128);
-
-				// load auto mapper file
-				pImg->LoadAutoMapper();
-
-				m_lImages.add(pImg);
-
-				// unload image
-				DataFile.UnloadData(pItem->m_ImageData);
-				DataFile.UnloadData(pItem->m_ImageName);
 			}
-		}
-
-		// load groups
-		{
-			int LayersStart, LayersNum;
-			DataFile.GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
-
-			int Start, Num;
-			DataFile.GetType(MAPITEMTYPE_GROUP, &Start, &Num);
-			for(int g = 0; g < Num; g++)
+			else
 			{
-				CMapItemGroup *pGItem = (CMapItemGroup *)DataFile.GetItem(Start+g, 0, 0);
+				pImg->m_Width = pItem->m_Width;
+				pImg->m_Height = pItem->m_Height;
+				pImg->m_Format = Format;
 
-				if(pGItem->m_Version < 1 || pGItem->m_Version > CMapItemGroup::CURRENT_VERSION)
+				// copy image data
+				const int DataSize = pMap->GetDataSize(pItem->m_ImageData);
+				if(!DataSize || DataSize != pImg->m_Width * pImg->m_Height * pImg->GetPixelSize())
+				{
+					delete pImg;
+					continue;
+				}
+				const void *pData = pMap->GetData(pItem->m_ImageData);
+				if(!pData)
+				{
+					delete pImg;
+					continue;
+				}
+				pImg->m_pData = mem_alloc(DataSize);
+				mem_copy(pImg->m_pData, pData, DataSize);
+				pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(
+					pImg->m_Width, pImg->m_Height, pImg->m_Format, pImg->m_pData,
+					CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+				pMap->UnloadData(pItem->m_ImageData);
+			}
+
+			pImg->LoadAutoMapper();
+
+			m_lImages.add(pImg);
+		}
+	}
+
+	// load groups
+	{
+		int LayersStart, LayersNum;
+		pMap->GetType(MAPITEMTYPE_LAYER, &LayersStart, &LayersNum);
+		int GroupsStart, GroupsNum;
+		pMap->GetType(MAPITEMTYPE_GROUP, &GroupsStart, &GroupsNum);
+
+		for(int g = 0; g < GroupsNum; g++)
+		{
+			int GroupItemSize;
+			const CMapItemGroup *pGItem = static_cast<CMapItemGroup *>(pMap->GetItem(GroupsStart + g, 0x0, 0x0, &GroupItemSize));
+			if(!CMapItemChecker::IsValid(pGItem, GroupItemSize))
+				continue;
+
+			CLayerGroup *pGroup = NewGroup();
+			pGroup->m_ParallaxX = clamp<int>(pGItem->m_ParallaxX, CProperty::MIN, CProperty::MAX);
+			pGroup->m_ParallaxY = clamp<int>(pGItem->m_ParallaxY, CProperty::MIN, CProperty::MAX);
+			pGroup->m_OffsetX = clamp<int>(pGItem->m_OffsetX, CProperty::MIN, CProperty::MAX);
+			pGroup->m_OffsetY = clamp<int>(pGItem->m_OffsetY, CProperty::MIN, CProperty::MAX);
+
+			if(pGItem->m_Version >= CMapItemGroup_v2::CURRENT_VERSION)
+			{
+				pGroup->m_UseClipping = pGItem->m_UseClipping != 0;
+				pGroup->m_ClipX = clamp<int>(pGItem->m_ClipX, CProperty::MIN, CProperty::MAX);
+				pGroup->m_ClipY = clamp<int>(pGItem->m_ClipY, CProperty::MIN, CProperty::MAX);
+				pGroup->m_ClipW = clamp<int>(pGItem->m_ClipW, CProperty::MIN, CProperty::MAX);
+				pGroup->m_ClipH = clamp<int>(pGItem->m_ClipH, CProperty::MIN, CProperty::MAX);
+			}
+
+			// load group name
+			if(pGItem->m_Version >= CMapItemGroup_v3::CURRENT_VERSION)
+				IntsToStr(pGItem->m_aName, sizeof(pGroup->m_aName) / sizeof(int), pGroup->m_aName);
+
+			for(int l = 0; l < minimum(pGItem->m_NumLayers, LayersNum); l++)
+			{
+				if(pGItem->m_StartLayer >= LayersNum)
+					continue;
+				const int LayerIndex = pGItem->m_StartLayer + l;
+				if(LayerIndex < 0 || LayerIndex >= LayersNum)
+					continue;
+				int LayerItemSize;
+				const CMapItemLayer *pLayerItem = static_cast<CMapItemLayer *>(pMap->GetItem(LayersStart + LayerIndex, 0x0, 0x0, &LayerItemSize));
+				if(!CMapItemChecker::IsValid(pLayerItem, LayerItemSize))
 					continue;
 
-				CLayerGroup *pGroup = NewGroup();
-				pGroup->m_ParallaxX = pGItem->m_ParallaxX;
-				pGroup->m_ParallaxY = pGItem->m_ParallaxY;
-				pGroup->m_OffsetX = pGItem->m_OffsetX;
-				pGroup->m_OffsetY = pGItem->m_OffsetY;
-
-				if(pGItem->m_Version >= 2)
+				if(pLayerItem->m_Type == LAYERTYPE_TILES)
 				{
-					pGroup->m_UseClipping = pGItem->m_UseClipping;
-					pGroup->m_ClipX = pGItem->m_ClipX;
-					pGroup->m_ClipY = pGItem->m_ClipY;
-					pGroup->m_ClipW = pGItem->m_ClipW;
-					pGroup->m_ClipH = pGItem->m_ClipH;
-				}
+					const CMapItemLayerTilemap *pTilemapItem = reinterpret_cast<const CMapItemLayerTilemap *>(pLayerItem);
 
-				// load group name
-				if(pGItem->m_Version >= 3)
-					IntsToStr(pGItem->m_aName, sizeof(pGroup->m_aName)/sizeof(int), pGroup->m_aName);
-
-				for(int l = 0; l < pGItem->m_NumLayers; l++)
-				{
-					CLayer *pLayer = 0;
-					CMapItemLayer *pLayerItem = (CMapItemLayer *)DataFile.GetItem(LayersStart+pGItem->m_StartLayer+l, 0, 0);
-					if(!pLayerItem)
-						continue;
-
-					if(pLayerItem->m_Type == LAYERTYPE_TILES)
+					CLayerTiles *pTiles = 0;
+					if(pTilemapItem->m_Flags & TILESLAYERFLAG_GAME)
 					{
-						CMapItemLayerTilemap *pTilemapItem = (CMapItemLayerTilemap *)pLayerItem;
-						CLayerTiles *pTiles = 0;
-
-						if(pTilemapItem->m_Flags&TILESLAYERFLAG_GAME)
-						{
-							pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
-							MakeGameLayer(pTiles);
-							MakeGameGroup(pGroup);
-						}
-						else
-						{
-							pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
-							pTiles->m_pEditor = m_pEditor;
-							pTiles->m_Color = pTilemapItem->m_Color;
-							pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
-							pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
-						}
-
-						pLayer = pTiles;
-
-						pGroup->AddLayer(pTiles);
-						void *pData = DataFile.GetData(pTilemapItem->m_Data);
-						pTiles->m_Image = pTilemapItem->m_Image;
-						pTiles->m_Game = pTilemapItem->m_Flags&TILESLAYERFLAG_GAME;
-
-						// load layer name
-						if(pTilemapItem->m_Version >= 3)
-							IntsToStr(pTilemapItem->m_aName, sizeof(pTiles->m_aName)/sizeof(int), pTiles->m_aName);
-
-						// get tile data
-						if(pTilemapItem->m_Version > 3)
-							pTiles->ExtractTiles((CTile *)pData);
-						else
-							mem_copy(pTiles->m_pTiles, pData, pTiles->m_Width*pTiles->m_Height*sizeof(CTile));
-
-
-						if(pTiles->m_Game && pTilemapItem->m_Version == MakeVersion(1, *pTilemapItem))
-						{
-							for(int i = 0; i < pTiles->m_Width*pTiles->m_Height; i++)
-							{
-								if(pTiles->m_pTiles[i].m_Index)
-									pTiles->m_pTiles[i].m_Index += ENTITY_OFFSET;
-							}
-						}
-
-						DataFile.UnloadData(pTilemapItem->m_Data);
-					}
-					else if(pLayerItem->m_Type == LAYERTYPE_QUADS)
-					{
-						CMapItemLayerQuads *pQuadsItem = (CMapItemLayerQuads *)pLayerItem;
-						CLayerQuads *pQuads = new CLayerQuads;
-						pQuads->m_pEditor = m_pEditor;
-						pLayer = pQuads;
-						pQuads->m_Image = pQuadsItem->m_Image;
-						if(pQuads->m_Image < -1 || pQuads->m_Image >= m_lImages.size())
-							pQuads->m_Image = -1;
-
-						// load layer name
-						if(pQuadsItem->m_Version >= 2)
-							IntsToStr(pQuadsItem->m_aName, sizeof(pQuads->m_aName)/sizeof(int), pQuads->m_aName);
-
-						void *pData = DataFile.GetDataSwapped(pQuadsItem->m_Data);
-						pGroup->AddLayer(pQuads);
-						pQuads->m_lQuads.set_size(pQuadsItem->m_NumQuads);
-						mem_copy(pQuads->m_lQuads.base_ptr(), pData, sizeof(CQuad)*pQuadsItem->m_NumQuads);
-						DataFile.UnloadData(pQuadsItem->m_Data);
-					}
-
-					if(pLayer)
-						pLayer->m_Flags = pLayerItem->m_Flags;
-				}
-			}
-		}
-
-		// load envelopes
-		{
-			CEnvPoint *pEnvPoints = 0;
-			{
-				int Start, Num;
-				DataFile.GetType(MAPITEMTYPE_ENVPOINTS, &Start, &Num);
-				if(Num)
-					pEnvPoints = (CEnvPoint *)DataFile.GetItem(Start, 0, 0);
-			}
-
-			int Start, Num;
-			DataFile.GetType(MAPITEMTYPE_ENVELOPE, &Start, &Num);
-			for(int e = 0; e < Num; e++)
-			{
-				CMapItemEnvelope *pItem = (CMapItemEnvelope *)DataFile.GetItem(Start+e, 0, 0);
-				const int Channels = minimum(pItem->m_Channels, 4);
-				CEnvelope *pEnv = new CEnvelope(Channels);
-				pEnv->m_lPoints.set_size(pItem->m_NumPoints);
-				for(int n = 0; n < pItem->m_NumPoints; n++)
-				{
-					if(pItem->m_Version >= 3)
-					{
-						pEnv->m_lPoints[n] = pEnvPoints[pItem->m_StartPoint + n];
+						pTiles = new CLayerGame(pTilemapItem->m_Width, pTilemapItem->m_Height);
+						MakeGameLayer(pTiles);
+						MakeGameGroup(pGroup);
 					}
 					else
 					{
-						// backwards compatibility
-						CEnvPoint_v1 *pEnvPoint_v1 = &((CEnvPoint_v1 *)pEnvPoints)[pItem->m_StartPoint + n];
-						mem_zero((void*)&pEnv->m_lPoints[n], sizeof(CEnvPoint));
+						pTiles = new CLayerTiles(pTilemapItem->m_Width, pTilemapItem->m_Height);
+						pTiles->m_pEditor = m_pEditor;
+						pTiles->m_Color = pTilemapItem->m_Color;
+						pTiles->m_ColorEnv = pTilemapItem->m_ColorEnv;
+						pTiles->m_ColorEnvOffset = pTilemapItem->m_ColorEnvOffset;
+					}
 
-						pEnv->m_lPoints[n].m_Time = pEnvPoint_v1->m_Time;
-						pEnv->m_lPoints[n].m_Curvetype = pEnvPoint_v1->m_Curvetype;
+					pTiles->m_Flags = pLayerItem->m_Flags;
+					pGroup->AddLayer(pTiles);
 
-						for(int c = 0; c < Channels; c++)
-						{
-							pEnv->m_lPoints[n].m_aValues[c] = pEnvPoint_v1->m_aValues[c];
-						}
+					pTiles->m_Image = pTilemapItem->m_Image;
+					pTiles->m_Game = pTilemapItem->m_Flags & TILESLAYERFLAG_GAME;
+
+					// load layer name
+					if(pTilemapItem->m_Version >= CMapItemLayerTilemap_v3::CURRENT_VERSION)
+						IntsToStr(pTilemapItem->m_aName, sizeof(pTiles->m_aName) / sizeof(int), pTiles->m_aName);
+
+					// get tile data
+					const int DataSize = minimum(pMap->GetDataSize(pTilemapItem->m_Data), pTiles->m_Width * pTiles->m_Height * (int)sizeof(CTile));
+					const CTile *pData = static_cast<CTile *>(pMap->GetData(pTilemapItem->m_Data));
+					if(DataSize && pData)
+					{
+						mem_copy(pTiles->m_pTiles, pData, DataSize);
+						pMap->UnloadData(pTilemapItem->m_Data);
 					}
 				}
+				else if(pLayerItem->m_Type == LAYERTYPE_QUADS)
+				{
+					const CMapItemLayerQuads *pQuadsItem = reinterpret_cast<const CMapItemLayerQuads *>(pLayerItem);
 
-				if(pItem->m_aName[0] != -1)	// compatibility with old maps
-					IntsToStr(pItem->m_aName, sizeof(pItem->m_aName)/sizeof(int), pEnv->m_aName);
-				m_lEnvelopes.add(pEnv);
-				if(pItem->m_Version >= 2)
-					pEnv->m_Synchronized = pItem->m_Synchronized;
+					CLayerQuads *pQuads = new CLayerQuads;
+					pQuads->m_pEditor = m_pEditor;
+					pQuads->m_Flags = pLayerItem->m_Flags;
+					pQuads->m_Image = pQuadsItem->m_Image;
+					if(pQuads->m_Image < -1 || pQuads->m_Image >= m_lImages.size())
+						pQuads->m_Image = -1;
+
+					// load layer name
+					if(pQuadsItem->m_Version >= CMapItemLayerQuads_v2::CURRENT_VERSION)
+						IntsToStr(pQuadsItem->m_aName, sizeof(pQuads->m_aName) / sizeof(int), pQuads->m_aName);
+
+					pGroup->AddLayer(pQuads);
+					pQuads->m_lQuads.set_size(pQuadsItem->m_NumQuads);
+					const int ExpectedDataSize = pQuadsItem->m_NumQuads * sizeof(CQuad);
+					mem_zero(pQuads->m_lQuads.base_ptr(), ExpectedDataSize);
+
+					const int DataSize = minimum(pMap->GetDataSize(pQuadsItem->m_Data), ExpectedDataSize);
+					const void *pData = pMap->GetDataSwapped(pQuadsItem->m_Data);
+					if(DataSize && pData)
+					{
+						mem_copy(pQuads->m_lQuads.base_ptr(), pData, DataSize);
+						pMap->UnloadData(pQuadsItem->m_Data);
+					}
+				}
 			}
 		}
 	}
-	else
-		return 0;
 
+	// load envelopes
+	do
+	{
+		int StartEnvPoints, NumEnvPointItems;
+		pMap->GetType(MAPITEMTYPE_ENVPOINTS, &StartEnvPoints, &NumEnvPointItems);
+		if(!NumEnvPointItems) // NumEnvPointItems is 0 or 1, as all points are packed into one item
+			break;
+
+		int EnvelopeItemVersion = -1;
+		int StartEnv, NumEnv;
+		pMap->GetType(MAPITEMTYPE_ENVELOPE, &StartEnv, &NumEnv);
+		for(int Env = 0; Env < NumEnv; Env++)
+		{
+			int ItemSize;
+			const CMapItemEnvelope *pItem = static_cast<CMapItemEnvelope *>(pMap->GetItem(StartEnv + Env, 0x0, 0x0, &ItemSize));
+			if(CMapItemChecker::IsValid(pItem, ItemSize))
+			{
+				if(EnvelopeItemVersion == -1)
+					EnvelopeItemVersion = pItem->m_Version;
+				else if(EnvelopeItemVersion != pItem->m_Version)
+					EnvelopeItemVersion = -2; // conflicting versions found
+			}
+		}
+		if(EnvelopeItemVersion < 0)
+			break;
+
+		int PointsItemSize;
+		const CEnvPoint *pPoints = static_cast<CEnvPoint *>(pMap->GetItem(StartEnvPoints, 0x0, 0x0, &PointsItemSize));
+		int NumEnvPoints;
+		if(!CMapItemChecker::IsValid(pPoints, PointsItemSize, EnvelopeItemVersion, &NumEnvPoints) || !NumEnvPoints)
+			break;
+
+		for(int Env = 0; Env < NumEnv; Env++)
+		{
+			int ItemSize;
+			const CMapItemEnvelope *pItem = static_cast<CMapItemEnvelope *>(pMap->GetItem(StartEnv + Env, 0x0, 0x0, &ItemSize));
+			if(!CMapItemChecker::IsValid(pItem, ItemSize) || pItem->m_NumPoints < 0 || pItem->m_NumPoints > NumEnvPoints)
+				continue;
+
+			CEnvelope *pEnv = new CEnvelope(pItem->m_Channels);
+			pEnv->m_lPoints.set_size(pItem->m_NumPoints);
+			mem_zero(pEnv->m_lPoints.base_ptr(), pItem->m_NumPoints * sizeof(CEnvPoint));
+
+			for(int Point = 0; Point < pItem->m_NumPoints; Point++)
+			{
+				const int PointIndex = pItem->m_StartPoint + Point;
+				if(PointIndex < 0 || PointIndex >= NumEnvPoints)
+					continue;
+
+				if(EnvelopeItemVersion >= CMapItemEnvelope_v3::CURRENT_VERSION)
+				{
+					pEnv->m_lPoints[Point] = pPoints[PointIndex];
+				}
+				else
+				{
+					// backwards compatibility
+					const CEnvPoint_v1 *pEnvPoint_v1 = &(reinterpret_cast<const CEnvPoint_v1 *>(pPoints))[PointIndex];
+
+					pEnv->m_lPoints[Point].m_Time = pEnvPoint_v1->m_Time;
+					pEnv->m_lPoints[Point].m_Curvetype = pEnvPoint_v1->m_Curvetype;
+
+					for(int c = 0; c < minimum(pItem->m_Channels, pEnv->GetChannels()); c++)
+					{
+						pEnv->m_lPoints[Point].m_aValues[c] = pEnvPoint_v1->m_aValues[c];
+					}
+				}
+			}
+
+			if(pItem->m_aName[0] != -1)	// compatibility with old maps
+				IntsToStr(pItem->m_aName, sizeof(pItem->m_aName) / sizeof(int), pEnv->m_aName);
+
+			if(pItem->m_Version >= CMapItemEnvelope_v2::CURRENT_VERSION)
+				pEnv->m_Synchronized = pItem->m_Synchronized;
+
+			m_lEnvelopes.add(pEnv);
+		}
+	} while(false);
+
+	delete pMap;
 	return 1;
 }
 

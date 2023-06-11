@@ -1240,7 +1240,10 @@ int CServer::LoadMap(const char *pMapName)
 	}
 
 	if(!m_pMap->Load(aBuf))
+	{
+		Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "map", m_pMap->GetError());
 		return 0;
+	}
 
 	// stop recording when we change map
 	if(m_DemoRecorder.IsRecording())

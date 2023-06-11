@@ -24,6 +24,7 @@ public:
 	};
 
 	CCollision();
+	void Clear();
 	void Init(class CLayers *pLayers);
 	bool CheckPoint(float x, float y, int Flag=COLFLAG_SOLID) const { return IsTile(round_to_int(x), round_to_int(y), Flag); }
 	bool CheckPoint(vec2 Pos, int Flag=COLFLAG_SOLID) const { return CheckPoint(Pos.x, Pos.y, Flag); }

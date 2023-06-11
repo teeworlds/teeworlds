@@ -114,7 +114,7 @@ const char* CTilesetMapper::GetRuleSetName(int Index) const
 
 void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID, RECTi Area)
 {
-	if(pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
+	if(!m_pEditor->m_Map.m_pGameLayer || pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
 		return;
 
 	CRuleSet *pConf = &m_aRuleSets[ConfigID];
@@ -642,7 +642,7 @@ void CDoodadsMapper::PlaceDoodads(CLayerTiles *pLayer, CRule *pRule, array<array
 
 void CDoodadsMapper::Proceed(CLayerTiles *pLayer, int ConfigID, int Amount)
 {
-	if(pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
+	if(!m_pEditor->m_Map.m_pGameLayer || pLayer->m_Readonly || ConfigID < 0 || ConfigID >= m_aRuleSets.size())
 		return;
 
 	AnalyzeGameLayer();
