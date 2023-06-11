@@ -84,17 +84,27 @@ void CSnapshot::DebugDump() const
 
 // CSnapshotDelta
 
-struct CItemList
-{
-	int m_Num;
-	int m_aKeys[64];
-	int m_aIndex[64];
-};
-
 enum
 {
 	HASHLIST_SIZE = 256,
+	HASHLIST_BUCKET_SIZE = 64,
 };
+
+struct CItemList
+{
+	int m_Num;
+	int m_aKeys[HASHLIST_BUCKET_SIZE];
+	int m_aIndex[HASHLIST_BUCKET_SIZE];
+};
+
+inline unsigned CalcHashID(int Key)
+{
+	// djb2 (http://www.cse.yorku.ca/~oz/hash.html)
+	unsigned Hash = 5381;
+	for(unsigned Shift = 0; Shift < sizeof(int); Shift++)
+		Hash = ((Hash << 5) + Hash) + ((Key >> (Shift * 8)) & 0xFF);
+	return Hash % HASHLIST_SIZE;
+}
 
 static void GenerateHash(CItemList *pHashlist, const CSnapshot *pSnapshot)
 {
@@ -104,8 +114,8 @@ static void GenerateHash(CItemList *pHashlist, const CSnapshot *pSnapshot)
 	for(int i = 0; i < pSnapshot->NumItems(); i++)
 	{
 		int Key = pSnapshot->GetItem(i)->Key();
-		int HashID = ((Key>>12)&0xf0) | (Key&0xf);
-		if(pHashlist[HashID].m_Num != 64)
+		unsigned HashID = CalcHashID(Key);
+		if(pHashlist[HashID].m_Num < HASHLIST_BUCKET_SIZE)
 		{
 			pHashlist[HashID].m_aIndex[pHashlist[HashID].m_Num] = i;
 			pHashlist[HashID].m_aKeys[pHashlist[HashID].m_Num] = Key;
@@ -116,7 +126,7 @@ static void GenerateHash(CItemList *pHashlist, const CSnapshot *pSnapshot)
 
 static int GetItemIndexHashed(int Key, const CItemList *pHashlist)
 {
-		int HashID = ((Key>>12)&0xf0) | (Key&0xf);
+		unsigned HashID = CalcHashID(Key);
 		for(int i = 0; i < pHashlist[HashID].m_Num; i++)
 		{
 			if(pHashlist[HashID].m_aKeys[i] == Key)
