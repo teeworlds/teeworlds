@@ -150,6 +150,10 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				{
 					char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
 					mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);
+					// print out the user's commands before they get run
+					char aBuf[128];
+					str_format(aBuf, sizeof(aBuf), "> %s", m_Input.GetString());
+					PrintLine(aBuf, false);
 				}
 				ExecuteLine(m_Input.GetString());
 				m_Input.Clear();
