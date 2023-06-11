@@ -2006,6 +2006,15 @@ void CMenus::ResetSettingsGeneral()
 void CMenus::ResetSettingsControls()
 {
 	m_pClient->m_pBinds->SetDefaults();
+
+	Config()->m_JoystickEnable = 0;
+	Config()->m_JoystickGUID[0] = '\0';
+	Config()->m_JoystickAbsolute = 0;
+	Config()->m_JoystickSens = 100;
+	Config()->m_JoystickX = 0;
+	Config()->m_JoystickY = 1;
+	Config()->m_JoystickTolerance = 5;
+	Config()->m_UiJoystickSens = 100;
 }
 
 void CMenus::ResetSettingsGraphics()

@@ -374,6 +374,8 @@ void CInput::UpdateMouseState()
 
 void CInput::UpdateJoystickState()
 {
+	if(!Config()->m_JoystickEnable)
+		return;
 	IJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick)
 		return;
@@ -398,6 +400,8 @@ void CInput::UpdateJoystickState()
 
 void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
 {
+	if(!Config()->m_JoystickEnable)
+		return;
 	CJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick || pJoystick->GetInstanceID() != Event.jaxis.which)
 		return;
@@ -435,6 +439,8 @@ void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
 
 void CInput::HandleJoystickButtonEvent(const SDL_Event &Event)
 {
+	if(!Config()->m_JoystickEnable)
+		return;
 	CJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick || pJoystick->GetInstanceID() != Event.jbutton.which)
 		return;
@@ -458,6 +464,8 @@ void CInput::HandleJoystickButtonEvent(const SDL_Event &Event)
 
 void CInput::HandleJoystickHatMotionEvent(const SDL_Event &Event)
 {
+	if(!Config()->m_JoystickEnable)
+		return;
 	CJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick || pJoystick->GetInstanceID() != Event.jhat.which)
 		return;
