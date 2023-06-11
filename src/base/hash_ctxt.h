@@ -7,6 +7,7 @@
 #include <stdint.h>
 
 #if defined(CONF_OPENSSL)
+#define OPENSSL_API_COMPAT 0x00908000L
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 #else
