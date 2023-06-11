@@ -11,6 +11,8 @@
 #include <engine/storage.h>
 #include <engine/client.h>
 
+#include <game/client/ui_scrollregion.h>
+
 #include "editor.h"
 
 bool CEditor::PopupGroup(void *pContext, CUIRect View)
@@ -766,20 +768,37 @@ static int g_SelectImageCurrent = -100;
 bool CEditor::PopupSelectImage(void *pContext, CUIRect View)
 {
 	CEditor *pEditor = (CEditor *)pContext;
+
 	CUIRect ButtonBar, ImageView;
-	View.VSplitLeft(80.0f, &ButtonBar, &View);
+	View.VSplitLeft(150.0f, &ButtonBar, &View);
 	View.Margin(10.0f, &ImageView);
 
 	int ShowImage = g_SelectImageCurrent;
 	bool ClosePopup = false;
 
+	const float RowHeight = 14.0f;
 	static int s_NoImageButton;
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0.0f, 0.0f);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	ScrollParams.m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	ScrollParams.m_ScrollbarWidth = 10.0f;
+	ScrollParams.m_ScrollbarMargin = 3.0f;
+	ScrollParams.m_ScrollUnit = RowHeight * 5;
+	s_ScrollRegion.Begin(&ButtonBar, &ScrollOffset, &ScrollParams);
+	ButtonBar.y += ScrollOffset.y;
+
 	for(int i = -1; i < pEditor->m_Map.m_lImages.size(); i++)
 	{
 		CUIRect Button;
-		ButtonBar.HSplitTop(12.0f, &Button, &ButtonBar);
-		ButtonBar.HSplitTop(2.0f, 0, &ButtonBar);
+		ButtonBar.HSplitTop(RowHeight, &Button, &ButtonBar);
+		s_ScrollRegion.AddRect(Button);
 
+		if(s_ScrollRegion.IsRectClipped(Button))
+			continue;
+
+		Button.HSplitTop(12.0f, &Button, 0);
 		if(pEditor->UI()->MouseInside(&Button))
 			ShowImage = i;
 
@@ -789,6 +808,8 @@ bool CEditor::PopupSelectImage(void *pContext, CUIRect View)
 			ClosePopup |= pEditor->Input()->MouseDoubleClick();
 		}
 	}
+
+	s_ScrollRegion.End();
 
 	if(ShowImage >= 0 && ShowImage < pEditor->m_Map.m_lImages.size())
 	{
@@ -816,7 +837,7 @@ void CEditor::PopupSelectImageInvoke(int Current, float x, float y)
 {
 	g_SelectImageSelected = -100;
 	g_SelectImageCurrent = Current;
-	UI()->DoPopupMenu(x, y, 400, 300, this, PopupSelectImage);
+	UI()->DoPopupMenu(x, y, 450, 300, this, PopupSelectImage);
 }
 
 int CEditor::PopupSelectImageResult()
