@@ -303,7 +303,7 @@ Messages = [
 	]),
 
 	NetMessage("Sv_TuneParams", []),
-	NetMessage("Sv_ExtraProjectile", []),
+	NetMessage("Sv_ExtraProjectile", []), # unused
 	NetMessage("Sv_ReadyToEnter", []),
 
 	NetMessage("Sv_WeaponPickup", [
