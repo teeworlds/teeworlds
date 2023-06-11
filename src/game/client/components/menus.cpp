@@ -1776,10 +1776,10 @@ void CMenus::OnRender()
 				TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			}
 
-			UI()->FinishCheck();
 		}
 	}
 
+	UI()->FinishCheck();
 	UI()->ClearHotkeys();
 }
 
