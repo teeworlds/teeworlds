@@ -702,9 +702,9 @@ void CClient::DebugRender()
 	Graphics()->MapScreen(0,0,Graphics()->ScreenWidth(),Graphics()->ScreenHeight());
 	Graphics()->QuadsBegin();
 
-	if(time_get()-LastSnap > time_freq())
+	if(Now-LastSnap > time_freq())
 	{
-		LastSnap = time_get();
+		LastSnap = Now;
 		Prev = Current;
 		net_stats(&Current);
 	}
@@ -2104,7 +2104,7 @@ void CClient::Run()
 			}
 			else if(m_EditorActive)
 				m_EditorActive = false;
-			
+
 			m_pTextRender->Update();
 
 			Update();
