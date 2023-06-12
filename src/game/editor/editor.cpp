@@ -4277,48 +4277,35 @@ void CEditor::DoMapBorder()
 		pT->m_pTiles[i].m_Index = 1;
 }
 
-void CEditor::UpdateAndRender()
+void CEditor::OnUpdate()
 {
-	static float s_MouseX = 0.0f;
-	static float s_MouseY = 0.0f;
-
-	if(m_Animate)
-		m_AnimateTime = (time_get()-m_AnimateStart)/(float)time_freq();
-	else
-		m_AnimateTime = 0;
-	ms_pUiGotContext = 0;
-
 	CUIElementBase::Init(UI()); // update static pointer because game and editor use separate UI
-	UI()->StartCheck();
 
 	for(int i = 0; i < Input()->NumEvents(); i++)
 		UI()->OnInput(Input()->GetEvent(i));
 
 	// handle cursor movement
 	{
-		float rx = 0.0f, ry = 0.0f;
-		int CursorType = Input()->CursorRelative(&rx, &ry);
-		UI()->ConvertCursorMove(&rx, &ry, CursorType);
+		static float s_MouseX = 0.0f;
+		static float s_MouseY = 0.0f;
 
-		m_MouseDeltaX = rx;
-		m_MouseDeltaY = ry;
+		float MouseRelX = 0.0f, MouseRelY = 0.0f;
+		int CursorType = Input()->CursorRelative(&MouseRelX, &MouseRelY);
+		if(CursorType != IInput::CURSOR_NONE)
+			UI()->ConvertCursorMove(&MouseRelX, &MouseRelY, CursorType);
+
+		m_MouseDeltaX += MouseRelX;
+		m_MouseDeltaY += MouseRelY;
 
 		if(!m_LockMouse)
 		{
-			s_MouseX += rx;
-			s_MouseY += ry;
+			s_MouseX = clamp<float>(s_MouseX + MouseRelX, 0.0f, Graphics()->ScreenWidth());
+			s_MouseY = clamp<float>(s_MouseY + MouseRelY, 0.0f, Graphics()->ScreenHeight());
 		}
 
-		s_MouseX = clamp(s_MouseX, 0.0f, (float)Graphics()->ScreenWidth());
-		s_MouseY = clamp(s_MouseY, 0.0f, (float)Graphics()->ScreenHeight());
-
-		// update the ui
-		float mx = (s_MouseX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
-		float my = (s_MouseY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
-		float Mdx = (m_MouseDeltaX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
-		float Mdy = (m_MouseDeltaY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
-		float Mwx = 0;
-		float Mwy = 0;
+		// update positions for ui, but only update ui when rendering
+		m_MouseX = UI()->Screen()->w * (s_MouseX / Graphics()->ScreenWidth());
+		m_MouseY = UI()->Screen()->h * (s_MouseY / Graphics()->ScreenHeight());
 
 		// fix correct world x and y
 		CLayerGroup *pSelectedGroup = GetSelectedGroup();
@@ -4327,18 +4314,24 @@ void CEditor::UpdateAndRender()
 			float aPoints[4];
 			pSelectedGroup->Mapping(aPoints);
 
-			float WorldWidth = aPoints[2]-aPoints[0];
-			float WorldHeight = aPoints[3]-aPoints[1];
+			float WorldWidth = aPoints[2] - aPoints[0];
+			float WorldHeight = aPoints[3] - aPoints[1];
 
-			Mwx = aPoints[0] + WorldWidth * (mx/UI()->Screen()->w);
-			Mwy = aPoints[1] + WorldHeight * (my/UI()->Screen()->h);
-			m_MouseDeltaWx = Mdx*(WorldWidth / UI()->Screen()->w);
-			m_MouseDeltaWy = Mdy*(WorldHeight / UI()->Screen()->h);
+			m_MouseWorldX = aPoints[0] + WorldWidth * (s_MouseX / UI()->Screen()->w);
+			m_MouseWorldY = aPoints[1] + WorldHeight * (s_MouseY / UI()->Screen()->h);
+			m_MouseDeltaWx = m_MouseDeltaX * (WorldWidth / Graphics()->ScreenWidth());
+			m_MouseDeltaWy = m_MouseDeltaY * (WorldHeight / Graphics()->ScreenHeight());
 		}
-
-		UI()->Update(mx, my, Mwx, Mwy);
+		else
+		{
+			m_MouseWorldX = 0.0f;
+			m_MouseWorldY = 0.0f;
+		}
 	}
+}
 
+void CEditor::OnRender()
+{
 	// toggle gui
 	if(Input()->KeyPress(KEY_TAB))
 		m_GuiActive = !m_GuiActive;
@@ -4346,7 +4339,22 @@ void CEditor::UpdateAndRender()
 	if(Input()->KeyPress(KEY_F10))
 		m_ShowMousePointer = false;
 
+	if(m_Animate)
+		m_AnimateTime = (time_get()-m_AnimateStart)/(float)time_freq();
+	else
+		m_AnimateTime = 0;
+
+	ms_pUiGotContext = 0;
+	UI()->StartCheck();
+
+	UI()->Update(m_MouseX, m_MouseY, m_MouseWorldX, m_MouseWorldY);
+
 	Render();
+
+	m_MouseDeltaX = 0.0f;
+	m_MouseDeltaY = 0.0f;
+	m_MouseDeltaWx = 0.0f;
+	m_MouseDeltaWy = 0.0f;
 
 	if(Input()->KeyPress(KEY_F10))
 	{

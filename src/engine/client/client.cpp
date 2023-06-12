@@ -790,7 +790,7 @@ void CClient::Render()
 {
 	if(m_EditorActive)
 	{
-		m_pEditor->UpdateAndRender();
+		m_pEditor->OnRender();
 	}
 	else
 	{
@@ -1773,8 +1773,10 @@ void CClient::Update()
 	// update the server browser
 	m_ServerBrowser.Update();
 
-	// update gameclient
-	if(!m_EditorActive)
+	// update editor/gameclient
+	if(m_EditorActive)
+		m_pEditor->OnUpdate();
+	else
 		GameClient()->OnUpdate();
 }
 

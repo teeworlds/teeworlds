@@ -11,7 +11,8 @@ public:
 
 	virtual ~IEditor() {}
 	virtual void Init() = 0;
-	virtual void UpdateAndRender() = 0;
+	virtual void OnUpdate() = 0;
+	virtual void OnRender() = 0;
 	virtual bool HasUnsavedData() const = 0;
 };
 
