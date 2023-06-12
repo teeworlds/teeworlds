@@ -907,9 +907,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 
 	const int BrowserType = ServerBrowser()->GetType();
 	int ToBeSelectedFilter = -2; // -2 to not restore, -1 to restore all filters closed
-	if(m_LastBrowserType == -1)
-		m_LastBrowserType = BrowserType;
-	else if(BrowserType != m_LastBrowserType)
+	if(m_LastBrowserType == -1 || BrowserType != m_LastBrowserType)
 	{
 		// restore selected filter and server when changing browser page
 		m_LastBrowserType = BrowserType;
