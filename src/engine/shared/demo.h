@@ -71,6 +71,8 @@ public:
 	};
 
 private:
+	static const float ms_aSpeeds[];
+
 	IListener *m_pListener;
 
 
@@ -117,6 +119,7 @@ public:
 	void Unpause();
 	int Stop();
 	void SetSpeed(float Speed);
+	void SetSpeedIndex(int Offset);
 	int SetPos(float Percent);
 	int SetPos(int WantedTick);
 	const CInfo *BaseInfo() const { return &m_Info.m_Info; }
