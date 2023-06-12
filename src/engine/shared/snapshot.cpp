@@ -203,7 +203,6 @@ int CSnapshotDelta::CreateDelta(const CSnapshot *pFrom, CSnapshot *pTo, void *pD
 	const CSnapshotItem *pFromItem;
 	const CSnapshotItem *pCurItem;
 	const CSnapshotItem *pPastItem;
-	int SizeCount = 0;
 
 	pDelta->m_NumDeletedItems = 0;
 	pDelta->m_NumUpdateItems = 0;
@@ -274,30 +273,10 @@ int CSnapshotDelta::CreateDelta(const CSnapshot *pFrom, CSnapshot *pTo, void *pD
 				*pData++ = ItemSize/4;
 
 			mem_copy(pData, pCurItem->Data(), ItemSize);
-			SizeCount += ItemSize;
 			pData += ItemSize/4;
 			pDelta->m_NumUpdateItems++;
 		}
 	}
-
-	if(0)
-	{
-		dbg_msg("snapshot", "%d %d %d",
-			pDelta->m_NumDeletedItems,
-			pDelta->m_NumUpdateItems,
-			pDelta->m_NumTempItems);
-	}
-
-	/*
-	// TODO: pack temp stuff
-
-	// finish
-	//mem_copy(pDelta->offsets, deleted, pDelta->num_deleted_items*sizeof(int));
-	//mem_copy(&(pDelta->offsets[pDelta->num_deleted_items]), update, pDelta->num_update_items*sizeof(int));
-	//mem_copy(&(pDelta->offsets[pDelta->num_deleted_items+pDelta->num_update_items]), temp, pDelta->num_temp_items*sizeof(int));
-	//mem_copy(pDelta->data_start(), data, data_size);
-	//pDelta->data_size = data_size;
-	* */
 
 	if(!pDelta->m_NumDeletedItems && !pDelta->m_NumUpdateItems && !pDelta->m_NumTempItems)
 		return 0;
