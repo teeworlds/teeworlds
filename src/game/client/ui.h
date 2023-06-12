@@ -13,7 +13,7 @@ public:
 	virtual float ToRelative(int AbsoluteValue, int Min, int Max) const = 0;
 	virtual int ToAbsolute(float RelativeValue, int Min, int Max) const = 0;
 };
-static class CLinearScrollbarScale : public IScrollbarScale
+class CLinearScrollbarScale : public IScrollbarScale
 {
 public:
 	float ToRelative(int AbsoluteValue, int Min, int Max) const
@@ -24,8 +24,8 @@ public:
 	{
 		return round_to_int(RelativeValue*(Max - Min) + Min + 0.1f);
 	}
-} const LinearScrollbarScale;
-static class CLogarithmicScrollbarScale : public IScrollbarScale
+};
+class CLogarithmicScrollbarScale : public IScrollbarScale
 {
 private:
 	int m_MinAdjustment;
@@ -55,7 +55,7 @@ public:
 		}
 		return round_to_int(exp(RelativeValue*(log(Max) - log(Min)) + log(Min))) + ResultAdjustment;
 	}
-} const LogarithmicScrollbarScale(25);
+};
 
 
 class IButtonColorFunction
@@ -190,6 +190,9 @@ public:
 	static const float ms_ListheaderHeight;
 	static const float ms_FontmodHeight;
 
+	static const CLinearScrollbarScale ms_LinearScrollbarScale;
+	static const CLogarithmicScrollbarScale ms_LogarithmicScrollbarScale;
+
 	void Init(class IKernel *pKernel);
 	class IClient *Client() const { return m_pClient; }
 	class CConfig *Config() const { return m_pConfig; }
@@ -269,8 +272,8 @@ public:
 	// scrollbars
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
-	void DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &LinearScrollbarScale, bool Infinite = false);
-	void DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int NumLabels, const IScrollbarScale *pScale = &LinearScrollbarScale);
+	void DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &ms_LinearScrollbarScale, bool Infinite = false);
+	void DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int NumLabels, const IScrollbarScale *pScale = &ms_LinearScrollbarScale);
 
 	// tooltips
 	void DoTooltip(const void *pID, const CUIRect *pRect, const char *pText);

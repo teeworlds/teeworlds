@@ -25,6 +25,9 @@ const vec4 CUI::ms_HighlightTextColor(0.0f, 0.0f, 0.0f, 1.0f);
 const vec4 CUI::ms_HighlightTextOutlineColor(1.0f, 1.0f, 1.0f, 0.25f);
 const vec4 CUI::ms_TransparentTextColor(1.0f, 1.0f, 1.0f, 0.5f);
 
+const CLinearScrollbarScale CUI::ms_LinearScrollbarScale;
+const CLogarithmicScrollbarScale CUI::ms_LogarithmicScrollbarScale(25);
+
 CUI *CUIElementBase::s_pUI = 0;
 
 IClient *CUIElementBase::Client() const { return s_pUI->Client(); }
