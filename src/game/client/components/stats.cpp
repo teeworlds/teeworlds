@@ -471,14 +471,12 @@ void CStats::OnRender()
 			const float RoundSize = BarHeight/2.0f;
 			float EndX = StartX; // each bar will have its width incremented by the roundsize so this avoids that last one would overflow
 			int TotalFrags = 0;
-			int TotalDeaths = 0;
 			for(int i = 0; i < NUM_WEAPONS; i++)
 			{
 				if(aDisplayWeapon[i])
 				{
 					EndX += 80.0f;
 					TotalFrags += pStats->m_aFragsWith[i];
-					TotalDeaths += pStats->m_aDeathsFrom[i];
 				}					
 			}
 			float ExploitableLength = (EndX-StartX) - RoundSize;

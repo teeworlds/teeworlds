@@ -417,7 +417,7 @@ endif()
 ########################################################################
 
 if(NOT(GTEST_FOUND) AND DOWNLOAD_GTEST)
-  set(TEEWORLDS_GTEST_VERSION release-1.8.1)
+  set(TEEWORLDS_GTEST_VERSION 5c8ca58edfb304b2dd5e6061f83387470826dd87) # master as of 2021-04-07
   configure_file(cmake/Download_GTest_CMakeLists.txt.in googletest-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
     RESULT_VARIABLE result
@@ -435,15 +435,6 @@ if(NOT(GTEST_FOUND) AND DOWNLOAD_GTEST)
       message(WARNING "Build step for googletest failed: ${result}")
       set(DOWNLOAD_GTEST OFF)
     else()
-      file(GLOB_RECURSE DDNET_GTEST_CMAKELISTS ${CMAKE_BINARY_DIR}/googletest-src/CMakeLists.txt)
-      foreach(file ${DDNET_GTEST_CMAKELISTS})
-        file(READ ${file} CONTENTS)
-        string(REPLACE "cmake_minimum_required(VERSION 2.6.4)" "cmake_minimum_required(VERSION 2.8.12...3.19.1)" CONTENTS "${CONTENTS}")
-        string(REPLACE "cmake_minimum_required(VERSION 2.6.4)" "cmake_minimum_required(VERSION 2.8.12...3.19.1)" CONTENTS "${CONTENTS}")
-        string(REPLACE "cmake_minimum_required(VERSION 2.8.8)" "cmake_minimum_required(VERSION 2.8.12...3.19.1)" CONTENTS "${CONTENTS}")
-        file(WRITE ${file} "${CONTENTS}")
-      endforeach()
-
       # Prevent overriding the parent project's compiler/linker settings on Windows
       set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
