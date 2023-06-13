@@ -6,6 +6,7 @@
 #include <engine/serverbrowser.h>
 #include <game/client/animstate.h>
 #include <game/client/components/menus.h>
+#include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
 #include <generated/client_data.h>
@@ -163,20 +164,45 @@ void CStats::OnRender()
 
 	const float Height = 400.0f * 3.0f;
 	const float Width = Height * Graphics()->ScreenAspect();
+
+	const float HeaderHeight = 50.0f;
+	const float TeamHeadlineHeight = 40.0f;
 	float w = 270.0f;
-	float h = 770.0f;
+	float h = 720.0f + HeaderHeight + (m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS ? 2 * TeamHeadlineHeight : 0.0f);
+
+	// local client or spectated player is always the first in the list
+	int LocalOrSpectatedClient = -1;
+	if(m_pClient->m_LocalClientID != -1 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
+		LocalOrSpectatedClient = m_pClient->m_LocalClientID;
+	else if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
+		LocalOrSpectatedClient = m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
 
 	int aPlayers[MAX_CLIENTS] = {0};
 	int NumPlayers = 0;
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	if(LocalOrSpectatedClient != -1)
 	{
-		if(!m_pClient->m_aClients[i].m_Active)
-			continue;
-		if(m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
-			continue;
-
-		aPlayers[NumPlayers] = i;
+		aPlayers[NumPlayers] = LocalOrSpectatedClient;
 		NumPlayers++;
+	}
+
+	// order other clients by team, starting with the team of our player
+	int aTeams[] = {TEAM_RED, TEAM_BLUE};
+	if(LocalOrSpectatedClient != -1 && m_pClient->m_aClients[LocalOrSpectatedClient].m_Team != aTeams[0])
+		std::swap(aTeams[0], aTeams[1]);
+	for(unsigned t = 0; t < sizeof(aTeams) / sizeof(aTeams[0]); ++t)
+	{
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(i == LocalOrSpectatedClient)
+				continue;
+			if(!m_pClient->m_aClients[i].m_Active)
+				continue;
+			if(m_pClient->m_aClients[i].m_Team != aTeams[t])
+				continue;
+
+			aPlayers[NumPlayers] = i;
+			NumPlayers++;
+		}
 	}
 
 	for(int i=0; i<9; i++)
@@ -230,10 +256,11 @@ void CStats::OnRender()
 
 	Graphics()->MapScreen(0, 0, Width, Height);
 
+	const float RoundingSize = 10.0f;
 	Graphics()->BlendNormal();
 	{
 		CUIRect Rect = {x, y, w, h};
-		Rect.Draw(vec4(0,0,0,0.5f), 17.0f);
+		Rect.Draw(vec4(0,0,0,0.5f), RoundingSize);
 	}
 
 	const float Margin = 10.0f;
@@ -241,9 +268,9 @@ void CStats::OnRender()
 	w -= 2 * Margin;
 
 	int px = 325;
-	const float HeaderHeight = 50.0f;
 
-	s_Cursor.m_FontSize = 20.0f;
+	const float HeaderFontSize = 20.0f;
+	s_Cursor.m_FontSize = HeaderFontSize;
 	s_Cursor.m_MaxWidth = -1;
 	s_Cursor.m_Align = TEXTALIGN_ML;
 	s_Cursor.Reset();
@@ -334,6 +361,7 @@ void CStats::OnRender()
 	}
 
 	s_Cursor.m_FontSize = FontSize;
+	int LastTeam = -1;
 	for(int j=0; j<NumPlayers; j++)
 	{
 		s_Cursor.m_Align = TEXTALIGN_ML;
@@ -351,6 +379,39 @@ void CStats::OnRender()
 			break;
 		}
 
+		const int CurrentTeam = m_pClient->m_aClients[aPlayers[j]].m_Team;
+		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS && LastTeam != CurrentTeam)
+		{
+			vec4 Color;
+			const char *pDefaultTeamName;
+			if(CurrentTeam == TEAM_RED)
+			{
+				Color = vec4(0.975f, 0.17f, 0.17f, 0.75f);
+				pDefaultTeamName = Localize("Red team");
+			}
+			else // if(CurrentTeam == TEAM_BLUE)
+			{
+				Color = vec4(0.17f, 0.46f, 0.975f, 0.75f);
+				pDefaultTeamName = Localize("Blue team");
+			}
+
+			const char *pTeamName = m_pClient->m_pScoreboard->GetClanName(CurrentTeam);
+			if(!pTeamName)
+				pTeamName = pDefaultTeamName;
+
+			CUIRect Rect = {x, y, w, TeamHeadlineHeight};
+			Rect.Draw(Color, RoundingSize);
+
+			s_Cursor.Reset();
+			s_Cursor.m_FontSize = HeaderFontSize;
+			s_Cursor.MoveTo(Rect.x + 20.0f, Rect.y + Rect.h / 2.0f);
+			TextRender()->TextOutlined(&s_Cursor, pTeamName, -1);
+			s_Cursor.m_FontSize = FontSize;
+
+			y += TeamHeadlineHeight;
+			LastTeam = CurrentTeam;
+		}
+
 		const CPlayerStats *pStats = &m_aStats[aPlayers[j]];
 		const bool HighlightedLine = aPlayers[j] == m_pClient->m_LocalClientID
 			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && aPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
@@ -359,7 +420,7 @@ void CStats::OnRender()
 		if(HighlightedLine)
 		{
 			CUIRect Rect = {x, y, w, LineHeight};
-			Rect.Draw(vec4(1,1,1,0.25f), 17.0f);
+			Rect.Draw(vec4(1,1,1,0.25f), RoundingSize);
 		}
 
 		CTeeRenderInfo Teeinfo = m_pClient->m_aClients[aPlayers[j]].m_RenderInfo;
