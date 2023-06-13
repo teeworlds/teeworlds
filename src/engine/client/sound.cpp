@@ -373,8 +373,10 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 	WavpackContext *pContext;
 
 	// don't waste memory on sound when we are stress testing
+#ifdef CONF_DEBUG
 	if(m_pConfig->m_DbgStress)
 		return CSampleHandle();
+#endif
 
 	// no need to load sound when we are running with no sound
 	if(!m_SoundEnabled)

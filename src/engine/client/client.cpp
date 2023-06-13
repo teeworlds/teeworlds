@@ -1740,6 +1740,7 @@ void CClient::Update()
 	}
 
 	// STRESS TEST: join the server again
+#ifdef CONF_DEBUG
 	if(Config()->m_DbgStress)
 	{
 		static int64 ActionTaken = 0;
@@ -1763,6 +1764,7 @@ void CClient::Update()
 			}
 		}
 	}
+#endif
 
 	// pump the network
 	PumpNetwork();
@@ -2130,7 +2132,9 @@ void CClient::Run()
 				m_LastRenderTime = Now;
 
 				// when we are stress testing only render every 10th frame
-				if(!Config()->m_DbgStress || (m_RenderFrames%10) == 0 )
+#ifdef CONF_DEBUG
+				if(!Config()->m_DbgStress || (m_RenderFrames%10) == 0)
+#endif
 				{
 					Render();
 					m_pGraphics->Swap();
@@ -2147,8 +2151,12 @@ void CClient::Run()
 		// beNice
 		if(Config()->m_ClCpuThrottle)
 			thread_sleep(Config()->m_ClCpuThrottle);
-		else if(Config()->m_DbgStress || !m_pGraphics->WindowActive())
+		else if(!m_pGraphics->WindowActive())
 			thread_sleep(5);
+#ifdef CONF_DEBUG
+		else if(Config()->m_DbgStress)
+			thread_sleep(5);
+#endif
 
 		if(Config()->m_DbgHitch)
 		{

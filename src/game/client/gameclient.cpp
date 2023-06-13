@@ -1161,6 +1161,7 @@ void CGameClient::OnNewSnapshot()
 
 	ProcessEvents();
 
+#ifdef CONF_DEBUG
 	if(Config()->m_DbgStress)
 	{
 		if((Client()->GameTick()%100) == 0)
@@ -1178,6 +1179,7 @@ void CGameClient::OnNewSnapshot()
 			Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 		}
 	}
+#endif
 
 	CTuningParams StandardTuning;
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
