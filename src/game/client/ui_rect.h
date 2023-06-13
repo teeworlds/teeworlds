@@ -19,6 +19,8 @@ public:
 
 	float x, y, w, h;
 
+	vec2 Center() const;
+
 	void HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing = 0.0f) const;
 	void HSplitTop(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
 	void HSplitBottom(float Cut, CUIRect *pTop, CUIRect *pBottom) const;
@@ -31,6 +33,7 @@ public:
 	void HMargin(float Cut, CUIRect *pOtherRect) const;
 
 	bool Inside(float x, float y) const;
+	bool Inside(vec2 Pos) const { return Inside(Pos.x, Pos.y); }
 
 	enum
 	{

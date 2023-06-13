@@ -10,6 +10,11 @@
 const float CUIRect::s_CornerAnglePerSegment = 2 * NUM_ROUND_CORNER_SEGMENTS / pi;
 IGraphics *CUIRect::s_pGraphics = 0;
 
+vec2 CUIRect::Center() const
+{
+	return vec2(x + w / 2.0f, y + h / 2.0f);
+}
+
 void CUIRect::HSplitMid(CUIRect *pTop, CUIRect *pBottom, float Spacing) const
 {
 	CUIRect r = *this;
