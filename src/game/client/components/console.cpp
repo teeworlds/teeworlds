@@ -507,7 +507,7 @@ void CGameConsole::OnRender()
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	ConsoleHeight -= 22.0f;
+	ConsoleHeight -= 36.0f;
 
 	CInstance *pConsole = CurrentConsole();
 
@@ -517,9 +517,15 @@ void CGameConsole::OnRender()
 		float x = 3;
 		float y = ConsoleHeight - RowHeight - 5.0f;
 
+		static CTextCursor s_CompletionOptionsCursor;
+		s_CompletionOptionsCursor.Reset();
+		s_CompletionOptionsCursor.MoveTo(x+pConsole->m_CompletionRenderOffset, y+RowHeight+2.0f);
+		s_CompletionOptionsCursor.m_FontSize = FontSize;
+		s_CompletionOptionsCursor.m_MaxWidth = -1.0f;
+
 		static CTextCursor s_InfoCursor;
 		s_InfoCursor.Reset();
-		s_InfoCursor.MoveTo(x+pConsole->m_CompletionRenderOffset, y+RowHeight+2.0f);
+		s_InfoCursor.MoveTo(x, y + 2.0f * RowHeight + 4.0f);
 		s_InfoCursor.m_FontSize = FontSize;
 		s_InfoCursor.m_MaxWidth = -1.0f;
 
@@ -571,35 +577,37 @@ void CGameConsole::OnRender()
 			Info.m_Width = Screen.w;
 			Info.m_TotalWidth = 0.0f;
 			Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
-			Info.m_pCursor = &s_InfoCursor;
+			Info.m_pCursor = &s_CompletionOptionsCursor;
 			m_pConsole->PossibleCommands(Info.m_pCurrentCmd, pConsole->m_CompletionFlagmask, m_ConsoleType != CGameConsole::CONSOLETYPE_LOCAL &&
 				Client()->RconAuthed() && Client()->UseTempRconCommands(), PossibleCommandsRenderCallback, &Info);
 
-			if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
+			if(pConsole->m_IsCommand)
 			{
-				const bool MapCompletion = IsMapCommandPrefix(Info.m_pCurrentCmd);
-				const bool TuningCompletion = IsTuningCommandPrefix(Info.m_pCurrentCmd);
-				if(MapCompletion || TuningCompletion)
+				// argument completion
+				if(Info.m_EnumCount <= 0)
 				{
-					Info.m_WantedCompletion = pConsole->m_CompletionChosenArgument;
-					Info.m_EnumCount = 0;
-					Info.m_TotalWidth = 0.0f;
-					Info.m_pCurrentCmd = pConsole->m_aCompletionBufferArgument;
-					if(MapCompletion)
-						m_pConsole->PossibleMaps(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
-					else if(TuningCompletion)
-						m_pClient->m_Tuning.PossibleTunings(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
+					const bool MapCompletion = IsMapCommandPrefix(Info.m_pCurrentCmd);
+					const bool TuningCompletion = IsTuningCommandPrefix(Info.m_pCurrentCmd);
+					if(MapCompletion || TuningCompletion)
+					{
+						Info.m_WantedCompletion = pConsole->m_CompletionChosenArgument;
+						Info.m_EnumCount = 0;
+						Info.m_TotalWidth = 0.0f;
+						Info.m_pCurrentCmd = pConsole->m_aCompletionBufferArgument;
+						if(MapCompletion)
+							m_pConsole->PossibleMaps(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
+						else if(TuningCompletion)
+							m_pClient->m_Tuning.PossibleTunings(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
+					}
 				}
 
-				if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
-				{
-					char aBuf[512];
-					str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_aCommandHelp);
-					TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
-					TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1);
-					str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
-					TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
-				}
+				char aBuf[512];
+				TextRender()->TextColor(0.9f, 0.9f, 0.9f, 1.0f);
+				str_format(aBuf, sizeof(aBuf), "Help: %s    ", pConsole->m_aCommandHelp);
+				TextRender()->TextDeferred(&s_InfoCursor, aBuf, -1);
+				TextRender()->TextColor(0.7f, 0.7f, 0.7f, 1.0f);
+				str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
+				TextRender()->TextDeferred(&s_InfoCursor, aBuf, -1);
 			}
 
 			// instant scrolling if distance too long
@@ -630,6 +638,7 @@ void CGameConsole::OnRender()
 		}
 		s_LastRender = Now;
 
+		TextRender()->DrawTextOutlined(&s_CompletionOptionsCursor);
 		TextRender()->DrawTextOutlined(&s_InfoCursor);
 
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);
