@@ -8,6 +8,8 @@
 #   Too annoying to always align for perfect padding
 # clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
 #   TODO: Requires C11 to fix
+# misc-unused-parameters
+#   TODO: Many changes
 
 Checks: >
   -*,
@@ -33,6 +35,12 @@ Checks: >
   cppcoreguidelines-interfaces-global-init,
   cppcoreguidelines-slicing,
   cppcoreguidelines-virtual-class-destructor,
+  misc-*,
+  -misc-const-correctness,
+  -misc-no-recursion,
+  -misc-non-private-member-variables-in-classes,
+  -misc-static-assert,
+  -misc-unused-parameters,
   performance-*,
   -performance-no-int-to-ptr,
   portability-*,
