@@ -2641,7 +2641,7 @@ char* str_sanitize_filename(char* aName)
 	{
 		// replace forbidden characters with a whispace
 		if(*str == '/' || *str == '<' || *str == '>' || *str == ':' || *str == '"'
-			|| *str == '/' || *str == '\\' || *str == '|' || *str == '?' || *str == '*')
+			|| *str == '\\' || *str == '|' || *str == '?' || *str == '*')
  			*str = ' ';
 		str++;
 	}
