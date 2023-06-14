@@ -27,7 +27,7 @@
 	public: \
 	void *operator new(size_t Size, int id); \
 	void operator delete(void *p, int id); \
-	void operator delete(void *p); \
+	void operator delete(void *p); /* NOLINT(misc-new-delete-overloads) */ \
 	private:
 
 #define MACRO_ALLOC_POOL_ID_IMPL(POOLTYPE, PoolSize) \
@@ -50,7 +50,7 @@
 		ms_PoolUsed##POOLTYPE[id] = 0; \
 		mem_zero(ms_PoolData##POOLTYPE[id], sizeof(POOLTYPE)); \
 	} \
-	void POOLTYPE::operator delete(void *p) \
+	void POOLTYPE::operator delete(void *p) /* NOLINT(misc-new-delete-overloads) */ \
 	{ \
 		int id = (POOLTYPE*)p - (POOLTYPE*)ms_PoolData##POOLTYPE; \
 		dbg_assert(ms_PoolUsed##POOLTYPE[id], "not used"); \
