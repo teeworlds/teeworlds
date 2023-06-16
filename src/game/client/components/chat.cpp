@@ -928,6 +928,7 @@ void CChat::OnRender()
 			pCursor->m_MaxWidth = Width-190.0f-s_CategoryCursor.Width();
 
 			float ScrollOffset = m_Input.GetScrollOffset();
+			float ScrollOffsetChange = m_Input.GetScrollOffsetChange();
 			pCursor->MoveTo(CursorPosition.x, CursorPosition.y - ScrollOffset);
 			pCursor->m_MaxLines = -1;
 			pCursor->m_Flags = TEXTFLAG_WORD_WRAP;
@@ -973,15 +974,20 @@ void CChat::OnRender()
 			const float XScale = Graphics()->ScreenWidth()/Width;
 			const float YScale = Graphics()->ScreenHeight()/Height;
 			Graphics()->ClipEnable((int)(ClippingRect.x*XScale), (int)(ClippingRect.y*YScale), (int)(ClippingRect.w*XScale), (int)(ClippingRect.h*YScale));
-			m_Input.Render();
+			m_Input.Render(m_Input.WasChanged());
 			Graphics()->ClipDisable();
 
 			// scroll to keep the caret inside the clipping rect
-			const float CaretPositionY = m_Input.GetCaretPosition().y + InputFontSize * 0.5f;
+			const float CaretPositionY = m_Input.GetCaretPosition().y + InputFontSize * 0.5f - ScrollOffsetChange;
 			if(CaretPositionY < ClippingRect.y)
-				m_Input.SetScrollOffset(maximum(0.0f, ScrollOffset - InputFontSize));
+				ScrollOffsetChange -= InputFontSize;
 			else if(CaretPositionY + InputFontSize * 0.35f > ClippingRect.y + ClippingRect.h)
-				m_Input.SetScrollOffset(ScrollOffset + InputFontSize);
+				ScrollOffsetChange += InputFontSize;
+
+			UI()->DoSmoothScrollLogic(&ScrollOffset, &ScrollOffsetChange, ClippingRect.h, pCursor->BoundingBox().h);
+
+			m_Input.SetScrollOffset(ScrollOffset);
+			m_Input.SetScrollOffsetChange(ScrollOffsetChange);
 		}
 	}
 
