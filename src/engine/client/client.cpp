@@ -1922,7 +1922,7 @@ void CClient::Run()
 			return;
 		}
 
-		atexit(SDL_Quit); // ignore_convention
+		atexit(SDL_Quit);
 	}
 
 	// init graphics
@@ -2546,17 +2546,17 @@ void CClient::DoVersionSpecificActions()
 		Upstream latency
 */
 #if defined(CONF_PLATFORM_MACOS)
-extern "C" int TWMain(int argc, const char **argv) // ignore_convention
+extern "C" int TWMain(int argc, const char **argv)
 #else
-int main(int argc, const char **argv) // ignore_convention
+int main(int argc, const char **argv)
 #endif
 {
 	cmdline_fix(&argc, &argv);
 #if defined(CONF_FAMILY_WINDOWS)
 	bool QuickEditMode = false;
-	for(int i = 1; i < argc; i++) // ignore_convention
+	for(int i = 1; i < argc; i++)
 	{
-		if(str_comp("--quickeditmode", argv[i]) == 0) // ignore_convention
+		if(str_comp("--quickeditmode", argv[i]) == 0)
 		{
 			QuickEditMode = true;
 		}
@@ -2564,9 +2564,9 @@ int main(int argc, const char **argv) // ignore_convention
 #endif
 
 	bool UseDefaultConfig = false;
-	for(int i = 1; i < argc; i++) // ignore_convention
+	for(int i = 1; i < argc; i++)
 	{
-		if(str_comp("-d", argv[i]) == 0 || str_comp("--default", argv[i]) == 0) // ignore_convention
+		if(str_comp("-d", argv[i]) == 0 || str_comp("--default", argv[i]) == 0)
 		{
 			UseDefaultConfig = true;
 			break;
@@ -2584,7 +2584,7 @@ int main(int argc, const char **argv) // ignore_convention
 	int FlagMask = CFGFLAG_CLIENT;
 	IEngine *pEngine = CreateEngine("Teeworlds");
 	IConsole *pConsole = CreateConsole(FlagMask);
-	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_CLIENT, argc, argv); // ignore_convention
+	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_CLIENT, argc, argv);
 	IConfigManager *pConfigManager = CreateConfigManager();
 	IEngineSound *pEngineSound = CreateEngineSound();
 	IEngineInput *pEngineInput = CreateEngineInput();
@@ -2655,7 +2655,7 @@ int main(int argc, const char **argv) // ignore_convention
 		pConsole->ExecuteFile("autoexec.cfg");
 
 		// parse the command line arguments
-		if(argc > 1) // ignore_convention
+		if(argc > 1)
 		{
 			const char *pAddress = 0;
 			if(argc == 2)

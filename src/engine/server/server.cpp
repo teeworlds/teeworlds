@@ -1809,13 +1809,13 @@ void HandleSigIntTerm(int Param)
 	signal(SIGTERM, SIG_DFL);
 }
 
-int main(int argc, const char **argv) // ignore_convention
+int main(int argc, const char **argv)
 {
 	cmdline_fix(&argc, &argv);
 #if defined(CONF_FAMILY_WINDOWS)
-	for(int i = 1; i < argc; i++) // ignore_convention
+	for(int i = 1; i < argc; i++)
 	{
-		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
+		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0)
 		{
 			dbg_console_hide();
 			break;
@@ -1824,9 +1824,9 @@ int main(int argc, const char **argv) // ignore_convention
 #endif
 
 	bool UseDefaultConfig = false;
-	for(int i = 1; i < argc; i++) // ignore_convention
+	for(int i = 1; i < argc; i++)
 	{
-		if(str_comp("-d", argv[i]) == 0 || str_comp("--default", argv[i]) == 0) // ignore_convention
+		if(str_comp("-d", argv[i]) == 0 || str_comp("--default", argv[i]) == 0)
 		{
 			UseDefaultConfig = true;
 			break;
@@ -1853,7 +1853,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IGameServer *pGameServer = CreateGameServer();
 	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER|CFGFLAG_ECON);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
-	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_SERVER, argc, argv); // ignore_convention
+	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_SERVER, argc, argv);
 	IConfigManager *pConfigManager = CreateConfigManager();
 
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer, pConfigManager->Values(), pConsole);
@@ -1893,8 +1893,8 @@ int main(int argc, const char **argv) // ignore_convention
 		pConsole->ExecuteFile("autoexec.cfg");
 
 		// parse the command line arguments
-		if(argc > 1) // ignore_convention
-			pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
+		if(argc > 1)
+			pConsole->ParseArguments(argc-1, &argv[1]);
 	}
 
 	// restore empty config strings to their defaults

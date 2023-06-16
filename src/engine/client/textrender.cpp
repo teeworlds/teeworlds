@@ -388,7 +388,7 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 		return false;
 	}
 
-	pBitmap = &GlyphFace->glyph->bitmap; // ignore_convention
+	pBitmap = &GlyphFace->glyph->bitmap;
 
 	// adjust spacing
 	int OutlineThickness = AdjustOutlineThicknessToFontSize(1, FontSize);
@@ -452,9 +452,9 @@ bool CGlyphMap::RenderGlyph(CGlyph *pGlyph, bool Render)
 	pGlyph->m_Face = GlyphFace;
 	pGlyph->m_Height = OutlinedHeight * Scale;
 	pGlyph->m_Width = OutlinedWidth * Scale;
-	pGlyph->m_BearingX = (GlyphFace->glyph->bitmap_left-OutlineThickness/2) * Scale; // ignore_convention
-	pGlyph->m_BearingY = (FontSize - GlyphFace->glyph->bitmap_top-OutlineThickness/2) * Scale; // ignore_convention
-	pGlyph->m_AdvanceX = (GlyphFace->glyph->advance.x>>6) * Scale; // ignore_convention
+	pGlyph->m_BearingX = (GlyphFace->glyph->bitmap_left-OutlineThickness/2) * Scale;
+	pGlyph->m_BearingY = (FontSize - GlyphFace->glyph->bitmap_top-OutlineThickness/2) * Scale;
+	pGlyph->m_AdvanceX = (GlyphFace->glyph->advance.x>>6) * Scale;
 	pGlyph->m_Rendered = Render;
 
 	return true;

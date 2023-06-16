@@ -593,7 +593,7 @@ int CInput::Update()
 
 				// fall through
 			case SDL_MOUSEBUTTONDOWN:
-				if(Event.button.button == SDL_BUTTON_LEFT) // ignore_convention
+				if(Event.button.button == SDL_BUTTON_LEFT)
 				{
 					Key = KEY_MOUSE_1;
 					if(Event.button.clicks%2 == 0)
@@ -601,20 +601,20 @@ int CInput::Update()
 					else if(Event.button.clicks == 1)
 						m_MouseDoubleClick = false;
 				}
-				else if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2; // ignore_convention
-				else if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3; // ignore_convention
-				else if(Event.button.button == SDL_BUTTON_X1) Key = KEY_MOUSE_4; // ignore_convention
-				else if(Event.button.button == SDL_BUTTON_X2) Key = KEY_MOUSE_5; // ignore_convention
-				else if(Event.button.button == 6) Key = KEY_MOUSE_6; // ignore_convention
-				else if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
-				else if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention
-				else if(Event.button.button == 9) Key = KEY_MOUSE_9; // ignore_convention
+				else if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2;
+				else if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3;
+				else if(Event.button.button == SDL_BUTTON_X1) Key = KEY_MOUSE_4;
+				else if(Event.button.button == SDL_BUTTON_X2) Key = KEY_MOUSE_5;
+				else if(Event.button.button == 6) Key = KEY_MOUSE_6;
+				else if(Event.button.button == 7) Key = KEY_MOUSE_7;
+				else if(Event.button.button == 8) Key = KEY_MOUSE_8;
+				else if(Event.button.button == 9) Key = KEY_MOUSE_9;
 				Scancode = Key;
 				break;
 
 			case SDL_MOUSEWHEEL:
-				if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
-				else if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
+				if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP;
+				else if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN;
 				else break;
 				Action |= IInput::FLAG_RELEASE;
 				Scancode = Key;
