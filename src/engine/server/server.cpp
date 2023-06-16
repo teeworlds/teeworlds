@@ -802,22 +802,15 @@ void CServer::UpdateClientMapListEntries()
 
 void CServer::ProcessClientPacket(CNetChunk *pPacket)
 {
-	int ClientID = pPacket->m_ClientID;
-	CUnpacker Unpacker;
-	Unpacker.Reset(pPacket->m_pData, pPacket->m_DataSize);
-
-	// unpack msgid and system flag
-	int Msg = Unpacker.GetInt();
-	int Sys = Msg&1;
-	Msg >>= 1;
-
+	CMsgUnpacker Unpacker(pPacket->m_pData, pPacket->m_DataSize);
 	if(Unpacker.Error())
 		return;
 
-	if(Sys)
+	const int ClientID = pPacket->m_ClientID;
+	if(Unpacker.System())
 	{
 		// system message
-		if(Msg == NETMSG_INFO)
+		if(Unpacker.Type() == NETMSG_INFO)
 		{
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_AUTH)
 			{
@@ -845,7 +838,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				SendMap(ClientID);
 			}
 		}
-		else if(Msg == NETMSG_REQUEST_MAP_DATA)
+		else if(Unpacker.Type() == NETMSG_REQUEST_MAP_DATA)
 		{
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && (m_aClients[ClientID].m_State == CClient::STATE_CONNECTING || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING_AS_SPEC))
 			{
@@ -879,7 +872,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 			}
 		}
-		else if(Msg == NETMSG_READY)
+		else if(Unpacker.Type() == NETMSG_READY)
 		{
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && (m_aClients[ClientID].m_State == CClient::STATE_CONNECTING || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING_AS_SPEC))
 			{
@@ -896,7 +889,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				SendConnectionReady(ClientID);
 			}
 		}
-		else if(Msg == NETMSG_ENTERGAME)
+		else if(Unpacker.Type() == NETMSG_ENTERGAME)
 		{
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_READY && GameServer()->IsClientReady(ClientID))
 			{
@@ -911,7 +904,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				GameServer()->OnClientEnter(ClientID);
 			}
 		}
-		else if(Msg == NETMSG_INPUT)
+		else if(Unpacker.Type() == NETMSG_INPUT)
 		{
 			CClient::CInput *pInput;
 			int64 TagTime;
@@ -968,7 +961,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(m_aClients[ClientID].m_State == CClient::STATE_INGAME)
 				GameServer()->OnClientDirectInput(ClientID, m_aClients[ClientID].m_LatestInput.m_aData);
 		}
-		else if(Msg == NETMSG_RCON_CMD)
+		else if(Unpacker.Type() == NETMSG_RCON_CMD)
 		{
 			const char *pCmd = Unpacker.GetString();
 
@@ -986,7 +979,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				m_RconAuthLevel = AUTHED_ADMIN;
 			}
 		}
-		else if(Msg == NETMSG_RCON_AUTH)
+		else if(Unpacker.Type() == NETMSG_RCON_AUTH)
 		{
 			const char *pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 
@@ -1053,7 +1046,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 			}
 		}
-		else if(Msg == NETMSG_PING)
+		else if(Unpacker.Type() == NETMSG_PING)
 		{
 			CMsgPacker Msg(NETMSG_PING_REPLY, true);
 			SendMsg(&Msg, MSGFLAG_FLUSH, ClientID);
@@ -1063,7 +1056,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(Config()->m_Debug)
 			{
 				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "strange message ClientID=%d msg=%d data_size=%d", ClientID, Msg, pPacket->m_DataSize);
+				str_format(aBuf, sizeof(aBuf), "strange message ClientID=%d msg=%d data_size=%d", ClientID, Unpacker.Type(), pPacket->m_DataSize);
 				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
 				str_hex(aBuf, sizeof(aBuf), pPacket->m_pData, minimum(pPacket->m_DataSize, 32));
 				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
@@ -1074,7 +1067,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	{
 		// game message
 		if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State >= CClient::STATE_READY)
-			GameServer()->OnMessage(Msg, &Unpacker, ClientID);
+			GameServer()->OnMessage(Unpacker.Type(), &Unpacker, ClientID);
 	}
 }
 

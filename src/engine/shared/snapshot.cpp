@@ -163,7 +163,7 @@ static void UndiffItem(const int *pPast, const int *pDiff, int *pOut, int Size, 
 		else
 		{
 			unsigned char aBuf[CVariableInt::MAX_BYTES_PACKED];
-			unsigned char *pEnd = CVariableInt::Pack(aBuf, *pDiff);
+			unsigned char *pEnd = CVariableInt::Pack(aBuf, *pDiff, sizeof(aBuf));
 			*pDataRate += (int)(pEnd - (unsigned char*)aBuf) * 8;
 		}
 
