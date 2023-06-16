@@ -258,9 +258,9 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	// render title
 	if(NoTitle)
 	{
-		if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+		if(Snap.m_pGameData && Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
 			pTitle = Localize("Game over");
-		else if(m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_ROUNDOVER)
+		else if(Snap.m_pGameData && Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_ROUNDOVER)
 			pTitle = Localize("Round over");
 		else
 			pTitle = Localize("Scoreboard");

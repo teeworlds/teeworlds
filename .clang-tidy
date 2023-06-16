@@ -1,0 +1,46 @@
+# Why we disabled individual checks:
+#
+# clang-analyzer-optin.cplusplus.UninitializedObject
+#   TODO: Occurs commonly in graphics_threaded.h
+# clang-analyzer-optin.cplusplus.VirtualCall
+#   Occurs very commonly all over
+# clang-analyzer-optin.performance.Padding
+#   Too annoying to always align for perfect padding
+# clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+#   TODO: Requires C11 to fix
+# misc-unused-parameters
+#   TODO: Many changes
+
+Checks: >
+  -*,
+  bugprone-*,
+  -bugprone-assignment-in-if-condition,
+  -bugprone-branch-clone,
+  -bugprone-easily-swappable-parameters,
+  -bugprone-implicit-widening-of-multiplication-result,
+  -bugprone-incorrect-roundings,
+  -bugprone-integer-division,
+  -bugprone-macro-parentheses,
+  -bugprone-narrowing-conversions,
+  -bugprone-parent-virtual-call,
+  -bugprone-reserved-identifier,
+  -bugprone-suspicious-include,
+  -bugprone-unhandled-self-assignment,
+  clang-analyzer-*,
+  -clang-analyzer-optin.cplusplus.UninitializedObject,
+  -clang-analyzer-optin.cplusplus.VirtualCall,
+  -clang-analyzer-optin.performance.Padding,
+  -clang-analyzer-security.insecureAPI.DeprecatedOrUnsafeBufferHandling,
+  cppcoreguidelines-avoid-goto,
+  cppcoreguidelines-interfaces-global-init,
+  cppcoreguidelines-slicing,
+  cppcoreguidelines-virtual-class-destructor,
+  misc-*,
+  -misc-const-correctness,
+  -misc-no-recursion,
+  -misc-non-private-member-variables-in-classes,
+  -misc-static-assert,
+  -misc-unused-parameters,
+  performance-*,
+  -performance-no-int-to-ptr,
+  portability-*,

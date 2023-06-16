@@ -375,7 +375,6 @@ void CStats::OnRender()
 			s_Cursor.MoveTo(x + 64, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, "⋅⋅⋅ ", -1);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
-			px += 100;
 			break;
 		}
 
@@ -604,7 +603,6 @@ void CStats::OnRender()
 					TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 				}
 			}
-			px += 100;
 		}
 		y += LineHeight;
 	}

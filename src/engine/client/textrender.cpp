@@ -480,6 +480,7 @@ CGlyph *CGlyphMap::GetGlyph(int Chr, int FontSizeIndex, bool Render)
 			m_Glyphs.add(Index);
 			return Index.m_pGlyph;
 		}
+		delete Index.m_pGlyph;
 		return NULL;
 	}
 
@@ -1056,10 +1057,6 @@ void CTextRender::TextNewline(CTextCursor *pCursor)
 	}
 
 	vec2 ScreenScale = vec2(ScreenWidth/(ScreenX1-ScreenX0), ScreenHeight/(ScreenY1-ScreenY0));
-	float Size = pCursor->m_FontSize;
-	int PixelSize = (int)(Size * ScreenScale.y);
-	Size = PixelSize / ScreenScale.y;
-
 	pCursor->m_LineCount++;
 	pCursor->m_Advance.y = pCursor->m_LineSpacing + pCursor->m_NextLineAdvanceY;
 	pCursor->m_Advance.x = 0;

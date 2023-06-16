@@ -51,7 +51,9 @@ static void AnimSeqEval(CAnimSequence *pSeq, float Time, CAnimKeyframe *pFrame)
 
 static void AnimAddKeyframe(CAnimKeyframe *pSeq, CAnimKeyframe *pAdded, float Amount)
 {
-	pSeq->m_X += pAdded->m_X*Amount;
+	// AnimSeqEval fills m_X for any case, clang-analyzer assumes going into the
+	// final else branch with pSeq->m_NumFrames < 2, which is impossible.
+	pSeq->m_X += pAdded->m_X*Amount; // NOLINT(clang-analyzer-core.UndefinedBinaryOperatorResult)
 	pSeq->m_Y += pAdded->m_Y*Amount;
 	pSeq->m_Angle += pAdded->m_Angle*Amount;
 }
