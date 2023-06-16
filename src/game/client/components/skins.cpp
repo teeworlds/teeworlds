@@ -1,5 +1,6 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#include <base/base64.h>
 #include <base/color.h>
 #include <base/math.h>
 #include <base/system.h>
@@ -23,17 +24,57 @@ int *CSkins::ms_apColorVariables[NUM_SKINPARTS] = {0};
 
 const float MIN_EYE_BODY_COLOR_DIST = 80.f; // between body and eyes (LAB color space)
 
+void CSkins::LoadSkinPartImpl(int PartIndex, CSkinPart *pPart, CImageInfo *pInfo)
+{
+	pPart->m_OrgTexture = Graphics()->LoadTextureRaw(pInfo->m_Width, pInfo->m_Height, pInfo->m_Format, pInfo->m_pData, pInfo->m_Format, 0);
+	pPart->m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
+
+	const int Step = pInfo->GetPixelSize();
+	unsigned char *pData = static_cast<unsigned char *>(pInfo->m_pData);
+
+	// dig out blood color
+	if(PartIndex == SKINPART_BODY)
+	{
+		const int Pitch = pInfo->m_Width * Step;
+		const int PartX = pInfo->m_Width / 2;
+		const int PartY = 0;
+		const int PartWidth = pInfo->m_Width / 2;
+		const int PartHeight = pInfo->m_Height / 2;
+
+		int aColors[3] = {0};
+		for(int y = PartY; y < PartY + PartHeight; y++)
+			for(int x = PartX; x < PartX + PartWidth; x++)
+				if(pData[y * Pitch + x * Step + 3] > 128)
+					for(int c = 0; c < 3; c++)
+						aColors[c] += pData[y * Pitch + x * Step + c];
+
+		pPart->m_BloodColor = normalize(vec3(aColors[0], aColors[1], aColors[2]));
+	}
+
+	// create colorless version
+	for(int i = 0; i < pInfo->m_Width * pInfo->m_Height; i++)
+	{
+		const int Average = (pData[i * Step] + pData[i * Step + 1] + pData[i * Step + 2]) / 3;
+		pData[i * Step] = Average;
+		pData[i * Step + 1] = Average;
+		pData[i * Step + 2] = Average;
+	}
+
+	pPart->m_ColorTexture = Graphics()->LoadTextureRaw(pInfo->m_Width, pInfo->m_Height, pInfo->m_Format, pInfo->m_pData, pInfo->m_Format, 0);
+	mem_free(pInfo->m_pData);
+}
+
 int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 {
 	CSkins *pSelf = (CSkins *)pUser;
 	if(IsDir || !str_endswith(pName, ".png"))
 		return 0;
 
+	char aBuf[IO_MAX_PATH_LENGTH + 64];
 	int PartNameSize, PartNameCount;
 	str_utf8_stats(pName, str_length(pName) - str_length(".png") + 1, IO_MAX_PATH_LENGTH, &PartNameSize, &PartNameCount);
 	if(PartNameSize >= MAX_SKIN_ARRAY_SIZE || PartNameCount > MAX_SKIN_LENGTH)
 	{
-		char aBuf[IO_MAX_PATH_LENGTH + 64];
 		str_format(aBuf, sizeof(aBuf), "failed to load skin part '%s': name too long", pName);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 		return 0;
@@ -44,7 +85,6 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 	if(pSelf->FindSkinPart(pSelf->m_ScanningPart, Part.m_aName, true) != -1)
 		return 0;
 
-	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "skins/%s/%s", CSkins::ms_apSkinPartNames[pSelf->m_ScanningPart], pName);
 	CImageInfo Info;
 	if(!pSelf->Graphics()->LoadPNG(&Info, aBuf, DirType))
@@ -60,57 +100,65 @@ int CSkins::SkinPartScan(const char *pName, int IsDir, int DirType, void *pUser)
 		return 0;
 	}
 
-	Part.m_OrgTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
-	Part.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
-
-	const int Step = Info.GetPixelSize();
-	unsigned char *pData = (unsigned char *)Info.m_pData;
-
-	// dig out blood color
-	if(pSelf->m_ScanningPart == SKINPART_BODY)
-	{
-		int Pitch = Info.m_Width * Step;
-		int PartX = Info.m_Width/2;
-		int PartY = 0;
-		int PartWidth = Info.m_Width/2;
-		int PartHeight = Info.m_Height/2;
-
-		int aColors[3] = {0};
-		for(int y = PartY; y < PartY+PartHeight; y++)
-			for(int x = PartX; x < PartX+PartWidth; x++)
-				if(pData[y*Pitch+x*Step+3] > 128)
-					for(int c = 0; c < 3; c++)
-						aColors[c] += pData[y*Pitch+x*Step+c];
-
-		Part.m_BloodColor = normalize(vec3(aColors[0], aColors[1], aColors[2]));
-	}
-
-	// create colorless version
-	for(int i = 0; i < Info.m_Width*Info.m_Height; i++)
-	{
-		const int Average = (pData[i*Step]+pData[i*Step+1]+pData[i*Step+2])/3;
-		pData[i*Step] = Average;
-		pData[i*Step+1] = Average;
-		pData[i*Step+2] = Average;
-	}
-
-	Part.m_ColorTexture = pSelf->Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
-	mem_free(Info.m_pData);
+	pSelf->LoadSkinPartImpl(pSelf->m_ScanningPart, &Part, &Info);
 
 	// set skin part data
 	Part.m_Flags = 0;
-	if(pName[0] == 'x' && pName[1] == '_')
+	if(str_startswith(pName, "x_"))
 		Part.m_Flags |= SKINFLAG_SPECIAL;
 	if(DirType != IStorage::TYPE_SAVE)
 		Part.m_Flags |= SKINFLAG_STANDARD;
+
 	if(pSelf->Config()->m_Debug)
 	{
-		str_format(aBuf, sizeof(aBuf), "load skin part %s", Part.m_aName);
+		str_format(aBuf, sizeof(aBuf), "loaded skin part '%s'", pName);
 		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 	}
-	pSelf->m_aaSkinParts[pSelf->m_ScanningPart].add(Part);
 
+	pSelf->AddSkinPart(pSelf->m_ScanningPart, &Part);
 	return 0;
+}
+
+const CSkins::CSkinPart *CSkins::LoadEmbeddedSkinPart(int PartIndex, const char *pName, const unsigned char *pData, unsigned Size)
+{
+	char aBuf[IO_MAX_PATH_LENGTH + 64];
+	int PartNameSize, PartNameCount;
+	str_utf8_stats(pName, str_length(pName) + 1, IO_MAX_PATH_LENGTH, &PartNameSize, &PartNameCount);
+	if(PartNameSize >= MAX_SKIN_ARRAY_SIZE || PartNameCount > MAX_SKIN_LENGTH)
+	{
+		str_format(aBuf, sizeof(aBuf), "failed to load embedded skin part '%s': name too long", pName);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
+		return 0x0;
+	}
+
+	CImageInfo Info;
+	if(!Graphics()->LoadPNG(&Info, pData, Size, pName))
+	{
+		str_format(aBuf, sizeof(aBuf), "failed to load embedded skin part '%s'", pName);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
+		return 0x0;
+	}
+	if(Info.m_Format != CImageInfo::FORMAT_RGBA)
+	{
+		str_format(aBuf, sizeof(aBuf), "failed to load embedded skin part '%s': must be RGBA format", pName);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
+		return 0x0;
+	}
+
+	CSkinPart Part;
+	str_copy(Part.m_aName, pName, minimum<int>(PartNameSize + 1, sizeof(Part.m_aName)));
+
+	LoadSkinPartImpl(PartIndex, &Part, &Info);
+
+	Part.m_Flags = SKINFLAG_EMBEDDED;
+
+	if(Config()->m_Debug)
+	{
+		str_format(aBuf, sizeof(aBuf), "loaded embedded skin part '%s'", pName);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
+	}
+
+	return AddSkinPart(PartIndex, &Part);
 }
 
 int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
@@ -172,12 +220,28 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 				continue;
 
 			// filename
+			bool LoadedFromFile = false;
 			const json_value &rFilename = rPart["filename"];
 			if(rFilename.type == json_string)
 			{
 				int SkinPart = pSelf->FindSkinPart(PartIndex, (const char *)rFilename, SpecialSkin);
 				if(SkinPart > -1)
+				{
 					Skin.m_apParts[PartIndex] = pSelf->GetSkinPart(PartIndex, SkinPart);
+					LoadedFromFile = true;
+				}
+			}
+
+			// embedded data
+			const json_value &rData = rPart["data"];
+			if(!LoadedFromFile && rData.type == json_string)
+			{
+				unsigned char *pImageData;
+				unsigned ImageSize = base64_decode(&pImageData, rData.u.string.ptr);
+				const CSkinPart *pEmbeddedPart = pSelf->LoadEmbeddedSkinPart(PartIndex, rFilename.u.string.ptr, pImageData, ImageSize);
+				if(pEmbeddedPart)
+					Skin.m_apParts[PartIndex] = pEmbeddedPart;
+				mem_free(pImageData);
 			}
 
 			// use custom colors
@@ -256,9 +320,10 @@ void CSkins::OnInit()
 	ms_apColorVariables[SKINPART_FEET] = &Config()->m_PlayerColorFeet;
 	ms_apColorVariables[SKINPART_EYES] = &Config()->m_PlayerColorEyes;
 
+	m_SkinPartsHeap.Reset();
 	for(int p = 0; p < NUM_SKINPARTS; p++)
 	{
-		m_aaSkinParts[p].clear();
+		m_aapSkinParts[p].clear();
 
 		// add none part
 		if(p == SKINPART_MARKING || p == SKINPART_DECORATION)
@@ -267,7 +332,7 @@ void CSkins::OnInit()
 			NoneSkinPart.m_Flags = SKINFLAG_STANDARD;
 			str_copy(NoneSkinPart.m_aName, "", sizeof(NoneSkinPart.m_aName));
 			NoneSkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
-			m_aaSkinParts[p].add(NoneSkinPart);
+			AddSkinPart(p, &NoneSkinPart);
 		}
 
 		// load skin parts
@@ -277,13 +342,13 @@ void CSkins::OnInit()
 		Storage()->ListDirectory(IStorage::TYPE_ALL, aBuf, SkinPartScan, this);
 
 		// add dummy skin part
-		if(!m_aaSkinParts[p].size())
+		if(!m_aapSkinParts[p].size())
 		{
 			CSkinPart DummySkinPart;
 			DummySkinPart.m_Flags = SKINFLAG_STANDARD;
 			str_copy(DummySkinPart.m_aName, "dummy", sizeof(DummySkinPart.m_aName));
 			DummySkinPart.m_BloodColor = vec3(1.0f, 1.0f, 1.0f);
-			m_aaSkinParts[p].add(DummySkinPart);
+			AddSkinPart(p, &DummySkinPart);
 		}
 
 		m_pClient->m_pMenus->RenderLoading(5);
@@ -391,12 +456,12 @@ int CSkins::Num()
 
 int CSkins::NumSkinPart(int Part)
 {
-	return m_aaSkinParts[Part].size();
+	return m_aapSkinParts[Part].size();
 }
 
 const CSkins::CSkin *CSkins::Get(int Index)
 {
-	return &m_aSkins[maximum(0, Index%m_aSkins.size())];
+	return &m_aSkins[clamp(Index, 0, m_aSkins.size() - 1)];
 }
 
 int CSkins::Find(const char *pName, bool AllowSpecialSkin)
@@ -411,18 +476,27 @@ int CSkins::Find(const char *pName, bool AllowSpecialSkin)
 
 const CSkins::CSkinPart *CSkins::GetSkinPart(int Part, int Index)
 {
-	int Size = m_aaSkinParts[Part].size();
-	return &m_aaSkinParts[Part][maximum(0, Index%Size)];
+	return m_aapSkinParts[Part][clamp(Index, 0, m_aapSkinParts[Part].size() - 1)];
 }
 
 int CSkins::FindSkinPart(int Part, const char *pName, bool AllowSpecialPart)
 {
-	for(int i = 0; i < m_aaSkinParts[Part].size(); i++)
+	for(int i = 0; i < m_aapSkinParts[Part].size(); i++)
 	{
-		if(str_comp(m_aaSkinParts[Part][i].m_aName, pName) == 0 && ((m_aaSkinParts[Part][i].m_Flags&SKINFLAG_SPECIAL) == 0 || AllowSpecialPart))
+		if(str_comp(m_aapSkinParts[Part][i]->m_aName, pName) == 0 && ((m_aapSkinParts[Part][i]->m_Flags&SKINFLAG_SPECIAL) == 0 || AllowSpecialPart))
 			return i;
 	}
 	return -1;
+}
+
+CSkins::CSkinPart *CSkins::AddSkinPart(int PartIndex, const CSkinPart *pPart)
+{
+	// Store the skin parts in a heap so their locations in memory don't change
+	// when more parts are added to the sorted array.
+	CSkinPart *pStoredPart = static_cast<CSkinPart *>(m_SkinPartsHeap.Allocate(sizeof(CSkinPart)));
+	mem_copy(pStoredPart, pPart, sizeof(CSkinPart));
+	m_aapSkinParts[PartIndex].add(pStoredPart);
+	return pStoredPart;
 }
 
 void CSkins::RandomizeSkin()
@@ -591,6 +665,26 @@ bool CSkins::SaveSkinfile(const char *pSaveSkinName)
 		{
 			Writer.WriteAttribute("filename");
 			Writer.WriteStrValue(ms_apSkinVariables[PartIndex]);
+
+			const int SkinPart = FindSkinPart(PartIndex, ms_apSkinVariables[PartIndex], false);
+			if(SkinPart > -1)
+			{
+				const CSkins::CSkinPart *pSkinPart = GetSkinPart(PartIndex, SkinPart);
+				if((pSkinPart->m_Flags & SKINFLAG_STANDARD) == 0)
+				{
+					char aPartFilename[IO_MAX_PATH_LENGTH];
+					str_format(aPartFilename, sizeof(aPartFilename), "skins/%s/%s.png", ms_apSkinPartNames[PartIndex], ms_apSkinVariables[PartIndex]);
+					void *pData;
+					unsigned DataSize;
+					if(!Storage()->ReadFile(aPartFilename, IStorage::TYPE_SAVE, &pData, &DataSize)) // TODO: with #3141 merged this returns true on success
+					{
+						char *pEncoded = base64_encode(static_cast<unsigned char *>(pData), DataSize);
+						Writer.WriteAttribute("data");
+						Writer.WriteStrValue(pEncoded);
+						mem_free(pEncoded);
+					}
+				}
+			}
 
 			const bool CustomColors = *ms_apUCCVariables[PartIndex];
 			Writer.WriteAttribute("custom_colors");

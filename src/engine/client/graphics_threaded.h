@@ -5,6 +5,8 @@
 
 #include <stdint.h>
 
+#include <pnglite.h>
+
 #include <engine/graphics.h>
 
 class CCommandBuffer
@@ -392,6 +394,8 @@ class CGraphics_Threaded : public IEngineGraphics
 
 	void KickCommandBuffer();
 
+	bool LoadPNGImpl(CImageInfo *pImg, png_read_callback_t pfnPngReadFunc, void *pPngReadUserData, const char *pFilename);
+
 	int IssueInit();
 	int InitWindow();
 public:
@@ -423,7 +427,8 @@ public:
 
 	// simple uncompressed RGBA loaders
 	virtual IGraphics::CTextureHandle LoadTexture(const char *pFilename, int StorageType, int StoreFormat, int Flags);
-	virtual int LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType);
+	virtual bool LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType);
+	virtual bool LoadPNG(CImageInfo *pImg, const unsigned char *pData, unsigned Size, const char *pContext);
 
 	void ScreenshotDirect(const char *pFilename);
 

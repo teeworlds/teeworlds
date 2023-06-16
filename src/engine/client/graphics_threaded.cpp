@@ -7,8 +7,6 @@
 
 #include <base/system.h>
 
-#include <pnglite.h>
-
 #include <engine/shared/config.h>
 #include <engine/graphics.h>
 #include <engine/storage.h>
@@ -397,46 +395,114 @@ IGraphics::CTextureHandle CGraphics_Threaded::LoadTexture(const char *pFilename,
 	return m_InvalidTexture;
 }
 
-int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
+bool CGraphics_Threaded::LoadPNGImpl(CImageInfo *pImg, png_read_callback_t pfnPngReadFunc, void *pPngReadUserData, const char *pFilename)
+{
+	png_init(0, 0);
+	png_t Png;
+	const int PngOpenError = png_open_read(&Png, pfnPngReadFunc, pPngReadUserData);
+	if(PngOpenError != PNG_NO_ERROR)
+	{
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "failed to read header. filename='%s' error='%s'", pFilename, png_error_string(PngOpenError));
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game/png", aBuf);
+		return false;
+	}
+
+	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA))
+	{
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "invalid format, must be 8 bits per pixel . filename='%s' depth='%d' color_type='%d'", pFilename, Png.depth, Png.color_type);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game/png", aBuf);
+		return false;
+	}
+
+	const unsigned MaxPngDimension = 8192;
+	if(Png.width > MaxPngDimension || Png.height > MaxPngDimension)
+	{
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "too large. filename='%s' width='%d' height='%d' max='%d'", pFilename, Png.width, Png.height, MaxPngDimension);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game/png", aBuf);
+		return false;
+	}
+
+	unsigned char *pBuffer = static_cast<unsigned char *>(mem_alloc(Png.width * Png.height * Png.bpp));
+	const int PngDataError = png_get_data(&Png, pBuffer);
+	if(PngDataError != PNG_NO_ERROR)
+	{
+		mem_free(pBuffer);
+		char aBuf[512];
+		str_format(aBuf, sizeof(aBuf), "failed to read data. filename='%s' error='%s'", pFilename, png_error_string(PngDataError));
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game/png", aBuf);
+		return false;
+	}
+
+	pImg->m_Width = Png.width;
+	pImg->m_Height = Png.height;
+	if(Png.color_type == PNG_TRUECOLOR)
+		pImg->m_Format = CImageInfo::FORMAT_RGB;
+	else if(Png.color_type == PNG_TRUECOLOR_ALPHA)
+		pImg->m_Format = CImageInfo::FORMAT_RGBA;
+	pImg->m_pData = pBuffer;
+	return true;
+}
+
+bool CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int StorageType)
 {
 	// open file for reading
 	char aCompleteFilename[IO_MAX_PATH_LENGTH];
 	IOHANDLE File = m_pStorage->OpenFile(pFilename, IOFLAG_READ, StorageType, aCompleteFilename, sizeof(aCompleteFilename));
 	if(!File)
 	{
-		dbg_msg("game/png", "failed to open file. filename='%s'", pFilename);
-		return 0;
+		char aBuf[IO_MAX_PATH_LENGTH + 64];
+		str_format(aBuf, sizeof(aBuf), "failed to open file. filename='%s'", pFilename);
+		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "game/png", aBuf);
+		return false;
 	}
 
-	png_init(0, 0); // ignore_convention
-	png_t Png; // ignore_convention
-	int Error = png_open_read(&Png, 0, File); // ignore_convention
-	if(Error != PNG_NO_ERROR)
-	{
-		dbg_msg("game/png", "failed to read file. filename='%s'", aCompleteFilename);
-		io_close(File);
-		return 0;
-	}
-
-	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA) || Png.width > (2<<12) || Png.height > (2<<12)) // ignore_convention
-	{
-		dbg_msg("game/png", "invalid format. filename='%s'", aCompleteFilename);
-		io_close(File);
-		return 0;
-	}
-
-	unsigned char *pBuffer = (unsigned char *)mem_alloc(Png.width * Png.height * Png.bpp); // ignore_convention
-	png_get_data(&Png, pBuffer); // ignore_convention
+	// Use default file-based read function
+	const bool Result = LoadPNGImpl(pImg, 0x0, File, aCompleteFilename);
 	io_close(File);
+	return Result;
+}
 
-	pImg->m_Width = Png.width; // ignore_convention
-	pImg->m_Height = Png.height; // ignore_convention
-	if(Png.color_type == PNG_TRUECOLOR) // ignore_convention
-		pImg->m_Format = CImageInfo::FORMAT_RGB;
-	else if(Png.color_type == PNG_TRUECOLOR_ALPHA) // ignore_convention
-		pImg->m_Format = CImageInfo::FORMAT_RGBA;
-	pImg->m_pData = pBuffer;
-	return 1;
+struct ReadPNGFromMemoryData
+{
+	const unsigned char *m_pData;
+	unsigned m_Size;
+	unsigned m_Position;
+};
+
+static unsigned ReadPNGFromMemory(void *pOut, unsigned long ElemSize, unsigned long ElemNum, void *pUserRaw)
+{
+	ReadPNGFromMemoryData *pUser = static_cast<ReadPNGFromMemoryData *>(pUserRaw);
+	unsigned long Size = ElemSize * ElemNum;
+	if(pOut)
+	{
+		if(pUser->m_Position >= pUser->m_Size)
+			return 0;
+		if(pUser->m_Position + Size > pUser->m_Size)
+			Size = pUser->m_Size - pUser->m_Position;
+		if(Size)
+		{
+			mem_copy(pOut, pUser->m_pData + pUser->m_Position, Size);
+			pUser->m_Position += Size;
+		}
+		return Size;
+	}
+	else
+	{
+		pUser->m_Position += Size;
+		return 0;
+	}
+}
+
+bool CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const unsigned char *pData, unsigned Size, const char *pContext)
+{
+	ReadPNGFromMemoryData UserData;
+	UserData.m_pData = pData;
+	UserData.m_Size = Size;
+	UserData.m_Position = 0;
+	return LoadPNGImpl(pImg, ReadPNGFromMemory, &UserData, pContext ? pContext : "memory");
 }
 
 void CGraphics_Threaded::KickCommandBuffer()
