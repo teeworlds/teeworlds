@@ -44,11 +44,6 @@
 #include "serverbrowser.h"
 #include "client.h"
 
-#if defined(CONF_FAMILY_WINDOWS)
-	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
-#endif
-
 #include "SDL.h"
 #ifdef main
 #undef main
@@ -2703,7 +2698,7 @@ int main(int argc, const char **argv) // ignore_convention
 	#endif
 	{
 		HideConsole = true;
-		FreeConsole();
+		dbg_console_hide();
 	}
 	else if(!QuickEditMode)
 		dbg_console_init();
