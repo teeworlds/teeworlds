@@ -33,7 +33,7 @@ void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
 		pThis->m_Activity.wait();
 		if(pThis->m_pBuffer)
 		{
-			#ifdef CONF_PLATFORM_MACOSX
+			#ifdef CONF_PLATFORM_MACOS
 				CAutoreleasePool AutoreleasePool;
 			#endif
 			pThis->m_pProcessor->RunBuffer(pThis->m_pBuffer);
@@ -651,7 +651,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWin
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
-#if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
+#if defined(CONF_PLATFORM_MACOS)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
 	{
 		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;	// always use "fake" fullscreen
 		*pWindowWidth = *pDesktopWidth;
@@ -784,7 +784,7 @@ void CGraphicsBackend_SDL_OpenGL::Maximize()
 
 bool CGraphicsBackend_SDL_OpenGL::Fullscreen(bool State)
 {
-#if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
+#if defined(CONF_PLATFORM_MACOS)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
 	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) == 0;
 #else
 	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN : 0) == 0;

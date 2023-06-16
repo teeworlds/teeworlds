@@ -10,29 +10,27 @@ jobs:
         os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-20.04]
         include:
         - os: ubuntu-latest
-          cmake-args: -G "Unix Makefiles"
-          build-args: --parallel
-          package-file: teeworlds-*-linux_x86_64.tar.xz
+          cmake-args: -G Ninja
+          package-file: "*-linux_x86_64.tar.xz"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: ubuntu-20.04
           cmake-path: /usr/bin/
-          cmake-args: -G "Unix Makefiles"
-          package-file: teeworlds-*-linux_x86_64.tar.xz
+          cmake-args: -G Ninja
+          package-file: "*-linux_x86_64.tar.xz"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: macOS-latest
-          cmake-args: -G "Unix Makefiles"
-          build-args: --parallel
-          package-file: teeworlds-*-osx.dmg
+          cmake-args: -G Ninja
+          package-file: "*-macos.dmg"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: windows-latest
           cmake-args: -A x64
-          package-file: teeworlds-*-win64.zip
+          package-file: "*-win64.zip"
           env:
             CFLAGS: /WX
             CXXFLAGS: /WX
@@ -47,13 +45,17 @@ jobs:
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update -y
-        sudo apt-get install pkg-config cmake libfreetype6-dev libsdl2-dev -y
+        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev -y
 
     - name: Prepare MacOS
       if: contains(matrix.os, 'macOS')
       run: |
-        brew update
-        brew install pkg-config sdl2
+        brew update || true
+        brew install pkg-config sdl2 python3 ninja || true
+        # --overwrite for:  Target /usr/local/bin/2to3 already exists.
+        brew link --overwrite python@3.10
+        brew upgrade freetype
+        sudo rm -rf /Library/Developer/CommandLineTools
 
     - name: Build in debug mode
       env: ${{ matrix.env }}
@@ -156,4 +158,4 @@ jobs:
     - name: Create MacOS app using make_release.py
       if: contains(matrix.os, 'macOS')
       run: |
-        sudo python3 scripts/make_release.py master osx
+        sudo python3 scripts/make_release.py master macos

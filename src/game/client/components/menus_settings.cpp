@@ -1591,7 +1591,7 @@ bool CMenus::DoResolutionList(CUIRect* pRect, CListBox* pListBox,
 void CMenus::RenderSettingsGraphics(CUIRect MainView)
 {
 	bool CheckFullscreen = false;
-	#ifdef CONF_PLATFORM_MACOSX
+	#ifdef CONF_PLATFORM_MACOS
 	CheckFullscreen = true;
 	#endif
 

@@ -65,9 +65,9 @@
 	#error missing atomic implementation for this compiler
 #endif
 
-#if defined(CONF_PLATFORM_MACOSX)
+#if defined(CONF_PLATFORM_MACOS)
 	/*
-		use semaphore provided by SDL on macosx
+		use semaphore provided by SDL on macos
 	*/
 #else
 	class semaphore

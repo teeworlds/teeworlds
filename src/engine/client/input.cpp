@@ -620,7 +620,7 @@ int CInput::Update()
 				Scancode = Key;
 				break;
 
-#if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (mouse state is faulty on start)
+#if defined(CONF_PLATFORM_MACOS)	// Todo SDL: remove this when fixed (mouse state is faulty on start)
 			case SDL_WINDOWEVENT:
 				if(Event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
 				{

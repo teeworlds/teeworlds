@@ -2,7 +2,7 @@ import os, sys
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 
 notice = [("/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */" + os.linesep).encode('utf-8'), ("/* If you are missing that file, acquire a complete release at teeworlds.com.                */" + os.linesep).encode('utf-8')]
-exclude = ["src%sengine%sexternal" % (os.sep, os.sep), "src%sosxlaunch" % os.sep, "src%sbase%shash_libtomcrypt.c" % (os.sep, os.sep)]
+exclude = ["src%sengine%sexternal" % (os.sep, os.sep), "src%smacoslaunch" % os.sep, "src%sbase%shash_libtomcrypt.c" % (os.sep, os.sep)]
 updated_files = 0
 
 def fix_copyright_notice(filename):
