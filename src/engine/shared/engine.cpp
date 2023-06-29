@@ -99,16 +99,16 @@ public:
 		// open logfile if needed
 		if(m_pConfig->m_Logfile[0])
 		{
-			char aBuf[32];
+			char aTimestamp[32];
 			if(m_pConfig->m_LogfileTimestamp)
-				str_timestamp(aBuf, sizeof(aBuf));
+				str_timestamp(aTimestamp, sizeof(aTimestamp));
 			else
-				aBuf[0] = 0;
-			char aLogFilename[128];			
-			str_format(aLogFilename, sizeof(aLogFilename), "dumps/%s%s.txt", m_pConfig->m_Logfile, aBuf);
+				aTimestamp[0] = 0;
+			char aLogFilename[128];
+			str_format(aLogFilename, sizeof(aLogFilename), "dumps/%s%s.txt", m_pConfig->m_Logfile, aTimestamp);
 			IOHANDLE Handle = m_pStorage->OpenFile(aLogFilename, IOFLAG_WRITE, IStorage::TYPE_SAVE);
 			if(Handle)
-				dbg_logger_filehandle(Handle);
+				dbg_logger_file(Handle);
 			else
 				dbg_msg("engine/logfile", "failed to open '%s' for logging", aLogFilename);
 		}
