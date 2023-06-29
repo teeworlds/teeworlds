@@ -166,7 +166,7 @@ class CTextRender : public IEngineTextRender
 
 	FT_Library m_FTLibrary;
 
-	int LoadFontCollection(const void *pFilename, const void *pBuf, long FileSize);
+	int LoadFontCollection(const char *pFilename, const void *pBuf, unsigned FileSize);
 
 	static bool IsWestern(int Chr)
 	{

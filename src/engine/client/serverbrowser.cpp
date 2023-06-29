@@ -3,12 +3,11 @@
 #include <base/math.h>
 #include <base/system.h>
 
-#include <engine/external/json-parser/json.h>
-
 #include <engine/shared/config.h>
 #include <engine/shared/memheap.h>
 #include <engine/shared/network.h>
 #include <engine/shared/packer.h>
+#include <engine/shared/jsonparser.h>
 #include <engine/shared/jsonwriter.h>
 #include <engine/shared/mapchecker.h>
 
@@ -610,25 +609,11 @@ void CServerBrowser::SetInfo(int ServerlistType, CServerEntry *pEntry, const CSe
 
 void CServerBrowser::LoadServerlist()
 {
-	// read file data into buffer
-	IOHANDLE File = Storage()->OpenFile(s_pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
-		return;
-	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize);
-	io_read(File, pFileData, FileSize);
-	io_close(File);
-
-	// parse json data
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
-	mem_free(pFileData);
-
+	CJsonParser JsonParser;
+	const json_value *pJsonData = JsonParser.ParseFile(s_pFilename, Storage());
 	if(pJsonData == 0)
 	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, s_pFilename, aError);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "client_srvbrowse", JsonParser.Error());
 		return;
 	}
 
@@ -643,9 +628,6 @@ void CServerBrowser::LoadServerlist()
 				Set(Addr, SET_MASTER_ADD, -1, 0);
 		}
 	}
-
-	// clean up
-	json_value_free(pJsonData);
 }
 
 void CServerBrowser::SaveServerlist()

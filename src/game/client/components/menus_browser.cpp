@@ -2,15 +2,15 @@
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <algorithm> // sort  TODO: remove this
 
-#include <engine/external/json-parser/json.h>
-
 #include <engine/config.h>
 #include <engine/graphics.h>
 #include <engine/keys.h>
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
+
 #include <engine/shared/config.h>
+#include <engine/shared/jsonparser.h>
 #include <engine/shared/jsonwriter.h>
 #include <engine/client/contacts.h>
 
@@ -155,28 +155,11 @@ void CMenus::CBrowserFilter::SetFilter(const CServerFilterInfo *pFilterInfo)
 
 void CMenus::LoadFilters()
 {
-	// read file data into buffer
-	const char *pFilename = "ui_settings.json";
-	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
-		return;
-	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize);
-	io_read(File, pFileData, FileSize);
-	io_close(File);
-
-	// parse json data
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
-	mem_free(pFileData);
-
+	CJsonParser JsonParser;
+	const json_value *pJsonData = JsonParser.ParseFile("ui_settings.json", Storage());
 	if(pJsonData == 0)
 	{
-		char aBuf[512];
-		str_format(aBuf, sizeof(aBuf), "failed to load filters from '%s': %s", pFilename, aError);
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", JsonParser.Error());
 		return;
 	}
 
@@ -277,9 +260,6 @@ void CMenus::LoadFilters()
 
 		m_lFilters[i].SetFilter(&FilterInfo);
 	}
-
-	// clean up
-	json_value_free(pJsonData);
 
 	CBrowserFilter *pSelectedFilter = GetSelectedBrowserFilter();
 	if(pSelectedFilter)

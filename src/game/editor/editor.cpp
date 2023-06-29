@@ -212,27 +212,13 @@ void CEditorImage::LoadAutoMapper()
 	if(m_pAutoMapper)
 		return;
 
-	// read file data into buffer
 	char aBuf[IO_MAX_PATH_LENGTH];
 	str_format(aBuf, sizeof(aBuf), "editor/automap/%s.json", m_aName);
-	IOHANDLE File = m_pEditor->Storage()->OpenFile(aBuf, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
-		return;
-	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize);
-	io_read(File, pFileData, FileSize);
-	io_close(File);
-
-	// parse json data
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
-	mem_free(pFileData);
-
+	CJsonParser JsonParser;
+	const json_value *pJsonData = JsonParser.ParseFile(aBuf, m_pEditor->Storage());
 	if(pJsonData == 0)
 	{
-		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, aBuf, aError);
+		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "editor", JsonParser.Error());
 		return;
 	}
 
@@ -253,11 +239,9 @@ void CEditorImage::LoadAutoMapper()
 		}
 	}
 
-	// clean up
-	json_value_free(pJsonData);
 	if(m_pAutoMapper && m_pEditor->Config()->m_Debug)
 	{
-		str_format(aBuf, sizeof(aBuf),"loaded %s.json (%s)", m_aName, IAutoMapper::GetTypeName(m_pAutoMapper->GetType()));
+		str_format(aBuf, sizeof(aBuf), "loaded %s.json (%s)", m_aName, IAutoMapper::GetTypeName(m_pAutoMapper->GetType()));
 		m_pEditor->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "editor", aBuf);
 	}
 }

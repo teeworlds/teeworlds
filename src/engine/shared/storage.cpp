@@ -394,15 +394,15 @@ public:
 	bool ReadFile(const char *pFilename, int Type, void **ppResult, unsigned *pResultLen)
 	{
 		IOHANDLE File = OpenFile(pFilename, IOFLAG_READ, Type);
-		*ppResult = 0;
-		*pResultLen = 0;
 		if(!File)
 		{
-			return true;
+			*ppResult = 0x0;
+			*pResultLen = 0;
+			return false;
 		}
 		io_read_all(File, ppResult, pResultLen);
 		io_close(File);
-		return false;
+		return true;
 	}
 
 	char *ReadFileStr(const char *pFilename, int Type)

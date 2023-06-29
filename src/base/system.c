@@ -388,28 +388,30 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
 
 void io_read_all(IOHANDLE io, void **result, unsigned *result_len)
 {
-	unsigned char *buffer = malloc(1024);
-	unsigned len = 0;
-	unsigned cap = 1024;
-	unsigned read;
-
-	*result = 0;
-	*result_len = 0;
-
-	while((read = io_read(io, buffer + len, cap - len)) != 0)
+	unsigned len = (unsigned)io_length(io);
+	char *buffer = mem_alloc(len + 1);
+	unsigned read = io_read(io, buffer, len + 1); // +1 to check if the file size is larger than expected
+	if(read < len)
 	{
-		len += read;
-		if(len == cap)
+		buffer = realloc(buffer, read + 1);
+		len = read;
+	}
+	else if(read > len)
+	{
+		unsigned cap = 2 * read;
+		len = read;
+		buffer = realloc(buffer, cap);
+		while((read = io_read(io, buffer + len, cap - len)) != 0)
 		{
-			cap *= 2;
-			buffer = realloc(buffer, cap);
+			len += read;
+			if(len == cap)
+			{
+				cap *= 2;
+				buffer = realloc(buffer, cap);
+			}
 		}
+		buffer = realloc(buffer, len + 1);
 	}
-	if(len == cap)
-	{
-		buffer = realloc(buffer, cap + 1);
-	}
-	// ensure null termination
 	buffer[len] = 0;
 	*result = buffer;
 	*result_len = len;
@@ -419,12 +421,11 @@ char *io_read_all_str(IOHANDLE io)
 {
 	void *buffer;
 	unsigned len;
-
 	io_read_all(io, &buffer, &len);
 	if(mem_has_null(buffer, len))
 	{
-		free(buffer);
-		return 0;
+		mem_free(buffer);
+		return 0x0;
 	}
 	return buffer;
 }
