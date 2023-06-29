@@ -750,7 +750,7 @@ void CServer::SendRconCmdAdd(const IConsole::CCommandInfo *pCommandInfo, int Cli
 void CServer::SendRconCmdRem(const IConsole::CCommandInfo *pCommandInfo, int ClientID)
 {
 	CMsgPacker Msg(NETMSG_RCON_CMD_REM, true);
-	Msg.AddString(pCommandInfo->m_pName, 256);
+	Msg.AddString(pCommandInfo->m_pName, IConsole::TEMPCMD_NAME_LENGTH);
 	SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
@@ -773,14 +773,14 @@ void CServer::UpdateClientRconCommands()
 void CServer::SendMapListEntryAdd(const CMapListEntry *pMapListEntry, int ClientID)
 {
 	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_ADD, true);
-	Msg.AddString(pMapListEntry->m_aName, 256);
+	Msg.AddString(pMapListEntry->m_aName, IConsole::TEMPMAP_NAME_LENGTH);
 	SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
 void CServer::SendMapListEntryRem(const CMapListEntry *pMapListEntry, int ClientID)
 {
 	CMsgPacker Msg(NETMSG_MAPLIST_ENTRY_REM, true);
-	Msg.AddString(pMapListEntry->m_aName, 256);
+	Msg.AddString(pMapListEntry->m_aName, IConsole::TEMPMAP_NAME_LENGTH);
 	SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
@@ -1498,6 +1498,8 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 		return 0;
 	aFilename[pSuffix - aFilename] = 0; // remove suffix
 
+	if(str_length(aFilename) >= IConsole::TEMPMAP_NAME_LENGTH)
+		return 0;
 	if(pUserdata->m_StandardOnly && !pThis->m_pMapChecker->IsStandardMap(aFilename))
 		return 0;
 
