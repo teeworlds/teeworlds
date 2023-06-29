@@ -75,8 +75,6 @@ CGameConsole::CInstance::CInstance(int Type)
 	Reset();
 
 	m_IsCommand = false;
-	m_aInputBuf[0] = '\0';
-	m_Input.SetBuffer(m_aInputBuf, sizeof(m_aInputBuf));
 }
 
 void CGameConsole::CInstance::Init(CGameConsole *pGameConsole)

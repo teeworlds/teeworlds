@@ -130,4 +130,17 @@ public:
 	void Deactivate();
 };
 
+template<int MaxSize, int MaxChars = MaxSize>
+class CLineInputBuffered : public CLineInput
+{
+	char m_aBuffer[MaxSize];
+
+public:
+	CLineInputBuffered() : CLineInput()
+	{
+		m_aBuffer[0] = 0;
+		SetBuffer(m_aBuffer, MaxSize, MaxChars);
+	}
+};
+
 #endif

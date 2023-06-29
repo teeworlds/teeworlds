@@ -197,8 +197,7 @@ private:
 	bool m_NeedRestartGraphics;
 	bool m_NeedRestartSound;
 	int m_TeePartSelected;
-	char m_aSaveSkinName[MAX_SKIN_ARRAY_SIZE];
-	CLineInput m_SkinNameInput;
+	CLineInputBuffered<static_cast<int>(MAX_SKIN_ARRAY_SIZE), static_cast<int>(MAX_SKIN_LENGTH)> m_SkinNameInput;
 
 	bool m_RefreshSkinSelector;
 	const CSkins::CSkin *m_pSelectedSkin;
@@ -219,8 +218,8 @@ private:
 	// for call vote
 	int m_CallvoteSelectedOption;
 	int m_CallvoteSelectedPlayer;
-	char m_aFilterString[VOTE_REASON_LENGTH];
-	char m_aCallvoteReason[VOTE_REASON_LENGTH];
+	CLineInputBuffered<static_cast<int>(VOTE_REASON_LENGTH)> m_CallvoteFilterInput;
+	CLineInputBuffered<static_cast<int>(VOTE_REASON_LENGTH)> m_CallvoteReasonInput;
 
 	// demo
 	enum
@@ -304,8 +303,7 @@ private:
 
 	sorted_array<CDemoItem> m_lDemos;
 	char m_aCurrentDemoFolder[IO_MAX_PATH_LENGTH];
-	char m_aCurrentDemoFile[IO_MAX_PATH_LENGTH];
-	CLineInput m_DemoNameInput;
+	CLineInputBuffered<static_cast<int>(IO_MAX_PATH_LENGTH)> m_DemoNameInput;
 	int m_DemolistSelectedIndex;
 	bool m_DemolistSelectedIsDir;
 	int m_DemolistStorageType;
