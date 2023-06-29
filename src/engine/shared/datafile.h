@@ -39,6 +39,7 @@ public:
 	unsigned Crc() const;
 
 	static bool CheckSha256(IOHANDLE Handle, const void *pSha256);
+	static bool CheckCrc(IOHANDLE Handle, const void *pCrc);
 };
 
 // write access

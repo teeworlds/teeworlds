@@ -1226,8 +1226,7 @@ int CServer::LoadMap(const char *pMapName)
 		return 0;
 
 	// stop recording when we change map
-	if(m_DemoRecorder.IsRecording())
-		m_DemoRecorder.Stop();
+	DemoRecorder_Stop();
 
 	// reinit snapshot ids
 	m_IDPool.TimeoutIDs();
@@ -1572,17 +1571,17 @@ void CServer::ConShutdown(IConsole::IResult *pResult, void *pUser)
 	}
 }
 
+void CServer::DemoRecorder_Start(const char *pFilename, bool WithTimestamp)
+{
+	m_DemoRecorder.Start(pFilename, WithTimestamp, GameServer()->NetVersion(), m_aCurrentMap, m_CurrentMapSha256, m_CurrentMapCrc, "server");
+}
+
 void CServer::DemoRecorder_HandleAutoStart()
 {
 	if(Config()->m_SvAutoDemoRecord)
 	{
-		if(m_DemoRecorder.IsRecording())
-			m_DemoRecorder.Stop();
-		char aFilename[128];
-		char aDate[20];
-		str_timestamp(aDate, sizeof(aDate));
-		str_format(aFilename, sizeof(aFilename), "demos/%s_%s.demo", "auto/autorecord", aDate);
-		m_DemoRecorder.Start(aFilename, GameServer()->NetVersion(), m_aCurrentMap, m_CurrentMapSha256, m_CurrentMapCrc, "server");
+		DemoRecorder_Stop();
+		DemoRecorder_Start("auto/autorecord", true);
 		if(Config()->m_SvAutoDemoMax)
 		{
 			// clean up auto recorded demos
@@ -1592,6 +1591,12 @@ void CServer::DemoRecorder_HandleAutoStart()
 	}
 }
 
+void CServer::DemoRecorder_Stop(bool ErrorIfNotRecording)
+{
+	if(ErrorIfNotRecording || m_DemoRecorder.IsRecording())
+		m_DemoRecorder.Stop();
+}
+
 bool CServer::DemoRecorder_IsRecording()
 {
 	return m_DemoRecorder.IsRecording();
@@ -1599,22 +1604,17 @@ bool CServer::DemoRecorder_IsRecording()
 
 void CServer::ConRecord(IConsole::IResult *pResult, void *pUser)
 {
-	CServer* pServer = (CServer *)pUser;
-	char aFilename[128];
+	CServer *pServer = (CServer *)pUser;
+
 	if(pResult->NumArguments())
-		str_format(aFilename, sizeof(aFilename), "demos/%s.demo", pResult->GetString(0));
+		pServer->DemoRecorder_Start(pResult->GetString(0), false);
 	else
-	{
-		char aDate[20];
-		str_timestamp(aDate, sizeof(aDate));
-		str_format(aFilename, sizeof(aFilename), "demos/demo_%s.demo", aDate);
-	}
-	pServer->m_DemoRecorder.Start(aFilename, pServer->GameServer()->NetVersion(), pServer->m_aCurrentMap, pServer->m_CurrentMapSha256, pServer->m_CurrentMapCrc, "server");
+		pServer->DemoRecorder_Start("demo", true);
 }
 
 void CServer::ConStopRecord(IConsole::IResult *pResult, void *pUser)
 {
-	((CServer *)pUser)->m_DemoRecorder.Stop();
+	((CServer *)pUser)->DemoRecorder_Stop(true);
 }
 
 void CServer::ConMapReload(IConsole::IResult *pResult, void *pUser)
