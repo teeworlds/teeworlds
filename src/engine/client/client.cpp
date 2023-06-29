@@ -1033,13 +1033,15 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 			}
 
 			// request the map version list now
+			unsigned char aData[sizeof(VERSIONSRV_GETMAPLIST) + sizeof(unsigned)];
+			mem_copy(aData, VERSIONSRV_GETMAPLIST, sizeof(VERSIONSRV_GETMAPLIST));
+			uint_to_bytes_be(aData + sizeof(VERSIONSRV_GETMAPLIST), CLIENT_VERSION);
 			CNetChunk Packet;
-			mem_zero(&Packet, sizeof(Packet));
 			Packet.m_ClientID = -1;
 			Packet.m_Address = m_VersionInfo.m_VersionServeraddr.m_Addr;
-			Packet.m_pData = VERSIONSRV_GETMAPLIST;
-			Packet.m_DataSize = sizeof(VERSIONSRV_GETMAPLIST);
 			Packet.m_Flags = NETSENDFLAG_CONNLESS;
+			Packet.m_pData = aData;
+			Packet.m_DataSize = sizeof(aData);
 			m_ContactClient.Send(&Packet);
 		}
 
@@ -1047,9 +1049,9 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		if(pPacket->m_DataSize >= (int)sizeof(VERSIONSRV_MAPLIST) &&
 			mem_comp(pPacket->m_pData, VERSIONSRV_MAPLIST, sizeof(VERSIONSRV_MAPLIST)) == 0)
 		{
-			int Size = pPacket->m_DataSize-sizeof(VERSIONSRV_MAPLIST);
-			int Num = Size/sizeof(CMapVersion);
-			m_pMapChecker->AddMaplist((CMapVersion *)((char*)pPacket->m_pData+sizeof(VERSIONSRV_MAPLIST)), Num);
+			m_pMapChecker->AddMaplist(
+				(const CMapVersion *)((char *)pPacket->m_pData + sizeof(VERSIONSRV_MAPLIST)),
+				unsigned(pPacket->m_DataSize - sizeof(VERSIONSRV_MAPLIST)) / sizeof(CMapVersion));
 		}
 	}
 

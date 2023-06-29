@@ -29,12 +29,12 @@ void CMapChecker::SetDefaults()
 	m_ClearListBeforeAdding = true;
 }
 
-void CMapChecker::AddMaplist(const CMapVersion *pMaplist, int Num)
+void CMapChecker::AddMaplist(const CMapVersion *pMaplist, unsigned Num)
 {
 	if(m_ClearListBeforeAdding)
 		Init();
 
-	for(int i = 0; i < Num; ++i)
+	for(unsigned i = 0; i < Num; ++i)
 	{
 		CWhitelistEntry *pEntry = (CWhitelistEntry *)m_Whitelist.Allocate(sizeof(CWhitelistEntry));
 		pEntry->m_pNext = m_pFirst;
