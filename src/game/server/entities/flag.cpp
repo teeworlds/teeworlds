@@ -68,7 +68,7 @@ void CFlag::TickDefered()
 			else
 			{
 				m_Vel.y += GameWorld()->m_Core.m_Tuning.m_Gravity;
-				GameServer()->Collision()->MoveBox(&m_Pos, &m_Vel, vec2(ms_PhysSize, ms_PhysSize), 0.5f);
+				GameServer()->Collision()->MoveBox(&m_Pos, &m_Vel, vec2(ms_PhysSize, ms_PhysSize), vec2(GameWorld()->m_Core.m_Tuning.m_FlagElasticity, GameWorld()->m_Core.m_Tuning.m_FlagElasticity));
 			}
 		}
 	}
