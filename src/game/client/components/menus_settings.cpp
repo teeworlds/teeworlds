@@ -393,7 +393,6 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 		}
 		m_SkinModified = true;
 	}
-	OldSelected = NewSelected;
 }
 
 void CMenus::RenderSkinPartSelection(CUIRect MainView)
