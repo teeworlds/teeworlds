@@ -1,7 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12...3.19.1)
-if(CMAKE_VERSION VERSION_LESS 3.12)
-  cmake_policy(VERSION ${CMAKE_VERSION})
-endif()
+cmake_minimum_required(VERSION 3.12...3.27.4)
 
 file(STRINGS src/game/version.h VERSION_LINE
   LIMIT_COUNT 1
