@@ -442,6 +442,29 @@ void CCommandProcessorFragment_OpenGL::Cmd_Texture_Create(const CCommandBuffer::
 	mem_free(pTexData);
 }
 
+void CCommandProcessorFragment_OpenGL::Cmd_AlphaMask_Begin(const CCommandBuffer::CAlphaMaskBeginCommand *pCommand)
+{ 
+	glClear(GL_STENCIL_BUFFER_BIT);
+	glEnable(GL_STENCIL_TEST);
+	glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+	glStencilFunc(GL_ALWAYS, 1, 1);
+	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+	glAlphaFunc(GL_GREATER, pCommand->m_Threshold);
+} 
+
+void CCommandProcessorFragment_OpenGL::Cmd_AlphaMask_End(const CCommandBuffer::CAlphaMaskEndCommand *pCommand)
+{
+	glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+	glStencilFunc(GL_EQUAL, 1, 1);
+	glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+	glAlphaFunc(GL_GREATER, 0);
+}
+
+void CCommandProcessorFragment_OpenGL::Cmd_AlphaMask_Clear(const CCommandBuffer::CAlphaMaskClearCommand *pCommand)
+{
+	glDisable(GL_STENCIL_TEST);
+}
+
 void CCommandProcessorFragment_OpenGL::Cmd_Clear(const CCommandBuffer::CClearCommand *pCommand)
 {
 	glClearColor(pCommand->m_Color.r, pCommand->m_Color.g, pCommand->m_Color.b, 0.0f);
@@ -523,6 +546,9 @@ bool CCommandProcessorFragment_OpenGL::RunCommand(const CCommandBuffer::CCommand
 	case CCommandBuffer::CMD_TEXTURE_CREATE: Cmd_Texture_Create(static_cast<const CCommandBuffer::CTextureCreateCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_TEXTURE_DESTROY: Cmd_Texture_Destroy(static_cast<const CCommandBuffer::CTextureDestroyCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_TEXTURE_UPDATE: Cmd_Texture_Update(static_cast<const CCommandBuffer::CTextureUpdateCommand *>(pBaseCommand)); break;
+	case CCommandBuffer::CMD_ALPHAMASK_BEGIN: Cmd_AlphaMask_Begin(static_cast<const CCommandBuffer::CAlphaMaskBeginCommand *>(pBaseCommand)); break;
+	case CCommandBuffer::CMD_ALPHAMASK_END: Cmd_AlphaMask_End(static_cast<const CCommandBuffer::CAlphaMaskEndCommand *>(pBaseCommand)); break;
+	case CCommandBuffer::CMD_ALPHAMASK_CLEAR: Cmd_AlphaMask_Clear(static_cast<const CCommandBuffer::CAlphaMaskClearCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_CLEAR: Cmd_Clear(static_cast<const CCommandBuffer::CClearCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_RENDER: Cmd_Render(static_cast<const CCommandBuffer::CRenderCommand *>(pBaseCommand)); break;
 	case CCommandBuffer::CMD_SCREENSHOT: Cmd_Screenshot(static_cast<const CCommandBuffer::CScreenshotCommand *>(pBaseCommand)); break;
@@ -666,6 +692,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWin
 
 	// set gl attributes
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 	if(FsaaSamples)
 	{
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);

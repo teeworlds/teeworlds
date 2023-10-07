@@ -134,6 +134,9 @@ private:
 	void Cmd_Texture_Update(const CCommandBuffer::CTextureUpdateCommand *pCommand);
 	void Cmd_Texture_Destroy(const CCommandBuffer::CTextureDestroyCommand *pCommand);
 	void Cmd_Texture_Create(const CCommandBuffer::CTextureCreateCommand *pCommand);
+	void Cmd_AlphaMask_Begin(const CCommandBuffer::CAlphaMaskBeginCommand *pCommand);
+	void Cmd_AlphaMask_End(const CCommandBuffer::CAlphaMaskEndCommand *pCommand);
+	void Cmd_AlphaMask_Clear(const CCommandBuffer::CAlphaMaskClearCommand *pCommand);
 	void Cmd_Clear(const CCommandBuffer::CClearCommand *pCommand);
 	void Cmd_Render(const CCommandBuffer::CRenderCommand *pCommand);
 	void Cmd_Screenshot(const CCommandBuffer::CScreenshotCommand *pCommand);
