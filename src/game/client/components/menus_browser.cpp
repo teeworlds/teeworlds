@@ -25,12 +25,12 @@
 #include "menus.h"
 
 CMenus::CColumn CMenus::ms_aBrowserCols[] = {  // Localize("Server"); Localize("Type"); Localize("Map"); Localize("Players"); Localize("Ping"); - these strings are localized within CLocConstString
-	{COL_BROWSER_FLAG,		-1,									" ",		-1, 4*16.0f+3*2.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
+	{COL_BROWSER_FLAG,		-1,									" ",		-1, 3*16.0f+3*2.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
 	{COL_BROWSER_NAME,		IServerBrowser::SORT_NAME,			"Server",	0, 310.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
 	{COL_BROWSER_GAMETYPE,	IServerBrowser::SORT_GAMETYPE,		"Type",		1, 70.0f,  0, {0}, {0}, TEXTALIGN_CENTER},
 	{COL_BROWSER_MAP,		IServerBrowser::SORT_MAP,			"Map",		1, 100.0f, 0, {0}, {0}, TEXTALIGN_CENTER},
 	{COL_BROWSER_PLAYERS,	IServerBrowser::SORT_NUMPLAYERS,	"Players",	1, 50.0f,  0, {0}, {0}, TEXTALIGN_CENTER},
-	{COL_BROWSER_PING,		IServerBrowser::SORT_PING,			"Ping",		1, 40.0f,  0, {0}, {0}, TEXTALIGN_CENTER},
+	{COL_BROWSER_PING,		IServerBrowser::SORT_PING,			"Ping",		1, 30.0f,  0, {0}, {0}, TEXTALIGN_CENTER},
 };
 
 CServerFilterInfo CMenus::CBrowserFilter::ms_FilterStandard = {IServerBrowser::FILTER_COMPAT_VERSION|IServerBrowser::FILTER_PURE|IServerBrowser::FILTER_PURE_MAP, 999, -1, 0, {{0}}, {0}, {0}};
@@ -524,11 +524,6 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 
 			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
 			Icon.Margin(2.0f, &Icon);
-			DoIcon(IMAGE_LEVELICONS, s_aDifficultySpriteIds[pEntry->m_ServerLevel], &Icon);
-			UI()->DoTooltip(&pEntry->m_ServerLevel, &Icon, s_aDifficultyLabels[pEntry->m_ServerLevel]);
-
-			Rect.VSplitLeft(Rect.h, &Icon, &Rect);
-			Icon.Margin(2.0f, &Icon);
 			DoIcon(IMAGE_BROWSEICONS, pEntry->m_Favorite ? SPRITE_BROWSE_STAR_A : SPRITE_BROWSE_STAR_B, &Icon);
 			if(UI()->DoButtonLogic(&pEntry->m_Favorite, &Icon))
 			{
@@ -655,6 +650,7 @@ int CMenus::DoBrowserEntry(const void *pID, CUIRect View, const CServerInfo *pEn
 			CUIRect Icon;
 			Button.VSplitLeft(Button.h, &Icon, &Button);
 			Icon.y -= 0.5f;
+			Icon.Margin(1.6f, &Icon);
 			DoGameIcon(pEntry->m_aGameType, &Icon);
 
 			// gametype text
@@ -876,7 +872,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	}
 
 	// list background
-	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 5.0f, CUIRect::CORNER_L);
+	View.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f), 0.0f, CUIRect::CORNER_L);
 	{
 		int Column = COL_BROWSER_PING;
 		switch(Config()->m_BrSort)
@@ -898,7 +894,7 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 		CUIRect Rect = View;
 		Rect.x = CMenus::ms_aBrowserCols[Column].m_Rect.x;
 		Rect.w = CMenus::ms_aBrowserCols[Column].m_Rect.w;
-		Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.05f));
+		Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.20f), 0.0f);
 	}
 
 	// update selection based on address if it changed
@@ -1224,7 +1220,6 @@ void CMenus::RenderServerbrowserServerList(CUIRect View)
 	if(ServerBrowser()->IsRefreshing() && m_ActivePage != PAGE_LAN)
 	{
 		char aBuf[128];
-		Status.HSplitTop(ButtonHeight + SpacingH, 0, &Status);
 		str_format(aBuf, sizeof(aBuf), Localize("%d%% loaded"), ServerBrowser()->LoadingProgression());
 		UI()->DoLabel(&Status, aBuf, 14.0f, TEXTALIGN_MC);
 	}
@@ -1327,7 +1322,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	CUIRect BottomArea;
 	const float FontSize = 10.0f;
 	static bool s_ListExtended[NUM_FRIEND_TYPES] = { 1, 1, 0 };
-	static vec3 s_ListColor[NUM_FRIEND_TYPES] = { vec3(0.5f, 1.0f, 0.5f), vec3(0.4f, 0.4f, 1.0f), vec3(1.0f, 0.5f, 0.5f) };
+	static vec3 s_ListColor[NUM_FRIEND_TYPES] = { vec3(0.06f, 0.7f, 0.2f), vec3(0.2f, 0.5f, 1.0f), vec3(0.6f, 0.1f, 0.1f) };
 	const float HeaderHeight = UI()->GetListHeaderHeight();
 	const float SpacingH = 2.0f;
 
@@ -1425,7 +1420,7 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 				bool ButtonResult = UI()->DoButtonLogic(&(s_aFriendButtons[ButtonId%20]), &Rect);
 				if(m_lFriendList[i][f].m_pServerInfo)
 					UI()->DoTooltip(&(s_aFriendButtons[ButtonId%20]), &Rect, Localize("Double click to join your friend."));
-				Rect.Draw(vec4(s_ListColor[i].r, s_ListColor[i].g, s_ListColor[i].b, Inside ? 0.5f : 0.3f));
+				Rect.Draw(vec4(s_ListColor[i].r, s_ListColor[i].g, s_ListColor[i].b, Inside ? 0.8f : 0.5f));
 				Rect.Margin(2.0f, &Rect);
 				Rect.VSplitRight(50.0f, &Rect, &Icon);
 
@@ -1598,55 +1593,55 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 
 	// server filter
 	ServerFilter.HSplitTop(UI()->GetListHeaderHeight(), &FilterHeader, &ServerFilter);
-	FilterHeader.Draw(vec4(1, 1, 1, 0.25f), 4.0f, CUIRect::CORNER_T);
-	ServerFilter.Draw(vec4(0, 0, 0, 0.15f), 4.0f, CUIRect::CORNER_B);
+	FilterHeader.Draw(vec4(0, 0, 0, 0.0f), 4.0f);
+	ServerFilter.Draw(vec4(0, 0, 0, 0.35f), 8.0f);
 	UI()->DoLabel(&FilterHeader, Localize("Server filter"), FontSize + 2.0f, TEXTALIGN_MC);
 
 	int NewSortHash = FilterInfo.m_SortHash;
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterEmpty = 0;
-	if(DoButton_CheckBox(&s_BrFilterEmpty, Localize("Has people playing"), FilterInfo.m_SortHash&IServerBrowser::FILTER_EMPTY, &Button))
+	if(DoButton_CheckBox(&s_BrFilterEmpty, Localize("Has people playing"), FilterInfo.m_SortHash&IServerBrowser::FILTER_EMPTY, &Button, false, true))
 		NewSortHash ^= IServerBrowser::FILTER_EMPTY;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterSpectators = 0;
-	if(DoButton_CheckBox(&s_BrFilterSpectators, Localize("Count players only"), FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS, &Button))
+	if(DoButton_CheckBox(&s_BrFilterSpectators, Localize("Count players only"), FilterInfo.m_SortHash&IServerBrowser::FILTER_SPECTATORS, &Button, false, true))
 		NewSortHash ^= IServerBrowser::FILTER_SPECTATORS;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterFull = 0;
-	if(DoButton_CheckBox(&s_BrFilterFull, Localize("Server not full"), FilterInfo.m_SortHash&IServerBrowser::FILTER_FULL, &Button))
+	if(DoButton_CheckBox(&s_BrFilterFull, Localize("Server not full"), FilterInfo.m_SortHash&IServerBrowser::FILTER_FULL, &Button, false, true))
 		NewSortHash ^= IServerBrowser::FILTER_FULL;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterFriends = 0;
-	if(DoButton_CheckBox(&s_BrFilterFriends, Localize("Show friends only"), FilterInfo.m_SortHash&IServerBrowser::FILTER_FRIENDS, &Button))
+	if(DoButton_CheckBox(&s_BrFilterFriends, Localize("Show friends only"), FilterInfo.m_SortHash&IServerBrowser::FILTER_FRIENDS, &Button, false, true))
 		NewSortHash ^= IServerBrowser::FILTER_FRIENDS;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterBots = 0;
-	if(DoButton_CheckBox(&s_BrFilterBots, Localize("Hide bots"), FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS, &Button))
+	if(DoButton_CheckBox(&s_BrFilterBots, Localize("Hide bots"), FilterInfo.m_SortHash&IServerBrowser::FILTER_BOTS, &Button, false, true))
 		NewSortHash ^= IServerBrowser::FILTER_BOTS;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterPw = 0;
-	if(DoButton_CheckBox(&s_BrFilterPw, Localize("No password"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PW, &Button))
+	if(DoButton_CheckBox(&s_BrFilterPw, Localize("No password"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PW, &Button, false, true))
 		NewSortHash ^= IServerBrowser::FILTER_PW;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterCompatversion = 0;
-	if(DoButton_CheckBox(&s_BrFilterCompatversion, Localize("Compatible version"), FilterInfo.m_SortHash&IServerBrowser::FILTER_COMPAT_VERSION, &Button))
+	if(DoButton_CheckBox(&s_BrFilterCompatversion, Localize("Compatible version"), FilterInfo.m_SortHash&IServerBrowser::FILTER_COMPAT_VERSION, &Button, false, true))
 		NewSortHash ^= IServerBrowser::FILTER_COMPAT_VERSION;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	const bool Locked = pFilter->Custom() == CBrowserFilter::FILTER_STANDARD;
 	static int s_BrFilterPure = 0;
-	if(DoButton_CheckBox(&s_BrFilterPure, Localize("Standard gametype"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE, &Button, Locked))
+	if(DoButton_CheckBox(&s_BrFilterPure, Localize("Standard gametype"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE, &Button, Locked, true))
 		NewSortHash ^= IServerBrowser::FILTER_PURE;
 
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	static int s_BrFilterPureMap = 0;
-	if(DoButton_CheckBox(&s_BrFilterPureMap, Localize("Standard map"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE_MAP, &Button))
+	if(DoButton_CheckBox(&s_BrFilterPureMap, Localize("Standard map"), FilterInfo.m_SortHash&IServerBrowser::FILTER_PURE_MAP, &Button, false, true))
 		NewSortHash ^= IServerBrowser::FILTER_PURE_MAP;
 
 	bool UpdateFilter = false;
@@ -1914,8 +1909,8 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo, const vec4
 
 	CUIRect ServerHeader;
 	View.HSplitTop(UI()->GetListHeaderHeight(), &ServerHeader, &View);
-	ServerHeader.Draw(vec4(1, 1, 1, 0.25f), 5.0f, CUIRect::CORNER_T);
-	View.Draw(vec4(0, 0, 0, 0.15f), 5.0f, CUIRect::CORNER_B);
+	ServerHeader.Draw(vec4(0, 0, 0, 0.0f), 5.0f);
+	View.Draw(vec4(0, 0, 0, 0.35f), 8.0f);
 	UI()->DoLabel(&ServerHeader, Localize("Server details"), FontSize + 2.0f, TEXTALIGN_MC);
 
 	if(!pInfo)
@@ -1930,7 +1925,8 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo, const vec4
 		"Difficulty:" };
 
 	CUIRect LeftColumn, RightColumn;
-	View.VMargin(2.0f, &View);
+	View.HMargin(8.0f, &View);
+	View.VMargin(8.0f, &View);
 	View.VSplitLeft(70.0f, &LeftColumn, &RightColumn);
 
 	for(unsigned int i = 0; i < sizeof(s_aLabels) / sizeof(s_aLabels[0]); i++)
@@ -1941,31 +1937,24 @@ void CMenus::RenderDetailInfo(CUIRect View, const CServerInfo *pInfo, const vec4
 
 	// map
 	RightColumn.HSplitTop(RowHeight, &Row, &RightColumn);
-	UI()->DoLabel(&Row, pInfo->m_aMap, FontSize, TEXTALIGN_LEFT, Row.w, false);
+	UI()->DoLabel(&Row, pInfo->m_aMap, FontSize, TEXTALIGN_RIGHT, Row.w, false);
 
 	// game type
 	RightColumn.HSplitTop(RowHeight, &Row, &RightColumn);
-	CUIRect Icon;
-	Row.VSplitLeft(Row.h, &Icon, &Row);
-	Icon.y -= 2.0f;
-	DoGameIcon(pInfo->m_aGameType, &Icon);
-	UI()->DoLabel(&Row, pInfo->m_aGameType, FontSize, TEXTALIGN_LEFT, Row.w, false);
+	UI()->DoLabel(&Row, pInfo->m_aGameType, FontSize, TEXTALIGN_RIGHT, Row.w, false);
 
 	// version
 	RightColumn.HSplitTop(RowHeight, &Row, &RightColumn);
-	UI()->DoLabel(&Row, pInfo->m_aVersion, FontSize, TEXTALIGN_LEFT, Row.w, false);
+	UI()->DoLabel(&Row, pInfo->m_aVersion, FontSize, TEXTALIGN_RIGHT, Row.w, false);
 
 	// difficulty
 	RightColumn.HSplitTop(RowHeight, &Row, &RightColumn);
-	Row.VSplitLeft(Row.h, &Icon, &Row);
-	Icon.y -= 2.0f;
-	DoIcon(IMAGE_LEVELICONS, s_aDifficultySpriteIds[pInfo->m_ServerLevel], &Icon);
-	UI()->DoLabel(&Row, s_aDifficultyLabels[pInfo->m_ServerLevel], FontSize, TEXTALIGN_LEFT, Row.w, false);
+	UI()->DoLabel(&Row, s_aDifficultyLabels[pInfo->m_ServerLevel], FontSize, TEXTALIGN_RIGHT, Row.w, false);
 }
 
 void CMenus::RenderDetailScoreboard(CUIRect View, const CServerInfo *pInfo, int RowCount, const vec4 &TextColor, const vec4 &TextOutlineColor)
 {
-	View.Draw(vec4(0, 0, 0, 0.15f), 5.0f, RowCount > 0 ? CUIRect::CORNER_B|CUIRect::CORNER_TL : CUIRect::CORNER_B);
+	View.Draw(vec4(0, 0, 0, 0.35f), 8.0f);
 	View.Margin(2.0f, &View);
 
 	if(!pInfo)
@@ -2093,14 +2082,14 @@ void CMenus::RenderServerbrowserServerDetail(CUIRect View, const CServerInfo *pI
 	CUIRect ServerHeader, ServerDetails, ServerScoreboard;
 
 	// split off a piece to use for scoreboard
-	View.HSplitTop(80.0f, &ServerDetails, &ServerScoreboard);
+	View.HSplitTop(95.0f, &ServerDetails, &ServerScoreboard);
 
 	// server details
 	RenderDetailInfo(ServerDetails, pInfo, CUI::ms_DefaultTextColor, CUI::ms_DefaultTextOutlineColor);
 
 	// server scoreboard
 	ServerScoreboard.HSplitTop(UI()->GetListHeaderHeight(), &ServerHeader, &ServerScoreboard);
-	ServerHeader.Draw(vec4(1, 1, 1, 0.25f), 4.0f, CUIRect::CORNER_T);
+	ServerHeader.Draw(vec4(0, 0, 0, 0.0f), 4.0f);
 	UI()->DoLabel(&ServerHeader, Localize("Scoreboard"), 12.0f, TEXTALIGN_MC);
 	RenderDetailScoreboard(ServerScoreboard, pInfo, 0, CUI::ms_DefaultTextColor, CUI::ms_DefaultTextOutlineColor);
 }

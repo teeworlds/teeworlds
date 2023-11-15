@@ -212,13 +212,13 @@ bool CMenus::DoButton_GridHeader(const void *pID, const char *pText, bool Checke
 {
 	if(Checked)
 	{
-		pRect->Draw(vec4(0.9f, 0.9f, 0.9f, 0.5f), 5.0f, Corners);
+		pRect->Draw(vec4(0.9f, 0.9f, 0.9f, 1.0f), 0.0f, Corners);
 		TextRender()->TextColor(CUI::ms_HighlightTextColor);
 		TextRender()->TextSecondaryColor(CUI::ms_HighlightTextOutlineColor);
 	}
 	else if(UI()->HotItem() == pID)
 	{
-		pRect->Draw(vec4(1.0f, 1.0f, 1.0f, 0.5f), 5.0f, Corners);
+		pRect->Draw(vec4(1.0f, 1.0f, 1.0f, 0.5f), 0.0f, Corners);
 	}
 
 	CUIRect Label;
@@ -234,14 +234,14 @@ bool CMenus::DoButton_GridHeader(const void *pID, const char *pText, bool Checke
 	return UI()->DoButtonLogic(pID, pRect);
 }
 
-bool CMenus::DoButton_CheckBox(const void *pID, const char *pText, bool Checked, const CUIRect *pRect, bool Locked)
+bool CMenus::DoButton_CheckBox(const void *pID, const char *pText, bool Checked, const CUIRect *pRect, bool Locked, bool Transparent)
 {
 	if(Locked)
 	{
 		TextRender()->TextColor(0.5f, 0.5f, 0.5f, 1.0f);
 	}
 
-	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
+	pRect->Draw(vec4(0.0f, 0.0f, 0.0f, Transparent ? 0.0f : 0.25f));
 
 	CUIRect Checkbox, Label;
 	pRect->VSplitLeft(pRect->h, &Checkbox, &Label);
