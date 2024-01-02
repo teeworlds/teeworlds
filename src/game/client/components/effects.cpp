@@ -55,12 +55,6 @@ void CEffects::DamageIndicator(vec2 Pos, int Amount, float Angle, int ClientID)
 	if(Amount == 0)
 		return;
 
-	if (ClientID < 0 || ClientID >= MAX_CLIENTS)
-	{
-		m_pClient->m_pDamageind->Create(vec2(Pos.x, Pos.y), direction(Angle));
-		return;
-	}
-
 	m_aDamageTaken[ClientID]++;
 
 	// create healthmod indicator
