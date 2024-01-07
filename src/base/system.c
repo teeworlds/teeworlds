@@ -749,7 +749,7 @@ static void netaddr_to_sockaddr_in6(const NETADDR *src, struct sockaddr_in6 *des
 	mem_zero(dest, sizeof(struct sockaddr_in6));
 	if(src->type != NETTYPE_IPV6)
 	{
-		dbg_msg("system", "couldn't not convert NETADDR of type %d to ipv6", src->type);
+		dbg_msg("system", "couldn't convert NETADDR of type %d to ipv6", src->type);
 		return;
 	}
 
