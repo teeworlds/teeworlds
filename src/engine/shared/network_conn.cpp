@@ -350,7 +350,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 			m_LastRecvTime = Now;
 			m_State = NET_CONNSTATE_ONLINE;
 			if(Config()->m_Debug)
-				dbg_msg("connection", "connecting online");
+				dbg_msg("connection", "connection online");
 		}
 	}
 
