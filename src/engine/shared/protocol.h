@@ -44,7 +44,7 @@ enum
 	NETMSG_SNAP,			// normal snapshot, multiple parts
 	NETMSG_SNAPEMPTY,		// empty snapshot
 	NETMSG_SNAPSINGLE,		// ?
-	NETMSG_SNAPSMALL,		//
+	NETMSG_SNAPSMALL,		// todo 0.8: remove unused
 	NETMSG_INPUTTIMING,		// reports how off the input was
 	NETMSG_RCON_AUTH_ON,	// rcon authentication enabled
 	NETMSG_RCON_AUTH_OFF,	// rcon authentication disabled

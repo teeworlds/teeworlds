@@ -8,6 +8,7 @@ on:
       - trying.tmp
       - staging-squash-merge.tmp
   pull_request:
+  merge_group:
 
 jobs:
   check-style:
@@ -28,4 +29,3 @@ jobs:
         do
           jq '.' "$json" || { echo "$json"; exit 1; };
         done < <(find . -name "*.json");
-

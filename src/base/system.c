@@ -2563,7 +2563,7 @@ int mem_comp(const void *a, const void *b, int size)
 int mem_has_null(const void *block, unsigned size)
 {
 	const unsigned char *bytes = block;
-	unsigned i;        
+	unsigned i;
 	for(i = 0; i < size; i++)
 	{
 		if(bytes[i] == 0)
