@@ -2375,22 +2375,23 @@ int str_comp_filenames(const char *a, const char *b)
 			{
 				if(!result)
 					result = *a - *b;
-				++a; ++b;
-			}
-			while(*a >= '0' && *a <= '9' && *b >= '0' && *b <= '9');
+				++a;
+				++b;
+			} while(*a >= '0' && *a <= '9' && *b >= '0' && *b <= '9');
 
 			if(*a >= '0' && *a <= '9')
 				return 1;
 			else if(*b >= '0' && *b <= '9')
 				return -1;
-			else if(result)
+			else if(result || *a == '\0' || *b == '\0')
 				return result;
 		}
 
-		if(tolower(*a) != tolower(*b))
-			break;
+		result = tolower(*a) - tolower(*b);
+		if(result)
+			return result;
 	}
-	return tolower(*a) - tolower(*b);
+	return *a - *b;
 }
 
 const char *str_startswith_nocase(const char *str, const char *prefix)
