@@ -1825,13 +1825,13 @@ void CEditor::DoMapEditor(CUIRect View)
 								}
 							}
 
-							CLayerGroup *g = GetSelectedGroup();
-							if(g)
+							CLayerGroup *pGroup = GetSelectedGroup();
+							if(pGroup && !m_ShowTilePicker)
 							{
-								m_Brush.m_OffsetX += g->m_OffsetX;
-								m_Brush.m_OffsetY += g->m_OffsetY;
-								m_Brush.m_ParallaxX = g->m_ParallaxX;
-								m_Brush.m_ParallaxY = g->m_ParallaxY;
+								m_Brush.m_OffsetX += pGroup->m_OffsetX;
+								m_Brush.m_OffsetY += pGroup->m_OffsetY;
+								m_Brush.m_ParallaxX = pGroup->m_ParallaxX;
+								m_Brush.m_ParallaxY = pGroup->m_ParallaxY;
 								m_Brush.Render();
 								float w, h;
 								m_Brush.GetSize(&w, &h);
@@ -4288,24 +4288,30 @@ void CEditor::OnUpdate()
 	{
 		static float s_MouseX = 0.0f;
 		static float s_MouseY = 0.0f;
+		static float s_MouseDeltaX = 0.0f;
+		static float s_MouseDeltaY = 0.0f;
 
 		float MouseRelX = 0.0f, MouseRelY = 0.0f;
 		int CursorType = Input()->CursorRelative(&MouseRelX, &MouseRelY);
 		if(CursorType != IInput::CURSOR_NONE)
 			UI()->ConvertCursorMove(&MouseRelX, &MouseRelY, CursorType);
 
-		m_MouseDeltaX += MouseRelX;
-		m_MouseDeltaY += MouseRelY;
+		m_MouseDeltaX = MouseRelX;
+		m_MouseDeltaY = MouseRelY;
 
 		if(!m_LockMouse)
 		{
-			s_MouseX = clamp<float>(s_MouseX + MouseRelX, 0.0f, Graphics()->ScreenWidth());
-			s_MouseY = clamp<float>(s_MouseY + MouseRelY, 0.0f, Graphics()->ScreenHeight());
+			s_MouseX += MouseRelX;
+			s_MouseY += MouseRelY;
 		}
+		s_MouseX = clamp<float>(s_MouseX, 0.0f, Graphics()->ScreenWidth());
+		s_MouseY = clamp<float>(s_MouseY, 0.0f, Graphics()->ScreenHeight());
 
 		// update positions for ui, but only update ui when rendering
-		m_MouseX = UI()->Screen()->w * (s_MouseX / Graphics()->ScreenWidth());
-		m_MouseY = UI()->Screen()->h * (s_MouseY / Graphics()->ScreenHeight());
+		m_MouseX = UI()->Screen()->w * (s_MouseX / (float) Graphics()->ScreenWidth());
+		m_MouseY = UI()->Screen()->h * (s_MouseY / (float) Graphics()->ScreenHeight());
+		s_MouseDeltaX = UI()->Screen()->w * (m_MouseDeltaX / (float) Graphics()->ScreenWidth());
+		s_MouseDeltaY = UI()->Screen()->h * (m_MouseDeltaY / (float) Graphics()->ScreenHeight());
 
 		// fix correct world x and y
 		CLayerGroup *pSelectedGroup = GetSelectedGroup();
@@ -4317,10 +4323,10 @@ void CEditor::OnUpdate()
 			float WorldWidth = aPoints[2] - aPoints[0];
 			float WorldHeight = aPoints[3] - aPoints[1];
 
-			m_MouseWorldX = aPoints[0] + WorldWidth * (s_MouseX / UI()->Screen()->w);
-			m_MouseWorldY = aPoints[1] + WorldHeight * (s_MouseY / UI()->Screen()->h);
-			m_MouseDeltaWx = m_MouseDeltaX * (WorldWidth / Graphics()->ScreenWidth());
-			m_MouseDeltaWy = m_MouseDeltaY * (WorldHeight / Graphics()->ScreenHeight());
+			m_MouseWorldX = aPoints[0] + WorldWidth * (m_MouseX / UI()->Screen()->w);
+			m_MouseWorldY = aPoints[1] + WorldHeight * (m_MouseY / UI()->Screen()->h);
+			m_MouseDeltaWx = s_MouseDeltaX * (WorldWidth / UI()->Screen()->w);
+			m_MouseDeltaWy = s_MouseDeltaY * (WorldHeight / UI()->Screen()->h);
 		}
 		else
 		{
