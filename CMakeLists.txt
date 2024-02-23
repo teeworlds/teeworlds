@@ -1,7 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12...3.19.1)
-if(CMAKE_VERSION VERSION_LESS 3.12)
-  cmake_policy(VERSION ${CMAKE_VERSION})
-endif()
+cmake_minimum_required(VERSION 3.12...3.27.4)
 
 file(STRINGS src/game/version.h VERSION_LINE
   LIMIT_COUNT 1
@@ -97,9 +94,9 @@ set(CLIENT_EXECUTABLE teeworlds CACHE STRING "Name of the build client executabl
 # Download dependencies
 ########################################################################
 
-find_package(PythonInterp)
+find_package(Python3)
 if(DOWNLOAD_DEPENDENCIES)
-  if(PYTHON_EXECUTABLE AND TARGET_OS STREQUAL "windows" AND TARGET_BITS)
+  if(Python3_EXECUTABLE AND TARGET_OS STREQUAL "windows" AND TARGET_BITS)
     set(DOWNLOADS)
     foreach(d freetype sdl)
       if(NOT EXISTS "${PROJECT_SOURCE_DIR}/other/${d}/${TARGET_OS}/lib${TARGET_BITS}")
@@ -108,7 +105,7 @@ if(DOWNLOAD_DEPENDENCIES)
     endforeach()
     if(DOWNLOADS)
       message(STATUS "Downloading Freetype and SDL 2")
-      execute_process(COMMAND ${PYTHON_EXECUTABLE} scripts/download.py ${DOWNLOADS}
+      execute_process(COMMAND ${Python3_EXECUTABLE} scripts/download.py ${DOWNLOADS}
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
       )
     endif()
@@ -354,12 +351,12 @@ if(TARGET_OS AND TARGET_OS STREQUAL "mac")
 endif()
 show_dependency_status("OpenSSL Crypto" CRYPTO)
 show_dependency_status("Pnglite" PNGLITE)
-show_dependency_status("PythonInterp" PYTHONINTERP)
+show_dependency_status("Python3" Python3)
 show_dependency_status("SDL2" SDL2)
 show_dependency_status("Wavpack" WAVPACK)
 show_dependency_status("Zlib" ZLIB)
 
-if(NOT(PYTHONINTERP_FOUND))
+if(NOT(Python3_FOUND))
   message(SEND_ERROR "You must install Python to compile Teeworlds")
 endif()
 
@@ -416,7 +413,7 @@ endif()
 ########################################################################
 
 if(NOT(GTEST_FOUND) AND DOWNLOAD_GTEST)
-  set(TEEWORLDS_GTEST_VERSION 5c8ca58edfb304b2dd5e6061f83387470826dd87) # master as of 2021-04-07
+  set(TEEWORLDS_GTEST_VERSION v1.13.0)
   configure_file(cmake/Download_GTest_CMakeLists.txt.in googletest-download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
     RESULT_VARIABLE result
@@ -1194,7 +1191,7 @@ file(COPY ${COPY_FILES} DESTINATION .)
 
 function(chash output_file)
   add_custom_command(OUTPUT ${output_file}
-    COMMAND ${PYTHON_EXECUTABLE} scripts/cmd5.py ${ARGN}
+    COMMAND ${Python3_EXECUTABLE} scripts/cmd5.py ${ARGN}
       > "${PROJECT_BINARY_DIR}/${output_file}"
     DEPENDS scripts/cmd5.py ${ARGN}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -1203,7 +1200,7 @@ endfunction()
 
 function(generate_source output_file script_parameter)
   add_custom_command(OUTPUT ${output_file}
-    COMMAND ${PYTHON_EXECUTABLE} datasrc/compile.py ${script_parameter}
+    COMMAND ${Python3_EXECUTABLE} datasrc/compile.py ${script_parameter}
       > "${PROJECT_BINARY_DIR}/${output_file}"
     DEPENDS
       datasrc/compile.py
@@ -1230,7 +1227,7 @@ if(GIT_FOUND)
   endif()
 endif()
 add_custom_command(OUTPUT ${PROJECT_BINARY_DIR}/src/generated/git_revision.cpp
-  COMMAND ${PYTHON_EXECUTABLE}
+  COMMAND ${Python3_EXECUTABLE}
     scripts/git_revision.py
     > ${PROJECT_BINARY_DIR}/src/generated/git_revision.cpp
   WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -1957,8 +1954,8 @@ if(CLIENT AND (DMGTOOLS_FOUND OR HDIUTIL))
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_CLIENT}> ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/MacOS/
     COMMAND ${CMAKE_COMMAND} -E copy ${SDL2_LIBRARY} ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/Frameworks/libSDL2-2.0.0.dylib
     COMMAND ${CMAKE_COMMAND} -E copy ${FREETYPE_LIBRARY} ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/Frameworks/libfreetype.6.dylib
-    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_change_dylib.py change --tools ${CMAKE_INSTALL_NAME_TOOL} ${CMAKE_OTOOL} ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/MacOS/${TARGET_CLIENT} SDL2 @executable_path/../Frameworks/libSDL2-2.0.0.dylib
-    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_change_dylib.py change --tools ${CMAKE_INSTALL_NAME_TOOL} ${CMAKE_OTOOL} ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/MacOS/${TARGET_CLIENT} libfreetype @executable_path/../Frameworks/libfreetype.6.dylib
+    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_change_dylib.py change --tools ${CMAKE_INSTALL_NAME_TOOL} ${CMAKE_OTOOL} ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/MacOS/${TARGET_CLIENT} SDL2 @executable_path/../Frameworks/libSDL2-2.0.0.dylib
+    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/darwin_change_dylib.py change --tools ${CMAKE_INSTALL_NAME_TOOL} ${CMAKE_OTOOL} ${DMG_TMPDIR}/${TARGET_CLIENT}.app/Contents/MacOS/${TARGET_CLIENT} libfreetype @executable_path/../Frameworks/libfreetype.6.dylib
 
     # SERVER
     COMMAND ${CMAKE_COMMAND} -E copy_directory data/maps ${DMG_TMPDIR}/${TARGET_SERVER}.app/Contents/Resources/data/maps
@@ -1967,7 +1964,7 @@ if(CLIENT AND (DMGTOOLS_FOUND OR HDIUTIL))
     COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${TARGET_SERVER}> $<TARGET_FILE:${TARGET_SERVER_LAUNCHER}> ${DMG_TMPDIR}/${TARGET_SERVER}.app/Contents/MacOS/
 
     # DMG
-    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/dmg.py create ${DMG_PARAMS} ${CPACK_PACKAGE_FILE_NAME}.dmg ${CPACK_PACKAGE_FILE_NAME} ${DMG_TMPDIR}
+    COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/scripts/dmg.py create ${DMG_PARAMS} ${CPACK_PACKAGE_FILE_NAME}.dmg ${CPACK_PACKAGE_FILE_NAME} ${DMG_TMPDIR}
 
     DEPENDS
       ${TARGET_CLIENT}
