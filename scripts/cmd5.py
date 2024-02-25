@@ -8,7 +8,7 @@ def cstrip(lines):
 		l = re.sub("#.*".encode(), "".encode(), l)
 		l = re.sub("//.*".encode(), "".encode(), l)
 		d += l + " ".encode()
-	d = re.sub("\/\*.*?\*/".encode(), "".encode(), d) # remove /* */ comments
+	d = re.sub(r"\/\*.*?\*/".encode(), "".encode(), d) # remove /* */ comments
 	d = d.replace("\t".encode(), " ".encode()) # tab to space
 	d = re.sub("  *".encode(), " ".encode(), d) # remove double spaces
 	d = re.sub("".encode(), "".encode(), d) # remove /* */ comments
