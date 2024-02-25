@@ -4,6 +4,8 @@ if sys.version_info[0] == 2:
 	url_lib = urllib
 elif sys.version_info[0] == 3:
 	import urllib.request
+	import ssl
+	ssl._create_default_https_context = ssl._create_unverified_context
 	url_lib = urllib.request
 
 def fetch_file(url):
