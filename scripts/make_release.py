@@ -8,7 +8,7 @@ arguments.add_option("-l", "--url-languages", default = "http://github.com/teewo
 arguments.add_option("-m", "--url-maps", default = "http://github.com/teeworlds/teeworlds-maps/archive/master.zip", help = "URL from which the teeworlds maps files will be downloaded")
 arguments.add_option("-s", "--source-dir", help = "Source directory which is used for building the package")
 (options, arguments) = arguments.parse_args()
-if len(sys.argv) != 3:
+if len(arguments) != 2:
 	print("wrong number of arguments")
 	print(sys.argv[0], "VERSION PLATFORM")
 	sys.exit(-1)
