@@ -1,7 +1,7 @@
 import shutil, os, re, sys, zipfile
-from distutils.dir_util import copy_tree
 os.chdir(os.path.dirname(os.path.realpath(sys.argv[0])) + "/..")
 import twlib
+from twlib import copy_tree
 
 def unzip(filename, where):
 	try:
