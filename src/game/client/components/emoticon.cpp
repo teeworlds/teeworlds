@@ -44,10 +44,6 @@ void CEmoticon::OnRelease()
 	m_Active = false;
 }
 
-void CEmoticon::OnMessage(int MsgType, void *pRawMsg)
-{
-}
-
 bool CEmoticon::OnCursorMove(float x, float y, int CursorType)
 {
 	if(!m_Active)
