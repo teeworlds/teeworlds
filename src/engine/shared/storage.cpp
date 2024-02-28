@@ -398,11 +398,11 @@ public:
 		*pResultLen = 0;
 		if(!File)
 		{
-			return true;
+			return false;
 		}
 		io_read_all(File, ppResult, pResultLen);
 		io_close(File);
-		return false;
+		return true;
 	}
 
 	char *ReadFileStr(const char *pFilename, int Type)
