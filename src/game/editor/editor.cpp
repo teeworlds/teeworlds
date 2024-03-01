@@ -561,6 +561,7 @@ void CEditor::CallbackOpenMap(const char *pFileName, int StorageType, void *pUse
 		pEditor->m_aFileName[0] = 0;
 	}
 }
+
 void CEditor::CallbackAppendMap(const char *pFileName, int StorageType, void *pUser)
 {
 	CEditor *pEditor = (CEditor*)pUser;
@@ -571,6 +572,7 @@ void CEditor::CallbackAppendMap(const char *pFileName, int StorageType, void *pU
 
 	pEditor->m_Dialog = DIALOG_NONE;
 }
+
 void CEditor::CallbackSaveMap(const char *pFileName, int StorageType, void *pUser)
 {
 	CEditor *pEditor = static_cast<CEditor*>(pUser);
@@ -588,6 +590,26 @@ void CEditor::CallbackSaveMap(const char *pFileName, int StorageType, void *pUse
 		pEditor->m_ValidSaveFilename = StorageType == IStorage::TYPE_SAVE && pEditor->m_pFileDialogPath == pEditor->m_aFileDialogCurrentFolder;
 		pEditor->m_Map.m_Modified = false;
 	}
+
+	pEditor->m_Dialog = DIALOG_NONE;
+}
+
+void CEditor::CallbackOpenEntities(const char *pFileName, int StorageType, void *pUser)
+{
+	CEditor *pEditor = (CEditor*)pUser;
+	CImageInfo ImgInfo;
+	if(!pEditor->Graphics()->LoadPNG(&ImgInfo, pFileName, StorageType))
+		return;
+	
+	if((ImgInfo.m_Width % 16) || (ImgInfo.m_Height % 16))
+	{
+		pEditor->m_PopupEventType = POPEVENT_ENTITIES;
+		pEditor->m_PopupEventActivated = true;
+		return;
+	}
+
+	pEditor->m_EntitiesTexture = pEditor->Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format, ImgInfo.m_pData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
+	pEditor->m_Map.m_pGameLayer->m_Texture = pEditor->m_EntitiesTexture;
 
 	pEditor->m_Dialog = DIALOG_NONE;
 }
@@ -3015,6 +3037,16 @@ void CEditor::FilelistPopulate(int StorageType)
 		Item.m_IsDir = true;
 		Item.m_IsLink = true;
 		Item.m_StorageType = IStorage::TYPE_SAVE;
+		m_CompleteFileList.add(Item);
+	}
+	if(!str_comp(m_pFileDialogPath, "editor"))
+	{
+		CFilelistItem Item;
+		str_copy(Item.m_aFilename, "entities.png", sizeof(Item.m_aFilename));
+		str_copy(Item.m_aName, "Vanilla", sizeof(Item.m_aName));
+		Item.m_IsDir = false;
+		Item.m_IsLink = true;
+		Item.m_StorageType = IStorage::TYPE_ALL;
 		m_CompleteFileList.add(Item);
 	}
 	Storage()->ListDirectory(StorageType, m_pFileDialogPath, EditorListdirCallback, this);
