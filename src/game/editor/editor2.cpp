@@ -231,7 +231,7 @@ void CEditor2::Update()
 	if(!m_InputConsole.IsOpen())
 	{
 		// move view
-		if(MouseButtons&MOUSE_RIGHT)
+		if(MouseButtons&MOUSE_RIGHT || MouseButtons&MOUSE_MIDDLE)
 		{
 			m_MapViewMove = m_UiMouseDelta;
 		}
