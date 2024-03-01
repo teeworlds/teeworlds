@@ -425,6 +425,7 @@ class CEditor2: public IEditor, public CEditor2Ui
 	void RenderPopupYesNo(void *pPopupData);
 	void RenderPopupMapNew(void *pPopupData);
 	void RenderPopupAddImage(void *pPopupData);
+	void RenderPopupEntitiesLoad(void *pPopupData);
 
 	bool DoFileSelect(CUIRect MainRect, CUIFileSelect *pState, CUIRect *pPreviewRect = 0);
 	bool DoPopupYesNo(CUIPopupYesNo* state);
@@ -459,12 +460,14 @@ class CEditor2: public IEditor, public CEditor2Ui
 	int Save(const char* pFilename);
 	bool LoadMap(const char *pFileName);
 	bool SaveMap(const char *pFileName);
+	bool LoadEntities(const char *pFileName);
 	void OnMapLoaded();
 
 	void UserMapNew();
 	void UserMapLoad();
 	void UserMapSave();
 	void UserMapSaveAs();
+	void UserMapEntitiesLoad();
 
 	void EditDeleteLayer(int LyID, int ParentGroupID);
 	void EditDeleteGroup(u32 GroupID);

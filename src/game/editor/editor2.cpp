@@ -2532,6 +2532,7 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 	static CUIButton s_OpenButton;
 	static CUIButton s_OpenCurrentButton;
 	static CUIButton s_AppendButton;
+	static CUIButton s_EntitiesButton;
 	static CUIButton s_ExitButton;
 
 	// whole screen "button" that prevents clicking on other stuff when exiting
@@ -2576,6 +2577,14 @@ void CEditor2::RenderPopupMenuFile(void* pPopupData)
 		ExitPopup();
 		UserMapSaveAs();
 	}
+
+	Rect.HSplitTop(20.0f, &Slot, &Rect);
+	if(UiButton(Slot, "Load Entities", &s_EntitiesButton))
+	{
+		ExitPopup();
+		UserMapEntitiesLoad();
+	}
+
 
 	Rect.HSplitTop(20.0f, &Slot, &Rect);
 	if(UiButton(Slot, "Exit", &s_ExitButton))
@@ -3456,6 +3465,97 @@ void CEditor2::RenderPopupAddImage(void *pPopupData)
 	}
 }
 
+void CEditor2::RenderPopupEntitiesLoad(void *pPopupData)
+{
+	if(Input()->KeyPress(KEY_ESCAPE))
+	{
+		ExitPopup();
+		return;
+	}
+
+	const CUIRect UiScreenRect = m_UiScreenRect;
+	Graphics()->MapScreen(UiScreenRect.x, UiScreenRect.y, UiScreenRect.w, UiScreenRect.h);
+
+	// whole screen "button" that prevents clicking on other stuff
+	DrawRect(UiScreenRect, vec4(0.0, 0, 0, 0.5));
+	static CUIButton OverlayFakeButton;
+	UiDoButtonBehavior(&OverlayFakeButton, UiScreenRect, &OverlayFakeButton);
+
+	const float Scale = 5.0f/6.0f;
+	CUIRect MainRect = {UiScreenRect.w * (1 - Scale) * 0.5f, UiScreenRect.h * (1 - Scale) * 0.5f, UiScreenRect.w * Scale, UiScreenRect.h * Scale};
+
+	DrawRectBorderOutside(MainRect, StyleColorBg, 2, vec4(0.145f, 0.0f, 0.4f, 1.0f));
+
+	CUIRect TitleRect;
+	MainRect.HSplitTop(20.0f, &TitleRect, &MainRect);
+	DrawText(TitleRect, Localize("Load Entities Image"), 10);
+
+	CUIRect Preview;
+	int OldSelected = m_UiFileSelectState.m_Selected;
+	if(DoFileSelect(MainRect, &m_UiFileSelectState, &Preview))
+	{
+		if(m_UiFileSelectState.m_aOutputPath[0])
+			LoadEntities(m_UiFileSelectState.m_aOutputPath);
+		ExitPopup();
+	}
+
+	static IGraphics::CTextureHandle s_PreviewTexHandle;
+	static CImageInfo s_PreviewImageInfo;
+	if(m_UiFileSelectState.m_Selected >= 0 && m_UiFileSelectState.m_Selected != OldSelected
+		&& str_endswith(m_UiFileSelectState.m_aFileList[m_UiFileSelectState.m_Selected].m_aFilename, ".png"))
+	{
+		if(s_PreviewTexHandle.IsValid())
+		{
+			Graphics()->UnloadTexture(&s_PreviewTexHandle);
+			s_PreviewTexHandle.Invalidate();
+		}
+
+		if(Graphics()->LoadPNG(&s_PreviewImageInfo, m_UiFileSelectState.m_aOutputPath, m_UiFileSelectState.m_aFileList[m_UiFileSelectState.m_Selected].m_StorageType))
+		{
+			s_PreviewTexHandle = Graphics()->LoadTextureRaw(s_PreviewImageInfo.m_Width, s_PreviewImageInfo.m_Height,
+				s_PreviewImageInfo.m_Format, s_PreviewImageInfo.m_pData, s_PreviewImageInfo.m_Format,
+				IGraphics::TEXLOAD_MULTI_DIMENSION);
+			mem_free(s_PreviewImageInfo.m_pData);
+			s_PreviewImageInfo.m_pData = 0;
+		}
+	}
+
+	if(s_PreviewTexHandle.IsValid())
+	{
+		// Center the Image on it's major axis
+		const float ImageAspect = s_PreviewImageInfo.m_Width / s_PreviewImageInfo.m_Height;
+		CUIRect Image;
+		if(s_PreviewImageInfo.m_Width > s_PreviewImageInfo.m_Height)
+		{
+			Image.w = Preview.w;
+			Image.h = Image.w / ImageAspect;
+			Image.x = Preview.x;
+			Image.y = Preview.y + (Preview.h - Image.h) * 0.5f;
+		}
+		else
+		{
+			Image.h = Preview.h;
+			Image.w = Image.h * ImageAspect;
+			Image.x = Preview.x + (Preview.w - Image.w) * 0.5f;
+			Image.y = Preview.y;
+		}
+
+		Graphics()->TextureSet(m_CheckerTexture);
+		Graphics()->QuadsBegin();
+		Graphics()->SetColor(1, 1, 1, 1);
+		Graphics()->QuadsSetSubset(0, 0, s_PreviewImageInfo.m_Width/128.0f, s_PreviewImageInfo.m_Height/128.0f);
+		IGraphics::CQuadItem BgQuad(Preview.x, Preview.y, Preview.w, Preview.h);
+		Graphics()->QuadsDrawTL(&BgQuad, 1);
+		Graphics()->QuadsEnd();
+
+		Graphics()->TextureSet(s_PreviewTexHandle);
+		Graphics()->QuadsBegin();
+		IGraphics::CQuadItem Quad(Image.x, Image.y, Image.w, Image.h);
+		Graphics()->QuadsDrawTL(&Quad, 1);
+		Graphics()->QuadsEnd();
+	}
+}
+
 bool CEditor2::DoPopupYesNo(CUIPopupYesNo* state)
 {
 	if(!state->m_Active)
@@ -4020,6 +4120,45 @@ bool CEditor2::SaveMap(const char* pFileName)
 	return false;
 }
 
+bool CEditor2::LoadEntities(const char *pFileName)
+{
+	if(!str_endswith(pFileName, ".png"))
+	{
+		// TODO: can we load anything other than png files?
+		ed_dbg("ERROR: '%s' image file not supported", pFilepath);
+		return false;
+	}
+
+	CImageInfo ImgInfo;
+	IGraphics::CTextureHandle TexHnd;
+	if(Graphics()->LoadPNG(&ImgInfo, pFileName, IStorage::TYPE_ALL))
+	{
+		const int TextureFlags = IGraphics::TEXLOAD_MULTI_DIMENSION;
+		ImgInfo.m_Format = CImageInfo::FORMAT_AUTO;
+		TexHnd = Graphics()->LoadTextureRaw(ImgInfo.m_Width, ImgInfo.m_Height, ImgInfo.m_Format,
+			ImgInfo.m_pData, ImgInfo.m_Format, TextureFlags);
+		mem_free(ImgInfo.m_pData); // TODO: keep this?
+		ImgInfo.m_pData = NULL;
+
+		if(!TexHnd.IsValid())
+		{
+			ed_dbg("LoadTextureRaw ERROR: could not load '%s' image file", pFileName);
+			return false;
+		}
+	}
+	else
+	{
+		ed_dbg("LoadPNG ERROR: could not load '%s' image file", pFileName);
+		return false;
+	}
+
+	m_EntitiesTexture = TexHnd;
+
+	ed_dbg("Image '%s' loaded", pFilepath);
+
+	return true;
+}
+
 void CEditor2::OnMapLoaded()
 {
 	m_MapSaved = true;
@@ -4088,6 +4227,35 @@ void CEditor2::UserMapSaveAs()
 	m_UiFileSelectState.PopulateFileList(Storage());
 
 	PushPopup(&CEditor2::RenderPopupMapSaveAs, 0x0);
+}
+
+void CEditor2::UserMapEntitiesLoad()
+{
+	m_UiFileSelectState.m_pButtonText = Localize("Load");
+	m_UiFileSelectState.m_NewFile = false;
+	m_UiFileSelectState.m_Selected = -1;
+	str_copy(m_UiFileSelectState.m_aPath, "editor", sizeof(m_UiFileSelectState.m_aPath));
+	m_UiFileSelectState.m_pListBoxEntries = 0;
+	m_UiFileSelectState.m_StorageType = IStorage::TYPE_SAVE;
+	m_UiFileSelectState.PopulateFileList(Storage());
+
+	CFileListItem Vanilla;
+	str_copy(Vanilla.m_aFilename, "entities.png", sizeof(Vanilla.m_aFilename));
+	str_copy(Vanilla.m_aName, "Vanilla", sizeof(Vanilla.m_aName));
+	Vanilla.m_IsDir = false;
+	Vanilla.m_IsLink = true;
+	Vanilla.m_StorageType = IStorage::TYPE_ALL;
+
+	char aPath[IO_MAX_PATH_LENGTH];
+	Storage()->OpenFile("editor/entities.png", IOFLAG_READ, IStorage::TYPE_ALL, aPath, sizeof(aPath));
+
+	fs_file_time(aPath, &Vanilla.m_Created, &Vanilla.m_Modified);
+
+	m_UiFileSelectState.m_aFileList.add(Vanilla);
+
+	m_UiFileSelectState.GenerateListBoxEntries();
+
+	PushPopup(&CEditor2::RenderPopupEntitiesLoad, 0x0);
 }
 
 void CEditor2::HistoryClear()
