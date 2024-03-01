@@ -708,6 +708,8 @@ bool CEditor::PopupEvent(void *pContext, CUIRect View)
 		pEditor->UI()->DoLabel(&Label, "New map", 20.0f, TEXTALIGN_CENTER);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
 		pEditor->UI()->DoLabel(&Label, "Save map", 20.0f, TEXTALIGN_CENTER);
+	else if(pEditor->m_PopupEventType == POPEVENT_ENTITIES)
+		pEditor->UI()->DoLabel(&Label, "Load entities", 20.0f, TEXTALIGN_CENTER);
 
 	View.HSplitBottom(10.0f, &View, 0);
 	View.HSplitBottom(20.0f, &View, &ButtonBar);
@@ -726,6 +728,8 @@ bool CEditor::PopupEvent(void *pContext, CUIRect View)
 		pEditor->UI()->DoLabel(&Label, "The map currently contains unsaved data; you may want to save it before you create a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
 		pEditor->UI()->DoLabel(&Label, "This file already exists.\nDo you want to overwrite it?", 10.0f, TEXTALIGN_LEFT);
+	else if(pEditor->m_PopupEventType == POPEVENT_ENTITIES)
+		pEditor->UI()->DoLabel(&Label, "The width or height of the entities texture is not divisible by 16", 10.0f, TEXTALIGN_LEFT);
 
 	// button bar
 	ButtonBar.VSplitLeft(30.0f, 0, &ButtonBar);
@@ -1201,6 +1205,7 @@ bool CEditor::PopupMenuFile(void *pContext, CUIRect View)
 	static int s_OpenCurrentButton = 0;
 	static int s_AppendButton = 0;
 	static int s_ExitButton = 0;
+	static int s_EntitiesButton = 0;
 
 	CUIRect Slot;
 	View.HSplitTop(2.0f, &Slot, &View);
@@ -1279,6 +1284,14 @@ bool CEditor::PopupMenuFile(void *pContext, CUIRect View)
 	if(pEditor->DoButton_MenuItem(&s_SaveAsButton, "Save As", 0, &Slot, 0, "Saves the current map under a new name"))
 	{
 		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_MAP, "Save map", "Save", "maps", "", pEditor->CallbackSaveMap, pEditor);
+		return true;
+	}
+
+	View.HSplitTop(10.0f, &Slot, &View);
+	View.HSplitTop(12.0f, &Slot, &View);
+	if(pEditor->DoButton_MenuItem(&s_EntitiesButton, "Load Entities", 0, &Slot, 0, "Load a image as the editor game entities"))
+	{
+		pEditor->InvokeFileDialog(IStorage::TYPE_SAVE, FILETYPE_IMG, "Load entities", "Load", "editor", "", pEditor->CallbackOpenEntities, pEditor);
 		return true;
 	}
 

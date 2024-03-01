@@ -652,6 +652,7 @@ public:
 		POPEVENT_LOAD_CURRENT,
 		POPEVENT_NEW,
 		POPEVENT_SAVE,
+		POPEVENT_ENTITIES,
 	};
 
 	int m_PopupEventType;
@@ -810,6 +811,7 @@ public:
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackSaveMap(const char *pFileName, int StorageType, void *pUser);
+	static void CallbackOpenEntities(const char *pFileName, int StorageType, void *pUser);
 
 	void PopupSelectImageInvoke(int Current, float x, float y);
 	int PopupSelectImageResult();
