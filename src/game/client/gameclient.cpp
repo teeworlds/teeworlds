@@ -401,7 +401,7 @@ void CGameClient::OnInit()
 	m_pEditor->Init();
 	m_pMenus->RenderLoading(2);
 
-	OnReset();	
+	OnReset();
 
 	m_ServerMode = SERVERMODE_PURE;
 
@@ -1317,7 +1317,7 @@ void CGameClient::OnNewSnapshot()
 							EvolveCharacter(&pCharInfo->m_Prev, EvolvePrevTick);
 						if(pCharInfo->m_Cur.m_Tick)
 							EvolveCharacter(&pCharInfo->m_Cur, EvolveCurTick);
-						
+
 						m_aClients[Item.m_ID].m_Evolved = m_Snap.m_aCharacters[Item.m_ID].m_Cur;
 					}
 
@@ -1873,6 +1873,7 @@ void CGameClient::DoTeamChangeMessage(const char *pName, int ClientID, int Team)
 	m_pChat->AddLine(aBuf);
 }
 
+// ----- send functions -----
 void CGameClient::SendSwitchTeam(int Team)
 {
 	CNetMsg_Cl_SetTeam Msg;

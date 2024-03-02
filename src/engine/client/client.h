@@ -212,18 +212,17 @@ public:
 	void SendInfo();
 	void SendEnterGame();
 	void SendReady();
+	void SendInput();
+	void SendRconAuth(const char *pName, const char *pPassword);
+	virtual void SendRcon(const char *pCmd);
 
 	virtual bool RconAuthed() const { return m_RconAuthed != 0; }
 	virtual bool UseTempRconCommands() const { return m_UseTempRconCommands != 0; }
-	void RconAuth(const char *pName, const char *pPassword);
-	virtual void Rcon(const char *pCmd);
 
 	virtual bool ConnectionProblems() const;
 	virtual int GetInputtimeMarginStabilityScore();
 
 	virtual bool SoundInitFailed() const { return m_SoundInitFailed; }
-
-	void SendInput();
 
 	// TODO: OPT: do this alot smarter!
 	virtual const int *GetInput(int Tick) const;

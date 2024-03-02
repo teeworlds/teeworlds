@@ -108,10 +108,11 @@ public:
 	virtual const int *GetInput(int Tick) const = 0;
 
 	// remote console
-	virtual void RconAuth(const char *pUsername, const char *pPassword) = 0;
 	virtual bool RconAuthed() const = 0;
 	virtual bool UseTempRconCommands() const = 0;
-	virtual void Rcon(const char *pLine) = 0;
+
+	virtual void SendRconAuth(const char *pUsername, const char *pPassword) = 0;
+	virtual void SendRcon(const char *pLine) = 0;
 
 	// server info
 	virtual void GetServerInfo(class CServerInfo *pServerInfo) = 0;

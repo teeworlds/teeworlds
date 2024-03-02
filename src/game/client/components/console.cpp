@@ -103,9 +103,9 @@ void CGameConsole::CInstance::ExecuteLine(const char *pLine)
 	else
 	{
 		if(m_pGameConsole->Client()->RconAuthed())
-			m_pGameConsole->Client()->Rcon(pLine);
+			m_pGameConsole->Client()->SendRcon(pLine);
 		else
-			m_pGameConsole->Client()->RconAuth("", pLine);
+			m_pGameConsole->Client()->SendRconAuth("", pLine);
 	}
 }
 

@@ -38,7 +38,7 @@ public:
 	virtual void OnRelease();
 	virtual void OnReset();
 
-	void Spectate(int SpecMode, int SpectatorID);
+	void SendSpectate(int SpecMode, int SpectatorID);
 };
 
 #endif

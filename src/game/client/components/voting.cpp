@@ -15,12 +15,12 @@ void CVoting::ConVote(IConsole::IResult *pResult, void *pUserData)
 {
 	CVoting *pSelf = (CVoting *)pUserData;
 	if(str_comp_nocase(pResult->GetString(0), "yes") == 0)
-		pSelf->Vote(VOTE_CHOICE_YES);
+		pSelf->SendVote(VOTE_CHOICE_YES);
 	else if(str_comp_nocase(pResult->GetString(0), "no") == 0)
-		pSelf->Vote(VOTE_CHOICE_NO);
+		pSelf->SendVote(VOTE_CHOICE_NO);
 }
 
-void CVoting::Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote)
+void CVoting::SendCallvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote)
 {
 	CNetMsg_Cl_CallVote Msg = {0};
 	Msg.m_Type = pType;
@@ -34,14 +34,14 @@ void CVoting::CallvoteSpectate(int ClientID, const char *pReason, bool ForceVote
 {
 	char aBuf[32];
 	str_format(aBuf, sizeof(aBuf), "%d", ClientID);
-	Callvote("spectate", aBuf, pReason, ForceVote);
+	SendCallvote("spectate", aBuf, pReason, ForceVote);
 }
 
 void CVoting::CallvoteKick(int ClientID, const char *pReason, bool ForceVote)
 {
 	char aBuf[32];
 	str_format(aBuf, sizeof(aBuf), "%d", ClientID);
-	Callvote("kick", aBuf, pReason, ForceVote);
+	SendCallvote("kick", aBuf, pReason, ForceVote);
 }
 
 void CVoting::CallvoteOption(int OptionID, const char *pReason, bool ForceVote)
@@ -51,7 +51,7 @@ void CVoting::CallvoteOption(int OptionID, const char *pReason, bool ForceVote)
 	{
 		if(OptionID == 0)
 		{
-			Callvote("option", pOption->m_aDescription, pReason, ForceVote);
+			SendCallvote("option", pOption->m_aDescription, pReason, ForceVote);
 			break;
 		}
 
@@ -69,7 +69,7 @@ void CVoting::RconRemoveVoteOption(int OptionID)
 		{
 			char aBuf[VOTE_DESC_LENGTH+32];
 			str_format(aBuf, sizeof(aBuf), "remove_vote \"%s\"", pOption->m_aDescription);
-			Client()->Rcon(aBuf);
+			Client()->SendRcon(aBuf);
 			break;
 		}
 
@@ -82,10 +82,10 @@ void CVoting::RconAddVoteOption(const char *pDescription, const char *pCommand)
 {
 	char aBuf[VOTE_DESC_LENGTH+VOTE_CMD_LENGTH+32];
 	str_format(aBuf, sizeof(aBuf), "add_vote \"%s\" \"%s\"", pDescription, pCommand);
-	Client()->Rcon(aBuf);
+	Client()->SendRcon(aBuf);
 }
 
-void CVoting::Vote(int Choice)
+void CVoting::SendVote(int Choice)
 {
 	CNetMsg_Cl_Vote Msg = { Choice };
 	Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
