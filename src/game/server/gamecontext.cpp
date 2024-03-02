@@ -437,7 +437,51 @@ void CGameContext::SendVoteStatus(int ClientID, int Total, int Yes, int No)
 	Msg.m_Pass = Total - (Yes+No);
 
 	Server()->SendPackMsg(&Msg, MSGFLAG_VITAL, ClientID);
+}
 
+void CGameContext::SendVoteClearOptions(int ClientID)
+{
+	CNetMsg_Sv_VoteClearOptions ClearMsg;
+	Server()->SendPackMsg(&ClearMsg, MSGFLAG_VITAL, ClientID);
+}
+
+void CGameContext::SendVoteOptions(int ClientID)
+{
+	CVoteOptionServer *pCurrent = m_pVoteOptionFirst;
+	while(pCurrent)
+	{
+		// count options for actual packet
+		int NumOptions = 0;
+		for(CVoteOptionServer *p = pCurrent; p && NumOptions < MAX_VOTE_OPTION_ADD; p = p->m_pNext, ++NumOptions);
+
+		// pack and send vote list packet
+		CMsgPacker Msg(NETMSGTYPE_SV_VOTEOPTIONLISTADD);
+		Msg.AddInt(NumOptions);
+		while(pCurrent && NumOptions--)
+		{
+			Msg.AddString(pCurrent->m_aDescription, VOTE_DESC_LENGTH);
+			pCurrent = pCurrent->m_pNext;
+		}
+		Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
+	}
+}
+
+void CGameContext::SendTuningParams(int ClientID)
+{
+	CheckPureTuning();
+
+	CMsgPacker Msg(NETMSGTYPE_SV_TUNEPARAMS);
+	int *pParams = (int *)&m_Tuning;
+	for(unsigned i = 0; i < sizeof(m_Tuning)/sizeof(int); i++)
+		Msg.AddInt(pParams[i]);
+	Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
+}
+
+void CGameContext::SendReadyToEnter(CPlayer *pPlayer)
+{
+	pPlayer->m_IsReadyToEnter = true;
+	CNetMsg_Sv_ReadyToEnter m;
+	Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, pPlayer->GetCID());
 }
 
 void CGameContext::AbortVoteOnDisconnect(int ClientID)
@@ -473,17 +517,6 @@ void CGameContext::CheckPureTuning()
 			m_Tuning = p;
 		}
 	}
-}
-
-void CGameContext::SendTuningParams(int ClientID)
-{
-	CheckPureTuning();
-
-	CMsgPacker Msg(NETMSGTYPE_SV_TUNEPARAMS);
-	int *pParams = (int *)&m_Tuning;
-	for(unsigned i = 0; i < sizeof(m_Tuning)/sizeof(int); i++)
-		Msg.AddInt(pParams[i]);
-	Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
 }
 
 void CGameContext::SwapTeams()
@@ -1128,35 +1161,10 @@ void CGameContext::OnMessage(int MsgID, CUnpacker *pUnpacker, int ClientID)
 
 			m_pController->OnPlayerInfoChange(pPlayer);
 
-			// send vote options
-			CNetMsg_Sv_VoteClearOptions ClearMsg;
-			Server()->SendPackMsg(&ClearMsg, MSGFLAG_VITAL, ClientID);
-
-			CVoteOptionServer *pCurrent = m_pVoteOptionFirst;
-			while(pCurrent)
-			{
-				// count options for actual packet
-				int NumOptions = 0;
-				for(CVoteOptionServer *p = pCurrent; p && NumOptions < MAX_VOTE_OPTION_ADD; p = p->m_pNext, ++NumOptions);
-
-				// pack and send vote list packet
-				CMsgPacker Msg(NETMSGTYPE_SV_VOTEOPTIONLISTADD);
-				Msg.AddInt(NumOptions);
-				while(pCurrent && NumOptions--)
-				{
-					Msg.AddString(pCurrent->m_aDescription, VOTE_DESC_LENGTH);
-					pCurrent = pCurrent->m_pNext;
-				}
-				Server()->SendMsg(&Msg, MSGFLAG_VITAL, ClientID);
-			}
-
-			// send tuning parameters to client
+			SendVoteClearOptions(ClientID);
+			SendVoteOptions(ClientID);
 			SendTuningParams(ClientID);
-
-			// client is ready to enter
-			pPlayer->m_IsReadyToEnter = true;
-			CNetMsg_Sv_ReadyToEnter m;
-			Server()->SendPackMsg(&m, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+			SendReadyToEnter(pPlayer);
 		}
 	}
 }
@@ -1491,8 +1499,7 @@ void CGameContext::ConClearVotes(IConsole::IResult *pResult, void *pUserData)
 	CGameContext *pSelf = (CGameContext *)pUserData;
 
 	pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "server", "cleared votes");
-	CNetMsg_Sv_VoteClearOptions VoteClearOptionsMsg;
-	pSelf->Server()->SendPackMsg(&VoteClearOptionsMsg, MSGFLAG_VITAL, -1);
+	pSelf->SendVoteClearOptions(-1);
 	pSelf->m_pVoteOptionHeap->Reset();
 	pSelf->m_pVoteOptionFirst = 0;
 	pSelf->m_pVoteOptionLast = 0;

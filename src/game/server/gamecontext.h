@@ -107,10 +107,6 @@ public:
 	void AbortVoteOnDisconnect(int ClientID);
 	void AbortVoteOnTeamChange(int ClientID);
 
-	void SendForceVote(int Type, const char *pDescription, const char *pReason);
-	void SendVoteSet(int Type, int ToClientID);
-	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
-
 	int m_VoteCreator;
 	int m_VoteType;
 	int64 m_VoteCloseTime;
@@ -151,6 +147,8 @@ public:
 	void SendMotd(int ClientID);
 	void SendSettings(int ClientID);
 	void SendSkinChange(int ClientID, int TargetID);
+	void SendTuningParams(int ClientID);
+	void SendReadyToEnter(CPlayer *pPlayer);
 
 	void SendGameMsg(int GameMsgID, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);
@@ -160,9 +158,14 @@ public:
 	void SendChatCommands(int ClientID);
 	void SendRemoveChatCommand(const CCommandManager::CCommand *pCommand, int ClientID);
 
+	void SendForceVote(int Type, const char *pDescription, const char *pReason);
+	void SendVoteSet(int Type, int ToClientID);
+	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
+	void SendVoteClearOptions(int ClientID);
+	void SendVoteOptions(int ClientID);
+
 	//
 	void CheckPureTuning();
-	void SendTuningParams(int ClientID);
 
 	//
 	void SwapTeams();
