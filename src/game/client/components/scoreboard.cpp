@@ -40,13 +40,26 @@ void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData)
 		pScoreboard->m_Active = false;
 	}
 	else if(!pScoreboard->m_Active)
+	{
 		pScoreboard->m_Activate = true;	
+		pScoreboard->m_Line[TEAM_RED] = 0;
+		pScoreboard->m_Line[TEAM_BLUE] = 0;
+	}
+}
+
+void CScoreboard::ConKeyScroll(IConsole::IResult *pResult, void *pUserData)
+{
+	CScoreboard *pScoreboard = (CScoreboard *)pUserData;
+	pScoreboard->m_Line[TEAM_RED]++;
+	pScoreboard->m_Line[TEAM_BLUE]++;
 }
 
 void CScoreboard::OnReset()
 {
 	m_Active = false;
 	m_Activate = false;
+	m_Line[TEAM_RED] = 0;
+	m_Line[TEAM_BLUE] = 0;
 }
 
 void CScoreboard::OnRelease()
@@ -57,6 +70,7 @@ void CScoreboard::OnRelease()
 void CScoreboard::OnConsoleInit()
 {
 	Console()->Register("+scoreboard", "", CFGFLAG_CLIENT, ConKeyScoreboard, this, "Show scoreboard");
+	Console()->Register("+scroll_scoreboard", "", CFGFLAG_CLIENT, ConKeyScroll, this, "Scroll scoreboard");
 }
 
 void CScoreboard::RenderGoals(float x, float y, float w)
@@ -429,7 +443,8 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	{
 		for(int RenderDead = 0; RenderDead < 2 && NumRenderScoreIDs < MAX_IDS-1; ++RenderDead)
 		{
-			for(int i = 0; i < MAX_CLIENTS && NumRenderScoreIDs < MAX_IDS-1; i++)
+			m_Line[Team] %= NumPlayers;
+			for(int i = m_Line[Team]; NumRenderScoreIDs < MAX_IDS-1; i + 1 < MAX_CLIENTS ? i++ : i = 0)
 			{
 				// make sure that we render the correct team
 				const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[i];
@@ -465,42 +480,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 					TeamScoreIDs[j] = i;
 					j++;
 				}
-			}
-
-			if(Classment < MAX_IDS-1) {}
-			else if(Classment == m_pClient->m_GameInfo.m_aTeamSize[Team] - 1)
-			{
-				HoleSizes[0] = Classment - MAX_IDS-2;
-				RenderScoreIDs[MAX_IDS-3] = -1;
-				RenderScoreIDs[MAX_IDS-2] = TeamScoreIDs[Classment-1];
-				RenderScoreIDs[MAX_IDS-1] = TeamScoreIDs[Classment];
-			}
-			else if(Classment == m_pClient->m_GameInfo.m_aTeamSize[Team] - 2)
-			{
-				HoleSizes[0] = Classment - MAX_IDS-3;
-				RenderScoreIDs[MAX_IDS-4] = -1;
-				RenderScoreIDs[MAX_IDS-3] = TeamScoreIDs[Classment-1];
-				RenderScoreIDs[MAX_IDS-2] = TeamScoreIDs[Classment];
-				RenderScoreIDs[MAX_IDS-1] = TeamScoreIDs[Classment+1];
-			}
-			else if(Classment == m_pClient->m_GameInfo.m_aTeamSize[Team] - 3)
-			{
-				HoleSizes[0] = Classment - MAX_IDS-4;
-				RenderScoreIDs[MAX_IDS-5] = -1;
-				RenderScoreIDs[MAX_IDS-4] = TeamScoreIDs[Classment-1];
-				RenderScoreIDs[MAX_IDS-3] = TeamScoreIDs[Classment];
-				RenderScoreIDs[MAX_IDS-2] = TeamScoreIDs[Classment+1];
-				RenderScoreIDs[MAX_IDS-1] = TeamScoreIDs[Classment+2];
-			}
-			else if(Classment < m_pClient->m_GameInfo.m_aTeamSize[Team] - 3)
-			{
-				HoleSizes[0] = Classment - MAX_IDS-4;
-				RenderScoreIDs[MAX_IDS-5] = -1;
-				RenderScoreIDs[MAX_IDS-4] = TeamScoreIDs[Classment-1];
-				RenderScoreIDs[MAX_IDS-3] = TeamScoreIDs[Classment];
-				RenderScoreIDs[MAX_IDS-2] = TeamScoreIDs[Classment+1];
-				HoleSizes[1] = m_pClient->m_GameInfo.m_aTeamSize[Team] - Classment - 2;
-				RenderScoreIDs[MAX_IDS-1] = -2;
 			}
 		}
 	}

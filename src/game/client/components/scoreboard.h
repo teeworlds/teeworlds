@@ -13,9 +13,11 @@ class CScoreboard : public CComponent
 	void RenderNetworkQuality(float x, float w);
 
 	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData);
+	static void ConKeyScroll(IConsole::IResult *pResult, void *pUserData);
 
 	bool m_Active;
 	bool m_Activate;
+	int m_Line[NUM_TEAMS];
  	class CUIRect m_TotalRect;
 
 public:

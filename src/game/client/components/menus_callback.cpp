@@ -40,6 +40,7 @@ static CKeyInfo gs_aKeys[] =
 	{ "Show chat", "+show_chat", 0, 0},
 	{ "Scoreboard", "+scoreboard", 0, 0},
 	{ "Statboard", "+stats", 0, 0},
+	{ "Scroll Scoreboard", "+scroll_scoreboard", 0, 0},
 	{ "Emoticon", "+emote", 0, 0},
 
 	{ "Spectator mode", "+spectate", 0, 0},
@@ -342,7 +343,7 @@ float CMenus::RenderSettingsControlsScoreboard(CUIRect View)
 		}
 	}
 
-	int NumOptions = 2;
+	int NumOptions = 3;
 	int StartOption = 18;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
@@ -353,7 +354,7 @@ float CMenus::RenderSettingsControlsScoreboard(CUIRect View)
 
 	DoSettingsControlsButtons(StartOption, StartOption+NumOptions, View, ButtonHeight, Spacing);
 
-	View.HSplitTop(ButtonHeight*2+Spacing*3, 0, &View);
+	View.HSplitTop(ButtonHeight*NumOptions+Spacing*(NumOptions+1), 0, &View);
 	View.VSplitLeft(View.w/3, 0, &View);
 	View.VSplitRight(View.w/2, &View, 0);
 	static int s_StatboardConfigDropdown = 0;
@@ -368,7 +369,7 @@ float CMenus::RenderSettingsControlsMisc(CUIRect View)
 	UpdateBindKeys(m_pClient->m_pBinds);
 
 	int NumOptions = 12;
-	int StartOption = 20;
+	int StartOption = 21;
 	float ButtonHeight = 20.0f;
 	float Spacing = 2.0f;
 	float BackgroundHeight = (float)NumOptions*ButtonHeight+(float)NumOptions*Spacing;
