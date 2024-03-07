@@ -20,7 +20,7 @@ class CBroadcast : public CComponent
 	};
 
 	enum {
-		MAX_BROADCAST_MSG_SIZE = 128,
+		MAX_BROADCAST_MSG_SIZE = 256,
 		MAX_BROADCAST_LINES = 3,
 	};
 
