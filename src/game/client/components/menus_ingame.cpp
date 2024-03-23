@@ -553,7 +553,7 @@ void CMenus::RenderServerControlKick(CUIRect MainView, bool FilterSpectators)
 		{
 			if(i == m_pClient->m_LocalClientID || !m_pClient->m_aClients[i].m_Active || m_pClient->m_aClients[i].m_Team != Teams[Team] ||
 				(FilterSpectators && m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS) ||
-				(!FilterSpectators && m_pClient->m_Snap.m_paPlayerInfos[i] && (m_pClient->m_Snap.m_paPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_ADMIN)))
+				(!FilterSpectators && m_pClient->m_Snap.m_apPlayerInfos[i] && (m_pClient->m_Snap.m_apPlayerInfos[i]->m_PlayerFlags&PLAYERFLAG_ADMIN)))
 				continue;
 			if(m_CallvoteSelectedPlayer == i)
 				Selected = NumOptions;

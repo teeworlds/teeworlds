@@ -710,7 +710,7 @@ CTextRender::CTextRender()
 	m_pGlyphMap = 0;
 	m_NumVariants = 0;
 	m_CurrentVariant = -1;
-	m_paVariants = 0;
+	m_apVariants = 0;
 
 	mem_zero(m_apFontData, sizeof(m_apFontData));
 }
@@ -734,8 +734,8 @@ void CTextRender::Shutdown()
 
 	FT_Done_FreeType(m_FTLibrary);
 
-	if(m_paVariants)
-		mem_free(m_paVariants);
+	if(m_apVariants)
+		mem_free(m_apVariants);
 
 	for(int i = 0; i < MAX_FACES; ++i)
 		if(m_apFontData[i])
@@ -820,18 +820,18 @@ void CTextRender::LoadFonts(IStorage *pStorage, IConsole *pConsole)
 	{
 		m_NumVariants = rVariant.u.object.length;
 		json_object_entry *Entries = rVariant.u.object.values;
-		m_paVariants = (CFontLanguageVariant *)mem_alloc(sizeof(CFontLanguageVariant)*m_NumVariants);
+		m_apVariants = (CFontLanguageVariant *)mem_alloc(sizeof(CFontLanguageVariant)*m_NumVariants);
 		for(int i = 0; i < m_NumVariants; ++i)
 		{
 			char aFileName[128];
 			str_format(aFileName, sizeof(aFileName), "languages/%s.json", (const char *)Entries[i].name);
-			str_copy(m_paVariants[i].m_aLanguageFile, aFileName, sizeof(m_paVariants[i].m_aLanguageFile));
+			str_copy(m_apVariants[i].m_aLanguageFile, aFileName, sizeof(m_apVariants[i].m_aLanguageFile));
 
 			json_value *pFamilyName = rVariant.u.object.values[i].value;
 			if(pFamilyName->type == json_string)
-				str_copy(m_paVariants[i].m_aFamilyName, pFamilyName->u.string.ptr, sizeof(m_paVariants[i].m_aFamilyName));
+				str_copy(m_apVariants[i].m_aFamilyName, pFamilyName->u.string.ptr, sizeof(m_apVariants[i].m_aFamilyName));
 			else
-				m_paVariants[i].m_aFamilyName[0] = 0;
+				m_apVariants[i].m_aFamilyName[0] = 0;
 		}
 	}
 
@@ -845,13 +845,13 @@ void CTextRender::SetFontLanguageVariant(const char *pLanguageFile)
 
 	char *pFamilyName = NULL;
 
-	if(m_paVariants)
+	if(m_apVariants)
 	{
 		for(int i = 0; i < m_NumVariants; ++i)
 		{
-			if(str_comp_filenames(pLanguageFile, m_paVariants[i].m_aLanguageFile) == 0)
+			if(str_comp_filenames(pLanguageFile, m_apVariants[i].m_aLanguageFile) == 0)
 			{
-				pFamilyName = m_paVariants[i].m_aFamilyName;
+				pFamilyName = m_apVariants[i].m_aFamilyName;
 				m_CurrentVariant = i;
 				break;
 			}

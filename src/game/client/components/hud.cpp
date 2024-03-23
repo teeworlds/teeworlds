@@ -854,7 +854,7 @@ void CHud::RenderSpectatorNotification()
 void CHud::RenderReadyUpNotification()
 {
 	if(m_pClient->m_LocalClientID != -1
-		&& !(m_pClient->m_Snap.m_paPlayerInfos[m_pClient->m_LocalClientID]->m_PlayerFlags&PLAYERFLAG_READY))
+		&& !(m_pClient->m_Snap.m_apPlayerInfos[m_pClient->m_LocalClientID]->m_PlayerFlags&PLAYERFLAG_READY))
 	{
 		static CTextCursor s_Cursor(16.0f);
 
@@ -994,7 +994,7 @@ void CHud::OnRender()
 			RenderHealthAndAmmo(m_pClient->m_Snap.m_pLocalCharacter);
 			if(Race && m_pClient->m_LocalClientID != -1)
 			{
-				RenderRaceTime(m_pClient->m_Snap.m_paPlayerInfosRace[m_pClient->m_LocalClientID]);
+				RenderRaceTime(m_pClient->m_Snap.m_apPlayerInfosRace[m_pClient->m_LocalClientID]);
 				RenderCheckpoint();
 			}
 		}
@@ -1005,7 +1005,7 @@ void CHud::OnRender()
 				RenderHealthAndAmmo(&m_pClient->m_Snap.m_aCharacters[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID].m_Cur);
 				if(Race)
 				{
-					RenderRaceTime(m_pClient->m_Snap.m_paPlayerInfosRace[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]);
+					RenderRaceTime(m_pClient->m_Snap.m_apPlayerInfosRace[m_pClient->m_Snap.m_SpecInfo.m_SpectatorID]);
 					RenderCheckpoint();
 				}
 			}

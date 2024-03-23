@@ -162,7 +162,7 @@ class CTextRender : public IEngineTextRender
 	// support regional variant fonts
 	int m_NumVariants;
 	int m_CurrentVariant;
-	CFontLanguageVariant *m_paVariants;
+	CFontLanguageVariant *m_apVariants;
 
 	FT_Library m_FTLibrary;
 

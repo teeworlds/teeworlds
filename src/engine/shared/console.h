@@ -36,7 +36,7 @@ class CConsole : public IConsole
 
 	int m_FlagMask;
 	bool m_StoreCommands;
-	const char *m_paStrokeStr[2];
+	const char *m_apStrokeStr[2];
 	CCommand *m_pFirstCommand;
 
 	class CExecFile
