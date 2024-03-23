@@ -47,7 +47,7 @@ bool CSpectator::SpecModePossible(int SpecMode, int SpectatorID)
 			&& m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS
 			&& (SpectatorID == m_pClient->m_LocalClientID
 				|| m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != m_pClient->m_aClients[SpectatorID].m_Team
-				|| (m_pClient->m_Snap.m_paPlayerInfos[SpectatorID] && (m_pClient->m_Snap.m_paPlayerInfos[SpectatorID]->m_PlayerFlags&PLAYERFLAG_DEAD))))
+				|| (m_pClient->m_Snap.m_apPlayerInfos[SpectatorID] && (m_pClient->m_Snap.m_apPlayerInfos[SpectatorID]->m_PlayerFlags&PLAYERFLAG_DEAD))))
 		{
 			return false;
 		}
