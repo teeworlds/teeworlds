@@ -443,6 +443,8 @@ void CGameClient::OnUpdate()
 				break;
 		}
 	}
+
+	m_pScoreboard->DoUpdate();
 }
 
 int CGameClient::OnSnapInput(int *pData)
