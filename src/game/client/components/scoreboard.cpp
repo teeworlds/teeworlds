@@ -466,25 +466,6 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 		NumRenderScoreIDs = MAX_IDS;
 		RenderScoreIDs[MAX_IDS-1] = -1;
 		HoleSizes[0] = m_pClient->m_GameInfo.m_aTeamSize[Team] - (MAX_IDS-1);
-
-		if(m_pClient->m_LocalClientID != -1 && (m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == Team || m_pClient->m_Snap.m_SpecInfo.m_Active))
-		{
-			int Classment = -1;
-			int TeamScoreIDs[MAX_CLIENTS];
-			for(int i = 0, j = 0; i < MAX_CLIENTS; i++)
-			{
-				// make sure that we render the correct team
-				const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[i];
-				if(!pInfo->m_pPlayerInfo || m_pClient->m_aClients[pInfo->m_ClientID].m_Team != Team)
-					continue;
-
-				if(m_pClient->m_LocalClientID == pInfo->m_ClientID || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
-					Classment = j;
-
-				TeamScoreIDs[j] = i;
-				j++;
-			}
-		}
 	}
 	else // Normal scoreboard
 	{
