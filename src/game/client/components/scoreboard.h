@@ -17,6 +17,8 @@ class CScoreboard : public CComponent
 
 	bool m_Active;
 	bool m_Activate;
+	bool m_Scroll;
+	int m_ScrollTimer;
 	int m_Line[NUM_TEAMS];
  	class CUIRect m_TotalRect;
 
@@ -26,6 +28,8 @@ public:
 	virtual void OnConsoleInit();
 	virtual void OnRender();
 	virtual void OnRelease();
+
+	void DoUpdate();
 
  	bool IsActive() const;
 	void ResetPlayerStats(int ClientID);
