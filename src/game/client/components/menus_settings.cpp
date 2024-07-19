@@ -999,7 +999,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Config()->m_ClAutoDemoRecord ^= 1;
 
 	if(Config()->m_ClAutoDemoRecord)
-		UI()->DoScrollbarOption(&Config()->m_ClAutoDemoMax, &Config()->m_ClAutoDemoMax, &ClientRight, Localize("Max"), 0, 1000, &CUI::ms_LogarithmicScrollbarScale, CUI::SCROLLBAR_INFINITE);
+		UI()->DoScrollbarOption(&Config()->m_ClAutoDemoMax, &Config()->m_ClAutoDemoMax, &ClientRight, Localize("Max"), 0, 1000, &CUI::ms_LogarithmicScrollbarScale, CUI::SCROLLBAR_OPTION_INFINITE);
 
 	Client.HSplitTop(Spacing, 0, &Client);
 	Client.HSplitTop(ButtonHeight, &ClientLeft, &Client);
@@ -1008,7 +1008,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 		Config()->m_ClAutoScreenshot ^= 1;
 
 	if(Config()->m_ClAutoScreenshot)
-		UI()->DoScrollbarOption(&Config()->m_ClAutoScreenshotMax, &Config()->m_ClAutoScreenshotMax, &ClientRight, Localize("Max"), 0, 1000, &CUI::ms_LogarithmicScrollbarScale, CUI::SCROLLBAR_INFINITE);
+		UI()->DoScrollbarOption(&Config()->m_ClAutoScreenshotMax, &Config()->m_ClAutoScreenshotMax, &ClientRight, Localize("Max"), 0, 1000, &CUI::ms_LogarithmicScrollbarScale, CUI::SCROLLBAR_OPTION_INFINITE);
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 

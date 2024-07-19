@@ -278,8 +278,8 @@ public:
 
 	enum
 	{
-		SCROLLBAR_INFINITE = 1 << 0,
-		SCROLLBAR_NO_STRICT_RANGE = 1 << 1,
+		SCROLLBAR_OPTION_INFINITE = 1 << 0,
+		SCROLLBAR_OPTION_NOCLAMPVALUE = 1 << 1,
 	};
 
 	// tooltips
