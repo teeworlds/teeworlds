@@ -129,7 +129,7 @@ void CRenderTools::RenderTee(CAnimState *pAnim, const CTeeRenderInfo *pInfo, int
 				// draw decoration
 				if(pInfo->m_aTextures[SKINPART_DECORATION].IsValid())
 				{
-					Graphics()->TextureSet(pInfo->m_aTextures[2]);
+					Graphics()->TextureSet(pInfo->m_aTextures[SKINPART_DECORATION]);
 					Graphics()->QuadsBegin();
 					Graphics()->QuadsSetRotation(pAnim->GetBody()->m_Angle*pi*2);
 					Graphics()->SetColor(pInfo->m_aColors[SKINPART_DECORATION].r, pInfo->m_aColors[SKINPART_DECORATION].g, pInfo->m_aColors[SKINPART_DECORATION].b, pInfo->m_aColors[SKINPART_DECORATION].a);
