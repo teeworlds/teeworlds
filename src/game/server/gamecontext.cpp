@@ -789,6 +789,7 @@ void CGameContext::OnClientDrop(int ClientID, const char *pReason)
 		if(Server()->DemoRecorder_IsRecording())
 		{
 			CNetMsg_De_ClientLeave Msg;
+			Msg.m_ClientID = ClientID;
 			Msg.m_pName = Server()->ClientName(ClientID);
 			Msg.m_pReason = pReason;
 			Server()->SendPackMsg(&Msg, MSGFLAG_NOSEND, -1);

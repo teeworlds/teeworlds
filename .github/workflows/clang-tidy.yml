@@ -1,0 +1,29 @@
+name: Check clang-tidy
+
+on:
+  push:
+    branches-ignore:
+      - master
+      - staging.tmp
+      - trying.tmp
+      - staging-squash-merge.tmp
+  pull_request:
+
+jobs:
+  check-clang-tidy:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+
+    - name: Install clang-tidy
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev clang-tidy -y
+    - name: Build with clang-tidy
+      run: |
+        mkdir clang-tidy
+        cd clang-tidy
+        cmake -G Ninja -DCMAKE_CXX_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" -DCMAKE_C_CLANG_TIDY="clang-tidy;-warnings-as-errors=*" -DCMAKE_BUILD_TYPE=Debug -Werror=dev ..
+        cmake --build . --config Debug --target everything -- -k 0

@@ -670,7 +670,7 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		if(GameMsgID < 0 || GameMsgID >= NUM_GAMEMSGS)
 			return;
 
-		int aParaI[3];
+		int aParaI[3] = {0, 0, 0};
 		int NumParaI = 0;
 
 		// get paras

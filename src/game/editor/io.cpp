@@ -479,6 +479,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 		}
 
 		// load envelopes
+		do
 		{
 			CEnvPoint *pEnvPoints = 0;
 			{
@@ -486,6 +487,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 				DataFile.GetType(MAPITEMTYPE_ENVPOINTS, &Start, &Num);
 				if(Num)
 					pEnvPoints = (CEnvPoint *)DataFile.GetItem(Start, 0, 0);
+				else
+					break;
 			}
 
 			int Start, Num;
@@ -525,6 +528,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					pEnv->m_Synchronized = pItem->m_Synchronized;
 			}
 		}
+		while(false);
 	}
 	else
 		return 0;

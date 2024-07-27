@@ -137,9 +137,6 @@ if(NOT MSVC)
   # Protect the stack pointer.
   add_c_compiler_flag_if_supported(OUR_FLAGS -fstack-protector-all)
 
-  # Protect the stack from clashing.
-  add_c_compiler_flag_if_supported(OUR_FLAGS -fstack-clash-protection)
-
   # Control-flow protection. Should protect against ROP.
   add_c_compiler_flag_if_supported(OUR_FLAGS -fcf-protection)
 

@@ -1265,9 +1265,9 @@ void CEditor::DoQuadEnvelopes(const array<CQuad> &lQuads, IGraphics::CTextureHan
 {
 	int Num = lQuads.size();
 	CEnvelope **apEnvelope = new CEnvelope*[Num];
-	mem_zero(apEnvelope, sizeof(CEnvelope*)*Num);
 	for(int i = 0; i < Num; i++)
 	{
+		apEnvelope[i] = 0;
 		if((m_ShowEnvelopePreview == SHOWENV_SELECTED && lQuads[i].m_PosEnv == m_SelectedEnvelope) || m_ShowEnvelopePreview == SHOWENV_ALL)
 			if(lQuads[i].m_PosEnv >= 0 && lQuads[i].m_PosEnv < m_Map.m_lEnvelopes.size())
 				apEnvelope[i] = m_Map.m_lEnvelopes[lQuads[i].m_PosEnv];
@@ -2671,7 +2671,7 @@ void CEditor::RenderFileDialog()
 	// GUI coordsys
 	CUIRect View = *UI()->Screen();
 	Graphics()->MapScreen(View.x, View.y, View.w, View.h);
-	CUIRect Preview;
+	CUIRect Preview = {0, 0, 0, 0};
 	float Width = View.w, Height = View.h;
 
 	View.Draw(vec4(0,0,0,0.25f), 0.0f, CUIRect::CORNER_NONE);
@@ -2782,9 +2782,9 @@ void CEditor::RenderFileDialog()
 		}
 	}
 
-	if(m_FilesSelectedIndex >= 0 && m_FilesSelectedIndex < m_FilteredFileList.size())
+	if(m_FilesSelectedIndex >= 0 && m_FilesSelectedIndex < m_FilteredFileList.size() && m_FileDialogFileType == CEditor::FILETYPE_IMG)
 	{
-		if(m_FileDialogFileType == CEditor::FILETYPE_IMG && !m_PreviewImageIsLoaded)
+		if(!m_PreviewImageIsLoaded)
 		{
 			int Length = str_length(m_FilteredFileList[m_FilesSelectedIndex]->m_aFilename);
 			if(Length >= str_length(".png") && str_endswith_nocase(m_FilteredFileList[m_FilesSelectedIndex]->m_aFilename, ".png"))

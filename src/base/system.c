@@ -115,7 +115,11 @@ void dbg_assert_imp(const char *filename, int line, int test, const char *msg)
 
 void dbg_break()
 {
-	*((volatile unsigned*)0) = 0x0;
+#ifdef __GNUC__
+	__builtin_trap();
+#else
+	abort();
+#endif
 }
 
 void dbg_msg(const char *sys, const char *fmt, ...)
@@ -148,20 +152,20 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 #if defined(CONF_FAMILY_WINDOWS)
 static void logger_win_console(const char *line, void *user)
 {
-	#define _MAX_LENGTH 1024
-	#define _MAX_LENGTH_ERROR (_MAX_LENGTH+32)
+	#define MAX_LENGTH 1024
+	#define MAX_LENGTH_ERROR (MAX_LENGTH+32)
 
 	static const int UNICODE_REPLACEMENT_CHAR = 0xfffd;
 
 	static const char *STR_TOO_LONG = "(str too long)";
 	static const char *INVALID_UTF8 = "(invalid utf8)";
 
-	wchar_t wline[_MAX_LENGTH_ERROR];
+	wchar_t wline[MAX_LENGTH_ERROR];
 	size_t len = 0;
 
 	const char *read = line;
 	const char *error = STR_TOO_LONG;
-	while(len < _MAX_LENGTH)
+	while(len < MAX_LENGTH)
 	{
 		// Read a character. This also advances the read pointer
 		int glyph = str_utf8_decode(&read);
@@ -213,23 +217,23 @@ static void logger_win_console(const char *line, void *user)
 			if(character == 0)
 				break;
 
-			dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for error");
-			wline[len++] = character;
+			dbg_assert(len < MAX_LENGTH_ERROR, "str too short for error");
+			wline[len++] = (unsigned char)character;
 			read++;
 		}
 	}
 
 	// Terminate the line
-	dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for \\r");
+	dbg_assert(len < MAX_LENGTH_ERROR, "str too short for \\r");
 	wline[len++] = '\r';
-	dbg_assert(len < _MAX_LENGTH_ERROR, "str too short for \\n");
+	dbg_assert(len < MAX_LENGTH_ERROR, "str too short for \\n");
 	wline[len++] = '\n';
 
 	// Ignore any error that might occur
 	WriteConsoleW(GetStdHandle(STD_OUTPUT_HANDLE), wline, len, 0, 0);
 
-	#undef _MAX_LENGTH
-	#undef _MAX_LENGTH_ERROR
+	#undef MAX_LENGTH
+	#undef MAX_LENGTH_ERROR
 }
 #endif
 
@@ -2638,7 +2642,7 @@ char* str_sanitize_filename(char* aName)
 	{
 		// replace forbidden characters with a whispace
 		if(*str == '/' || *str == '<' || *str == '>' || *str == ':' || *str == '"'
-			|| *str == '/' || *str == '\\' || *str == '|' || *str == '?' || *str == '*')
+			|| *str == '\\' || *str == '|' || *str == '?' || *str == '*')
  			*str = ' ';
 		str++;
 	}
@@ -3136,7 +3140,7 @@ int str_utf8_decode(const char **ptr)
 	{
 		if((*buf&0x80) == 0x0)  /* 0xxxxxxx */
 		{
-			ch = *buf;
+			ch = (unsigned char)*buf;
 			buf++;
 		}
 		else if((*buf&0xE0) == 0xC0) /* 110xxxxx */
