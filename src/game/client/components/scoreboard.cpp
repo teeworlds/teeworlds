@@ -40,23 +40,48 @@ void CScoreboard::ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData)
 		pScoreboard->m_Active = false;
 	}
 	else if(!pScoreboard->m_Active)
-		pScoreboard->m_Activate = true;	
+	{
+		pScoreboard->m_Activate = true;
+		pScoreboard->m_Scroll = false;
+	}
+}
+
+void CScoreboard::ConKeyScroll(IConsole::IResult *pResult, void *pUserData)
+{
+	CScoreboard *pScoreboard = (CScoreboard *)pUserData;
+	int Result = pResult->GetInteger(0);
+
+	if(!Result)
+	{
+		pScoreboard->m_Scroll = false;
+	}
+	else if(pScoreboard->IsActive() && !pScoreboard->m_Scroll)
+	{
+		pScoreboard->m_Scroll = true;
+	}
 }
 
 void CScoreboard::OnReset()
 {
 	m_Active = false;
 	m_Activate = false;
+	m_Scroll = false;
+	m_Line[TEAM_RED] = 0;
+	m_Line[TEAM_BLUE] = 0;
+	m_ScrollTimer = 0;
 }
 
 void CScoreboard::OnRelease()
 {
 	m_Active = false;
+	m_Scroll = false;
+	m_ScrollTimer = 0;
 }
 
 void CScoreboard::OnConsoleInit()
 {
 	Console()->Register("+scoreboard", "", CFGFLAG_CLIENT, ConKeyScoreboard, this, "Show scoreboard");
+	Console()->Register("+scroll_scoreboard", "", CFGFLAG_CLIENT, ConKeyScroll, this, "Scroll scoreboard");
 }
 
 void CScoreboard::RenderGoals(float x, float y, float w)
@@ -427,98 +452,32 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 	// Non vanilla scoreboard, for now, some parts of the scoreboard are omitted
 	if(NumPlayers > MAX_IDS)
 	{
-		for(int RenderDead = 0; RenderDead < 2 && NumRenderScoreIDs < MAX_IDS-1; ++RenderDead)
+		m_Line[Team] %= NumPlayers;
+		for(int i = m_Line[Team]; NumRenderScoreIDs < MAX_IDS-1; i + 1 < MAX_CLIENTS ? i++ : i = 0)
 		{
-			for(int i = 0; i < MAX_CLIENTS && NumRenderScoreIDs < MAX_IDS-1; i++)
-			{
-				// make sure that we render the correct team
-				const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[i];
-				if(!pInfo->m_pPlayerInfo || m_pClient->m_aClients[pInfo->m_ClientID].m_Team != Team || (!RenderDead && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD)) ||
-					(RenderDead && !(pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD)))
-					continue;
+			// make sure that we render the correct team
+			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[i];
+			if(!pInfo->m_pPlayerInfo || m_pClient->m_aClients[pInfo->m_ClientID].m_Team != Team)
+				continue;
 
-				RenderScoreIDs[NumRenderScoreIDs] = i;
-				NumRenderScoreIDs++;
-			}
+			RenderScoreIDs[NumRenderScoreIDs] = i;
+			NumRenderScoreIDs++;
 		}
 		NumRenderScoreIDs = MAX_IDS;
 		RenderScoreIDs[MAX_IDS-1] = -1;
 		HoleSizes[0] = m_pClient->m_GameInfo.m_aTeamSize[Team] - (MAX_IDS-1);
-
-		if(m_pClient->m_LocalClientID != -1 && (m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == Team || m_pClient->m_Snap.m_SpecInfo.m_Active))
-		{
-			int Classment = -1;
-			int TeamScoreIDs[MAX_CLIENTS];
-			for(int RenderDead = 0, j = 0; RenderDead < 2; ++RenderDead)
-			{
-				for(int i = 0; i < MAX_CLIENTS; i++)
-				{
-					// make sure that we render the correct team
-					const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[i];
-					if(!pInfo->m_pPlayerInfo || m_pClient->m_aClients[pInfo->m_ClientID].m_Team != Team || (!RenderDead && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD)) ||
-						(RenderDead && !(pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD)))
-						continue;
-
-					if(m_pClient->m_LocalClientID == pInfo->m_ClientID || (m_pClient->m_Snap.m_SpecInfo.m_Active && pInfo->m_ClientID == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID))
-						Classment = j;
-
-					TeamScoreIDs[j] = i;
-					j++;
-				}
-			}
-
-			if(Classment < MAX_IDS-1) {}
-			else if(Classment == m_pClient->m_GameInfo.m_aTeamSize[Team] - 1)
-			{
-				HoleSizes[0] = Classment - MAX_IDS-2;
-				RenderScoreIDs[MAX_IDS-3] = -1;
-				RenderScoreIDs[MAX_IDS-2] = TeamScoreIDs[Classment-1];
-				RenderScoreIDs[MAX_IDS-1] = TeamScoreIDs[Classment];
-			}
-			else if(Classment == m_pClient->m_GameInfo.m_aTeamSize[Team] - 2)
-			{
-				HoleSizes[0] = Classment - MAX_IDS-3;
-				RenderScoreIDs[MAX_IDS-4] = -1;
-				RenderScoreIDs[MAX_IDS-3] = TeamScoreIDs[Classment-1];
-				RenderScoreIDs[MAX_IDS-2] = TeamScoreIDs[Classment];
-				RenderScoreIDs[MAX_IDS-1] = TeamScoreIDs[Classment+1];
-			}
-			else if(Classment == m_pClient->m_GameInfo.m_aTeamSize[Team] - 3)
-			{
-				HoleSizes[0] = Classment - MAX_IDS-4;
-				RenderScoreIDs[MAX_IDS-5] = -1;
-				RenderScoreIDs[MAX_IDS-4] = TeamScoreIDs[Classment-1];
-				RenderScoreIDs[MAX_IDS-3] = TeamScoreIDs[Classment];
-				RenderScoreIDs[MAX_IDS-2] = TeamScoreIDs[Classment+1];
-				RenderScoreIDs[MAX_IDS-1] = TeamScoreIDs[Classment+2];
-			}
-			else if(Classment < m_pClient->m_GameInfo.m_aTeamSize[Team] - 3)
-			{
-				HoleSizes[0] = Classment - MAX_IDS-4;
-				RenderScoreIDs[MAX_IDS-5] = -1;
-				RenderScoreIDs[MAX_IDS-4] = TeamScoreIDs[Classment-1];
-				RenderScoreIDs[MAX_IDS-3] = TeamScoreIDs[Classment];
-				RenderScoreIDs[MAX_IDS-2] = TeamScoreIDs[Classment+1];
-				HoleSizes[1] = m_pClient->m_GameInfo.m_aTeamSize[Team] - Classment - 2;
-				RenderScoreIDs[MAX_IDS-1] = -2;
-			}
-		}
 	}
 	else // Normal scoreboard
 	{
-		for(int RenderDead = 0; RenderDead < 2; ++RenderDead)
+		for(int i = 0; i < MAX_CLIENTS && NumRenderScoreIDs < MAX_IDS; i++)
 		{
-			for(int i = 0; i < MAX_CLIENTS && NumRenderScoreIDs < MAX_IDS; i++)
-			{
-				// make sure that we render the correct team
-				const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[i];
-				if(!pInfo->m_pPlayerInfo || m_pClient->m_aClients[pInfo->m_ClientID].m_Team != Team || (!RenderDead && (pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD)) ||
-					(RenderDead && !(pInfo->m_pPlayerInfo->m_PlayerFlags&PLAYERFLAG_DEAD)))
-					continue;
+			// make sure that we render the correct team
+			const CGameClient::CPlayerInfoItem *pInfo = &m_pClient->m_Snap.m_aInfoByScore[i];
+			if(!pInfo->m_pPlayerInfo || m_pClient->m_aClients[pInfo->m_ClientID].m_Team != Team)
+				continue;
 
-				RenderScoreIDs[NumRenderScoreIDs] = i;
-				NumRenderScoreIDs++;
-			}
+			RenderScoreIDs[NumRenderScoreIDs] = i;
+			NumRenderScoreIDs++;
 		}
 	}
 
@@ -915,6 +874,24 @@ bool CScoreboard::IsActive() const
 		return true;
 
 	return false;
+}
+
+void CScoreboard::DoUpdate()
+{
+	if(m_Scroll)
+	{
+		if(m_ScrollTimer > 0)
+		{
+			m_ScrollTimer --;
+		}
+		else
+		{
+			m_Line[TEAM_RED] ++;
+			m_Line[TEAM_BLUE] ++;
+			// in ms
+			m_ScrollTimer = round_to_int((1.0f / (float) Config()->m_ClScoreboardScrollSpeed) * Client()->GameTickSpeed());
+		}
+	}
 }
 
 const char *CScoreboard::GetClanName(int Team)
