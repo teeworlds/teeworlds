@@ -4,6 +4,38 @@
 
 #include <base/system.h>
 
+TEST(Str, HexEncode)
+{
+	char aOut[64];
+	const char *pData = "ABCD";
+	str_hex(aOut, sizeof(aOut), pData, 0);
+	EXPECT_STREQ(aOut, "");
+	str_hex(aOut, sizeof(aOut), pData, 1);
+	EXPECT_STREQ(aOut, "41 ");
+	str_hex(aOut, sizeof(aOut), pData, 2);
+	EXPECT_STREQ(aOut, "41 42 ");
+	str_hex(aOut, sizeof(aOut), pData, 3);
+	EXPECT_STREQ(aOut, "41 42 43 ");
+	str_hex(aOut, sizeof(aOut), pData, 4);
+	EXPECT_STREQ(aOut, "41 42 43 44 ");
+	str_hex(aOut, 1, pData, 4);
+	EXPECT_STREQ(aOut, "");
+	str_hex(aOut, 2, pData, 4);
+	EXPECT_STREQ(aOut, "");
+	str_hex(aOut, 3, pData, 4);
+	EXPECT_STREQ(aOut, "");
+	str_hex(aOut, 4, pData, 4);
+	EXPECT_STREQ(aOut, "41 ");
+	str_hex(aOut, 5, pData, 4);
+	EXPECT_STREQ(aOut, "41 ");
+	str_hex(aOut, 6, pData, 4);
+	EXPECT_STREQ(aOut, "41 ");
+	str_hex(aOut, 7, pData, 4);
+	EXPECT_STREQ(aOut, "41 42 ");
+	str_hex(aOut, 8, pData, 4);
+	EXPECT_STREQ(aOut, "41 42 ");
+}
+
 TEST(Str, Startswith)
 {
 	EXPECT_TRUE(str_startswith("abcdef", "abc"));
