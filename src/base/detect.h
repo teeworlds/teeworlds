@@ -124,6 +124,14 @@
 	#endif
 #endif
 
+#if defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64)
+	#define CONF_ARCH_ARM64 1
+	#define CONF_ARCH_STRING "arm64"
+	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
+		#define CONF_ARCH_ENDIAN_LITTLE 1
+	#endif
+#endif
+
 #if defined(__powerpc__) || defined(__ppc__)
 	#define CONF_ARCH_PPC 1
 	#define CONF_ARCH_STRING "ppc"
