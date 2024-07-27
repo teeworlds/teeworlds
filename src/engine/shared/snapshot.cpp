@@ -198,7 +198,7 @@ const CSnapshotDelta::CData *CSnapshotDelta::EmptyDelta() const
 int CSnapshotDelta::CreateDelta(const CSnapshot *pFrom, CSnapshot *pTo, void *pDstData)
 {
 	CData *pDelta = (CData *)pDstData;
-	int *pData = (int *)pDelta->m_pData;
+	int *pData = (int *)pDelta->m_aData;
 	int i, ItemSize, PastIndex;
 	const CSnapshotItem *pFromItem;
 	const CSnapshotItem *pCurItem;
@@ -295,7 +295,7 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 {
 	CSnapshotBuilder Builder;
 	const CData *pDelta = (const CData *)pSrcData;
-	const int *pData = (const int *)pDelta->m_pData;
+	const int *pData = (const int *)pDelta->m_aData;
 	const int *pEnd = (const int *)(((const char *)pSrcData + DataSize));
 
 	const CSnapshotItem *pFromItem;

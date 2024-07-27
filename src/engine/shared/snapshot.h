@@ -68,7 +68,7 @@ public:
 		int m_NumDeletedItems;
 		int m_NumUpdateItems;
 		int m_NumTempItems; // needed?
-		int m_pData[1];
+		int m_aData[1];
 	};
 
 private:
