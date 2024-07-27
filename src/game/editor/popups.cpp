@@ -566,8 +566,7 @@ bool CEditor::PopupNewFolder(void *pContext, CUIRect View)
 		View.HSplitBottom(40.0f, &View, 0);
 		View.VMargin(40.0f, &View);
 		View.HSplitBottom(20.0f, &View, &Label);
-		static CLineInput s_FolderInput(pEditor->m_aFileDialogNewFolderName, sizeof(pEditor->m_aFileDialogNewFolderName));
-		pEditor->DoEditBox(&s_FolderInput, &Label, 15.0f);
+		pEditor->DoEditBox(&pEditor->m_FileDialogNewFolderNameInput, &Label, 15.0f);
 		View.HSplitBottom(20.0f, &View, &Label);
 		pEditor->UI()->DoLabel(&Label, "Name:", 10.0f, TEXTALIGN_LEFT);
 
@@ -578,10 +577,10 @@ bool CEditor::PopupNewFolder(void *pContext, CUIRect View)
 		if(pEditor->DoButton_Editor(&s_CreateButton, "Create", 0, &Label, 0, 0))
 		{
 			// create the folder
-			if(pEditor->m_aFileDialogNewFolderName[0])
+			if(pEditor->m_FileDialogNewFolderNameInput.GetLength())
 			{
 				char aBuf[IO_MAX_PATH_LENGTH];
-				str_format(aBuf, sizeof(aBuf), "%s/%s", pEditor->m_pFileDialogPath, pEditor->m_aFileDialogNewFolderName);
+				str_format(aBuf, sizeof(aBuf), "%s/%s", pEditor->m_pFileDialogPath, pEditor->m_FileDialogNewFolderNameInput.GetString());
 				if(pEditor->Storage()->CreateFolder(aBuf, IStorage::TYPE_SAVE))
 				{
 					pEditor->FilelistPopulate(IStorage::TYPE_SAVE);

@@ -18,8 +18,7 @@ class CChat : public CComponent
 		MAX_LINE_LENGTH = 512,
 	};
 
-	char m_aInputBuf[MAX_LINE_LENGTH];
-	CLineInput m_Input;
+	CLineInputBuffered<static_cast<int>(MAX_LINE_LENGTH)> m_Input;
 
 	struct CLine
 	{
@@ -131,7 +130,6 @@ public:
 	void EnableMode(int Mode, const char *pText = 0x0);
 	void SendChat(int Mode, const char *pLine);
 
-	CChat();
 	virtual void OnInit();
 	virtual void OnReset();
 	virtual void OnMapLoad();

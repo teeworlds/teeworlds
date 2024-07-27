@@ -1485,37 +1485,35 @@ void CMenus::RenderServerbrowserFriendTab(CUIRect View)
 	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Name"), FontSize, TEXTALIGN_ML);
-	static char s_aName[MAX_NAME_ARRAY_SIZE] = { 0 };
-	static CLineInput s_NameInput(s_aName, sizeof(s_aName), MAX_NAME_LENGTH);
+	static CLineInputBuffered<static_cast<int>(MAX_NAME_ARRAY_SIZE), static_cast<int>(MAX_NAME_LENGTH)> s_NameInput;
 	UI()->DoEditBox(&s_NameInput, &Button, Button.h*CUI::ms_FontmodHeight*0.8f);
 
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	BottomArea.HSplitTop(SpacingH, 0, &BottomArea);
 	Button.VSplitLeft(50.0f, &Label, &Button);
 	UI()->DoLabel(&Label, Localize("Clan"), FontSize, TEXTALIGN_ML);
-	static char s_aClan[MAX_CLAN_ARRAY_SIZE] = { 0 };
-	static CLineInput s_ClanInput(s_aClan, sizeof(s_aClan), MAX_CLAN_LENGTH);
+	static CLineInputBuffered<static_cast<int>(MAX_CLAN_ARRAY_SIZE), static_cast<int>(MAX_CLAN_LENGTH)> s_ClanInput;
 	UI()->DoEditBox(&s_ClanInput, &Button, Button.h*CUI::ms_FontmodHeight*0.8f);
 
 	BottomArea.HSplitTop(HeaderHeight, &Button, &BottomArea);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f));
-	if(s_aName[0] || s_aClan[0])
+	if(s_NameInput.GetLength() || s_ClanInput.GetLength())
 		Button.VSplitLeft(Button.h, &Icon, &Label);
 	else
 		Label = Button;
 
-	const char *pButtonText = (!s_aName[0] && !s_aClan[0]) ? Localize("Add friend/clan") : s_aName[0] ? Localize("Add friend") : Localize("Add clan");
+	const char *pButtonText = (!s_NameInput.GetLength() && !s_ClanInput.GetLength()) ? Localize("Add friend/clan") : s_NameInput.GetLength() ? Localize("Add friend") : Localize("Add clan");
 	UI()->DoLabel(&Label, pButtonText, FontSize, TEXTALIGN_MC);
-	if(s_aName[0] || s_aClan[0])
+	if(s_NameInput.GetLength() || s_ClanInput.GetLength())
 		DoIcon(IMAGE_FRIENDICONS, UI()->MouseHovered(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Icon);
 	static CButtonContainer s_AddFriend;
-	if((s_aName[0] || s_aClan[0]) && UI()->DoButtonLogic(&s_AddFriend, &Button))
+	if((s_NameInput.GetLength() || s_ClanInput.GetLength()) && UI()->DoButtonLogic(&s_AddFriend, &Button))
 	{
-		m_pClient->Friends()->AddFriend(s_aName, s_aClan);
+		m_pClient->Friends()->AddFriend(s_NameInput.GetString(), s_ClanInput.GetString());
 		FriendlistOnUpdate();
 		Client()->ServerBrowserUpdate();
-		s_aName[0] = 0;
-		s_aClan[0] = 0;
+		s_NameInput.Clear();
+		s_ClanInput.Clear();
 	}
 
 	// delete friend
@@ -1547,13 +1545,12 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	// new filter
 	ServerFilter.HSplitBottom(LineSize, &ServerFilter, &Button);
 	Button.VSplitLeft(60.0f, &Icon, &Button);
-	static char s_aFilterName[32] = { 0 };
-	static CLineInput s_FilterInput(s_aFilterName, sizeof(s_aFilterName));
+	static CLineInputBuffered<32> s_FilterInput;
 	UI()->DoEditBox(&s_FilterInput, &Icon, FontSize, CUIRect::CORNER_L);
 	Button.Draw(vec4(1.0f, 1.0f, 1.0f, 0.25f), 5.0f, CUIRect::CORNER_R);
 	Button.VSplitLeft(Button.h, &Icon, &Label);
 	UI()->DoLabel(&Label, Localize("New filter"), FontSize, TEXTALIGN_ML);
-	if(s_aFilterName[0])
+	if(s_FilterInput.GetLength())
 	{
 		DoIcon(IMAGE_FRIENDICONS, UI()->MouseHovered(&Button) ? SPRITE_FRIEND_PLUS_A : SPRITE_FRIEND_PLUS_B, &Icon);
 		static CButtonContainer s_AddFilter;
@@ -1562,9 +1559,9 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 			CBrowserFilter *pSelectedFilter = GetSelectedBrowserFilter();
 			if(pSelectedFilter)
 				pSelectedFilter->Switch();
-			m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_aFilterName, ServerBrowser()));
+			m_lFilters.add(CBrowserFilter(CBrowserFilter::FILTER_CUSTOM, s_FilterInput.GetString(), ServerBrowser()));
 			m_lFilters[m_lFilters.size()-1].Switch();
-			s_aFilterName[0] = 0;
+			s_FilterInput.Clear();
 			Client()->ServerBrowserUpdate();
 		}
 	}
@@ -1715,21 +1712,20 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		ButtonLine.VSplitRight(ButtonLine.h, &ButtonLine, &AddExlButton);
 		ButtonLine.VSplitRight(ButtonLine.h, &EditBox, &AddIncButton);
 
-		static char s_aGametype[16] = { 0 };
-		static CLineInput s_GametypeInput(s_aGametype, sizeof(s_aGametype));
+		static CLineInputBuffered<16> s_GametypeInput;
 		UI()->DoEditBox(&s_GametypeInput, &EditBox, FontSize, CUIRect::CORNER_L);
 
 		static CButtonContainer s_AddInclusiveGametype;
-		if(DoButton_Menu(&s_AddInclusiveGametype, "+", 0, &AddIncButton, 0, 0) && s_aGametype[0])
+		if(DoButton_Menu(&s_AddInclusiveGametype, "+", 0, &AddIncButton, 0, 0) && s_GametypeInput.GetLength())
 		{
 			for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 			{
 				if(!FilterInfo.m_aGametype[i][0])
 				{
-					str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
+					str_copy(FilterInfo.m_aGametype[i], s_GametypeInput.GetString(), sizeof(FilterInfo.m_aGametype[i]));
 					FilterInfo.m_aGametypeExclusive[i] = false;
 					UpdateFilter = true;
-					s_aGametype[0] = 0;
+					s_GametypeInput.Clear();
 					break;
 				}
 			}
@@ -1737,16 +1733,16 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 		UI()->DoTooltip(&s_AddInclusiveGametype, &AddIncButton, Localize("Include servers with this gametype."));
 
 		static CButtonContainer s_AddExclusiveGametype;
-		if(DoButton_Menu(&s_AddExclusiveGametype, "-", 0, &AddExlButton, 0, CUIRect::CORNER_R) && s_aGametype[0])
+		if(DoButton_Menu(&s_AddExclusiveGametype, "-", 0, &AddExlButton, 0, CUIRect::CORNER_R) && s_GametypeInput.GetLength())
 		{
 			for(int i = 0; i < CServerFilterInfo::MAX_GAMETYPES; ++i)
 			{
 				if(!FilterInfo.m_aGametype[i][0])
 				{
-					str_copy(FilterInfo.m_aGametype[i], s_aGametype, sizeof(FilterInfo.m_aGametype[i]));
+					str_copy(FilterInfo.m_aGametype[i], s_GametypeInput.GetString(), sizeof(FilterInfo.m_aGametype[i]));
 					FilterInfo.m_aGametypeExclusive[i] = true;
 					UpdateFilter = true;
-					s_aGametype[0] = 0;
+					s_GametypeInput.Clear();
 					break;
 				}
 			}
@@ -1794,11 +1790,10 @@ void CMenus::RenderServerbrowserFilterTab(CUIRect View)
 	ServerFilter.HSplitTop(LineSize, &Button, &ServerFilter);
 	UI()->DoLabel(&Button, Localize("Server address:"), FontSize, TEXTALIGN_LEFT);
 	Button.VSplitRight(60.0f, 0, &Button);
-	static char s_aAddressFilter[sizeof(FilterInfo.m_aAddress)];
-	static CLineInput s_AddressInput(s_aAddressFilter, sizeof(s_aAddressFilter));
+	static CLineInputBuffered<static_cast<int>(sizeof(FilterInfo.m_aAddress))> s_AddressInput;
 	if(UI()->DoEditBox(&s_AddressInput, &Button, FontSize))
 	{
-		str_copy(FilterInfo.m_aAddress, s_aAddressFilter, sizeof(FilterInfo.m_aAddress));
+		str_copy(FilterInfo.m_aAddress, s_AddressInput.GetString(), sizeof(FilterInfo.m_aAddress));
 		UpdateFilter = true;
 	}
 

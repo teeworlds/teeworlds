@@ -54,8 +54,6 @@ CMenus::CMenus()
 	m_NeedRestartSound = false;
 	m_NeedRestartPlayer = false;
 	m_TeePartSelected = SKINPART_BODY;
-	m_aSaveSkinName[0] = '\0';
-	m_SkinNameInput.SetBuffer(m_aSaveSkinName, sizeof(m_aSaveSkinName), MAX_SKIN_LENGTH);
 	m_RefreshSkinSelector = true;
 	m_pSelectedSkin = 0;
 	m_MenuActive = true;
@@ -75,10 +73,6 @@ CMenus::CMenus()
 	m_LastInput = time_get();
 
 	str_copy(m_aCurrentDemoFolder, "demos", sizeof(m_aCurrentDemoFolder));
-	m_aCurrentDemoFile[0] = '\0';
-	m_DemoNameInput.SetBuffer(m_aCurrentDemoFile, sizeof(m_aCurrentDemoFile));
-	m_aCallvoteReason[0] = 0;
-	m_aFilterString[0] = 0;
 
 	m_ActiveListBox = ACTLB_NONE;
 
@@ -1464,9 +1458,9 @@ void CMenus::RenderMenu(CUIRect Screen)
 				m_Popup = POPUP_NONE;
 
 			static CButtonContainer s_ButtonYes;
-			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_aCurrentDemoFile[0], &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_DemoNameInput.GetLength(), &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 			{
-				if(m_aCurrentDemoFile[0])
+				if(m_DemoNameInput.GetLength())
 				{
 					m_Popup = POPUP_NONE;
 					// rename demo
@@ -1476,14 +1470,13 @@ void CMenus::RenderMenu(CUIRect Screen)
 						const int ExtLength = str_length(pExt);
 						char aBufOld[IO_MAX_PATH_LENGTH];
 						str_format(aBufOld, sizeof(aBufOld), "%s/%s", m_aCurrentDemoFolder, m_lDemos[m_DemolistSelectedIndex].m_aFilename);
-						int Length = str_length(m_aCurrentDemoFile);
-						if(Length < ExtLength || str_comp(m_aCurrentDemoFile + Length - ExtLength, pExt))
-							str_append(m_aCurrentDemoFile, pExt, sizeof(m_aCurrentDemoFile));
+						if(m_DemoNameInput.GetLength() < ExtLength || str_comp(m_DemoNameInput.GetString() + m_DemoNameInput.GetLength() - ExtLength, pExt))
+							m_DemoNameInput.Append(pExt);
 						char aPathNew[IO_MAX_PATH_LENGTH];
-						str_format(aPathNew, sizeof(aPathNew), "%s/%s", m_aCurrentDemoFolder, m_aCurrentDemoFile);
+						str_format(aPathNew, sizeof(aPathNew), "%s/%s", m_aCurrentDemoFolder, m_DemoNameInput.GetString());
 						if(Storage()->RenameFile(aBufOld, aPathNew, m_lDemos[m_DemolistSelectedIndex].m_StorageType))
 						{
-							str_copy(m_aDemolistPreviousSelection, m_aCurrentDemoFile, sizeof(m_aDemolistPreviousSelection));
+							str_copy(m_aDemolistPreviousSelection, m_DemoNameInput.GetString(), sizeof(m_aDemolistPreviousSelection));
 							DemolistPopulate();
 							DemolistOnUpdate(false);
 						}
@@ -1514,13 +1507,13 @@ void CMenus::RenderMenu(CUIRect Screen)
 				m_Popup = POPUP_NONE;
 
 			static CButtonContainer s_ButtonYes;
-			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_aSaveSkinName[0], &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
+			if(DoButton_Menu(&s_ButtonYes, Localize("Yes"), !m_SkinNameInput.GetLength(), &Yes) || UI()->ConsumeHotkey(CUI::HOTKEY_ENTER))
 			{
-				if(m_aSaveSkinName[0])
+				if(m_SkinNameInput.GetLength())
 				{
-					if(m_aSaveSkinName[0] != 'x' && m_aSaveSkinName[1] != '_')
+					if(m_SkinNameInput.GetString()[0] != 'x' && m_SkinNameInput.GetString()[1] != '_')
 					{
-						if(m_pClient->m_pSkins->SaveSkinfile(m_aSaveSkinName))
+						if(m_pClient->m_pSkins->SaveSkinfile(m_SkinNameInput.GetString()))
 						{
 							m_Popup = POPUP_NONE;
 							m_RefreshSkinSelector = true;

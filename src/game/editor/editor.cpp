@@ -2725,18 +2725,20 @@ void CEditor::RenderFileDialog()
 		if(DoEditBox(&m_FileDialogFileNameInput, &FileBox, 10.0f))
 		{
 			// remove '/' and '\'
-			char aTempFileName[sizeof(m_aFileDialogFileName)];
-			str_copy(aTempFileName, m_aFileDialogFileName, sizeof(aTempFileName));
-			for(int i = 0; aTempFileName[i]; ++i)
-				if(aTempFileName[i] == '/' || aTempFileName[i] == '\\')
-					str_copy(&aTempFileName[i], &aTempFileName[i+1], (int)(sizeof(aTempFileName))-i);
-			m_FileDialogFileNameInput.Set(aTempFileName);
+			for(int i = 0; m_FileDialogFileNameInput.GetString()[i]; ++i)
+			{
+				if(m_FileDialogFileNameInput.GetString()[i] == '/' || m_FileDialogFileNameInput.GetString()[i] == '\\')
+				{
+					m_FileDialogFileNameInput.SetRange(m_FileDialogFileNameInput.GetString() + i + 1, i, m_FileDialogFileNameInput.GetLength());
+					--i;
+				}
+			}
 			m_FilesSelectedIndex = -1;
 			m_aFilesSelectedName[0] = '\0';
 			// find first valid entry, if it exists
 			for(int i = 0; i < m_FilteredFileList.size(); i++)
 			{
-				if(str_comp_nocase(m_FilteredFileList[i]->m_aName, m_aFileDialogFileName) == 0)
+				if(str_comp_nocase(m_FilteredFileList[i]->m_aName, m_FileDialogFileNameInput.GetString()) == 0)
 				{
 					m_FilesSelectedIndex = i;
 					str_copy(m_aFilesSelectedName, m_FilteredFileList[i]->m_aName, sizeof(m_aFilesSelectedName));
@@ -2758,13 +2760,13 @@ void CEditor::RenderFileDialog()
 			{
 				m_FilesSelectedIndex = -1;
 			}
-			else if(m_FilesSelectedIndex == -1 || (m_aFileDialogFilterString[0] && !str_find_nocase(m_FilteredFileList[m_FilesSelectedIndex]->m_aName, m_aFileDialogFilterString)))
+			else if(m_FilesSelectedIndex == -1 || (m_FileDialogFilterInput.GetLength() && !str_find_nocase(m_FilteredFileList[m_FilesSelectedIndex]->m_aName, m_FileDialogFilterInput.GetString())))
 			{
 				// we need to refresh selection
 				m_FilesSelectedIndex = -1;
 				for(int i = 0; i < m_FilteredFileList.size(); i++)
 				{
-					if(str_find_nocase(m_FilteredFileList[i]->m_aName, m_aFileDialogFilterString))
+					if(str_find_nocase(m_FilteredFileList[i]->m_aName, m_FileDialogFilterInput.GetString()))
 					{
 						m_FilesSelectedIndex = i;
 						break;
@@ -2902,7 +2904,7 @@ void CEditor::RenderFileDialog()
 		}
 		else // file
 		{
-			str_format(m_aFileSaveName, sizeof(m_aFileSaveName), "%s/%s", m_pFileDialogPath, m_aFileDialogFileName);
+			str_format(m_aFileSaveName, sizeof(m_aFileSaveName), "%s/%s", m_pFileDialogPath, m_FileDialogFileNameInput.GetString());
 			if(!str_comp(m_pFileDialogButtonText, "Save"))
 			{
 				IOHANDLE File = Storage()->OpenFile(m_aFileSaveName, IOFLAG_READ, IStorage::TYPE_SAVE);
@@ -2934,10 +2936,10 @@ void CEditor::RenderFileDialog()
 		static int s_NewFolderButton = 0;
 		if(DoButton_Editor(&s_NewFolderButton, "New folder", 0, &Button, 0, 0))
 		{
-			m_aFileDialogNewFolderName[0] = 0;
+			m_FileDialogNewFolderNameInput.Clear();
 			m_aFileDialogErrString[0] = 0;
 			UI()->DoPopupMenu(Width/2.0f-200.0f, Height/2.0f-100.0f, 400.0f, 200.0f, this, PopupNewFolder);
-			UI()->SetActiveItem(0);
+			UI()->SetActiveItem(&m_FileDialogNewFolderNameInput);
 		}
 
 		ButtonBar.VSplitLeft(40.0f, 0, &ButtonBar);
@@ -2960,7 +2962,7 @@ void CEditor::RefreshFilteredFileList()
 	m_FilteredFileList.clear();
 	for(int i = 0; i < m_CompleteFileList.size(); i++)
 	{
-		if(!m_aFileDialogFilterString[0] || str_find_nocase(m_CompleteFileList[i].m_aName, m_aFileDialogFilterString))
+		if(!m_FileDialogFilterInput.GetLength() || str_find_nocase(m_CompleteFileList[i].m_aName, m_FileDialogFilterInput.GetString()))
 		{
 			m_FilteredFileList.add(&m_CompleteFileList[i]);
 		}
