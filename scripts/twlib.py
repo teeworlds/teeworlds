@@ -1,3 +1,4 @@
+import shutil
 import sys
 if sys.version_info[0] == 2:
 	import urllib
@@ -5,6 +6,14 @@ if sys.version_info[0] == 2:
 elif sys.version_info[0] == 3:
 	import urllib.request
 	url_lib = urllib.request
+
+try:
+	from distutils.dir_util import copy_tree
+except ModuleNotFoundError:
+	# distutils was removed in python 3.12
+	# https://peps.python.org/pep-0632/
+	def copy_tree(src, dst):
+		shutil.copytree(src, dst, dirs_exist_ok=True)
 
 def fetch_file(url):
 	print("trying %s" % url)
