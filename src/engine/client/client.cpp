@@ -605,6 +605,10 @@ void CClient::DisconnectWithReason(const char *pReason)
 	m_aSnapshots[SNAP_CURRENT] = 0;
 	m_aSnapshots[SNAP_PREV] = 0;
 	m_ReceivedSnapshots = 0;
+
+	// refresh server list
+	if (Config()->m_ClRefreshServerBrowserOnDisconnect)
+		m_ServerBrowser.Refresh(IServerBrowser::REFRESHFLAG_LAN|IServerBrowser::REFRESHFLAG_INTERNET);
 }
 
 void CClient::Disconnect()
