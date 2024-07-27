@@ -72,8 +72,6 @@ void CLayerTiles::PrepareForSave()
 	CTile Tile; // current tile to be duplicated
 	Tile.m_Skip = MAX_SKIP; // tell the code that we can't skip the first tile
 
-	int NumHitMaxSkip = -1;
-
 	for(int i = 0; i < m_Width * m_Height; i++)
 	{
 		// we can only store MAX_SKIP empty tiles in one tile
@@ -82,7 +80,6 @@ void CLayerTiles::PrepareForSave()
 			Tile = m_pTiles[i];
 			Tile.m_Skip = 0;
 			NumSaveTiles++;
-			NumHitMaxSkip++;
 		}
 		// tile is different from last one? - can't skip it
 		else if(m_pTiles[i].m_Index != Tile.m_Index || m_pTiles[i].m_Flags != Tile.m_Flags)
