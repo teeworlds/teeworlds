@@ -504,7 +504,7 @@ if ScriptArgs['arch'] then
 else
 	if arch == "ia32" then
 		archs = {"x86"}
-	elseif arch == "ia64" or arch == "amd64" then
+	elseif arch == "ia64" or arch == "amd64" or arch == "arm64" then
 		archs = {"x86_64"}
 	else
 		archs = {arch}
