@@ -84,7 +84,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 			if(pImg->m_Format == CImageInfo::FORMAT_RGB)
 			{
 				unsigned char *pSrc = (unsigned char *)pImg->m_pData;
-				unsigned char *pBuf = (unsigned char *)mem_alloc(Item.m_Width*Item.m_Height*4, 1);
+				unsigned char *pBuf = (unsigned char *)mem_alloc(Item.m_Width*Item.m_Height*4);
 				for(int i = 0; i < Item.m_Width*Item.m_Height; i++)
 				{
 					pBuf[4 * i + 0] = pSrc[3 * i + 0]; // r
@@ -341,9 +341,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					pImg->m_Format = CImageInfo::FORMAT_RGBA;
 
 					// copy image data
-					const int DataSize = pImg->m_Width * pImg->m_Height * pImg->GetPixelSize();
 					void *pData = DataFile.GetData(pItem->m_ImageData);
-					pImg->m_pData = mem_alloc(pImg->m_Width*pImg->m_Height*4, 1);
+					pImg->m_pData = mem_alloc(pImg->m_Width*pImg->m_Height*4);
 					mem_copy(pImg->m_pData, pData, pImg->m_Width*pImg->m_Height*4);
 					pImg->m_Texture = m_pEditor->Graphics()->LoadTextureRaw(pImg->m_Width, pImg->m_Height, pImg->m_Format, pImg->m_pData, CImageInfo::FORMAT_AUTO, IGraphics::TEXLOAD_MULTI_DIMENSION);
 				}
