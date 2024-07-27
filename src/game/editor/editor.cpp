@@ -259,8 +259,9 @@ void CEditor::EnvelopeEval(float TimeOffset, int Env, float *pChannels, void *pU
 	}
 
 	CEnvelope *e = pThis->m_Map.m_lEnvelopes[Env];
-	float t = pThis->m_AnimateTime+TimeOffset;
+	float t = pThis->m_AnimateTime;
 	t *= pThis->m_AnimateSpeed;
+	t += TimeOffset;
 	e->Eval(t, pChannels);
 }
 
@@ -642,7 +643,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// proof button
 	TB_Top.VSplitLeft(40.0f, &Button, &TB_Top);
 	static int s_ProofButton = 0;
-	if(DoButton_Editor(&s_ProofButton, "Proof", m_ProofBorders, &Button, 0, "[ctrl+p] Toggles proof borders. These borders represent what a player maximum can see.") ||
+	if(DoButton_Editor(&s_ProofButton, "Proof", m_ProofBorders, &Button, 0, "[ctrl+p] Toggle proof borders. These borders represent the maximum range players are able to see in-game.") ||
 		(Input()->KeyPress(KEY_P) && (Input()->KeyIsPressed(KEY_LCTRL) || Input()->KeyIsPressed(KEY_RCTRL))))
 	{
 		m_ProofBorders = !m_ProofBorders;
@@ -741,12 +742,12 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 				s_RotationAmount = maximum(90, (s_RotationAmount/90)*90);
 				break;
 			}
-		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 359, TileLayer?90:1, TileLayer?10.0f:2.0f, "Rotation of the brush in degrees. Use left mouse button to drag and change the value. Hold shift to be more precise.");
+		s_RotationAmount = UiDoValueSelector(&s_RotationAmount, &Button, "", s_RotationAmount, TileLayer?90:1, 359, TileLayer?90:1, TileLayer?10.0f:2.0f, "Rotation of the brush in degrees. Hold down the left mouse button to change the value. Hold Shift for more precision.");
 
 		TB_Top.VSplitLeft(5.0f, &Button, &TB_Top);
 		TB_Top.VSplitLeft(30.0f, &Button, &TB_Top);
 		static int s_CcwButton = 0;
-		if(DoButton_Ex(&s_CcwButton, "CCW", Enabled, &Button, 0, "[R] Rotates the brush counter clockwise", CUIRect::CORNER_L) || Input()->KeyPress(KEY_R))
+		if(DoButton_Ex(&s_CcwButton, "CCW", Enabled, &Button, 0, "[R] Rotates the brush counter-clockwise", CUIRect::CORNER_L) || Input()->KeyPress(KEY_R))
 		{
 			for(int i = 0; i < m_Brush.m_lLayers.size(); i++)
 				m_Brush.m_lLayers[i]->BrushRotate(-s_RotationAmount/360.0f*pi*2);
@@ -819,7 +820,7 @@ void CEditor::DoToolbar(CUIRect ToolBar)
 	// grid button
 	TB_Bottom.VSplitLeft(50.0f, &Button, &TB_Bottom);
 	static int s_GridButton = 0;
-	if(DoButton_Editor(&s_GridButton, "Grid", m_GridActive, &Button, 0, "Toggle Grid"))
+	if(DoButton_Editor(&s_GridButton, "Grid", m_GridActive, &Button, 0, "Toggle grid"))
 	{
 		m_GridActive = !m_GridActive;
 	}
@@ -1040,7 +1041,7 @@ void CEditor::DoQuad(CQuad *q, int Index)
 		ms_pUiGotContext = pID;
 
 		PivotColor = HexToRgba(Config()->m_EdColorQuadPivotHover);
-		m_pTooltip = "Left mouse button to move. Hold shift to move pivot. Hold ctrl to rotate. Hold alt to ignore grid.";
+		m_pTooltip = "Left mouse button to move. Hold Shift to move pivot. Hold Ctrl to rotate. Hold Alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
 		{
@@ -1220,7 +1221,7 @@ void CEditor::DoQuadPoint(CQuad *pQuad, int QuadIndex, int V)
 		ms_pUiGotContext = pID;
 
 		pointColor = HexToRgba(Config()->m_EdColorQuadPointHover);
-		m_pTooltip = "Left mouse button to move. Hold shift to move the texture. Hold alt to ignore grid.";
+		m_pTooltip = "Left mouse button to move. Hold Shift to move the texture. Hold Alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
 		{
@@ -1483,7 +1484,7 @@ void CEditor::DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int PIndex)
 		ms_pUiGotContext = pID;
 
 		Graphics()->SetColor(1.0f, 1.0f, 1.0f, 1.0f);
-		m_pTooltip = "Left mouse button to move. Hold ctrl to rotate. Hold alt to ignore grid.";
+		m_pTooltip = "Left mouse button to move. Hold Ctrl to rotate. Hold Alt to ignore grid.";
 
 		if(UI()->MouseButton(0))
 		{
@@ -2165,7 +2166,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 		}
 		else if(pProps[i].m_Type == PROPTYPE_INT_SCROLL)
 		{
-			int NewValue = UiDoValueSelector(&pIDs[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, "Use left mouse button to drag and change the value. Hold shift to be more precise.");
+			int NewValue = UiDoValueSelector(&pIDs[i], &Shifter, "", pProps[i].m_Value, pProps[i].m_Min, pProps[i].m_Max, 1, 1.0f, "Use left mouse button to drag and change the value. Hold Shift for more precision.");
 			if(NewValue != pProps[i].m_Value)
 			{
 				*pNewVal = NewValue;
@@ -2189,7 +2190,7 @@ int CEditor::DoProperties(CUIRect *pToolBox, CProperty *pProps, int *pIDs, int *
 			for(int c = 0; c < 4; c++)
 			{
 				int v = (pProps[i].m_Value >> s_aShift[c])&0xff;
-				NewColor |= UiDoValueSelector(((char *)&pIDs[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1, 1.0f, "Use left mouse button to drag and change the color value. Hold shift to be more precise.")<<s_aShift[c];
+				NewColor |= UiDoValueSelector(((char *)&pIDs[i])+c, &Shifter, s_paTexts[c], v, 0, 255, 1, 1.0f, "Use left mouse button to drag and change the color value. Hold Shift for more precision.")<<s_aShift[c];
 
 				if(c != 3)
 				{
@@ -2779,6 +2780,10 @@ void CEditor::RenderFileDialog()
 				str_copy(m_aFilesSelectedName, m_FilteredFileList[m_FilesSelectedIndex]->m_aName, sizeof(m_aFilesSelectedName));
 			else
 				m_aFilesSelectedName[0] = '\0';
+			if(m_FilesSelectedIndex >= 0 && !m_FilteredFileList[m_FilesSelectedIndex]->m_IsDir)
+				m_FileDialogFileNameInput.Set(m_FilteredFileList[m_FilesSelectedIndex]->m_aFilename);
+			else
+				m_FileDialogFileNameInput.Clear();
 			s_ListBox.ScrollToSelected();
 		}
 	}
@@ -3045,7 +3050,7 @@ void CEditor::RenderModebar(CUIRect View)
 		Button.HSplitTop(30.0f, 0, &Button);
 		static int s_Button = 0;
 		const char *pButName = m_Mode == MODE_LAYERS ? "Layers" : "Images";
-		if(DoButton_Tab(&s_Button, pButName, 0, &Button, 0, "Switch between images and layers managment."))
+		if(DoButton_Tab(&s_Button, pButName, 0, &Button, 0, "Switch between image and layer management."))
 		{
 			if(m_Mode == MODE_LAYERS)
 				m_Mode = MODE_IMAGES;
@@ -3517,7 +3522,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 							m_ShowEnvelopePreview = SHOWENV_SELECTED;
 							ColorMod = 100.0f;
 							Graphics()->SetColor(1,0.75f,0.75f,1);
-							m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise. Hold shift to alter time point aswell. Right click to delete.";
+							m_pTooltip = "Left mouse to drag. Hold Ctrl for more precision. Hold Shift to alter time point aswell. Right click to delete.";
 						}
 
 						if(UI()->CheckActiveItem(pID) || UI()->HotItem() == pID)
@@ -3605,7 +3610,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 								m_ShowEnvelopePreview = SHOWENV_SELECTED;
 								ColorMod = 100.0f;
-								m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise.";
+								m_pTooltip = "Left mouse to drag. Hold Ctrl for more precision.";
 							}
 
 							if(UI()->CheckActiveItem(pID) || UI()->HotItem() == pID)
@@ -3688,7 +3693,7 @@ void CEditor::RenderEnvelopeEditor(CUIRect View)
 
 								m_ShowEnvelopePreview = SHOWENV_SELECTED;
 								ColorMod = 100.0f;
-								m_pTooltip = "Left mouse to drag. Hold ctrl to be more precise.";
+								m_pTooltip = "Left mouse to drag. Hold Ctrl for more precision.";
 							}
 
 							if(UI()->CheckActiveItem(pID) || UI()->HotItem() == pID)
@@ -3808,7 +3813,7 @@ void CEditor::Render()
 		m_EditorOffsetY = 0;
 		m_ZoomLevel = 100;
 	}
-	if(m_Dialog == DIALOG_NONE && UI()->MouseInside(&View))
+	if(m_Dialog == DIALOG_NONE && !UI()->IsPopupActive() && UI()->MouseInside(&View))
 	{
 		// Determines in which direction to zoom.
 		int Zoom = 0;
@@ -4256,48 +4261,35 @@ void CEditor::DoMapBorder()
 		pT->m_pTiles[i].m_Index = 1;
 }
 
-void CEditor::UpdateAndRender()
+void CEditor::OnUpdate()
 {
-	static float s_MouseX = 0.0f;
-	static float s_MouseY = 0.0f;
-
-	if(m_Animate)
-		m_AnimateTime = (time_get()-m_AnimateStart)/(float)time_freq();
-	else
-		m_AnimateTime = 0;
-	ms_pUiGotContext = 0;
-
 	CUIElementBase::Init(UI()); // update static pointer because game and editor use separate UI
-	UI()->StartCheck();
 
 	for(int i = 0; i < Input()->NumEvents(); i++)
 		UI()->OnInput(Input()->GetEvent(i));
 
 	// handle cursor movement
 	{
-		float rx = 0.0f, ry = 0.0f;
-		int CursorType = Input()->CursorRelative(&rx, &ry);
-		UI()->ConvertCursorMove(&rx, &ry, CursorType);
+		static float s_MouseX = 0.0f;
+		static float s_MouseY = 0.0f;
 
-		m_MouseDeltaX = rx;
-		m_MouseDeltaY = ry;
+		float MouseRelX = 0.0f, MouseRelY = 0.0f;
+		int CursorType = Input()->CursorRelative(&MouseRelX, &MouseRelY);
+		if(CursorType != IInput::CURSOR_NONE)
+			UI()->ConvertCursorMove(&MouseRelX, &MouseRelY, CursorType);
+
+		m_MouseDeltaX += MouseRelX;
+		m_MouseDeltaY += MouseRelY;
 
 		if(!m_LockMouse)
 		{
-			s_MouseX += rx;
-			s_MouseY += ry;
+			s_MouseX = clamp<float>(s_MouseX + MouseRelX, 0.0f, Graphics()->ScreenWidth());
+			s_MouseY = clamp<float>(s_MouseY + MouseRelY, 0.0f, Graphics()->ScreenHeight());
 		}
 
-		s_MouseX = clamp(s_MouseX, 0.0f, (float)Graphics()->ScreenWidth());
-		s_MouseY = clamp(s_MouseY, 0.0f, (float)Graphics()->ScreenHeight());
-
-		// update the ui
-		float mx = (s_MouseX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
-		float my = (s_MouseY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
-		float Mdx = (m_MouseDeltaX/(float)Graphics()->ScreenWidth())*UI()->Screen()->w;
-		float Mdy = (m_MouseDeltaY/(float)Graphics()->ScreenHeight())*UI()->Screen()->h;
-		float Mwx = 0;
-		float Mwy = 0;
+		// update positions for ui, but only update ui when rendering
+		m_MouseX = UI()->Screen()->w * (s_MouseX / Graphics()->ScreenWidth());
+		m_MouseY = UI()->Screen()->h * (s_MouseY / Graphics()->ScreenHeight());
 
 		// fix correct world x and y
 		CLayerGroup *pSelectedGroup = GetSelectedGroup();
@@ -4306,18 +4298,24 @@ void CEditor::UpdateAndRender()
 			float aPoints[4];
 			pSelectedGroup->Mapping(aPoints);
 
-			float WorldWidth = aPoints[2]-aPoints[0];
-			float WorldHeight = aPoints[3]-aPoints[1];
+			float WorldWidth = aPoints[2] - aPoints[0];
+			float WorldHeight = aPoints[3] - aPoints[1];
 
-			Mwx = aPoints[0] + WorldWidth * (mx/UI()->Screen()->w);
-			Mwy = aPoints[1] + WorldHeight * (my/UI()->Screen()->h);
-			m_MouseDeltaWx = Mdx*(WorldWidth / UI()->Screen()->w);
-			m_MouseDeltaWy = Mdy*(WorldHeight / UI()->Screen()->h);
+			m_MouseWorldX = aPoints[0] + WorldWidth * (s_MouseX / UI()->Screen()->w);
+			m_MouseWorldY = aPoints[1] + WorldHeight * (s_MouseY / UI()->Screen()->h);
+			m_MouseDeltaWx = m_MouseDeltaX * (WorldWidth / Graphics()->ScreenWidth());
+			m_MouseDeltaWy = m_MouseDeltaY * (WorldHeight / Graphics()->ScreenHeight());
 		}
-
-		UI()->Update(mx, my, Mwx, Mwy);
+		else
+		{
+			m_MouseWorldX = 0.0f;
+			m_MouseWorldY = 0.0f;
+		}
 	}
+}
 
+void CEditor::OnRender()
+{
 	// toggle gui
 	if(Input()->KeyPress(KEY_TAB))
 		m_GuiActive = !m_GuiActive;
@@ -4325,7 +4323,22 @@ void CEditor::UpdateAndRender()
 	if(Input()->KeyPress(KEY_F10))
 		m_ShowMousePointer = false;
 
+	if(m_Animate)
+		m_AnimateTime = (time_get()-m_AnimateStart)/(float)time_freq();
+	else
+		m_AnimateTime = 0;
+
+	ms_pUiGotContext = 0;
+	UI()->StartCheck();
+
+	UI()->Update(m_MouseX, m_MouseY, m_MouseWorldX, m_MouseWorldY);
+
 	Render();
+
+	m_MouseDeltaX = 0.0f;
+	m_MouseDeltaY = 0.0f;
+	m_MouseDeltaWx = 0.0f;
+	m_MouseDeltaWy = 0.0f;
 
 	if(Input()->KeyPress(KEY_F10))
 	{

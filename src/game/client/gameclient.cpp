@@ -199,7 +199,7 @@ struct CGameMsg
 
 static CGameMsg gs_GameMsgList[NUM_GAMEMSGS] = {
 	{/*GAMEMSG_TEAM_SWAP*/ DO_CHAT, PARA_NONE, "Teams were swapped"}, // Localize("Teams were swapped")
-	{/*GAMEMSG_SPEC_INVALIDID*/ DO_CHAT, PARA_NONE, "Invalid spectator id used"},   //!
+	{/*GAMEMSG_SPEC_INVALID_ID*/ DO_CHAT, PARA_NONE, "Invalid spectator id used"},   //!
 	{/*GAMEMSG_TEAM_SHUFFLE*/ DO_CHAT, PARA_NONE, "Teams were shuffled"}, // Localize("Teams were shuffled")
 	{/*GAMEMSG_TEAM_BALANCE*/ DO_CHAT, PARA_NONE, "Teams have been balanced"}, // Localize("Teams have been balanced")
 	{/*GAMEMSG_CTF_DROP*/ DO_SPECIAL, PARA_NONE, ""},	// special - play ctf drop sound
@@ -401,7 +401,7 @@ void CGameClient::OnInit()
 	m_pEditor->Init();
 	m_pMenus->RenderLoading(2);
 
-	OnReset();	
+	OnReset();
 
 	m_ServerMode = SERVERMODE_PURE;
 
@@ -901,11 +901,14 @@ void CGameClient::OnMessage(int MsgId, CUnpacker *pUnpacker)
 		{
 			DoLeaveMessage(m_aClients[pMsg->m_ClientID].m_aName, pMsg->m_ClientID, pMsg->m_pReason);
 
-			CNetMsg_De_ClientLeave Msg;
-			Msg.m_pName = m_aClients[pMsg->m_ClientID].m_aName;
-			Msg.m_ClientID = pMsg->m_ClientID;
-			Msg.m_pReason = pMsg->m_pReason;
-			Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND | MSGFLAG_RECORD);
+			if(m_pDemoRecorder->IsRecording())
+			{
+				CNetMsg_De_ClientLeave Msg;
+				Msg.m_pName = m_aClients[pMsg->m_ClientID].m_aName;
+				Msg.m_ClientID = pMsg->m_ClientID;
+				Msg.m_pReason = pMsg->m_pReason;
+				Client()->SendPackMsg(&Msg, MSGFLAG_NOSEND | MSGFLAG_RECORD);
+			}
 		}
 
 		m_GameInfo.m_NumPlayers--;
@@ -1161,6 +1164,7 @@ void CGameClient::OnNewSnapshot()
 
 	ProcessEvents();
 
+#ifdef CONF_DEBUG
 	if(Config()->m_DbgStress)
 	{
 		if((Client()->GameTick()%100) == 0)
@@ -1178,6 +1182,7 @@ void CGameClient::OnNewSnapshot()
 			Client()->SendPackMsg(&Msg, MSGFLAG_VITAL);
 		}
 	}
+#endif
 
 	CTuningParams StandardTuning;
 	if(Client()->State() == IClient::STATE_DEMOPLAYBACK)
@@ -1312,7 +1317,7 @@ void CGameClient::OnNewSnapshot()
 							EvolveCharacter(&pCharInfo->m_Prev, EvolvePrevTick);
 						if(pCharInfo->m_Cur.m_Tick)
 							EvolveCharacter(&pCharInfo->m_Cur, EvolveCurTick);
-						
+
 						m_aClients[Item.m_ID].m_Evolved = m_Snap.m_aCharacters[Item.m_ID].m_Cur;
 					}
 
@@ -1868,6 +1873,7 @@ void CGameClient::DoTeamChangeMessage(const char *pName, int ClientID, int Team)
 	m_pChat->AddLine(aBuf);
 }
 
+// ----- send functions -----
 void CGameClient::SendSwitchTeam(int Team)
 {
 	CNetMsg_Cl_SetTeam Msg;

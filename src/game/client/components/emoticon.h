@@ -25,10 +25,9 @@ public:
 	virtual void OnConsoleInit();
 	virtual void OnRender();
 	virtual void OnRelease();
-	virtual void OnMessage(int MsgType, void *pRawMsg);
 	virtual bool OnCursorMove(float x, float y, int CursorType);
 
-	void Emote(int Emoticon);
+	void SendEmote(int Emoticon);
 };
 
 #endif

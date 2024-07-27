@@ -737,6 +737,19 @@ void CConsole::Con_EvalIf(IResult *pResult, void *pUserData)
 		pConsole->ExecuteLine(pResult->GetString(5));
 }
 
+void CConsole::Con_EvalIfCmd(IResult *pResult, void *pUserData)
+{
+	CConsole *pConsole = static_cast<CConsole *>(pUserData);
+	CCommand *pCommand = pConsole->FindCommand(pResult->GetString(0), pConsole->m_FlagMask);
+	if(pResult->NumArguments() > 2 && str_comp(pResult->GetString(2), "else"))
+		pConsole->Print(OUTPUT_LEVEL_STANDARD, "console", "Error: expected else");
+
+	if(pCommand)
+		pConsole->ExecuteLine(pResult->GetString(1));
+	else if(pResult->NumArguments() == 4)
+		pConsole->ExecuteLine(pResult->GetString(3));
+}
+
 void CConsole::ConToggle(IConsole::IResult *pResult, void *pUser)
 {
 	CConsole *pConsole = static_cast<CConsole *>(pUser);
@@ -817,6 +830,7 @@ CConsole::CConsole(int FlagMask)
 	Register("echo", "r[text]", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Echo, this, "Echo the text");
 	Register("exec", "r[file]", CFGFLAG_SERVER|CFGFLAG_CLIENT, Con_Exec, this, "Execute the specified file");
 	Register("eval_if", "s[config] s[comparison] s[value] s[command] ?s[else] ?s[command]", CFGFLAG_SERVER|CFGFLAG_CLIENT|CFGFLAG_STORE, Con_EvalIf, this, "Execute command if condition is true");
+	Register("eval_if_cmd", "s[check_command] s[command] ?s[else] ?s[command]", CFGFLAG_SERVER|CFGFLAG_CLIENT|CFGFLAG_STORE, Con_EvalIfCmd, this, "Execute command if check_command exists");
 
 	Register("toggle", "s[config-option] i[value1] i[value2]", CFGFLAG_SERVER|CFGFLAG_CLIENT, ConToggle, this, "Toggle config value");
 	Register("+toggle", "s[config-option] i[value1] i[value2]", CFGFLAG_CLIENT, ConToggleStroke, this, "Toggle config value via keypress");

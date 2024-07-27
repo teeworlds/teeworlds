@@ -327,4 +327,20 @@ enum
 inline int KeyToKeycode(int Key) { return (Key>=0x80) ? (Key-0x80)|(1<<30) : Key; }
 inline int KeycodeToKey(int Keycode) { return (Keycode&(1<<30)) ? Keycode-(1<<30)+0x80 : Keycode; }
 
+inline int DigitToNumberKey(int Digit)
+{
+	if(Digit < 0 || Digit > 9)
+		return KEY_UNKNOWN;
+	return KEY_0 + Digit;
+}
+
+inline int DigitToKeypadKey(int Digit)
+{
+	if(Digit < 0 || Digit > 9)
+		return KEY_UNKNOWN;
+	if(Digit == 0)
+		return KEY_KP_0;
+	return KEY_KP_1 + Digit - 1;
+}
+
 #endif

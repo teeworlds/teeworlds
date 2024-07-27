@@ -63,8 +63,8 @@
 #if defined(MACOSX) || defined(__APPLE__) || defined(__DARWIN__)
 	#define CONF_FAMILY_UNIX 1
 	#define CONF_FAMILY_STRING "unix"
-	#define CONF_PLATFORM_MACOSX 1
-	#define CONF_PLATFORM_STRING "macosx"
+	#define CONF_PLATFORM_MACOS 1
+	#define CONF_PLATFORM_STRING "macos"
 #endif
 
 #if defined(__sun)

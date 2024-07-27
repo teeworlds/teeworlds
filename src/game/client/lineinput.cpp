@@ -12,6 +12,7 @@
 IInput *CLineInput::s_pInput = 0;
 ITextRender *CLineInput::s_pTextRender = 0;
 IGraphics *CLineInput::s_pGraphics = 0;
+IClient *CLineInput::s_pClient = 0;
 
 CLineInput *CLineInput::s_pActiveInput = 0;
 EInputPriority CLineInput::s_ActiveInputPriority = NONE;
@@ -32,9 +33,11 @@ void CLineInput::SetBuffer(char *pStr, int MaxSize, int MaxChars)
 	m_WasChanged = m_pStr && pLastStr && m_WasChanged;
 	if(!pLastStr)
 	{
-		m_ScrollOffset = 0;
+		m_CursorPos = m_SelectionStart = m_SelectionEnd = 0;
+		m_ScrollOffset = m_ScrollOffsetChange = 0.0f;
 		m_CaretPosition = vec2(0, 0);
 		m_Hidden = false;
+		m_WasRendered = false;
 	}
 	if(m_pStr && m_pStr != pLastStr)
 		UpdateStrData();
@@ -210,16 +213,17 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 	if(Event.m_Flags&IInput::FLAG_PRESS)
 	{
 		const bool CtrlPressed = s_pInput->KeyIsPressed(KEY_LCTRL) || s_pInput->KeyIsPressed(KEY_RCTRL);
+		const bool AltPressed = s_pInput->KeyIsPressed(KEY_LALT) || s_pInput->KeyIsPressed(KEY_RALT);
 
-#ifdef CONF_PLATFORM_MACOSX
-		const bool MoveWord = s_pInput->KeyIsPressed(KEY_LALT) || s_pInput->KeyIsPressed(KEY_RALT);
+#ifdef CONF_PLATFORM_MACOS
+		const bool MoveWord = AltPressed && !CtrlPressed;
 #else
-		const bool MoveWord = CtrlPressed;
+		const bool MoveWord = CtrlPressed && !AltPressed;
 #endif
 
 		if(Event.m_Key == KEY_BACKSPACE)
 		{
-			if(SelectionLength && !MoveWord)
+			if(SelectionLength)
 			{
 				SetRange("", m_SelectionStart, m_SelectionEnd);
 			}
@@ -239,7 +243,7 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 		}
 		else if(Event.m_Key == KEY_DELETE)
 		{
-			if(SelectionLength && !MoveWord)
+			if(SelectionLength)
 			{
 				SetRange("", m_SelectionStart, m_SelectionEnd);
 			}
@@ -323,13 +327,13 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 			m_CursorPos = m_Len;
 			m_SelectionEnd = m_Len;
 		}
-		else if(CtrlPressed && Event.m_Key == KEY_V)
+		else if(CtrlPressed && !AltPressed && Event.m_Key == KEY_V)
 		{
 			const char *pClipboardText = s_pInput->GetClipboardText();
 			if(pClipboardText)
 				SetRange(pClipboardText, m_SelectionStart, m_SelectionEnd);
 		}
-		else if(CtrlPressed && (Event.m_Key == KEY_C || Event.m_Key == KEY_X) && SelectionLength)
+		else if(CtrlPressed && !AltPressed  && (Event.m_Key == KEY_C || Event.m_Key == KEY_X) && SelectionLength)
 		{
 			char *pSelection = m_pStr + m_SelectionStart;
 			char TempChar = pSelection[SelectionLength];
@@ -339,7 +343,7 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 			if(Event.m_Key == KEY_X)
 				SetRange("", m_SelectionStart, m_SelectionEnd);
 		}
-		else if(CtrlPressed && Event.m_Key == KEY_A)
+		else if(CtrlPressed && !AltPressed  && Event.m_Key == KEY_A)
 		{
 			m_SelectionStart = 0;
 			m_SelectionEnd = m_CursorPos = m_Len;
@@ -351,8 +355,9 @@ bool CLineInput::ProcessInput(const IInput::CEvent &Event)
 	return m_WasChanged;
 }
 
-void CLineInput::Render()
+void CLineInput::Render(bool Changed)
 {
+	m_WasRendered = true;
 	m_TextCursor.Reset();
 
 	if(!m_pStr)
@@ -398,9 +403,15 @@ void CLineInput::Render()
 		s_pTextRender->TextDeferred(&s_MarkerCursor, "｜", -1);
 		s_MarkerCursor.MoveTo(s_pTextRender->CaretPosition(&m_TextCursor, HasComposition ? DisplayCompositionStart : DisplayCursorOffset));
 
-		// render blinking caret
-		if((2*time_get()/time_freq())%2)
-			s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
+		// render blinking caret, don't blink shortly after caret has been moved
+		{
+			const float LocalTime = s_pClient->LocalTime();
+			static float s_LastChanged = 0.0f;
+			if(Changed)
+				s_LastChanged = LocalTime;
+			if(fmod(LocalTime - s_LastChanged, 1.0f) < 0.5f)
+				s_pTextRender->DrawTextOutlined(&s_MarkerCursor);
+		}
 
 		m_CaretPosition = s_pTextRender->CaretPosition(&m_TextCursor, DisplayCursorOffset);
 		s_MarkerCursor.MoveTo(m_CaretPosition);
@@ -415,6 +426,23 @@ void CLineInput::Render()
 
 void CLineInput::RenderCandidates()
 {
+	// Check if the active line input was not rendered and deactivate it in that case.
+	// This can happen e.g. when an input in the ingame menu is active and the menu is
+	// closed or when switching between menu and editor with an active input.
+	CLineInput *pActiveInput = GetActiveInput();
+	if(pActiveInput != nullptr)
+	{
+		if(pActiveInput->m_WasRendered)
+		{
+			pActiveInput->m_WasRendered = false;
+		}
+		else
+		{
+			pActiveInput->Deactivate();
+			return;
+		}
+	}
+
 	if(!s_pInput->HasComposition() || !s_pInput->GetCandidateCount())
 		return;
 

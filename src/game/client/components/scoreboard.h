@@ -14,8 +14,6 @@ class CScoreboard : public CComponent
 
 	static void ConKeyScoreboard(IConsole::IResult *pResult, void *pUserData);
 
-	const char *GetClanName(int Team);
-
 	bool m_Active;
 	bool m_Activate;
  	class CUIRect m_TotalRect;
@@ -26,10 +24,11 @@ public:
 	virtual void OnConsoleInit();
 	virtual void OnRender();
 	virtual void OnRelease();
-	
+
  	bool IsActive() const;
 	void ResetPlayerStats(int ClientID);
  	class CUIRect GetScoreboardRect() const { return m_TotalRect; }
+	const char *GetClanName(int Team);
 };
 
 #endif

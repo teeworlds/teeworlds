@@ -5,7 +5,7 @@
 
 #include "graphics_threaded.h"
 
-#if defined(CONF_PLATFORM_MACOSX)
+#if defined(CONF_PLATFORM_MACOS)
 	#include <objc/objc-runtime.h>
 
 	class semaphore

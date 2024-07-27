@@ -75,13 +75,6 @@ CInput::CInput()
 	m_CandidateSelectedIndex = -1;
 }
 
-CInput::~CInput()
-{
-	if(m_pClipboardText)
-		SDL_free(m_pClipboardText);
-	CloseJoysticks();
-}
-
 void CInput::Init()
 {
 	StopTextInput();
@@ -93,6 +86,12 @@ void CInput::Init()
 	MouseModeRelative();
 
 	InitJoysticks();
+}
+
+void CInput::Shutdown()
+{
+	SDL_free(m_pClipboardText);
+	CloseJoysticks();
 }
 
 void CInput::InitJoysticks()
@@ -183,16 +182,11 @@ CInput::CJoystick::CJoystick(CInput *pInput, int Index, SDL_Joystick *pDelegate)
 
 void CInput::CloseJoysticks()
 {
-	for(array<CJoystick>::range r = m_aJoysticks.all(); !r.empty(); r.pop_front())
-		r.front().Close();
+	if(SDL_WasInit(SDL_INIT_JOYSTICK))
+		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+
 	m_aJoysticks.clear();
 	m_pActiveJoystick = 0x0;
-}
-
-void CInput::CJoystick::Close()
-{
-	if(SDL_JoystickGetAttached(m_pDelegate))
-		SDL_JoystickClose(m_pDelegate);
 }
 
 void CInput::SelectNextJoystick()
@@ -380,6 +374,8 @@ void CInput::UpdateMouseState()
 
 void CInput::UpdateJoystickState()
 {
+	if(!Config()->m_JoystickEnable)
+		return;
 	IJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick)
 		return;
@@ -404,6 +400,8 @@ void CInput::UpdateJoystickState()
 
 void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
 {
+	if(!Config()->m_JoystickEnable)
+		return;
 	CJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick || pJoystick->GetInstanceID() != Event.jaxis.which)
 		return;
@@ -441,6 +439,8 @@ void CInput::HandleJoystickAxisMotionEvent(const SDL_Event &Event)
 
 void CInput::HandleJoystickButtonEvent(const SDL_Event &Event)
 {
+	if(!Config()->m_JoystickEnable)
+		return;
 	CJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick || pJoystick->GetInstanceID() != Event.jbutton.which)
 		return;
@@ -464,6 +464,8 @@ void CInput::HandleJoystickButtonEvent(const SDL_Event &Event)
 
 void CInput::HandleJoystickHatMotionEvent(const SDL_Event &Event)
 {
+	if(!Config()->m_JoystickEnable)
+		return;
 	CJoystick *pJoystick = GetActiveJoystick();
 	if(!pJoystick || pJoystick->GetInstanceID() != Event.jhat.which)
 		return;
@@ -591,7 +593,7 @@ int CInput::Update()
 
 				// fall through
 			case SDL_MOUSEBUTTONDOWN:
-				if(Event.button.button == SDL_BUTTON_LEFT) // ignore_convention
+				if(Event.button.button == SDL_BUTTON_LEFT)
 				{
 					Key = KEY_MOUSE_1;
 					if(Event.button.clicks%2 == 0)
@@ -599,26 +601,26 @@ int CInput::Update()
 					else if(Event.button.clicks == 1)
 						m_MouseDoubleClick = false;
 				}
-				else if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2; // ignore_convention
-				else if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3; // ignore_convention
-				else if(Event.button.button == SDL_BUTTON_X1) Key = KEY_MOUSE_4; // ignore_convention
-				else if(Event.button.button == SDL_BUTTON_X2) Key = KEY_MOUSE_5; // ignore_convention
-				else if(Event.button.button == 6) Key = KEY_MOUSE_6; // ignore_convention
-				else if(Event.button.button == 7) Key = KEY_MOUSE_7; // ignore_convention
-				else if(Event.button.button == 8) Key = KEY_MOUSE_8; // ignore_convention
-				else if(Event.button.button == 9) Key = KEY_MOUSE_9; // ignore_convention
+				else if(Event.button.button == SDL_BUTTON_RIGHT) Key = KEY_MOUSE_2;
+				else if(Event.button.button == SDL_BUTTON_MIDDLE) Key = KEY_MOUSE_3;
+				else if(Event.button.button == SDL_BUTTON_X1) Key = KEY_MOUSE_4;
+				else if(Event.button.button == SDL_BUTTON_X2) Key = KEY_MOUSE_5;
+				else if(Event.button.button == 6) Key = KEY_MOUSE_6;
+				else if(Event.button.button == 7) Key = KEY_MOUSE_7;
+				else if(Event.button.button == 8) Key = KEY_MOUSE_8;
+				else if(Event.button.button == 9) Key = KEY_MOUSE_9;
 				Scancode = Key;
 				break;
 
 			case SDL_MOUSEWHEEL:
-				if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP; // ignore_convention
-				else if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN; // ignore_convention
+				if(Event.wheel.y > 0) Key = KEY_MOUSE_WHEEL_UP;
+				else if(Event.wheel.y < 0) Key = KEY_MOUSE_WHEEL_DOWN;
 				else break;
 				Action |= IInput::FLAG_RELEASE;
 				Scancode = Key;
 				break;
 
-#if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (mouse state is faulty on start)
+#if defined(CONF_PLATFORM_MACOS)	// Todo SDL: remove this when fixed (mouse state is faulty on start)
 			case SDL_WINDOWEVENT:
 				if(Event.window.event == SDL_WINDOWEVENT_MAXIMIZED)
 				{

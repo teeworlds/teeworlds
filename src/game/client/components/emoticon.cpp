@@ -23,7 +23,7 @@ void CEmoticon::ConKeyEmoticon(IConsole::IResult *pResult, void *pUserData)
 
 void CEmoticon::ConEmote(IConsole::IResult *pResult, void *pUserData)
 {
-	((CEmoticon *)pUserData)->Emote(pResult->GetInteger(0));
+	((CEmoticon *)pUserData)->SendEmote(pResult->GetInteger(0));
 }
 
 void CEmoticon::OnConsoleInit()
@@ -42,10 +42,6 @@ void CEmoticon::OnReset()
 void CEmoticon::OnRelease()
 {
 	m_Active = false;
-}
-
-void CEmoticon::OnMessage(int MsgType, void *pRawMsg)
-{
 }
 
 bool CEmoticon::OnCursorMove(float x, float y, int CursorType)
@@ -103,7 +99,7 @@ void CEmoticon::OnRender()
 	if(!m_Active)
 	{
 		if(m_WasActive && m_SelectedEmote != -1)
-			Emote(m_SelectedEmote);
+			SendEmote(m_SelectedEmote);
 		m_WasActive = false;
 		return;
 	}
@@ -166,7 +162,7 @@ void CEmoticon::OnRender()
 	RenderTools()->RenderCursor(m_SelectorMouse.x + Screen.w/2, m_SelectorMouse.y + Screen.h/2, 24.0f);
 }
 
-void CEmoticon::Emote(int Emoticon)
+void CEmoticon::SendEmote(int Emoticon)
 {
 	CNetMsg_Cl_Emoticon Msg;
 	Msg.m_Emoticon = Emoticon;

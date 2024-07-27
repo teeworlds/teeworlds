@@ -221,12 +221,12 @@ int CSound::Init()
 	m_MixingRate = m_pConfig->m_SndRate;
 
 	// Set 16-bit stereo audio at 22Khz
-	Format.freq = m_pConfig->m_SndRate; // ignore_convention
-	Format.format = AUDIO_S16; // ignore_convention
-	Format.channels = 2; // ignore_convention
-	Format.samples = m_pConfig->m_SndBufferSize; // ignore_convention
-	Format.callback = SdlCallback; // ignore_convention
-	Format.userdata = NULL; // ignore_convention
+	Format.freq = m_pConfig->m_SndRate;
+	Format.format = AUDIO_S16;
+	Format.channels = 2;
+	Format.samples = m_pConfig->m_SndBufferSize;
+	Format.callback = SdlCallback;
+	Format.userdata = NULL;
 
 	// Open the audio device and start playing sound!
 	if(SDL_OpenAudio(&Format, NULL) < 0)
@@ -373,8 +373,10 @@ ISound::CSampleHandle CSound::LoadWV(const char *pFilename)
 	WavpackContext *pContext;
 
 	// don't waste memory on sound when we are stress testing
+#ifdef CONF_DEBUG
 	if(m_pConfig->m_DbgStress)
 		return CSampleHandle();
+#endif
 
 	// no need to load sound when we are running with no sound
 	if(!m_SoundEnabled)

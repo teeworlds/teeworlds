@@ -37,6 +37,7 @@ testrunner
 versionsrv*
 
 # IDE project files
+.cache
 .cproject
 .idea
 .project

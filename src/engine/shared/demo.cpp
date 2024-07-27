@@ -14,7 +14,9 @@
 #include "snapshot.h"
 
 static const unsigned char gs_aHeaderMarker[7] = {'T', 'W', 'D', 'E', 'M', 'O', 0};
-static const unsigned char gs_ActVersion = 4;
+static const unsigned char gs_ActVersion = 5;
+static const unsigned char gs_OldVersion = 4;
+static const unsigned char gs_VersionTickCompression = 5; // demo files with this version or higher will use `CHUNKTICKFLAG_TICK_COMPRESSED`
 static const int gs_LengthOffset = 152;
 static const int gs_NumMarkersOffset = 176;
 
@@ -144,8 +146,10 @@ enum
 {
 	CHUNKTYPEFLAG_TICKMARKER = 0x80,
 	CHUNKTICKFLAG_KEYFRAME = 0x40, // only when tickmarker is set
+	CHUNKTICKFLAG_TICK_COMPRESSED = 0x20, // when we store the tick value in the first chunk
 
-	CHUNKMASK_TICK = 0x3f,
+	CHUNKMASK_TICK = 0x1f,
+	CHUNKMASK_TICK_LEGACY = 0x3f,
 	CHUNKMASK_TYPE = 0x60,
 	CHUNKMASK_SIZE = 0x1f,
 
@@ -158,7 +162,7 @@ enum
 
 void CDemoRecorder::WriteTickMarker(int Tick, int Keyframe)
 {
-	if(m_LastTickMarker == -1 || Tick-m_LastTickMarker > 63 || Keyframe)
+	if(m_LastTickMarker == -1 || Tick-m_LastTickMarker > CHUNKMASK_TICK || Keyframe)
 	{
 		unsigned char aChunk[5];
 		aChunk[0] = CHUNKTYPEFLAG_TICKMARKER;
@@ -172,7 +176,7 @@ void CDemoRecorder::WriteTickMarker(int Tick, int Keyframe)
 	else
 	{
 		unsigned char aChunk[1];
-		aChunk[0] = CHUNKTYPEFLAG_TICKMARKER | (Tick-m_LastTickMarker);
+		aChunk[0] = CHUNKTYPEFLAG_TICKMARKER | CHUNKTICKFLAG_TICK_COMPRESSED | (Tick-m_LastTickMarker);
 		io_write(m_File, aChunk, sizeof(aChunk));
 	}
 
@@ -338,6 +342,7 @@ void CDemoRecorder::AddDemoMarker()
 }
 
 
+const float CDemoPlayer::ms_aSpeeds[] = {0.05f, 0.1f, 0.25f, 0.5f, 0.75f, 1.0f, 2.0f, 4.0f, 8.0f};
 
 CDemoPlayer::CDemoPlayer(class CSnapshotDelta *pSnapshotDelta)
 {
@@ -375,19 +380,24 @@ int CDemoPlayer::ReadChunkHeader(int *pType, int *pSize, int *pTick)
 	if(Chunk&CHUNKTYPEFLAG_TICKMARKER)
 	{
 		// decode tick marker
-		int Tickdelta = Chunk&(CHUNKMASK_TICK);
+		int Tickdelta_legacy = Chunk&(CHUNKMASK_TICK_LEGACY); // compatibility
 		*pType = Chunk&(CHUNKTYPEFLAG_TICKMARKER|CHUNKTICKFLAG_KEYFRAME);
 
-		if(Tickdelta == 0)
+		if(m_Info.m_Header.m_Version < gs_VersionTickCompression && Tickdelta_legacy != 0)
+		{
+			*pTick += Tickdelta_legacy;
+		}
+		else if(Chunk&(CHUNKTICKFLAG_TICK_COMPRESSED))
+		{
+			int Tickdelta = Chunk&(CHUNKMASK_TICK);
+			*pTick += Tickdelta;
+		}
+		else
 		{
 			unsigned char aTickData[4];
 			if(io_read(m_File, aTickData, sizeof(aTickData)) != sizeof(aTickData))
 				return -1;
 			*pTick = bytes_be_to_int(aTickData);
-		}
-		else
-		{
-			*pTick += Tickdelta;
 		}
 	}
 	else
@@ -633,7 +643,8 @@ const char *CDemoPlayer::Load(const char *pFilename, int StorageType, const char
 	m_Info.m_NextTick = -1;
 	m_Info.m_Info.m_CurrentTick = -1;
 	m_Info.m_PreviousTick = -1;
-	m_Info.m_Info.m_Speed = 1;
+	m_Info.m_Info.m_Speed = 1.0f;
+	m_Info.m_Info.m_SpeedIndex = 5;
 
 	m_LastSnapshotDataSize = -1;
 
@@ -648,7 +659,7 @@ const char *CDemoPlayer::Load(const char *pFilename, int StorageType, const char
 		return m_aErrorMsg;
 	}
 
-	if(m_Info.m_Header.m_Version != gs_ActVersion)
+	if(m_Info.m_Header.m_Version < gs_OldVersion)
 	{
 		str_format(m_aErrorMsg, sizeof(m_aErrorMsg), "demo version %d is not supported", m_Info.m_Header.m_Version);
 		m_pConsole->Print(IConsole::OUTPUT_LEVEL_STANDARD, "demo_player", m_aErrorMsg);
@@ -772,6 +783,12 @@ void CDemoPlayer::SetSpeed(float Speed)
 	m_Info.m_Info.m_Speed = Speed;
 }
 
+void CDemoPlayer::SetSpeedIndex(int Offset)
+{
+	m_Info.m_Info.m_SpeedIndex = clamp<int>(m_Info.m_Info.m_SpeedIndex + Offset, 0, sizeof(ms_aSpeeds) / sizeof(ms_aSpeeds[0]) - 1);
+	SetSpeed(ms_aSpeeds[m_Info.m_Info.m_SpeedIndex]);
+}
+
 int CDemoPlayer::Update()
 {
 	int64 Now = time_get();
@@ -862,7 +879,7 @@ bool CDemoPlayer::GetDemoInfo(const char *pFilename, int StorageType, CDemoHeade
 		return false;
 
 	io_read(File, pDemoHeader, sizeof(CDemoHeader));
-	bool Valid = mem_comp(pDemoHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) == 0 && pDemoHeader->m_Version == gs_ActVersion;
+	bool Valid = mem_comp(pDemoHeader->m_aMarker, gs_aHeaderMarker, sizeof(gs_aHeaderMarker)) == 0 && pDemoHeader->m_Version >= gs_OldVersion;
 	io_close(File);
 	return Valid;
 }

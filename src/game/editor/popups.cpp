@@ -11,6 +11,8 @@
 #include <engine/storage.h>
 #include <engine/client.h>
 
+#include <game/client/ui_scrollregion.h>
+
 #include "editor.h"
 
 bool CEditor::PopupGroup(void *pContext, CUIRect View)
@@ -715,15 +717,15 @@ bool CEditor::PopupEvent(void *pContext, CUIRect View)
 	View.VMargin(40.0f, &View);
 	View.HSplitTop(20.0f, &Label, &View);
 	if(pEditor->m_PopupEventType == POPEVENT_EXIT)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you exit the editor.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map currently contains unsaved data; you may want to save it before you exit the editor.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map currently contains unsaved data; you may want to save it before you load a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_LOAD_CURRENT)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you load the current map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map currently contains unsaved data; you may want to save it before you load the current map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_NEW)
-		pEditor->UI()->DoLabel(&Label, "The map contains unsaved data, you might want to save it before you create a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
+		pEditor->UI()->DoLabel(&Label, "The map currently contains unsaved data; you may want to save it before you create a new map.\nContinue anyway?", 10.0f, TEXTALIGN_LEFT, Label.w-10.0f);
 	else if(pEditor->m_PopupEventType == POPEVENT_SAVE)
-		pEditor->UI()->DoLabel(&Label, "The file already exists.\nDo you want to overwrite the map?", 10.0f, TEXTALIGN_LEFT);
+		pEditor->UI()->DoLabel(&Label, "This file already exists.\nDo you want to overwrite it?", 10.0f, TEXTALIGN_LEFT);
 
 	// button bar
 	ButtonBar.VSplitLeft(30.0f, 0, &ButtonBar);
@@ -766,20 +768,37 @@ static int g_SelectImageCurrent = -100;
 bool CEditor::PopupSelectImage(void *pContext, CUIRect View)
 {
 	CEditor *pEditor = (CEditor *)pContext;
+
 	CUIRect ButtonBar, ImageView;
-	View.VSplitLeft(80.0f, &ButtonBar, &View);
+	View.VSplitLeft(150.0f, &ButtonBar, &View);
 	View.Margin(10.0f, &ImageView);
 
 	int ShowImage = g_SelectImageCurrent;
 	bool ClosePopup = false;
 
+	const float RowHeight = 14.0f;
 	static int s_NoImageButton;
+	static CScrollRegion s_ScrollRegion;
+	vec2 ScrollOffset(0.0f, 0.0f);
+	CScrollRegionParams ScrollParams;
+	ScrollParams.m_ClipBgColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	ScrollParams.m_ScrollbarBgColor = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+	ScrollParams.m_ScrollbarWidth = 10.0f;
+	ScrollParams.m_ScrollbarMargin = 3.0f;
+	ScrollParams.m_ScrollUnit = RowHeight * 5;
+	s_ScrollRegion.Begin(&ButtonBar, &ScrollOffset, &ScrollParams);
+	ButtonBar.y += ScrollOffset.y;
+
 	for(int i = -1; i < pEditor->m_Map.m_lImages.size(); i++)
 	{
 		CUIRect Button;
-		ButtonBar.HSplitTop(12.0f, &Button, &ButtonBar);
-		ButtonBar.HSplitTop(2.0f, 0, &ButtonBar);
+		ButtonBar.HSplitTop(RowHeight, &Button, &ButtonBar);
+		s_ScrollRegion.AddRect(Button);
 
+		if(s_ScrollRegion.IsRectClipped(Button))
+			continue;
+
+		Button.HSplitTop(12.0f, &Button, 0);
 		if(pEditor->UI()->MouseInside(&Button))
 			ShowImage = i;
 
@@ -789,6 +808,8 @@ bool CEditor::PopupSelectImage(void *pContext, CUIRect View)
 			ClosePopup |= pEditor->Input()->MouseDoubleClick();
 		}
 	}
+
+	s_ScrollRegion.End();
 
 	if(ShowImage >= 0 && ShowImage < pEditor->m_Map.m_lImages.size())
 	{
@@ -816,7 +837,7 @@ void CEditor::PopupSelectImageInvoke(int Current, float x, float y)
 {
 	g_SelectImageSelected = -100;
 	g_SelectImageCurrent = Current;
-	UI()->DoPopupMenu(x, y, 400, 300, this, PopupSelectImage);
+	UI()->DoPopupMenu(x, y, 450, 300, this, PopupSelectImage);
 }
 
 int CEditor::PopupSelectImageResult()

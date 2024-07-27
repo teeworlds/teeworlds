@@ -78,9 +78,9 @@ void CBroadcast::RenderServerBroadcast()
 	{
 		CBroadcastSegment *pSegment = &m_aServerBroadcastSegments[i];
 		if(m_aServerBroadcastSegments[i].m_IsHighContrast)
-			TextRender()->DrawTextOutlined(&m_ServerBroadcastCursor, Fade, pSegment->m_GlyphPos, (pSegment+1)->m_GlyphPos);
+			TextRender()->DrawTextOutlined(&m_ServerBroadcastCursor, Fade, pSegment->m_GlyphPos, (pSegment + 1)->m_GlyphPos - pSegment->m_GlyphPos);
 		else
-			TextRender()->DrawTextShadowed(&m_ServerBroadcastCursor, ShadowOffset, Fade, pSegment->m_GlyphPos, (pSegment+1)->m_GlyphPos);
+			TextRender()->DrawTextShadowed(&m_ServerBroadcastCursor, ShadowOffset, Fade, pSegment->m_GlyphPos, (pSegment + 1)->m_GlyphPos - pSegment->m_GlyphPos);
 	}
 }
 

@@ -5,6 +5,7 @@
 
 #include <base/vmath.h>
 
+#include <engine/client.h>
 #include <engine/graphics.h>
 #include <engine/input.h>
 #include <engine/textrender.h>
@@ -23,6 +24,7 @@ class CLineInput
 	static IInput *s_pInput;
 	static ITextRender *s_pTextRender;
 	static IGraphics *s_pGraphics;
+	static IClient *s_pClient;
 
 	static CLineInput *s_pActiveInput;
 	static EInputPriority s_ActiveInputPriority;
@@ -44,10 +46,12 @@ class CLineInput
 	int m_SelectionEnd;
 
 	float m_ScrollOffset;
+	float m_ScrollOffsetChange;
 	vec2 m_CaretPosition;
 
 	bool m_Hidden;
 	bool m_WasChanged;
+	bool m_WasRendered;
 
 	void UpdateStrData();
 	enum EMoveDirection
@@ -63,7 +67,13 @@ class CLineInput
 	void OnDeactivate();
 
 public:
-	static void Init(IInput *pInput, ITextRender *pTextRender, IGraphics *pGraphics) { s_pInput = pInput; s_pTextRender = pTextRender; s_pGraphics = pGraphics; }
+	static void Init(IInput *pInput, ITextRender *pTextRender, IGraphics *pGraphics, IClient *pClient)
+	{
+		s_pInput = pInput;
+		s_pTextRender = pTextRender;
+		s_pGraphics = pGraphics;
+		s_pClient = pClient;
+	}
 	static void RenderCandidates();
 
 	static CLineInput *GetActiveInput() { return s_pActiveInput; }
@@ -102,6 +112,8 @@ public:
 	// used either for vertical or horizontal scrolling
 	float GetScrollOffset() const { return m_ScrollOffset; }
 	void SetScrollOffset(float ScrollOffset) { m_ScrollOffset = ScrollOffset; }
+	float GetScrollOffsetChange() const { return m_ScrollOffsetChange; }
+	void SetScrollOffsetChange(float ScrollOffsetChange) { m_ScrollOffsetChange = ScrollOffsetChange; }
 
 	vec2 GetCaretPosition() const { return m_CaretPosition; } // only updated while the input is active
 
@@ -111,7 +123,7 @@ public:
 	bool ProcessInput(const IInput::CEvent &Event);
 	bool WasChanged() { bool Changed = m_WasChanged; m_WasChanged = false; return Changed; }
 
-	void Render();
+	void Render(bool Changed);
 
 	bool IsActive() const { return GetActiveInput() == this; }
 	void Activate(EInputPriority Priority);

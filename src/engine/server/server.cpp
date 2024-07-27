@@ -30,11 +30,6 @@
 #include "register.h"
 #include "server.h"
 
-#if defined(CONF_FAMILY_WINDOWS)
-	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
-#endif
-
 #include <signal.h>
 
 volatile sig_atomic_t InterruptSignaled = 0;
@@ -265,11 +260,6 @@ CServer::CServer() : m_DemoRecorder(&m_SnapshotDelta)
 
 	m_pCurrentMapData = 0;
 	m_CurrentMapSize = 0;
-
-	m_NumMapEntries = 0;
-	m_pFirstMapEntry = 0;
-	m_pLastMapEntry = 0;
-	m_pMapListHeap = 0;
 
 	m_MapReload = false;
 
@@ -666,7 +656,7 @@ int CServer::NewClientCallback(int ClientID, void *pUser)
 	pThis->m_aClients[ClientID].m_Authed = AUTHED_NO;
 	pThis->m_aClients[ClientID].m_AuthTries = 0;
 	pThis->m_aClients[ClientID].m_pRconCmdToSend = 0;
-	pThis->m_aClients[ClientID].m_pMapListEntryToSend = 0;
+	pThis->m_aClients[ClientID].m_MapListEntryToSend = -1;
 	pThis->m_aClients[ClientID].m_NoRconNote = false;
 	pThis->m_aClients[ClientID].m_Quitting = false;
 	pThis->m_aClients[ClientID].m_Latency = 0;
@@ -699,7 +689,7 @@ int CServer::DelClientCallback(int ClientID, const char *pReason, void *pUser)
 	pThis->m_aClients[ClientID].m_Authed = AUTHED_NO;
 	pThis->m_aClients[ClientID].m_AuthTries = 0;
 	pThis->m_aClients[ClientID].m_pRconCmdToSend = 0;
-	pThis->m_aClients[ClientID].m_pMapListEntryToSend = 0;
+	pThis->m_aClients[ClientID].m_MapListEntryToSend = -1;
 	pThis->m_aClients[ClientID].m_NoRconNote = false;
 	pThis->m_aClients[ClientID].m_Quitting = false;
 	pThis->m_aClients[ClientID].m_Snapshots.PurgeAll();
@@ -799,12 +789,12 @@ void CServer::UpdateClientMapListEntries()
 {
 	for(int ClientID = Tick() % MAX_RCONCMD_RATIO; ClientID < MAX_CLIENTS; ClientID += MAX_RCONCMD_RATIO)
 	{
-		if(m_aClients[ClientID].m_State != CClient::STATE_EMPTY && m_aClients[ClientID].m_Authed)
+		if(m_aClients[ClientID].m_State != CClient::STATE_EMPTY && m_aClients[ClientID].m_Authed && m_aClients[ClientID].m_MapListEntryToSend >= 0)
 		{
-			for(int i = 0; i < MAX_MAPLISTENTRY_SEND && m_aClients[ClientID].m_pMapListEntryToSend; ++i)
+			for(int i = 0; i < MAX_MAPLISTENTRY_SEND && m_aClients[ClientID].m_MapListEntryToSend < m_lMaps.size(); ++i)
 			{
-				SendMapListEntryAdd(m_aClients[ClientID].m_pMapListEntryToSend, ClientID);
-				m_aClients[ClientID].m_pMapListEntryToSend = m_aClients[ClientID].m_pMapListEntryToSend->m_pNext;
+				SendMapListEntryAdd(&m_lMaps[m_aClients[ClientID].m_MapListEntryToSend], ClientID);
+				m_aClients[ClientID].m_MapListEntryToSend++;
 			}
 		}
 	}
@@ -812,22 +802,15 @@ void CServer::UpdateClientMapListEntries()
 
 void CServer::ProcessClientPacket(CNetChunk *pPacket)
 {
-	int ClientID = pPacket->m_ClientID;
-	CUnpacker Unpacker;
-	Unpacker.Reset(pPacket->m_pData, pPacket->m_DataSize);
-
-	// unpack msgid and system flag
-	int Msg = Unpacker.GetInt();
-	int Sys = Msg&1;
-	Msg >>= 1;
-
+	CMsgUnpacker Unpacker(pPacket->m_pData, pPacket->m_DataSize);
 	if(Unpacker.Error())
 		return;
 
-	if(Sys)
+	const int ClientID = pPacket->m_ClientID;
+	if(Unpacker.System())
 	{
 		// system message
-		if(Msg == NETMSG_INFO)
+		if(Unpacker.Type() == NETMSG_INFO)
 		{
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_AUTH)
 			{
@@ -855,7 +838,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				SendMap(ClientID);
 			}
 		}
-		else if(Msg == NETMSG_REQUEST_MAP_DATA)
+		else if(Unpacker.Type() == NETMSG_REQUEST_MAP_DATA)
 		{
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && (m_aClients[ClientID].m_State == CClient::STATE_CONNECTING || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING_AS_SPEC))
 			{
@@ -889,7 +872,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 			}
 		}
-		else if(Msg == NETMSG_READY)
+		else if(Unpacker.Type() == NETMSG_READY)
 		{
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && (m_aClients[ClientID].m_State == CClient::STATE_CONNECTING || m_aClients[ClientID].m_State == CClient::STATE_CONNECTING_AS_SPEC))
 			{
@@ -906,7 +889,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				SendConnectionReady(ClientID);
 			}
 		}
-		else if(Msg == NETMSG_ENTERGAME)
+		else if(Unpacker.Type() == NETMSG_ENTERGAME)
 		{
 			if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State == CClient::STATE_READY && GameServer()->IsClientReady(ClientID))
 			{
@@ -921,7 +904,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				GameServer()->OnClientEnter(ClientID);
 			}
 		}
-		else if(Msg == NETMSG_INPUT)
+		else if(Unpacker.Type() == NETMSG_INPUT)
 		{
 			CClient::CInput *pInput;
 			int64 TagTime;
@@ -978,7 +961,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 			if(m_aClients[ClientID].m_State == CClient::STATE_INGAME)
 				GameServer()->OnClientDirectInput(ClientID, m_aClients[ClientID].m_LatestInput.m_aData);
 		}
-		else if(Msg == NETMSG_RCON_CMD)
+		else if(Unpacker.Type() == NETMSG_RCON_CMD)
 		{
 			const char *pCmd = Unpacker.GetString();
 
@@ -996,7 +979,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				m_RconAuthLevel = AUTHED_ADMIN;
 			}
 		}
-		else if(Msg == NETMSG_RCON_AUTH)
+		else if(Unpacker.Type() == NETMSG_RCON_AUTH)
 		{
 			const char *pPw = Unpacker.GetString(CUnpacker::SANITIZE_CC);
 
@@ -1018,7 +1001,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					m_aClients[ClientID].m_Authed = AUTHED_ADMIN;
 					m_aClients[ClientID].m_pRconCmdToSend = Console()->FirstCommandInfo(IConsole::ACCESS_LEVEL_ADMIN, CFGFLAG_SERVER);
 					if(m_aClients[ClientID].m_Version >= MIN_MAPLIST_CLIENTVERSION)
-						m_aClients[ClientID].m_pMapListEntryToSend = m_pFirstMapEntry;
+						m_aClients[ClientID].m_MapListEntryToSend = 0;
 					SendRconLine(ClientID, "Admin authentication successful. Full remote console access granted.");
 					char aAddrStr[NETADDR_MAXSTRSIZE];
 					net_addr_str(m_NetServer.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
@@ -1036,7 +1019,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 					SendRconLine(ClientID, "Moderator authentication successful. Limited remote console access granted.");
 					const IConsole::CCommandInfo *pInfo = Console()->GetCommandInfo("sv_map", CFGFLAG_SERVER, false);
 					if(pInfo && pInfo->GetAccessLevel() == IConsole::ACCESS_LEVEL_MOD && m_aClients[ClientID].m_Version >= MIN_MAPLIST_CLIENTVERSION)
-						m_aClients[ClientID].m_pMapListEntryToSend = m_pFirstMapEntry;
+						m_aClients[ClientID].m_MapListEntryToSend = 0;
 					char aAddrStr[NETADDR_MAXSTRSIZE];
 					net_addr_str(m_NetServer.ClientAddr(ClientID), aAddrStr, sizeof(aAddrStr), true);
 					char aBuf[256];
@@ -1063,17 +1046,17 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 			}
 		}
-		else if(Msg == NETMSG_PING)
+		else if(Unpacker.Type() == NETMSG_PING)
 		{
 			CMsgPacker Msg(NETMSG_PING_REPLY, true);
-			SendMsg(&Msg, 0, ClientID);
+			SendMsg(&Msg, MSGFLAG_FLUSH, ClientID);
 		}
 		else
 		{
 			if(Config()->m_Debug)
 			{
 				char aBuf[256];
-				str_format(aBuf, sizeof(aBuf), "strange message ClientID=%d msg=%d data_size=%d", ClientID, Msg, pPacket->m_DataSize);
+				str_format(aBuf, sizeof(aBuf), "strange message ClientID=%d msg=%d data_size=%d", ClientID, Unpacker.Type(), pPacket->m_DataSize);
 				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
 				str_hex(aBuf, sizeof(aBuf), pPacket->m_pData, minimum(pPacket->m_DataSize, 32));
 				Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "server", aBuf);
@@ -1084,7 +1067,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	{
 		// game message
 		if((pPacket->m_Flags&NET_CHUNKFLAG_VITAL) != 0 && m_aClients[ClientID].m_State >= CClient::STATE_READY)
-			GameServer()->OnMessage(Msg, &Unpacker, ClientID);
+			GameServer()->OnMessage(Unpacker.Type(), &Unpacker, ClientID);
 	}
 }
 
@@ -1475,12 +1458,6 @@ void CServer::Free()
 		mem_free(m_pCurrentMapData);
 		m_pCurrentMapData = 0;
 	}
-
-	if(m_pMapListHeap)
-	{
-		delete m_pMapListHeap;
-		m_pMapListHeap = 0;
-	}
 }
 
 struct CSubdirCallbackUserdata
@@ -1524,24 +1501,14 @@ int CServer::MapListEntryCallback(const char *pFilename, int IsDir, int DirType,
 	if(pUserdata->m_StandardOnly && !pThis->m_pMapChecker->IsStandardMap(aFilename))
 		return 0;
 
-	CMapListEntry *pEntry = (CMapListEntry *)pThis->m_pMapListHeap->Allocate(sizeof(CMapListEntry));
-	pThis->m_NumMapEntries++;
-	pEntry->m_pNext = 0;
-	pEntry->m_pPrev = pThis->m_pLastMapEntry;
-	if(pEntry->m_pPrev)
-		pEntry->m_pPrev->m_pNext = pEntry;
-	pThis->m_pLastMapEntry = pEntry;
-	if(!pThis->m_pFirstMapEntry)
-		pThis->m_pFirstMapEntry = pEntry;
-
-	str_copy(pEntry->m_aName, aFilename, sizeof(pEntry->m_aName));
+	pThis->m_lMaps.add(CMapListEntry(aFilename));
 
 	return 0;
 }
 
 void CServer::InitMapList()
 {
-	m_pMapListHeap = new CHeap();
+	m_lMaps.clear();
 
 	CSubdirCallbackUserdata Userdata;
 	if(str_comp(Config()->m_SvMaplist, "standard") == 0)
@@ -1554,7 +1521,7 @@ void CServer::InitMapList()
 	Userdata.m_pServer = this;
 	str_copy(Userdata.m_aName, "", sizeof(Userdata.m_aName));
 	m_pStorage->ListDirectory(IStorage::TYPE_ALL, "maps/", MapListEntryCallback, &Userdata);
-	dbg_msg("server", "%d maps added to maplist", m_NumMapEntries);
+	dbg_msg("server", "%d maps added to maplist", m_lMaps.size());
 }
 
 void CServer::ConKick(IConsole::IResult *pResult, void *pUser)
@@ -1668,7 +1635,7 @@ void CServer::ConLogout(IConsole::IResult *pResult, void *pUser)
 		pServer->m_aClients[pServer->m_RconClientID].m_Authed = AUTHED_NO;
 		pServer->m_aClients[pServer->m_RconClientID].m_AuthTries = 0;
 		pServer->m_aClients[pServer->m_RconClientID].m_pRconCmdToSend = 0;
-		pServer->m_aClients[pServer->m_RconClientID].m_pMapListEntryToSend = 0;
+		pServer->m_aClients[pServer->m_RconClientID].m_MapListEntryToSend = -1;
 		pServer->SendRconLine(pServer->m_RconClientID, "Logout successful.");
 		char aBuf[32];
 		str_format(aBuf, sizeof(aBuf), "ClientID=%d logged out", pServer->m_RconClientID);
@@ -1842,24 +1809,24 @@ void HandleSigIntTerm(int Param)
 	signal(SIGTERM, SIG_DFL);
 }
 
-int main(int argc, const char **argv) // ignore_convention
+int main(int argc, const char **argv)
 {
 	cmdline_fix(&argc, &argv);
 #if defined(CONF_FAMILY_WINDOWS)
-	for(int i = 1; i < argc; i++) // ignore_convention
+	for(int i = 1; i < argc; i++)
 	{
-		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0) // ignore_convention
+		if(str_comp("-s", argv[i]) == 0 || str_comp("--silent", argv[i]) == 0)
 		{
-			ShowWindow(GetConsoleWindow(), SW_HIDE);
+			dbg_console_hide();
 			break;
 		}
 	}
 #endif
 
 	bool UseDefaultConfig = false;
-	for(int i = 1; i < argc; i++) // ignore_convention
+	for(int i = 1; i < argc; i++)
 	{
-		if(str_comp("-d", argv[i]) == 0 || str_comp("--default", argv[i]) == 0) // ignore_convention
+		if(str_comp("-d", argv[i]) == 0 || str_comp("--default", argv[i]) == 0)
 		{
 			UseDefaultConfig = true;
 			break;
@@ -1886,7 +1853,7 @@ int main(int argc, const char **argv) // ignore_convention
 	IGameServer *pGameServer = CreateGameServer();
 	IConsole *pConsole = CreateConsole(CFGFLAG_SERVER|CFGFLAG_ECON);
 	IEngineMasterServer *pEngineMasterServer = CreateEngineMasterServer();
-	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_SERVER, argc, argv); // ignore_convention
+	IStorage *pStorage = CreateStorage("Teeworlds", IStorage::STORAGETYPE_SERVER, argc, argv);
 	IConfigManager *pConfigManager = CreateConfigManager();
 
 	pServer->InitRegister(&pServer->m_NetServer, pEngineMasterServer, pConfigManager->Values(), pConsole);
@@ -1926,8 +1893,8 @@ int main(int argc, const char **argv) // ignore_convention
 		pConsole->ExecuteFile("autoexec.cfg");
 
 		// parse the command line arguments
-		if(argc > 1) // ignore_convention
-			pConsole->ParseArguments(argc-1, &argv[1]); // ignore_convention
+		if(argc > 1)
+			pConsole->ParseArguments(argc-1, &argv[1]);
 	}
 
 	// restore empty config strings to their defaults

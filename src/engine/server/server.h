@@ -3,6 +3,8 @@
 #ifndef ENGINE_SERVER_SERVER_H
 #define ENGINE_SERVER_SERVER_H
 
+#include <base/tl/sorted_array.h>
+
 #include <engine/server.h>
 #include <engine/shared/memheap.h>
 
@@ -135,7 +137,7 @@ public:
 		bool m_NoRconNote;
 		bool m_Quitting;
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
-		const CMapListEntry *m_pMapListEntryToSend;
+		int m_MapListEntryToSend;
 
 		void Reset();
 	};
@@ -172,18 +174,17 @@ public:
 	int m_CurrentMapSize;
 	int m_MapChunksPerRequest;
 
-	//maplist
+	// maplist
 	struct CMapListEntry
 	{
-		CMapListEntry *m_pPrev;
-		CMapListEntry *m_pNext;
 		char m_aName[IConsole::TEMPMAP_NAME_LENGTH];
+
+		CMapListEntry() {}
+		CMapListEntry(const char *pName) { str_copy(m_aName, pName, sizeof(m_aName)); }
+		bool operator<(const CMapListEntry &Other) const { return str_comp_filenames(m_aName, Other.m_aName) < 0; }
 	};
 
-	CHeap *m_pMapListHeap;
-	CMapListEntry *m_pLastMapEntry;
-	CMapListEntry *m_pFirstMapEntry;
-	int m_NumMapEntries;
+	sorted_array<CMapListEntry> m_lMaps;
 
 	int m_RconPasswordSet;
 	int m_GeneratedRconPassword;

@@ -39,7 +39,7 @@ public:
 	#include "tuning.h"
 	#undef MACRO_TUNING_PARAM
 
-	static int Num() { return sizeof(CTuningParams)/sizeof(int); }
+	static int Num() { return sizeof(CTuningParams)/sizeof(CTuneParam); }
 	bool Set(int Index, float Value);
 	bool Set(const char *pName, float Value);
 	bool Get(int Index, float *pValue) const;

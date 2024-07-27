@@ -122,7 +122,7 @@ protected:
 		int m_TimeLimit;
 	} m_GameInfo;
 
-	void UpdateGameInfo(int ClientID);
+	void SendGameInfo(int ClientID);
 
 public:
 	IGameController(class CGameContext *pGameServer);

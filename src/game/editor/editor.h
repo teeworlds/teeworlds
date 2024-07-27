@@ -567,6 +567,11 @@ public:
 		m_ZoomLevel = 200;
 		m_LockMouse = false;
 		m_ShowMousePointer = true;
+
+		m_MouseX = 0.0f;
+		m_MouseY = 0.0f;
+		m_MouseWorldX = 0.0f;
+		m_MouseWorldY = 0.0f;
 		m_MouseDeltaX = 0;
 		m_MouseDeltaY = 0;
 		m_MouseDeltaWx = 0;
@@ -596,7 +601,8 @@ public:
 	}
 
 	virtual void Init();
-	virtual void UpdateAndRender();
+	virtual void OnUpdate();
+	virtual void OnRender();
 	virtual bool HasUnsavedData() const { return m_Map.m_Modified; }
 
 	void RefreshFilteredFileList();
@@ -705,6 +711,11 @@ public:
 	bool m_ShowMousePointer;
 	bool m_GuiActive;
 	bool m_ProofBorders;
+
+	float m_MouseX;
+	float m_MouseY;
+	float m_MouseWorldX;
+	float m_MouseWorldY;
 	float m_MouseDeltaX;
 	float m_MouseDeltaY;
 	float m_MouseDeltaWx;

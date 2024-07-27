@@ -207,7 +207,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 
 	// ready mode
 	const CGameClient::CSnapState& Snap = m_pClient->m_Snap;
-	const bool ReadyMode = Snap.m_pGameData && (Snap.m_pGameData->m_GameStateFlags&(GAMESTATEFLAG_STARTCOUNTDOWN|GAMESTATEFLAG_PAUSED|GAMESTATEFLAG_WARMUP)) && Snap.m_pGameData->m_GameStateEndTick == 0;
+	const bool ReadyMode = Snap.m_pGameData && Snap.m_pGameData->m_GameStateEndTick == 0;
 
 	bool Race = m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_RACE;
 
@@ -665,7 +665,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			{
 				// K
 				TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, 0.5f*ColorAlpha);
-				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Frags, 0, 999));
+				str_format(aBuf, sizeof(aBuf), "%d", clamp(m_pClient->m_pStats->GetPlayerStats(pInfo->m_ClientID)->m_Kills, 0, 999));
 				s_Cursor.Reset();
 				s_Cursor.MoveTo(KillOffset+KillLength/2, y+Spacing);
 				s_Cursor.m_MaxWidth = KillLength;
@@ -696,7 +696,7 @@ float CScoreboard::RenderScoreboard(float x, float y, float w, int Team, const c
 			s_Cursor.MoveTo(ScoreOffset+(Race ? ScoreLength-3.f : ScoreLength/2), y+Spacing);
 			s_Cursor.m_MaxWidth = ScoreLength;
 			TextRender()->TextColor(TextColor.r, TextColor.g, TextColor.b, ColorAlpha);
-			if(!Race && !(m_pClient->m_LocalClientID == pInfo->m_ClientID && Config()->m_ClHideSelfScore))
+			if(Race || m_pClient->m_LocalClientID != pInfo->m_ClientID || !Config()->m_ClHideSelfScore)
 			{
 				TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			}

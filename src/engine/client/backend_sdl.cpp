@@ -33,7 +33,7 @@ void CGraphicsBackend_Threaded::ThreadFunc(void *pUser)
 		pThis->m_Activity.wait();
 		if(pThis->m_pBuffer)
 		{
-			#ifdef CONF_PLATFORM_MACOSX
+			#ifdef CONF_PLATFORM_MACOS
 				CAutoreleasePool AutoreleasePool;
 			#endif
 			pThis->m_pProcessor->RunBuffer(pThis->m_pBuffer);
@@ -172,7 +172,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::CState &St
 			glBindTexture(GL_TEXTURE_3D, m_aTextures[State.m_Texture].m_Tex3D[State.m_TextureArrayIndex]);
 		}
 		else
-			dbg_msg("render", "invalid texture %d %d %d\n", State.m_Texture, State.m_Dimension, m_aTextures[State.m_Texture].m_State);
+			dbg_msg("render", "invalid texture %d %d %d", State.m_Texture, State.m_Dimension, m_aTextures[State.m_Texture].m_State);
 
 		if(m_aTextures[State.m_Texture].m_Format == CCommandBuffer::TEXFORMAT_RGBA)
 			SrcBlendMode = GL_ONE;
@@ -195,7 +195,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::CState &St
 		glBlendFunc(SrcBlendMode, GL_ONE);
 		break;
 	default:
-		dbg_msg("render", "unknown blendmode %d\n", State.m_BlendMode);
+		dbg_msg("render", "unknown blendmode %d", State.m_BlendMode);
 	};
 
 	// wrap mode
@@ -208,7 +208,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::CState &St
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		break;
 	default:
-		dbg_msg("render", "unknown wrapmode %d\n", State.m_WrapModeU);
+		dbg_msg("render", "unknown wrapmode u %d", State.m_WrapModeU);
 	};
 
 	switch(State.m_WrapModeV)
@@ -220,7 +220,7 @@ void CCommandProcessorFragment_OpenGL::SetState(const CCommandBuffer::CState &St
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 		break;
 	default:
-		dbg_msg("render", "unknown wrapmode %d\n", State.m_WrapModeV);
+		dbg_msg("render", "unknown wrapmode v %d", State.m_WrapModeV);
 	};
 
 	if(State.m_Texture >= 0 && State.m_Texture < CCommandBuffer::MAX_TEXTURES && State.m_Dimension == 3)
@@ -468,7 +468,7 @@ void CCommandProcessorFragment_OpenGL::Cmd_Render(const CCommandBuffer::CRenderC
 		glDrawArrays(GL_LINES, 0, pCommand->m_PrimCount*2);
 		break;
 	default:
-		dbg_msg("render", "unknown primtype %d\n", pCommand->m_Cmd);
+		dbg_msg("render", "unknown primtype %d", pCommand->m_PrimType);
 	};
 }
 
@@ -651,7 +651,7 @@ int CGraphicsBackend_SDL_OpenGL::Init(const char *pName, int *pScreen, int *pWin
 	if(Flags&IGraphicsBackend::INITFLAG_BORDERLESS)
 		SdlFlags |= SDL_WINDOW_BORDERLESS;
 	if(Flags&IGraphicsBackend::INITFLAG_FULLSCREEN)
-#if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
+#if defined(CONF_PLATFORM_MACOS)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
 	{
 		SdlFlags |= SDL_WINDOW_FULLSCREEN_DESKTOP;	// always use "fake" fullscreen
 		*pWindowWidth = *pDesktopWidth;
@@ -784,7 +784,7 @@ void CGraphicsBackend_SDL_OpenGL::Maximize()
 
 bool CGraphicsBackend_SDL_OpenGL::Fullscreen(bool State)
 {
-#if defined(CONF_PLATFORM_MACOSX)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
+#if defined(CONF_PLATFORM_MACOS)	// Todo SDL: remove this when fixed (game freezes when losing focus in fullscreen)
 	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN_DESKTOP : 0) == 0;
 #else
 	return SDL_SetWindowFullscreen(m_pWindow, State ? SDL_WINDOW_FULLSCREEN : 0) == 0;

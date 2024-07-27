@@ -474,7 +474,7 @@ void CHud::RenderWarmupTimer()
 			}
 			else
 			{
-				str_format(aBuf, sizeof(aBuf), Localize("wait for more players"));
+				str_format(aBuf, sizeof(aBuf), Localize("waiting for more players"));
 				if(m_WarmupHideTick == 0)
 					m_WarmupHideTick = time_get();
 			}
@@ -613,11 +613,11 @@ void CHud::RenderVoting()
 	char aBufYes[64], aBufNo[64];
 	m_pClient->m_pBinds->GetKey("vote yes", aBufYes, sizeof(aBufYes));
 	m_pClient->m_pBinds->GetKey("vote no", aBufNo, sizeof(aBufNo));
-	str_format(aBuf, sizeof(aBuf), "%s - %s", aBufYes, Localize("Vote yes"));
+	str_format(aBuf, sizeof(aBuf), "%s - %s", aBufYes, Localize("Vote Yes"));
 	Base.y += Base.h+1;
 	UI()->DoLabel(&Base, aBuf, 6.0f, TEXTALIGN_LEFT);
 
-	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote no"), aBufNo);
+	str_format(aBuf, sizeof(aBuf), "%s - %s", Localize("Vote No"), aBufNo);
 	UI()->DoLabel(&Base, aBuf, 6.0f, TEXTALIGN_RIGHT);
 }
 
@@ -802,7 +802,7 @@ void CHud::RenderSpectatorHud()
 	switch(SpecMode)
 	{
 	case SPEC_FREEVIEW:
-		str_format(aBuf, sizeof(aBuf), "%s", Localize("Free-View"));
+		str_format(aBuf, sizeof(aBuf), "%s", Localize("Free View"));
 		break;
 	case SPEC_PLAYER:
 		str_format(aBuf, sizeof(aBuf), "%s", pName);
@@ -841,7 +841,7 @@ void CHud::RenderSpectatorNotification()
 		
 		if(NumPlayers > 0)
 		{
-			const char *pText = Localize("Click on a player or a flag to follow it");
+			const char *pText = Localize("Click on a player or flag to follow it");
 			static CTextCursor s_Cursor(16.0f);
 			s_Cursor.MoveTo(150 * Graphics()->ScreenAspect(), 30);
 			s_Cursor.m_Align = TEXTALIGN_TC;

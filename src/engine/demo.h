@@ -34,6 +34,7 @@ public:
 	public:
 		bool m_Paused;
 		float m_Speed;
+		int m_SpeedIndex;
 
 		int m_FirstTick;
 		int m_CurrentTick;
@@ -52,6 +53,7 @@ public:
 
 	~IDemoPlayer() {}
 	virtual void SetSpeed(float Speed) = 0;
+	virtual void SetSpeedIndex(int Offset) = 0;
 	virtual int SetPos(float Percent) = 0;
 	virtual int SetPos(int WantedTick) = 0;
 	virtual void Pause() = 0;

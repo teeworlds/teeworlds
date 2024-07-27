@@ -322,8 +322,10 @@ int CGraphics_Threaded::LoadTextureRawSub(CTextureHandle TextureID, int x, int y
 IGraphics::CTextureHandle CGraphics_Threaded::LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags)
 {
 	// don't waste memory on texture if we are stress testing
+#ifdef CONF_DEBUG
 	if(m_pConfig->m_DbgStress)
 		return m_InvalidTexture;
+#endif
 
 	// grab texture
 	int Tex = m_FirstFreeTexture;
@@ -406,9 +408,9 @@ int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int Sto
 		return 0;
 	}
 
-	png_init(0, 0); // ignore_convention
-	png_t Png; // ignore_convention
-	int Error = png_open_read(&Png, 0, File); // ignore_convention
+	png_init(0, 0);
+	png_t Png;
+	int Error = png_open_read(&Png, 0, File);
 	if(Error != PNG_NO_ERROR)
 	{
 		dbg_msg("game/png", "failed to read file. filename='%s'", aCompleteFilename);
@@ -416,22 +418,22 @@ int CGraphics_Threaded::LoadPNG(CImageInfo *pImg, const char *pFilename, int Sto
 		return 0;
 	}
 
-	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA) || Png.width > (2<<12) || Png.height > (2<<12)) // ignore_convention
+	if(Png.depth != 8 || (Png.color_type != PNG_TRUECOLOR && Png.color_type != PNG_TRUECOLOR_ALPHA) || Png.width > (2<<12) || Png.height > (2<<12))
 	{
 		dbg_msg("game/png", "invalid format. filename='%s'", aCompleteFilename);
 		io_close(File);
 		return 0;
 	}
 
-	unsigned char *pBuffer = (unsigned char *)mem_alloc(Png.width * Png.height * Png.bpp); // ignore_convention
-	png_get_data(&Png, pBuffer); // ignore_convention
+	unsigned char *pBuffer = (unsigned char *)mem_alloc(Png.width * Png.height * Png.bpp);
+	png_get_data(&Png, pBuffer);
 	io_close(File);
 
-	pImg->m_Width = Png.width; // ignore_convention
-	pImg->m_Height = Png.height; // ignore_convention
-	if(Png.color_type == PNG_TRUECOLOR) // ignore_convention
+	pImg->m_Width = Png.width;
+	pImg->m_Height = Png.height;
+	if(Png.color_type == PNG_TRUECOLOR)
 		pImg->m_Format = CImageInfo::FORMAT_RGB;
-	else if(Png.color_type == PNG_TRUECOLOR_ALPHA) // ignore_convention
+	else if(Png.color_type == PNG_TRUECOLOR_ALPHA)
 		pImg->m_Format = CImageInfo::FORMAT_RGBA;
 	pImg->m_pData = pBuffer;
 	return 1;
@@ -472,9 +474,9 @@ void CGraphics_Threaded::ScreenshotDirect(const char *pFilename)
 		if(File)
 		{
 			// save png
-			png_t Png; // ignore_convention
-			png_open_write(&Png, 0, File); // ignore_convention
-			png_set_data(&Png, Image.m_Width, Image.m_Height, 8, PNG_TRUECOLOR, (unsigned char *)Image.m_pData); // ignore_convention
+			png_t Png;
+			png_open_write(&Png, 0, File);
+			png_set_data(&Png, Image.m_Width, Image.m_Height, 8, PNG_TRUECOLOR, (unsigned char *)Image.m_pData);
 			io_close(File);
 			str_format(aBuf, sizeof(aBuf), "saved screenshot to '%s'", aWholePath);
 		}

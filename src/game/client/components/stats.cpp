@@ -6,6 +6,7 @@
 #include <engine/serverbrowser.h>
 #include <game/client/animstate.h>
 #include <game/client/components/menus.h>
+#include <game/client/components/scoreboard.h>
 #include <game/client/components/sounds.h>
 #include <game/client/gameclient.h>
 #include <generated/client_data.h>
@@ -30,14 +31,14 @@ CStats::CStats()
 void CStats::CPlayerStats::Reset()
 {
 	m_IngameTicks		= 0;
-	m_Frags				= 0;
+	m_Kills				= 0;
 	m_Deaths			= 0;
 	m_Suicides			= 0;
 	m_BestSpree			= 0;
 	m_CurrentSpree		= 0;
 	for(int j = 0; j < NUM_WEAPONS; j++)
 	{
-		m_aFragsWith[j]		= 0;
+		m_aKillsWith[j]		= 0;
 		m_aDeathsFrom[j]	= 0;
 	}
 	m_FlagGrabs			= 0;
@@ -109,13 +110,13 @@ void CStats::OnMessage(int MsgType, void *pRawMsg)
 			m_aStats[pMsg->m_Victim].m_DeathsCarrying++;
 		if(pMsg->m_Victim != pMsg->m_Killer)
 		{
-			m_aStats[pMsg->m_Killer].m_Frags++;
+			m_aStats[pMsg->m_Killer].m_Kills++;
 			m_aStats[pMsg->m_Killer].m_CurrentSpree++;
 
 			if(m_aStats[pMsg->m_Killer].m_CurrentSpree > m_aStats[pMsg->m_Killer].m_BestSpree)
 				m_aStats[pMsg->m_Killer].m_BestSpree = m_aStats[pMsg->m_Killer].m_CurrentSpree;
 			if(pMsg->m_Weapon >= 0)
-				m_aStats[pMsg->m_Killer].m_aFragsWith[pMsg->m_Weapon]++;
+				m_aStats[pMsg->m_Killer].m_aKillsWith[pMsg->m_Weapon]++;
 			if(pMsg->m_ModeSpecial & 1)
 				m_aStats[pMsg->m_Killer].m_CarriersKilled++;
 			if(pMsg->m_ModeSpecial & 2)
@@ -132,7 +133,8 @@ void CStats::OnRender()
 	if(Config()->m_ClAutoStatScreenshot)
 	{
 		// on game over, wait three seconds
-		if(m_ScreenshotTime < 0 && m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER)
+		const bool IsGameOver = m_pClient->m_Snap.m_pGameData && m_pClient->m_Snap.m_pGameData->m_GameStateFlags&GAMESTATEFLAG_GAMEOVER;
+		if(m_ScreenshotTime < 0 && IsGameOver)
 			m_ScreenshotTime = time_get()+time_freq()*3;
 
 		// when rendered, take screenshot once
@@ -141,6 +143,9 @@ void CStats::OnRender()
 			AutoStatScreenshot();
 			m_ScreenshotTaken = true;
 		}
+
+		if(!IsGameOver)
+			m_ScreenshotTime = -1;
 	}
 
 	// don't render if menu is open
@@ -159,26 +164,51 @@ void CStats::OnRender()
 
 	const float Height = 400.0f * 3.0f;
 	const float Width = Height * Graphics()->ScreenAspect();
+
+	const float HeaderHeight = 50.0f;
+	const float TeamHeadlineHeight = 40.0f;
 	float w = 270.0f;
-	float h = 770.0f;
+	float h = 720.0f + HeaderHeight + (m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS ? 2 * TeamHeadlineHeight : 0.0f);
+
+	// local client or spectated player is always the first in the list
+	int LocalOrSpectatedClient = -1;
+	if(m_pClient->m_LocalClientID != -1 && m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team != TEAM_SPECTATORS)
+		LocalOrSpectatedClient = m_pClient->m_LocalClientID;
+	else if(m_pClient->m_Snap.m_SpecInfo.m_Active && m_pClient->m_Snap.m_SpecInfo.m_SpectatorID != -1)
+		LocalOrSpectatedClient = m_pClient->m_Snap.m_SpecInfo.m_SpectatorID;
 
 	int aPlayers[MAX_CLIENTS] = {0};
 	int NumPlayers = 0;
-	for(int i = 0; i < MAX_CLIENTS; i++)
+	if(LocalOrSpectatedClient != -1)
 	{
-		if(!m_pClient->m_aClients[i].m_Active)
-			continue;
-		if(m_pClient->m_aClients[i].m_Team == TEAM_SPECTATORS)
-			continue;
-
-		aPlayers[NumPlayers] = i;
+		aPlayers[NumPlayers] = LocalOrSpectatedClient;
 		NumPlayers++;
+	}
+
+	// order other clients by team, starting with the team of our player
+	int aTeams[] = {TEAM_RED, TEAM_BLUE};
+	if(LocalOrSpectatedClient != -1 && m_pClient->m_aClients[LocalOrSpectatedClient].m_Team != aTeams[0])
+		std::swap(aTeams[0], aTeams[1]);
+	for(unsigned t = 0; t < sizeof(aTeams) / sizeof(aTeams[0]); ++t)
+	{
+		for(int i = 0; i < MAX_CLIENTS; i++)
+		{
+			if(i == LocalOrSpectatedClient)
+				continue;
+			if(!m_pClient->m_aClients[i].m_Active)
+				continue;
+			if(m_pClient->m_aClients[i].m_Team != aTeams[t])
+				continue;
+
+			aPlayers[NumPlayers] = i;
+			NumPlayers++;
+		}
 	}
 
 	for(int i=0; i<9; i++)
 		if(Config()->m_ClStatboardInfos & (1<<i))
 		{
-			if((1<<i) == (TC_STATS_DEATHS) && Config()->m_ClStatboardInfos & TC_STATS_FRAGS)
+			if((1<<i) == (TC_STATS_DEATHS) && Config()->m_ClStatboardInfos & TC_STATS_KILLS)
 			{
 				w += 60; // some extra for the merge
 				continue;
@@ -207,7 +237,7 @@ void CStats::OnRender()
 		{
 			const CPlayerStats *pStats = &m_aStats[aPlayers[i]];
 			for(int j=0; j<NUM_WEAPONS; j++)
-				aDisplayWeapon[j] = aDisplayWeapon[j] || pStats->m_aFragsWith[j] || pStats->m_aDeathsFrom[j];
+				aDisplayWeapon[j] = aDisplayWeapon[j] || pStats->m_aKillsWith[j] || pStats->m_aDeathsFrom[j];
 		}
 		for(int i = 0; i < NUM_WEAPONS; i++)
 			if(aDisplayWeapon[i])
@@ -226,10 +256,11 @@ void CStats::OnRender()
 
 	Graphics()->MapScreen(0, 0, Width, Height);
 
+	const float RoundingSize = 10.0f;
 	Graphics()->BlendNormal();
 	{
 		CUIRect Rect = {x, y, w, h};
-		Rect.Draw(vec4(0,0,0,0.5f), 17.0f);
+		Rect.Draw(vec4(0,0,0,0.5f), RoundingSize);
 	}
 
 	const float Margin = 10.0f;
@@ -237,28 +268,28 @@ void CStats::OnRender()
 	w -= 2 * Margin;
 
 	int px = 325;
-	const float HeaderHeight = 50.0f;
 
-	s_Cursor.m_FontSize = 20.0f;
+	const float HeaderFontSize = 20.0f;
+	s_Cursor.m_FontSize = HeaderFontSize;
 	s_Cursor.m_MaxWidth = -1;
 	s_Cursor.m_Align = TEXTALIGN_ML;
 	s_Cursor.Reset();
 	s_Cursor.MoveTo(x + 10, y + HeaderHeight / 2.0f);
 	TextRender()->TextOutlined(&s_Cursor, Localize("Name"), -1);
-	const char *apHeaders[] = { "K", "D", Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("FPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
+	const char *apHeaders[] = { "K", "D", Localize("Suicides"), Localize("Ratio"), Localize("Net", "Net score"), Localize("KPM"), Localize("Spree"), Localize("Best spree"), Localize("Grabs", "Flag grabs") };
 	s_Cursor.m_Align = TEXTALIGN_MR;
 	for(int i = 0; i < 9; i++)
 	{
 		if(Config()->m_ClStatboardInfos & (1<<i))
 		{
 			const char *pText = apHeaders[i];
-			// handle K:D merge (in the frags column)
-			if(1<<i == TC_STATS_FRAGS && Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
+			// handle K:D merge (in the kills column)
+			if(1<<i == TC_STATS_KILLS && Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
 			{
 				pText = "K:D";
 				px += 60.0f; // some extra for the merge
 			}
-			else if(1<<i == TC_STATS_DEATHS && Config()->m_ClStatboardInfos & TC_STATS_FRAGS)
+			else if(1<<i == TC_STATS_DEATHS && Config()->m_ClStatboardInfos & TC_STATS_KILLS)
 				continue;
 			// handle spree columns merge
 			if(1<<i == TC_STATS_BESTSPREE)
@@ -330,6 +361,7 @@ void CStats::OnRender()
 	}
 
 	s_Cursor.m_FontSize = FontSize;
+	int LastTeam = -1;
 	for(int j=0; j<NumPlayers; j++)
 	{
 		s_Cursor.m_Align = TEXTALIGN_ML;
@@ -347,6 +379,39 @@ void CStats::OnRender()
 			break;
 		}
 
+		const int CurrentTeam = m_pClient->m_aClients[aPlayers[j]].m_Team;
+		if(m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS && LastTeam != CurrentTeam)
+		{
+			vec4 Color;
+			const char *pDefaultTeamName;
+			if(CurrentTeam == TEAM_RED)
+			{
+				Color = vec4(0.975f, 0.17f, 0.17f, 0.75f);
+				pDefaultTeamName = Localize("Red team");
+			}
+			else // if(CurrentTeam == TEAM_BLUE)
+			{
+				Color = vec4(0.17f, 0.46f, 0.975f, 0.75f);
+				pDefaultTeamName = Localize("Blue team");
+			}
+
+			const char *pTeamName = m_pClient->m_pScoreboard->GetClanName(CurrentTeam);
+			if(!pTeamName)
+				pTeamName = pDefaultTeamName;
+
+			CUIRect Rect = {x, y, w, TeamHeadlineHeight};
+			Rect.Draw(Color, RoundingSize);
+
+			s_Cursor.Reset();
+			s_Cursor.m_FontSize = HeaderFontSize;
+			s_Cursor.MoveTo(Rect.x + 20.0f, Rect.y + Rect.h / 2.0f);
+			TextRender()->TextOutlined(&s_Cursor, pTeamName, -1);
+			s_Cursor.m_FontSize = FontSize;
+
+			y += TeamHeadlineHeight;
+			LastTeam = CurrentTeam;
+		}
+
 		const CPlayerStats *pStats = &m_aStats[aPlayers[j]];
 		const bool HighlightedLine = aPlayers[j] == m_pClient->m_LocalClientID
 			|| (m_pClient->m_Snap.m_SpecInfo.m_Active && aPlayers[j] == m_pClient->m_Snap.m_SpecInfo.m_SpectatorID);
@@ -355,7 +420,7 @@ void CStats::OnRender()
 		if(HighlightedLine)
 		{
 			CUIRect Rect = {x, y, w, LineHeight};
-			Rect.Draw(vec4(1,1,1,0.25f), 17.0f);
+			Rect.Draw(vec4(1,1,1,0.25f), RoundingSize);
 		}
 
 		CTeeRenderInfo Teeinfo = m_pClient->m_aClients[aPlayers[j]].m_RenderInfo;
@@ -372,15 +437,15 @@ void CStats::OnRender()
 		s_Cursor.m_MaxWidth = -1;
 		s_Cursor.m_Align = TEXTALIGN_MR;
 		px = 325;
-		if(Config()->m_ClStatboardInfos & TC_STATS_FRAGS)
+		if(Config()->m_ClStatboardInfos & TC_STATS_KILLS)
 		{
 			if(Config()->m_ClStatboardInfos & TC_STATS_DEATHS)
 			{
 				px += 60;
-				str_format(aBuf, sizeof(aBuf), "%d:%d", pStats->m_Frags, pStats->m_Deaths);
+				str_format(aBuf, sizeof(aBuf), "%d:%d", pStats->m_Kills, pStats->m_Deaths);
 			}
 			else
-				str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Frags);
+				str_format(aBuf, sizeof(aBuf), "%d", pStats->m_Kills);
 			
 			s_Cursor.Reset();
 			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
@@ -408,7 +473,7 @@ void CStats::OnRender()
 			if(pStats->m_Deaths == 0)
 				str_format(aBuf, sizeof(aBuf), "—");
 			else
-				str_format(aBuf, sizeof(aBuf), "%.2f", (float)(pStats->m_Frags)/pStats->m_Deaths);
+				str_format(aBuf, sizeof(aBuf), "%.2f", (float)(pStats->m_Kills)/pStats->m_Deaths);
 			s_Cursor.Reset();
 			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
@@ -416,16 +481,16 @@ void CStats::OnRender()
 		}
 		if(Config()->m_ClStatboardInfos & TC_STATS_NET)
 		{
-			str_format(aBuf, sizeof(aBuf), "%+d", pStats->m_Frags-pStats->m_Deaths);
+			str_format(aBuf, sizeof(aBuf), "%+d", pStats->m_Kills - pStats->m_Deaths);
 			s_Cursor.Reset();
 			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
 			px += 100;
 		}
-		if(Config()->m_ClStatboardInfos & TC_STATS_FPM)
+		if(Config()->m_ClStatboardInfos & TC_STATS_KPM)
 		{
-			float Fpm = pStats->m_IngameTicks > 0 ? (float)(pStats->m_Frags * Client()->GameTickSpeed() * 60) / pStats->m_IngameTicks : 0.f;
-			str_format(aBuf, sizeof(aBuf), "%.1f", Fpm);
+			const float KPM = pStats->m_IngameTicks > 0 ? (float)(pStats->m_Kills * Client()->GameTickSpeed() * 60) / pStats->m_IngameTicks : 0.f;
+			str_format(aBuf, sizeof(aBuf), "%.1f", KPM);
 			s_Cursor.Reset();
 			s_Cursor.MoveTo(x + px, y + LineHeight / 2.0f);
 			TextRender()->TextOutlined(&s_Cursor, aBuf, -1);
@@ -470,24 +535,22 @@ void CStats::OnRender()
 			const float StartX = px - Offset;
 			const float RoundSize = BarHeight/2.0f;
 			float EndX = StartX; // each bar will have its width incremented by the roundsize so this avoids that last one would overflow
-			int TotalFrags = 0;
-			int TotalDeaths = 0;
+			int TotalKills = 0;
 			for(int i = 0; i < NUM_WEAPONS; i++)
 			{
 				if(aDisplayWeapon[i])
 				{
 					EndX += 80.0f;
-					TotalFrags += pStats->m_aFragsWith[i];
-					TotalDeaths += pStats->m_aDeathsFrom[i];
+					TotalKills += pStats->m_aKillsWith[i];
 				}					
 			}
 			float ExploitableLength = (EndX-StartX) - RoundSize;
 			CUIRect Rect = {x + StartX, y + LineHeight / 2.0f - BarHeight / 2.0f, 0.0f, BarHeight};
 			for(int i = 0; i < NUM_WEAPONS; i++)
 			{
-				if(pStats->m_aFragsWith[i])
+				if(pStats->m_aKillsWith[i])
 				{
-					Rect.w = ExploitableLength * pStats->m_aFragsWith[i] / (float)TotalFrags;
+					Rect.w = ExploitableLength * pStats->m_aKillsWith[i] / (float)TotalKills;
 					Rect.w += RoundSize;
 					Rect.Draw(s_aWeaponColors[i], RoundSize);
 					Rect.w -= RoundSize;

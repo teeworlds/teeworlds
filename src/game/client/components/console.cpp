@@ -103,9 +103,9 @@ void CGameConsole::CInstance::ExecuteLine(const char *pLine)
 	else
 	{
 		if(m_pGameConsole->Client()->RconAuthed())
-			m_pGameConsole->Client()->Rcon(pLine);
+			m_pGameConsole->Client()->SendRcon(pLine);
 		else
-			m_pGameConsole->Client()->RconAuth("", pLine);
+			m_pGameConsole->Client()->SendRconAuth("", pLine);
 	}
 }
 
@@ -150,6 +150,10 @@ void CGameConsole::CInstance::OnInput(IInput::CEvent Event)
 				{
 					char *pEntry = m_History.Allocate(m_Input.GetLength()+1);
 					mem_copy(pEntry, m_Input.GetString(), m_Input.GetLength()+1);
+					// print out the user's commands before they get run
+					char aBuf[128];
+					str_format(aBuf, sizeof(aBuf), "> %s", m_Input.GetString());
+					PrintLine(aBuf, false);
 				}
 				ExecuteLine(m_Input.GetString());
 				m_Input.Clear();
@@ -374,7 +378,7 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
 		pInfo->m_pSelf->TextRender()->TextColor(0.05f, 0.05f, 0.05f,1);
-		const float BeginX = pInfo->m_pCursor->AdvancePosition().x - pInfo->m_Offset;
+		const float BeginX = pInfo->m_pCursor->AdvancePosition().x + pInfo->m_Offset;
 		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
 		CTextBoundingBox Box = pInfo->m_pCursor->BoundingBox();
 		CUIRect Rect = {Box.x - 5 + BeginX, Box.y, Box.w + 8 - BeginX, Box.h};
@@ -382,10 +386,12 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 		Rect.Draw(vec4(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f), pInfo->m_pCursor->m_FontSize/3);
 
 		// scroll when out of sight
-		if(Rect.x + *pInfo->m_pOffsetChange < 0.0f)
-			*pInfo->m_pOffsetChange += -Rect.x + pInfo->m_Width/4.0f;
-		else if(Rect.x + Rect.w + *pInfo->m_pOffsetChange > pInfo->m_Width)
-			*pInfo->m_pOffsetChange -= Rect.x + Rect.w - pInfo->m_Width + pInfo->m_Width/4.0f;
+		const bool MoveLeft = Rect.x - *pInfo->m_pOffsetChange < 0.0f;
+		const bool MoveRight = Rect.x + Rect.w - *pInfo->m_pOffsetChange > pInfo->m_Width;
+		if(MoveLeft && !MoveRight)
+			*pInfo->m_pOffsetChange -= -Rect.x + pInfo->m_Width/4.0f;
+		else if(!MoveLeft && MoveRight)
+			*pInfo->m_pOffsetChange += Rect.x + Rect.w - pInfo->m_Width + pInfo->m_Width/4.0f;
 	}
 	else
 	{
@@ -408,7 +414,7 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 
 	pInfo->m_EnumCount++;
 	pInfo->m_pSelf->TextRender()->TextAdvance(pInfo->m_pCursor, 7.0f);
-	pInfo->m_TotalWidth = pInfo->m_pCursor->AdvancePosition().x - pInfo->m_Offset;
+	pInfo->m_TotalWidth = pInfo->m_pCursor->AdvancePosition().x + pInfo->m_Offset;
 }
 
 void CGameConsole::OnRender()
@@ -503,7 +509,7 @@ void CGameConsole::OnRender()
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
-	ConsoleHeight -= 22.0f;
+	ConsoleHeight -= 36.0f;
 
 	CInstance *pConsole = CurrentConsole();
 
@@ -513,9 +519,15 @@ void CGameConsole::OnRender()
 		float x = 3;
 		float y = ConsoleHeight - RowHeight - 5.0f;
 
+		static CTextCursor s_CompletionOptionsCursor;
+		s_CompletionOptionsCursor.Reset();
+		s_CompletionOptionsCursor.MoveTo(x - pConsole->m_CompletionRenderOffset, y + RowHeight + 2.0f);
+		s_CompletionOptionsCursor.m_FontSize = FontSize;
+		s_CompletionOptionsCursor.m_MaxWidth = -1.0f;
+
 		static CTextCursor s_InfoCursor;
 		s_InfoCursor.Reset();
-		s_InfoCursor.MoveTo(x+pConsole->m_CompletionRenderOffset, y+RowHeight+2.0f);
+		s_InfoCursor.MoveTo(x, y + 2.0f * RowHeight + 4.0f);
 		s_InfoCursor.m_FontSize = FontSize;
 		s_InfoCursor.m_MaxWidth = -1.0f;
 
@@ -550,12 +562,11 @@ void CGameConsole::OnRender()
 		pInputCursor->MoveTo(x, y + FontSize * 1.35f);
 
 		pConsole->m_Input.Activate(CONSOLE); // ensure the input is active
-		pConsole->m_Input.Render();
+		pConsole->m_Input.Render(pConsole->m_Input.WasChanged());
 
 		y -= (pInputCursor->LineCount() - 1) * FontSize;
 
 		// render possible commands
-		static float s_LastRender = Now;
 		if((m_ConsoleType == CONSOLETYPE_LOCAL || Client()->RconAuthed()) && pConsole->m_Input.GetString()[0])
 		{
 			CCompletionOptionRenderInfo Info;
@@ -567,65 +578,43 @@ void CGameConsole::OnRender()
 			Info.m_Width = Screen.w;
 			Info.m_TotalWidth = 0.0f;
 			Info.m_pCurrentCmd = pConsole->m_aCompletionBuffer;
-			Info.m_pCursor = &s_InfoCursor;
+			Info.m_pCursor = &s_CompletionOptionsCursor;
 			m_pConsole->PossibleCommands(Info.m_pCurrentCmd, pConsole->m_CompletionFlagmask, m_ConsoleType != CGameConsole::CONSOLETYPE_LOCAL &&
 				Client()->RconAuthed() && Client()->UseTempRconCommands(), PossibleCommandsRenderCallback, &Info);
 
-			if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
+			if(pConsole->m_IsCommand)
 			{
-				const bool MapCompletion = IsMapCommandPrefix(Info.m_pCurrentCmd);
-				const bool TuningCompletion = IsTuningCommandPrefix(Info.m_pCurrentCmd);
-				if(MapCompletion || TuningCompletion)
+				// argument completion
+				if(Info.m_EnumCount <= 0)
 				{
-					Info.m_WantedCompletion = pConsole->m_CompletionChosenArgument;
-					Info.m_EnumCount = 0;
-					Info.m_TotalWidth = 0.0f;
-					Info.m_pCurrentCmd = pConsole->m_aCompletionBufferArgument;
-					if(MapCompletion)
-						m_pConsole->PossibleMaps(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
-					else if(TuningCompletion)
-						m_pClient->m_Tuning.PossibleTunings(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
+					const bool MapCompletion = IsMapCommandPrefix(Info.m_pCurrentCmd);
+					const bool TuningCompletion = IsTuningCommandPrefix(Info.m_pCurrentCmd);
+					if(MapCompletion || TuningCompletion)
+					{
+						Info.m_WantedCompletion = pConsole->m_CompletionChosenArgument;
+						Info.m_EnumCount = 0;
+						Info.m_TotalWidth = 0.0f;
+						Info.m_pCurrentCmd = pConsole->m_aCompletionBufferArgument;
+						if(MapCompletion)
+							m_pConsole->PossibleMaps(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
+						else if(TuningCompletion)
+							m_pClient->m_Tuning.PossibleTunings(Info.m_pCurrentCmd, PossibleCommandsRenderCallback, &Info);
+					}
 				}
 
-				if(Info.m_EnumCount <= 0 && pConsole->m_IsCommand)
-				{
-					char aBuf[512];
-					str_format(aBuf, sizeof(aBuf), "Help: %s ", pConsole->m_aCommandHelp);
-					TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
-					TextRender()->TextColor(0.75f, 0.75f, 0.75f, 1);
-					str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
-					TextRender()->TextDeferred(Info.m_pCursor, aBuf, -1);
-				}
+				char aBuf[512];
+				TextRender()->TextColor(0.9f, 0.9f, 0.9f, 1.0f);
+				str_format(aBuf, sizeof(aBuf), "Help: %s    ", pConsole->m_aCommandHelp);
+				TextRender()->TextDeferred(&s_InfoCursor, aBuf, -1);
+				TextRender()->TextColor(0.7f, 0.7f, 0.7f, 1.0f);
+				str_format(aBuf, sizeof(aBuf), "Syntax: %s %s", pConsole->m_aCommandName, pConsole->m_aCommandParams);
+				TextRender()->TextDeferred(&s_InfoCursor, aBuf, -1);
 			}
 
-			// instant scrolling if distance too long
-			if(absolute(pConsole->m_CompletionRenderOffsetChange) > Info.m_Width)
-			{
-				pConsole->m_CompletionRenderOffset += pConsole->m_CompletionRenderOffsetChange;
-				pConsole->m_CompletionRenderOffsetChange = 0.0f;
-			}
-			// smooth scrolling
-			if(pConsole->m_CompletionRenderOffsetChange)
-			{
-				const float Delta = pConsole->m_CompletionRenderOffsetChange * clamp((Now - s_LastRender) * 10.0f, 0.0f, 1.0f);
-				pConsole->m_CompletionRenderOffset += Delta;
-				pConsole->m_CompletionRenderOffsetChange -= Delta;
-			}
-			// clamp to first item
-			if(pConsole->m_CompletionRenderOffset > 0.0f)
-			{
-				pConsole->m_CompletionRenderOffset = 0.0f;
-				pConsole->m_CompletionRenderOffsetChange = 0.0f;
-			}
-			// clamp to last item
-			if(Info.m_TotalWidth > Info.m_Width && pConsole->m_CompletionRenderOffset < Info.m_Width - Info.m_TotalWidth)
-			{
-				pConsole->m_CompletionRenderOffset = Info.m_Width - Info.m_TotalWidth;
-				pConsole->m_CompletionRenderOffsetChange = 0.0f;
-			}
+			UI()->DoSmoothScrollLogic(&pConsole->m_CompletionRenderOffset, &pConsole->m_CompletionRenderOffsetChange, Info.m_Width, Info.m_TotalWidth);
 		}
-		s_LastRender = Now;
 
+		TextRender()->DrawTextOutlined(&s_CompletionOptionsCursor);
 		TextRender()->DrawTextOutlined(&s_InfoCursor);
 
 		TextRender()->TextColor(1.0f, 1.0f, 1.0f, 1.0f);

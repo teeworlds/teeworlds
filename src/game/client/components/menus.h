@@ -40,10 +40,10 @@ class CMenus : public CComponent
 private:
 	typedef float (CMenus::*FDropdownCallback)(CUIRect View);
 
-	bool DoButton_SpriteID(CButtonContainer *pBC, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, bool Fade = true);
+	bool DoButton_SpriteID(CButtonContainer *pButtonContainer, int ImageID, int SpriteID, bool Checked, const CUIRect *pRect, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, bool Fade = true);
 	bool DoButton_Toggle(const void *pID, bool Checked, const CUIRect *pRect, bool Active);
-	bool DoButton_Menu(CButtonContainer *pBC, const char *pText, bool Checked, const CUIRect *pRect, const char *pImageName = 0, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, vec4 ColorHot = vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade = true);
-	bool DoButton_MenuTabTop(CButtonContainer *pBC, const char *pText, bool Checked, const CUIRect *pRect, float Alpha = 1.0f, float FontAlpha = 1.0f, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f);
+	bool DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, bool Checked, const CUIRect *pRect, const char *pImageName = 0, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, vec4 ColorHot = vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade = true);
+	bool DoButton_MenuTabTop(CButtonContainer *pButtonContainer, const char *pText, bool Checked, const CUIRect *pRect, float Alpha = 1.0f, float FontAlpha = 1.0f, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f);
 
 	bool DoButton_CheckBox(const void *pID, const char *pText, bool Checked, const CUIRect *pRect, bool Locked = false);
 
@@ -54,7 +54,7 @@ private:
 	void DoInfoBox(const CUIRect *pRect, const char *pLable, const char *pValue);
 
 	void DoJoystickBar(const CUIRect *pRect, float Current, float Tolerance, bool Active);
-	void DoButton_KeySelect(CButtonContainer *pBC, const char *pText, const CUIRect *pRect);
+	void DoButton_KeySelect(CButtonContainer *pButtonContainer, const char *pText, const CUIRect *pRect);
 	int DoKeyReader(CButtonContainer *pPC, const CUIRect *pRect, int Key, int Modifier, int *pNewModifier);
 
 	enum
@@ -562,7 +562,7 @@ private:
 	// found in menus_settings.cpp
 	void RenderLanguageSelection(CUIRect MainView, bool Header=true);
 	void RenderThemeSelection(CUIRect MainView, bool Header=true);
-	void RenderHSLPicker(CUIRect Picker);
+	void RenderHSLPicker(CUIRect MainView);
 	void RenderSkinSelection(CUIRect MainView);
 	void RenderSkinPartSelection(CUIRect MainView);
 	void RenderSkinPartPalette(CUIRect MainView);
