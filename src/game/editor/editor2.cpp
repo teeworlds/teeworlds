@@ -4125,7 +4125,7 @@ bool CEditor2::LoadEntities(const char *pFileName)
 	if(!str_endswith(pFileName, ".png"))
 	{
 		// TODO: can we load anything other than png files?
-		ed_dbg("ERROR: '%s' image file not supported", pFilepath);
+		ed_dbg("ERROR: '%s' image file not supported", pFileName);
 		return false;
 	}
 
@@ -4154,7 +4154,7 @@ bool CEditor2::LoadEntities(const char *pFileName)
 
 	m_EntitiesTexture = TexHnd;
 
-	ed_dbg("Image '%s' loaded", pFilepath);
+	ed_dbg("Image '%s' loaded", pFileName);
 
 	return true;
 }
