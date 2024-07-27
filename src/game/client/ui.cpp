@@ -705,8 +705,10 @@ float CUI::DoScrollbarH(const void *pID, const CUIRect *pRect, float Current)
 	return ReturnValue;
 }
 
-void CUI::DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, bool Infinite)
+void CUI::DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale, unsigned char Options)
 {
+	const bool Infinite = Options & CUI::SCROLLBAR_OPTION_INFINITE;
+	const bool NoClampValue = Options & CUI::SCROLLBAR_OPTION_NOCLAMPVALUE;
 	int Value = *pOption;
 	if(Infinite)
 	{
@@ -736,6 +738,10 @@ void CUI::DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect,
 
 	ScrollBar.VMargin(4.0f, &ScrollBar);
 	Value = pScale->ToAbsolute(DoScrollbarH(pID, &ScrollBar, pScale->ToRelative(Value, Min, Max)), Min, Max);
+	if (NoClampValue && ((Value == Min && *pOption < Min) || (Value == Max && *pOption > Max)))
+	{
+		Value = *pOption;
+	}
 	if(Infinite && Value == Max)
 		Value = 0;
 

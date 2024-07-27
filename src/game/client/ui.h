@@ -273,8 +273,14 @@ public:
 	// scrollbars
 	float DoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	float DoScrollbarH(const void *pID, const CUIRect *pRect, float Current);
-	void DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &ms_LinearScrollbarScale, bool Infinite = false);
+	void DoScrollbarOption(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, int Min, int Max, const IScrollbarScale *pScale = &ms_LinearScrollbarScale, unsigned char Options = 0);
 	void DoScrollbarOptionLabeled(const void *pID, int *pOption, const CUIRect *pRect, const char *pStr, const char *apLabels[], int NumLabels, const IScrollbarScale *pScale = &ms_LinearScrollbarScale);
+
+	enum
+	{
+		SCROLLBAR_OPTION_INFINITE = 1 << 0,
+		SCROLLBAR_OPTION_NOCLAMPVALUE = 1 << 1,
+	};
 
 	// tooltips
 	void DoTooltip(const void *pID, const CUIRect *pRect, const char *pText);
