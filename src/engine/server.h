@@ -66,7 +66,9 @@ public:
 	virtual void Kick(int ClientID, const char *pReason) = 0;
 	virtual void ChangeMap(const char *pMap) = 0;
 
+	virtual void DemoRecorder_Start(const char *pFilename, bool WithTimestamp) = 0;
 	virtual void DemoRecorder_HandleAutoStart() = 0;
+	virtual void DemoRecorder_Stop(bool ErrorIfNotRecording = false) = 0;
 	virtual bool DemoRecorder_IsRecording() = 0;
 };
 

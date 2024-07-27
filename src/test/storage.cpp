@@ -32,6 +32,12 @@ TEST(Storage, FindFile)
 	EXPECT_TRUE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), &Sha256, 0x3bb935c6, 5));
 	EXPECT_STREQ(aFound, aFilenameWithDot);
 
+	EXPECT_TRUE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), 0, 0x3bb935c6));
+	EXPECT_STREQ(aFound, aFilenameWithDot);
+
+	EXPECT_TRUE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), &Sha256, 0x3bb935c6));
+	EXPECT_STREQ(aFound, aFilenameWithDot);
+
 	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), 0, 0, 0));
 	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), 0, 0x3bb935c6, 0));
 	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), 0, 0, 5));
@@ -40,6 +46,12 @@ TEST(Storage, FindFile)
 
 	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), &WrongSha256, 0x3bb935c6, 5));
 	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), &SHA256_ZEROED, 0x3bb935c6, 5));
+
+	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), 0, 0));
+	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), 0, 0x3bb935c5));
+
+	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), &WrongSha256, 0x3bb935c6));
+	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), &SHA256_ZEROED, 0x3bb935c6));
 
 	EXPECT_TRUE(pStorage->RemoveFile(Info.m_aFilename, IStorage::TYPE_SAVE));
 }
