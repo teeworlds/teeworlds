@@ -231,7 +231,6 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size);
 
 	Remarks:
 		- Does NOT guarantee that there are no internal null bytes.
-		- Guarantees that result will contain zero-termination.
 		- The result must be freed after it has been used.
 */
 void io_read_all(IOHANDLE io, void **result, unsigned *result_len);

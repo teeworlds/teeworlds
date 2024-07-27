@@ -368,24 +368,24 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], server, game_server)
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["json"], server, game_server)
 end
 
 function BuildTools(settings)
 	local tools = {}
 	for i,v in ipairs(Collect("src/tools/*.cpp", "src/tools/*.c")) do
 		local toolname = PathFilename(PathBase(v))
-		tools[i] = Link(settings, toolname, Compile(settings, v), libs["zlib"], libs["md5"], libs["wavpack"], libs["png"])
+		tools[i] = Link(settings, toolname, Compile(settings, v), libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"])
 	end
 	PseudoTarget(settings.link.Output(settings, "pseudo_tools") .. settings.link.extension, tools)
 end
 
 function BuildMasterserver(settings)
-	return Link(settings, "mastersrv", Compile(settings, Collect("src/mastersrv/*.cpp")), libs["zlib"], libs["md5"])
+	return Link(settings, "mastersrv", Compile(settings, Collect("src/mastersrv/*.cpp")), libs["zlib"], libs["md5"], libs["json"])
 end
 
 function BuildVersionserver(settings)
-	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"], libs["md5"])
+	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"], libs["md5"], libs["json"])
 end
 
 function BuildContent(settings, arch, conf)

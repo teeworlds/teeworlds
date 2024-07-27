@@ -1318,6 +1318,8 @@ set_src(ENGINE_SHARED GLOB src/engine/shared
   huffman.h
   jobs.cpp
   jobs.h
+  jsonparser.cpp
+  jsonparser.h
   jsonwriter.cpp
   jsonwriter.h
   kernel.cpp
@@ -1723,6 +1725,7 @@ if(GTEST_FOUND OR DOWNLOAD_GTEST)
     git_revision.cpp
     hash.cpp
     io.cpp
+    jsonparser.cpp
     jsonwriter.cpp
     packer.cpp
     sorted_array.cpp

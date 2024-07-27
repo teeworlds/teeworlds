@@ -4,9 +4,10 @@
 #include <base/system.h>
 #include <base/tl/algorithm.h>
 
-#include <engine/external/json-parser/json.h>
 #include <engine/console.h>
 #include <engine/storage.h>
+
+#include <engine/shared/jsonparser.h>
 
 #include "localization.h"
 
@@ -59,34 +60,19 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		return true;
 	}
 
-	// read file data into buffer
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
+	CJsonParser JsonParser;
+	const json_value *pJsonData = JsonParser.ParseFile(pFilename, pStorage);
+	if(pJsonData == 0)
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", JsonParser.Error());
 		return false;
-	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize);
-	io_read(File, pFileData, FileSize);
-	io_close(File);
+	}
 
-	// init
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "loaded '%s'", pFilename);
 	pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 	m_Strings.clear();
 	m_StringsHeap.Reset();
-
-	// parse json data
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
-	mem_free(pFileData);
-	
-	if(pJsonData == 0)
-	{
-		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
-		return false;
-	}
 
 	// extract data
 	const json_value &rStart = (*pJsonData)["translated strings"];
@@ -120,8 +106,6 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		}
 	}
 
-	// clean up
-	json_value_free(pJsonData);
 	m_CurrentVersion = ++m_VersionCounter;
 	return true;
 }

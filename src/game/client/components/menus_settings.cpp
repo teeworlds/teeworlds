@@ -9,8 +9,9 @@
 #include <engine/serverbrowser.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
-#include <engine/external/json-parser/json.h>
+
 #include <engine/shared/config.h>
+#include <engine/shared/jsonparser.h>
 
 #include <generated/protocol.h>
 #include <generated/client_data.h>
@@ -644,33 +645,14 @@ int CMenus::ThemeIconScan(const char *pName, int IsDir, int DirType, void *pUser
 
 void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<CLanguage> *pLanguages)
 {
-	// read file data into buffer
-	const char *pFilename = "languages/index.json";
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
-	{
-		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", "couldn't open index file");
-		return;
-	}
-	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize);
-	io_read(File, pFileData, FileSize);
-	io_close(File);
-
-	// parse json data
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
-	mem_free(pFileData);
-
+	CJsonParser JsonParser;
+	const json_value *pJsonData = JsonParser.ParseFile("languages/index.json", pStorage);
 	if(pJsonData == 0)
 	{
-		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", JsonParser.Error());
 		return;
 	}
 
-	// extract data
 	const json_value &rStart = (*pJsonData)["language indices"];
 	if(rStart.type == json_array)
 	{
@@ -681,9 +663,6 @@ void LoadLanguageIndexfile(IStorage *pStorage, IConsole *pConsole, sorted_array<
 			pLanguages->add(CLanguage((const char *)rStart[i]["name"], aFileName, (json_int_t)rStart[i]["code"]));
 		}
 	}
-
-	// clean up
-	json_value_free(pJsonData);
 }
 
 void CMenus::RenderLanguageSelection(CUIRect MainView, bool Header)
