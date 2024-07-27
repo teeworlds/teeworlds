@@ -126,12 +126,12 @@ void CChat::OnStateChange(int NewState, int OldState)
 
 void CChat::ConSay(IConsole::IResult *pResult, void *pUserData)
 {
-	((CChat*)pUserData)->Say(CHAT_ALL, pResult->GetString(0));
+	((CChat*)pUserData)->SendChat(CHAT_ALL, pResult->GetString(0));
 }
 
 void CChat::ConSayTeam(IConsole::IResult *pResult, void *pUserData)
 {
-	((CChat*)pUserData)->Say(CHAT_TEAM, pResult->GetString(0));
+	((CChat*)pUserData)->SendChat(CHAT_TEAM, pResult->GetString(0));
 }
 
 void CChat::ConSaySelf(IConsole::IResult *pResult, void *pUserData)
@@ -149,7 +149,7 @@ void CChat::ConWhisper(IConsole::IResult *pResult, void *pUserData)
 	else
 	{
 		pChat->m_WhisperTarget = Target;
-		pChat->Say(CHAT_WHISPER, pResult->GetString(1));
+		pChat->SendChat(CHAT_WHISPER, pResult->GetString(1));
 	}
 }
 
@@ -282,7 +282,7 @@ bool CChat::OnInput(IInput::CEvent Event)
 			{
 				if(m_PendingChatCounter == 0 && m_LastChatSend+time_freq() < time_get())
 				{
-					Say(m_Mode, m_Input.GetString());
+					SendChat(m_Mode, m_Input.GetString());
 					AddEntry = true;
 				}
 				else if(m_PendingChatCounter < 3)
@@ -753,7 +753,7 @@ void CChat::OnRender()
 {
 	if(Client()->State() < IClient::STATE_ONLINE)
 		return;
-	
+
 	if(!Config()->m_ClShowChat)
 		return;
 
@@ -765,7 +765,7 @@ void CChat::OnRender()
 		{
 			if(i == 0)
 			{
-				Say(pEntry->m_Mode, pEntry->m_aText);
+				SendChat(pEntry->m_Mode, pEntry->m_aText);
 				break;
 			}
 		}
@@ -1311,7 +1311,7 @@ void CChat::OnRender()
 	HandleCommands(x+CategoryWidth, Height - 24.f, 200.0f-CategoryWidth);
 }
 
-void CChat::Say(int Mode, const char *pLine)
+void CChat::SendChat(int Mode, const char *pLine)
 {
 	m_LastChatSend = time_get();
 

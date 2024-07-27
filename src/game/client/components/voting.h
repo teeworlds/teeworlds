@@ -24,7 +24,7 @@ class CVoting : public CComponent
 
 	void ClearOptions();
 	void Clear();
-	void Callvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote);
+	void SendCallvote(const char *pType, const char *pValue, const char *pReason, bool ForceVote);
 
 	int m_NumVoteOptions;
 	CVoteOptionClient *m_pFirst;
@@ -49,8 +49,6 @@ public:
 	void RconRemoveVoteOption(int OptionID);
 	void RconAddVoteOption(const char *pDescription, const char *pCommand);
 
-	void Vote(int Choice);
-
 	int SecondsLeft() { return (m_Closetime - time_get())/time_freq(); }
 	bool IsVoting() { return m_Closetime > 0 && m_Closetime > time_get(); }
 	int TakenChoice() const { return m_Voted; }
@@ -59,6 +57,8 @@ public:
 	int CallvoteBlockTime() const { return m_CallvoteBlockTick > Client()->GameTick() ? (m_CallvoteBlockTick-Client()->GameTick())/Client()->GameTickSpeed() : 0; }
 	int NumVoteOptions() const { return m_NumVoteOptions; }
 	const CVoteOptionClient *FirstVoteOption() const { return m_pFirst; }
+
+	void SendVote(int Choice);
 };
 
 #endif

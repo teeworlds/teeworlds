@@ -27,7 +27,7 @@ public:
 	virtual void OnRelease();
 	virtual bool OnCursorMove(float x, float y, int CursorType);
 
-	void Emote(int Emoticon);
+	void SendEmote(int Emoticon);
 };
 
 #endif

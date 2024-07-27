@@ -309,7 +309,7 @@ public:
 
 	int GetClientID(const char *pName);
 
-	// actions
+	// ----- send functions -----
 	// TODO: move these
 	void SendSwitchTeam(int Team);
 	void SendStartInfo();

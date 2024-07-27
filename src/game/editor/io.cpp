@@ -241,7 +241,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		char aMapName[128];
 		m_pEditor->ExtractName(pFileName, aMapName, sizeof(aMapName));
 		if(!str_comp(aMapName, CurrentServerInfo.m_aMap))
-			m_pEditor->Client()->Rcon("reload");
+			m_pEditor->Client()->SendRcon("reload");
 	}
 
 	return 1;

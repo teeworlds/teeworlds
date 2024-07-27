@@ -360,7 +360,7 @@ void CClient::SendReady()
 	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
-void CClient::RconAuth(const char *pName, const char *pPassword)
+void CClient::SendRconAuth(const char *pName, const char *pPassword)
 {
 	if(RconAuthed())
 		return;
@@ -370,21 +370,11 @@ void CClient::RconAuth(const char *pName, const char *pPassword)
 	SendMsg(&Msg, MSGFLAG_VITAL);
 }
 
-void CClient::Rcon(const char *pCmd)
+void CClient::SendRcon(const char *pCmd)
 {
 	CMsgPacker Msg(NETMSG_RCON_CMD, true);
 	Msg.AddString(pCmd, 256);
 	SendMsg(&Msg, MSGFLAG_VITAL);
-}
-
-bool CClient::ConnectionProblems() const
-{
-	return m_NetClient.GotProblems() != 0;
-}
-
-int CClient::GetInputtimeMarginStabilityScore()
-{
-	return m_PredictedTime.GetStabilityScore();
 }
 
 void CClient::SendInput()
@@ -429,6 +419,16 @@ void CClient::SendInput()
 const char *CClient::LatestVersion() const
 {
 	return m_aVersionStr;
+}
+
+bool CClient::ConnectionProblems() const
+{
+	return m_NetClient.GotProblems() != 0;
+}
+
+int CClient::GetInputtimeMarginStabilityScore()
+{
+	return m_PredictedTime.GetStabilityScore();
 }
 
 // TODO: OPT: do this alot smarter!
@@ -2267,13 +2267,13 @@ void CClient::Con_Screenshot(IConsole::IResult *pResult, void *pUserData)
 void CClient::Con_Rcon(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->Rcon(pResult->GetString(0));
+	pSelf->SendRcon(pResult->GetString(0));
 }
 
 void CClient::Con_RconAuth(IConsole::IResult *pResult, void *pUserData)
 {
 	CClient *pSelf = (CClient *)pUserData;
-	pSelf->RconAuth("", pResult->GetString(0));
+	pSelf->SendRconAuth("", pResult->GetString(0));
 }
 
 const char *CClient::DemoPlayer_Play(const char *pFilename, int StorageType)
