@@ -1064,10 +1064,11 @@ void sphore_init(SEMAPHORE *sem)
 
 void sphore_wait(SEMAPHORE *sem)
 {
+	int result = 0;
+
 	lock_wait((*sem)->c_lock);
 
 	(*sem)->waiters++;
-	int result = 0;
 	while((*sem)->count == 0)
 		result = pthread_cond_wait(&(*sem)->c_nzcond, (LOCKINTERNAL *)(*sem)->c_lock);
 
