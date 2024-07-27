@@ -157,6 +157,21 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 	for(int i = 0; i < MsgLength && ServerMsgLen < MAX_BROADCAST_MSG_SIZE - 1; i++)
 	{
 		const char *c = pMsg->m_pMessage + i;
+
+		if(*c == '\\' && c[1] == '^')
+		{
+			aBuf[ServerMsgLen++] = c[1];
+			i++; // skip '^'
+			continue;
+		}
+
+		if (*c == '\\' && c[1] == '\\')
+		{
+			aBuf[ServerMsgLen++] = *c;
+			i++; // skip the second backslash
+			continue;
+		}
+
 		if(*c == '^' && i+3 < MsgLength && IsCharANum(c[1]) && IsCharANum(c[2])  && IsCharANum(c[3]))
 		{
 			SegmentColors[m_NumSegments] = vec4((c[1] - '0') / 9.0f, (c[2] - '0') / 9.0f, (c[3] - '0') / 9.0f, 1.0f);
