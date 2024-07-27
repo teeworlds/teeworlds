@@ -8,16 +8,6 @@
 #if defined(CONF_PLATFORM_MACOS)
 	#include <objc/objc-runtime.h>
 
-	class semaphore
-	{
-		SDL_sem *sem;
-	public:
-		semaphore() { sem = SDL_CreateSemaphore(0); }
-		~semaphore() { SDL_DestroySemaphore(sem); }
-		void wait() { SDL_SemWait(sem); }
-		void signal() { SDL_SemPost(sem); }
-	};
-
 	class CAutoreleasePool
 	{
 	private:
