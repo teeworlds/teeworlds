@@ -157,7 +157,8 @@ int CSkins::SkinScan(const char *pName, int IsDir, int DirType, void *pUser)
 
 	if(pJsonData == 0)
 	{
-		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, aBuf, aError);
+		str_format(aBuf, sizeof(aBuf), "failed to load skin '%s': %s", pName, aError);
+		pSelf->Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 		return 0;
 	}
 
@@ -324,13 +325,13 @@ void CSkins::OnInit()
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf), "failed to load xmas hat '%s'", pFileName);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 		}
 		else
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf), "loaded xmas hat '%s'", pFileName);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 			m_XmasHatTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 			mem_free(Info.m_pData);
 		}
@@ -345,13 +346,13 @@ void CSkins::OnInit()
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf), "failed to load bot '%s'", pFileName);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 		}
 		else
 		{
 			char aBuf[128];
 			str_format(aBuf, sizeof(aBuf), "loaded bot '%s'", pFileName);
-			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "game", aBuf);
+			Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "skins", aBuf);
 			m_BotTexture = Graphics()->LoadTextureRaw(Info.m_Width, Info.m_Height, Info.m_Format, Info.m_pData, Info.m_Format, 0);
 			mem_free(Info.m_pData);
 		}
