@@ -942,10 +942,10 @@ float CUI::GetClientIDRectWidth(float FontSize)
 
 float CUI::GetListHeaderHeight() const
 {
-	return ms_ListheaderHeight + (m_pConfig->m_UiWideview ? 3.0f : 0.0f);
+	return ms_ListheaderHeight + 3.0f;
 }
 
 float CUI::GetListHeaderHeightFactor() const
 {
-	return 1.0f + (m_pConfig->m_UiWideview ? (3.0f/ms_ListheaderHeight) : 0.0f);
+	return 1.0f + (3.0f/ms_ListheaderHeight);
 }
