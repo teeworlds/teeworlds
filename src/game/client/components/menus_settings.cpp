@@ -399,7 +399,7 @@ void CMenus::RenderSkinSelection(CUIRect MainView)
 void CMenus::RenderSkinPartSelection(CUIRect MainView)
 {
 	static bool s_InitSkinPartList = true;
-	static sorted_array<const CSkins::CSkinPart *> s_paList[6];
+	static sorted_array<const CSkins::CSkinPart *> s_paList[NUM_SKINPARTS];
 	static CListBox s_ListBox;
 	if(s_InitSkinPartList)
 	{
@@ -1061,7 +1061,7 @@ void CMenus::RenderSettingsTeeCustom(CUIRect MainView)
 
 	float ButtonWidth = (Patterns.w/6.0f)-(SpacingW*5.0)/6.0f;
 
-	static CButtonContainer s_aPatternButtons[6];
+	static CButtonContainer s_aPatternButtons[NUM_SKINPARTS];
 	for(int i = 0; i < NUM_SKINPARTS; i++)
 	{
 		Patterns.VSplitLeft(ButtonWidth, &Button, &Patterns);
