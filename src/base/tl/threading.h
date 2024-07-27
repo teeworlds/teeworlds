@@ -1,5 +1,7 @@
-
-#pragma once
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#ifndef BASE_TL_THREADING_H
+#define BASE_TL_THREADING_H
 
 #include "../system.h"
 
@@ -44,7 +46,7 @@
 	{
 		return _InterlockedIncrement((volatile long *)pValue);
 	}
-	
+
 	inline unsigned atomic_dec(volatile unsigned *pValue)
 	{
 		return _InterlockedDecrement((volatile long *)pValue);
@@ -63,21 +65,15 @@
 	#error missing atomic implementation for this compiler
 #endif
 
-#if defined(CONF_PLATFORM_MACOSX)
-	/*
-		use semaphore provided by SDL on macosx
-	*/
-#else
-	class semaphore
-	{
-		SEMAPHORE sem;
-	public:
-		semaphore() { semaphore_init(&sem); }
-		~semaphore() { semaphore_destroy(&sem); }
-		void wait() { semaphore_wait(&sem); }
-		void signal() { semaphore_signal(&sem); }
-	};
-#endif
+class semaphore
+{
+	SEMAPHORE sem;
+public:
+	semaphore() { sphore_init(&sem); }
+	~semaphore() { sphore_destroy(&sem); }
+	void wait() { sphore_wait(&sem); }
+	void signal() { sphore_signal(&sem); }
+};
 
 class lock
 {
@@ -115,3 +111,5 @@ public:
 		var->release();
 	}
 };
+
+#endif // BASE_TL_THREADING_H

@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <engine/console.h>
 #include <engine/storage.h>
 
@@ -163,7 +165,7 @@ void CTilesetMapper::Proceed(CLayerTiles *pLayer, int ConfigID, RECTi Area)
 					}
 				}
 
-				if(RespectRules && (pConf->m_aRules[i].m_Random <= 1 || (int)(frandom() * pConf->m_aRules[i].m_Random) == 1))
+				if(RespectRules && (pConf->m_aRules[i].m_Random <= 1 || (int)(random_float() * pConf->m_aRules[i].m_Random) == 1))
 				{
 					pTile->m_Index = pConf->m_aRules[i].m_Index;
 					pTile->m_Flags = 0;

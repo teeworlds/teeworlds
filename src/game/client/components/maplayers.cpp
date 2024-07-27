@@ -52,6 +52,9 @@ void CMapLayers::LoadBackgroundMap()
 			case SEASON_WINTER:
 				pMenuMap = "winter";
 				break;
+			case SEASON_NEWYEAR:
+				pMenuMap = "newyear";
+				break;
 		}
 	}
 
@@ -175,7 +178,7 @@ void CMapLayers::LoadEnvPoints(const CLayers *pLayers, array<CEnvPoint>& lEnvPoi
 				p.m_Time = pEnvPoint_v1->m_Time;
 				p.m_Curvetype = pEnvPoint_v1->m_Curvetype;
 
-				for(int c = 0; c < pItem->m_Channels; c++)
+				for(int c = 0; c < minimum(pItem->m_Channels, 4); c++)
 				{
 					p.m_aValues[c] = pEnvPoint_v1->m_aValues[c];
 					p.m_aInTangentdx[c] = 0;
@@ -480,15 +483,16 @@ static void PlaceEggDoodads(int LayerWidth, int LayerHeight, CTile* aOutTiles, C
 
 void CMapLayers::PlaceEasterEggs(const CLayers *pLayers)
 {
-	CMapItemLayerTilemap* pGameLayer = pLayers->GameLayer();
+	CMapItemLayerTilemap *pGameLayer = pLayers->GameLayer();
 	if(m_pEggTiles)
 		mem_free(m_pEggTiles);
 
 	m_EggLayerWidth = pGameLayer->m_Width;
 	m_EggLayerHeight = pGameLayer->m_Height;
-	m_pEggTiles = (CTile*)mem_alloc(sizeof(CTile) * m_EggLayerWidth * m_EggLayerHeight,1);
-	mem_zero(m_pEggTiles, sizeof(CTile) * m_EggLayerWidth * m_EggLayerHeight);
-	CTile* aGameLayerTiles = (CTile*)pLayers->Map()->GetData(pGameLayer->m_Data);
+	int DataSize = sizeof(CTile) * m_EggLayerWidth * m_EggLayerHeight;
+	m_pEggTiles = (CTile *)mem_alloc(DataSize);
+	mem_zero(m_pEggTiles, DataSize);
+	CTile *pGameLayerTiles = (CTile *)pLayers->Map()->GetData(pGameLayer->m_Data);
 
 	// first pass: baskets
 	static const int s_aBasketIDs[] = {
@@ -497,7 +501,7 @@ void CMapLayers::PlaceEasterEggs(const CLayers *pLayers)
 	};
 
 	static const int s_BasketCount = sizeof(s_aBasketIDs)/sizeof(s_aBasketIDs[0]);
-	PlaceEggDoodads(m_EggLayerWidth, m_EggLayerHeight, m_pEggTiles, aGameLayerTiles, 3, 2, s_aBasketIDs, s_BasketCount, 250);
+	PlaceEggDoodads(m_EggLayerWidth, m_EggLayerHeight, m_pEggTiles, pGameLayerTiles, 3, 2, s_aBasketIDs, s_BasketCount, 250);
 
 	// second pass: double eggs
 	static const int s_aDoubleEggIDs[] = {
@@ -510,7 +514,7 @@ void CMapLayers::PlaceEasterEggs(const CLayers *pLayers)
 	};
 
 	static const int s_DoubleEggCount = sizeof(s_aDoubleEggIDs)/sizeof(s_aDoubleEggIDs[0]);
-	PlaceEggDoodads(m_EggLayerWidth, m_EggLayerHeight, m_pEggTiles, aGameLayerTiles, 2, 1, s_aDoubleEggIDs, s_DoubleEggCount, 100);
+	PlaceEggDoodads(m_EggLayerWidth, m_EggLayerHeight, m_pEggTiles, pGameLayerTiles, 2, 1, s_aDoubleEggIDs, s_DoubleEggCount, 100);
 
 	// third pass: eggs
 	static const int s_aEggIDs[] = {
@@ -524,5 +528,5 @@ void CMapLayers::PlaceEasterEggs(const CLayers *pLayers)
 	};
 
 	static const int s_EggCount = sizeof(s_aEggIDs)/sizeof(s_aEggIDs[0]);
-	PlaceEggDoodads(m_EggLayerWidth, m_EggLayerHeight, m_pEggTiles, aGameLayerTiles, 1, 1, s_aEggIDs, s_EggCount, 30);
+	PlaceEggDoodads(m_EggLayerWidth, m_EggLayerHeight, m_pEggTiles, pGameLayerTiles, 1, 1, s_aEggIDs, s_EggCount, 30);
 }

@@ -44,7 +44,7 @@ enum
 	NETMSG_SNAP,			// normal snapshot, multiple parts
 	NETMSG_SNAPEMPTY,		// empty snapshot
 	NETMSG_SNAPSINGLE,		// ?
-	NETMSG_SNAPSMALL,		//
+	NETMSG_SNAPSMALL,		// todo 0.8: remove unused
 	NETMSG_INPUTTIMING,		// reports how off the input was
 	NETMSG_RCON_AUTH_ON,	// rcon authentication enabled
 	NETMSG_RCON_AUTH_OFF,	// rcon authentication disabled
@@ -52,8 +52,8 @@ enum
 	NETMSG_RCON_CMD_ADD,
 	NETMSG_RCON_CMD_REM,
 
-	NETMSG_AUTH_CHALLANGE,	//
-	NETMSG_AUTH_RESULT,		//
+	NETMSG_AUTH_CHALLENGE,	// unused
+	NETMSG_AUTH_RESULT,		// unused
 
 	// sent by client
 	NETMSG_READY,			//
@@ -63,13 +63,13 @@ enum
 	NETMSG_RCON_AUTH,		//
 	NETMSG_REQUEST_MAP_DATA,//
 
-	NETMSG_AUTH_START,		//
-	NETMSG_AUTH_RESPONSE,	//
+	NETMSG_AUTH_START,		// unused
+	NETMSG_AUTH_RESPONSE,	// unused
 
 	// sent by both
 	NETMSG_PING,
 	NETMSG_PING_REPLY,
-	NETMSG_ERROR,
+	NETMSG_ERROR,			// unused
 
 	NETMSG_MAPLIST_ENTRY_ADD,// todo 0.8: move up
 	NETMSG_MAPLIST_ENTRY_REM,

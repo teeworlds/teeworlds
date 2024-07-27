@@ -63,8 +63,8 @@
 #if defined(MACOSX) || defined(__APPLE__) || defined(__DARWIN__)
 	#define CONF_FAMILY_UNIX 1
 	#define CONF_FAMILY_STRING "unix"
-	#define CONF_PLATFORM_MACOSX 1
-	#define CONF_PLATFORM_STRING "macosx"
+	#define CONF_PLATFORM_MACOS 1
+	#define CONF_PLATFORM_STRING "macos"
 #endif
 
 #if defined(__sun)
@@ -119,6 +119,14 @@
 #if defined(__amd64__) || defined(__x86_64__) || defined(_M_X64)
 	#define CONF_ARCH_AMD64 1
 	#define CONF_ARCH_STRING "amd64"
+	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
+		#define CONF_ARCH_ENDIAN_LITTLE 1
+	#endif
+#endif
+
+#if defined(__aarch64__) || defined(_M_ARM64) || defined(__arm64)
+	#define CONF_ARCH_ARM64 1
+	#define CONF_ARCH_STRING "arm64"
 	#if !defined(CONF_ARCH_ENDIAN_LITTLE) && !defined(CONF_ARCH_ENDIAN_BIG)
 		#define CONF_ARCH_ENDIAN_LITTLE 1
 	#endif

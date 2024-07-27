@@ -1,0 +1,31 @@
+name: Check style
+
+on:
+  push:
+    branches-ignore:
+      - master
+      - staging.tmp
+      - trying.tmp
+      - staging-squash-merge.tmp
+  pull_request:
+
+jobs:
+  check-style:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Prepare
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install jq -y
+    - name: Check header guards
+      run: scripts/check_header_guards.py
+    - name: Lint JSON
+      run: |
+        while read -r json;
+        do
+          jq '.' "$json" || { echo "$json"; exit 1; };
+        done < <(find . -name "*.json");
+

@@ -3,7 +3,7 @@
 #ifndef BASE_TL_RANGE_H
 #define BASE_TL_RANGE_H
 
-#include "base.h"
+#include <base/system.h>
 
 /*
 	Group: Range concepts
@@ -20,7 +20,7 @@
 */
 struct concept_empty
 {
-	template<typename T> static void check(T &t) { if(0) t.empty(); };
+	template<typename T> static void check(T &t) { if(0) t.empty(); }
 };
 
 /*
@@ -34,7 +34,7 @@ struct concept_empty
 */
 struct concept_index
 {
-	template<typename T> static void check(T &t) { if(0) t.index(0); };
+	template<typename T> static void check(T &t) { if(0) t.index(0); }
 };
 
 /*
@@ -48,7 +48,7 @@ struct concept_index
 */
 struct concept_size
 {
-	template<typename T> static void check(T &t) { if(0) t.size(); };
+	template<typename T> static void check(T &t) { if(0) t.size(); }
 };
 
 /*
@@ -62,7 +62,7 @@ struct concept_size
 */
 struct concept_slice
 {
-	template<typename T> static void check(T &t) { if(0) t.slice(0, 0); };
+	template<typename T> static void check(T &t) { if(0) t.slice(0, 0); }
 };
 
 /*
@@ -76,7 +76,7 @@ struct concept_slice
 */
 struct concept_sorted
 {
-	template<typename T> static void check(T &t) { if(0) t.sorted(); };
+	template<typename T> static void check(T &t) { if(0) t.sorted(); }
 };
 
 /*
@@ -145,11 +145,11 @@ public:
 	}
 
 	bool empty() const { return begin >= end; }
-	void pop_front() { tl_assert(!empty()); begin++; }
-	void pop_back() { tl_assert(!empty()); end--; }
-	T& front() { tl_assert(!empty()); return *begin; }
-	T& back() { tl_assert(!empty()); return *(end-1); }
-	T& index(unsigned i) { tl_assert(i < (unsigned)(end-begin)); return begin[i]; }
+	void pop_front() { dbg_assert(!empty(), "empty"); begin++; }
+	void pop_back() { dbg_assert(!empty(), "empty"); end--; }
+	T& front() { dbg_assert(!empty(), "empty"); return *begin; }
+	T& back() { dbg_assert(!empty(), "empty"); return *(end-1); }
+	T& index(unsigned i) { dbg_assert(i < (unsigned)(end-begin), "out of range"); return begin[i]; }
 	unsigned size() const { return (unsigned)(end-begin); }
 	plain_range slice(unsigned startindex, unsigned endindex)
 	{

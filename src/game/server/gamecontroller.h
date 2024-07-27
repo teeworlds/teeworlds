@@ -59,7 +59,7 @@ class IGameController
 	int m_GameStateTimer;
 
 	virtual bool DoWincheckMatch();		// returns true when the match is over
-	virtual void DoWincheckRound() {};
+	virtual void DoWincheckRound() {}
 	bool HasEnoughPlayers() const { return (IsTeamplay() && m_aTeamSize[TEAM_RED] > 0 && m_aTeamSize[TEAM_BLUE] > 0) || (!IsTeamplay() && m_aTeamSize[TEAM_RED] > 1); }
 	void ResetGame();
 	void SetGameState(EGameState GameState, int Timer=0);
@@ -122,11 +122,11 @@ protected:
 		int m_TimeLimit;
 	} m_GameInfo;
 
-	void UpdateGameInfo(int ClientID);
+	void SendGameInfo(int ClientID);
 
 public:
 	IGameController(class CGameContext *pGameServer);
-	virtual ~IGameController() {};
+	virtual ~IGameController() {}
 
 	// event
 	/*
@@ -165,10 +165,10 @@ public:
 	*/
 	virtual bool OnEntity(int Index, vec2 Pos);
 
-	void OnPlayerConnect(class CPlayer *pPlayer);
-	void OnPlayerDisconnect(class CPlayer *pPlayer);
-	void OnPlayerInfoChange(class CPlayer *pPlayer);
-	void OnPlayerReadyChange(class CPlayer *pPlayer);
+	virtual void OnPlayerConnect(class CPlayer *pPlayer);
+	virtual void OnPlayerDisconnect(class CPlayer *pPlayer);
+	virtual void OnPlayerInfoChange(class CPlayer *pPlayer);
+	virtual void OnPlayerReadyChange(class CPlayer *pPlayer);
 	void OnPlayerCommand(class CPlayer *pPlayer, const char *pCommandName, const char *pCommandArgs);
 
 	void OnReset();

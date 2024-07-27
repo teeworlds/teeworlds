@@ -39,6 +39,7 @@ class CGameContext : public IGameServer
 	IServer *m_pServer;
 	class CConfig *m_pConfig;
 	class IConsole *m_pConsole;
+	class IStorage *m_pStorage;
 	CLayers m_Layers;
 	CCollision m_Collision;
 	CNetObjHandler m_NetObjHandler;
@@ -77,6 +78,7 @@ public:
 	IServer *Server() const { return m_pServer; }
 	class CConfig *Config() { return m_pConfig; }
 	class IConsole *Console() { return m_pConsole; }
+	class IStorage *Storage() { return m_pStorage; }
 	CCollision *Collision() { return &m_Collision; }
 	CTuningParams *Tuning() { return &m_Tuning; }
 
@@ -102,9 +104,6 @@ public:
 	// voting
 	void StartVote(const char *pDesc, const char *pCommand, const char *pReason);
 	void EndVote(int Type, bool Force);
-	void ForceVote(int Type, const char *pDescription, const char *pReason);
-	void SendVoteSet(int Type, int ToClientID);
-	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
 	void AbortVoteOnDisconnect(int ClientID);
 	void AbortVoteOnTeamChange(int ClientID);
 
@@ -122,10 +121,6 @@ public:
 	int m_VoteEnforce;
 	enum
 	{
-		VOTE_ENFORCE_UNKNOWN=0,
-		VOTE_ENFORCE_NO,
-		VOTE_ENFORCE_YES,
-
 		VOTE_TIME=25,
 		VOTE_CANCEL_TIME = 10,
 
@@ -144,7 +139,7 @@ public:
 	void CreateDeath(vec2 Pos, int Who);
 	void CreateSound(vec2 Pos, int Sound, int64 Mask=-1);
 
-	// network
+	// ----- send functions -----
 	void SendChat(int ChatterClientID, int Mode, int To, const char *pText);
 	void SendBroadcast(const char *pText, int ClientID);
 	void SendEmoticon(int ClientID, int Emoticon);
@@ -152,6 +147,8 @@ public:
 	void SendMotd(int ClientID);
 	void SendSettings(int ClientID);
 	void SendSkinChange(int ClientID, int TargetID);
+	void SendTuningParams(int ClientID);
+	void SendReadyToEnter(CPlayer *pPlayer);
 
 	void SendGameMsg(int GameMsgID, int ClientID);
 	void SendGameMsg(int GameMsgID, int ParaI1, int ClientID);
@@ -161,9 +158,14 @@ public:
 	void SendChatCommands(int ClientID);
 	void SendRemoveChatCommand(const CCommandManager::CCommand *pCommand, int ClientID);
 
+	void SendForceVote(int Type, const char *pDescription, const char *pReason);
+	void SendVoteSet(int Type, int ToClientID);
+	void SendVoteStatus(int ClientID, int Total, int Yes, int No);
+	void SendVoteClearOptions(int ClientID);
+	void SendVoteOptions(int ClientID);
+
 	//
 	void CheckPureTuning();
-	void SendTuningParams(int ClientID);
 
 	//
 	void SwapTeams();

@@ -21,26 +21,27 @@ public:
 	CServerBrowser();
 	void Init(class CNetClient *pClient, const char *pNetVersion);
 	void Set(const NETADDR &Addr, int SetType, int Token, const CServerInfo *pInfo);
-	void Update(bool ForceResort);	
+	void Update();
 
 	// interface functions
-	int GetType() { return m_ActServerlistType; };
+	int GetType() { return m_ActServerlistType; }
 	void SetType(int Type);
 	void Refresh(int RefreshFlags);
 	bool IsRefreshing() const { return m_pFirstReqServer != 0; }
 	bool IsRefreshingMasters() const { return m_pMasterServer->IsRefreshing(); }
 	bool WasUpdated(bool Purge);
 	int LoadingProgression() const;
+	void RequestResort() { m_NeedResort = true; }
 
 	int NumServers() const { return m_aServerlist[m_ActServerlistType].m_NumServers; }
 	int NumPlayers() const { return m_aServerlist[m_ActServerlistType].m_NumPlayers; }
 	int NumClients() const { return m_aServerlist[m_ActServerlistType].m_NumClients; }
-	const CServerInfo *Get(int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[Index]->m_Info; };
+	const CServerInfo *Get(int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[Index]->m_Info; }
 
 	int NumSortedServers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedServers(FilterIndex); }
 	int NumSortedPlayers(int FilterIndex) const { return m_ServerBrowserFilter.GetNumSortedPlayers(FilterIndex); }
-	const CServerInfo *SortedGet(int FilterIndex, int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[m_ServerBrowserFilter.GetIndex(FilterIndex, Index)]->m_Info; };
-	const void *GetID(int FilterIndex, int Index) const { return m_ServerBrowserFilter.GetID(FilterIndex, Index); };
+	const CServerInfo *SortedGet(int FilterIndex, int Index) const { return &m_aServerlist[m_ActServerlistType].m_ppServerlist[m_ServerBrowserFilter.GetIndex(FilterIndex, Index)]->m_Info; }
+	const void *GetID(int FilterIndex, int Index) const { return m_ServerBrowserFilter.GetID(FilterIndex, Index); }
 
 	void AddFavorite(const CServerInfo *pInfo);
 	void RemoveFavorite(const CServerInfo *pInfo);
@@ -48,10 +49,10 @@ public:
 	void SetFavoritePassword(const char *pAddress, const char *pPassword);
 	const char *GetFavoritePassword(const char *pAddress);
 
-	int AddFilter(const CServerFilterInfo *pFilterInfo) { return m_ServerBrowserFilter.AddFilter(pFilterInfo); };
-	void SetFilter(int Index, const CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.SetFilter(Index, pFilterInfo); };
-	void GetFilter(int Index, CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.GetFilter(Index, pFilterInfo); };
-	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); };
+	int AddFilter(const CServerFilterInfo *pFilterInfo) { return m_ServerBrowserFilter.AddFilter(pFilterInfo); }
+	void SetFilter(int Index, const CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.SetFilter(Index, pFilterInfo); }
+	void GetFilter(int Index, CServerFilterInfo *pFilterInfo) { m_ServerBrowserFilter.GetFilter(Index, pFilterInfo); }
+	void RemoveFilter(int Index) { m_ServerBrowserFilter.RemoveFilter(Index); }
 
 	static void CBFTrackPacket(int TrackID, void *pUser);
 	
@@ -64,7 +65,8 @@ private:
 	class IConsole *m_pConsole;
 	class IStorage *m_pStorage;
 	class IMasterServer *m_pMasterServer;
-		
+	class IMapChecker *m_pMapChecker;
+
 	class CServerBrowserFavorites m_ServerBrowserFavorites;
 	class CServerBrowserFilter m_ServerBrowserFilter;
 
@@ -87,6 +89,7 @@ private:
 		CServerEntry *m_aServerlistIp[256]; // ip hash list
 		CServerEntry **m_ppServerlist;
 
+		~CServerlist();
 		void Clear();
 	} m_aServerlist[NUM_TYPES];
 
@@ -94,8 +97,9 @@ private:
 	CServerEntry *m_pLastReqServer;
 	int m_NumRequests;
 
-	int m_NeedRefresh;
+	bool m_NeedRefresh;
 	bool m_InfoUpdated;
+	bool m_NeedResort;
 
 	// the token is to keep server refresh separated from each other
 	int m_CurrentLanToken;

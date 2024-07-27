@@ -3,8 +3,6 @@
 #ifndef ENGINE_SHARED_HUFFMAN_H
 #define ENGINE_SHARED_HUFFMAN_H
 
-
-
 class CHuffman
 {
 	enum
@@ -32,6 +30,8 @@ class CHuffman
 		unsigned char m_Symbol;
 	};
 
+	static const unsigned ms_aFreqTable[HUFFMAN_MAX_SYMBOLS];
+
 	CNode m_aNodes[HUFFMAN_MAX_NODES];
 	CNode *m_apDecodeLut[HUFFMAN_LUTSIZE];
 	CNode *m_pStartNode;
@@ -42,50 +42,46 @@ class CHuffman
 
 public:
 	/*
-		Function: huffman_init
+		Function: Init
 			Inits the compressor/decompressor.
 
 		Parameters:
-			huff - Pointer to the state to init
-			frequencies - A pointer to an array of 256 entries of the frequencies of the bytes
+			pFrequencies - A pointer to an array of 256 entries of the frequencies of the bytes
 
 		Remarks:
-			- Does no allocation what so ever.
-			- You don't have to call any cleanup functions when you are done with it
+			- Does no allocation whatsoever.
+			- You don't have to call any cleanup functions when you are done with it.
 	*/
-	void Init(const unsigned *pFrequencies = 0);
+	void Init(const unsigned *pFrequencies = ms_aFreqTable);
 
 	/*
-		Function: huffman_compress
+		Function: Compress
 			Compresses a buffer and outputs a compressed buffer.
 
 		Parameters:
-			huff - Pointer to the huffman state
-			input - Buffer to compress
-			input_size - Size of the buffer to compress
-			output - Buffer to put the compressed data into
-			output_size - Size of the output buffer
+			pInput - Buffer to compress
+			InputSize - Size of the buffer to compress
+			pOutput - Buffer to put the compressed data into
+			OutputSize - Size of the output buffer
 
 		Returns:
 			Returns the size of the compressed data. Negative value on failure.
 	*/
-	int Compress(const void *pInput, int InputSize, void *pOutput, int OutputSize);
+	int Compress(const void *pInput, int InputSize, void *pOutput, int OutputSize) const;
 
 	/*
-		Function: huffman_decompress
+		Function: Decompress
 			Decompresses a buffer
 
 		Parameters:
-			huff - Pointer to the huffman state
-			input - Buffer to decompress
-			input_size - Size of the buffer to decompress
-			output - Buffer to put the uncompressed data into
-			output_size - Size of the output buffer
+			pInput - Buffer to decompress
+			InputSize - Size of the buffer to decompress
+			pOutput - Buffer to put the uncompressed data into
+			OutputSize - Size of the output buffer
 
 		Returns:
 			Returns the size of the uncompressed data. Negative value on failure.
 	*/
-	int Decompress(const void *pInput, int InputSize, void *pOutput, int OutputSize);
-
+	int Decompress(const void *pInput, int InputSize, void *pOutput, int OutputSize) const;
 };
-#endif // __HUFFMAN_HEADER__
+#endif // ENGINE_SHARED_HUFFMAN_H

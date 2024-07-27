@@ -9,6 +9,7 @@
 #include <game/layers.h>
 #include <game/gamecore.h>
 #include "render.h"
+#include "ui.h"
 
 class CGameClient : public IGameClient
 {
@@ -23,7 +24,7 @@ class CGameClient : public IGameClient
 		CStack();
 		void Add(class CComponent *pComponent);
 
-		class CComponent *m_paComponents[MAX_COMPONENTS];
+		class CComponent *m_apComponents[MAX_COMPONENTS];
 		int m_Num;
 	};
 
@@ -90,15 +91,15 @@ public:
 	class IDemoRecorder *DemoRecorder() const { return m_pDemoRecorder; }
 	class IServerBrowser *ServerBrowser() const { return m_pServerBrowser; }
 	class CRenderTools *RenderTools() { return &m_RenderTools; }
-	class CLayers *Layers() { return &m_Layers; };
-	class CCollision *Collision() { return &m_Collision; };
+	class CLayers *Layers() { return &m_Layers; }
+	class CCollision *Collision() { return &m_Collision; }
 	class IEditor *Editor() { return m_pEditor; }
 	class IFriends *Friends() { return m_pFriends; }
 	class IBlacklist *Blacklist() { return m_pBlacklist; }
 
-	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); };
-	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); };
-	const char *NetmsgFailedOn() { return m_NetObjHandler.FailedMsgOn(); };
+	const char *NetobjFailedOn() { return m_NetObjHandler.FailedObjOn(); }
+	int NetobjNumFailures() { return m_NetObjHandler.NumObjFailures(); }
+	const char *NetmsgFailedOn() { return m_NetObjHandler.FailedMsgOn(); }
 
 	bool m_SuppressEvents;
 
@@ -154,7 +155,7 @@ public:
 		const CNetObj_PlayerInfo *m_pLocalInfo;
 		const CNetObj_SpectatorInfo *m_pSpectatorInfo;
 		const CNetObj_SpectatorInfo *m_pPrevSpectatorInfo;
-		const CNetObj_Flag *m_paFlags[2];
+		const CNetObj_Flag *m_apFlags[2];
 		const CNetObj_GameData *m_pGameData;
 		const CNetObj_GameDataTeam *m_pGameDataTeam;
 		const CNetObj_GameDataFlag *m_pGameDataFlag;
@@ -164,8 +165,8 @@ public:
 		int m_NotReadyCount;
 		int m_AliveCount[NUM_TEAMS];
 
-		const CNetObj_PlayerInfo *m_paPlayerInfos[MAX_CLIENTS];
-		const CNetObj_PlayerInfoRace *m_paPlayerInfosRace[MAX_CLIENTS];
+		const CNetObj_PlayerInfo *m_apPlayerInfos[MAX_CLIENTS];
+		const CNetObj_PlayerInfoRace *m_apPlayerInfosRace[MAX_CLIENTS];
 		CPlayerInfoItem m_aInfoByScore[MAX_CLIENTS];
 
 		// spectate data
@@ -308,7 +309,7 @@ public:
 
 	int GetClientID(const char *pName);
 
-	// actions
+	// ----- send functions -----
 	// TODO: move these
 	void SendSwitchTeam(int Team);
 	void SendStartInfo();

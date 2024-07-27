@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include "test.h"
 
 #include <gtest/gtest.h>
@@ -38,4 +40,6 @@ TEST(Storage, FindFile)
 
 	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), &WrongSha256, 0x3bb935c6, 5));
 	EXPECT_FALSE(pStorage->FindFile(Info.m_aFilename, ".", IStorage::TYPE_ALL, aFound, sizeof(aFound), &SHA256_ZEROED, 0x3bb935c6, 5));
+
+	EXPECT_TRUE(pStorage->RemoveFile(Info.m_aFilename, IStorage::TYPE_SAVE));
 }

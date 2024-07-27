@@ -1,4 +1,9 @@
-#pragma once
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#ifndef ENGINE_CLIENT_GRAPHICS_THREADED_H
+#define ENGINE_CLIENT_GRAPHICS_THREADED_H
+
+#include <stdint.h>
 
 #include <engine/graphics.h>
 
@@ -30,12 +35,14 @@ class CCommandBuffer
 			m_Used = 0;
 		}
 
-		void *Alloc(unsigned Requested)
+		void *Alloc(unsigned Requested, unsigned Alignment = 8) // TODO: use alignof(std::max_align_t)
 		{
-			if(Requested + m_Used > m_Size)
+			size_t Offset = Alignment - (reinterpret_cast<uintptr_t>(m_pData + m_Used) % Alignment);
+			if(Requested + Offset + m_Used > m_Size)
 				return 0;
-			void *pPtr = &m_pData[m_Used];
-			m_Used += Requested;
+
+			void *pPtr = &m_pData[m_Used + Offset];
+			m_Used += Requested + Offset;
 			return pPtr;
 		}
 
@@ -131,10 +138,13 @@ public:
 	struct CCommand
 	{
 	public:
-		CCommand(unsigned Cmd) : m_Cmd(Cmd), m_Size(0) {}
+		CCommand(unsigned Cmd) :
+			m_Cmd(Cmd), m_pNext(0) {}
 		unsigned m_Cmd;
-		unsigned m_Size;
+		CCommand *m_pNext;
 	};
+	CCommand *m_pCmdBufferHead;
+	CCommand *m_pCmdBufferTail;
 
 	struct CState
 	{
@@ -245,8 +255,8 @@ public:
 	};
 
 	//
-	CCommandBuffer(unsigned CmdBufferSize, unsigned DataBufferSize)
-	: m_CmdBuffer(CmdBufferSize), m_DataBuffer(DataBufferSize)
+	CCommandBuffer(unsigned CmdBufferSize, unsigned DataBufferSize) :
+		m_CmdBuffer(CmdBufferSize), m_DataBuffer(DataBufferSize), m_pCmdBufferHead(0), m_pCmdBufferTail(0)
 	{
 	}
 
@@ -262,26 +272,29 @@ public:
 		(void)static_cast<const CCommand *>(&Command);
 
 		// allocate and copy the command into the buffer
-		CCommand *pCmd = (CCommand *)m_CmdBuffer.Alloc(sizeof(Command));
+		T *pCmd = (T *)m_CmdBuffer.Alloc(sizeof(*pCmd), 8); // TODO: use alignof(T)
 		if(!pCmd)
 			return false;
-		mem_copy(pCmd, &Command, sizeof(Command));
-		pCmd->m_Size = sizeof(Command);
+		*pCmd = Command;
+		pCmd->m_pNext = 0;
+
+		if(m_pCmdBufferTail)
+			m_pCmdBufferTail->m_pNext = pCmd;
+		if(!m_pCmdBufferHead)
+			m_pCmdBufferHead = pCmd;
+		m_pCmdBufferTail = pCmd;
+
 		return true;
 	}
 
-	CCommand *GetCommand(unsigned *pIndex)
+	CCommand *Head()
 	{
-		if(*pIndex >= m_CmdBuffer.DataUsed())
-			return NULL;
-
-		CCommand *pCommand = (CCommand *)&m_CmdBuffer.DataPtr()[*pIndex];
-		*pIndex += pCommand->m_Size;
-		return pCommand;
+		return m_pCmdBufferHead;
 	}
 
 	void Reset()
 	{
+		m_pCmdBufferHead = m_pCmdBufferTail = 0;
 		m_CmdBuffer.Reset();
 		m_DataBuffer.Reset();
 	}
@@ -404,7 +417,7 @@ public:
 	virtual void LinesEnd();
 	virtual void LinesDraw(const CLineItem *pArray, int Num);
 
-	virtual int UnloadTexture(IGraphics::CTextureHandle *Index);
+	virtual int UnloadTexture(IGraphics::CTextureHandle *pIndex);
 	virtual IGraphics::CTextureHandle LoadTextureRaw(int Width, int Height, int Format, const void *pData, int StoreFormat, int Flags);
 	virtual int LoadTextureRawSub(IGraphics::CTextureHandle TextureID, int x, int y, int Width, int Height, int Format, const void *pData);
 
@@ -465,3 +478,5 @@ public:
 };
 
 extern IGraphicsBackend *CreateGraphicsBackend();
+
+#endif // ENGINE_CLIENT_GRAPHICS_THREADED_H

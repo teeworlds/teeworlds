@@ -1,20 +1,24 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_CLIENT_COMPONENTS_STATS_H
 #define GAME_CLIENT_COMPONENTS_STATS_H
 
 #include <game/client/component.h>
 
-enum {
-	TC_STATS_FRAGS=1,
-	TC_STATS_DEATHS=2,
-	TC_STATS_SUICIDES=4,
-	TC_STATS_RATIO=8,
-	TC_STATS_NET=16,
-	TC_STATS_FPM=32,
-	TC_STATS_SPREE=64,
-	TC_STATS_BESTSPREE=128,
-	TC_STATS_FLAGGRABS=256,
-	TC_STATS_WEAPS=512,
-	TC_STATS_FLAGCAPTURES=1024,
+enum
+{
+	TC_STATS_KILLS = 1,
+	TC_STATS_DEATHS = 2,
+	TC_STATS_SUICIDES = 4,
+	TC_STATS_RATIO = 8,
+	TC_STATS_NET = 16,
+	TC_STATS_KPM = 32,
+	TC_STATS_SPREE = 64,
+	TC_STATS_BESTSPREE = 128,
+	TC_STATS_FLAGGRABS = 256,
+	TC_STATS_WEAPS = 512,
+	TC_STATS_FLAGCAPTURES = 1024,
+	NUM_TC_STATS = 11
 };
 
 class CStats: public CComponent
@@ -30,9 +34,9 @@ private:
 		}
 
 		int m_IngameTicks;
-		int m_aFragsWith[NUM_WEAPONS];
+		int m_aKillsWith[NUM_WEAPONS];
 		int m_aDeathsFrom[NUM_WEAPONS];
-		int m_Frags;
+		int m_Kills;
 		int m_Deaths;
 		int m_Suicides;
 		int m_BestSpree;

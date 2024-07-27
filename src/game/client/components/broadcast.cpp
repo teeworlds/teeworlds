@@ -57,17 +57,17 @@ void CBroadcast::RenderServerBroadcast()
 	const float Width = Height*Graphics()->ScreenAspect();
 	Graphics()->MapScreen(0, 0, Width, Height);
 
-	const float Fade = 1.0f - max(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
+	const float Fade = 1.0f - maximum(0.0f, (DeltaTime - DisplayStartFade) / (DisplayDuration - DisplayStartFade));
 	const float TextHeight = m_ServerBroadcastCursor.BoundingBox().h;
 	const float Rounding = 5.0f;
 
 	CUIRect BroadcastView;
 	BroadcastView.w = Width * 0.5f;
-	BroadcastView.h = max(TextHeight, 2*Rounding) + 2.0f;
+	BroadcastView.h = maximum(TextHeight, 2*Rounding) + 2.0f;
 	BroadcastView.x = BroadcastView.w * 0.5f;
 	BroadcastView.y = Height - BroadcastView.h;
 
-	RenderTools()->DrawUIRect(&BroadcastView, vec4(0.0f, 0.0f, 0.0f, 0.25f * Fade), CUI::CORNER_T, Rounding);
+	BroadcastView.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f * Fade), Rounding, CUIRect::CORNER_T);
 
 	// draw lines
 	const vec2 ShadowOffset(1.0f, 2.0f);
@@ -78,9 +78,9 @@ void CBroadcast::RenderServerBroadcast()
 	{
 		CBroadcastSegment *pSegment = &m_aServerBroadcastSegments[i];
 		if(m_aServerBroadcastSegments[i].m_IsHighContrast)
-			TextRender()->DrawTextOutlined(&m_ServerBroadcastCursor, Fade, pSegment->m_GlyphPos, (pSegment+1)->m_GlyphPos);
+			TextRender()->DrawTextOutlined(&m_ServerBroadcastCursor, Fade, pSegment->m_GlyphPos, (pSegment + 1)->m_GlyphPos - pSegment->m_GlyphPos);
 		else
-			TextRender()->DrawTextShadowed(&m_ServerBroadcastCursor, ShadowOffset, Fade, pSegment->m_GlyphPos, (pSegment+1)->m_GlyphPos);
+			TextRender()->DrawTextShadowed(&m_ServerBroadcastCursor, ShadowOffset, Fade, pSegment->m_GlyphPos, (pSegment + 1)->m_GlyphPos - pSegment->m_GlyphPos);
 	}
 }
 
@@ -107,10 +107,14 @@ CBroadcast::CBroadcast()
 
 void CBroadcast::DoClientBroadcast(const char *pText)
 {
+	const float Height = 300;
+	const float Width = Height*Graphics()->ScreenAspect();
+	Graphics()->MapScreen(0, 0, Width, Height);
+
 	m_ClientBroadcastCursor.Reset();
 	m_ClientBroadcastCursor.m_FontSize = 12.0f;
 	m_ClientBroadcastCursor.m_Align = TEXTALIGN_TC;
-	m_ClientBroadcastCursor.m_MaxWidth = 300*Graphics()->ScreenAspect();
+	m_ClientBroadcastCursor.m_MaxWidth = Width;
 
 	TextRender()->TextDeferred(&m_ClientBroadcastCursor, pText, -1);
 	m_BroadcastTime = Client()->LocalTime() + 10.0f;
@@ -153,6 +157,21 @@ void CBroadcast::OnBroadcastMessage(const CNetMsg_Sv_Broadcast *pMsg)
 	for(int i = 0; i < MsgLength && ServerMsgLen < MAX_BROADCAST_MSG_SIZE - 1; i++)
 	{
 		const char *c = pMsg->m_pMessage + i;
+
+		if(*c == '\\' && c[1] == '^')
+		{
+			aBuf[ServerMsgLen++] = c[1];
+			i++; // skip '^'
+			continue;
+		}
+
+		if (*c == '\\' && c[1] == '\\')
+		{
+			aBuf[ServerMsgLen++] = *c;
+			i++; // skip the second backslash
+			continue;
+		}
+
 		if(*c == '^' && i+3 < MsgLength && IsCharANum(c[1]) && IsCharANum(c[2])  && IsCharANum(c[3]))
 		{
 			SegmentColors[m_NumSegments] = vec4((c[1] - '0') / 9.0f, (c[2] - '0') / 9.0f, (c[3] - '0') / 9.0f, 1.0f);

@@ -12,7 +12,7 @@ class CConsole : public IConsole
 	class CCommand : public CCommandInfo
 	{
 	public:
-		CCommand(bool BasicAccess) : CCommandInfo(BasicAccess) {};
+		CCommand(bool BasicAccess) : CCommandInfo(BasicAccess) {}
 		CCommand *m_pNext;
 		int m_Flags;
 		bool m_Temp;
@@ -36,7 +36,7 @@ class CConsole : public IConsole
 
 	int m_FlagMask;
 	bool m_StoreCommands;
-	const char *m_paStrokeStr[2];
+	const char *m_apStrokeStr[2];
 	CCommand *m_pFirstCommand;
 
 	class CExecFile
@@ -54,10 +54,13 @@ class CConsole : public IConsole
 	CCommand *m_pRecycleList;
 	CHeap m_TempCommands;
 
+	void TraverseChain(FCommandCallback *ppfnCallback, void **ppUserData);
+
 	static void Con_Chain(IResult *pResult, void *pUserData);
 	static void Con_Echo(IResult *pResult, void *pUserData);
 	static void Con_Exec(IResult *pResult, void *pUserData);
 	static void Con_EvalIf(IResult *pResult, void *pUserData);
+	static void Con_EvalIfCmd(IResult *pResult, void *pUserData);
 	static void ConToggle(IResult *pResult, void *pUser);
 	static void ConToggleStroke(IResult *pResult, void *pUser);
 	static void ConModCommandAccess(IResult *pResult, void *pUser);

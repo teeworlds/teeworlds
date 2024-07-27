@@ -33,12 +33,12 @@ void CNotifications::Con_SndToggle(IConsole::IResult *pResult, void *pUserData)
 void CNotifications::RenderSoundNotification()
 {
 	const float Height = 300.0f;
-	const float Width = Height*Graphics()->ScreenAspect();
+	const float Width = Height * Graphics()->ScreenAspect();
 	const float ItemHeight = 20.f;
 	const float ItemWidth = 20.f;
 	const float DisplayTime = 1.5f; // includes FadeTime
 	const float FadeTime = 0.6f;
-	const float RemainingDisplayTime = max(0.0f, m_SoundToggleTime + DisplayTime - Client()->LocalTime());
+	const float RemainingDisplayTime = maximum(0.0f, m_SoundToggleTime + DisplayTime - Client()->LocalTime());
 
 	if(RemainingDisplayTime == 0.0f)
 		return;
@@ -51,11 +51,11 @@ void CNotifications::RenderSoundNotification()
 	Area.w = ItemWidth;
 	Area.h = ItemHeight;
 
-	const float Fade = min(1.0f, RemainingDisplayTime / FadeTime); // 0.0 ≤ Fade ≤ 1.0
+	const float Fade = minimum(1.0f, RemainingDisplayTime / FadeTime); // 0.0 ≤ Fade ≤ 1.0
 
 	vec4 Color = (Config()->m_SndEnable == 0) ? vec4(1.f/0xff*0xf9, 1.f/0xff*0x2b, 1.f/0xff*0x2b, 0.55f) : vec4(1.f/0xff*0x2b, 1.f/0xff*0xf9, 1.f/0xff*0x2b, 0.55f);
 	Color = mix(vec4(Color.r, Color.g, Color.b, 0.0f), Color, 0.8*Fade);
-	RenderTools()->DrawUIRect(&Area, Color, CUI::CORNER_ALL, 3.0f);
+	Area.Draw(Color, 3.0f);
 
 	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_SOUNDICONS].m_Id);
 	Graphics()->QuadsBegin();

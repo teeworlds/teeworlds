@@ -74,9 +74,9 @@ public:
 	int GetTeamColor(int UseCustomColors, int PartColor, int Team, int Part) const;
 
 	// returns true if everything was valid and nothing changed
-	bool ValidateSkinParts(char *aPartNames[NUM_SKINPARTS], int *aUseCustomColors, int* aPartColors, int GameFlags) const;
+	bool ValidateSkinParts(char *apPartNames[NUM_SKINPARTS], int *pUseCustomColors, int *pPartColors, int GameFlags) const;
 
-	void SaveSkinfile(const char *pSaveSkinName);
+	bool SaveSkinfile(const char *pSaveSkinName);
 
 private:
 	int m_ScanningPart;

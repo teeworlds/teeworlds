@@ -278,7 +278,7 @@ public:
 
 	~CEditorImage();
 
-	void AnalyseTileFlags();
+	void AnalyzeTileFlags();
 	void LoadAutoMapper();
 
 	IGraphics::CTextureHandle m_Texture;
@@ -353,7 +353,7 @@ public:
 		if(Index1 < 0 || Index1 >= m_lGroups.size()) return Index0;
 		if(Index0 == Index1) return Index0;
 		m_Modified = true;
-		tl_swap(m_lGroups[Index0], m_lGroups[Index1]);
+		std::swap(m_lGroups[Index0], m_lGroups[Index1]);
 		return Index1;
 	}
 
@@ -510,13 +510,13 @@ class CEditor : public IEditor
 	CRenderTools m_RenderTools;
 	CUI m_UI;
 public:
-	class IInput *Input() { return m_pInput; };
-	class IClient *Client() { return m_pClient; };
+	class IInput *Input() { return m_pInput; }
+	class IClient *Client() { return m_pClient; }
 	class CConfig *Config() { return m_pConfig; }
-	class IConsole *Console() { return m_pConsole; };
-	class IGraphics *Graphics() { return m_pGraphics; };
-	class ITextRender *TextRender() { return m_pTextRender; };
-	class IStorage *Storage() { return m_pStorage; };
+	class IConsole *Console() { return m_pConsole; }
+	class IGraphics *Graphics() { return m_pGraphics; }
+	class ITextRender *TextRender() { return m_pTextRender; }
+	class IStorage *Storage() { return m_pStorage; }
 	CUI *UI() { return &m_UI; }
 	CRenderTools *RenderTools() { return &m_RenderTools; }
 
@@ -548,16 +548,11 @@ public:
 		m_pFileDialogTitle = 0;
 		m_pFileDialogButtonText = 0;
 		m_pFileDialogUser = 0;
-		m_aFileDialogFileName[0] = 0;
 		m_aFileDialogCurrentFolder[0] = 0;
 		m_aFileDialogCurrentLink[0] = 0;
 		m_pFileDialogPath = m_aFileDialogCurrentFolder;
-		m_aFileDialogActivate = false;
-		m_FileDialogScrollValue = 0.0f;
 		m_FilesSelectedIndex = -1;
-		m_FilesStartAt = 0;
-		m_FilesCur = 0;
-		m_FilesStopAt = 999;
+		m_aFilesSelectedName[0] = '\0';
 
 		m_WorldOffsetX = 0;
 		m_WorldOffsetY = 0;
@@ -568,6 +563,11 @@ public:
 		m_ZoomLevel = 200;
 		m_LockMouse = false;
 		m_ShowMousePointer = true;
+
+		m_MouseX = 0.0f;
+		m_MouseY = 0.0f;
+		m_MouseWorldX = 0.0f;
+		m_MouseWorldY = 0.0f;
 		m_MouseDeltaX = 0;
 		m_MouseDeltaY = 0;
 		m_MouseDeltaWx = 0;
@@ -597,9 +597,11 @@ public:
 	}
 
 	virtual void Init();
-	virtual void UpdateAndRender();
+	virtual void OnUpdate();
+	virtual void OnRender();
 	virtual bool HasUnsavedData() const { return m_Map.m_Modified; }
 
+	void RefreshFilteredFileList();
 	void FilelistPopulate(int StorageType);
 	void InvokeFileDialog(int StorageType, int FileType, const char *pTitle, const char *pButtonText,
 		const char *pBasepath, const char *pDefaultName,
@@ -663,18 +665,16 @@ public:
 	const char *m_pFileDialogButtonText;
 	void (*m_pfnFileDialogFunc)(const char *pFileName, int StorageType, void *pUser);
 	void *m_pFileDialogUser;
-	char m_aFileDialogFileName[IO_MAX_PATH_LENGTH];
+	CLineInputBuffered<static_cast<int>(IO_MAX_PATH_LENGTH)> m_FileDialogFileNameInput;
 	char m_aFileDialogCurrentFolder[IO_MAX_PATH_LENGTH];
 	char m_aFileDialogCurrentLink[IO_MAX_PATH_LENGTH];
 	char *m_pFileDialogPath;
-	bool m_aFileDialogActivate;
 	int m_FileDialogFileType;
-	float m_FileDialogScrollValue;
 	int m_FilesSelectedIndex;
-	char m_aFileDialogFilterString[64];
-	char m_FileDialogNewFolderName[64];
-	char m_FileDialogErrString[64];
-	float m_FilesSearchBoxID;
+	char m_aFilesSelectedName[IO_MAX_PATH_LENGTH];
+	CLineInputBuffered<64> m_FileDialogFilterInput;
+	CLineInputBuffered<64> m_FileDialogNewFolderNameInput;
+	char m_aFileDialogErrString[64];
 	IGraphics::CTextureHandle m_FilePreviewImage;
 	bool m_PreviewImageIsLoaded;
 	CImageInfo m_FilePreviewImageInfo;
@@ -692,10 +692,8 @@ public:
 														m_IsDir && !Other.m_IsDir ? true : !m_IsDir && Other.m_IsDir ? false :
 														str_comp_filenames(m_aFilename, Other.m_aFilename) < 0; }
 	};
-	sorted_array<CFilelistItem> m_FileList;
-	int m_FilesStartAt;
-	int m_FilesCur;
-	int m_FilesStopAt;
+	sorted_array<CFilelistItem> m_CompleteFileList;
+	sorted_array<CFilelistItem *> m_FilteredFileList;
 
 	float m_WorldOffsetX;
 	float m_WorldOffsetY;
@@ -707,6 +705,11 @@ public:
 	bool m_ShowMousePointer;
 	bool m_GuiActive;
 	bool m_ProofBorders;
+
+	float m_MouseX;
+	float m_MouseY;
+	float m_MouseWorldX;
+	float m_MouseWorldY;
 	float m_MouseDeltaX;
 	float m_MouseDeltaY;
 	float m_MouseDeltaWx;
@@ -769,38 +772,34 @@ public:
 	int DoButton_ButtonDec(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_ButtonInc(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 
-	int DoButton_File(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_Image(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip, bool Used);
 
 	int DoButton_Menu(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags, const char *pToolTip);
 	int DoButton_MenuItem(const void *pID, const char *pText, int Checked, const CUIRect *pRect, int Flags=0, const char *pToolTip=0);
 
-	int DoEditBox(void *pID, const CUIRect *pRect, char *pStr, unsigned StrSize, float FontSize, float *Offset, bool Hidden=false, int Corners=CUI::CORNER_ALL);
+	bool DoEditBox(CLineInput *pLineInput, const CUIRect *pRect, float FontSize) { return UI()->DoEditBox(pLineInput, pRect, FontSize, CUIRect::CORNER_ALL, &LightButtonColorFunction); }
 
 	void RenderBackground(CUIRect View, IGraphics::CTextureHandle Texture, float Size, float Brightness);
 
 	void RenderGrid(CLayerGroup *pGroup);
 
-	void UiInvokePopupMenu(void *pID, int Flags, float X, float Y, float W, float H, int (*pfnFunc)(CEditor *pEditor, CUIRect Rect), void *pExtra=0);
-	void UiDoPopupMenu();
-
 	int UiDoValueSelector(void *pID, CUIRect *pRect, const char *pLabel, int Current, int Min, int Max, int Step, float Scale, const char *pToolTip);
 
-	static int PopupGroup(CEditor *pEditor, CUIRect View);
-	static int PopupLayer(CEditor *pEditor, CUIRect View);
-	static int PopupQuad(CEditor *pEditor, CUIRect View);
-	static int PopupPoint(CEditor *pEditor, CUIRect View);
-	static int PopupNewFolder(CEditor *pEditor, CUIRect View);
-	static int PopupMapInfo(CEditor *pEditor, CUIRect View);
-	static int PopupEvent(CEditor *pEditor, CUIRect View);
-	static int PopupSelectImage(CEditor *pEditor, CUIRect View);
-	static int PopupSelectGametileOp(CEditor *pEditor, CUIRect View);
-	static int PopupImage(CEditor *pEditor, CUIRect View);
-	static int PopupMenuFile(CEditor *pEditor, CUIRect View);
-	static int PopupSelectConfigAutoMap(CEditor *pEditor, CUIRect View);
-	static int PopupSelectDoodadRuleSet(CEditor *pEditor, CUIRect View);
-	static int PopupDoodadAutoMap(CEditor *pEditor, CUIRect View);
-	static int PopupColorPicker(CEditor *pEditor, CUIRect View);
+	static bool PopupGroup(void *pContext, CUIRect View);
+	static bool PopupLayer(void *pContext, CUIRect View);
+	static bool PopupQuad(void *pContext, CUIRect View);
+	static bool PopupPoint(void *pContext, CUIRect View);
+	static bool PopupNewFolder(void *pContext, CUIRect View);
+	static bool PopupMapInfo(void *pContext, CUIRect View);
+	static bool PopupEvent(void *pContext, CUIRect View);
+	static bool PopupSelectImage(void *pContext, CUIRect View);
+	static bool PopupSelectGametileOp(void *pContext, CUIRect View);
+	static bool PopupImage(void *pContext, CUIRect View);
+	static bool PopupMenuFile(void *pContext, CUIRect View);
+	static bool PopupSelectConfigAutoMap(void *pContext, CUIRect View);
+	static bool PopupSelectDoodadRuleSet(void *pContext, CUIRect View);
+	static bool PopupDoodadAutoMap(void *pContext, CUIRect View);
+	static bool PopupColorPicker(void *pContext, CUIRect View);
 
 	static void CallbackOpenMap(const char *pFileName, int StorageType, void *pUser);
 	static void CallbackAppendMap(const char *pFileName, int StorageType, void *pUser);
@@ -815,23 +814,21 @@ public:
 	void PopupSelectConfigAutoMapInvoke(float x, float y);
 	bool PopupAutoMapProceedOrder();
 
-	vec4 ButtonColorMul(const void *pID);
-
 	void DoQuadEnvelopes(const array<CQuad> &m_lQuads, IGraphics::CTextureHandle Texture);
 	void DoQuadEnvPoint(const CQuad *pQuad, int QIndex, int pIndex);
 	void DoQuadPoint(CQuad *pQuad, int QuadIndex, int v);
 
-	void DoMapEditor(CUIRect View, CUIRect Toolbar);
+	void DoMapEditor(CUIRect View);
 	void DoToolbar(CUIRect Toolbar);
 	void DoQuad(CQuad *pQuad, int Index);
-	float UiDoScrollbarV(const void *pID, const CUIRect *pRect, float Current);
 	vec4 GetButtonColor(const void *pID, int Checked);
 
 	static void ReplaceImage(const char *pFilename, int StorageType, void *pUser);
 	static void AddImage(const char *pFilename, int StorageType, void *pUser);
 
-	void RenderImages(CUIRect Toolbox, CUIRect Toolbar, CUIRect View);
-	void RenderLayers(CUIRect Toolbox, CUIRect Toolbar, CUIRect View);
+	void RenderImagesList(CUIRect Toolbox);
+	void RenderSelectedImage(CUIRect View);
+	void RenderLayers(CUIRect LayersBox);
 	void RenderModebar(CUIRect View);
 	void RenderStatusbar(CUIRect View);
 	void RenderEnvelopeEditor(CUIRect View);
@@ -839,7 +836,6 @@ public:
 	void RenderMenubar(CUIRect Menubar);
 	void RenderFileDialog();
 
-	void AddFileDialogEntry(int Index, CUIRect *pView);
 	void SortImages();
 	static void ExtractName(const char *pFileName, char *pName, int BufferSize)
 	{
@@ -853,7 +849,7 @@ public:
 				pEnd = pFileName;
 		}
 
-		int Length = pEnd > pExtractedName ? min(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
+		int Length = pEnd > pExtractedName ? minimum(BufferSize, (int)(pEnd-pExtractedName+1)) : BufferSize;
 		str_copy(pName, pExtractedName, Length);
 	}
 

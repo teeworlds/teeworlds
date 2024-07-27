@@ -9,13 +9,13 @@ class CEffects : public CComponent
 	bool m_Add50hz;
 	bool m_Add100hz;
 
-	int m_DamageTaken;
-	float m_DamageTakenTick;
+	int m_aDamageTaken[MAX_CLIENTS];
+	float m_aDamageTakenTick[MAX_CLIENTS];
 public:
 	CEffects();
 
 	void AirJump(vec2 Pos);
-	void DamageIndicator(vec2 Pos, int Amount);
+	void DamageIndicator(vec2 Pos, int Amount, float Angle, int ClientID);
 	void PowerupShine(vec2 Pos, vec2 Size);
 	void SmokeTrail(vec2 Pos, vec2 Vel);
 	void SkidTrail(vec2 Pos, vec2 Vel);
@@ -26,6 +26,5 @@ public:
 	void HammerHit(vec2 Pos);
 
 	virtual void OnRender();
-	float GetEffectsSpeed();
 };
 #endif

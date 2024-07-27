@@ -85,6 +85,8 @@ public:
 	char m_aGametypeExclusive[MAX_GAMETYPES];
 	char m_aAddress[NETADDR_MAXSTRSIZE];
 
+	void Set(const CServerFilterInfo *pSrc);
+
 	void ToggleLevel(int Level)
 	{
 		m_ServerLevel ^= 1 << Level;

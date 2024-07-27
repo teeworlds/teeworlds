@@ -12,7 +12,7 @@ GameStateFlags = Flags("GAMESTATEFLAG", ["WARMUP", "SUDDENDEATH", "ROUNDOVER", "
 CoreEventFlags = Flags("COREEVENTFLAG", ["GROUND_JUMP", "AIR_JUMP", "HOOK_ATTACH_PLAYER", "HOOK_ATTACH_GROUND", "HOOK_HIT_NOHOOK"])
 RaceFlags = Flags("RACEFLAG", ["HIDE_KILLMSG", "FINISHMSG_AS_CHAT", "KEEP_WANTED_WEAPON"])
 
-GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "SPEC_INVALIDID", "TEAM_SHUFFLE", "TEAM_BALANCE", "CTF_DROP", "CTF_RETURN",
+GameMsgIDs = Enum("GAMEMSG", ["TEAM_SWAP", "SPEC_INVALID_ID", "TEAM_SHUFFLE", "TEAM_BALANCE", "CTF_DROP", "CTF_RETURN",
 
 							"TEAM_ALL", "TEAM_BALANCE_VICTIM", "CTF_GRAB",
 
@@ -54,6 +54,10 @@ enum
 	SKINPART_FEET,
 	SKINPART_EYES,
 	NUM_SKINPARTS,
+
+	VOTE_CHOICE_NO = -1,
+	VOTE_CHOICE_PASS = 0,
+	VOTE_CHOICE_YES = 1
 };
 '''
 
@@ -92,6 +96,8 @@ Objects = [
 
 		NetFlag("m_PlayerFlags", PlayerFlags),
 
+		# 0 means "no wanted weapon", `1+weapon` means that `weapon` is wanted,
+		# and ninja is not a valid wanted weapon.
 		NetIntRange("m_WantedWeapon", 0, 'NUM_WEAPONS-1'),
 		NetIntAny("m_NextWeapon"),
 		NetIntAny("m_PrevWeapon"),
@@ -173,7 +179,7 @@ Objects = [
 		NetIntRange("m_Health", 0, 10),
 		NetIntRange("m_Armor", 0, 10),
 		NetIntAny("m_AmmoCount"),
-		NetIntRange("m_Weapon", 0, 'NUM_WEAPONS-1'),
+		NetIntRange("m_Weapon", -1, 'NUM_WEAPONS-1'),
 		NetEnum("m_Emote", Emotes),
 		NetTick("m_AttackTick"),
 		NetFlag("m_TriggeredEvents", CoreEventFlags),
@@ -297,7 +303,7 @@ Messages = [
 	]),
 
 	NetMessage("Sv_TuneParams", []),
-	NetMessage("Sv_ExtraProjectile", []),
+	NetMessage("Sv_ExtraProjectile", []), # unused
 	NetMessage("Sv_ReadyToEnter", []),
 
 	NetMessage("Sv_WeaponPickup", [
@@ -423,7 +429,7 @@ Messages = [
 	]),
 
 	NetMessage("Cl_Vote", [
-		NetIntRange("m_Vote", -1, 1),
+		NetIntRange("m_Vote", 'VOTE_CHOICE_NO', 'VOTE_CHOICE_YES'),
 	]),
 
 	NetMessage("Cl_CallVote", [

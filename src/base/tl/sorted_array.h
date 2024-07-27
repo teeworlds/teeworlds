@@ -30,7 +30,8 @@ public:
 
 	void sort_range()
 	{
-		sort(all());
+		if(parent::size() > 0)
+			sort(all());
 	}
 
 	template<class R>

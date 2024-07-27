@@ -1,19 +1,12 @@
-#pragma once
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
+#ifndef ENGINE_CLIENT_BACKEND_SDL_H
+#define ENGINE_CLIENT_BACKEND_SDL_H
 
 #include "graphics_threaded.h"
 
-#if defined(CONF_PLATFORM_MACOSX)
+#if defined(CONF_PLATFORM_MACOS)
 	#include <objc/objc-runtime.h>
-
-	class semaphore
-	{
-		SDL_sem *sem;
-	public:
-		semaphore() { sem = SDL_CreateSemaphore(0); }
-		~semaphore() { SDL_DestroySemaphore(sem); }
-		void wait() { SDL_SemWait(sem); }
-		void signal() { SDL_SemPost(sem); }
-	};
 
 	class CAutoreleasePool
 	{
@@ -216,3 +209,5 @@ public:
 	virtual int WindowActive();
 	virtual int WindowOpen();
 };
+
+#endif // ENGINE_CLIENT_BACKEND_SDL_H

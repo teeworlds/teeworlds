@@ -72,8 +72,6 @@ void CLayerTiles::PrepareForSave()
 	CTile Tile; // current tile to be duplicated
 	Tile.m_Skip = MAX_SKIP; // tell the code that we can't skip the first tile
 
-	int NumHitMaxSkip = -1;
-
 	for(int i = 0; i < m_Width * m_Height; i++)
 	{
 		// we can only store MAX_SKIP empty tiles in one tile
@@ -82,7 +80,6 @@ void CLayerTiles::PrepareForSave()
 			Tile = m_pTiles[i];
 			Tile.m_Skip = 0;
 			NumSaveTiles++;
-			NumHitMaxSkip++;
 		}
 		// tile is different from last one? - can't skip it
 		else if(m_pTiles[i].m_Index != Tile.m_Index || m_pTiles[i].m_Flags != Tile.m_Flags)
@@ -424,8 +421,8 @@ void CLayerTiles::Resize(int NewW, int NewH)
 	mem_zero(pNewData, NewW*NewH*sizeof(CTile));
 
 	// copy old data
-	for(int y = 0; y < min(NewH, m_Height); y++)
-		mem_copy(&pNewData[y*NewW], &m_pTiles[y*m_Width], min(m_Width, NewW)*sizeof(CTile));
+	for(int y = 0; y < minimum(NewH, m_Height); y++)
+		mem_copy(&pNewData[y*NewW], &m_pTiles[y*m_Width], minimum(m_Width, NewW)*sizeof(CTile));
 
 	// replace old
 	delete [] m_pTiles;
@@ -479,10 +476,10 @@ void CLayerTiles::ShowInfo()
 	Graphics()->TextureSet(s_Font);
 	Graphics()->QuadsBegin();
 
-	int StartY = max(0, (int)(ScreenY0/32.0f)-1);
-	int StartX = max(0, (int)(ScreenX0/32.0f)-1);
-	int EndY = min((int)(ScreenY1/32.0f)+1, m_Height);
-	int EndX = min((int)(ScreenX1/32.0f)+1, m_Width);
+	int StartY = maximum(0, (int)(ScreenY0/32.0f)-1);
+	int StartX = maximum(0, (int)(ScreenX0/32.0f)-1);
+	int EndY = minimum((int)(ScreenY1/32.0f)+1, m_Height);
+	int EndX = minimum((int)(ScreenX1/32.0f)+1, m_Width);
 
 	for(int y = StartY; y < EndY; y++)
 		for(int x = StartX; x < EndX; x++)
@@ -512,7 +509,6 @@ void CLayerTiles::ShowInfo()
 		}
 
 	Graphics()->QuadsEnd();
-	Graphics()->MapScreen(ScreenX0, ScreenY0, ScreenX1, ScreenY1);
 }
 
 int CLayerTiles::RenderProperties(CUIRect *pToolBox)
@@ -559,8 +555,8 @@ int CLayerTiles::RenderProperties(CUIRect *pToolBox)
 		if(Result > -1)
 		{
 			CLayerTiles *gl = m_pEditor->m_Map.m_pGameLayer;
-			int w = min(gl->m_Width, m_Width);
-			int h = min(gl->m_Height, m_Height);
+			int w = minimum(gl->m_Width, m_Width);
+			int h = minimum(gl->m_Height, m_Height);
 			for(int y = 0; y < h; y++)
 				for(int x = 0; x < w; x++)
 					if(m_pTiles[y*m_Width+x].m_Index)

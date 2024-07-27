@@ -28,13 +28,16 @@ map_version*
 mastersrv*
 packetgen*
 teeworlds*
+!other/bash-completion/teeworlds
 !teeworlds.manifest
 !teeworlds.rc
 teeworlds_srv*
+!other/bash-completion/teeworlds_srv
 testrunner
 versionsrv*
 
 # IDE project files
+.cache
 .cproject
 .idea
 .project

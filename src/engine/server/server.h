@@ -3,6 +3,8 @@
 #ifndef ENGINE_SERVER_SERVER_H
 #define ENGINE_SERVER_SERVER_H
 
+#include <base/tl/sorted_array.h>
+
 #include <engine/server.h>
 #include <engine/shared/memheap.h>
 
@@ -135,7 +137,7 @@ public:
 		bool m_NoRconNote;
 		bool m_Quitting;
 		const IConsole::CCommandInfo *m_pRconCmdToSend;
-		const CMapListEntry *m_pMapListEntryToSend;
+		int m_MapListEntryToSend;
 
 		void Reset();
 	};
@@ -150,6 +152,7 @@ public:
 	CServerBan m_ServerBan;
 
 	IEngineMap *m_pMap;
+	IMapChecker *m_pMapChecker;
 
 	int64 m_GameStartTime;
 	bool m_RunServer;
@@ -157,6 +160,7 @@ public:
 	int m_RconClientID;
 	int m_RconAuthLevel;
 	int m_PrintCBIndex;
+	char m_aShutdownReason[128];
 
 	// map
 	enum
@@ -170,31 +174,23 @@ public:
 	int m_CurrentMapSize;
 	int m_MapChunksPerRequest;
 
-	//maplist
+	// maplist
 	struct CMapListEntry
 	{
-		CMapListEntry *m_pPrev;
-		CMapListEntry *m_pNext;
 		char m_aName[IConsole::TEMPMAP_NAME_LENGTH];
+
+		CMapListEntry() {}
+		CMapListEntry(const char *pName) { str_copy(m_aName, pName, sizeof(m_aName)); }
+		bool operator<(const CMapListEntry &Other) const { return str_comp_filenames(m_aName, Other.m_aName) < 0; }
 	};
 
-	struct CSubdirCallbackUserdata
-	{
-		CServer *m_pServer;
-		char m_aName[IConsole::TEMPMAP_NAME_LENGTH];
-	};
-
-	CHeap *m_pMapListHeap;
-	CMapListEntry *m_pLastMapEntry;
-	CMapListEntry *m_pFirstMapEntry;
-	int m_NumMapEntries;
+	sorted_array<CMapListEntry> m_lMaps;
 
 	int m_RconPasswordSet;
 	int m_GeneratedRconPassword;
 
 	CDemoRecorder m_DemoRecorder;
 	CRegister m_Register;
-	CMapChecker m_MapChecker;
 
 	CServer();
 
@@ -256,10 +252,12 @@ public:
 	int LoadMap(const char *pMapName);
 
 	void InitRegister(CNetServer *pNetServer, IEngineMasterServer *pMasterServer, CConfig *pConfig, IConsole *pConsole);
-	void InitInterfaces(CConfig *pConfig, IConsole *pConsole, IGameServer *pGameServer, IEngineMap *pMap, IStorage *pStorage);
+	void InitInterfaces(IKernel *pKernel);
 	int Run();
+	void Free();
 
 	static int MapListEntryCallback(const char *pFilename, int IsDir, int DirType, void *pUser);
+	void InitMapList();
 
 	static void ConKick(IConsole::IResult *pResult, void *pUser);
 	static void ConStatus(IConsole::IResult *pResult, void *pUser);

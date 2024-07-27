@@ -66,9 +66,9 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 	{
 		CEditorImage *pImg = m_lImages[i];
 
-		// analyse the image for when saving (should be done when we load the image)
+		// analyze the image for when saving (should be done when we load the image)
 		// TODO!
-		pImg->AnalyseTileFlags();
+		pImg->AnalyzeTileFlags();
 
 		CMapItemImage Item;
 		Item.m_Version = CMapItemImage::CURRENT_VERSION;
@@ -231,7 +231,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 
 	// save points
 	int TotalSize = Size * PointCount;
-	unsigned char *pPoints = (unsigned char *)mem_alloc(TotalSize, 1);
+	unsigned char *pPoints = (unsigned char *)mem_alloc(TotalSize);
 	int Offset = 0;
 	for(int e = 0; e < m_lEnvelopes.size(); e++)
 	{
@@ -257,7 +257,7 @@ int CEditorMap::Save(class IStorage *pStorage, const char *pFileName)
 		char aMapName[128];
 		m_pEditor->ExtractName(pFileName, aMapName, sizeof(aMapName));
 		if(!str_comp(aMapName, CurrentServerInfo.m_aMap))
-			m_pEditor->Client()->Rcon("reload");
+			m_pEditor->Client()->SendRcon("reload");
 	}
 
 	return 1;
@@ -341,6 +341,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 					pImg->m_Format = CImageInfo::FORMAT_RGBA;
 
 					// copy image data
+					const int DataSize = pImg->m_Width * pImg->m_Height * pImg->GetPixelSize();
 					void *pData = DataFile.GetData(pItem->m_ImageData);
 					pImg->m_pData = mem_alloc(pImg->m_Width*pImg->m_Height*4, 1);
 					mem_copy(pImg->m_pData, pData, pImg->m_Width*pImg->m_Height*4);
@@ -493,7 +494,8 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 			for(int e = 0; e < Num; e++)
 			{
 				CMapItemEnvelope *pItem = (CMapItemEnvelope *)DataFile.GetItem(Start+e, 0, 0);
-				CEnvelope *pEnv = new CEnvelope(pItem->m_Channels);
+				const int Channels = minimum(pItem->m_Channels, 4);
+				CEnvelope *pEnv = new CEnvelope(Channels);
 				pEnv->m_lPoints.set_size(pItem->m_NumPoints);
 				for(int n = 0; n < pItem->m_NumPoints; n++)
 				{
@@ -510,7 +512,7 @@ int CEditorMap::Load(class IStorage *pStorage, const char *pFileName, int Storag
 						pEnv->m_lPoints[n].m_Time = pEnvPoint_v1->m_Time;
 						pEnv->m_lPoints[n].m_Curvetype = pEnvPoint_v1->m_Curvetype;
 
-						for(int c = 0; c < pItem->m_Channels; c++)
+						for(int c = 0; c < Channels; c++)
 						{
 							pEnv->m_lPoints[n].m_aValues[c] = pEnvPoint_v1->m_aValues[c];
 						}

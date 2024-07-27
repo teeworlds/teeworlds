@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef ENGINE_SHARED_NETBAN_H
 #define ENGINE_SHARED_NETBAN_H
 
@@ -114,10 +116,10 @@ protected:
 		bool IsFull() const { return m_CountUsed == MAX_BANS; }
 
 		CBan<CDataType> *First() const { return m_pFirstUsed; }
-		CBan<CDataType> *First(const CNetHash *pNetHash) const { return m_paaHashList[pNetHash->m_HashIndex][pNetHash->m_Hash]; }
+		CBan<CDataType> *First(const CNetHash *pNetHash) const { return m_aapHashList[pNetHash->m_HashIndex][pNetHash->m_Hash]; }
 		CBan<CDataType> *Find(const CDataType *pData, const CNetHash *pNetHash) const
 		{
-			for(CBan<CDataType> *pBan = m_paaHashList[pNetHash->m_HashIndex][pNetHash->m_Hash]; pBan; pBan = pBan->m_pHashNext)
+			for(CBan<CDataType> *pBan = m_aapHashList[pNetHash->m_HashIndex][pNetHash->m_Hash]; pBan; pBan = pBan->m_pHashNext)
 			{
 				if(NetComp(&pBan->m_Data, pData) == 0)
 					return pBan;
@@ -133,7 +135,7 @@ protected:
 			MAX_BANS=1024,
 		};
 
-		CBan<CDataType> *m_paaHashList[HashCount][256];
+		CBan<CDataType> *m_aapHashList[HashCount][256];
 		CBan<CDataType> m_aBans[MAX_BANS];
 		CBan<CDataType> *m_pFirstFree;
 		CBan<CDataType> *m_pFirstUsed;

@@ -1,3 +1,5 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef BASE_HASH_CTXT_H
 #define BASE_HASH_CTXT_H
 
@@ -5,6 +7,7 @@
 #include <stdint.h>
 
 #if defined(CONF_OPENSSL)
+#define OPENSSL_API_COMPAT 0x00908000L
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 #else

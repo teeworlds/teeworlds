@@ -1,6 +1,40 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #include <gtest/gtest.h>
 
 #include <base/system.h>
+
+TEST(Str, HexEncode)
+{
+	char aOut[64];
+	const char *pData = "ABCD";
+	str_hex(aOut, sizeof(aOut), pData, 0);
+	EXPECT_STREQ(aOut, "");
+	str_hex(aOut, sizeof(aOut), pData, 1);
+	EXPECT_STREQ(aOut, "41 ");
+	str_hex(aOut, sizeof(aOut), pData, 2);
+	EXPECT_STREQ(aOut, "41 42 ");
+	str_hex(aOut, sizeof(aOut), pData, 3);
+	EXPECT_STREQ(aOut, "41 42 43 ");
+	str_hex(aOut, sizeof(aOut), pData, 4);
+	EXPECT_STREQ(aOut, "41 42 43 44 ");
+	str_hex(aOut, 1, pData, 4);
+	EXPECT_STREQ(aOut, "");
+	str_hex(aOut, 2, pData, 4);
+	EXPECT_STREQ(aOut, "");
+	str_hex(aOut, 3, pData, 4);
+	EXPECT_STREQ(aOut, "");
+	str_hex(aOut, 4, pData, 4);
+	EXPECT_STREQ(aOut, "41 ");
+	str_hex(aOut, 5, pData, 4);
+	EXPECT_STREQ(aOut, "41 ");
+	str_hex(aOut, 6, pData, 4);
+	EXPECT_STREQ(aOut, "41 ");
+	str_hex(aOut, 7, pData, 4);
+	EXPECT_STREQ(aOut, "41 42 ");
+	str_hex(aOut, 8, pData, 4);
+	EXPECT_STREQ(aOut, "41 42 ");
+}
 
 TEST(Str, Startswith)
 {
@@ -123,4 +157,41 @@ TEST(Str, PathUnsafe)
 	EXPECT_FALSE(str_path_unsafe("abc\\def.txt"));
 	EXPECT_FALSE(str_path_unsafe("abc/def\\ghi.txt"));
 	EXPECT_FALSE(str_path_unsafe("любовь"));
+}
+
+TEST(Str, Utf8Stats)
+{
+	int Size, Count;
+
+	str_utf8_stats("abc", 4, 3, &Size, &Count);
+	EXPECT_EQ(Size, 3);
+	EXPECT_EQ(Count, 3);
+
+	str_utf8_stats("abc", 2, 3, &Size, &Count);
+	EXPECT_EQ(Size, 1);
+	EXPECT_EQ(Count, 1);
+
+	str_utf8_stats("", 1, 0, &Size, &Count);
+	EXPECT_EQ(Size, 0);
+	EXPECT_EQ(Count, 0);
+
+	str_utf8_stats("abcde", 6, 5, &Size, &Count);
+	EXPECT_EQ(Size, 5);
+	EXPECT_EQ(Count, 5);
+
+	str_utf8_stats("любовь", 13, 6, &Size, &Count);
+	EXPECT_EQ(Size, 12);
+	EXPECT_EQ(Count, 6);
+
+	str_utf8_stats("abc愛", 7, 4, &Size, &Count);
+	EXPECT_EQ(Size, 6);
+	EXPECT_EQ(Count, 4);
+
+	str_utf8_stats("abc愛", 6, 4, &Size, &Count);
+	EXPECT_EQ(Size, 3);
+	EXPECT_EQ(Count, 3);
+
+	str_utf8_stats("любовь", 13, 3, &Size, &Count);
+	EXPECT_EQ(Size, 6);
+	EXPECT_EQ(Count, 3);
 }

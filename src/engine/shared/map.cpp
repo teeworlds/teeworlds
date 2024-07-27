@@ -63,7 +63,7 @@ public:
 							dbg_msg("engine", "map layer too big (%d * %d * %u causes an integer overflow)", pTilemap->m_Width, pTilemap->m_Height, unsigned(sizeof(CTile)));
 							return false;
 						}
-						CTile *pTiles = static_cast<CTile *>(mem_alloc(TilemapSize, 1));
+						CTile *pTiles = static_cast<CTile *>(mem_alloc(TilemapSize));
 						if(!pTiles)
 							return false;
 

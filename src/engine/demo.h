@@ -34,6 +34,7 @@ public:
 	public:
 		bool m_Paused;
 		float m_Speed;
+		int m_SpeedIndex;
 
 		int m_FirstTick;
 		int m_CurrentTick;
@@ -52,12 +53,14 @@ public:
 
 	~IDemoPlayer() {}
 	virtual void SetSpeed(float Speed) = 0;
+	virtual void SetSpeedIndex(int Offset) = 0;
 	virtual int SetPos(float Percent) = 0;
+	virtual int SetPos(int WantedTick) = 0;
 	virtual void Pause() = 0;
 	virtual void Unpause() = 0;
 	virtual const CInfo *BaseInfo() const = 0;
 	virtual void GetDemoName(char *pBuffer, int BufferSize) const = 0;
-	virtual bool GetDemoInfo(class IStorage *pStorage, const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const = 0;
+	virtual bool GetDemoInfo(const char *pFilename, int StorageType, CDemoHeader *pDemoHeader) const = 0;
 	virtual int GetDemoType() const = 0;
 };
 

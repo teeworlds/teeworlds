@@ -1,12 +1,15 @@
 /* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
 /* If you are missing that file, acquire a complete release at teeworlds.com.                */
 
-#include "localization.h"
+#include <base/system.h>
 #include <base/tl/algorithm.h>
 
-#include <engine/external/json-parser/json.h>
 #include <engine/console.h>
 #include <engine/storage.h>
+
+#include <engine/shared/jsonparser.h>
+
+#include "localization.h"
 
 const char *Localize(const char *pStr, const char *pContext)
 {
@@ -42,7 +45,7 @@ void CLocalizationDatabase::AddString(const char *pOrgStr, const char *pNewStr, 
 	CString s;
 	s.m_Hash = str_quickhash(pOrgStr);
 	s.m_ContextHash = str_quickhash(pContext);
-	s.m_Replacement = *pNewStr ? pNewStr : pOrgStr;
+	s.m_pReplacement = m_StringsHeap.StoreString(*pNewStr ? pNewStr : pOrgStr);
 	m_Strings.add(s);
 }
 
@@ -52,37 +55,24 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 	if(pFilename[0] == 0)
 	{
 		m_Strings.clear();
+		m_StringsHeap.Reset();
 		m_CurrentVersion = 0;
 		return true;
 	}
 
-	// read file data into buffer
-	IOHANDLE File = pStorage->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
+	CJsonParser JsonParser;
+	const json_value *pJsonData = JsonParser.ParseFile(pFilename, pStorage);
+	if(pJsonData == 0)
+	{
+		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", JsonParser.Error());
 		return false;
-	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize, 1);
-	io_read(File, pFileData, FileSize);
-	io_close(File);
+	}
 
-	// init
 	char aBuf[256];
 	str_format(aBuf, sizeof(aBuf), "loaded '%s'", pFilename);
 	pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "localization", aBuf);
 	m_Strings.clear();
-
-	// parse json data
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
-	mem_free(pFileData);
-	
-	if(pJsonData == 0)
-	{
-		pConsole->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
-		return false;
-	}
+	m_StringsHeap.Reset();
 
 	// extract data
 	const json_value &rStart = (*pJsonData)["translated strings"];
@@ -116,8 +106,6 @@ bool CLocalizationDatabase::Load(const char *pFilename, IStorage *pStorage, ICon
 		}
 	}
 
-	// clean up
-	json_value_free(pJsonData);
 	m_CurrentVersion = ++m_VersionCounter;
 	return true;
 }
@@ -127,6 +115,7 @@ const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHas
 	CString String;
 	String.m_Hash = Hash;
 	String.m_ContextHash = ContextHash;
+	String.m_pReplacement = 0x0;
 	sorted_array<CString>::range r = ::find_binary(m_Strings.all(), String);
 	if(r.empty())
 		return 0;
@@ -137,12 +126,12 @@ const char *CLocalizationDatabase::FindString(unsigned Hash, unsigned ContextHas
 	{
 		const CString &rStr = r.index(i);
 		if(rStr.m_ContextHash == ContextHash)
-			return rStr.m_Replacement;
+			return rStr.m_pReplacement;
 		else if(rStr.m_ContextHash == DefaultHash)
 			DefaultIndex = i;
 	}
 	
-    return r.index(DefaultIndex).m_Replacement;
+    return r.index(DefaultIndex).m_pReplacement;
 }
 
 CLocalizationDatabase g_Localization;

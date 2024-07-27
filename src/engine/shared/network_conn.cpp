@@ -350,7 +350,7 @@ int CNetConnection::Feed(CNetPacketConstruct *pPacket, NETADDR *pAddr)
 			m_LastRecvTime = Now;
 			m_State = NET_CONNSTATE_ONLINE;
 			if(Config()->m_Debug)
-				dbg_msg("connection", "connecting online");
+				dbg_msg("connection", "connection online");
 		}
 	}
 
@@ -406,29 +406,29 @@ int CNetConnection::Update()
 	// send keep alives if nothing has happend for 250ms
 	if(State() == NET_CONNSTATE_ONLINE)
 	{
-		if(time_get()-m_LastSendTime > time_freq()/2) // flush connection after 500ms if needed
+		if(Now-m_LastSendTime > time_freq()/2) // flush connection after 500ms if needed
 		{
 			int NumFlushedChunks = Flush();
 			if(NumFlushedChunks && Config()->m_Debug)
 				dbg_msg("connection", "flushed connection due to timeout. %d chunks.", NumFlushedChunks);
 		}
 
-		if(time_get()-m_LastSendTime > time_freq())
+		if(Now-m_LastSendTime > time_freq())
 			SendControl(NET_CTRLMSG_KEEPALIVE, 0, 0);
 	}
 	else if(State() == NET_CONNSTATE_TOKEN)
 	{
-		if(time_get()-m_LastSendTime > time_freq()/2) // send a new token request every 500ms
+		if(Now-m_LastSendTime > time_freq()/2) // send a new token request every 500ms
 			SendControlWithToken(NET_CTRLMSG_TOKEN);
 	}
 	else if(State() == NET_CONNSTATE_CONNECT)
 	{
-		if(time_get()-m_LastSendTime > time_freq()/2) // send a new connect every 500ms
+		if(Now-m_LastSendTime > time_freq()/2) // send a new connect every 500ms
 			SendControlWithToken(NET_CTRLMSG_CONNECT);
 	}
 	else if(State() == NET_CONNSTATE_PENDING)
 	{
-		if(time_get()-m_LastSendTime > time_freq()/2) // send a new connect/accept every 500ms
+		if(Now-m_LastSendTime > time_freq()/2) // send a new connect/accept every 500ms
 			SendControl(NET_CTRLMSG_ACCEPT, 0, 0);
 	}
 

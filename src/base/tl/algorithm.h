@@ -3,9 +3,9 @@
 #ifndef BASE_TL_ALGORITHM_H
 #define BASE_TL_ALGORITHM_H
 
-#include "range.h"
 #include <algorithm>
 
+#include "range.h"
 
 /*
 	insert 4
@@ -94,7 +94,7 @@ void sort_bubble(R range)
 		{
 			typename R::type *cur = &section.front();
 			if(*cur < *prev)
-				tl_swap(*cur, *prev);
+				std::swap(*cur, *prev);
 			prev = cur;
 		}
 	}

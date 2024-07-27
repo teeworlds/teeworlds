@@ -20,6 +20,7 @@ class CSpectator : public CComponent
 	int m_SelectedSpecMode;
 	vec2 m_SelectorMouse;
 
+	bool CanSpectate();
 	bool SpecModePossible(int SpecMode, int SpectatorID);
 	void HandleSpectateNextPrev(int Direction);
 
@@ -37,7 +38,7 @@ public:
 	virtual void OnRelease();
 	virtual void OnReset();
 
-	void Spectate(int SpecMode, int SpectatorID);
+	void SendSpectate(int SpecMode, int SpectatorID);
 };
 
 #endif

@@ -28,7 +28,7 @@
 
 	#include <dirent.h>
 
-	#if defined(CONF_PLATFORM_MACOSX)
+	#if defined(CONF_PLATFORM_MACOS)
 		#include <Carbon/Carbon.h>
 	#endif
 
@@ -42,6 +42,8 @@
 	#include <errno.h>
 	#include <process.h>
 	#include <wincrypt.h>
+	#include <share.h>
+	#include <shellapi.h>
 #else
 	#error NOT IMPLEMENTED
 #endif
@@ -62,16 +64,44 @@ IOHANDLE io_stdin() { return (IOHANDLE)stdin; }
 IOHANDLE io_stdout() { return (IOHANDLE)stdout; }
 IOHANDLE io_stderr() { return (IOHANDLE)stderr; }
 
-static DBG_LOGGER loggers[16];
+typedef struct
+{
+	DBG_LOGGER logger;
+	DBG_LOGGER_FINISH finish;
+	void *user;
+} DBG_LOGGER_DATA;
+
+static DBG_LOGGER_DATA loggers[16];
 static int num_loggers = 0;
 
 static NETSTATS network_stats = {0};
 
 static NETSOCKET invalid_socket = {NETTYPE_INVALID, -1, -1};
 
-void dbg_logger(DBG_LOGGER logger)
+static void dbg_logger_finish(void)
 {
-	loggers[num_loggers++] = logger;
+	int i;
+	for(i = 0; i < num_loggers; i++)
+	{
+		if(loggers[i].finish)
+		{
+			loggers[i].finish(loggers[i].user);
+		}
+	}
+}
+
+void dbg_logger(DBG_LOGGER logger, DBG_LOGGER_FINISH finish, void *user)
+{
+	DBG_LOGGER_DATA data;
+	if(num_loggers == 0)
+	{
+		atexit(dbg_logger_finish);
+	}
+	data.logger = logger;
+	data.finish = finish;
+	data.user = user;
+	loggers[num_loggers] = data;
+	num_loggers++;
 }
 
 void dbg_assert_imp(const char *filename, int line, int test, const char *msg)
@@ -100,7 +130,7 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 
 	str_format(str, sizeof(str), "[%s][%s]: ", timestr, sys);
 
-	len = strlen(str);
+	len = str_length(str);
 	msg = (char *)str + len;
 
 	va_start(args, fmt);
@@ -112,11 +142,11 @@ void dbg_msg(const char *sys, const char *fmt, ...)
 	va_end(args);
 
 	for(i = 0; i < num_loggers; i++)
-		loggers[i](str);
+		loggers[i].logger(str, loggers[i].user);
 }
 
 #if defined(CONF_FAMILY_WINDOWS)
-static void logger_win_console(const char *line)
+static void logger_win_console(const char *line, void *user)
 {
 	#define _MAX_LENGTH 1024
 	#define _MAX_LENGTH_ERROR (_MAX_LENGTH+32)
@@ -203,27 +233,43 @@ static void logger_win_console(const char *line)
 }
 #endif
 
-static void logger_stdout(const char *line)
+static void logger_stdout(const char *line, void *user)
 {
 	printf("%s\n", line);
 	fflush(stdout);
 }
 
-static void logger_debugger(const char *line)
-{
 #if defined(CONF_FAMILY_WINDOWS)
-	OutputDebugString(line);
-	OutputDebugString("\n");
+static void logger_win_debugger(const char *line, void *user)
+{
+	WCHAR wBuffer[512];
+	MultiByteToWideChar(CP_UTF8, 0, line, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+	OutputDebugStringW(wBuffer);
+	OutputDebugStringW(L"\n");
+}
 #endif
+
+static void logger_file(const char *line, void *user)
+{
+	ASYNCIO *logfile = (ASYNCIO *)user;
+	aio_lock(logfile);
+	aio_write_unlocked(logfile, line, strlen(line));
+	aio_write_newline_unlocked(logfile);
+	aio_unlock(logfile);
 }
 
-
-static IOHANDLE logfile = 0;
-static void logger_file(const char *line)
+static void logger_stdout_finish(void *user)
 {
-	io_write(logfile, line, strlen(line));
-	io_write_newline(logfile);
-	io_flush(logfile);
+	ASYNCIO *logfile = (ASYNCIO *)user;
+	aio_wait(logfile);
+	aio_free(logfile);
+}
+
+static void logger_file_finish(void *user)
+{
+	ASYNCIO *logfile = (ASYNCIO *)user;
+	aio_close(logfile);
+	logger_stdout_finish(user);
 }
 
 void dbg_logger_stdout()
@@ -231,28 +277,23 @@ void dbg_logger_stdout()
 #if defined(CONF_FAMILY_WINDOWS)
 	if(GetFileType(GetStdHandle(STD_OUTPUT_HANDLE)) == FILE_TYPE_CHAR)
 	{
-		dbg_logger(logger_win_console);
+		dbg_logger(logger_win_console, 0, 0);
 		return;
 	}
 #endif
-	dbg_logger(logger_stdout);
+	dbg_logger(logger_stdout, 0, 0);
 }
 
-void dbg_logger_debugger() { dbg_logger(logger_debugger); }
-void dbg_logger_file(const char *filename)
+void dbg_logger_debugger()
 {
-	IOHANDLE handle = io_open(filename, IOFLAG_WRITE);
-	if(handle)
-		dbg_logger_filehandle(handle);
-	else
-		dbg_msg("dbg/logger", "failed to open '%s' for logging", filename);
+#if defined(CONF_FAMILY_WINDOWS)
+	dbg_logger(logger_win_debugger, 0, 0);
+#endif
 }
 
-void dbg_logger_filehandle(IOHANDLE handle)
+void dbg_logger_file(IOHANDLE logfile)
 {
-	logfile = handle;
-	if(logfile)
-		dbg_logger(logger_file);
+	dbg_logger(logger_file, logger_file_finish, aio_new(logfile));
 }
 
 #if defined(CONF_FAMILY_WINDOWS)
@@ -272,27 +313,15 @@ void dbg_console_cleanup()
 {
 	SetConsoleMode(GetStdHandle(STD_INPUT_HANDLE), old_console_mode);
 }
+
+void dbg_console_hide()
+{
+	FreeConsole();
+}
 #endif
 /* */
 
-typedef struct MEMHEADER
-{
-	const char *filename;
-	int line;
-	int size;
-	struct MEMHEADER *prev;
-	struct MEMHEADER *next;
-} MEMHEADER;
-
-typedef struct MEMTAIL
-{
-	int guard;
-} MEMTAIL;
-
-static struct MEMHEADER *first = 0;
-static const int MEM_GUARD_VAL = 0xbaadc0de;
-
-void *mem_alloc_debug(const char *filename, int line, unsigned size, unsigned alignment)
+void *mem_alloc(unsigned size)
 {
 	return malloc(size);
 }
@@ -317,51 +346,71 @@ void mem_zero(void *block,unsigned size)
 	memset(block, 0, size);
 }
 
-int mem_check_imp()
+IOHANDLE io_open_impl(const char *filename, int flags)
 {
-	MEMHEADER *header = first;
-	while(header)
+	dbg_assert(flags == (IOFLAG_READ | IOFLAG_SKIP_BOM) || flags == IOFLAG_READ || flags == IOFLAG_WRITE || flags == IOFLAG_APPEND, "flags must be read, read+skipbom, write or append");
+#if defined(CONF_FAMILY_WINDOWS)
+	if((flags & IOFLAG_READ) != 0)
 	{
-		MEMTAIL *tail = (MEMTAIL *)(((char*)(header+1))+header->size);
-		if(tail->guard != MEM_GUARD_VAL)
-		{
-			dbg_msg("mem", "Memory check failed at %s(%d): %d", header->filename, header->line, header->size);
-			return 0;
-		}
-		header = header->next;
-	}
-
-	return 1;
-}
-
-IOHANDLE io_open(const char *filename, int flags)
-{
-	if(flags == IOFLAG_READ)
-	{
-	#if defined(CONF_FAMILY_WINDOWS)
 		// check for filename case sensitive
-		WIN32_FIND_DATA finddata;
+		WIN32_FIND_DATAW finddata;
 		HANDLE handle;
-		int length;
+		WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+		char buffer[IO_MAX_PATH_LENGTH];
 
-		length = str_length(filename);
+		int length = str_length(filename);
 		if(!filename || !length || filename[length-1] == '\\')
 			return 0x0;
-		handle = FindFirstFile(filename, &finddata);
+		MultiByteToWideChar(CP_UTF8, 0, filename, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+		handle = FindFirstFileW(wBuffer, &finddata);
 		if(handle == INVALID_HANDLE_VALUE)
 			return 0x0;
-		else if(str_comp(filename+length-str_length(finddata.cFileName), finddata.cFileName) != 0)
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer, sizeof(buffer), NULL, NULL);
+		if(str_comp(filename+length-str_length(buffer), buffer) != 0)
 		{
 			FindClose(handle);
 			return 0x0;
 		}
 		FindClose(handle);
-	#endif
-		return (IOHANDLE)fopen(filename, "rb");
+		return (IOHANDLE)_wfsopen(wBuffer, L"rb", _SH_DENYNO);
 	}
 	if(flags == IOFLAG_WRITE)
-		return (IOHANDLE)fopen(filename, "wb");
+	{
+		WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+		MultiByteToWideChar(CP_UTF8, 0, filename, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+		return (IOHANDLE)_wfsopen(wBuffer, L"wb", _SH_DENYNO);
+	}
+	if(flags == IOFLAG_APPEND)
+	{
+		WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+		MultiByteToWideChar(CP_UTF8, 0, filename, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+		return (IOHANDLE)_wfsopen(wBuffer, L"ab", _SH_DENYNO);
+	}
 	return 0x0;
+#else
+	if((flags & IOFLAG_READ) != 0)
+		return (IOHANDLE)fopen(filename, "rb");
+	if(flags == IOFLAG_WRITE)
+		return (IOHANDLE)fopen(filename, "wb");
+	if(flags == IOFLAG_APPEND)
+		return (IOHANDLE)fopen(filename, "ab");
+	return 0x0;
+#endif
+}
+
+IOHANDLE io_open(const char *filename, int flags)
+{
+	IOHANDLE result = io_open_impl(filename, flags);
+	unsigned char buf[3];
+	if((flags & IOFLAG_SKIP_BOM) == 0 || !result)
+	{
+		return result;
+	}
+	if(io_read(result, buf, sizeof(buf)) != 3 || buf[0] != 0xef || buf[1] != 0xbb || buf[2] != 0xbf)
+	{
+		io_seek(result, 0, IOSEEK_START);
+	}
+	return result;
 }
 
 unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
@@ -371,28 +420,30 @@ unsigned io_read(IOHANDLE io, void *buffer, unsigned size)
 
 void io_read_all(IOHANDLE io, void **result, unsigned *result_len)
 {
-	unsigned char *buffer = malloc(1024);
-	unsigned len = 0;
-	unsigned cap = 1024;
-	unsigned read;
-
-	*result = 0;
-	*result_len = 0;
-
-	while((read = io_read(io, buffer + len, cap - len)) != 0)
+	unsigned len = (unsigned)io_length(io);
+	char *buffer = mem_alloc(len + 1);
+	unsigned read = io_read(io, buffer, len + 1); // +1 to check if the file size is larger than expected
+	if(read < len)
 	{
-		len += read;
-		if(len == cap)
+		buffer = realloc(buffer, read + 1);
+		len = read;
+	}
+	else if(read > len)
+	{
+		unsigned cap = 2 * read;
+		len = read;
+		buffer = realloc(buffer, cap);
+		while((read = io_read(io, buffer + len, cap - len)) != 0)
 		{
-			cap *= 2;
-			buffer = realloc(buffer, cap);
+			len += read;
+			if(len == cap)
+			{
+				cap *= 2;
+				buffer = realloc(buffer, cap);
+			}
 		}
+		buffer = realloc(buffer, len + 1);
 	}
-	if(len == cap)
-	{
-		buffer = realloc(buffer, cap + 1);
-	}
-	// ensure null termination
 	buffer[len] = 0;
 	*result = buffer;
 	*result_len = len;
@@ -402,12 +453,11 @@ char *io_read_all_str(IOHANDLE io)
 {
 	void *buffer;
 	unsigned len;
-
 	io_read_all(io, &buffer, &len);
 	if(mem_has_null(buffer, len))
 	{
-		free(buffer);
-		return 0;
+		mem_free(buffer);
+		return 0x0;
 	}
 	return buffer;
 }
@@ -485,6 +535,326 @@ int io_flush(IOHANDLE io)
 	return 0;
 }
 
+int io_error(IOHANDLE io)
+{
+	return ferror((FILE*)io);
+}
+
+#define ASYNC_BUFSIZE 8 * 1024
+#define ASYNC_LOCAL_BUFSIZE 64 * 1024
+
+struct ASYNCIO
+{
+	LOCK lock;
+	IOHANDLE io;
+	SEMAPHORE sphore;
+	void *thread;
+
+	unsigned char *buffer;
+	unsigned int buffer_size;
+	unsigned int read_pos;
+	unsigned int write_pos;
+
+	int error;
+	unsigned char finish;
+	unsigned char refcount;
+};
+
+enum
+{
+	ASYNCIO_RUNNING,
+	ASYNCIO_CLOSE,
+	ASYNCIO_EXIT,
+};
+
+struct BUFFERS
+{
+	unsigned char *buf1;
+	unsigned int len1;
+	unsigned char *buf2;
+	unsigned int len2;
+};
+
+static void buffer_ptrs(ASYNCIO *aio, struct BUFFERS *buffers)
+{
+	mem_zero(buffers, sizeof(*buffers));
+	if(aio->read_pos < aio->write_pos)
+	{
+		buffers->buf1 = aio->buffer + aio->read_pos;
+		buffers->len1 = aio->write_pos - aio->read_pos;
+	}
+	else if(aio->read_pos > aio->write_pos)
+	{
+		buffers->buf1 = aio->buffer + aio->read_pos;
+		buffers->len1 = aio->buffer_size - aio->read_pos;
+		buffers->buf2 = aio->buffer;
+		buffers->len2 = aio->write_pos;
+	}
+}
+
+static void aio_handle_free_and_unlock(ASYNCIO *aio)
+{
+	int do_free;
+	aio->refcount--;
+
+	do_free = aio->refcount == 0;
+	lock_unlock(aio->lock);
+	if(do_free)
+	{
+		free(aio->buffer);
+		sphore_destroy(&aio->sphore);
+		lock_destroy(aio->lock);
+		free(aio);
+	}
+}
+
+static void aio_thread(void *user)
+{
+	ASYNCIO *aio = user;
+
+	lock_wait(aio->lock);
+	while(1)
+	{
+		struct BUFFERS buffers;
+		int result_io_error;
+		unsigned char local_buffer[ASYNC_LOCAL_BUFSIZE];
+		unsigned int local_buffer_len = 0;
+
+		if(aio->read_pos == aio->write_pos)
+		{
+			if(aio->finish != ASYNCIO_RUNNING)
+			{
+				if(aio->finish == ASYNCIO_CLOSE)
+				{
+					io_close(aio->io);
+				}
+				aio_handle_free_and_unlock(aio);
+				break;
+			}
+			lock_unlock(aio->lock);
+			sphore_wait(&aio->sphore);
+			lock_wait(aio->lock);
+			continue;
+		}
+
+		buffer_ptrs(aio, &buffers);
+		if(buffers.buf1)
+		{
+			if(buffers.len1 > sizeof(local_buffer) - local_buffer_len)
+			{
+				buffers.len1 = sizeof(local_buffer) - local_buffer_len;
+			}
+			mem_copy(local_buffer + local_buffer_len, buffers.buf1, buffers.len1);
+			local_buffer_len += buffers.len1;
+			if(buffers.buf2)
+			{
+				if(buffers.len2 > sizeof(local_buffer) - local_buffer_len)
+				{
+					buffers.len2 = sizeof(local_buffer) - local_buffer_len;
+				}
+				mem_copy(local_buffer + local_buffer_len, buffers.buf2, buffers.len2);
+				local_buffer_len += buffers.len2;
+			}
+		}
+		aio->read_pos = (aio->read_pos + buffers.len1 + buffers.len2) % aio->buffer_size;
+		lock_unlock(aio->lock);
+
+		io_write(aio->io, local_buffer, local_buffer_len);
+		io_flush(aio->io);
+		result_io_error = io_error(aio->io);
+
+		lock_wait(aio->lock);
+		aio->error = result_io_error;
+	}
+}
+
+ASYNCIO *aio_new(IOHANDLE io)
+{
+	ASYNCIO *aio = malloc(sizeof(*aio));
+	if(!aio)
+	{
+		return 0;
+	}
+	aio->io = io;
+	aio->lock = lock_create();
+	sphore_init(&aio->sphore);
+	aio->thread = 0;
+
+	aio->buffer = malloc(ASYNC_BUFSIZE);
+	if(!aio->buffer)
+	{
+		sphore_destroy(&aio->sphore);
+		lock_destroy(aio->lock);
+		free(aio);
+		return 0;
+	}
+	aio->buffer_size = ASYNC_BUFSIZE;
+	aio->read_pos = 0;
+	aio->write_pos = 0;
+	aio->error = 0;
+	aio->finish = ASYNCIO_RUNNING;
+	aio->refcount = 2;
+
+	aio->thread = thread_init(aio_thread, aio);
+	if(!aio->thread)
+	{
+		free(aio->buffer);
+		sphore_destroy(&aio->sphore);
+		lock_destroy(aio->lock);
+		free(aio);
+		return 0;
+	}
+	return aio;
+}
+
+static unsigned int buffer_len(ASYNCIO *aio)
+{
+	if(aio->write_pos >= aio->read_pos)
+	{
+		return aio->write_pos - aio->read_pos;
+	}
+	else
+	{
+		return aio->buffer_size + aio->write_pos - aio->read_pos;
+	}
+}
+
+static unsigned int next_buffer_size(unsigned int cur_size, unsigned int need_size)
+{
+	while(cur_size < need_size)
+	{
+		cur_size *= 2;
+	}
+	return cur_size;
+}
+
+void aio_lock(ASYNCIO *aio)
+{
+	lock_wait(aio->lock);
+}
+
+void aio_unlock(ASYNCIO *aio)
+{
+	lock_unlock(aio->lock);
+	sphore_signal(&aio->sphore);
+}
+
+void aio_write_unlocked(ASYNCIO *aio, const void *buffer, unsigned size)
+{
+	unsigned int remaining;
+	remaining = aio->buffer_size - buffer_len(aio);
+
+	// Don't allow full queue to distinguish between empty and full queue.
+	if(size < remaining)
+	{
+		unsigned int remaining_contiguous = aio->buffer_size - aio->write_pos;
+		if(size > remaining_contiguous)
+		{
+			mem_copy(aio->buffer + aio->write_pos, buffer, remaining_contiguous);
+			size -= remaining_contiguous;
+			buffer = ((unsigned char *)buffer) + remaining_contiguous;
+			aio->write_pos = 0;
+		}
+		mem_copy(aio->buffer + aio->write_pos, buffer, size);
+		aio->write_pos = (aio->write_pos + size) % aio->buffer_size;
+	}
+	else
+	{
+		// Add 1 so the new buffer isn't completely filled.
+		unsigned int new_written = buffer_len(aio) + size + 1;
+		unsigned int next_size = next_buffer_size(aio->buffer_size, new_written);
+		unsigned int next_len = 0;
+		unsigned char *next_buffer = malloc(next_size);
+
+		struct BUFFERS buffers;
+		buffer_ptrs(aio, &buffers);
+		if(buffers.buf1)
+		{
+			mem_copy(next_buffer + next_len, buffers.buf1, buffers.len1);
+			next_len += buffers.len1;
+			if(buffers.buf2)
+			{
+				mem_copy(next_buffer + next_len, buffers.buf2, buffers.len2);
+				next_len += buffers.len2;
+			}
+		}
+		mem_copy(next_buffer + next_len, buffer, size);
+		next_len += size;
+
+		free(aio->buffer);
+		aio->buffer = next_buffer;
+		aio->buffer_size = next_size;
+		aio->read_pos = 0;
+		aio->write_pos = next_len;
+	}
+}
+
+void aio_write(ASYNCIO *aio, const void *buffer, unsigned size)
+{
+	aio_lock(aio);
+	aio_write_unlocked(aio, buffer, size);
+	aio_unlock(aio);
+}
+
+void aio_write_newline_unlocked(ASYNCIO *aio)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	aio_write_unlocked(aio, "\r\n", 2);
+#else
+	aio_write_unlocked(aio, "\n", 1);
+#endif
+}
+
+void aio_write_newline(ASYNCIO *aio)
+{
+	aio_lock(aio);
+	aio_write_newline_unlocked(aio);
+	aio_unlock(aio);
+}
+
+int aio_error(ASYNCIO *aio)
+{
+	int result;
+	lock_wait(aio->lock);
+	result = aio->error;
+	lock_unlock(aio->lock);
+	return result;
+}
+
+void aio_free(ASYNCIO *aio)
+{
+	lock_wait(aio->lock);
+	if(aio->thread)
+	{
+		thread_detach(aio->thread);
+		aio->thread = 0;
+	}
+	aio_handle_free_and_unlock(aio);
+}
+
+void aio_close(ASYNCIO *aio)
+{
+	lock_wait(aio->lock);
+	aio->finish = ASYNCIO_CLOSE;
+	lock_unlock(aio->lock);
+	sphore_signal(&aio->sphore);
+}
+
+void aio_wait(ASYNCIO *aio)
+{
+	void *thread;
+	lock_wait(aio->lock);
+	thread = aio->thread;
+	aio->thread = 0;
+	if(aio->finish == ASYNCIO_RUNNING)
+	{
+		aio->finish = ASYNCIO_EXIT;
+	}
+	lock_unlock(aio->lock);
+	sphore_signal(&aio->sphore);
+	thread_wait(thread);
+}
+
 struct THREAD_RUN
 {
 	void (*threadfunc)(void *);
@@ -515,7 +885,12 @@ void *thread_init(void (*threadfunc)(void *), void *u)
 #if defined(CONF_FAMILY_UNIX)
 	{
 		pthread_t id;
-		if(pthread_create(&id, NULL, thread_run, data) != 0)
+		pthread_attr_t attr;
+		pthread_attr_init(&attr);
+#if defined(CONF_PLATFORM_MACOS)
+		pthread_attr_set_qos_class_np(&attr, QOS_CLASS_USER_INTERACTIVE, 0);
+#endif
+		if(pthread_create(&id, &attr, thread_run, data) != 0)
 		{
 			return 0;
 		}
@@ -541,11 +916,8 @@ void thread_wait(void *thread)
 
 void thread_destroy(void *thread)
 {
-#if defined(CONF_FAMILY_UNIX)
-	void *r = 0;
-	pthread_join((pthread_t)thread, &r);
-#else
-	/*#error not implemented*/
+#if defined(CONF_FAMILY_WINDOWS)
+	CloseHandle((HANDLE)thread);
 #endif
 }
 
@@ -603,7 +975,7 @@ typedef CRITICAL_SECTION LOCKINTERNAL;
 
 LOCK lock_create()
 {
-	LOCKINTERNAL *lock = (LOCKINTERNAL*)mem_alloc(sizeof(LOCKINTERNAL), 4);
+	LOCKINTERNAL *lock = (LOCKINTERNAL*)mem_alloc(sizeof(LOCKINTERNAL));
 
 #if defined(CONF_FAMILY_UNIX)
 	pthread_mutex_init(lock, 0x0);
@@ -660,20 +1032,71 @@ void lock_unlock(LOCK lock)
 #endif
 }
 
-#if !defined(CONF_PLATFORM_MACOSX)
-	#if defined(CONF_FAMILY_UNIX)
-	void semaphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
-	void semaphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
-	void semaphore_signal(SEMAPHORE *sem) { sem_post(sem); }
-	void semaphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
-	#elif defined(CONF_FAMILY_WINDOWS)
-	void semaphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
-	void semaphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, INFINITE); }
-	void semaphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
-	void semaphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
-	#else
-		#error not implemented on this platform
-	#endif
+#if defined(CONF_FAMILY_UNIX) && !defined(CONF_PLATFORM_MACOS) // this should be CONF_POSIX_SEM but bam can't run C programs
+void sphore_init(SEMAPHORE *sem) { sem_init(sem, 0, 0); }
+void sphore_wait(SEMAPHORE *sem) { sem_wait(sem); }
+void sphore_signal(SEMAPHORE *sem) { sem_post(sem); }
+void sphore_destroy(SEMAPHORE *sem) { sem_destroy(sem); }
+#elif defined(CONF_FAMILY_WINDOWS)
+void sphore_init(SEMAPHORE *sem) { *sem = CreateSemaphore(0, 0, 10000, 0); }
+void sphore_wait(SEMAPHORE *sem) { WaitForSingleObject((HANDLE)*sem, INFINITE); }
+void sphore_signal(SEMAPHORE *sem) { ReleaseSemaphore((HANDLE)*sem, 1, NULL); }
+void sphore_destroy(SEMAPHORE *sem) { CloseHandle((HANDLE)*sem); }
+#else
+typedef struct SEMINTERNAL
+{
+	int count;
+	int waiters;
+	LOCK c_lock;
+	pthread_cond_t c_nzcond;
+} SEMINTERNAL;
+
+void sphore_init(SEMAPHORE *sem)
+{
+	*sem = mem_alloc(sizeof(**sem));
+
+	(*sem)->count = 0;
+	(*sem)->waiters = 0;
+
+	(*sem)->c_lock = lock_create();
+	pthread_cond_init(&(*sem)->c_nzcond, 0);
+}
+
+void sphore_wait(SEMAPHORE *sem)
+{
+	lock_wait((*sem)->c_lock);
+
+	(*sem)->waiters++;
+	int result = 0;
+	while((*sem)->count == 0)
+		result = pthread_cond_wait(&(*sem)->c_nzcond, (LOCKINTERNAL *)(*sem)->c_lock);
+
+	(*sem)->waiters--;
+
+	if(!result)
+		(*sem)->count--;
+
+	lock_unlock((*sem)->c_lock);
+}
+
+void sphore_signal(SEMAPHORE *sem)
+{
+	lock_wait((*sem)->c_lock);
+
+	if((*sem)->waiters)
+		pthread_cond_signal(&(*sem)->c_nzcond);
+
+	(*sem)->count++;
+	lock_unlock((*sem)->c_lock);
+}
+
+void sphore_destroy(SEMAPHORE *sem)
+{
+	pthread_cond_destroy(&(*sem)->c_nzcond);
+	lock_destroy((*sem)->c_lock);
+	mem_free(*sem);
+}
+
 #endif
 
 
@@ -730,7 +1153,7 @@ static void netaddr_to_sockaddr_in6(const NETADDR *src, struct sockaddr_in6 *des
 	mem_zero(dest, sizeof(struct sockaddr_in6));
 	if(src->type != NETTYPE_IPV6)
 	{
-		dbg_msg("system", "couldn't not convert NETADDR of type %d to ipv6", src->type);
+		dbg_msg("system", "couldn't convert NETADDR of type %d to ipv6", src->type);
 		return;
 	}
 
@@ -932,7 +1355,7 @@ int net_addr_from_str(NETADDR *addr, const char *string)
 			int size;
 			sa6.sin6_family = AF_INET6;
 			size = (int)sizeof(sa6);
-			if(WSAStringToAddress(buf, AF_INET6, NULL, (struct sockaddr *)&sa6, &size) != 0)
+			if(WSAStringToAddressA(buf, AF_INET6, NULL, (struct sockaddr *)&sa6, &size) != 0)
 				return -1;
 		}
 #else
@@ -1019,9 +1442,11 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 	{
 #if defined(CONF_FAMILY_WINDOWS)
 		char buf[128];
+		WCHAR wBuffer[128];
 		int error = WSAGetLastError();
-		if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
-			buf[0] = 0;
+		if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, wBuffer, sizeof(wBuffer) / sizeof(WCHAR), 0) == 0)
+			wBuffer[0] = 0;
+		WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buf, sizeof(buf), NULL, NULL);
 		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
 		dbg_msg("net", "failed to create socket with domain %d and type %d (%d '%s')", domain, type, errno, strerror(errno));
@@ -1058,11 +1483,13 @@ static int priv_net_create_socket(int domain, int type, struct sockaddr *addr, i
 		{
 #if defined(CONF_FAMILY_WINDOWS)
 			char buf[128];
+			WCHAR wBuffer[128];
 			int error = WSAGetLastError();
 			if(error == WSAEADDRINUSE && use_random_port)
 				continue;
-			if(FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM|FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, buf, sizeof(buf), 0) == 0)
-				buf[0] = 0;
+			if(FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS, 0, error, 0, wBuffer, sizeof(wBuffer) / sizeof(WCHAR), 0) == 0)
+				wBuffer[0] = 0;
+			WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buf, sizeof(buf), NULL, NULL);
 			dbg_msg("net", "failed to bind socket with domain %d and type %d (%d '%s')", domain, type, error, buf);
 #else
 			if(errno == EADDRINUSE && use_random_port)
@@ -1158,7 +1585,7 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 			d = sendto((int)sock.ipv4sock, (const char*)data, size, 0, (struct sockaddr *)&sa, sizeof(sa));
 		}
 		else
-			dbg_msg("net", "can't sent ipv4 traffic to this socket");
+			dbg_msg("net", "can't send ipv4 traffic to this socket");
 	}
 
 	if(addr->type&NETTYPE_IPV6)
@@ -1181,11 +1608,11 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 			d = sendto((int)sock.ipv6sock, (const char*)data, size, 0, (struct sockaddr *)&sa, sizeof(sa));
 		}
 		else
-			dbg_msg("net", "can't sent ipv6 traffic to this socket");
+			dbg_msg("net", "can't send ipv6 traffic to this socket");
 	}
 	/*
 	else
-		dbg_msg("net", "can't sent to network of type %d", addr->type);
+		dbg_msg("net", "can't send to network of type %d", addr->type);
 		*/
 
 	/*if(d < 0)
@@ -1507,22 +1934,25 @@ static inline time_t filetime_to_unixtime(LPFILETIME filetime)
 	li.QuadPart -= 11644473600LL; // Windows epoch is in the past
 
 	t = li.QuadPart;
-	return t == li.QuadPart ? t : (time_t)-1;
+	return t == (time_t)li.QuadPart ? t : (time_t)-1;
 }
 #endif
 
 void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	WIN32_FIND_DATA finddata;
+	WIN32_FIND_DATAW finddata;
 	HANDLE handle;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
+	char buffer2[IO_MAX_PATH_LENGTH];
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	int length;
+
 	str_format(buffer, sizeof(buffer), "%s/*", dir);
+	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 
-	handle = FindFirstFileA(buffer, &finddata);
-
-	if (handle == INVALID_HANDLE_VALUE)
+	handle = FindFirstFileW(wBuffer, &finddata);
+	if(handle == INVALID_HANDLE_VALUE)
 		return;
 
 	str_format(buffer, sizeof(buffer), "%s/", dir);
@@ -1531,17 +1961,17 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	/* add all the entries */
 	do
 	{
-		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
-		if(cb(finddata.cFileName, fs_is_dir(buffer), type, user))
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, sizeof(buffer2), NULL, NULL);
+		str_copy(buffer+length, buffer2, (int)sizeof(buffer)-length);
+		if(cb(buffer2, (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0, type, user))
 			break;
 	}
-	while (FindNextFileA(handle, &finddata));
+	while(FindNextFileW(handle, &finddata));
 
 	FindClose(handle);
-	return;
 #else
 	struct dirent *entry;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
 	int length;
 	DIR *d = opendir(dir);
 
@@ -1554,28 +1984,30 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	while((entry = readdir(d)) != NULL)
 	{
 		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
-		if(cb(entry->d_name, fs_is_dir(buffer), type, user))
+		if(cb(entry->d_name, entry->d_type == DT_UNKNOWN ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
 			break;
 	}
 
 	/* close the directory and return */
 	closedir(d);
-	return;
 #endif
 }
 
-void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void* user)
+void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int type, void *user)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	WIN32_FIND_DATA finddata;
+	WIN32_FIND_DATAW finddata;
 	HANDLE handle;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
+	char buffer2[IO_MAX_PATH_LENGTH];
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
 	int length;
+
 	str_format(buffer, sizeof(buffer), "%s/*", dir);
+	MultiByteToWideChar(CP_UTF8, 0, buffer, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
 
-	handle = FindFirstFileA(buffer, &finddata);
-
-	if (handle == INVALID_HANDLE_VALUE)
+	handle = FindFirstFileW(wBuffer, &finddata);
+	if(handle == INVALID_HANDLE_VALUE)
 		return;
 
 	str_format(buffer, sizeof(buffer), "%s/", dir);
@@ -1584,24 +2016,24 @@ void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 	/* add all the entries */
 	do
 	{
-		str_copy(buffer+length, finddata.cFileName, (int)sizeof(buffer)-length);
-
 		CFsFileInfo info;
-		info.m_pName = finddata.cFileName;
+		WideCharToMultiByte(CP_UTF8, 0, finddata.cFileName, -1, buffer2, sizeof(buffer2), NULL, NULL);
+		str_copy(buffer+length, buffer2, (int)sizeof(buffer)-length);
+
+		info.m_pName = buffer2;
 		info.m_TimeCreated = filetime_to_unixtime(&finddata.ftCreationTime);
 		info.m_TimeModified = filetime_to_unixtime(&finddata.ftLastWriteTime);
 
-		if(cb(&info, fs_is_dir(buffer), type, user))
+		if(cb(&info, (finddata.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) != 0, type, user))
 			break;
 	}
-	while (FindNextFileA(handle, &finddata));
+	while(FindNextFileW(handle, &finddata));
 
 	FindClose(handle);
-	return;
 #else
 	struct dirent *entry;
 	time_t created = -1, modified = -1;
-	char buffer[1024*2];
+	char buffer[IO_MAX_PATH_LENGTH];
 	int length;
 	DIR *d = opendir(dir);
 
@@ -1622,23 +2054,24 @@ void fs_listdir_fileinfo(const char* dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 		info.m_TimeCreated = created;
 		info.m_TimeModified = modified;
 
-		if(cb(&info, fs_is_dir(buffer), type, user))
+		if(cb(&info, entry->d_type == DT_UNKNOWN ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
 			break;
 	}
 
 	/* close the directory and return */
 	closedir(d);
-	return;
 #endif
 }
 
 int fs_storage_path(const char *appname, char *path, int max)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	char *home = getenv("APPDATA");
+	WCHAR *home = _wgetenv(L"APPDATA");
+	char buffer[IO_MAX_PATH_LENGTH];
 	if(!home)
 		return -1;
-	str_format(path, max, "%s/%s", home, appname);
+	WideCharToMultiByte(CP_UTF8, 0, home, -1, buffer, sizeof(buffer), NULL, NULL);
+	str_format(path, max, "%s/%s", buffer, appname);
 	return 0;
 #else
 	char *home = getenv("HOME");
@@ -1649,27 +2082,27 @@ int fs_storage_path(const char *appname, char *path, int max)
 	if(!home)
 		return -1;
 
-#if defined(CONF_PLATFORM_MACOSX)
+#if defined(CONF_PLATFORM_MACOS)
 	str_format(path, max, "%s/Library/Application Support/%s", home, appname);
 	return 0;
 #endif
 
 	/* old folder location */
 	str_format(path, max, "%s/.%s", home, appname);
-	for(i = strlen(home)+2; path[i]; i++)
+	for(i = str_length(home)+2; path[i]; i++)
 		path[i] = tolower(path[i]);
 
 	if(!xdgdatahome)
 	{
 		/* use default location */
 		str_format(xdgpath, max, "%s/.local/share/%s", home, appname);
-		for(i = strlen(home)+14; xdgpath[i]; i++)
+		for(i = str_length(home)+14; xdgpath[i]; i++)
 			xdgpath[i] = tolower(xdgpath[i]);
 	}
 	else
 	{
 		str_format(xdgpath, max, "%s/%s", xdgdatahome, appname);
-		for(i = strlen(xdgdatahome)+1; xdgpath[i]; i++)
+		for(i = str_length(xdgdatahome)+1; xdgpath[i]; i++)
 			xdgpath[i] = tolower(xdgpath[i]);
 	}
 
@@ -1690,8 +2123,10 @@ int fs_storage_path(const char *appname, char *path, int max)
 int fs_makedir(const char *path)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	if(_mkdir(path) == 0)
-			return 0;
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+	if(_wmkdir(wBuffer) == 0)
+		return 0;
 	if(errno == EEXIST)
 		return 0;
 	return -1;
@@ -1732,46 +2167,36 @@ int fs_makedir_recursive(const char *path)
 int fs_is_dir(const char *path)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	/* TODO: do this smarter */
-	WIN32_FIND_DATA finddata;
-	HANDLE handle;
-	char buffer[1024*2];
-	str_format(buffer, sizeof(buffer), "%s/*", path);
-
-	if ((handle = FindFirstFileA(buffer, &finddata)) == INVALID_HANDLE_VALUE)
-		return 0;
-
-	FindClose(handle);
-	return 1;
+	WCHAR wPath[IO_MAX_PATH_LENGTH];
+	DWORD attributes;
+	MultiByteToWideChar(CP_UTF8, 0, path, -1, wPath, sizeof(wPath) / sizeof(WCHAR));
+	attributes = GetFileAttributesW(wPath);
+	return attributes != INVALID_FILE_ATTRIBUTES && (attributes & FILE_ATTRIBUTE_DIRECTORY) ? 1 : 0;
 #else
-	struct stat sb;
-	if (stat(path, &sb) == -1)
-		return 0;
-
-	if (S_ISDIR(sb.st_mode))
-		return 1;
-	else
-		return 0;
-#endif
-}
-
-time_t fs_getmtime(const char *path)
-{
 	struct stat sb;
 	if(stat(path, &sb) == -1)
 		return 0;
-
-	return sb.st_mtime;
+	return S_ISDIR(sb.st_mode) ? 1 : 0;
+#endif
 }
 
 int fs_chdir(const char *path)
 {
 	if(fs_is_dir(path))
 	{
+#if defined(CONF_FAMILY_WINDOWS)
+		WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+		MultiByteToWideChar(CP_UTF8, 0, path, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+		if(_wchdir(wBuffer))
+			return 1;
+		else
+			return 0;
+#else
 		if(chdir(path))
 			return 1;
 		else
 			return 0;
+#endif
 	}
 	else
 		return 1;
@@ -1779,12 +2204,26 @@ int fs_chdir(const char *path)
 
 char *fs_getcwd(char *buffer, int buffer_size)
 {
-	if(buffer == 0)
-		return 0;
 #if defined(CONF_FAMILY_WINDOWS)
-	return _getcwd(buffer, buffer_size);
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+#endif
+	dbg_assert(buffer != 0, "buffer invalid");
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
+#if defined(CONF_FAMILY_WINDOWS)
+	if(_wgetcwd(wBuffer, buffer_size) == 0)
+	{
+		buffer[0] = '\0';
+		return 0;
+	}
+	WideCharToMultiByte(CP_UTF8, 0, wBuffer, -1, buffer, buffer_size, NULL, NULL);
+	return buffer;
 #else
-	return getcwd(buffer, buffer_size);
+	if(getcwd(buffer, buffer_size) == 0)
+	{
+		buffer[0] = '\0';
+		return 0;
+	}
+	return buffer;
 #endif
 }
 
@@ -1807,16 +2246,34 @@ int fs_parent_dir(char *path)
 
 int fs_remove(const char *filename)
 {
-	if(remove(filename) != 0)
+#if defined(CONF_FAMILY_WINDOWS)
+	WCHAR wFilename[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, filename, -1, wFilename, sizeof(wFilename) / sizeof(WCHAR));
+	if(DeleteFileW(wFilename) == 0)
 		return 1;
 	return 0;
+#else
+	if(remove(filename))
+		return 1;
+	return 0;
+#endif
 }
 
 int fs_rename(const char *oldname, const char *newname)
 {
-	if(rename(oldname, newname) != 0)
+#if defined(CONF_FAMILY_WINDOWS)
+	WCHAR wOldname[IO_MAX_PATH_LENGTH];
+	WCHAR wNewname[IO_MAX_PATH_LENGTH];
+	MultiByteToWideChar(CP_UTF8, 0, oldname, -1, wOldname, sizeof(wOldname) / sizeof(WCHAR));
+	MultiByteToWideChar(CP_UTF8, 0, newname, -1, wNewname, sizeof(wNewname) / sizeof(WCHAR));
+	if(MoveFileExW(wOldname, wNewname, MOVEFILE_REPLACE_EXISTING | MOVEFILE_COPY_ALLOWED) == 0)
 		return 1;
 	return 0;
+#else
+	if(rename(oldname, newname))
+		return 1;
+	return 0;
+#endif
 }
 
 int fs_read(const char *name, void **result, unsigned *result_len)
@@ -1835,7 +2292,7 @@ int fs_read(const char *name, void **result, unsigned *result_len)
 
 char *fs_read_str(const char *name)
 {
-	IOHANDLE file = io_open(name, IOFLAG_READ);
+	IOHANDLE file = io_open(name, IOFLAG_READ | IOFLAG_SKIP_BOM);
 	char *result;
 	if(!file)
 	{
@@ -1849,13 +2306,18 @@ char *fs_read_str(const char *name)
 int fs_file_time(const char *name, time_t *created, time_t *modified)
 {
 #if defined(CONF_FAMILY_WINDOWS)
-	WIN32_FIND_DATA finddata;
-	HANDLE handle = FindFirstFile(name, &finddata);
+	WIN32_FIND_DATAW finddata;
+	HANDLE handle;
+	WCHAR wBuffer[IO_MAX_PATH_LENGTH];
+
+	MultiByteToWideChar(CP_UTF8, 0, name, -1, wBuffer, sizeof(wBuffer) / sizeof(WCHAR));
+	handle = FindFirstFileW(wBuffer, &finddata);
 	if(handle == INVALID_HANDLE_VALUE)
 		return 1;
 
 	*created = filetime_to_unixtime(&finddata.ftCreationTime);
 	*modified = filetime_to_unixtime(&finddata.ftLastWriteTime);
+	FindClose(handle);
 #elif defined(CONF_FAMILY_UNIX)
 	struct stat sb;
 	if(stat(name, &sb))
@@ -1954,6 +2416,11 @@ int time_season()
 	time(&time_data);
 	time_info = localtime(&time_data);
 
+	if((time_info->tm_mon == 11 && time_info->tm_mday == 31) || (time_info->tm_mon == 0 && time_info->tm_mday == 1))
+	{
+		return SEASON_NEWYEAR;
+	}
+
 	switch(time_info->tm_mon)
 	{
 		case 11:
@@ -2028,8 +2495,10 @@ int time_iseasterday()
 
 void str_append(char *dst, const char *src, int dst_size)
 {
-	int s = strlen(dst);
+	int s;
 	int i = 0;
+	dbg_assert(dst_size > 0, "dst_size invalid");
+	s = str_length(dst);
 	while(s < dst_size)
 	{
 		dst[s] = src[i];
@@ -2044,8 +2513,9 @@ void str_append(char *dst, const char *src, int dst_size)
 
 void str_copy(char *dst, const char *src, int dst_size)
 {
-	strncpy(dst, src, dst_size);
-	dst[dst_size-1] = 0; /* assure null termination */
+	dbg_assert(dst_size > 0, "dst_size invalid");
+	dst[0] = '\0';
+	strncat(dst, src, dst_size - 1);
 }
 
 void str_truncate(char *dst, int dst_size, const char *src, int truncation_len)
@@ -2065,17 +2535,17 @@ int str_length(const char *str)
 
 void str_format(char *buffer, int buffer_size, const char *format, ...)
 {
+	va_list ap;
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
+	va_start(ap, format);
+
 #if defined(CONF_FAMILY_WINDOWS) && !defined(__GNUC__)
-	va_list ap;
-	va_start(ap, format);
 	_vsprintf_p(buffer, buffer_size, format, ap);
-	va_end(ap);
 #else
-	va_list ap;
-	va_start(ap, format);
 	vsnprintf(buffer, buffer_size, format, ap);
-	va_end(ap);
 #endif
+
+	va_end(ap);
 
 	buffer[buffer_size-1] = 0; /* assure null termination */
 }
@@ -2309,22 +2779,23 @@ int str_comp_filenames(const char *a, const char *b)
 			{
 				if(!result)
 					result = *a - *b;
-				++a; ++b;
-			}
-			while(*a >= '0' && *a <= '9' && *b >= '0' && *b <= '9');
+				++a;
+				++b;
+			} while(*a >= '0' && *a <= '9' && *b >= '0' && *b <= '9');
 
 			if(*a >= '0' && *a <= '9')
 				return 1;
 			else if(*b >= '0' && *b <= '9')
 				return -1;
-			else if(result)
+			else if(result || *a == '\0' || *b == '\0')
 				return result;
 		}
 
-		if(tolower(*a) != tolower(*b))
-			break;
+		result = tolower(*a) - tolower(*b);
+		if(result)
+			return result;
 	}
-	return tolower(*a) - tolower(*b);
+	return *a - *b;
 }
 
 const char *str_startswith_nocase(const char *str, const char *prefix)
@@ -2435,15 +2906,16 @@ const char *str_find(const char *haystack, const char *needle)
 void str_hex(char *dst, int dst_size, const void *data, int data_size)
 {
 	static const char hex[] = "0123456789ABCDEF";
-	int b;
-
-	for(b = 0; b < data_size && b < dst_size/4-4; b++)
+	int data_index;
+	int dst_index;
+	for(data_index = 0, dst_index = 0; data_index < data_size && dst_index < dst_size - 3; data_index++)
 	{
-		dst[b*3] = hex[((const unsigned char *)data)[b]>>4];
-		dst[b*3+1] = hex[((const unsigned char *)data)[b]&0xf];
-		dst[b*3+2] = ' ';
-		dst[b*3+3] = 0;
+		dst[data_index * 3] = hex[((const unsigned char *)data)[data_index] >> 4];
+		dst[data_index * 3 + 1] = hex[((const unsigned char *)data)[data_index] & 0xf];
+		dst[data_index * 3 + 2] = ' ';
+		dst_index += 3;
 	}
+	dst[dst_index] = '\0';
 }
 
 int str_is_number(const char *str)
@@ -2463,6 +2935,7 @@ int str_is_number(const char *str)
 void str_timestamp_ex(time_t time_data, char *buffer, int buffer_size, const char *format)
 {
 	struct tm *time_info;
+	dbg_assert(buffer_size > 0, "buffer_size invalid");
 	time_info = localtime(&time_data);
 	strftime(buffer, buffer_size, format, time_info);
 	buffer[buffer_size-1] = 0;	/* assure null termination */
@@ -2496,7 +2969,7 @@ int mem_comp(const void *a, const void *b, int size)
 int mem_has_null(const void *block, unsigned size)
 {
 	const unsigned char *bytes = block;
-	unsigned i;        
+	unsigned i;
 	for(i = 0; i < size; i++)
 	{
 		if(bytes[i] == 0)
@@ -2725,6 +3198,7 @@ void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
 {
 	int new_cursor;
 	int cursor = 0;
+	dbg_assert(dst_size > 0, "dst_size invalid");
 
 	while(src[cursor] && num > 0)
 	{
@@ -2737,6 +3211,20 @@ void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num)
 	}
 
 	str_copy(dst, src, cursor < dst_size ? cursor+1 : dst_size);
+}
+
+void str_utf8_stats(const char *str, int max_size, int max_count, int *size, int *count)
+{
+	*size = 0;
+	*count = 0;
+	while(*size < max_size && *count < max_count)
+	{
+		int new_size = str_utf8_forward(str, *size);
+		if(new_size == *size || new_size >= max_size)
+			break;
+		*size = new_size;
+		++(*count);
+	}
 }
 
 unsigned str_quickhash(const char *str)
@@ -2789,6 +3277,35 @@ int secure_random_init()
 #endif
 }
 
+int secure_random_uninit()
+{
+	if(!secure_random_data.initialized)
+	{
+		return 0;
+	}
+#if defined(CONF_FAMILY_WINDOWS)
+	if(CryptReleaseContext(secure_random_data.provider, 0))
+	{
+		secure_random_data.initialized = 0;
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+#else
+	if(!io_close(secure_random_data.urandom))
+	{
+		secure_random_data.initialized = 0;
+		return 0;
+	}
+	else
+	{
+		return 1;
+	}
+#endif
+}
+
 void secure_random_fill(void *bytes, unsigned length)
 {
 	if(!secure_random_data.initialized)
@@ -2820,18 +3337,92 @@ int pid()
 #endif
 }
 
+void cmdline_fix(int *argc, const char ***argv)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	int wide_argc = 0;
+	int total_size = 0;
+	int remaining_size;
+	char **new_argv;
+	WCHAR **wide_argv = CommandLineToArgvW(GetCommandLineW(), &wide_argc);
+	dbg_assert(wide_argv != NULL, "CommandLineToArgvW failure");
+
+	for(int i = 0; i < wide_argc; i++)
+	{
+		int size = WideCharToMultiByte(CP_UTF8, 0, wide_argv[i], -1, NULL, 0, NULL, NULL);
+		dbg_assert(size != 0, "WideCharToMultiByte failure");
+		total_size += size;
+	}
+
+	new_argv = (char **)malloc((wide_argc + 1) * sizeof(*new_argv));
+	new_argv[0] = (char *)malloc(total_size);
+	mem_zero(new_argv[0], total_size);
+
+	remaining_size = total_size;
+	for(int i = 0; i < wide_argc; i++)
+	{
+		int size = WideCharToMultiByte(CP_UTF8, 0, wide_argv[i], -1, new_argv[i], remaining_size, NULL, NULL);
+		dbg_assert(size != 0, "WideCharToMultiByte failure");
+
+		remaining_size -= size;
+		new_argv[i + 1] = new_argv[i] + size;
+	}
+
+	new_argv[wide_argc] = 0;
+	*argc = wide_argc;
+	*argv = (const char **)new_argv;
+#endif
+}
+
+void cmdline_free(int argc, const char **argv)
+{
+#if defined(CONF_FAMILY_WINDOWS)
+	free((void *)*argv);
+	free((char **)argv);
+#endif
+}
+
+int bytes_be_to_int(const unsigned char *bytes)
+{
+	int Result;
+	unsigned char *pResult = (unsigned char *)&Result;
+	for(unsigned i = 0; i < sizeof(int); i++)
+	{
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		pResult[i] = bytes[i];
+#else
+		pResult[i] = bytes[sizeof(int) - i - 1];
+#endif
+	}
+	return Result;
+}
+
+void int_to_bytes_be(unsigned char *bytes, int value)
+{
+	const unsigned char *pValue = (const unsigned char *)&value;
+	for(unsigned i = 0; i < sizeof(int); i++)
+	{
+#if defined(CONF_ARCH_ENDIAN_BIG)
+		bytes[i] = pValue[i];
+#else
+		bytes[sizeof(int) - i - 1] = pValue[i];
+#endif
+	}
+}
+
 unsigned bytes_be_to_uint(const unsigned char *bytes)
 {
-	return (bytes[0]<<24) | (bytes[1]<<16) | (bytes[2]<<8) | bytes[3];
+	return ((bytes[0] & 0xffu) << 24u) | ((bytes[1] & 0xffu) << 16u) | ((bytes[2] & 0xffu) << 8u) | (bytes[3] & 0xffu);
 }
 
 void uint_to_bytes_be(unsigned char *bytes, unsigned value)
 {
-	bytes[0] = (value>>24)&0xff;
-	bytes[1] = (value>>16)&0xff;
-	bytes[2] = (value>>8)&0xff;
-	bytes[3] = value&0xff;
+	bytes[0] = (value >> 24u) & 0xffu;
+	bytes[1] = (value >> 16u) & 0xffu;
+	bytes[2] = (value >> 8u) & 0xffu;
+	bytes[3] = value & 0xffu;
 }
+
 
 #if defined(__cplusplus)
 }

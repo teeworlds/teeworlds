@@ -20,11 +20,11 @@ public:
 		ACCESS_LEVEL_ADMIN=0,
 		ACCESS_LEVEL_MOD,
 
-		TEMPCMD_NAME_LENGTH=32,
-		TEMPCMD_HELP_LENGTH=96,
+		TEMPCMD_NAME_LENGTH=48,
+		TEMPCMD_HELP_LENGTH=128,
 		TEMPCMD_PARAMS_LENGTH=96,
 
-		TEMPMAP_NAME_LENGTH = 32,
+		TEMPMAP_NAME_LENGTH = 128,
 
 		MAX_PRINT_CB=4,
 	};
@@ -68,7 +68,7 @@ public:
 	typedef void (*FCommandCallback)(IResult *pResult, void *pUserData);
 	typedef void (*FChainCommandCallback)(IResult *pResult, void *pUserData, FCommandCallback pfnCallback, void *pCallbackUserData);
 
-	static void EmptyPossibleCommandCallback(int Index, const char *pCmd, void *pUser) {};
+	static void EmptyPossibleCommandCallback(int Index, const char *pCmd, void *pUser) {}
 
 	virtual void Init() = 0;
 	virtual const CCommandInfo *FirstCommandInfo(int AccessLevel, int Flagmask) const = 0;

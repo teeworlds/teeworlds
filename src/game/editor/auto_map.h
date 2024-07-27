@@ -1,10 +1,12 @@
+/* (c) Magnus Auvinen. See licence.txt in the root of the distribution for more information. */
+/* If you are missing that file, acquire a complete release at teeworlds.com.                */
 #ifndef GAME_EDITOR_AUTO_MAP_H
 #define GAME_EDITOR_AUTO_MAP_H
 
-#include <base/tl/array.h>
 #include <base/vmath.h>
+#include <base/tl/array.h>
 
-#include <engine/external/json-parser/json.h>
+#include <engine/shared/jsonparser.h>
 
 typedef struct
 {
@@ -28,7 +30,7 @@ public:
 	};
 
 	IAutoMapper(class CEditor *pEditor, int Type) : m_pEditor(pEditor), m_Type(Type) {}
-	virtual ~IAutoMapper() {};
+	virtual ~IAutoMapper() {}
 	virtual void Load(const json_value &rElement) = 0;
 	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, RECTi Area) {}
 	virtual void Proceed(class CLayerTiles *pLayer, int ConfigID, int Ammount) {} // for convenience purposes

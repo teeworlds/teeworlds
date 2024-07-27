@@ -7,7 +7,7 @@
 #include <engine/graphics.h>
 #include <engine/storage.h>
 #include <engine/textrender.h>
-#include <engine/external/json-parser/json.h>
+#include <engine/shared/jsonparser.h>
 #include <engine/shared/config.h>
 
 #include "menus.h"
@@ -16,29 +16,11 @@
 
 void CCountryFlags::LoadCountryflagsIndexfile()
 {
-	// read file data into buffer
-	const char *pFilename = "countryflags/index.json";
-	IOHANDLE File = Storage()->OpenFile(pFilename, IOFLAG_READ, IStorage::TYPE_ALL);
-	if(!File)
-	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", "couldn't open index file");
-		return;
-	}
-	int FileSize = (int)io_length(File);
-	char *pFileData = (char *)mem_alloc(FileSize, 1);
-	io_read(File, pFileData, FileSize);
-	io_close(File);
-
-	// parse json data
-	json_settings JsonSettings;
-	mem_zero(&JsonSettings, sizeof(JsonSettings));
-	char aError[256];
-	json_value *pJsonData = json_parse_ex(&JsonSettings, pFileData, FileSize, aError);
-	mem_free(pFileData);
-
+	CJsonParser JsonParser;
+	const json_value *pJsonData = JsonParser.ParseFile("countryflags/index.json", Storage());
 	if(pJsonData == 0)
 	{
-		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, pFilename, aError);
+		Console()->Print(IConsole::OUTPUT_LEVEL_ADDINFO, "countryflags", JsonParser.Error());
 		return;
 	}
 
@@ -108,7 +90,6 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 	}
 
 	// clean up
-	json_value_free(pJsonData);
 	m_aCountryFlags.sort_range();
 
 	// find index of default item
@@ -127,7 +108,7 @@ void CCountryFlags::LoadCountryflagsIndexfile()
 	else
 		mem_zero(m_CodeIndexLUT, sizeof(m_CodeIndexLUT));
 	for(int i = 0; i < m_aCountryFlags.size(); ++i)
-		m_CodeIndexLUT[max(0, (m_aCountryFlags[i].m_CountryCode-CODE_LB)%CODE_RANGE)] = i;
+		m_CodeIndexLUT[maximum(0, (m_aCountryFlags[i].m_CountryCode-CODE_LB)%CODE_RANGE)] = i;
 }
 
 int CCountryFlags::GetInitAmount() const
@@ -159,7 +140,7 @@ int CCountryFlags::Num() const
 
 const CCountryFlags::CCountryFlag *CCountryFlags::GetByCountryCode(int CountryCode) const
 {
-	return GetByIndex(m_CodeIndexLUT[max(0, (CountryCode-CODE_LB)%CODE_RANGE)]);
+	return GetByIndex(m_CodeIndexLUT[maximum(0, (CountryCode-CODE_LB)%CODE_RANGE)]);
 }
 
 const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index, bool SkipBlocked) const
@@ -171,7 +152,7 @@ const CCountryFlags::CCountryFlag *CCountryFlags::GetByIndex(int Index, bool Ski
 				if(!Index--)
 					return &m_aCountryFlags[i];
 	}
-	return &m_aCountryFlags[max(0, Index%m_aCountryFlags.size())];
+	return &m_aCountryFlags[maximum(0, Index%m_aCountryFlags.size())];
 }
 
 void CCountryFlags::Render(int CountryCode, const vec4 *pColor, float x, float y, float w, float h, bool AllowBlocked)

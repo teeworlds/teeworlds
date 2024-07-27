@@ -8,7 +8,7 @@
 void CHeap::NewChunk()
 {
 	// allocate memory
-	char *pMem = (char*)mem_alloc(sizeof(CChunk)+CHUNK_SIZE, 1);
+	char *pMem = (char*)mem_alloc(sizeof(CChunk)+CHUNK_SIZE);
 	if(!pMem)
 		return;
 
@@ -83,5 +83,13 @@ void *CHeap::Allocate(unsigned int Size)
 		pMem = (char *)AllocateFromChunk(Size);
 	}
 
+	return pMem;
+}
+
+const char *CHeap::StoreString(const char *pSrc)
+{
+	const int Size = str_length(pSrc) + 1;
+	char *pMem = static_cast<char *>(Allocate(Size));
+	str_copy(pMem, pSrc, Size);
 	return pMem;
 }

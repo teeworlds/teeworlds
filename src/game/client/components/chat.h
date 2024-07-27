@@ -11,14 +11,14 @@
 
 class CChat : public CComponent
 {
-	CLineInput m_Input;
-
 	enum
 	{
 		MAX_LINES = 250,
 		MAX_CHAT_PAGES = 10,
 		MAX_LINE_LENGTH = 512,
 	};
+
+	CLineInputBuffered<static_cast<int>(MAX_LINE_LENGTH)> m_Input;
 
 	struct CLine
 	{
@@ -39,32 +39,34 @@ class CChat : public CComponent
 	// chat sounds
 	enum
 	{
-		CHAT_SERVER=0,
+		CHAT_SERVER = 0,
 		CHAT_HIGHLIGHT,
 		CHAT_CLIENT,
 		CHAT_NUM,
 	};
+	int GetChatSound(int ChatType);
 
 	int m_Mode;
 	int m_WhisperTarget;
 	int m_LastWhisperFrom;
 	bool m_Show;
 	int m_BacklogPage;
-	bool m_InputUpdate;
-	int m_ChatStringOffset;
-	int m_OldChatStringLength;
 	int m_CompletionChosen;
 	int m_CompletionFav;
 	char m_aCompletionBuffer[256];
 	int m_PlaceholderOffset;
 	int m_PlaceholderLength;
-	bool m_ReverseCompletion;
 	bool m_FirstMap;
 	float m_CurrentLineWidth;
 
 	int m_ChatBufferMode;
-	char m_ChatBuffer[MAX_LINE_LENGTH];
-	char m_ChatCmdBuffer[1024];
+	char m_aChatBuffer[MAX_LINE_LENGTH];
+	char m_aChatCmdBuffer[1024];
+
+	void ClearInput();
+	void ClearChatBuffer();
+
+	bool IsClientIgnored(int ClientID);
 
 	struct CHistoryEntry
 	{
@@ -77,8 +79,6 @@ class CChat : public CComponent
 	int64 m_LastChatSend;
 	int64 m_aLastSoundPlayed[CHAT_NUM];
 
-	typedef void (*COMMAND_CALLBACK)(CChat *pChatData, const char *pArgs);
-
 	// chat commands
 	bool m_IgnoreCommand;
 	int m_SelectedCommand;
@@ -88,8 +88,8 @@ class CChat : public CComponent
 	int m_FilteredCount;
 	int FilterChatCommands(const char *pLine);
 	int GetFirstActiveCommand();
-	int NextActiveCommand(int *Index);
-	int PreviousActiveCommand(int *Index);
+	int NextActiveCommand(int *pIndex);
+	int PreviousActiveCommand(int *pIndex);
 	int GetActiveCountRange(int i, int j);
 
 	CCommandManager m_CommandManager;
@@ -97,6 +97,7 @@ class CChat : public CComponent
 	void HandleCommands(float x, float y, float w);
 	bool ExecuteCommand();
 	bool CompleteCommand();
+	const char *GetModeName(int Mode, int ClientID = 0) const;
 
 	static void Com_All(IConsole::IResult *pResult, void *pContext);
 	static void Com_Team(IConsole::IResult *pResult, void *pContext);
@@ -105,14 +106,13 @@ class CChat : public CComponent
 	static void Com_Mute(IConsole::IResult *pResult, void *pContext);
 	static void Com_Befriend(IConsole::IResult *pResult, void *pContext);
 
-	void ClearInput();
-
 	static void ConSay(IConsole::IResult *pResult, void *pUserData);
 	static void ConSayTeam(IConsole::IResult *pResult, void *pUserData);
 	static void ConSaySelf(IConsole::IResult *pResult, void *pUserData);
 	static void ConWhisper(IConsole::IResult *pResult, void *pUserData);
 	static void ConChat(IConsole::IResult *pResult, void *pUserData);
 	static void ConShowChat(IConsole::IResult *pResult, void *pUserData);
+	static void ConChatCommand(IConsole::IResult *pResult, void *pUserData);
 	static void ServerCommandCallback(IConsole::IResult *pResult, void *pContext);
 
 public:
@@ -126,10 +126,9 @@ public:
 
 	bool IsActive() const { return m_Mode != CHAT_NONE; }
 	void AddLine(const char *pLine, int ClientID = SERVER_MSG, int Mode = CHAT_NONE, int TargetID = -1);
-	void EnableMode(int Mode, const char* pText = NULL);
-	void Say(int Mode, const char *pLine);
-	void ClearChatBuffer();
-	const char* GetCommandName(int Mode) const;
+	void Disable();
+	void EnableMode(int Mode, const char *pText = 0x0);
+	void SendChat(int Mode, const char *pLine);
 
 	virtual void OnInit();
 	virtual void OnReset();

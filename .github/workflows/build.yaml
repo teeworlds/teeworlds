@@ -6,33 +6,32 @@ jobs:
   build-cmake:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-16.04]
+        os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-20.04]
         include:
         - os: ubuntu-latest
-          cmake-args: -G "Unix Makefiles"
-          build-args: --parallel
-          package-file: teeworlds-*-linux_x86_64.tar.xz
+          cmake-args: -G Ninja
+          package-file: "*-linux_x86_64.tar.xz"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
-        - os: ubuntu-16.04
+        - os: ubuntu-20.04
           cmake-path: /usr/bin/
-          cmake-args: -G "Unix Makefiles"
-          package-file: teeworlds-*-linux_x86_64.tar.xz
+          cmake-args: -G Ninja
+          package-file: "*-linux_x86_64.tar.xz"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: macOS-latest
-          cmake-args: -G "Unix Makefiles"
-          build-args: --parallel
-          package-file: teeworlds-*-osx.dmg
+          cmake-args: -G Ninja
+          package-file: "*-macos.dmg"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: windows-latest
-          cmake-args: -G "Visual Studio 16 2019" -A x64
-          package-file: teeworlds-*-win64.zip
+          cmake-args: -A x64
+          package-file: "*-win64.zip"
           env:
             CFLAGS: /WX
             CXXFLAGS: /WX
@@ -47,13 +46,17 @@ jobs:
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update -y
-        sudo apt-get install pkg-config cmake libfreetype6-dev libsdl2-dev -y
+        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev -y
 
     - name: Prepare MacOS
       if: contains(matrix.os, 'macOS')
       run: |
-        brew update
-        brew install pkg-config sdl2
+        brew update || true
+        brew install pkg-config sdl2 python3 ninja || true
+        # --overwrite for:  Target /usr/local/bin/2to3 already exists.
+        brew link --overwrite python@3.12
+        brew upgrade freetype
+        sudo rm -rf /Library/Developer/CommandLineTools
 
     - name: Build in debug mode
       env: ${{ matrix.env }}
@@ -67,6 +70,10 @@ jobs:
       run: |
         cd debug
         ${{ matrix.cmake-path }}cmake --build . --config Debug ${{ matrix.build-args }} --target run_tests
+    - name: Run debug server
+      env: ${{ matrix.env }}
+      run: |
+        cd debug
         ./teeworlds_srv shutdown
 
     - name: Build in release mode
@@ -80,6 +87,10 @@ jobs:
       run: |
         cd release
         ${{ matrix.cmake-path }}cmake --build . --config Release ${{ matrix.build-args }} --target run_tests
+    - name: Run release server
+      env: ${{ matrix.env }}
+      run: |
+        cd release
         ./teeworlds_srv shutdown
 
     - name: Package
@@ -98,6 +109,7 @@ jobs:
   build-bam:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
 
@@ -110,7 +122,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: matricks/bam
-        ref: 07fbb5543c692f6b9a7f09e48c64e2368349a3a8
+        ref: 8cd08744c37666830d439ab54016c9d228c63b68
         path: ./bam
 
     - name: Prepare Linux
@@ -148,4 +160,4 @@ jobs:
     - name: Create MacOS app using make_release.py
       if: contains(matrix.os, 'macOS')
       run: |
-        sudo python3 scripts/make_release.py master osx
+        sudo python3 scripts/make_release.py master macos
