@@ -122,7 +122,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: matricks/bam
-        ref: 8cd08744c37666830d439ab54016c9d228c63b68
+        ref: 657d1a0b47d1210b6d10bea12fdd28938f175d25
         path: ./bam
 
     - name: Prepare Linux
