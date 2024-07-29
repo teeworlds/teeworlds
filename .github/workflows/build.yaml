@@ -151,7 +151,8 @@ jobs:
       if: contains(matrix.os, 'macOS')
       run: |
         otool -L ./bam/bam
-        gdb -ex='set confirm off' -ex='set pagination off' -ex=run -ex=bt -ex=quit ./bam/bam conf=debug all
+        sudo dtruss ./bam/bam conf=debug all
+        # gdb -ex='set confirm off' -ex='set pagination off' -ex=run -ex=bt -ex=quit ./bam/bam conf=debug all
 
     - name: Build in debug mode
       run: ./bam/bam conf=debug all
