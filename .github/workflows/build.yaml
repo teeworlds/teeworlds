@@ -57,6 +57,7 @@ jobs:
         brew link --overwrite python@3.12
         brew upgrade freetype
         sudo rm -rf /Library/Developer/CommandLineTools
+        brew install gdb
 
     - name: Build in debug mode
       env: ${{ matrix.env }}
