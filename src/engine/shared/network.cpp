@@ -382,12 +382,12 @@ void CNetBase::SendControlMsgWithToken(const NETADDR *pAddr, TOKEN Token, int Ac
 
 unsigned char *CNetChunkHeader::Pack(unsigned char *pData)
 {
-	pData[0] = ((m_Flags&0x03)<<6) | ((m_Size>>6)&0x3F);
-	pData[1] = (m_Size&0x3F);
+	pData[0] = ((m_Flags&0b00000011)<<6) | ((m_Size>>6)&0b00111111);
+	pData[1] = (m_Size&0b00111111);
 	if(m_Flags&NET_CHUNKFLAG_VITAL)
 	{
-		pData[1] |= (m_Sequence>>2)&0xC0;
-		pData[2] = m_Sequence&0xFF;
+		pData[1] |= (m_Sequence>>2)&0b11000000;
+		pData[2] = m_Sequence&0b11111111;
 		return pData + 3;
 	}
 	return pData + 2;
@@ -395,12 +395,12 @@ unsigned char *CNetChunkHeader::Pack(unsigned char *pData)
 
 unsigned char *CNetChunkHeader::Unpack(unsigned char *pData)
 {
-	m_Flags = (pData[0]>>6)&0x03;
-	m_Size = ((pData[0]&0x3F)<<6) | (pData[1]&0x3F);
+	m_Flags = (pData[0]>>6)&0b00000011;
+	m_Size = ((pData[0]&0b00111111)<<6) | (pData[1]&0b00111111);
 	m_Sequence = -1;
 	if(m_Flags&NET_CHUNKFLAG_VITAL)
 	{
-		m_Sequence = ((pData[1]&0xC0)<<2) | pData[2];
+		m_Sequence = ((pData[1]&0b11000000)<<2) | pData[2];
 		return pData + 3;
 	}
 	return pData + 2;
