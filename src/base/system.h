@@ -329,7 +329,7 @@ int io_seek(IOHANDLE io, int offset, int origin);
 		io - Handle to the file.
 
 	Returns:
-		Returns the current position. -1L if an error occured.
+		Returns the current position. -1L if an error occurred.
 */
 long int io_tell(IOHANDLE io);
 
@@ -341,7 +341,7 @@ long int io_tell(IOHANDLE io);
 		io - Handle to the file.
 
 	Returns:
-		Returns the total size. -1L if an error occured.
+		Returns the total size. -1L if an error occurred.
 */
 long int io_length(IOHANDLE io);
 
@@ -399,7 +399,7 @@ IOHANDLE io_stdout();
 */
 IOHANDLE io_stderr();
 
-/* Group: Asychronous I/O */
+/* Group: Asynchronous I/O */
 
 typedef struct ASYNCIO ASYNCIO;
 /*
@@ -768,7 +768,7 @@ int net_init();
 /*
 	Function: net_host_lookup
 		Does a hostname lookup by name and fills out the passed
-		NETADDR struct with the recieved details.
+		NETADDR struct with the received details.
 
 	Returns:
 		0 on success.
@@ -792,7 +792,7 @@ int net_addr_comp(const NETADDR *a, const NETADDR *b, int check_port);
 
 /*
 	Function: net_addr_str
-		Turns a network address into a representive string.
+		Turns a network address into a representative string.
 
 	Parameters:
 		addr - Address to turn into a string.
@@ -862,7 +862,7 @@ int net_udp_send(NETSOCKET sock, const NETADDR *addr, const void *data, int size
 		maxsize - Maximum size to receive.
 
 	Returns:
-		On success it returns the number of bytes recived. Returns -1
+		On success it returns the number of bytes received. Returns -1
 		on error.
 */
 int net_udp_recv(NETSOCKET sock, NETADDR *addr, void *data, int maxsize);
@@ -915,7 +915,7 @@ int net_tcp_set_linger(NETSOCKET sock, int state);
 
 	Parameters:
 		sock - Socket to start listen to.
-		backlog - Size of the queue of incomming connections to keep.
+		backlog - Size of the queue of incoming connections to keep.
 
 	Returns:
 		Returns 0 on success.
@@ -1005,7 +1005,7 @@ int net_tcp_close(NETSOCKET sock);
 
 	Remarks:
 		- The strings are treated as zero-terminated strings.
-		- Garantees that dst string will contain zero-termination.
+		- Guarantees that dst string will contain zero-termination.
 */
 void str_append(char *dst, const char *src, int dst_size);
 
@@ -1020,7 +1020,7 @@ void str_append(char *dst, const char *src, int dst_size);
 
 	Remarks:
 		- The strings are treated as zero-terminated strings.
-		- Garantees that dst string will contain zero-termination.
+		- Guarantees that dst string will contain zero-termination.
 */
 void str_copy(char *dst, const char *src, int dst_size);
 
@@ -1037,7 +1037,7 @@ void str_copy(char *dst, const char *src, int dst_size);
 
 	Remarks:
 		- The strings are treated as zero-terminated strings.
-		- Garantees that dst string will contain zero-termination.
+		- Guarantees that dst string will contain zero-termination.
 */
 void str_truncate(char *dst, int dst_size, const char *src, int truncation_len);
 
@@ -1851,7 +1851,7 @@ int str_utf8_decode(const char **ptr);
 		Encode an utf8 character
 
 	Parameters:
-		ptr - Pointer to a buffer that should recive the data. Should be able to hold at least 4 bytes.
+		ptr - Pointer to a buffer that should receive the data. Should be able to hold at least 4 bytes.
 
 	Returns:
 		Number of bytes put into the buffer.
@@ -1889,7 +1889,7 @@ int str_utf8_check(const char *str);
 
 	Remarks:
 		- The strings are treated as zero-terminated strings.
-		- Garantees that dst string will contain zero-termination.
+		- Guarantees that dst string will contain zero-termination.
 */
 void str_utf8_copy_num(char *dst, const char *src, int dst_size, int num);
 
