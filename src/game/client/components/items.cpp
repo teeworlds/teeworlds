@@ -216,8 +216,20 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 
+	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
+	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
+
+	if(pCurrent->m_OuterColor >= 0 && pCurrent->m_InnerColor >= 0)
+	{
+		OuterColor.r = ((float)((pCurrent->m_OuterColor) >> 16 & 0xFF)) / 255;
+		OuterColor.g = ((float)((pCurrent->m_OuterColor) >> 8 & 0xFF)) / 255;
+		OuterColor.b = ((float)(pCurrent->m_OuterColor & 0xFF)) / 255;
+		InnerColor.r = ((float)((pCurrent->m_InnerColor) >> 16 & 0xFF)) / 255;
+		InnerColor.g = ((float)((pCurrent->m_InnerColor) >> 8 & 0xFF)) / 255;
+		InnerColor.b = ((float)(pCurrent->m_InnerColor & 0xFF)) / 255;
+	}
+
 	// do outline
-	const vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
 	const vec2 Outer = vec2(Dir.y, -Dir.x) * (7.0f*RemainingRelativeLifetime);
 	Graphics()->SetColor(OuterColor);
 	IGraphics::CFreeformItem Freeform(
@@ -228,7 +240,6 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
 	// do inner
-	const vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
 	const vec2 Inner = vec2(Dir.y, -Dir.x) * (5.0f*RemainingRelativeLifetime);
 	Graphics()->SetColor(InnerColor);
 	Freeform = IGraphics::CFreeformItem(

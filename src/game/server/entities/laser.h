@@ -5,10 +5,11 @@
 
 #include <game/server/entity.h>
 
+// Set both inner and outer colors or the client ignores them (RGB)
 class CLaser : public CEntity
 {
 public:
-	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner);
+	CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int OuterColor = -1, int InnerColor = -1);
 
 	virtual void Reset();
 	virtual void Tick();
@@ -26,6 +27,8 @@ private:
 	int m_Bounces;
 	int m_EvalTick;
 	int m_Owner;
+	int m_OuterColor;
+	int m_InnerColor;
 };
 
 #endif

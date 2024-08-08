@@ -120,6 +120,9 @@ Objects = [
 		NetIntAny("m_FromY"),
 
 		NetTick("m_StartTick"),
+        
+		NetIntAny("m_OuterColor"),
+		NetIntAny("m_InnerColor"),
 	]),
 
 	NetObject("Pickup", [
