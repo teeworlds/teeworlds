@@ -212,10 +212,6 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 	const float LifetimeMillis = 1000.0f * (Client()->GameTick() - pCurrent->m_StartTick + s_LastIntraTick) / Client()->GameTickSpeed();
 	const float RemainingRelativeLifetime = 1.0f - clamp(LifetimeMillis / m_pClient->m_Tuning.m_LaserBounceDelay, 0.0f, 1.0f);
 
-	Graphics()->BlendNormal();
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-
 	vec4 OuterColor(0.075f, 0.075f, 0.25f, 1.0f);
 	vec4 InnerColor(0.5f, 0.5f, 1.0f, 1.0f);
 
@@ -229,27 +225,33 @@ void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
 		InnerColor.b = ((float)(pCurrent->m_InnerColor & 0xFF)) / 255;
 	}
 
-	// do outline
-	const vec2 Outer = vec2(Dir.y, -Dir.x) * (7.0f*RemainingRelativeLifetime);
-	Graphics()->SetColor(OuterColor);
-	IGraphics::CFreeformItem Freeform(
-			From.x-Outer.x, From.y-Outer.y,
-			From.x+Outer.x, From.y+Outer.y,
-			Pos.x-Outer.x, Pos.y-Outer.y,
-			Pos.x+Outer.x, Pos.y+Outer.y);
-	Graphics()->QuadsDrawFreeform(&Freeform, 1);
+	if(Pos != From)
+	{
+		Graphics()->BlendNormal();
+		Graphics()->TextureClear();
+		Graphics()->QuadsBegin();
+		// do outline
+		const vec2 Outer = vec2(Dir.y, -Dir.x) * (7.0f*RemainingRelativeLifetime);
+		Graphics()->SetColor(OuterColor);
+		IGraphics::CFreeformItem Freeform(
+				From.x-Outer.x, From.y-Outer.y,
+				From.x+Outer.x, From.y+Outer.y,
+				Pos.x-Outer.x, Pos.y-Outer.y,
+				Pos.x+Outer.x, Pos.y+Outer.y);
+		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
-	// do inner
-	const vec2 Inner = vec2(Dir.y, -Dir.x) * (5.0f*RemainingRelativeLifetime);
-	Graphics()->SetColor(InnerColor);
-	Freeform = IGraphics::CFreeformItem(
-			From.x-Inner.x, From.y-Inner.y,
-			From.x+Inner.x, From.y+Inner.y,
-			Pos.x-Inner.x, Pos.y-Inner.y,
-			Pos.x+Inner.x, Pos.y+Inner.y);
-	Graphics()->QuadsDrawFreeform(&Freeform, 1);
+		// do inner
+		const vec2 Inner = vec2(Dir.y, -Dir.x) * (5.0f*RemainingRelativeLifetime);
+		Graphics()->SetColor(InnerColor);
+		Freeform = IGraphics::CFreeformItem(
+				From.x-Inner.x, From.y-Inner.y,
+				From.x+Inner.x, From.y+Inner.y,
+				Pos.x-Inner.x, Pos.y-Inner.y,
+				Pos.x+Inner.x, Pos.y+Inner.y);
+		Graphics()->QuadsDrawFreeform(&Freeform, 1);
 
-	Graphics()->QuadsEnd();
+		Graphics()->QuadsEnd();
+	}
 
 	// render head
 	Graphics()->BlendNormal();
