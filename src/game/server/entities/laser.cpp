@@ -6,7 +6,7 @@
 #include "character.h"
 #include "laser.h"
 
-CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner)
+CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEnergy, int Owner, int OuterColor, int InnerColor)
 : CEntity(pGameWorld, CGameWorld::ENTTYPE_LASER, Pos)
 {
 	m_Owner = Owner;
@@ -14,6 +14,8 @@ CLaser::CLaser(CGameWorld *pGameWorld, vec2 Pos, vec2 Direction, float StartEner
 	m_Dir = Direction;
 	m_Bounces = 0;
 	m_EvalTick = 0;
+	m_OuterColor = OuterColor;
+	m_InnerColor = InnerColor;
 	GameWorld()->InsertEntity(this);
 	DoBounce();
 }
@@ -111,4 +113,6 @@ void CLaser::Snap(int SnappingClient)
 	pObj->m_FromX = round_to_int(m_From.x);
 	pObj->m_FromY = round_to_int(m_From.y);
 	pObj->m_StartTick = m_EvalTick;
+	pObj->m_OuterColor = m_OuterColor;
+	pObj->m_InnerColor = m_InnerColor;
 }
