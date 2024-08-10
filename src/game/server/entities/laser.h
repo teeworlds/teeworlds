@@ -29,6 +29,8 @@ private:
 	int m_Owner;
 	int m_OuterColor;
 	int m_InnerColor;
+
+	enum { MIN_LASEREX_CLIENT_VERSION = 0x0706 }; // TODO 0.8: remove
 };
 
 #endif

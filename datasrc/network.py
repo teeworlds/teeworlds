@@ -120,9 +120,6 @@ Objects = [
 		NetIntAny("m_FromY"),
 
 		NetTick("m_StartTick"),
-        
-		NetIntAny("m_OuterColor"),
-		NetIntAny("m_InnerColor"),
 	]),
 
 	NetObject("Pickup", [
@@ -270,6 +267,19 @@ Objects = [
 		NetIntRange("m_BestTime", -1, 'max_int'),
 		NetIntRange("m_Precision", 0, 3),
 		NetFlag("m_RaceFlags", RaceFlags),
+	]),
+    
+	# TODO 0.8: replace normal laser with this
+	NetObject("LaserEx", [
+		NetIntAny("m_X"),
+		NetIntAny("m_Y"),
+		NetIntAny("m_FromX"),
+		NetIntAny("m_FromY"),
+
+		NetTick("m_StartTick"),
+        
+		NetIntAny("m_OuterColor"),
+		NetIntAny("m_InnerColor"),
 	]),
 ]
 

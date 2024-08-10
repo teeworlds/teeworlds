@@ -104,15 +104,30 @@ void CLaser::Snap(int SnappingClient)
 	if(NetworkClipped(SnappingClient) && NetworkClipped(SnappingClient, m_From))
 		return;
 
-	CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, GetID(), sizeof(CNetObj_Laser)));
-	if(!pObj)
-		return;
+	if(Server()->GetClientVersion(SnappingClient) >= MIN_LASEREX_CLIENT_VERSION) //TODO 0.8: remove this and the else block
+	{
+		CNetObj_LaserEx *pObj = static_cast<CNetObj_LaserEx *>(Server()->SnapNewItem(NETOBJTYPE_LASER, GetID(), sizeof(CNetObj_LaserEx)));
+		if(!pObj)
+			return;
 
-	pObj->m_X = round_to_int(m_Pos.x);
-	pObj->m_Y = round_to_int(m_Pos.y);
-	pObj->m_FromX = round_to_int(m_From.x);
-	pObj->m_FromY = round_to_int(m_From.y);
-	pObj->m_StartTick = m_EvalTick;
-	pObj->m_OuterColor = m_OuterColor;
-	pObj->m_InnerColor = m_InnerColor;
+		pObj->m_X = round_to_int(m_Pos.x);
+		pObj->m_Y = round_to_int(m_Pos.y);
+		pObj->m_FromX = round_to_int(m_From.x);
+		pObj->m_FromY = round_to_int(m_From.y);
+		pObj->m_StartTick = m_EvalTick;
+		pObj->m_OuterColor = m_OuterColor;
+		pObj->m_InnerColor = m_InnerColor;
+	}
+	else
+	{
+		CNetObj_Laser *pObj = static_cast<CNetObj_Laser *>(Server()->SnapNewItem(NETOBJTYPE_LASER, GetID(), sizeof(CNetObj_Laser)));
+		if(!pObj)
+			return;
+
+		pObj->m_X = round_to_int(m_Pos.x);
+		pObj->m_Y = round_to_int(m_Pos.y);
+		pObj->m_FromX = round_to_int(m_From.x);
+		pObj->m_FromY = round_to_int(m_From.y);
+		pObj->m_StartTick = m_EvalTick;
+	}
 }

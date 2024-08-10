@@ -194,7 +194,7 @@ void CItems::RenderFlag(const CNetObj_Flag *pPrev, const CNetObj_Flag *pCurrent,
 }
 
 
-void CItems::RenderLaser(const struct CNetObj_Laser *pCurrent)
+void CItems::RenderLaser(const struct CNetObj_LaserEx *pCurrent)
 {
 	const vec2 Pos = vec2(pCurrent->m_X, pCurrent->m_Y);
 	const vec2 From = vec2(pCurrent->m_FromX, pCurrent->m_FromY);
@@ -295,7 +295,7 @@ void CItems::OnRender()
 		}
 		else if(Item.m_Type == NETOBJTYPE_LASER)
 		{
-			RenderLaser((const CNetObj_Laser *)pData);
+			RenderLaser((const CNetObj_LaserEx *)pData);
 		}
 	}
 
