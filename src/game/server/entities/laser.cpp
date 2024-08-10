@@ -106,7 +106,7 @@ void CLaser::Snap(int SnappingClient)
 
 	if(Server()->GetClientVersion(SnappingClient) >= MIN_LASEREX_CLIENT_VERSION) //TODO 0.8: remove this and the else block
 	{
-		CNetObj_LaserEx *pObj = static_cast<CNetObj_LaserEx *>(Server()->SnapNewItem(NETOBJTYPE_LASER, GetID(), sizeof(CNetObj_LaserEx)));
+		CNetObj_LaserEx *pObj = static_cast<CNetObj_LaserEx *>(Server()->SnapNewItem(NETOBJTYPE_LASEREX, GetID(), sizeof(CNetObj_LaserEx)));
 		if(!pObj)
 			return;
 

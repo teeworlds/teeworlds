@@ -293,7 +293,15 @@ void CItems::OnRender()
 			if(pPrev)
 				RenderPickup((const CNetObj_Pickup *)pPrev, (const CNetObj_Pickup *)pData);
 		}
-		else if(Item.m_Type == NETOBJTYPE_LASER)
+		else if(Item.m_Type == NETOBJTYPE_LASER) // TODO 0.8: remove
+		{
+			CNetObj_LaserEx tmp;
+			mem_copy(&tmp, pData, sizeof(CNetObj_Laser));
+			tmp.m_OuterColor = -1;
+			tmp.m_InnerColor = -1;
+			RenderLaser((const CNetObj_LaserEx *)&tmp);
+		}
+		else if(Item.m_Type == NETOBJTYPE_LASEREX)
 		{
 			RenderLaser((const CNetObj_LaserEx *)pData);
 		}
