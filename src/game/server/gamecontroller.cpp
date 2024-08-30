@@ -634,11 +634,7 @@ void IGameController::StartMatch()
 	m_aTeamscore[TEAM_RED] = 0;
 	m_aTeamscore[TEAM_BLUE] = 0;
 
-	// start countdown if there're enough players, otherwise do warmup till there're
-	if(HasEnoughPlayers())
-		SetGameState(IGS_START_COUNTDOWN);
-	else
-		SetGameState(IGS_WARMUP_GAME, TIMER_INFINITE);
+	OnRoundStart();
 
 	Server()->DemoRecorder_HandleAutoStart();
 	char aBuf[256];
@@ -652,6 +648,11 @@ void IGameController::StartRound()
 
 	++m_RoundCount;
 
+	OnRoundStart();
+}
+
+void IGameController::OnRoundStart()
+{
 	// start countdown if there're enough players, otherwise abort to warmup
 	if(HasEnoughPlayers())
 		SetGameState(IGS_START_COUNTDOWN);
