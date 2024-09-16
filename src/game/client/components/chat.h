@@ -115,6 +115,8 @@ class CChat : public CComponent
 	static void ConChatCommand(IConsole::IResult *pResult, void *pUserData);
 	static void ServerCommandCallback(IConsole::IResult *pResult, void *pContext);
 
+	bool LineShouldHighlight(const char *pLine, const char *pName);
+
 public:
 	// client IDs for special messages
 	enum
