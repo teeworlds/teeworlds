@@ -157,7 +157,7 @@ void IGameController::CheckTeamBalance()
 
 void IGameController::DoTeamBalance()
 {
-	if(!IsTeamplay() || !Config()->m_SvTeambalanceTime || absolute(m_aTeamSize[TEAM_RED]-m_aTeamSize[TEAM_BLUE]) < NUM_TEAMS)
+	if(!IsTeamplay() || absolute(m_aTeamSize[TEAM_RED]-m_aTeamSize[TEAM_BLUE]) < NUM_TEAMS)
 		return;
 
 	GameServer()->Console()->Print(IConsole::OUTPUT_LEVEL_DEBUG, "game", "Balancing teams");
@@ -817,7 +817,7 @@ void IGameController::Tick()
 		case TBALANCE_OK:
 			break;
 		default:
-			if(Server()->Tick() > m_UnbalancedTick+Config()->m_SvTeambalanceTime*Server()->TickSpeed()*60)
+			if(Config()->m_SvTeambalanceTime && Server()->Tick() > m_UnbalancedTick+Config()->m_SvTeambalanceTime*Server()->TickSpeed()*60)
 				DoTeamBalance();
 		}
 	}
