@@ -1071,7 +1071,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	}
 }
 
-void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
+void CServer::GenerateServerInfo(CPacker *pPacker, bool IncludeClientInfo)
 {
 	// count the players
 	int PlayerCount = 0, ClientCount = 0;
@@ -1084,13 +1084,6 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 
 			ClientCount++;
 		}
-	}
-
-	if(Token != -1)
-	{
-		pPacker->Reset();
-		pPacker->AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
-		pPacker->AddInt(Token);
 	}
 
 	pPacker->AddString(GameServer()->Version(), 32);
@@ -1115,7 +1108,7 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 	pPacker->AddInt(ClientCount); // num clients
 	pPacker->AddInt(maximum(ClientCount, Config()->m_SvMaxClients)); // max clients
 
-	if(Token != -1)
+	if(IncludeClientInfo)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -1134,7 +1127,7 @@ void CServer::GenerateServerInfo(CPacker *pPacker, int Token)
 void CServer::SendServerInfo(int ClientID)
 {
 	CMsgPacker Msg(NETMSG_SERVERINFO, true);
-	GenerateServerInfo(&Msg, -1);
+	GenerateServerInfo(&Msg, false);
 	if(ClientID == -1)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
@@ -1172,10 +1165,12 @@ void CServer::PumpNetwork()
 					continue;
 
 				CPacker Packer;
+				Packer.Reset();
+				Packer.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
+				Packer.AddInt(SrvBrwsToken);
+				GenerateServerInfo(&Packer, true);
+
 				CNetChunk Response;
-
-				GenerateServerInfo(&Packer, SrvBrwsToken);
-
 				Response.m_ClientID = -1;
 				Response.m_Address = Packet.m_Address;
 				Response.m_Flags = NETSENDFLAG_CONNLESS;
