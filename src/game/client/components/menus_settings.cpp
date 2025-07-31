@@ -827,7 +827,7 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 	Game.Draw(vec4(0.0f, 0.0f, 0.0f, 0.25f));
 
 	// render client menu background
-	NumOptions = 4;
+	NumOptions = 5;
 	BackgroundHeight = (float)(NumOptions+1)*ButtonHeight+(float)NumOptions*Spacing;
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
@@ -987,6 +987,12 @@ void CMenus::RenderSettingsGeneral(CUIRect MainView)
 
 	if(Config()->m_ClAutoScreenshot)
 		UI()->DoScrollbarOption(&Config()->m_ClAutoScreenshotMax, &Config()->m_ClAutoScreenshotMax, &ClientRight, Localize("Max"), 0, 1000, &CUI::ms_LogarithmicScrollbarScale, CUI::SCROLLBAR_OPTION_INFINITE);
+
+	Client.HSplitTop(Spacing, 0, &Client);
+	Client.HSplitTop(ButtonHeight, &ClientLeft, &Client);
+	ClientLeft.VSplitMid(&ClientLeft, &ClientRight, Spacing);
+	if(DoButton_CheckBox(&Config()->m_ClRefreshServerBrowserOnDisconnect, Localize("Automatically refresh server browser on disconnect"), Config()->m_ClRefreshServerBrowserOnDisconnect, &ClientLeft))
+		Config()->m_ClRefreshServerBrowserOnDisconnect ^= 1;
 
 	MainView.HSplitTop(10.0f, 0, &MainView);
 

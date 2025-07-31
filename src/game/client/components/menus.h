@@ -18,6 +18,7 @@
 #include <game/client/localization.h>
 #include <game/client/ui.h>
 #include <game/client/ui_listbox.h>
+#include <game/client/ui_rect.h>
 #include <game/client/ui_scrollregion.h>
 
 #include "skins.h"
@@ -45,7 +46,7 @@ private:
 	bool DoButton_Menu(CButtonContainer *pButtonContainer, const char *pText, bool Checked, const CUIRect *pRect, const char *pImageName = 0, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f, vec4 ColorHot = vec4(1.0f, 1.0f, 1.0f, 0.75f), bool TextFade = true);
 	bool DoButton_MenuTabTop(CButtonContainer *pButtonContainer, const char *pText, bool Checked, const CUIRect *pRect, float Alpha = 1.0f, float FontAlpha = 1.0f, int Corners = CUIRect::CORNER_ALL, float Rounding = 5.0f, float FontFactor = 0.0f);
 
-	bool DoButton_CheckBox(const void *pID, const char *pText, bool Checked, const CUIRect *pRect, bool Locked = false);
+	bool DoButton_CheckBox(const void *pID, const char *pText, bool Checked, const CUIRect *pRect, bool Locked = false, bool Transparent = false);
 
 	void DoIcon(int ImageId, int SpriteId, const CUIRect *pRect, const vec4 *pColor = 0);
 	bool DoButton_GridHeader(const void *pID, const char *pText, bool Checked, int Align, const CUIRect *pRect, int Corners = CUIRect::CORNER_ALL);
