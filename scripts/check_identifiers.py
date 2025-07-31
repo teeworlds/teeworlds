@@ -2,6 +2,7 @@ import csv
 import sys
 import re
 
+
 def check_name(kind, qualifiers, type, name):
     if kind == "variable":
         return check_variable_name(qualifiers, type, name)
@@ -17,6 +18,7 @@ def check_name(kind, qualifiers, type, name):
             return "must only contain uppercase letters, digits and underscores"
     return None
 
+
 ALLOW = set("""
     dx dy
     fx fy
@@ -28,6 +30,8 @@ ALLOW = set("""
     x0 x1
     y0 y1
 """.split())
+
+
 def check_variable_name(qualifiers, type, name):
     if qualifiers == "" and type == "" and name == "argc":
         return None
@@ -54,9 +58,11 @@ def check_variable_name(qualifiers, type, name):
             return "should start with an uppercase letter"
     return None
 
+
 def main():
     import argparse
-    p = argparse.ArgumentParser(description="Check identifiers (input via stdin in CSV format from extract_identifiers.py) for naming style in Teeworlds code")
+    p = argparse.ArgumentParser(
+        description="Check identifiers (input via stdin in CSV format from extract_identifiers.py) for naming style in Teeworlds code")
     args = p.parse_args()
 
     identifiers = list(csv.DictReader(sys.stdin))
@@ -66,8 +72,10 @@ def main():
         error = check_name(i["kind"], i["qualifiers"], i["type"], i["name"])
         if error:
             unclean = True
-            print("{}:{}:{}: {}: {}".format(i["file"], i["line"], i["column"], i["name"], error))
+            print("{}:{}:{}: {}: {}".format(
+                i["file"], i["line"], i["column"], i["name"], error))
     return unclean
+
 
 if __name__ == "__main__":
     sys.exit(main())
