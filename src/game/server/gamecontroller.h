@@ -165,6 +165,12 @@ public:
 	*/
 	virtual bool OnEntity(int Index, vec2 Pos);
 
+	/*
+		Function: OnRoundStart
+			Called when a new match or round starts.
+	*/
+	virtual void OnRoundStart();
+
 	virtual void OnPlayerConnect(class CPlayer *pPlayer);
 	virtual void OnPlayerDisconnect(class CPlayer *pPlayer);
 	virtual void OnPlayerInfoChange(class CPlayer *pPlayer);
