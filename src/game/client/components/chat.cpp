@@ -566,6 +566,23 @@ void CChat::OnMessage(int MsgType, void *pRawMsg)
 	}
 }
 
+bool CChat::LineShouldHighlight(const char *pLine, const char *pName)
+{
+	const char *pHit = str_find_nocase(pLine, pName);
+
+	while(pHit)
+	{
+		int Length = str_length(pName);
+
+		if(Length > 0 && (pLine == pHit || pHit[-1] == ' ') && (pHit[Length] == 0 || pHit[Length] == ' ' || pHit[Length] == '.' || pHit[Length] == '!' || pHit[Length] == ',' || pHit[Length] == '?' || pHit[Length] == ':'))
+			return true;
+
+		pHit = str_find_nocase(pHit + 1, pName);
+	}
+
+	return false;
+}
+
 bool CChat::IsClientIgnored(int ClientID)
 {
 	return !Config()->m_ClShowsocial
@@ -645,17 +662,9 @@ void CChat::AddLine(const char *pLine, int ClientID, int Mode, int TargetID)
 		// do not highlight our own messages, whispers and system messages
 		if(Mode != CHAT_WHISPER && ClientID >= 0 && ClientID != m_pClient->m_LocalClientID)
 		{
-			const char *pHL = str_find_nocase(pLine, m_pClient->m_aClients[m_pClient->m_LocalClientID].m_aName);
-			if(pHL)
+			Highlighted = LineShouldHighlight(pLine, m_pClient->m_aClients[m_pClient->m_LocalClientID].m_aName);
+			if(Highlighted)
 			{
-				int Length = str_length(m_pClient->m_aClients[m_pClient->m_LocalClientID].m_aName);
-				if((pLine == pHL || pHL[-1] == ' ')) // "" or " " before
-				{
-					if((pHL[Length] == 0 || pHL[Length] == ' ')) // "" or " " after
-						Highlighted = true;
-					if(pHL[Length] == ':' && (pHL[Length+1] == 0 || pHL[Length+1] == ' ')) // ":" or ": " after
-						Highlighted = true;
-				}
 				m_CompletionFav = ClientID;
 			}
 		}
