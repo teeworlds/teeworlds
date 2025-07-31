@@ -373,15 +373,14 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 {
 	CCompletionOptionRenderInfo *pInfo = static_cast<CCompletionOptionRenderInfo *>(pUser);
 
+	vec4 TextColor;
 	if(pInfo->m_EnumCount == pInfo->m_WantedCompletion)
 	{
-		pInfo->m_pSelf->TextRender()->TextColor(0.05f, 0.05f, 0.05f,1);
-		const float BeginX = pInfo->m_pCursor->AdvancePosition().x + pInfo->m_Offset;
-		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
-		CTextBoundingBox Box = pInfo->m_pCursor->BoundingBox();
-		CUIRect Rect = {Box.x - 5 + BeginX, Box.y, Box.w + 8 - BeginX, Box.h};
+		TextColor = vec4(1.0f, 1.0f, 1.0f, 1.0f);
+		const float TextWidth = pInfo->m_pSelf->TextRender()->TextWidth(pInfo->m_pCursor->m_FontSize, pStr, -1);
+		CUIRect Rect = { pInfo->m_pCursor->AdvancePosition().x - 2.0f, pInfo->m_pCursor->AdvancePosition().y, TextWidth + 4.0f, pInfo->m_pCursor->m_FontSize + 4.0f };
 
-		Rect.Draw(vec4(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,0.85f), pInfo->m_pCursor->m_FontSize/3);
+		Rect.Draw(vec4(0.0f, 0.0f, 0.0f, 0.85f), pInfo->m_pCursor->m_FontSize/3);
 
 		// scroll when out of sight
 		const bool MoveLeft = Rect.x - *pInfo->m_pOffsetChange < 0.0f;
@@ -393,21 +392,23 @@ void CGameConsole::PossibleCommandsRenderCallback(int Index, const char *pStr, v
 	}
 	else
 	{
-		const char *pMatchStart = str_find_nocase(pStr, pInfo->m_pCurrentCmd);
-		if(pMatchStart)
-		{
-			pInfo->m_pSelf->TextRender()->TextColor(0.5f,0.5f,0.5f,1);
-			pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, pMatchStart-pStr);
-			pInfo->m_pSelf->TextRender()->TextColor(229.0f/255.0f,185.0f/255.0f,4.0f/255.0f,1);
-			pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pMatchStart, str_length(pInfo->m_pCurrentCmd));
-			pInfo->m_pSelf->TextRender()->TextColor(0.5f,0.5f,0.5f,1);
-			pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pMatchStart+str_length(pInfo->m_pCurrentCmd), -1);
-		}
-		else
-		{
-			pInfo->m_pSelf->TextRender()->TextColor(0.75f,0.75f,0.75f,1);
-			pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
-		}
+		TextColor = vec4(0.75f, 0.75f, 0.75f, 1.0f);
+	}
+
+	const char *pMatchStart = str_find_nocase(pStr, pInfo->m_pCurrentCmd);
+	if(pMatchStart)
+	{
+		pInfo->m_pSelf->TextRender()->TextColor(TextColor);
+		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, pMatchStart-pStr);
+		pInfo->m_pSelf->TextRender()->TextColor(1.0f, 0.8f, 0.0f, 1);
+		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pMatchStart, str_length(pInfo->m_pCurrentCmd));
+		pInfo->m_pSelf->TextRender()->TextColor(TextColor);
+		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pMatchStart + str_length(pInfo->m_pCurrentCmd), -1);
+	}
+	else
+	{
+		pInfo->m_pSelf->TextRender()->TextColor(TextColor);
+		pInfo->m_pSelf->TextRender()->TextDeferred(pInfo->m_pCursor, pStr, -1);
 	}
 
 	pInfo->m_EnumCount++;
@@ -466,44 +467,31 @@ void CGameConsole::OnRender()
 	Graphics()->TextureClear();
 	Graphics()->QuadsBegin();
 	IGraphics::CColorVertex Array[4] = {
-		IGraphics::CColorVertex(0, 0,0,0, 0.5f),
-		IGraphics::CColorVertex(1, 0,0,0, 0.5f),
-		IGraphics::CColorVertex(2, 0,0,0, 0.0f),
-		IGraphics::CColorVertex(3, 0,0,0, 0.0f)};
+		IGraphics::CColorVertex(0, 0, 0, 0, 0.4f),
+		IGraphics::CColorVertex(1, 0, 0, 0, 0.4f),
+		IGraphics::CColorVertex(2, 0, 0, 0, 0.0f),
+		IGraphics::CColorVertex(3, 0, 0, 0, 0.0f)};
 	Graphics()->SetColorVertex(Array, 4);
-	IGraphics::CQuadItem QuadItem(0, ConsoleHeight, Screen.w, 10.0f);
+	// preserve 1.0f space for the border line
+	IGraphics::CQuadItem QuadItem(0, ConsoleHeight + 1.0f, Screen.w, 10.0f);
+	Graphics()->QuadsDrawTL(&QuadItem, 1);
+	Graphics()->QuadsEnd();
+
+	// do border line
+	Graphics()->QuadsBegin();
+	Graphics()->SetColor(0.05f, 0.05f, 0.05f, 0.9f);
+	if(m_ConsoleType == CONSOLETYPE_REMOTE)
+		Graphics()->SetColor(0.15f, 0.05f, 0.05f, 0.9f);
+	QuadItem = IGraphics::CQuadItem(0, ConsoleHeight, Screen.w, 1.0f);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
 	// do background
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BG].m_Id);
 	Graphics()->QuadsBegin();
-	Graphics()->SetColor(0.2f, 0.2f, 0.2f,0.9f);
+	Graphics()->SetColor(0.1f, 0.1f, 0.1f, 0.9f);
 	if(m_ConsoleType == CONSOLETYPE_REMOTE)
-		Graphics()->SetColor(0.4f, 0.2f, 0.2f,0.9f);
-	Graphics()->QuadsSetSubset(0,-ConsoleHeight*0.075f,Screen.w*0.075f*0.5f,0);
+		Graphics()->SetColor(0.25f, 0.1f, 0.1f, 0.9f);
 	QuadItem = IGraphics::CQuadItem(0, 0, Screen.w, ConsoleHeight);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	// do small bar shadow
-	Graphics()->TextureClear();
-	Graphics()->QuadsBegin();
-	Array[0] = IGraphics::CColorVertex(0, 0,0,0, 0.0f);
-	Array[1] = IGraphics::CColorVertex(1, 0,0,0, 0.0f);
-	Array[2] = IGraphics::CColorVertex(2, 0,0,0, 0.25f);
-	Array[3] = IGraphics::CColorVertex(3, 0,0,0, 0.25f);
-	Graphics()->SetColorVertex(Array, 4);
-	QuadItem = IGraphics::CQuadItem(0, ConsoleHeight-20, Screen.w, 10);
-	Graphics()->QuadsDrawTL(&QuadItem, 1);
-	Graphics()->QuadsEnd();
-
-	// do the lower bar
-	Graphics()->TextureSet(g_pData->m_aImages[IMAGE_CONSOLE_BAR].m_Id);
-	Graphics()->QuadsBegin();
-	Graphics()->SetColor(1.0f, 1.0f, 1.0f, 0.9f);
-	Graphics()->QuadsSetSubset(0,0.1f,Screen.w*0.015f,1-0.1f);
-	QuadItem = IGraphics::CQuadItem(0,ConsoleHeight-10.0f,Screen.w,10.0f);
 	Graphics()->QuadsDrawTL(&QuadItem, 1);
 	Graphics()->QuadsEnd();
 
@@ -517,21 +505,24 @@ void CGameConsole::OnRender()
 		float x = 3;
 		float y = ConsoleHeight - RowHeight - 5.0f;
 
+		// Space between the console log and the input cursor
+		float Space = (RowHeight / 3) * 2;
+
 		static CTextCursor s_CompletionOptionsCursor;
 		s_CompletionOptionsCursor.Reset();
-		s_CompletionOptionsCursor.MoveTo(x - pConsole->m_CompletionRenderOffset, y + RowHeight + 2.0f);
+		s_CompletionOptionsCursor.MoveTo(x - pConsole->m_CompletionRenderOffset, y + RowHeight + 2.0f + Space);
 		s_CompletionOptionsCursor.m_FontSize = FontSize;
 		s_CompletionOptionsCursor.m_MaxWidth = -1.0f;
 
 		static CTextCursor s_InfoCursor;
 		s_InfoCursor.Reset();
-		s_InfoCursor.MoveTo(x, y + 2.0f * RowHeight + 4.0f);
+		s_InfoCursor.MoveTo(x, y + 2.0f * RowHeight + 4.0f + Space);
 		s_InfoCursor.m_FontSize = FontSize;
 		s_InfoCursor.m_MaxWidth = -1.0f;
 
 		// render prompt
 		static CTextCursor s_PromptCursor(FontSize);
-		s_PromptCursor.MoveTo(x, y);
+		s_PromptCursor.MoveTo(x, y + Space);
 		const char *pPrompt = "> ";
 		if(m_ConsoleType == CONSOLETYPE_REMOTE)
 		{
@@ -557,7 +548,7 @@ void CGameConsole::OnRender()
 		pInputCursor->m_MaxLines = -1;
 		pInputCursor->m_FontSize = FontSize;
 		pInputCursor->m_MaxWidth = Screen.w - 10.0f - x;
-		pInputCursor->MoveTo(x, y + FontSize * 1.35f);
+		pInputCursor->MoveTo(x, y + FontSize * 1.35f + Space);
 
 		pConsole->m_Input.Activate(CONSOLE); // ensure the input is active
 		pConsole->m_Input.Render(pConsole->m_Input.WasChanged());
