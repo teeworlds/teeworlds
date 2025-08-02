@@ -1360,7 +1360,8 @@ void CGameContext::ConLockTeams(IConsole::IResult *pResult, void *pUserData)
 void CGameContext::ConForceTeamBalance(IConsole::IResult *pResult, void *pUserData)
 {
 	CGameContext *pSelf = (CGameContext *)pUserData;
-	pSelf->m_pController->ForceTeamBalance();
+	if(pSelf->m_pController)
+		pSelf->m_pController->ForceTeamBalance();
 }
 
 void CGameContext::ConAddVote(IConsole::IResult *pResult, void *pUserData)
