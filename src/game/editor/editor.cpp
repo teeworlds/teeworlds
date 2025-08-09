@@ -2868,6 +2868,7 @@ void CEditor::RenderFileDialog()
 	{
 		if(IsDir)	// folder
 		{
+			m_FileDialogFilterInput.Clear();
 			if(str_comp(m_FilteredFileList[m_FilesSelectedIndex]->m_aFilename, "..") == 0)	// parent folder
 			{
 				if(fs_parent_dir(m_pFileDialogPath))
