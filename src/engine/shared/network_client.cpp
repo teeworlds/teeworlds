@@ -74,44 +74,43 @@ int CNetClient::Recv(CNetChunk *pChunk, TOKEN *pResponseToken)
 
 		// TODO: empty the recvinfo
 		NETADDR Addr;
-		int Result = UnpackPacket(&Addr, m_RecvUnpacker.m_aBuffer, &m_RecvUnpacker.m_Data);
+		int Error = UnpackPacket(&Addr, m_RecvUnpacker.m_aBuffer, &m_RecvUnpacker.m_Data);
 		// no more packets for now
-		if(Result > 0)
+		if(Error > 0)
 			break;
+		if(Error)
+			continue;
 
-		if(!Result)
+		if(m_Connection.State() != NET_CONNSTATE_OFFLINE && m_Connection.State() != NET_CONNSTATE_ERROR && net_addr_comp(m_Connection.PeerAddress(), &Addr, true) == 0)
 		{
-			if(m_Connection.State() != NET_CONNSTATE_OFFLINE && m_Connection.State() != NET_CONNSTATE_ERROR && net_addr_comp(m_Connection.PeerAddress(), &Addr, true) == 0)
+			if(m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
 			{
-				if(m_Connection.Feed(&m_RecvUnpacker.m_Data, &Addr))
-				{
-					if(!(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS))
-						m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
-				}
+				if(!(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS))
+					m_RecvUnpacker.Start(&Addr, &m_Connection, 0);
 			}
-			else
+		}
+		else
+		{
+			int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data);
+			if(!Accept)
+				continue;
+
+			if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
 			{
-				int Accept = m_TokenManager.ProcessMessage(&Addr, &m_RecvUnpacker.m_Data);
-				if(!Accept)
-					continue;
+				if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
+					m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, NET_TOKENFLAG_ALLOWBROADCAST|NET_TOKENFLAG_RESPONSEONLY);
+			}
+			else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS && Accept != -1)
+			{
+				pChunk->m_Flags = NETSENDFLAG_CONNLESS;
+				pChunk->m_ClientID = -1;
+				pChunk->m_Address = Addr;
+				pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
+				pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
 
-				if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONTROL)
-				{
-					if(m_RecvUnpacker.m_Data.m_aChunkData[0] == NET_CTRLMSG_TOKEN)
-						m_TokenCache.AddToken(&Addr, m_RecvUnpacker.m_Data.m_ResponseToken, NET_TOKENFLAG_ALLOWBROADCAST|NET_TOKENFLAG_RESPONSEONLY);
-				}
-				else if(m_RecvUnpacker.m_Data.m_Flags&NET_PACKETFLAG_CONNLESS && Accept != -1)
-				{
-					pChunk->m_Flags = NETSENDFLAG_CONNLESS;
-					pChunk->m_ClientID = -1;
-					pChunk->m_Address = Addr;
-					pChunk->m_DataSize = m_RecvUnpacker.m_Data.m_DataSize;
-					pChunk->m_pData = m_RecvUnpacker.m_Data.m_aChunkData;
-
-					if(pResponseToken)
-						*pResponseToken = m_RecvUnpacker.m_Data.m_ResponseToken;
-					return 1;
-				}
+				if(pResponseToken)
+					*pResponseToken = m_RecvUnpacker.m_Data.m_ResponseToken;
+				return 1;
 			}
 		}
 	}
@@ -202,4 +201,3 @@ const char *CNetClient::ErrorString() const
 {
 	return m_Connection.ErrorString();
 }
-
