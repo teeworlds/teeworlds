@@ -52,11 +52,12 @@ jobs:
       if: contains(matrix.os, 'macOS')
       run: |
         brew update || true
-        brew install pkg-config sdl2 python3 ninja || true
+        brew install pkg-config sdl2 python3 ninja gdb || true
         # --overwrite for:  Target /usr/local/bin/2to3 already exists.
         brew link --overwrite python@3.12
         brew upgrade freetype
         sudo rm -rf /Library/Developer/CommandLineTools
+        brew install gdb
 
     - name: Build in debug mode
       env: ${{ matrix.env }}
@@ -122,7 +123,7 @@ jobs:
       uses: actions/checkout@v2
       with:
         repository: matricks/bam
-        ref: 8cd08744c37666830d439ab54016c9d228c63b68
+        ref: 657d1a0b47d1210b6d10bea12fdd28938f175d25
         path: ./bam
 
     - name: Prepare Linux
@@ -146,6 +147,13 @@ jobs:
       run: |
         cd bam
         ./make_win64_msvc.bat
+
+    - name: Build in debug mode (macos gdb)
+      if: contains(matrix.os, 'macOS')
+      run: |
+        otool -L ./bam/bam
+        sudo dtruss ./bam/bam conf=debug all
+        # gdb -ex='set confirm off' -ex='set pagination off' -ex=run -ex=bt -ex=quit ./bam/bam conf=debug all
 
     - name: Build in debug mode
       run: ./bam/bam conf=debug all

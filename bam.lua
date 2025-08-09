@@ -121,8 +121,11 @@ function GenerateMacOSSettings(settings, conf, arch, compiler)
 	elseif arch == "ppc64" then
 		settings.cc.flags:Add("-arch ppc64")
 		settings.link.flags:Add("-arch ppc64")
+	elseif arch == "arm64" then
+		settings.cc.flags:Add("-arch arm64")
+		settings.link.flags:Add("-arch arm64")
 	else
-		print("Unknown Architecture '" .. arch .. "'. Supported: x86, x86_64, ppc, ppc64")
+		print("Unknown Architecture '" .. arch .. "'. Supported: x86, x86_64, ppc, ppc64, arm64")
 		os.exit(1)
 	end
 
@@ -185,8 +188,10 @@ function GenerateLinuxSettings(settings, conf, arch, compiler)
 		settings.link.flags:Add("-m64")
 	elseif arch == "armv7l" then
 		-- arm 32 bit
+	elseif arch == "arm64" then
+		-- arm 64 bit
 	else
-		print("Unknown Architecture '" .. arch .. "'. Supported: x86, x86_64")
+		print("Unknown Architecture '" .. arch .. "'. Supported: x86, x86_64, armv7l, arm64")
 		os.exit(1)
 	end
 	settings.link.libs:Add("pthread")
@@ -504,7 +509,7 @@ if ScriptArgs['arch'] then
 else
 	if arch == "ia32" then
 		archs = {"x86"}
-	elseif arch == "ia64" or arch == "amd64" or arch == "arm64" then
+	elseif arch == "ia64" or arch == "amd64" then
 		archs = {"x86_64"}
 	else
 		archs = {arch}
