@@ -29,7 +29,7 @@ public:
 	CDemoRecorder(class CSnapshotDelta *pSnapshotDelta);
 	void Init(class IConsole *pConsole, class IStorage *pStorage);
 
-	int Start(const char *pFilename, const char *pNetversion, const char *pMap, SHA256_DIGEST MapSha256, unsigned MapCrc, const char *pType);
+	int Start(const char *pFilename, bool WithTimestamp, const char *pNetversion, const char *pMap, SHA256_DIGEST MapSha256, unsigned MapCrc, const char *pType);
 	int Stop();
 	void AddDemoMarker();
 

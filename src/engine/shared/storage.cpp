@@ -427,7 +427,8 @@ public:
 		const SHA256_DIGEST *m_pWantedSha256;
 		unsigned m_WantedCrc;
 		unsigned m_WantedSize;
-		bool m_CheckHashAndSize;
+		bool m_CheckHash;
+		bool m_CheckSize;
 	};
 
 	static int FindFileCallback(const char *pName, int IsDir, int Type, void *pUser)
@@ -452,13 +453,15 @@ public:
 			// found the file
 			str_format(Data.m_pBuffer, Data.m_BufferSize, "%s/%s", Data.m_pPath, Data.m_pFilename);
 
-			if(Data.m_CheckHashAndSize)
+			if(Data.m_CheckHash || Data.m_CheckSize)
 			{
 				// check crc and size
 				SHA256_DIGEST Sha256;
 				unsigned Crc = 0;
 				unsigned Size = 0;
-				if(!Data.m_pStorage->GetHashAndSize(Data.m_pBuffer, Type, &Sha256, &Crc, &Size) || (Data.m_pWantedSha256 && Sha256 != *Data.m_pWantedSha256) || Crc != Data.m_WantedCrc || Size != Data.m_WantedSize)
+				if(!Data.m_pStorage->GetHashAndSize(Data.m_pBuffer, Type, &Sha256, &Crc, &Size)
+					|| (Data.m_CheckHash && ((Data.m_pWantedSha256 && Sha256 != *Data.m_pWantedSha256) || Crc != Data.m_WantedCrc))
+					|| (Data.m_CheckSize && Size != Data.m_WantedSize))
 				{
 					Data.m_pBuffer[0] = 0;
 					return 0;
@@ -510,7 +513,24 @@ public:
 		Data.m_pWantedSha256 = 0;
 		Data.m_WantedCrc = 0;
 		Data.m_WantedSize = 0;
-		Data.m_CheckHashAndSize = false;
+		Data.m_CheckHash = false;
+		Data.m_CheckSize = false;
+		return FindFileImpl(Type, &Data);
+	}
+
+	virtual bool FindFile(const char *pFilename, const char *pPath, int Type, char *pBuffer, int BufferSize, const SHA256_DIGEST *pWantedSha256, unsigned WantedCrc)
+	{
+		CFindCBData Data;
+		Data.m_pStorage = this;
+		Data.m_pFilename = pFilename;
+		Data.m_pPath = pPath;
+		Data.m_pBuffer = pBuffer;
+		Data.m_BufferSize = BufferSize;
+		Data.m_pWantedSha256 = pWantedSha256;
+		Data.m_WantedCrc = WantedCrc;
+		Data.m_WantedSize = 0;
+		Data.m_CheckHash = true;
+		Data.m_CheckSize = false;
 		return FindFileImpl(Type, &Data);
 	}
 
@@ -525,7 +545,8 @@ public:
 		Data.m_pWantedSha256 = pWantedSha256;
 		Data.m_WantedCrc = WantedCrc;
 		Data.m_WantedSize = WantedSize;
-		Data.m_CheckHashAndSize = true;
+		Data.m_CheckHash = true;
+		Data.m_CheckSize = true;
 		return FindFileImpl(Type, &Data);
 	}
 
