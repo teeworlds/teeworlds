@@ -217,7 +217,7 @@ void CSpectator::OnRender()
 	if(m_pClient->m_LocalClientID == -1 || m_pClient->m_aClients[m_pClient->m_LocalClientID].m_Team == TEAM_SPECTATORS)
 	{
 		CUIRect FreeViewRect;
-		FreeViewRect.x = CenterOffset.x - 280.0f;
+		FreeViewRect.x = CenterOffset.x - 280.0f * ScaleX;
 		FreeViewRect.y = CenterOffset.y - 280.0f;
 		FreeViewRect.w = 270.0f;
 		FreeViewRect.h = 60.0f;
