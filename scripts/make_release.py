@@ -98,6 +98,8 @@ package_dir = package
 source_package_dir = "build/"
 if platform == 'win32' or platform == 'linux_x86':
 	source_package_dir += "x86/release/"
+elif platform == 'macos':
+	source_package_dir += "arm64/release/"
 else:
 	source_package_dir += "x86_64/release/"
 
@@ -179,12 +181,12 @@ if use_bundle:
 	copy_tree(maps_dir, clientbundle_resource_dir+"/data/maps")
 	shutil.copy("other/icons/Teeworlds.icns", clientbundle_resource_dir)
 	shutil.copy(source_package_dir+name+exe_ext, clientbundle_bin_dir)
-	shell("install_name_tool -change /usr/local/opt/freetype/lib/libfreetype.6.dylib @executable_path/../Frameworks/libfreetype.6.dylib " + binary_path)
-	shell("install_name_tool -change /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib @executable_path/../Frameworks/libSDL2-2.0.0.dylib  " + binary_path)
-	shell("cp /usr/local/opt/freetype/lib/libfreetype.6.dylib " + clientbundle_framework_dir)
-	shell("cp /usr/local/opt/libpng/lib/libpng16.16.dylib " + clientbundle_framework_dir)
-	shell("cp /usr/local/opt/sdl2/lib/libSDL2-2.0.0.dylib " + clientbundle_framework_dir)
-	shell("install_name_tool -change /usr/local/opt/libpng/lib/libpng16.16.dylib @executable_path/../Frameworks/libpng16.16.dylib " + freetypelib_path)
+	shell("install_name_tool -change /opt/homebrew/opt/freetype/lib/libfreetype.6.dylib @executable_path/../Frameworks/libfreetype.6.dylib " + binary_path)
+	shell("install_name_tool -change /opt/homebrew/opt/sdl2/lib/libSDL2-2.0.0.dylib @executable_path/../Frameworks/libSDL2-2.0.0.dylib  " + binary_path)
+	shell("cp /opt/homebrew/opt/freetype/lib/libfreetype.6.dylib " + clientbundle_framework_dir)
+	shell("cp /opt/homebrew/opt/freetype/lib/libfreetype.6.dylib " + clientbundle_framework_dir)
+	shell("cp /opt/homebrew/opt/sdl2/lib/libSDL2-2.0.0.dylib " + clientbundle_framework_dir)
+	shell("install_name_tool -change /opt/homebrew/opt/libpng/lib/libpng16.16.dylib @executable_path/../Frameworks/libpng16.16.dylib " + freetypelib_path)
 	open(os.path.join(clientbundle_content_dir, "Info.plist"), "w").write("""
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">

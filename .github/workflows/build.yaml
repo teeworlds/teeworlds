@@ -8,37 +8,41 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-20.04]
+        os: [ubuntu-latest, macOS-latest, windows-latest, ubuntu-22.04]
         include:
         - os: ubuntu-latest
           cmake-args: -G Ninja
           package-file: "*-linux_x86_64.tar.xz"
+          archtitecture: "x86_64"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
-        - os: ubuntu-20.04
+        - os: ubuntu-22.04
           cmake-path: /usr/bin/
           cmake-args: -G Ninja
           package-file: "*-linux_x86_64.tar.xz"
+          archtitecture: "x86_64"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: macOS-latest
           cmake-args: -G Ninja
           package-file: "*-macos.dmg"
+          archtitecture: "arm64"
           env:
             CFLAGS: -Wdeclaration-after-statement -Werror
             CXXFLAGS: -Werror
         - os: windows-latest
           cmake-args: -A x64
           package-file: "*-win64.zip"
+          archtitecture: "x86_64"
           env:
             CFLAGS: /WX
             CXXFLAGS: /WX
             LDFLAGS: /WX
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -46,7 +50,7 @@ jobs:
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update -y
-        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev -y
+        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev libgl1-mesa-dev -y
 
     - name: Prepare MacOS
       if: contains(matrix.os, 'macOS')
@@ -101,7 +105,7 @@ jobs:
         mv ${{ matrix.package-file }} artifacts
 
     - name: Upload Artifacts
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v4
       with:
         name: teeworlds-${{ matrix.os }}
         path: release/artifacts
@@ -112,24 +116,31 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macOS-latest, windows-latest]
+        include:
+        - os: ubuntu-latest
+          archtitecture: "x86_64"
+        - os: macOS-latest
+          archtitecture: "arm64"
+        - os: windows-latest
+          archtitecture: "x86_64"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
     - name: Checkout bam
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
       with:
         repository: matricks/bam
-        ref: 8cd08744c37666830d439ab54016c9d228c63b68
+        ref: a44a2c7dc16caae7ac457f17dfd14a87e7059c57
         path: ./bam
 
     - name: Prepare Linux
       if: contains(matrix.os, 'ubuntu')
       run: |
         sudo apt-get update -y
-        sudo apt-get install libfreetype6-dev libsdl2-dev -y
+        sudo apt-get install libfreetype6-dev libsdl2-dev libgl1-mesa-dev -y
         cd bam
         ./make_unix.sh
 
@@ -150,12 +161,12 @@ jobs:
     - name: Build in debug mode
       run: ./bam/bam conf=debug all
     - name: Test debug
-      run: ./build/x86_64/debug/teeworlds_srv shutdown
+      run: ./build/${{ matrix.archtitecture }}/debug/teeworlds_srv shutdown
 
     - name: Build in release mode
       run: ./bam/bam conf=release all
     - name: Test release
-      run: ./build/x86_64/release/teeworlds_srv shutdown
+      run: ./build/${{ matrix.archtitecture }}/release/teeworlds_srv shutdown
 
     - name: Create MacOS app using make_release.py
       if: contains(matrix.os, 'macOS')

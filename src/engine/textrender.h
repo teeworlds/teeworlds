@@ -146,7 +146,7 @@ public:
 			m_PageCountWhenDrawn = -1;
 			m_Truncated = false;
 			m_StartOfLine = true;
-			m_Glyphs.set_size(0);
+			m_Glyphs.clear();
 			m_StringVersion = StringVersion;
 			m_SkipTextRender = false;
 		}

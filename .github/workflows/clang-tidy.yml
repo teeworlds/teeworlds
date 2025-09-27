@@ -20,7 +20,7 @@ jobs:
     - name: Install clang-tidy
       run: |
         sudo apt-get update -y
-        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev clang-tidy -y
+        sudo apt-get install pkg-config cmake ninja-build libfreetype6-dev libsdl2-dev libgl1-mesa-dev clang-tidy -y
     - name: Build with clang-tidy
       run: |
         mkdir clang-tidy
