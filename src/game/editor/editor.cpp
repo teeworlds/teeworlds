@@ -4260,22 +4260,25 @@ void CEditor::OnUpdate()
 	CUIElementBase::Init(UI()); // update static pointer because game and editor use separate UI
 
 	for(int i = 0; i < Input()->NumEvents(); i++)
-		UI()->OnInput(Input()->GetEvent(i));
+	{
+		IInput::CEvent e = Input()->GetEvent(i);
+		if(!Input()->IsEventValid(&e))
+			continue;
+		UI()->OnInput(e);
+	}
 
 	// handle cursor movement
 	{
 		static float s_MouseX = 0.0f;
 		static float s_MouseY = 0.0f;
-		static float s_MouseDeltaX = 0.0f;
-		static float s_MouseDeltaY = 0.0f;
 
 		float MouseRelX = 0.0f, MouseRelY = 0.0f;
 		int CursorType = Input()->CursorRelative(&MouseRelX, &MouseRelY);
 		if(CursorType != IInput::CURSOR_NONE)
 			UI()->ConvertCursorMove(&MouseRelX, &MouseRelY, CursorType);
 
-		m_MouseDeltaX = MouseRelX;
-		m_MouseDeltaY = MouseRelY;
+		m_MouseDeltaX += MouseRelX;
+		m_MouseDeltaY += MouseRelY;
 
 		if(!m_LockMouse)
 		{
@@ -4288,8 +4291,6 @@ void CEditor::OnUpdate()
 		// update positions for ui, but only update ui when rendering
 		m_MouseX = UI()->Screen()->w * (s_MouseX / (float) Graphics()->ScreenWidth());
 		m_MouseY = UI()->Screen()->h * (s_MouseY / (float) Graphics()->ScreenHeight());
-		s_MouseDeltaX = UI()->Screen()->w * (m_MouseDeltaX / (float) Graphics()->ScreenWidth());
-		s_MouseDeltaY = UI()->Screen()->h * (m_MouseDeltaY / (float) Graphics()->ScreenHeight());
 
 		// fix correct world x and y
 		CLayerGroup *pSelectedGroup = GetSelectedGroup();
@@ -4303,8 +4304,8 @@ void CEditor::OnUpdate()
 
 			m_MouseWorldX = aPoints[0] + WorldWidth * (m_MouseX / UI()->Screen()->w);
 			m_MouseWorldY = aPoints[1] + WorldHeight * (m_MouseY / UI()->Screen()->h);
-			m_MouseDeltaWx = s_MouseDeltaX * (WorldWidth / UI()->Screen()->w);
-			m_MouseDeltaWy = s_MouseDeltaY * (WorldHeight / UI()->Screen()->h);
+			m_MouseDeltaWx = m_MouseDeltaX * (WorldWidth / UI()->Screen()->w);
+			m_MouseDeltaWy = m_MouseDeltaY * (WorldHeight / UI()->Screen()->h);
 		}
 		else
 		{
