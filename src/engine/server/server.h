@@ -127,6 +127,7 @@ public:
 
 		char m_aName[MAX_NAME_ARRAY_SIZE];
 		char m_aClan[MAX_CLAN_ARRAY_SIZE];
+		int m_ServerInfoVersion;
 		int m_Version;
 		int m_Country;
 		int m_Score;
@@ -243,7 +244,9 @@ public:
 	void ProcessClientPacket(CNetChunk *pPacket);
 
 	void SendServerInfo(int ClientID);
-	void GenerateServerInfo(CPacker *pPacker, bool IncludeClientInfo);
+	void GenerateServerInfo(CPacker *pPacker, int ServerInfoVersion, bool IncludeClientInfo);
+	// return: next StartClientID to continue from, or -1 if done
+	int GenerateServerInfoPlayers(CPacker *pPacker, int ServerInfoVersion, int StartClientID);
 
 	void PumpNetwork();
 

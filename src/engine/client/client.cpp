@@ -344,6 +344,7 @@ void CClient::SendInfo()
 	Msg.AddString(GameClient()->NetVersion(), 128);
 	Msg.AddString(m_aServerPassword, 128);
 	Msg.AddInt(GameClient()->ClientVersion());
+	Msg.AddInt(SERVERINFO_VERSION_CURRENT);
 	SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH);
 }
 
@@ -976,32 +977,38 @@ int CClient::UnpackServerInfo(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pTo
 	return 0;
 }
 
-bool CompareScore(const CServerInfo::CClient &C1, const CServerInfo::CClient &C2)
+int CClient::UnpackServerInfoPlayer(CUnpacker *pUnpacker, CServerInfo *pInfo, int *pToken)
 {
-	if(C1.m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC)
-		return false;
-	if(C2.m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC)
-		return true;
-	return C1.m_Score > C2.m_Score;
-}
+	if(pToken)
+		*pToken = pUnpacker->GetInt();
+	if(!pToken)
+		return 0;
 
-bool CompareTime(const CServerInfo::CClient &C1, const CServerInfo::CClient &C2)
-{
-	if(C1.m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC)
-		return false;
-	if(C2.m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC)
-		return true;
-	if(C1.m_Score < 0)
-		return false;
-	if(C2.m_Score < 0)
-		return true;
-	return C1.m_Score < C2.m_Score;
-}
+	int NumPlayers = 0;
+	int NumClients = 0;
+	while(pUnpacker->GetIntOrDefault(0) && !pUnpacker->Error() && NumClients < MAX_CLIENTS)
+	{
+		str_utf8_copy_num(pInfo->m_aClients[NumClients].m_aName, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[NumClients].m_aName), MAX_NAME_LENGTH);
+		str_utf8_copy_num(pInfo->m_aClients[NumClients].m_aClan, pUnpacker->GetString(CUnpacker::SANITIZE_CC|CUnpacker::SKIP_START_WHITESPACES), sizeof(pInfo->m_aClients[NumClients].m_aClan), MAX_CLAN_LENGTH);
+		pInfo->m_aClients[NumClients].m_Country = pUnpacker->GetInt();
+		pInfo->m_aClients[NumClients].m_Score = pUnpacker->GetInt();
+		pInfo->m_aClients[NumClients].m_PlayerType = pUnpacker->GetInt()&CServerInfo::CClient::PLAYERFLAG_MASK;
+		if(pInfo->m_aClients[NumClients].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_BOT)
+		{
+			if(pInfo->m_aClients[NumClients].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC)
+				pInfo->m_NumBotSpectators++;
+			else
+				pInfo->m_NumBotPlayers++;
+		}
 
-inline void SortClients(CServerInfo *pInfo)
-{
-	std::stable_sort(pInfo->m_aClients, pInfo->m_aClients + pInfo->m_NumClients,
-		(pInfo->m_Flags&IServerBrowser::FLAG_TIMESCORE) ? CompareTime : CompareScore);
+		if(!(pInfo->m_aClients[NumClients].m_PlayerType&CServerInfo::CClient::PLAYERFLAG_SPEC))
+			NumPlayers++;
+		NumClients++;
+	}
+	pInfo->m_NumPlayers = NumPlayers;
+	pInfo->m_NumClients = NumClients;
+
+	return 0;
 }
 
 void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
@@ -1118,6 +1125,18 @@ void CClient::ProcessConnlessPacket(CNetChunk *pPacket)
 		{
 			SortClients(&Info);
 			m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_TOKEN, Token, &Info);
+		}
+	}
+	if(pPacket->m_DataSize >= (int)sizeof(SERVERBROWSE_PLAYERSINFO) && mem_comp(pPacket->m_pData, SERVERBROWSE_PLAYERSINFO, sizeof(SERVERBROWSE_PLAYERSINFO)) == 0)
+	{
+		CUnpacker Up;
+		CServerInfo Info = {0};
+		Up.Reset((unsigned char*)pPacket->m_pData+sizeof(SERVERBROWSE_PLAYERSINFO), pPacket->m_DataSize-sizeof(SERVERBROWSE_PLAYERSINFO));
+		net_addr_str(&pPacket->m_Address, Info.m_aAddress, sizeof(Info.m_aAddress), true);
+		int Token;
+		if(!UnpackServerInfoPlayer(&Up, &Info, &Token))
+		{
+			m_ServerBrowser.Set(pPacket->m_Address, CServerBrowser::SET_PLAYERINFO, Token, &Info);
 		}
 	}
 }

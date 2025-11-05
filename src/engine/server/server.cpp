@@ -833,6 +833,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 				}
 
 				m_aClients[ClientID].m_Version = Unpacker.GetInt();
+				m_aClients[ClientID].m_ServerInfoVersion = Unpacker.GetIntOrDefault(SERVERINFO_VERSION_LEGACY);
 
 				m_aClients[ClientID].m_State = CClient::STATE_CONNECTING;
 				SendMap(ClientID);
@@ -1071,7 +1072,7 @@ void CServer::ProcessClientPacket(CNetChunk *pPacket)
 	}
 }
 
-void CServer::GenerateServerInfo(CPacker *pPacker, bool IncludeClientInfo)
+void CServer::GenerateServerInfo(CPacker *pPacker, int ServerInfoVersion, bool IncludeClientInfo)
 {
 	// count the players
 	int PlayerCount = 0, ClientCount = 0;
@@ -1103,12 +1104,12 @@ void CServer::GenerateServerInfo(CPacker *pPacker, bool IncludeClientInfo)
 	pPacker->AddInt(Flags);
 
 	pPacker->AddInt(Config()->m_SvSkillLevel);	// server skill level
-	pPacker->AddInt(PlayerCount); // num players
+	pPacker->AddInt(ServerInfoVersion == SERVERINFO_VERSION_LEGACY ? PlayerCount : 0); // num players
 	pPacker->AddInt(Config()->m_SvPlayerSlots); // max players
-	pPacker->AddInt(ClientCount); // num clients
+	pPacker->AddInt(ServerInfoVersion == SERVERINFO_VERSION_LEGACY ? ClientCount : 0); // num clients
 	pPacker->AddInt(maximum(ClientCount, Config()->m_SvMaxClients)); // max clients
 
-	if(IncludeClientInfo)
+	if(IncludeClientInfo && ServerInfoVersion == SERVERINFO_VERSION_LEGACY)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
@@ -1124,20 +1125,54 @@ void CServer::GenerateServerInfo(CPacker *pPacker, bool IncludeClientInfo)
 	}
 }
 
+int CServer::GenerateServerInfoPlayers(CPacker *pPacker, int ServerInfoVersion, int StartClientID)
+{
+	if(ServerInfoVersion == SERVERINFO_VERSION_LEGACY)
+		return -1;
+	while(StartClientID < MAX_CLIENTS)
+	{
+		if(m_aClients[StartClientID].m_State != CClient::STATE_EMPTY)
+		{
+			CPacker InfoPacker;
+			InfoPacker.Reset();
+			InfoPacker.AddInt(1); // for client to check
+			InfoPacker.AddString(ClientName(StartClientID), 0); // client name
+			InfoPacker.AddString(ClientClan(StartClientID), 0); // client clan
+			InfoPacker.AddInt(m_aClients[StartClientID].m_Country); // client country
+			InfoPacker.AddInt(m_aClients[StartClientID].m_Score); // client score
+			InfoPacker.AddInt(GameServer()->IsClientPlayer(StartClientID) ? 0 : 1); // flag spectator=1, bot=2 (player=0)
+
+			if(pPacker->Size() + InfoPacker.Size() + NET_MAX_CHUNKHEADERSIZE > NET_MAX_PAYLOAD)
+				break;
+
+			pPacker->AddRaw(InfoPacker.Data(), InfoPacker.Size());
+		}
+		StartClientID++;
+	}
+
+	return StartClientID >= MAX_CLIENTS ? -1 : StartClientID;
+}
+
 void CServer::SendServerInfo(int ClientID)
 {
-	CMsgPacker Msg(NETMSG_SERVERINFO, true);
-	GenerateServerInfo(&Msg, false);
 	if(ClientID == -1)
 	{
 		for(int i = 0; i < MAX_CLIENTS; i++)
 		{
 			if(m_aClients[i].m_State != CClient::STATE_EMPTY)
+			{
+				CMsgPacker Msg(NETMSG_SERVERINFO, true);
+				GenerateServerInfo(&Msg, m_aClients[i].m_ServerInfoVersion, false);
 				SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, i);
+			}
 		}
 	}
 	else if(ClientID >= 0 && ClientID < MAX_CLIENTS && m_aClients[ClientID].m_State != CClient::STATE_EMPTY)
+	{
+		CMsgPacker Msg(NETMSG_SERVERINFO, true);
+		GenerateServerInfo(&Msg, m_aClients[ClientID].m_ServerInfoVersion, false);
 		SendMsg(&Msg, MSGFLAG_VITAL|MSGFLAG_FLUSH, ClientID);
+	}
 }
 
 
@@ -1161,6 +1196,7 @@ void CServer::PumpNetwork()
 				CUnpacker Unpacker;
 				Unpacker.Reset((unsigned char*)Packet.m_pData+sizeof(SERVERBROWSE_GETINFO), Packet.m_DataSize-sizeof(SERVERBROWSE_GETINFO));
 				int SrvBrwsToken = Unpacker.GetInt();
+				int InfoVersion = Unpacker.GetIntOrDefault(SERVERINFO_VERSION_LEGACY);
 				if(Unpacker.Error())
 					continue;
 
@@ -1168,7 +1204,7 @@ void CServer::PumpNetwork()
 				Packer.Reset();
 				Packer.AddRaw(SERVERBROWSE_INFO, sizeof(SERVERBROWSE_INFO));
 				Packer.AddInt(SrvBrwsToken);
-				GenerateServerInfo(&Packer, true);
+				GenerateServerInfo(&Packer, InfoVersion, true);
 
 				CNetChunk Response;
 				Response.m_ClientID = -1;
@@ -1177,6 +1213,25 @@ void CServer::PumpNetwork()
 				Response.m_pData = Packer.Data();
 				Response.m_DataSize = Packer.Size();
 				m_NetServer.Send(&Response, ResponseToken);
+
+				if(InfoVersion == SERVERINFO_VERSION_LEGACY)
+					continue;
+
+				int Next = 0;
+				while(Next != -1)
+				{
+					Packer.Reset();
+					Packer.AddRaw(SERVERBROWSE_PLAYERSINFO, sizeof(SERVERBROWSE_PLAYERSINFO));
+					Packer.AddInt(SrvBrwsToken);
+					Next = GenerateServerInfoPlayers(&Packer, InfoVersion, Next);
+
+					Response.m_ClientID = -1;
+					Response.m_Address = Packet.m_Address;
+					Response.m_Flags = NETSENDFLAG_CONNLESS;
+					Response.m_pData = Packer.Data();
+					Response.m_DataSize = Packer.Size();
+					m_NetServer.Send(&Response, ResponseToken);
+				}
 			}
 		}
 		else
