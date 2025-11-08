@@ -5,12 +5,18 @@
 
 #include "alloc.h"
 
-
 enum
 {
 	WEAPON_GAME = -3, // team switching etc
 	WEAPON_SELF = -2, // console kill command
 	WEAPON_WORLD = -1, // death tiles etc
+};
+
+struct CTeeInfos
+{
+	char m_aaSkinPartNames[NUM_SKINPARTS][MAX_SKIN_ARRAY_SIZE];
+	int m_aUseCustomColors[NUM_SKINPARTS];
+	int m_aSkinPartColors[NUM_SKINPARTS];
 };
 
 // player object
@@ -78,13 +84,8 @@ public:
 	int m_LastKillTick;
 	int m_LastReadyChangeTick;
 
-	// TODO: clean this up
-	struct
-	{
-		char m_aaSkinPartNames[NUM_SKINPARTS][MAX_SKIN_ARRAY_SIZE];
-		int m_aUseCustomColors[NUM_SKINPARTS];
-		int m_aSkinPartColors[NUM_SKINPARTS];
-	} m_TeeInfos;
+	// player skin
+	CTeeInfos m_TeeInfos;
 
 	int m_RespawnTick;
 	int m_DieTick;
