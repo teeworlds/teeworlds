@@ -263,7 +263,7 @@ void CNetTokenCache::AddToken(const NETADDR *pAddr, TOKEN Token, int TokenFLag)
 	{
 		NETADDR NullAddr = { 0 };
 		NullAddr.type = 7;	// cover broadcasts
-		if(net_addr_comp(&pInfo->m_Addr, pAddr, true) == 0 || ((TokenFLag&NET_TOKENFLAG_ALLOWBROADCAST) && net_addr_comp(&pInfo->m_Addr, &NullAddr, false) == 0))
+		if(net_addr_comp(&pInfo->m_Addr, pAddr, true) == 0 || ((TokenFLag&NET_TOKENFLAG_ALLOWBROADCAST) && net_addr_comp(&pInfo->m_Addr, &NullAddr, false) == 0 && pInfo->m_Addr.port == pAddr->port))
 		{
 			// notify the user that the packet gets delivered
 			if(pInfo->m_pfnCallback)
