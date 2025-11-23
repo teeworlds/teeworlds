@@ -7,6 +7,7 @@
 #include <base/system.h>
 #include <engine/storage.h>
 #include <zlib.h>
+#include <zstd.h>
 
 static const int DEBUG=0;
 
@@ -122,7 +123,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 #if defined(CONF_ARCH_ENDIAN_BIG)
 	swap_endian(&Header, sizeof(int), sizeof(Header)/sizeof(int));
 #endif
-	if(Header.m_Version != 3 && Header.m_Version != 4)
+	if(Header.m_Version < 3 && Header.m_Version > 5)
 	{
 		dbg_msg("datafile", "wrong version. version=%x", Header.m_Version);
 		io_close(File);
@@ -133,7 +134,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	int64 Size = 0;
 	Size += Header.m_NumItemTypes*sizeof(CDatafileItemType);
 	Size += (Header.m_NumItems+Header.m_NumRawData)*sizeof(int);
-	if(Header.m_Version == 4)
+	if(Header.m_Version >= 4)
 		Size += Header.m_NumRawData*sizeof(int); // v4 has uncompressed data sizes aswell
 	Size += Header.m_ItemSize;
 
@@ -193,7 +194,7 @@ bool CDataFileReader::Open(class IStorage *pStorage, const char *pFilename, int 
 	m_pDataFile->m_Info.m_pDataOffsets = (int *)&m_pDataFile->m_Info.m_pItemOffsets[m_pDataFile->m_Header.m_NumItems];
 	m_pDataFile->m_Info.m_pDataSizes = (int *)&m_pDataFile->m_Info.m_pDataOffsets[m_pDataFile->m_Header.m_NumRawData];
 
-	if(Header.m_Version == 4)
+	if(Header.m_Version >= 4)
 		m_pDataFile->m_Info.m_pItemStart = (char *)&m_pDataFile->m_Info.m_pDataSizes[m_pDataFile->m_Header.m_NumRawData];
 	else
 		m_pDataFile->m_Info.m_pItemStart = (char *)&m_pDataFile->m_Info.m_pDataOffsets[m_pDataFile->m_Header.m_NumRawData];
@@ -292,27 +293,60 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 		int SwapSize = DataSize;
 #endif
 
-		if(m_pDataFile->m_Header.m_Version == 4)
+		if(m_pDataFile->m_Header.m_Version == 4 || m_pDataFile->m_Header.m_Version == 5)
 		{
-			// v4 has compressed data
+			// v4: zlib, v5: zstd
 			void *pTemp = (char *)mem_alloc(DataSize);
 			unsigned long UncompressedSize = m_pDataFile->m_Info.m_pDataSizes[Index];
 			unsigned long s;
 
-			dbg_msg("datafile", "loading data index=%d size=%d uncompressed=%lu", Index, DataSize, UncompressedSize);
+			dbg_msg("datafile", "loading data index=%d size=%d uncompressed=%lu version=%d",
+				Index, DataSize, UncompressedSize, m_pDataFile->m_Header.m_Version);
+
 			m_pDataFile->m_ppDataPtrs[Index] = (char *)mem_alloc(UncompressedSize);
 			m_pDataFile->m_pDataSizes[Index] = UncompressedSize;
 
 			// read the compressed data
-			io_seek(m_pDataFile->m_File, m_pDataFile->m_DataStartOffset+m_pDataFile->m_Info.m_pDataOffsets[Index], IOSEEK_START);
+			io_seek(m_pDataFile->m_File, m_pDataFile->m_DataStartOffset + m_pDataFile->m_Info.m_pDataOffsets[Index], IOSEEK_START);
 			io_read(m_pDataFile->m_File, pTemp, DataSize);
 
-			// decompress the data, TODO: check for errors
-			s = UncompressedSize;
-			uncompress((Bytef*)m_pDataFile->m_ppDataPtrs[Index], &s, (Bytef*)pTemp, DataSize);
+			// decompress based on version
+			if(m_pDataFile->m_Header.m_Version == 4)
+			{
+				// zlib
+				s = UncompressedSize;
+				int Result = uncompress((Bytef*)m_pDataFile->m_ppDataPtrs[Index], &s, (Bytef*)pTemp, DataSize);
+				if(Result != Z_OK)
+				{
+					dbg_msg("datafile", "zlib uncompress failed: %d", Result);
+					mem_free(pTemp);
+					UnloadData(Index);
+					return 0;
+				}
 #if defined(CONF_ARCH_ENDIAN_BIG)
-			SwapSize = s;
+				SwapSize = s;
 #endif
+			}
+			else if(m_pDataFile->m_Header.m_Version == 5)
+			{
+				// zstd
+				size_t Result = ZSTD_decompress(m_pDataFile->m_ppDataPtrs[Index], UncompressedSize,
+				                             (const void*)pTemp, DataSize);
+				if(ZSTD_isError(Result))
+				{
+					dbg_msg("datafile", "zstd decompress failed: %s", ZSTD_getErrorName(Result));
+					mem_free(pTemp);
+					UnloadData(Index);
+					return 0;
+				}
+				if(Result != UncompressedSize)
+				{
+					dbg_msg("datafile", "zstd decompress warning: expected %d, got %d", (int) UncompressedSize, (int) Result);
+				}
+#if defined(CONF_ARCH_ENDIAN_BIG)
+				SwapSize = (int) Result;
+#endif
+			}
 
 			// clean up the temporary buffers
 			mem_free(pTemp);
@@ -323,13 +357,13 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 			dbg_msg("datafile", "loading data index=%d size=%d", Index, DataSize);
 			m_pDataFile->m_ppDataPtrs[Index] = (char *)mem_alloc(DataSize);
 			m_pDataFile->m_pDataSizes[Index] = DataSize;
-			io_seek(m_pDataFile->m_File, m_pDataFile->m_DataStartOffset+m_pDataFile->m_Info.m_pDataOffsets[Index], IOSEEK_START);
+			io_seek(m_pDataFile->m_File, m_pDataFile->m_DataStartOffset + m_pDataFile->m_Info.m_pDataOffsets[Index], IOSEEK_START);
 			io_read(m_pDataFile->m_File, m_pDataFile->m_ppDataPtrs[Index], DataSize);
 		}
 
 #if defined(CONF_ARCH_ENDIAN_BIG)
 		if(Swap && SwapSize)
-			swap_endian(m_pDataFile->m_ppDataPtrs[Index], sizeof(int), SwapSize/sizeof(int));
+			swap_endian(m_pDataFile->m_ppDataPtrs[Index], sizeof(int), SwapSize / sizeof(int));
 #endif
 	}
 
@@ -583,24 +617,28 @@ int CDataFileWriter::AddData(int Size, const void *pData)
 	dbg_assert(m_NumDatas < 1024, "too much data");
 
 	CDataInfo *pInfo = &m_pDatas[m_NumDatas];
-	unsigned long s = compressBound(Size);
-	void *pCompData = mem_alloc(s); // temporary buffer that we use during compression
 
-	int Result = compress((Bytef*)pCompData, &s, (Bytef*)pData, Size);
-	if(Result != Z_OK)
+	// zstd
+	size_t MaxCompressedSize = ZSTD_compressBound(Size);
+	void *pCompData = mem_alloc(MaxCompressedSize); // temporary buffer that we use during compression
+
+	size_t CompressedSize = ZSTD_compress(pCompData, MaxCompressedSize, pData, Size, 6);
+	if(ZSTD_isError(CompressedSize))
 	{
-		dbg_msg("datafile", "compression error %d", Result);
-		dbg_assert(0, "zlib error");
+		dbg_msg("datafile", "zstd compress failed: %s", ZSTD_getErrorName(CompressedSize));
+		mem_free(pCompData);
+		dbg_assert(0, "zstd error");
+		return 0;
 	}
 
 	pInfo->m_UncompressedSize = Size;
-	pInfo->m_CompressedSize = (int)s;
+	pInfo->m_CompressedSize = (int)CompressedSize;
 	pInfo->m_pCompressedData = mem_alloc(pInfo->m_CompressedSize);
 	mem_copy(pInfo->m_pCompressedData, pCompData, pInfo->m_CompressedSize);
 	mem_free(pCompData);
 
 	m_NumDatas++;
-	return m_NumDatas-1;
+	return m_NumDatas - 1;
 }
 
 int CDataFileWriter::AddDataSwapped(int Size, const void *pData)
@@ -663,7 +701,7 @@ int CDataFileWriter::Finish()
 		Header.m_aID[1] = 'A';
 		Header.m_aID[2] = 'T';
 		Header.m_aID[3] = 'A';
-		Header.m_Version = 4;
+		Header.m_Version = 5;
 		Header.m_Size = FileSize - 16;
 		Header.m_Swaplen = SwapSize - 16;
 		Header.m_NumItemTypes = m_NumItemTypes;

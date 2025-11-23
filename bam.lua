@@ -11,6 +11,7 @@ config:Add(OptTestCompileC("stackprotector", "int main(){return 0;}", "-fstack-p
 config:Add(OptTestCompileC("minmacosxsdk", "int main(){return 0;}", "-mmacosx-version-min=10.7 -isysroot /Developer/SDKs/MacOSX10.7.sdk"))
 config:Add(OptTestCompileC("buildwithoutsseflag", "#include <immintrin.h>\nint main(){_mm_pause();return 0;}", ""))
 config:Add(OptLibrary("zlib", "zlib.h", false))
+config:Add(OptLibrary("zstd", "zstd.h", false))
 config:Add(SDL.OptFind("sdl", true))
 config:Add(FreeType.OptFind("freetype", true))
 config:Finalize("config.lua")
@@ -103,9 +104,35 @@ function GenerateCommonSettings(settings, conf, arch, compiler)
 	local wavpack = Compile(settings, Collect("src/engine/external/wavpack/*.c"))
 	local png = Compile(settings, Collect("src/engine/external/pnglite/*.c"))
 	local json = Compile(settings, Collect("src/engine/external/json-parser/*.c"))
+	local zstd = nil
+
+	-- Compile zstd if needed
+	local zstd = nil
+	if config.zstd.value == 1 then
+		settings.link.libs:Add("z")
+		if config.zstd.include_path then
+			settings.cc.includes:Add(config.zstd.include_path)
+		end
+	else
+		settings.cc.includes:Add("src/engine/external/zstd")
+
+		-- Collect all .c files in zstd and subdirectories
+		local zstd_src = CollectRecursive("src/engine/external/zstd/*.c")
+
+		-- Determine if we can use ASM optimization
+		local use_asm = (arch == "x86_64" or arch == "amd64") and compiler ~= "cl"
+		if use_asm then
+			table.insert(zstd_src, "src/engine/external/zstd/decompress/huf_decompress_amd64.S")
+		else
+			-- Disable ASM when not on x86_64 or using MSVC
+			settings.cc.defines:Add("ZSTD_DISABLE_ASM")
+		end
+
+		zstd = Compile(settings, zstd_src)
+	end
 
 	-- globally available libs
-	libs = {zlib=zlib, wavpack=wavpack, png=png, md5=md5, json=json}
+	libs = {zlib=zlib, wavpack=wavpack, png=png, md5=md5, json=json, zstd=zstd}
 end
 
 function GenerateMacOSSettings(settings, conf, arch, compiler)
@@ -360,7 +387,7 @@ function BuildClient(settings, family, platform)
 	local game_client = Compile(settings, CollectRecursive("src/game/client/*.cpp"), SharedClientFiles())
 	local game_editor = Compile(settings, Collect("src/game/editor/*.cpp"))
 	
-	Link(settings, "teeworlds", libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], client, game_client, game_editor)
+	Link(settings, "teeworlds", libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], libs["zstd"], client, game_client, game_editor)
 end
 
 function BuildServer(settings, family, platform)
@@ -368,24 +395,24 @@ function BuildServer(settings, family, platform)
 	
 	local game_server = Compile(settings, CollectRecursive("src/game/server/*.cpp"), SharedServerFiles())
 	
-	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["json"], server, game_server)
+	return Link(settings, "teeworlds_srv", libs["zlib"], libs["md5"], libs["json"], libs["zstd"], server, game_server)
 end
 
 function BuildTools(settings)
 	local tools = {}
 	for i,v in ipairs(Collect("src/tools/*.cpp", "src/tools/*.c")) do
 		local toolname = PathFilename(PathBase(v))
-		tools[i] = Link(settings, toolname, Compile(settings, v), libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"])
+		tools[i] = Link(settings, toolname, Compile(settings, v), libs["zlib"], libs["md5"], libs["wavpack"], libs["png"], libs["json"], libs["zstd"])
 	end
 	PseudoTarget(settings.link.Output(settings, "pseudo_tools") .. settings.link.extension, tools)
 end
 
 function BuildMasterserver(settings)
-	return Link(settings, "mastersrv", Compile(settings, Collect("src/mastersrv/*.cpp")), libs["zlib"], libs["md5"], libs["json"])
+	return Link(settings, "mastersrv", Compile(settings, Collect("src/mastersrv/*.cpp")), libs["zlib"], libs["md5"], libs["json"], libs["zstd"])
 end
 
 function BuildVersionserver(settings)
-	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"], libs["md5"], libs["json"])
+	return Link(settings, "versionsrv", Compile(settings, Collect("src/versionsrv/*.cpp")), libs["zlib"], libs["md5"], libs["json"], libs["zstd"])
 end
 
 function BuildContent(settings, arch, conf)
