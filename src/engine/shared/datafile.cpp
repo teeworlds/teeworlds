@@ -307,9 +307,16 @@ void *CDataFileReader::GetDataImpl(int Index, int Swap)
 			io_seek(m_pDataFile->m_File, m_pDataFile->m_DataStartOffset+m_pDataFile->m_Info.m_pDataOffsets[Index], IOSEEK_START);
 			io_read(m_pDataFile->m_File, pTemp, DataSize);
 
-			// decompress the data, TODO: check for errors
+			// decompress the data
 			s = UncompressedSize;
-			uncompress((Bytef*)m_pDataFile->m_ppDataPtrs[Index], &s, (Bytef*)pTemp, DataSize);
+			int Result = uncompress((Bytef*)m_pDataFile->m_ppDataPtrs[Index], &s, (Bytef*)pTemp, DataSize);
+			if(Result != Z_OK)
+			{
+				dbg_msg("datafile", "zlib uncompress failed: %d", Result);
+				mem_free(pTemp);
+				UnloadData(Index);
+				return 0;
+			}
 #if defined(CONF_ARCH_ENDIAN_BIG)
 			SwapSize = s;
 #endif

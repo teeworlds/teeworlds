@@ -9,10 +9,14 @@ class CEventHandler
 	static const int MAX_EVENTS = 128;
 	static const int MAX_DATASIZE = 128*64;
 
-	int m_aTypes[MAX_EVENTS]; // TODO: remove some of these arrays
-	int m_aOffsets[MAX_EVENTS];
-	int m_aSizes[MAX_EVENTS];
-	int64 m_aClientMasks[MAX_EVENTS];
+	struct CEventEntry
+	{
+		int m_Type;
+		int m_Offset;
+		int m_Size;
+		int64 m_ClientMask;
+	};
+	CEventEntry m_aEventList[MAX_EVENTS];
 	char m_aData[MAX_DATASIZE];
 
 	class CGameContext *m_pGameServer;

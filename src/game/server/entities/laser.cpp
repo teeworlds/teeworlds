@@ -23,7 +23,7 @@ bool CLaser::HitCharacter(vec2 From, vec2 To)
 {
 	vec2 At;
 	CCharacter *pOwnerChar = GameServer()->GetPlayerChar(m_Owner);
-	CCharacter *pHit = GameWorld()->IntersectCharacter(m_Pos, To, 0.f, At, pOwnerChar);
+	CCharacter *pHit = (CCharacter *) GameWorld()->IntersectEntity(m_Pos, To, 0.f, At, CGameWorld::ENTTYPE_CHARACTER, pOwnerChar);
 	if(!pHit)
 		return false;
 

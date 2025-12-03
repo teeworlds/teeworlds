@@ -602,8 +602,17 @@ void CCharacter::TickDefered()
 	}
 	else if(m_Core.m_Death)
 	{
-		// handle death-tiles
+		// handle death-tiles and ensure no core dumped issue.
+		// also, since dead characters are removed from the game world and won't be snapped,
+		// so we can skip the 'update the m_SendCore' process.
 		Die(m_pPlayer->GetCID(), WEAPON_WORLD);
+		return;
+	}
+
+	// manage emote here instead of in the snap function
+	if(m_EmoteStop < Server()->Tick())
+	{
+		SetEmote(EMOTE_NORMAL, -1);
 	}
 
 	// update the m_SendCore if needed
@@ -778,8 +787,6 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 	// check for death
 	if(m_Health <= 0)
 	{
-		Die(From, Weapon);
-
 		// set attacker's face to happy (taunt!)
 		if(From >= 0 && From != m_pPlayer->GetCID() && GameServer()->m_apPlayers[From])
 		{
@@ -789,7 +796,8 @@ bool CCharacter::TakeDamage(vec2 Force, vec2 Source, int Dmg, int From, int Weap
 				pChr->SetEmote(EMOTE_HAPPY, Server()->Tick() + Server()->TickSpeed());
 			}
 		}
-
+		// move the die function below so that we can ensure no core dumped issue here
+		Die(From, Weapon);
 		return false;
 	}
 
@@ -824,12 +832,6 @@ void CCharacter::Snap(int SnappingClient)
 	{
 		pCharacter->m_Tick = m_ReckoningTick;
 		m_SendCore.Write(pCharacter);
-	}
-
-	// set emote
-	if(m_EmoteStop < Server()->Tick())
-	{
-		SetEmote(EMOTE_NORMAL, -1);
 	}
 
 	pCharacter->m_Emote = m_EmoteType;

@@ -203,22 +203,21 @@ void CGameWorld::Tick()
 }
 
 
-// TODO: should be more general
-CCharacter *CGameWorld::IntersectCharacter(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, CEntity *pNotThis)
+CEntity *CGameWorld::IntersectEntity(vec2 Pos0, vec2 Pos1, float Radius, vec2& NewPos, int Type, CEntity *pNotThis)
 {
-	// Find other players
+	// Find other entities
 	float ClosestLen = distance(Pos0, Pos1) * 100.0f;
-	CCharacter *pClosest = 0;
+	CEntity *pClosest = 0;
 
-	CCharacter *p = (CCharacter *)FindFirst(ENTTYPE_CHARACTER);
-	for(; p; p = (CCharacter *)p->TypeNext())
+	CEntity *p = FindFirst(Type);
+	for(; p; p = p->TypeNext())
  	{
 		if(p == pNotThis)
 			continue;
 
 		vec2 IntersectPos = closest_point_on_line(Pos0, Pos1, p->m_Pos);
 		float Len = distance(p->m_Pos, IntersectPos);
-		if(Len < p->m_ProximityRadius+Radius)
+		if(Len < p->GetProximityRadius() + Radius)
 		{
 			Len = distance(Pos0, IntersectPos);
 			if(Len < ClosestLen)

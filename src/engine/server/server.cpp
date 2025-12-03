@@ -485,13 +485,14 @@ int CServer::SendMsg(CMsgPacker *pMsg, int Flags, int ClientID)
 		if(ClientID == -1)
 		{
 			// broadcast
-			int i;
-			for(i = 0; i < MAX_CLIENTS; i++)
+			for(int i = 0; i < MAX_CLIENTS; i++)
+			{
 				if(m_aClients[i].m_State == CClient::STATE_INGAME && !m_aClients[i].m_Quitting)
 				{
 					Packet.m_ClientID = i;
 					m_NetServer.Send(&Packet);
 				}
+			}
 		}
 		else
 			m_NetServer.Send(&Packet);
