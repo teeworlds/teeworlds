@@ -198,7 +198,7 @@ void CCharacterCore::Tick(bool UseInput)
 		int Hit = m_pCollision->IntersectLine(m_HookPos, NewPos, &NewPos, 0);
 		if(Hit)
 		{
-			if(Hit&CCollision::COLFLAG_NOHOOK)
+			if(Hit&CCollision::COLFLAG_UNHOOKABLE)
 				GoingToRetract = true;
 			else
 				GoingToHitGround = true;

@@ -50,7 +50,7 @@ bool CEditor::PopupGroup(void *pContext, CUIRect View)
 			for(int y = 0; y < gl->m_Height; ++y)
 				for(int x = 0; x < gl->m_Width; ++x)
 				{
-					if(gl->m_pTiles[y*gl->m_Width+x].m_Index > static_cast<unsigned char>(TILE_NOHOOK))
+					if(gl->m_pTiles[y*gl->m_Width+x].m_Index > static_cast<unsigned char>(TILE_UNHOOKABLE))
 						continue;
 
 					bool Found = false;

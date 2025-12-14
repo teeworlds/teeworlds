@@ -39,11 +39,11 @@ void CCollision::Init(class CLayers *pLayers)
 		case TILE_DEATH:
 			m_pTiles[i].m_Index = COLFLAG_DEATH;
 			break;
-		case TILE_SOLID:
+		case TILE_HOOKABLE:
 			m_pTiles[i].m_Index = COLFLAG_SOLID;
 			break;
-		case TILE_NOHOOK:
-			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_NOHOOK;
+		case TILE_UNHOOKABLE:
+			m_pTiles[i].m_Index = COLFLAG_SOLID|COLFLAG_UNHOOKABLE;
 			break;
 		default:
 			m_pTiles[i].m_Index = 0;
