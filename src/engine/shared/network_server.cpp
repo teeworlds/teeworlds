@@ -299,7 +299,7 @@ int CNetServer::Send(CNetChunk *pChunk, TOKEN Token)
 		}
 		else
 		{
-			Drop(pChunk->m_ClientID, "Error sending data");
+			Drop(pChunk->m_ClientID, m_aSlots[pChunk->m_ClientID].m_Connection.State() == NET_CONNSTATE_ERROR ? m_aSlots[pChunk->m_ClientID].m_Connection.ErrorString() : "Error sending data");
 		}
 	}
 	return 0;

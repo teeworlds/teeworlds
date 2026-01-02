@@ -144,7 +144,8 @@ int CNetConnection::QueueChunkEx(int Flags, int DataSize, const void *pData, int
 		else
 		{
 			// out of buffer
-			Disconnect("too weak connection (out of buffer)");
+			m_State = NET_CONNSTATE_ERROR;
+			SetError("too weak connection (out of buffer)");
 			return -1;
 		}
 	}
