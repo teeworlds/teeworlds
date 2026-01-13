@@ -60,11 +60,14 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 		Kill.m_Player1RenderInfo = m_pClient->m_aClients[Kill.m_Player1ID].m_RenderInfo;
 
 		Kill.m_Player2ID = pMsg->m_Killer;
+		Kill.m_Player3ID = pMsg->m_Assist;
+
+		float FontSize = Kill.m_Player3ID >= 0 ? 20.0f : 36.0f;
 		if(Kill.m_Player2ID >= 0)
 		{
 			if(Config()->m_ClShowsocial)
 			{
-				Kill.m_Player2NameCursor.m_FontSize = 36.0f;
+				Kill.m_Player2NameCursor.m_FontSize = FontSize;
 				TextRender()->TextDeferred(&Kill.m_Player2NameCursor, m_pClient->m_aClients[Kill.m_Player2ID].m_aName, -1);
 			}
 
@@ -91,6 +94,39 @@ void CInfoMessages::OnMessage(int MsgType, void *pRawMsg)
 					Kill.m_Player2RenderInfo.m_aColors[p].a *= .5f;
 				}
 				Kill.m_Player2RenderInfo.m_Size = 64.0f;
+			}
+		}
+		if(Kill.m_Player2ID >= 0 && Kill.m_Player3ID >= 0)
+		{
+			if(Config()->m_ClShowsocial)
+			{
+				Kill.m_Player3NameCursor.m_FontSize = FontSize;
+				TextRender()->TextDeferred(&Kill.m_Player3NameCursor, m_pClient->m_aClients[Kill.m_Player3ID].m_aName, -1);
+			}
+
+			Kill.m_Player3RenderInfo = m_pClient->m_aClients[Kill.m_Player3ID].m_RenderInfo;
+		}
+		else
+		{
+			bool IsTeamplay = (m_pClient->m_GameInfo.m_GameFlags&GAMEFLAG_TEAMS) != 0;
+			int KillerTeam = - 1 - Kill.m_Player3ID;
+			int Skin = m_pClient->m_pSkins->Find("dummy", false);
+			if(Skin != -1)
+			{
+				const CSkins::CSkin *pDummy = m_pClient->m_pSkins->Get(Skin);
+				for(int p = 0; p < NUM_SKINPARTS; p++)
+				{
+					Kill.m_Player3RenderInfo.m_aTextures[p] = pDummy->m_apParts[p]->m_OrgTexture;
+					if(IsTeamplay)
+					{
+						int ColorVal = m_pClient->m_pSkins->GetTeamColor(0, 0x000000, KillerTeam, p);
+						Kill.m_Player3RenderInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(ColorVal, p==SKINPART_MARKING);
+					}
+					else
+						Kill.m_Player3RenderInfo.m_aColors[p] = m_pClient->m_pSkins->GetColorV4(0x000000, p==SKINPART_MARKING);
+					Kill.m_Player3RenderInfo.m_aColors[p].a *= .5f;
+				}
+				Kill.m_Player3RenderInfo.m_Size = 64.0f;
 			}
 		}
 
@@ -209,9 +245,11 @@ void CInfoMessages::OnRender()
 
 void CInfoMessages::RenderKillMsg(CInfoMsg *pInfoMsg, float x, float y) const
 {
-	float FontSize = 36.0f;
-	float KillerNameW = pInfoMsg->m_Player2NameCursor.Width() + UI()->GetClientIDRectWidth(FontSize);
-	float VictimNameW = pInfoMsg->m_Player1NameCursor.Width() + UI()->GetClientIDRectWidth(FontSize);
+	const float NormalFontSize = 36.0f;
+	float KillerFontSize = pInfoMsg->m_Player3ID >= 0 ? 20.0f : NormalFontSize;
+	float AssisterNameW = pInfoMsg->m_Player3NameCursor.Width() + UI()->GetClientIDRectWidth(KillerFontSize);
+	float KillerNameW = pInfoMsg->m_Player2NameCursor.Width() + UI()->GetClientIDRectWidth(KillerFontSize);
+	float VictimNameW = pInfoMsg->m_Player1NameCursor.Width() + UI()->GetClientIDRectWidth(NormalFontSize);
 
 	// render victim name
 	x -= VictimNameW;
@@ -281,15 +319,31 @@ void CInfoMessages::RenderKillMsg(CInfoMsg *pInfoMsg, float x, float y) const
 
 		// render killer tee
 		x -= 24.0f;
+		if(pInfoMsg->m_Player3ID >= 0)
+		{
+			RenderTools()->RenderTee(CAnimState::GetIdle(), &pInfoMsg->m_Player3RenderInfo, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
+			x -= 16.0f;
+		}
 		RenderTools()->RenderTee(CAnimState::GetIdle(), &pInfoMsg->m_Player2RenderInfo, EMOTE_ANGRY, vec2(1,0), vec2(x, y+28));
 		x -= 32.0f;
+
+		if(pInfoMsg->m_Player3ID >= 0)
+		{
+			y -= pInfoMsg->m_Player3NameCursor.Height() / 2.0f - 12.0f;
+			// render assister name
+			float x0 = x - AssisterNameW;
+			float AdvanceID = UI()->DrawClientID(pInfoMsg->m_Player3NameCursor.m_FontSize, vec2(x0, y), pInfoMsg->m_Player3ID);
+			pInfoMsg->m_Player3NameCursor.MoveTo(x0 + AdvanceID, y);
+			TextRender()->DrawTextOutlined(&pInfoMsg->m_Player3NameCursor, 0.75f);
+			y += pInfoMsg->m_Player3NameCursor.Height() - 4.0f;
+		}
 
 		if(pInfoMsg->m_Player2ID >= 0)
 		{
 			// render killer name
-			x -= KillerNameW;
-			float AdvanceID = UI()->DrawClientID(pInfoMsg->m_Player2NameCursor.m_FontSize, vec2(x, y), pInfoMsg->m_Player2ID);
-			pInfoMsg->m_Player2NameCursor.MoveTo(x + AdvanceID, y);
+			float x0 = x - KillerNameW;
+			float AdvanceID = UI()->DrawClientID(pInfoMsg->m_Player2NameCursor.m_FontSize, vec2(x0, y), pInfoMsg->m_Player2ID);
+			pInfoMsg->m_Player2NameCursor.MoveTo(x0 + AdvanceID, y);
 			TextRender()->DrawTextOutlined(&pInfoMsg->m_Player2NameCursor);
 		}
 	}

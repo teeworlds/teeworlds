@@ -22,6 +22,11 @@ class CInfoMessages : public CComponent
 		CTextCursor m_Player2NameCursor;
 		CTeeRenderInfo m_Player2RenderInfo;
 
+		// assister
+		int m_Player3ID;
+		CTextCursor m_Player3NameCursor;
+		CTeeRenderInfo m_Player3RenderInfo;
+
 		// kill msg
 		int m_Weapon;
 		int m_ModeSpecial; // for CTF, if the guy is carrying a flag for example
