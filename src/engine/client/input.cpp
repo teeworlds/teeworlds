@@ -289,14 +289,25 @@ void CInput::MouseModeRelative()
 {
 	if(!m_MouseInputRelative)
 	{
+		int x=0,y=0;
 		m_MouseInputRelative = true;
 		SDL_ShowCursor(SDL_DISABLE);
 		if(SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP, Config()->m_InpGrab ? "0" : "1", SDL_HINT_OVERRIDE) == SDL_FALSE)
 		{
 			Console()->Print(IConsole::OUTPUT_LEVEL_STANDARD, "input", "unable to switch relative mouse mode");
 		}
-		SDL_SetRelativeMouseMode(SDL_TRUE);
-		SDL_GetRelativeMouseState(NULL, NULL);
+
+		//In order to play on remote desktop,
+		//relative mode should be disabled and global mouse should be Initialised.
+		//Both mode should be at 0, 0 in order to map the mouse at the correct place.
+		//fix-linux-rdp-mouse-issue-3198
+
+		SDL_SetRelativeMouseMode(SDL_FALSE);
+		//Setting it To 0,0 just avoid overlap on opening.
+		SDL_GetRelativeMouseState(&x,&y);
+		//Global State just reduce the cpu usage.
+		SDL_GetGlobalMouseState(&x,&y);
+
 	}
 }
 
