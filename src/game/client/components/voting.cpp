@@ -224,6 +224,10 @@ void CVoting::OnMessage(int MsgType, void *pRawMsg)
 				if(pMsg->m_ClientID == m_pClient->m_LocalClientID)
 					m_CallvoteBlockTick = Client()->GameTick()+Client()->GameTickSpeed()*VOTE_COOLDOWN;
 			}
+			else
+			{
+				str_copy(m_aDescription, pMsg->m_pDescription, sizeof(m_aDescription));
+			}
 		}
 		else
 		{
