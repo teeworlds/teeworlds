@@ -62,7 +62,7 @@ public:
 	void RenderCursor(vec2 Center, float Size) { RenderCursor(Center.x, Center.y, Size); }
 
 	// object render methods
-	void RenderTee(class CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos);
+	void RenderTee(class CAnimState *pAnim, const CTeeRenderInfo *pInfo, int Emote, vec2 Dir, vec2 Pos, float Alpha = 1.0f);
 	void RenderTeeHand(const CTeeRenderInfo *pInfo, vec2 CenterPos, vec2 Dir, float AngleOffset, vec2 PostRotOffset);
 
 	// map render methods (render_map.cpp)
