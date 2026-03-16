@@ -375,7 +375,7 @@ void CHud::RenderScoreHud()
 
 				TextRender()->TextDeferred(&s_ScoreCursors[t], aBuf, -1);
 
-				s_PositionCursors[t].Reset(0);
+				s_PositionCursors[t].Reset();
 				str_format(aBuf, sizeof(aBuf), "%d.", aPos[t]);
 				s_PositionCursors[t].m_FontSize = 10.0f;
 				TextRender()->TextDeferred(&s_PositionCursors[t], aBuf, -1);
