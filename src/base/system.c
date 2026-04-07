@@ -1989,7 +1989,7 @@ void fs_listdir(const char *dir, FS_LISTDIR_CALLBACK cb, int type, void *user)
 	while((entry = readdir(d)) != NULL)
 	{
 		str_copy(buffer+length, entry->d_name, (int)sizeof(buffer)-length);
-		if(cb(entry->d_name, entry->d_type == DT_UNKNOWN ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
+		if(cb(entry->d_name, (entry->d_type == DT_UNKNOWN || entry->d_type == DT_LNK) ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
 			break;
 	}
 
@@ -2059,7 +2059,7 @@ void fs_listdir_fileinfo(const char *dir, FS_LISTDIR_CALLBACK_FILEINFO cb, int t
 		info.m_TimeCreated = created;
 		info.m_TimeModified = modified;
 
-		if(cb(&info, entry->d_type == DT_UNKNOWN ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
+		if(cb(&info, (entry->d_type == DT_UNKNOWN || entry->d_type == DT_LNK) ? fs_is_dir(buffer) : entry->d_type == DT_DIR, type, user))
 			break;
 	}
 
