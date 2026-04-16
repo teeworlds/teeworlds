@@ -21,7 +21,9 @@ struct CScrollRegionParams
 
 	enum
 	{
-		FLAG_CONTENT_STATIC_WIDTH = 0x1
+		FLAG_CONTENT_STATIC_WIDTH = 1 << 0,
+		FLAG_HIDDEN_SCROLLBAR = 1 << 1,
+		FLAG_SCROLL_WITHOUT_HOVERD = 1 << 2,
 	};
 
 	CScrollRegionParams()

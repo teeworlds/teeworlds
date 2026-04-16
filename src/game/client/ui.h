@@ -263,6 +263,7 @@ public:
 
 	// labels
 	void DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int Align = TEXTALIGN_TL, float LineWidth = -1.0f, bool MultiLine = true);
+	void DoLabelColor(const CUIRect *pRect, const vec4 &TextColor, const char *pText, float FontSize, int Align = TEXTALIGN_TL, float LineWidth = -1.0f, bool MultiLine = true);
 	void DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor, int Align = TEXTALIGN_TL);
 	void DoLabelSelected(const CUIRect *pRect, const char *pText, bool Selected, float FontSize, int Align = TEXTALIGN_TL);
 

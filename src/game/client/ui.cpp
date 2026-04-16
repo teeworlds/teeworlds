@@ -369,6 +369,16 @@ void CUI::DoLabel(const CUIRect *pRect, const char *pText, float FontSize, int A
 	TextRender()->TextOutlined(&s_Cursor, pText, -1);
 }
 
+void CUI::DoLabelColor(const CUIRect *pRect, const vec4 &TextColor, const char *pText, float FontSize, int Align, float LineWidth, bool MultiLine)
+{
+	vec4 OldColor = TextRender()->GetColor();
+	TextRender()->TextColor(TextColor);
+	
+	DoLabel(pRect, pText, FontSize, Align, LineWidth, MultiLine);
+
+	TextRender()->TextColor(OldColor);
+}
+
 void CUI::DoLabelHighlighted(const CUIRect *pRect, const char *pText, const char *pHighlighted, float FontSize, const vec4 &TextColor, const vec4 &HighlightColor, int Align)
 {
 	static CTextCursor s_Cursor;

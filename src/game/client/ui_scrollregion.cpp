@@ -29,7 +29,7 @@ void CScrollRegion::Begin(CUIRect *pClipRect, vec2 *pOutOffset, CScrollRegionPar
 	const bool ForceShowScrollbar = m_Params.m_Flags&CScrollRegionParams::FLAG_CONTENT_STATIC_WIDTH;
 
 	CUIRect ScrollBarBg;
-	bool HasScrollBar = ContentOverflows || ForceShowScrollbar;
+	bool HasScrollBar = (ContentOverflows || ForceShowScrollbar) && !(m_Params.m_Flags & CScrollRegionParams::FLAG_HIDDEN_SCROLLBAR);
 	CUIRect *pModifyRect = HasScrollBar ? pClipRect : 0;
 	pClipRect->VSplitRight(m_Params.m_ScrollbarWidth, pModifyRect, &ScrollBarBg);
 	ScrollBarBg.Margin(m_Params.m_ScrollbarMargin, &m_RailRect);
@@ -70,7 +70,7 @@ void CScrollRegion::End()
 	float AnimationDuration = 0.5f;
 
 	const bool IsPageScroll = Input()->KeyIsPressed(KEY_LALT) || Input()->KeyIsPressed(KEY_RALT);
-	if(UI()->MouseHovered(&RegionRect))
+	if(UI()->MouseHovered(&RegionRect) || m_Params.m_Flags & CScrollRegionParams::FLAG_SCROLL_WITHOUT_HOVERD)
 	{
 		const float ScrollUnit = IsPageScroll ? m_ClipRect.h : m_Params.m_ScrollUnit;
 		if(UI()->KeyPress(KEY_MOUSE_WHEEL_UP))
@@ -166,14 +166,17 @@ void CScrollRegion::End()
 	m_ScrollY = clamp(m_ScrollY, 0.0f, MaxScroll);
 	m_ContentScrollOff.y = -m_ScrollY;
 
-	vec4 SliderColor;
-	if(Grabbed)
-		SliderColor = m_Params.m_SliderColorGrabbed;
-	else if(Hovered)
-		SliderColor = m_Params.m_SliderColorHover;
-	else
-		SliderColor = m_Params.m_SliderColor;
-	Slider.Draw(SliderColor, Slider.w/2.0f);
+	if(!(m_Params.m_Flags & CScrollRegionParams::FLAG_HIDDEN_SCROLLBAR))
+	{
+		vec4 SliderColor;
+		if(Grabbed)
+			SliderColor = m_Params.m_SliderColorGrabbed;
+		else if(Hovered)
+			SliderColor = m_Params.m_SliderColorHover;
+		else
+			SliderColor = m_Params.m_SliderColor;
+		Slider.Draw(SliderColor, Slider.w / 2.0f);
+	}
 }
 
 void CScrollRegion::AddRect(const CUIRect &Rect)

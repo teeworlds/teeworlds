@@ -8,7 +8,7 @@ class CScoreboard : public CComponent
 {
 	void RenderGoals(float x, float y, float w);
 	float RenderSpectators(float x, float y, float w);
-	float RenderScoreboard(float x, float y, float w, int Team, const char *pTitle, int Align);
+	float RenderScoreboard(float x, float y, float w, int Align);
 	void RenderRecordingNotification(float x, float w);
 	void RenderNetworkQuality(float x, float w);
 
@@ -18,6 +18,7 @@ class CScoreboard : public CComponent
 	bool m_Activate;
  	class CUIRect m_TotalRect;
 
+	void RenderTeamScoreboard(int Team, CUIRect &MainView, float LineHeight, class CScrollRegion *pScrollRegion);
 public:
 	CScoreboard();
 	virtual void OnReset();
