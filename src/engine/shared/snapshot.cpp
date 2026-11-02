@@ -379,6 +379,9 @@ int CSnapshotDelta::UnpackDelta(const CSnapshot *pFrom, CSnapshot *pTo, const vo
 		FromIndex = pFrom->GetItemIndex(Key);
 		if(FromIndex != -1)
 		{
+			int FromSize = pFrom->GetItemSize(FromIndex);
+			if(FromSize != ItemSize)
+				return -3;
 			// we got an update so we need to apply the diff
 			UndiffItem(pFrom->GetItem(FromIndex)->Data(), pData, pNewData, ItemSize / 4, &m_aSnapshotDataRate[Type]);
 			m_aSnapshotDataUpdates[Type]++;
